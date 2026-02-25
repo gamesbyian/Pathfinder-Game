@@ -778,23 +778,6 @@
     function loop() {
         if (ENGINE.overlayState === HINT_ANIMATING && ENGINE.hinter.pathList.length) {
             ENGINE.hinter.index += 0.5; const hPath = ENGINE.hinter.pathList[ENGINE.hinter.currentPathIdx];
-            if (ENGINE.mode === EDITOR && ENGINE.hinter.source === 'dynamic') {
-                const targetLevel = ENGINE.editor.workingLevel;
-                const visibleCount = Math.min(hPath.length, Math.floor(ENGINE.hinter.index));
-                ENGINE.path = hPath.slice(0, visibleCount);
-                ENGINE.isPortalJump = new Set();
-                for (let i = 1; i < ENGINE.path.length; i++) {
-                    const prev = ENGINE.path[i - 1];
-                    const portal = resolvePortal(targetLevel, prev);
-                    if (portal && portal.dest === ENGINE.path[i]) ENGINE.isPortalJump.add(i);
-                }
-                if (ENGINE.path.length > 0) {
-                    ENGINE.activeGateKey = ENGINE.path[0];
-                    rebuildDerivedPathState(ENGINE);
-                } else {
-                    PathNavigator.clear(ENGINE);
-                }
-            }
             if (ENGINE.hinter.index >= hPath.length + 40) { 
                 ENGINE.hinter.alpha -= 0.05; 
                 if (ENGINE.hinter.alpha <= 0) { 
@@ -1444,7 +1427,7 @@
         
         if (ENGINE.path.length) { const stroke = ENGINE.rainbowActive ? 'rainbow' : th.path; drawPath(ENGINE.path, ENGINE.isPortalJump, stroke, vp.cellW * 0.25); } 
         
-        if (ENGINE.overlayState === HINT_ANIMATING && ENGINE.hinter.pathList.length && !(ENGINE.mode === EDITOR && ENGINE.hinter.source === 'dynamic')) { 
+        if (ENGINE.overlayState === HINT_ANIMATING && ENGINE.hinter.pathList.length) { 
             ctx.save(); ctx.globalAlpha = ENGINE.hinter.alpha; 
             const hPath = ENGINE.hinter.pathList[ENGINE.hinter.currentPathIdx], displayPath = hPath.slice(0, Math.floor(ENGINE.hinter.index)), hintsJumps = new Set(); 
             for(let i=1; i<displayPath.length; i++){ const p1 = UNPACK(displayPath[i-1]), p2 = UNPACK(displayPath[i]); if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) hintsJumps.add(i); } 
@@ -1480,9 +1463,7 @@
                     setOverlayState(OVERLAY_NONE, 'solver-invalid-path');
                     return;
                 }
-                if (ENGINE.mode === EDITOR) {
-                    PathNavigator.clear(ENGINE);
-                } else {
+                if (ENGINE.mode !== EDITOR) {
                     ENGINE.path = [...firstPath];
                     ENGINE.isPortalJump = new Set();
                     for (let i = 1; i < firstPath.length; i++) {
