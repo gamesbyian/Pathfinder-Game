@@ -1083,6 +1083,8 @@
     }
     
     function triggerBombDetonation(key) { 
+        ENGINE.armedFalseGoals.delete(key);
+        ENGINE.detonatedFalseGoals.add(key);
         setOverlayState(FALSE_GOAL_ANIMATING);
         const overlay = $('bombJumpScare'); overlay.classList.remove('hidden'); overlay.classList.add('flex'); SOUND_BUS.play("C2", "8n"); 
         setTimeout(() => { 
@@ -1090,7 +1092,6 @@
             SOUND_BUS.play("F1", "4n"); 
             setTimeout(() => { 
                 overlay.classList.add('hidden'); overlay.classList.remove('flex'); overlay.querySelector('#scaryBomb').innerHTML = `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>`; 
-                ENGINE.armedFalseGoals.delete(key); ENGINE.detonatedFalseGoals.add(key); 
                 setOverlayState(OVERLAY_NONE);
             }, 1000); 
         }, 1000); 
@@ -1915,8 +1916,9 @@
     // ======================================================
     // D) Rules / ValidationAndWin
     // ======================================================
-    function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [HAZARD_TRIGGERED].includes(logicState) || mode === EDITOR) return false; const last = path[path.length - 1]; const curLen = path.length > 0 ? path.length - 1 - isPortalJump.size : 0; if (last === level.goalKey && curLen === level.reqLen && intersections === level.reqInt) { const allMustPass = level.mustPassKeys.every(k => visitedCounts.get(k) > 0); const allMustCross = level.mustCrossKeys.every(k => (visitedCounts.get(k) || 0) >= 2); if (allMustPass && allMustCross) { return true; } } return false; }
-    function checkFalseGoalCondition() { const l = ENGINE.level; const curLen = getRealLength(ENGINE); if (curLen === l.reqLen && ENGINE.intersections === l.reqInt) { const allMustPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const allMustCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (allMustPass && allMustCross) { return true; } } return false; }
+    function areWinMetricsSatisfied(state = ENGINE, level = (state.mode === PLAY ? state.level : state.editor.workingLevel)) { if (!level || !state.path.length) return false; const curLen = getRealLength(state); if (curLen !== level.reqLen || state.intersections !== level.reqInt) return false; const allMustPass = level.mustPassKeys.every(k => state.visitedCounts.get(k) > 0); const allMustCross = level.mustCrossKeys.every(k => (state.visitedCounts.get(k) || 0) >= 2); return allMustPass && allMustCross; }
+    function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [HAZARD_TRIGGERED].includes(logicState) || mode === EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return areWinMetricsSatisfied(stubState, level); }
+    function checkFalseGoalCondition() { return areWinMetricsSatisfied(ENGINE, ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel); }
     function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); $('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); $('winModal').classList.remove('hidden'); SOUND_BUS.play("C5", "8n"); } }
     
     function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, { mode: ENGINE.mode, armedFalseGoals: ENGINE.armedFalseGoals, flipCount: ENGINE.flipCount, crossedSet: ENGINE.crossedFlippingFilters }); }
@@ -2011,6 +2013,7 @@
     
     async function runGameSolver() { 
         if (ENGINE.activeSolverController) return; 
+        stopHintAnimation();
         
         ENGINE.activeSolverController = new AbortController(); 
         setOverlayState(SOLVER_RUNNING);
@@ -2058,6 +2061,14 @@
         setOverlayState(HINT_ANIMATING);
         ENGINE.hinter.alpha = 1; ENGINE.hinter.index = 0; 
         showMessage(`Solution ${ENGINE.hinter.currentPathIdx + 1}/${ENGINE.hinter.pathList.length}`, "text-emerald-600"); 
+    }
+
+    function stopHintAnimation() {
+        ENGINE.hinter.pathList = [];
+        ENGINE.hinter.currentPathIdx = 0;
+        ENGINE.hinter.index = 0;
+        ENGINE.hinter.alpha = 0;
+        setOverlayState(OVERLAY_NONE);
     }
     
     function loadLevel(idx, keepVariant = false) { 
@@ -2281,6 +2292,7 @@
             if (isVisible) { $('editorHelpModal').classList.add('hidden'); return; }
             closeAllModals();
             if (ENGINE.activeSolverController) return; 
+            stopHintAnimation();
             const l = ENGINE.editor.workingLevel; l.reqLen = parseInt($('editReqLen').value); l.reqInt = parseInt($('editReqInt').value); 
             ENGINE.activeSolverController = new AbortController(); 
             setOverlayState(SOLVER_RUNNING);
@@ -2293,6 +2305,7 @@
                     onProgress: (elapsedMs) => { uiTimer.innerText = (elapsedMs / 1000).toFixed(1) + 's'; } 
                 }); 
                 ENGINE.editor.validTrapSpots = spots; 
+                render();
                 if (spots.size > 0) showMessage(`Found ${spots.size} spots.`, "text-white font-black"); 
                 else showMessage("No spots found.", "text-white font-black"); 
                 setOverlayState(OVERLAY_NONE);
