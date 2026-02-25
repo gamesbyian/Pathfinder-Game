@@ -346,78 +346,87 @@
 </div>
 
 <script type="module">
-    const $ = id => document.getElementById(id);
-    const AXIS = { NONE: 0, H: 1, V: 2 };
-    window.AXIS = AXIS;
+    // --- FILE-LOCAL MODULES (single-file modularization) ---
+    const AppModules = {
+        dom: {
+            byId(id) { return document.getElementById(id); }
+        },
+        constants: {
+            AXIS: { NONE: 0, H: 1, V: 2 },
+            MODES: { PLAY: 0, EDITOR: 1 },
+            LogicStatus: {
+                IDLE: "IDLE",
+                DRAGGING: "DRAGGING",
+                PORTAL_PAUSE: "PORTAL_PAUSE",
+                RESOLVED: "RESOLVED",
+                HAZARD_TRIGGERED: "HAZARD_TRIGGERED",
+                EDIT_DRAG: "EDIT_DRAG",
+                THEME_DRAG: "THEME_DRAG"
+            },
+            OverlayStatus: {
+                NONE: "NONE",
+                HINT_ANIMATING: "HINT_ANIMATING",
+                FALSE_GOAL_ANIMATING: "FALSE_GOAL_ANIMATING",
+                GOOSE_OVERLAY: "GOOSE_OVERLAY",
+                SOLVER_RUNNING: "SOLVER_RUNNING"
+            }
+        },
+        state: {
+            createEngine({ PLAY, IDLE, OVERLAY_NONE }) {
+                return {
+                    mode: PLAY,
+                    logicState: IDLE,
+                    overlayState: OVERLAY_NONE,
+                    isDevMode: false,
+                    levelIdx: 0,
+                    variant: 0,
+                    level: null,
+                    path: [],
+                    isPortalJump: new Set(),
+                    visitedCounts: new Map(),
+                    cellUsage: new Map(),
+                    intersections: 0,
+                    activeGateKey: null,
+                    flipCount: 0,
+                    visualFlipCount: 0,
+                    crossedFlippingFilters: new Map(),
+                    detonatedFalseGoals: new Set(),
+                    armedFalseGoals: new Set(),
+                    undoStack: [],
+                    revealedGeese: new Set(),
+                    ripples: [],
+                    gooseEncounteredThisLevel: false,
+                    muted: true,
+                    rainbowActive: true,
+                    titleClickCount: 0,
+                    titleClickTimer: null,
+                    resetStreak: 0,
+                    lastFlipTime: 0,
+                    cheatTimer: null,
+                    hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none' },
+                    activeSolverController: null,
+                    viewport: { cellW: 0, cellH: 0, swapped: false, lastWidth: 0 },
+                    themeDragColor: null,
+                    themeDragTheme: null,
+                    themeDragCategory: null,
+                    themeTapSelectedColor: null,
+                    themeTapSelectedTheme: null,
+                    themeTapCategory: null,
+                    progressSet: new Set(),
+                    editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true }
+                };
+            }
+        }
+    };
+
+    const $ = AppModules.dom.byId;
+    const { AXIS, MODES, LogicStatus, OverlayStatus } = AppModules.constants;
     const { H, V, NONE } = AXIS;
-    
-    // --- MODE & STATE CONSTANTS ---
-    const MODES = { PLAY: 0, EDITOR: 1 };
+    window.AXIS = AXIS;
     const { PLAY, EDITOR } = MODES;
-
-    const LogicStatus = { 
-        IDLE: "IDLE", 
-        DRAGGING: "DRAGGING", 
-        PORTAL_PAUSE: "PORTAL_PAUSE", 
-        RESOLVED: "RESOLVED", 
-        HAZARD_TRIGGERED: "HAZARD_TRIGGERED",
-        EDIT_DRAG: "EDIT_DRAG",
-        THEME_DRAG: "THEME_DRAG"
-    };
     const { IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG } = LogicStatus;
-
-    const OverlayStatus = {
-        NONE: "NONE",
-        HINT_ANIMATING: "HINT_ANIMATING",
-        FALSE_GOAL_ANIMATING: "FALSE_GOAL_ANIMATING",
-        GOOSE_OVERLAY: "GOOSE_OVERLAY",
-        SOLVER_RUNNING: "SOLVER_RUNNING"
-    };
     const { NONE: OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = OverlayStatus;
-
-    // --- ENGINE CORE ---
-    const ENGINE = { 
-        mode: PLAY, 
-        logicState: IDLE,
-        overlayState: OVERLAY_NONE,
-        isDevMode: false, 
-        levelIdx: 0, 
-        variant: 0, 
-        level: null, 
-        path: [], 
-        isPortalJump: new Set(), 
-        visitedCounts: new Map(), 
-        cellUsage: new Map(), 
-        intersections: 0, 
-        activeGateKey: null, 
-        flipCount: 0, 
-        visualFlipCount: 0, 
-        crossedFlippingFilters: new Map(), 
-        detonatedFalseGoals: new Set(), 
-        armedFalseGoals: new Set(), 
-        undoStack: [], 
-        revealedGeese: new Set(), 
-        ripples: [], 
-        gooseEncounteredThisLevel: false, 
-        muted: true, 
-        rainbowActive: true, 
-        titleClickCount: 0, 
-        titleClickTimer: null, 
-        resetStreak: 0, 
-        lastFlipTime: 0, 
-        cheatTimer: null, 
-        hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none' }, 
-        activeSolverController: null, 
-        viewport: { cellW: 0, cellH: 0, swapped: false, lastWidth: 0 }, 
-        themeDragColor: null, 
-        themeDragTheme: null, 
-        themeDragCategory: null, 
-        themeTapSelectedColor: null, 
-        themeTapSelectedTheme: null, 
-        themeTapCategory: null, 
-        progressSet: new Set(),
-        editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true } 
-    };
+    const ENGINE = AppModules.state.createEngine({ PLAY, IDLE, OVERLAY_NONE });
 
     // --- FIREBASE & LOCAL STORAGE LOGIC ---
     const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
