@@ -1639,7 +1639,7 @@
             setOverlayState(SOLVER_RUNNING);
             const uiTimer = $('solverTimer'); const searchLabel = $('searchLabel'); 
             try { 
-                const spots = await PathfinderSolver.findTrapSpots(l, { 
+                const spots = await APP.solver.findTrapSpots(l, { 
                     timeLimit: 8000, 
                     signal: ENGINE.activeSolverController.signal, 
                     onStateUpdate: (msg) => { searchLabel.innerText = msg; showMessage(msg, "text-white font-black"); }, 
