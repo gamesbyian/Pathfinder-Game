@@ -325,3 +325,18 @@ window.THEMES_MORE = {
         burst: '#333333', check: '#00ffff'
     }
 };
+
+(function applyLeaveThemeColors() {
+    const leaveFor = (theme) => {
+        const base = theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#dc2626';
+        const hex = (base || '').replace('#', '');
+        let r = 220, g = 38, b = 38;
+        if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
+        const hover = `#${Math.max(0, Math.floor(r * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.85)).toString(16).padStart(2, '0')}`;
+        const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+        return { bg: base, hover, text: luminance > 0.55 ? '#0f172a' : '#ffffff', border: hover };
+    };
+    Object.keys(window.THEMES_MORE).forEach((key) => {
+        window.THEMES_MORE[key].leave = leaveFor(window.THEMES_MORE[key]);
+    });
+})();
