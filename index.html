@@ -413,6 +413,7 @@
                     themeTapSelectedTheme: null,
                     themeTapCategory: null,
                     progressSet: new Set(),
+                    debugLog: [],
                     editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true }
                 };
             }
@@ -428,11 +429,215 @@
     const { NONE: OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = OverlayStatus;
     const ENGINE = AppModules.state.createEngine({ PLAY, IDLE, OVERLAY_NONE });
 
+    const UI = {
+        el: {},
+        init() {
+            const ids = ['editorPalette','playMetrics','editorMetrics','gameButtonGrid','editorButtonGrid','editCopyBtn','editGenBtn','devCopyBtn','devGenBtn','exportArea','themeSelectFooter','searchIndicator','solverTimer','searchLabel','levelTitle','lengthInfo','intersectionInfo','message'];
+            ids.forEach(id => { this.el[id] = document.getElementById(id); });
+        },
+        showOverlay(name, onOff) {
+            if (name === 'search') this.setSearchIndicator(onOff);
+        },
+        setSearchIndicator(onOff) { const el = this.el.searchIndicator || $('searchIndicator'); if (el) el.classList.toggle('hidden', !onOff); },
+        setSolverTimer(text) { const el = this.el.solverTimer || $('solverTimer'); if (el) el.innerText = text; },
+        showLoading(text = 'Initing Systems...', pct = null) {
+            const overlay = $('loadingOverlay');
+            const status = $('loadStatusLabel');
+            if (status) status.innerText = pct === null ? text : `${text} (${pct}%)`;
+            if (overlay) { overlay.classList.remove('hidden'); overlay.style.opacity = '1'; }
+        },
+        hideLoading() {
+            const overlay = $('loadingOverlay');
+            if (!overlay) return;
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.classList.add('hidden'), 500);
+        },
+        showError(text) {
+            const status = $('loadStatusLabel');
+            if (status) status.innerText = text;
+            console.error(text);
+        },
+        setModeUI(mode) {
+            const isEd = mode === EDITOR;
+            (this.el.editorPalette || $('editorPalette')).classList.toggle('hidden', !isEd);
+            (this.el.playMetrics || $('playMetrics')).style.display = isEd ? 'none' : 'flex';
+            (this.el.editorMetrics || $('editorMetrics')).style.display = isEd ? 'flex' : 'none';
+            (this.el.gameButtonGrid || $('gameButtonGrid')).classList.toggle('hidden', isEd);
+            (this.el.editorButtonGrid || $('editorButtonGrid')).classList.toggle('hidden', !isEd);
+            (this.el.editCopyBtn || $('editCopyBtn')).classList.toggle('hidden', !isEd);
+            (this.el.editGenBtn || $('editGenBtn')).classList.toggle('hidden', !isEd);
+            (this.el.devCopyBtn || $('devCopyBtn')).classList.toggle('hidden', isEd || !ENGINE.isDevMode);
+            (this.el.devGenBtn || $('devGenBtn')).classList.toggle('hidden', isEd || !ENGINE.isDevMode);
+        },
+        updateMetrics(len, ints, reqLen, reqInt) {
+            const l = this.el.lengthInfo || $('lengthInfo');
+            const i = this.el.intersectionInfo || $('intersectionInfo');
+            if (l) l.innerText = `${len}/${reqLen}`;
+            if (i) { i.innerText = `${ints}/${reqInt}`; i.classList.toggle('text-red-300', ints > reqLen); i.classList.toggle('text-white', ints <= reqLen); }
+        },
+        updateLevelLabel(text) { const el = this.el.levelTitle || $('levelTitle'); if (el) el.innerText = text; },
+        flashMessage(text, ms = 800, className = 'text-white font-black') { showMessage(text, className); if (!text) return; setTimeout(() => showMessage('', ''), ms); }
+    };
+
+    AppModules.ui = UI;
+
+    const Engine = {
+        getState() { return ENGINE; },
+        getCurrentLevel() { return ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; },
+        log(type, msg, meta = null) {
+            if (!ENGINE.isDevMode) return;
+            ENGINE.debugLog.push({ ts: Date.now(), type, msg, meta });
+            if (ENGINE.debugLog.length > 200) ENGINE.debugLog.shift();
+        },
+        setMode(newMode, reason = 'setMode') {
+            if (ENGINE.mode === newMode) return true;
+            const oldMode = ENGINE.mode;
+            ENGINE.mode = newMode;
+            this.log('mode', `${oldMode} -> ${newMode}`, { reason });
+            return true;
+        },
+        setLogicState(newState, reason = '') {
+            if (ENGINE.logicState === newState) return true;
+            const allowed = VALID_LOGIC_TRANSITIONS[ENGINE.logicState] || [];
+            if (!allowed.includes(newState) && newState !== IDLE) {
+                this.log('logic_blocked', `${ENGINE.logicState} -> ${newState}`, { reason });
+                return false;
+            }
+            if (ENGINE.overlayState === SOLVER_RUNNING && newState === DRAGGING) return false;
+            if (ENGINE.logicState === EDIT_DRAG && newState !== EDIT_DRAG && typeof ghostEl !== 'undefined' && ghostEl) { ghostEl.style.display = 'none'; ghostEl.innerHTML = ''; }
+            ENGINE.logicState = newState;
+            this.log('logic', `=> ${newState}`, { reason });
+            return true;
+        },
+        setOverlayState(newState, reason = '') {
+            if (ENGINE.overlayState === newState) return true;
+            if (ENGINE.overlayState === SOLVER_RUNNING && newState !== SOLVER_RUNNING) { UI.setSearchIndicator(false); setSolversActive(true); }
+            if (ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) { ENGINE.hinter.alpha = 0; setSolversActive(true); }
+            if (newState === SOLVER_RUNNING && ENGINE.logicState === DRAGGING) this.setLogicState(IDLE, 'overlay-preempt-drag');
+            ENGINE.overlayState = newState;
+            if (newState === SOLVER_RUNNING) { UI.setSearchIndicator(true); setSolversActive(false); }
+            if (newState === HINT_ANIMATING) setSolversActive(false);
+            this.log('overlay', `=> ${newState}`, { reason });
+            return true;
+        },
+        normalizeLevel(levelLike = null) {
+            const l = levelLike || this.getCurrentLevel();
+            if (!l) throw new Error('No active level');
+            const { w, h } = l.grid || {};
+            if (!Number.isInteger(w) || !Number.isInteger(h) || w <= 0 || h <= 0) throw new Error('Invalid grid');
+            const checkKey = (k, label) => { const p = UNPACK(k); if (!inBounds(p.x, p.y, w, h)) throw new Error(`${label} out of bounds`); };
+            l.gateKeys.forEach(k => checkKey(k, 'gate'));
+            if (l.goalKey !== -1) checkKey(l.goalKey, 'goal');
+            l.blockSet.forEach(k => checkKey(k, 'block'));
+            l.gooseSet.forEach(k => checkKey(k, 'goose'));
+            l.falseGoalKeys.forEach(k => checkKey(k, 'falseGoal'));
+            l.mustPassKeys.forEach(k => checkKey(k, 'mustPass'));
+            l.mustCrossKeys.forEach(k => checkKey(k, 'mustCross'));
+            l.filterMap.forEach((axis,k) => checkKey(k, 'filter'));
+            l.flippingFilterMap.forEach((axis,k) => checkKey(k, 'flippingFilter'));
+            l.portalMap.forEach((v,k) => { checkKey(k,'portal'); checkKey(v.dest,'portalDest'); });
+            return l;
+        },
+        validatePath(path, normalizedLevel, { allowEditorLooseRules = false } = {}) {
+            const l = normalizedLevel || this.getCurrentLevel();
+            if (!Array.isArray(path) || path.length === 0) return { ok: false, reason: 'Empty path' };
+            try { this.normalizeLevel(l); } catch (e) { return { ok: false, reason: e.message }; }
+            const temp = { mode: allowEditorLooseRules ? EDITOR : PLAY, path: [], isPortalJump: new Set(), visitedCounts: new Map(), cellUsage: new Map(), intersections: 0, crossedFlippingFilters: new Map(), flipCount: 0, armedFalseGoals: new Set(l.falseGoalKeys || []) };
+            if (!allowEditorLooseRules && !l.gateKeys.includes(path[0])) return { ok: false, reason: 'Path must start on a gate' };
+            for (let i = 0; i < path.length; i++) {
+                const k = path[i];
+                const p = UNPACK(k);
+                if (!inBounds(p.x, p.y, l.grid.w, l.grid.h)) return { ok: false, reason: `Out of bounds at step ${i + 1}` };
+                if (!isValidMoveEngine(k, temp.path, temp.visitedCounts, temp.cellUsage, temp.intersections, temp.isPortalJump, l, temp)) return { ok: false, reason: `Invalid move at step ${i + 1}` };
+                const prev = temp.path[temp.path.length - 1];
+                const isJump = prev !== undefined && l.portalMap.has(prev) && l.portalMap.get(prev).dest === k;
+                PathNavigator.pushStep(temp, k, isJump);
+            }
+            if (!allowEditorLooseRules && path[path.length - 1] !== l.goalKey) return { ok: false, reason: 'Path must end on goal' };
+            if (!allowEditorLooseRules && !l.mustPassKeys.every(k => temp.visitedCounts.get(k) > 0)) return { ok: false, reason: 'Must-pass unmet' };
+            if (!allowEditorLooseRules && !l.mustCrossKeys.every(k => (temp.visitedCounts.get(k) || 0) >= 2)) return { ok: false, reason: 'Must-cross unmet' };
+            return { ok: true };
+        },
+        loadLevel(idx, keepVariant = false) { return loadLevel(idx, keepVariant); },
+        resetLevel() { return loadLevel(ENGINE.levelIdx, true); },
+        runSanityChecks() {
+            const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS;
+            const failures = [];
+            for (let i = 0; i < levels.length; i++) {
+                try {
+                    const l = normalizeLevel(i);
+                    this.normalizeLevel(l);
+                    (l.hints || []).forEach((hint, idx) => {
+                        const vr = this.validatePath(hint, l, { allowEditorLooseRules: false });
+                        if (!vr.ok) failures.push(`L${i + 1} hint ${idx + 1}: ${vr.reason}`);
+                    });
+                } catch (e) { failures.push(`L${i + 1}: ${e.message}`); }
+            }
+            if (ENGINE.isDevMode && failures.length) failures.forEach(f => console.warn('[Sanity]', f));
+            return { ok: failures.length === 0, failures };
+        },
+        enterPlayMode() { SolverFacade.cancel('enter-play'); this.setOverlayState(OVERLAY_NONE, 'enter-play'); this.setLogicState(IDLE, 'enter-play'); this.setMode(PLAY, 'enter-play'); UI.setModeUI(PLAY); ENGINE.editor.selectedTool = null; ENGINE.editor.draggedObject = null; },
+        enterEditorMode() { SolverFacade.cancel('enter-editor'); this.setOverlayState(OVERLAY_NONE, 'enter-editor'); this.setLogicState(IDLE, 'enter-editor'); this.setMode(EDITOR, 'enter-editor'); UI.setModeUI(EDITOR); }
+    };
+
+    const SolverFacade = {
+        runId: 0,
+        cancel(reason = 'cancel') {
+            this.runId += 1;
+            if (ENGINE.activeSolverController) { try { ENGINE.activeSolverController.abort(); } catch (e) {} }
+            ENGINE.activeSolverController = null;
+            Engine.setOverlayState(OVERLAY_NONE, `solver-${reason}`);
+        },
+        async solveLevel(levelIdx = ENGINE.levelIdx, opts = {}) {
+            if (ENGINE.activeSolverController) return [];
+            const { allowEditorLooseRules = false, onStateUpdate = () => {}, onProgress = () => {}, ...solverOpts } = opts;
+            const runId = ++this.runId;
+            ENGINE.activeSolverController = new AbortController();
+            Engine.setOverlayState(SOLVER_RUNNING, 'solver-start');
+            const normalized = Engine.normalizeLevel(Engine.getCurrentLevel());
+            const solutions = await PathfinderSolver.solve(normalized, {
+                ...solverOpts,
+                signal: ENGINE.activeSolverController.signal,
+                onStateUpdate,
+                onProgress
+            });
+            if (runId !== this.runId) return [];
+            const valid = [];
+            for (const s of solutions || []) {
+                const r = Engine.validatePath(s.path, normalized, { allowEditorLooseRules });
+                if (r.ok) valid.push(s.path); else Engine.log('solver_invalid_path', r.reason, { levelIdx });
+            }
+            ENGINE.activeSolverController = null;
+            return valid;
+        },
+        async solveCurrentLevel(opts = {}) {
+            return this.solveLevel(ENGINE.levelIdx, opts);
+        }
+    };
+
     const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
     const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
 
     const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
     const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
+
+    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
+    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
+
+    AppModules.engine = Engine;
+    AppModules.solver = SolverFacade;
+    AppModules.editor = EditorController;
+    AppModules.game = GameController;
+
+    const APP = Object.freeze({
+        modules: AppModules,
+        ui: UI,
+        engine: Engine,
+        solver: SolverFacade,
+        editor: EditorController,
+        game: GameController
+    });
+    window.APP = APP;
 
     // --- FIREBASE & LOCAL STORAGE LOGIC ---
     const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
@@ -1067,7 +1272,8 @@
     
     const SolverCore = {
         _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet) {
-            const { x, y } = UNPACK(key); const { w, h } = l.grid; if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false; if (l.gooseSet.has(key)) return false; const lastK = path[path.length - 1]; if (lastK === undefined) return true; if (lastK === l.goalKey) return false; if (l.gateKeys.includes(key)) return false; if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false; const lastP = UNPACK(lastK); const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key; if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false; const axis = (y === lastP.y) ? H : V; const u = usage.get(key); if (u && ((axis === H && u.h) || (axis === V && u.v))) return false; const uLast = usage.get(lastK); if (uLast) { let entryAxis = NONE; if (path.length > 1 && !jumpSet.has(path.length - 1)) { const prevP = UNPACK(path[path.length - 2]); const lastP_check = UNPACK(lastK); entryAxis = (prevP.y === lastP_check.y) ? H : V; } if (axis !== entryAxis) { if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false; } } let filterLast = l.filterMap.get(lastK); if (filterLast === undefined && l.flippingFilterMap.has(lastK)) { const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount; filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK); } if (filterLast && filterLast !== axis) return false; let filterTarget = l.filterMap.get(key); if (filterTarget === undefined && l.flippingFilterMap.has(key)) { const relevantFlipCount = crossedSet.has(key) ? crossedSet.get(key) : flipCount; const baseAxis = l.flippingFilterMap.get(key); filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis; } if (filterTarget && filterTarget !== axis) return false; return true; 
+            const runtime = { mode: PLAY, armedFalseGoals: new Set(), crossedFlippingFilters: crossedSet, flipCount };
+            return isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l, runtime) && !l.gooseSet.has(key);
         },
         _buildDistMap(l) { const { w, h } = l.grid; const map = new Map(); const q = [{k: l.goalKey, d: 0}]; map.set(l.goalKey, 0); let head = 0; while(head < q.length) { const {k, d} = q[head++]; const p = UNPACK(k); const neighbors = []; const portal = resolvePortal(l, k); if (portal) neighbors.push(portal.dest); [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx, dy]) => { const nx = p.x+dx, ny = p.y+dy; if(inBounds(nx, ny, w, h)) { const nk = PACK(nx, ny); if (!l.blockSet.has(nk)) neighbors.push(nk); } }); for (const nk of neighbors) { if (!map.has(nk)) { map.set(nk, d + 1); q.push({k: nk, d: d + 1}); } } } return map; },
         _buildFlipperDistMap(l, flipperSet) { const { w, h } = l.grid; const map = new Map(); const q = []; flipperSet.forEach(k => { map.set(k, 0); q.push({k: k, d: 0}); }); let head = 0; while(head < q.length) { const {k, d} = q[head++]; const p = UNPACK(k); const neighbors = []; const portal = resolvePortal(l, k); if (portal) neighbors.push(portal.dest); [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx, dy]) => { const nx = p.x+dx, ny = p.y+dy; if(inBounds(nx, ny, w, h)) { const nk = PACK(nx, ny); if (!l.blockSet.has(nk)) neighbors.push(nk); } }); for (const nk of neighbors) { if (!map.has(nk)) { map.set(nk, d+1); q.push({k: nk, d: d+1}); } } } return map; },
@@ -1174,6 +1380,12 @@
     
     async function runGameSolver() {
         try {
+            const paths = await APP.solver.solveCurrentLevel({
+                timeLimit: 105000,
+                allowEditorLooseRules: ENGINE.mode === EDITOR,
+                onStateUpdate: (msg) => { $('searchLabel').innerText = msg; showMessage(msg, 'text-sky-600'); },
+                onProgress: (elapsedMs) => UI.setSolverTimer((elapsedMs / 1000).toFixed(1) + 's')
+            });
             const paths = await SolverFacade.solveLevel(ENGINE.levelIdx, { timeLimit: 105000 });
             if (paths.length > 0) {
                 if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
@@ -1475,6 +1687,7 @@
             finish() {
                 if (this.didFinish) return;
                 this.didFinish = true;
+                APP.ui.hideLoading();
                 UI.hideLoading();
                 populateThemes();
             },
@@ -1547,6 +1760,19 @@
         startBoot();
         applyTheme('classic');
         if (ENGINE.isDevMode) Engine.runSanityChecks();
+        } catch (bootErr) {
+            console.error('Boot error', bootErr);
+            APP.ui.showError(`Boot error: ${bootErr?.message || bootErr}`);
+            try {
+                window.RAW_LEVELS = FALLBACK_RAW_LEVELS;
+                Engine.loadLevel(0);
+                updatePlayModeLayout();
+                loop();
+                APP.ui.hideLoading();
+            } catch (e) {
+                APP.ui.showError(`Fatal boot failure: ${e?.message || e}`);
+            }
+        }
     };
 </script>
 </body>
