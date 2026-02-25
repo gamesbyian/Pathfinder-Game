@@ -20,6 +20,7 @@
         :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; }
         canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: white; }
+        canvas:focus { outline: none; }
         .modal { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
         .modal-content { transition: all 0.3s ease; }
         #winSubMessage { font-family: 'Caveat', cursive; }
@@ -43,6 +44,9 @@
             #themeModal.landscape-left-modal { align-items: flex-start; justify-content: flex-start; padding: 1rem 1rem 1rem 1.5rem; }
             #themeModal.landscape-left-modal #themeModalPanel { width: min(46vw, 90vh); max-width: min(46vw, 90vh); max-height: calc(100vh - 2rem); }
         }
+        .app-layout.forced-landscape { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
+        .app-layout.forced-landscape .layout-left-pane { width: min(46vw, 90vh); max-height: 96vh; overflow-y: auto; padding-right: 0.5rem; }
+        .app-layout.forced-landscape .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
         
         .palette-grid { display: grid; grid-template-columns: repeat(6, 2.2rem); gap: 0.35rem; width: max-content; margin: 0; }
         .palette-item { width: 100%; height: 2.2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e1; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; touch-action: none; }
@@ -310,6 +314,7 @@
     </div>
 
     <div class="flex w-full items-center justify-end gap-3 shrink-0 pt-2">
+        <button id="orientationToggleBtn" class="px-4 bg-slate-300/60 backdrop-blur-md rounded-2xl h-[3.25rem] border border-white/20 shadow-lg text-slate-700 font-black uppercase tracking-widest hover:bg-slate-400/60 transition text-[0.65rem] flex items-center justify-center">Landscape</button>
         <button id="openThemeModalBtn" class="px-5 bg-slate-300/60 backdrop-blur-md rounded-2xl h-[3.25rem] border border-white/20 shadow-lg text-slate-700 font-black uppercase tracking-widest hover:bg-slate-400/60 transition text-xs flex items-center justify-center">Themes</button>
         <button id="muteBtn" class="bg-white/50 backdrop-blur-md text-slate-500 w-[3.25rem] h-[3.25rem] rounded-2xl flex items-center justify-center hover:bg-white/80 transition shrink-0 shadow-lg border border-white/20">
             <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="22"></line><line id="muteSlash" x1="2" y1="2" x2="22" y2="22"></line></svg>
@@ -442,7 +447,7 @@
         progressSet: new Set(),
         foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true } 
-        ,ui: { isLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null }
+        ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false }
     };
         return { ENGINE };
@@ -530,9 +535,14 @@
     }
 
     function updateLayoutMode() {
-        ENGINE.ui.isLandscapeLayout = window.matchMedia('(orientation: landscape)').matches && window.innerWidth >= 900;
+        const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && window.innerWidth >= 900;
+        ENGINE.ui.isLandscapeLayout = naturalLandscape || ENGINE.ui.forceLandscapeLayout;
+        const appLayout = $('appLayout');
+        if (appLayout) appLayout.classList.toggle('forced-landscape', ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
         const themeModal = $('themeModal');
         if (themeModal) themeModal.classList.toggle('landscape-left-modal', ENGINE.ui.isLandscapeLayout);
+        const orientationBtn = $('orientationToggleBtn');
+        if (orientationBtn) orientationBtn.innerText = ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape';
     }
 
     const VALID_LOGIC_TRANSITIONS = {
@@ -666,23 +676,73 @@
         glf: { bodyBg: '#bdc3c7', canvasBg: '#ecf0f1', grid: '#95a5a6', headerLeft: '#D21F1B', headerRight: '#4A90E2', path: '#F4D03F', controls: 'rgba(236, 240, 241, 0.8)', metricText: '#ecf0f1', btns: { undo: '#34495e', reset: '#D21F1B', guide: '#558735', whoa: '#2a6ebd', hint: '#d35400', saved: '#27ae60', mega: '#a51815', mute: '#bdc3c7', muteIcon: '#2c3e50', copy: '#bdc3c7', gen: '#bdc3c7', modeToggle: '#2c3e50', solve: '#c4a112', editClear: '#a51815', editBombs: '#F4D03F', editNew: '#27ae60' }, modal: { bg: 'rgba(213, 219, 219, 0.95)', panelBg: '#ecf0f1', border: '#95a5a6', text: '#2c3e50', textMuted: '#7f8c8d', accent: '#D21F1B' }, output: { bg: '#2c3e50', text: '#93C572' }, colors: { gate: '#D21F1B', goal: '#F4D03F', block: '#bdc3c7', pin: '#D21F1B', pinUnflipped: '#7f8c8d', filter: '#2c3e50', portal: '#4A90E2', cross: '#D21F1B' }, palette: { bg: '#ecf0f1', border: '#D21F1B', itemBg: '#bdc3c7', itemBorder: '#95a5a6', toolBg: '#ecf0f1' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#bdc3c7', ghostBorder: '#D21F1B', win: { bg: '#ecf0f1', border: '#D21F1B', text: '#7f8c8d', accent: '#2c3e50' }, alert: { bg: '#2c3e50', stroke: '#ecf0f1' }, ctrlArea: { bg: '#ecf0f1', border: '#95a5a6' }, burst: '#ecf0f1', check: '#D21F1B' }
     };
 
+    function isValidHexColor(value) {
+        return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());
+    }
+
+    function parseGeminiSuggestionsPayload(data) {
+        const textParts = [];
+        const candidates = Array.isArray(data?.candidates) ? data.candidates : [];
+        candidates.forEach(candidate => {
+            const parts = candidate?.content?.parts;
+            if (Array.isArray(parts)) {
+                parts.forEach(part => {
+                    if (typeof part?.text === 'string') textParts.push(part.text);
+                });
+            }
+        });
+
+        const parseCandidates = [];
+        textParts.forEach(text => {
+            parseCandidates.push(text);
+            const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+            if (fencedMatch?.[1]) parseCandidates.push(fencedMatch[1]);
+        });
+
+        let parsed = null;
+        let parseError = null;
+        for (const candidateText of parseCandidates) {
+            try {
+                parsed = JSON.parse(candidateText);
+                parseError = null;
+                break;
+            } catch (err) {
+                parseError = err;
+            }
+        }
+        if (!parsed) return { colors: null, error: parseError ? `Invalid JSON response: ${parseError.message}` : 'No JSON response text returned.' };
+
+        if (!Array.isArray(parsed.suggestions)) return { colors: null, error: 'Invalid schema: suggestions must be an array.' };
+        const normalized = [];
+        for (const raw of parsed.suggestions) {
+            const color = typeof raw === 'string' ? raw.trim() : '';
+            if (isValidHexColor(color)) normalized.push(color.toUpperCase());
+        }
+        const unique = Array.from(new Set(normalized));
+        if (unique.length < 6) return { colors: null, error: 'Invalid schema: need 6 valid #RRGGBB colors.' };
+        return { colors: unique.slice(0, 6), error: null };
+    }
+
     async function fetchGeminiThemeColors(themeName, themeObj) {
         const apiKey = "AIzaSyC7rfddVJfU4X9qziTa1le6Q2AWDRCTzn4";
         const systemPrompt = "You are a professional UI/UX color palette specialist. Your goal is to analyze the provided Pathfinder game theme and suggest exactly 6 new hex colors that expand the existing palette while maintaining visual consistency and accessibility.";
-        const userPrompt = `Theme Name: ${themeName}\nCurrent Colors: ${JSON.stringify(themeObj)}\n\nSuggest 6 complementary hex colors.`;
+        const userPrompt = `Theme Name: ${themeName}
+Current Colors: ${JSON.stringify(themeObj)}
+
+Suggest 6 complementary hex colors in #RRGGBB format.`;
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-        
+
         const payload = {
             systemInstruction: { parts: [{ text: systemPrompt }] },
             contents: [{ parts: [{ text: userPrompt }] }],
-            generationConfig: { 
+            generationConfig: {
                 responseMimeType: "application/json",
                 responseSchema: {
                     type: "OBJECT",
                     properties: {
                         suggestions: {
                             type: "ARRAY",
-                            items: { type: "STRING" },
+                            items: { type: "STRING", pattern: "^#[0-9A-Fa-f]{6}$" },
                             minItems: 6,
                             maxItems: 6
                         }
@@ -692,28 +752,33 @@
             }
         };
 
-        let delays = [1000, 2000, 4000, 8000, 16000];
+        const delays = [1000, 2000, 4000, 8000, 16000];
+        let lastError = null;
         for (let i = 0; i < 6; i++) {
             try {
                 const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                
-                if (res.status === 429) throw new Error('Rate Limit');
-                if (!res.ok) throw new Error('API Error');
-                
-                const data = await res.json();
-                const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (jsonText) {
-                    const parsed = JSON.parse(jsonText);
-                    if (parsed.suggestions && parsed.suggestions.length >= 6) return parsed.suggestions;
+                const body = await res.json().catch(() => ({}));
+
+                if (res.status === 429) {
+                    lastError = `Rate limited (${res.status}).`;
+                    throw new Error('Rate Limit');
                 }
+                if (!res.ok) {
+                    const apiMessage = body?.error?.message || `HTTP ${res.status}`;
+                    return { colors: null, error: `Gemini API error: ${apiMessage}` };
+                }
+
+                const parsed = parseGeminiSuggestionsPayload(body);
+                if (parsed.colors) return { colors: parsed.colors, error: null };
+                lastError = parsed.error;
             } catch (err) {
-                if (i === 5) return null;
-                await new Promise(r => setTimeout(r, delays[i]));
+                if (err.message !== 'Rate Limit') lastError = err?.message || 'Unknown request failure.';
             }
+            if (i < delays.length) await new Promise(r => setTimeout(r, delays[i]));
         }
-        return null;
+        return { colors: null, error: lastError || 'Unable to generate suggestions.' };
     }
-    
+
     APP.Themes = APP.Themes || {};
     APP.Themes.THEMES = THEMES;
     let currentTheme = 'classic';
@@ -1056,19 +1121,26 @@
 
         const handleAiGeneration = async () => {
             aiGrid.innerHTML = '<span class="text-[0.55rem] font-bold text-[var(--theme-modal-muted)] animate-pulse uppercase tracking-widest">Calling Specialist...</span>';
-            const colors = await fetchGeminiThemeColors(themeKey, t);
+            const { colors, error } = await fetchGeminiThemeColors(themeKey, t);
             if (colors && colors.length >= 6) {
                 if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
-                window.THEME_AI_COLORS[themeKey] = colors.slice(0,6);
+                window.THEME_AI_COLORS[themeKey] = colors.slice(0, 6);
                 aiGrid.innerHTML = '';
                 window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, false, "Misc")));
             } else {
                 aiGrid.innerHTML = '';
+                const failWrap = document.createElement('div');
+                failWrap.className = "flex flex-col items-center gap-1";
                 const failBtn = document.createElement('button');
                 failBtn.className = "text-[0.55rem] text-red-500 font-bold uppercase tracking-widest hover:scale-105 transition-transform";
                 failBtn.innerText = "Generation Failed - Retry?";
                 failBtn.onclick = handleAiGeneration;
-                aiGrid.appendChild(failBtn);
+                const detail = document.createElement('div');
+                detail.className = "text-[0.5rem] text-[var(--theme-modal-muted)] max-w-[16rem] text-center leading-tight";
+                detail.innerText = error || "Unknown Gemini error.";
+                failWrap.appendChild(failBtn);
+                failWrap.appendChild(detail);
+                aiGrid.appendChild(failWrap);
             }
         };
 
@@ -1603,7 +1675,7 @@
                     }
                 }
             }
-            if (Array.isArray(s.mustCrossCounts) && typeof s.mustCrossMask === "bigint") {
+            if (s.mustCrossCounts && typeof s.mustCrossMask === "bigint") {
                 const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(k) : undefined;
                 if (crossIdx !== undefined) {
                     const prev = s.mustCrossCounts[crossIdx];
@@ -1717,7 +1789,7 @@
             let steps = 0;
             while (stack.length > 0) {
                 if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                if (Date.now() - options.startTime > options.timeLimit) return null;
+                if (Date.now() - options.startTime > options.timeLimit) return SOLVER_TIMEOUT;
                 if (++steps % 500 === 0) {
                     await new Promise(r => setTimeout(r, 0));
                     options.onProgress(Date.now() - options.startTime);
@@ -1863,6 +1935,8 @@
     };
 
 
+    const SOLVER_TIMEOUT = Symbol("solver-timeout");
+
     // ======================================================
     // H) Solver
     // ======================================================
@@ -1871,6 +1945,7 @@
             const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
             const startTime = Date.now();
             const foundSolutions = [];
+            foundSolutions.timedOut = false;
             if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
             onStateUpdate("Analyzing Bipartite Parity...");
 
@@ -2024,6 +2099,10 @@
                 await new Promise(r => setTimeout(r, 0));
                 const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
                 const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, cellUsageFreq, level, internalOpts);
+                if (result === SOLVER_TIMEOUT) {
+                    foundSolutions.timedOut = true;
+                    break;
+                }
                 if (result) {
                     const solStr = JSON.stringify(result.path);
                     if (!foundSolutions.some(s => JSON.stringify(s.path) === solStr)) {
@@ -2251,8 +2330,8 @@
                 outEl.value = JSON.stringify(paths).replace(/\s/g, ''); 
                 startHintAnimation(); 
             } else { 
-                outEl.value = "No strict solutions found."; 
-                showMessage("No valid path found.", "text-amber-600"); 
+                outEl.value = solutions.timedOut ? "Solver timed out before proving unsat." : "No strict solutions found."; 
+                showMessage(solutions.timedOut ? "Solver timed out." : "No valid path found.", "text-amber-600"); 
                 setOverlayState(OVERLAY_NONE);
             } 
         } catch (err) { 
@@ -2480,7 +2559,7 @@
 
         window.addEventListener('gamepadconnected', () => setFocusGroup(ENGINE.ui.focusGroup || 'GRID', ENGINE.ui.focusIndex || 0));
         window.addEventListener('gamepaddisconnected', () => { ENGINE.gamepad.hasPad = false; ENGINE.gamepad.lastButtons = []; });
-        setFocusGroup('GRID', 0);
+        setFocusGroup('CONTROLS', 0);
         
         window.addEventListener('resize', () => {
             updateAppScale();
@@ -2493,6 +2572,7 @@
         $('gridSizeMinusBtn').onclick = () => { closeAllModals(); changeGridSize(-1); };
         $('gridSizePlusBtn').onclick = () => { closeAllModals(); changeGridSize(1); };
         $('muteBtn').onclick = () => { closeAllModals(); ENGINE.muted = !ENGINE.muted; $('muteSlash').style.display = ENGINE.muted ? 'block' : 'none'; };
+        $('orientationToggleBtn').onclick = () => { closeAllModals(); ENGINE.ui.forceLandscapeLayout = !ENGINE.ui.forceLandscapeLayout; updateLayoutMode(); updateAppScale(); updateViewport(); showMessage(ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
         
         const perspectiveAction = () => { closeAllModals(); if (ENGINE.activeSolverController) return; ENGINE.variant = (ENGINE.variant + 1) % 8; updateViewport(); rebuildDerivedPathState(ENGINE); SOUND_BUS.play("D5", "32n"); };
         $('whoaBtn').onclick = perspectiveAction;
