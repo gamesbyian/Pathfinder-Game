@@ -1457,7 +1457,7 @@
             }
             if (c === 0) {
                 const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(k) : undefined;
-                if (mustIdx !== undefined) {
+                if (mustIdx !== undefined && typeof s.mustMask === "bigint") {
                     const bit = 1n << BigInt(mustIdx);
                     if ((s.mustMask & bit) !== 0n) {
                         s.mustMask &= ~bit;
@@ -1465,7 +1465,7 @@
                     }
                 }
             }
-            if (s.mustCrossCounts) {
+            if (Array.isArray(s.mustCrossCounts) && typeof s.mustCrossMask === "bigint") {
                 const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(k) : undefined;
                 if (crossIdx !== undefined) {
                     const prev = s.mustCrossCounts[crossIdx];
@@ -1487,14 +1487,14 @@
             if (l.flippingFilterMap.has(k) && !s.crossedFlippers.has(k)) {
                 s.crossedFlippers.set(k, s.flipCount);
                 const flipIdx = l.flipperIndex ? l.flipperIndex.get(k) : undefined;
-                if (flipIdx !== undefined) {
+                if (flipIdx !== undefined && typeof s.flipperCrossMask === "bigint" && typeof s.flipParity === "number") {
                     const bit = 1n << BigInt(flipIdx);
                     s.flipperCrossMask |= bit;
-                    if ((s.flipParity & 1) === 1) s.flipperParityAtCrossMask |= bit;
+                    if (typeof s.flipperParityAtCrossMask === "bigint" && (s.flipParity & 1) === 1) s.flipperParityAtCrossMask |= bit;
                     log.push({ op: 'flipper_mask_set', bit, hadParity: (s.flipParity & 1) === 1 });
                 }
                 s.flipCount++;
-                s.flipParity = s.flipCount % 2;
+                if (typeof s.flipParity === "number") s.flipParity = s.flipCount % 2;
                 log.push({ op: 'flip_add', key: k });
             }
             return log;
@@ -2091,8 +2091,8 @@
         ENGINE.revealedGeese.clear(); 
         ENGINE.ripples = []; 
         ENGINE.gooseEncounteredThisLevel = false; 
-        ENGINE.armedFalseGoals = new Set(ENGINE.level.falseGoalKeys); 
-        ENGINE.detonatedFalseGoals.clear(); 
+        ENGINE.armedFalseGoals = new Set(ENGINE.level.falseGoalKeys || []);
+        ENGINE.detonatedFalseGoals = new Set();
         if (isEditor) { 
             ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); 
             ENGINE.editor.isPencilMode = false; 
