@@ -1447,15 +1447,16 @@
     
     async function runGameSolver() {
         try {
-            const targetLevel = ENGINE.mode === EDITOR ? ENGINE.editor.workingLevel : ENGINE.level;
+            const isEditor = ENGINE.mode === EDITOR;
+            const targetLevel = isEditor ? ENGINE.editor.workingLevel : ENGINE.level;
             const paths = await APP.solver.solveCurrentLevel({
                 timeLimit: 105000,
-                allowEditorLooseRules: ENGINE.mode === EDITOR,
+                allowEditorLooseRules: isEditor,
                 onStateUpdate: (msg) => { $('searchLabel').innerText = msg; showMessage(msg, 'text-sky-600'); },
                 onProgress: (elapsedMs) => UI.setSolverTimer((elapsedMs / 1000).toFixed(1) + 's')
             });
             if (paths.length > 0) {
-                if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
+                if (isEditor) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
                 const firstPath = paths[0];
                 if (!isRenderableSolverPath(firstPath, targetLevel)) {
                     outEl.value = 'Solver path invalid/out-of-bounds.';
@@ -1463,6 +1464,11 @@
                     setOverlayState(OVERLAY_NONE, 'solver-invalid-path');
                     return;
                 }
+
+                ENGINE.hinter.pathList = paths;
+                ENGINE.hinter.source = 'dynamic';
+                ENGINE.hinter.currentPathIdx = 0;
+
                 if (ENGINE.mode !== EDITOR) {
                     ENGINE.path = [...firstPath];
                     ENGINE.isPortalJump = new Set();
@@ -1474,9 +1480,6 @@
                     ENGINE.activeGateKey = firstPath[0] ?? null;
                     rebuildDerivedPathState(ENGINE);
                 }
-                ENGINE.hinter.pathList = paths;
-                ENGINE.hinter.source = 'dynamic';
-                ENGINE.hinter.currentPathIdx = 0;
                 outEl.value = JSON.stringify(paths).replace(/\s/g, '');
                 startHintAnimation();
             } else {
