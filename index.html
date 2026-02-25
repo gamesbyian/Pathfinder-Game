@@ -431,6 +431,9 @@
     const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
     const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
 
+    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
+    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
+
     // --- FIREBASE & LOCAL STORAGE LOGIC ---
     const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
     let auth = null;
@@ -1257,6 +1260,7 @@
     }
     
     window.onload = () => {
+        try {
         let pendingAction = null; const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { pendingAction = actionFn; $('unsavedModal').classList.remove('hidden'); } else { actionFn(); } };
         $('unsavedStayBtn').onclick = () => { closeAllModals(); pendingAction = null; $('unsavedModal').classList.add('hidden'); };
         $('unsavedLeaveBtn').onclick = () => { closeAllModals(); $('unsavedModal').classList.add('hidden'); if (pendingAction) pendingAction(); };
@@ -1351,10 +1355,10 @@
         };
 
         $('undoBtn').onclick = () => { closeAllModals(); if(ENGINE.undoStack.length) applySnapshot(ENGINE.undoStack.pop()); };
-        $('devGenBtn').onclick = () => { closeAllModals(); outEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.select(); document.execCommand('copy'); showMessage("Path Captured", "text-white font-black"); };
+        $('devGenBtn').onclick = () => { closeAllModals(); const vr = ENGINE.mode === PLAY ? Engine.validatePath(ENGINE.path, ENGINE.level, { allowEditorLooseRules: false }) : { ok: true }; if (!vr.ok) { UI.flashMessage('Invalid path filtered'); return; } outEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.select(); document.execCommand('copy'); showMessage("Path Captured", "text-white font-black"); };
         $('editGenBtn').onclick = () => { closeAllModals(); generateLevelString(); };
         $('devCopyBtn').onclick = () => { closeAllModals(); if (outEl.value) { outEl.select(); document.execCommand('copy'); showMessage("Copied", "text-white font-black"); } };
-        $('editCopyBtn').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; outEl.select(); document.execCommand('copy'); showMessage("Path Copied", "text-white font-black"); } };
+        $('editCopyBtn').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const vr = ENGINE.mode === PLAY ? Engine.validatePath(ENGINE.path, ENGINE.level, { allowEditorLooseRules: false }) : { ok: true }; if (!vr.ok) { UI.flashMessage('Invalid path filtered'); return; } const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; outEl.select(); document.execCommand('copy'); showMessage("Path Copied", "text-white font-black"); } };
 
         const hintBtn = $('hintBtn'); const hintTopHalf = $('hintTopHalf'); let isHintExpanded = false;
         const toggleHint = () => { 
@@ -1465,28 +1469,69 @@
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
         
         const loader = {
-            progress: 0, hasLoaded: false, finish() { const overlay = $('loadingOverlay'); overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 500); populateThemes(); },
-            triggerFallback() { if (this.hasLoaded) return; this.hasLoaded = true; window.RAW_LEVELS = FALLBACK_RAW_LEVELS; this.finish(); loadLevel(0); updatePlayModeLayout(); loop(); },
+            progress: 0,
+            hasLoaded: false,
+            didFinish: false,
+            finish() {
+                if (this.didFinish) return;
+                this.didFinish = true;
+                UI.hideLoading();
+                populateThemes();
+            },
+            async triggerFallback(reason = 'fallback') {
+                if (this.didFinish) return;
+                UI.showLoading('Loading fallback data...');
+                try {
+                    window.RAW_LEVELS = FALLBACK_RAW_LEVELS;
+                    Engine.loadLevel(0);
+                    updatePlayModeLayout();
+                    loop();
+                    this.hasLoaded = true;
+                } catch (e) {
+                    UI.showError(`Fallback init failed: ${e?.message || e}`);
+                } finally {
+                    this.finish();
+                }
+            },
             start() {
-                const loadThemes = new Promise(resolve => { 
-                    const s = document.createElement('script'); 
-                    s.src = "./themes.js"; 
-                    s.onload = () => { 
-                        if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE); 
-                        resolve(); 
-                    }; 
-                    s.onerror = () => resolve(); 
-                    document.head.appendChild(s); 
+                UI.showLoading('Initing Systems...');
+                const loadThemes = new Promise(resolve => {
+                    const s = document.createElement('script');
+                    s.src = "./themes.js";
+                    s.onload = () => {
+                        try {
+                            if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
+                        } catch (e) {}
+                        resolve();
+                    };
+                    s.onerror = () => resolve();
+                    document.head.appendChild(s);
                 });
-                const loadLevels = new Promise((resolve, reject) => { 
-                    const s = document.createElement('script'); 
-                    s.src = "./levels.js"; 
-                    s.onload = () => resolve(); 
-                    s.onerror = () => reject(); 
-                    document.head.appendChild(s); 
+                const loadLevels = new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = "./levels.js";
+                    s.onload = () => resolve();
+                    s.onerror = () => reject(new Error('levels.js missing'));
+                    document.head.appendChild(s);
                 });
-                Promise.all([loadThemes, loadLevels]).then(() => { if (this.hasLoaded) return; this.hasLoaded = true; loadLevel(0); updatePlayModeLayout(); loop(); this.finish(); }).catch(() => this.triggerFallback());
-                setTimeout(() => this.triggerFallback(), 5000);
+                Promise.all([loadThemes, loadLevels]).then(() => {
+                    if (this.didFinish || this.hasLoaded) return;
+                    try {
+                        if (!Array.isArray(window.RAW_LEVELS) || window.RAW_LEVELS.length === 0) throw new Error('RAW_LEVELS unavailable');
+                        UI.init();
+                        Engine.loadLevel(0);
+                        updatePlayModeLayout();
+                        loop();
+                        this.hasLoaded = true;
+                    } catch (e) {
+                        console.error('Normal boot failed; using fallback.', e);
+                        return this.triggerFallback('normal-boot-error');
+                    }
+                    this.finish();
+                }).catch(() => this.triggerFallback('script-load-failure'));
+                setTimeout(() => {
+                    if (!this.hasLoaded && !this.didFinish) this.triggerFallback('timeout');
+                }, 5000);
             }
         };
 
