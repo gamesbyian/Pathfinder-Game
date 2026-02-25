@@ -428,6 +428,9 @@
     const { NONE: OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = OverlayStatus;
     const ENGINE = AppModules.state.createEngine({ PLAY, IDLE, OVERLAY_NONE });
 
+    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
+    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
+
     // --- FIREBASE & LOCAL STORAGE LOGIC ---
     const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
     let auth = null;
@@ -512,42 +515,12 @@
         [THEME_DRAG]: [IDLE]
     };
 
-    function setLogicState(newState) {
-        if (!VALID_LOGIC_TRANSITIONS[ENGINE.logicState].includes(newState) && newState !== IDLE) {
-            console.warn(`Blocked Logic Transition: ${ENGINE.logicState} -> ${newState}`);
-            return false;
-        }
-
-        if (ENGINE.logicState === EDIT_DRAG && newState !== EDIT_DRAG) {
-            ghostEl.style.display = 'none';
-            ghostEl.innerHTML = '';
-        }
-
-        ENGINE.logicState = newState;
-        return true;
+    function setLogicState(newState, reason = '') {
+        return Engine.setLogicState(newState, reason);
     }
 
-    function setOverlayState(newState) {
-        if (ENGINE.overlayState === SOLVER_RUNNING && newState !== SOLVER_RUNNING) {
-            $('searchIndicator').classList.add('hidden');
-            setSolversActive(true);
-        }
-        if (ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
-            ENGINE.hinter.alpha = 0;
-            setSolversActive(true);
-        }
-
-        ENGINE.overlayState = newState;
-
-        if (newState === SOLVER_RUNNING) {
-            $('searchIndicator').classList.remove('hidden');
-            setSolversActive(false);
-        }
-        if (newState === HINT_ANIMATING) {
-            setSolversActive(false);
-        }
-
-        return true;
+    function setOverlayState(newState, reason = '') {
+        return Engine.setOverlayState(newState, reason);
     }
 
     const FALLBACK_RAW_LEVELS = [ { grid: {w:10, h:10}, gates: [{x:2,y:2}, {x:2,y:4}], goal: {x:9,y:9}, reqLen: 14, reqInt: 0, blocks: [{x:4,y:4}, {x:5,y:4}, {x:4,y:5}, {x:5,y:5}], mustPass: [{x:6,y:6}], geese: [{x:6,y:7}], flippingFilters: [{x:8, y:2, axis: 2}, {x:3, y:8, axis: 1}, {x:5, y:2, axis: 1}, {x:7, y:2, axis: 1}], falseGoals: [{x:2, y:8}], hints: [] } ];
@@ -1109,7 +1082,7 @@
     function checkFalseGoalCondition() { const l = ENGINE.level; const curLen = getRealLength(ENGINE); if (curLen === l.reqLen && ENGINE.intersections === l.reqInt) { const allMustPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const allMustCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (allMustPass && allMustCross) { return true; } } return false; }
     function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); $('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); $('winModal').classList.remove('hidden'); SOUND_BUS.play("C5", "8n"); } }
     
-    function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { const { x, y } = UNPACK(key); const { w, h } = l.grid; if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false; if (ENGINE.mode === EDITOR && l.gooseSet.has(key)) return false; const lastK = path[path.length - 1]; if (lastK === undefined) return true; if (ENGINE.mode !== EDITOR) { if (lastK === l.goalKey) return false; if (ENGINE.armedFalseGoals.has(lastK)) return false; if (l.gateKeys.includes(key)) return false; } else { if (path.length > 1 && l.gateKeys.includes(lastK)) return false; } if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false; const lastP = UNPACK(lastK); const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key; if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false; const axis = (y === lastP.y) ? H : V; const u = usage.get(key); if (u && ((axis === H && u.h) || (axis === V && u.v))) return false; const uLast = usage.get(lastK); if (uLast) { let entryAxis = NONE; if (path.length > 1 && !jumpSet.has(path.length - 1)) { const prevP = UNPACK(path[path.length - 2]); const lastP_check = UNPACK(lastK); entryAxis = (prevP.y === lastP_check.y) ? H : V; } if (axis !== entryAxis) { if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false; } } let filterLast = l.filterMap.get(lastK); if (filterLast === undefined && l.flippingFilterMap.has(lastK)) { const relevantFlipCount = ENGINE.crossedFlippingFilters.has(lastK) ? ENGINE.crossedFlippingFilters.get(lastK) : ENGINE.flipCount; filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK); } if (filterLast && filterLast !== axis) return false; let filterTarget = l.filterMap.get(key); if (filterTarget === undefined && l.flippingFilterMap.has(key)) { const relevantFlipCount = ENGINE.crossedFlippingFilters.has(key) ? ENGINE.crossedFlippingFilters.get(key) : ENGINE.flipCount; const baseAxis = l.flippingFilterMap.get(key); filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis; } if (filterTarget && filterTarget !== axis) return false; return true; }
+    function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l, runtime = ENGINE) { const { x, y } = UNPACK(key); const { w, h } = l.grid; if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false; if (runtime.mode === EDITOR && l.gooseSet.has(key)) return false; const lastK = path[path.length - 1]; if (lastK === undefined) return true; if (runtime.mode !== EDITOR) { if (lastK === l.goalKey) return false; if (runtime.armedFalseGoals.has(lastK)) return false; if (l.gateKeys.includes(key)) return false; } else { if (path.length > 1 && l.gateKeys.includes(lastK)) return false; } if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false; const lastP = UNPACK(lastK); const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key; if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false; const axis = (y === lastP.y) ? H : V; const u = usage.get(key); if (u && ((axis === H && u.h) || (axis === V && u.v))) return false; const uLast = usage.get(lastK); if (uLast) { let entryAxis = NONE; if (path.length > 1 && !jumpSet.has(path.length - 1)) { const prevP = UNPACK(path[path.length - 2]); const lastP_check = UNPACK(lastK); entryAxis = (prevP.y === lastP_check.y) ? H : V; } if (axis !== entryAxis) { if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false; } } let filterLast = l.filterMap.get(lastK); if (filterLast === undefined && l.flippingFilterMap.has(lastK)) { const relevantFlipCount = runtime.crossedFlippingFilters.has(lastK) ? runtime.crossedFlippingFilters.get(lastK) : runtime.flipCount; filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK); } if (filterLast && filterLast !== axis) return false; let filterTarget = l.filterMap.get(key); if (filterTarget === undefined && l.flippingFilterMap.has(key)) { const relevantFlipCount = runtime.crossedFlippingFilters.has(key) ? runtime.crossedFlippingFilters.get(key) : runtime.flipCount; const baseAxis = l.flippingFilterMap.get(key); filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis; } if (filterTarget && filterTarget !== axis) return false; return true; }
     
     function processStep(key) { const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(ENGINE.logicState) && ENGINE.mode !== EDITOR) return null; if (ENGINE.path.length > 1 && key === ENGINE.path[ENGINE.path.length - 2]) { PathNavigator.truncateTo(ENGINE, ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (isValidMoveEngine(key, ENGINE.path, ENGINE.visitedCounts, ENGINE.cellUsage, ENGINE.intersections, ENGINE.isPortalJump, activeLevel)) { if (ENGINE.mode === EDITOR) ENGINE.editor.isModified = true; if (ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { ENGINE.revealedGeese.add(key); if (!ENGINE.gooseEncounteredThisLevel) { ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } ENGINE.undoStack.push(createSnapshot()); if(ENGINE.undoStack.length > 200) ENGINE.undoStack.shift(); PathNavigator.pushStep(ENGINE, key, false); if (ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { PathNavigator.pushStep(ENGINE, portal.dest, true); ENGINE.ripples.push({x: UNPACK(key).x, y: UNPACK(key).y, startTime: Date.now(), color: portal.color}); ENGINE.ripples.push({x: UNPACK(portal.dest).x, y: UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
     
@@ -1117,7 +1090,7 @@
     
     function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); $('themeSelectFooter').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); $('themeSelectFooter').classList.add('hidden'); } }
     function isModalActive() { return !$('guideModal').classList.contains('hidden') || !$('editorHelpModal').classList.contains('hidden') || !$('winModal').classList.contains('hidden') || !$('megaModal').classList.contains('hidden') || !$('themeModal').classList.contains('hidden') || !$('unsavedModal').classList.contains('hidden'); }
-    function switchMode(newMode) { if (ENGINE.mode === EDITOR && newMode === PLAY) { if (ENGINE.editor.pendingPortal) { showMessage("Finish portal pair first!", "text-red-500 font-bold"); return; } } const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').style.display = isEd ? 'none' : 'flex'; $('editorMetrics').style.display = isEd ? 'flex' : 'none'; $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); $('themeSelectFooter').classList.remove('hidden'); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); updateCompletionUI(); showMessage("", ""); }
+    function switchMode(newMode) { if (ENGINE.mode === EDITOR && newMode === PLAY) { if (ENGINE.editor.pendingPortal) { showMessage("Finish portal pair first!", "text-red-500 font-bold"); return; } } const isEd = newMode === EDITOR; SolverFacade.cancel('switch-mode'); Engine.setMode(newMode, 'switchMode'); setLogicState(IDLE, 'switch-mode'); setOverlayState(OVERLAY_NONE, 'switch-mode'); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); UI.setModeUI(newMode); const exportArea = $('exportArea'); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); $('themeSelectFooter').classList.remove('hidden'); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); updateCompletionUI(); showMessage("", ""); }
     function updatePencilState() { const btn = $('editPencilBtn'); const svg = btn.querySelector('svg'); if (ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
     function saveEditorState() { ENGINE.editor.isModified = true; ENGINE.editor.undoStack.push(deepCloneLevel(ENGINE.editor.workingLevel)); if (ENGINE.editor.undoStack.length > 50) ENGINE.editor.undoStack.shift(); ENGINE.hinter.pathList = []; }
     function restoreEditorState() { if (ENGINE.editor.undoStack.length === 0) return; ENGINE.editor.isModified = true; ENGINE.editor.workingLevel = ENGINE.editor.undoStack.pop(); let newPending = null; ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); ENGINE.editor.pendingPortal = newPending; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); showMessage("Undo Grid Action", "text-slate-500"); }
@@ -1196,50 +1169,30 @@
         else if (ENGINE.mode === EDITOR) { const curLen = getRealLength(ENGINE); const lMet = $('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${ENGINE.intersections})`; }
     }
     
-    async function runGameSolver() { 
-        if (ENGINE.activeSolverController) return; 
-        
-        ENGINE.activeSolverController = new AbortController(); 
-        setOverlayState(SOLVER_RUNNING);
-        
-        const uiTimer = $('solverTimer'); 
-        const searchLabel = $('searchLabel'); 
-        const startTime = Date.now();
-
-        try { 
-            const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; 
-            const solutions = await PathfinderSolver.solve(activeLevel, { 
-                timeLimit: 105000, 
-                signal: ENGINE.activeSolverController.signal, 
-                onStateUpdate: (msg) => { 
-                    searchLabel.innerText = msg; 
-                    showMessage(msg, "text-sky-600"); 
-                }, 
-                onProgress: (elapsedMs) => { uiTimer.innerText = (elapsedMs / 1000).toFixed(1) + 's'; } 
-            }); 
-            
-            if (solutions.length > 0) { 
-                const paths = solutions.map(s => s.path); 
-                if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); } 
-                ENGINE.hinter.pathList = paths; 
-                ENGINE.hinter.source = 'dynamic'; 
-                ENGINE.hinter.currentPathIdx = 0; 
-                outEl.value = JSON.stringify(paths).replace(/\s/g, ''); 
-                startHintAnimation(); 
-            } else { 
-                outEl.value = "No strict solutions found."; 
-                showMessage("No valid path found.", "text-amber-600"); 
-                setOverlayState(OVERLAY_NONE);
-            } 
-        } catch (err) { 
-            setOverlayState(OVERLAY_NONE);
-            if (err.name === 'AbortError') { showMessage("Solver cancelled.", "text-amber-600"); } 
-            else { console.error("Solver error:", err); } 
-        } finally { 
-            ENGINE.activeSolverController = null; 
-        } 
+    async function runGameSolver() {
+        try {
+            const paths = await SolverFacade.solveLevel(ENGINE.levelIdx, { timeLimit: 105000 });
+            if (paths.length > 0) {
+                if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
+                ENGINE.hinter.pathList = paths;
+                ENGINE.hinter.source = 'dynamic';
+                ENGINE.hinter.currentPathIdx = 0;
+                outEl.value = JSON.stringify(paths).replace(/\s/g, '');
+                startHintAnimation();
+            } else {
+                outEl.value = "No strict solutions found.";
+                showMessage("No valid path found.", "text-amber-600");
+                setOverlayState(OVERLAY_NONE, 'solver-empty');
+            }
+        } catch (err) {
+            setOverlayState(OVERLAY_NONE, 'solver-error');
+            if (err.name === 'AbortError') { showMessage("Solver cancelled.", "text-amber-600"); }
+            else { console.error("Solver error:", err); }
+        } finally {
+            ENGINE.activeSolverController = null;
+        }
     }
-    
+
     function startHintAnimation() { 
         if (!ENGINE.hinter.pathList.length) return; 
         setOverlayState(HINT_ANIMATING);
@@ -1424,7 +1377,7 @@
             if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return;
             if (!isHintExpanded) { toggleHint(); updateHintLabel(); } else {
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
-                if (isTopHalf) runGameSolver(); else { if (ENGINE.level?.hints?.length > 0) { ENGINE.hinter.pathList = ENGINE.level.hints; ENGINE.hinter.currentPathIdx = (ENGINE.hinter.source === 'saved' ? (ENGINE.hinter.currentPathIdx + 1) % ENGINE.hinter.pathList.length : 0); ENGINE.hinter.source = 'saved'; startHintAnimation(); } else showMessage("No saved hint.", "text-white font-black"); }
+                if (isTopHalf) runGameSolver(); else { if (ENGINE.level?.hints?.length > 0) { const savedPaths = (ENGINE.level?.hints || []).filter(p => Engine.validatePath(p, ENGINE.level, { allowEditorLooseRules: false }).ok); if (!savedPaths.length) { showMessage('Saved hint invalid.', 'text-amber-600'); return; } ENGINE.hinter.pathList = savedPaths; ENGINE.hinter.currentPathIdx = (ENGINE.hinter.source === 'saved' ? (ENGINE.hinter.currentPathIdx + 1) % ENGINE.hinter.pathList.length : 0); ENGINE.hinter.source = 'saved'; startHintAnimation(); } else showMessage("No saved hint.", "text-white font-black"); }
                 toggleHint(); updateHintLabel();
             }
         };
@@ -1545,8 +1498,10 @@
             loader.start();
         };
 
+        UI.init();
         startBoot();
         applyTheme('classic');
+        if (ENGINE.isDevMode) Engine.runSanityChecks();
     };
 </script>
 </body>
