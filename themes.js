@@ -326,17 +326,102 @@ window.THEMES_MORE = {
     }
 };
 
-(function applyLeaveThemeColors() {
-    const leaveFor = (theme) => {
-        const base = theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#dc2626';
-        const hex = (base || '').replace('#', '');
-        let r = 220, g = 38, b = 38;
-        if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
-        const hover = `#${Math.max(0, Math.floor(r * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.85)).toString(16).padStart(2, '0')}`;
-        const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
-        return { bg: base, hover, text: luminance > 0.55 ? '#0f172a' : '#ffffff', border: hover };
+(function normalizeThemeColors() {
+    const CLASSIC_LEAVE = { bg: '#dc2626', hover: '#b91c1c', text: '#ffffff', border: '#b91c1c' };
+
+    const toRgb = (hex, fallback = { r: 220, g: 38, b: 38 }) => {
+        const normalized = (hex || '').replace('#', '');
+        if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return fallback;
+        return { r: parseInt(normalized.slice(0, 2), 16), g: parseInt(normalized.slice(2, 4), 16), b: parseInt(normalized.slice(4, 6), 16) };
     };
+
+    const darkenHex = (hex, factor = 0.85) => {
+        const { r, g, b } = toRgb(hex);
+        return `#${Math.max(0, Math.floor(r * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * factor)).toString(16).padStart(2, '0')}`;
+    };
+
+    const leaveFor = (theme) => {
+        const fallbackBase = theme.headerRight || theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#7f1d1d';
+        const leave = theme.leave || {};
+        let bg = leave.bg || fallbackBase;
+        if (bg.toLowerCase() === CLASSIC_LEAVE.bg) bg = theme.headerLeft || theme.colors?.goal || '#7f1d1d';
+        let hover = leave.hover || darkenHex(bg, 0.85);
+        if (hover.toLowerCase() === CLASSIC_LEAVE.hover) hover = darkenHex(bg, 0.78);
+        const { r, g, b } = toRgb(bg);
+        const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+        return { bg, hover, text: leave.text || (luminance > 0.55 ? '#0f172a' : '#ffffff'), border: leave.border || hover };
+    };
+
+    const normalize = (theme) => {
+        const t = theme || {};
+        t.btns = t.btns || {};
+        t.modal = t.modal || {};
+        t.output = t.output || {};
+        t.colors = t.colors || {};
+        t.palette = t.palette || {};
+        t.win = t.win || {};
+        t.alert = t.alert || {};
+        t.ctrlArea = t.ctrlArea || {};
+
+        t.bodyBg = t.bodyBg || '#e0f2fe';
+        t.canvasBg = t.canvasBg || '#ffffff';
+        t.grid = t.grid || '#94a3b8';
+        t.headerLeft = t.headerLeft || '#dc2626';
+        t.headerRight = t.headerRight || '#2563eb';
+        t.path = t.path || '#2563eb';
+        t.controls = t.controls || 'rgba(255, 255, 255, 0.7)';
+        t.metricText = t.metricText || '#ffffff';
+        t.headerLeftText = t.headerLeftText || '#ffffff';
+        t.headerLeftLabel = t.headerLeftLabel || 'rgba(255, 255, 255, 0.7)';
+        t.ghostBg = t.ghostBg || t.canvasBg;
+        t.ghostBorder = t.ghostBorder || t.headerRight;
+
+        const btnFallbacks = { undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight, hint: t.headerRight, saved: t.headerRight, mega: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight, copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, solve: t.headerRight, editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight };
+        Object.keys(btnFallbacks).forEach((btnKey) => { t.btns[btnKey] = t.btns[btnKey] || btnFallbacks[btnKey]; });
+
+        t.modal.bg = t.modal.bg || 'rgba(248, 250, 252, 0.95)';
+        t.modal.panelBg = t.modal.panelBg || t.canvasBg;
+        t.modal.border = t.modal.border || t.grid;
+        t.modal.text = t.modal.text || t.headerRight;
+        t.modal.textMuted = t.modal.textMuted || t.grid;
+        t.modal.accent = t.modal.accent || t.headerLeft;
+
+        t.output.bg = t.output.bg || t.bodyBg;
+        t.output.text = t.output.text || t.modal.text;
+
+        t.colors.gate = t.colors.gate || t.headerRight;
+        t.colors.goal = t.colors.goal || t.headerLeft;
+        t.colors.block = t.colors.block || t.canvasBg;
+        t.colors.pin = t.colors.pin || t.colors.goal;
+        t.colors.pinUnflipped = t.colors.pinUnflipped || t.grid;
+        t.colors.filter = t.colors.filter || t.modal.text;
+        t.colors.portal = t.colors.portal || t.headerRight;
+        t.colors.cross = t.colors.cross || t.colors.filter;
+
+        t.palette.bg = t.palette.bg || t.bodyBg;
+        t.palette.border = t.palette.border || t.grid;
+        t.palette.itemBg = t.palette.itemBg || t.canvasBg;
+        t.palette.itemBorder = t.palette.itemBorder || t.grid;
+        t.palette.toolBg = t.palette.toolBg || t.palette.bg;
+
+        t.win.bg = t.win.bg || t.canvasBg;
+        t.win.border = t.win.border || t.headerRight;
+        t.win.text = t.win.text || t.modal.textMuted;
+        t.win.accent = t.win.accent || t.modal.accent;
+
+        t.alert.bg = t.alert.bg || t.headerLeft;
+        t.alert.stroke = t.alert.stroke || t.grid;
+
+        t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
+        t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
+
+        t.burst = t.burst || t.palette.itemBg;
+        t.check = t.check || t.colors.filter;
+        t.leave = leaveFor(t);
+        return t;
+    };
+
     Object.keys(window.THEMES_MORE).forEach((key) => {
-        window.THEMES_MORE[key].leave = leaveFor(window.THEMES_MORE[key]);
+        window.THEMES_MORE[key] = normalize(window.THEMES_MORE[key]);
     });
 })();
