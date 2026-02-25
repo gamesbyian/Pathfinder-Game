@@ -1067,7 +1067,7 @@
     const cvs = $('gameCanvas'); const ctx = cvs.getContext('2d'); const msgEl = $('message'); const outEl = $('solutionOutput'); const winOutEl = $('winSolutionOutput'); const ghostEl = $('dragGhost');
     
     function transformPoint(x, y, variant, W, H) { switch (variant) { case 0: return { tx: x, ty: y }; case 1: return { tx: H - 1 - y, ty: x }; case 2: return { tx: W - 1 - x, ty: H - 1 - y }; case 3: return { tx: y, ty: W - 1 - x }; case 4: return { tx: W - 1 - x, ty: y }; case 5: return { tx: x, ty: H - 1 - y }; case 6: return { tx: y, ty: x }; case 7: return { tx: H - 1 - y, ty: W - 1 - x }; default: return { tx: x, ty: y }; } }
-    function inverseTransformPoint(tx, ty, variant, W, H) { switch (variant) { case 0: return { x: tx, y: ty }; case 1: return { x: ty, y: H - 1 - tx }; case 2: return { x: W - 1 - tx, y: H - 1 - ty }; case 3: return { x: W - 1 - ty, y: tx }; case 4: return { x: W - 1 - tx, y: ty }; case 5: return { x: tx, y: H - 1 - ty }; case 6: return { x: ty, y:tx }; case 7: return { x: W - 1 - ty, y: H - 1 - tx }; default: return { x: tx, ty: y }; } }
+    function inverseTransformPoint(tx, ty, variant, W, H) { switch (variant) { case 0: return { x: tx, y: ty }; case 1: return { x: ty, y: H - 1 - tx }; case 2: return { x: W - 1 - tx, y: H - 1 - ty }; case 3: return { x: W - 1 - ty, y: tx }; case 4: return { x: W - 1 - tx, y: ty }; case 5: return { x: tx, y: H - 1 - ty }; case 6: return { x: ty, y:tx }; case 7: return { x: W - 1 - ty, y: H - 1 - tx }; default: return { x: tx, y: ty }; } }
     function transformAxis(axis, variant) { const swaps = [1, 3, 6, 7]; if (swaps.includes(variant)) { if (axis === H) return V; if (axis === V) return H; } return axis; }
     function getGridCoord(e) { const rect = cvs.getBoundingClientRect(); const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (cvs.width / rect.width) / ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (cvs.height / rect.height) / ENGINE.viewport.cellH))); return inverseTransformPoint(tx, ty, ENGINE.variant, l.grid.w, l.grid.h); }
     
@@ -1105,49 +1105,63 @@
     function createSnapshot() { return { path: [...ENGINE.path], isPortalJump: new Set(ENGINE.isPortalJump), activeGateKey: ENGINE.activeGateKey, logicState: ENGINE.logicState, detonatedFalseGoals: new Set(ENGINE.detonatedFalseGoals) }; }
     function applySnapshot(snap) { ENGINE.path = [...snap.path]; ENGINE.isPortalJump = new Set(snap.isPortalJump); ENGINE.activeGateKey = snap.activeGateKey; setLogicState(snap.logicState); ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); ENGINE.armedFalseGoals = armed; rebuildDerivedPathState(ENGINE); showMessage("", ""); }
     
-    const SolverCore = {
-        _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet) {
-            const { x, y } = UNPACK(key);
-            const { w, h } = l.grid;
-            if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false;
-            if (l.gooseSet.has(key)) return false;
-            const lastK = path[path.length - 1];
-            if (lastK === undefined) return true;
+    function isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) {
+        const { x, y } = UNPACK(key);
+        const { w, h } = l.grid;
+        if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false;
+        if (ctx.mode === EDITOR && l.gooseSet.has(key)) return false;
+        const lastK = path[path.length - 1];
+        if (lastK === undefined) return true;
+        if (ctx.mode !== EDITOR) {
             if (lastK === l.goalKey) return false;
+            if (ctx.armedFalseGoals?.has(lastK)) return false;
             if (l.gateKeys.includes(key)) return false;
-            if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
-            const lastP = UNPACK(lastK);
-            const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key;
-            if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
-            const axis = (y === lastP.y) ? H : V;
-            const u = usage.get(key);
-            if (u && ((axis === H && u.h) || (axis === V && u.v))) return false;
-            const uLast = usage.get(lastK);
-            if (uLast) {
-                let entryAxis = NONE;
-                if (path.length > 1 && !jumpSet.has(path.length - 1)) {
-                    const prevP = UNPACK(path[path.length - 2]);
-                    const lastP_check = UNPACK(lastK);
-                    entryAxis = (prevP.y === lastP_check.y) ? H : V;
-                }
-                if (axis !== entryAxis) {
-                    if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false;
-                }
+        } else if (path.length > 1 && l.gateKeys.includes(lastK)) return false;
+        if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
+        const lastP = UNPACK(lastK);
+        const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key;
+        if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
+        const axis = (y === lastP.y) ? H : V;
+        const u = usage.get(key);
+        if (u && ((axis === H && u.h) || (axis === V && u.v))) return false;
+        const uLast = usage.get(lastK);
+        if (uLast) {
+            let entryAxis = NONE;
+            if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+                const prevP = UNPACK(path[path.length - 2]);
+                const lastP_check = UNPACK(lastK);
+                entryAxis = (prevP.y === lastP_check.y) ? H : V;
             }
-            let filterLast = l.filterMap.get(lastK);
-            if (filterLast === undefined && l.flippingFilterMap.has(lastK)) {
-                const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
-                filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK);
+            if (axis !== entryAxis) {
+                if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false;
             }
-            if (filterLast && filterLast !== axis) return false;
-            let filterTarget = l.filterMap.get(key);
-            if (filterTarget === undefined && l.flippingFilterMap.has(key)) {
-                const relevantFlipCount = crossedSet.has(key) ? crossedSet.get(key) : flipCount;
-                const baseAxis = l.flippingFilterMap.get(key);
-                filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
-            }
-            if (filterTarget && filterTarget !== axis) return false;
-            return true;
+        }
+        const flipCount = ctx.flipCount || 0;
+        const crossedSet = ctx.crossedSet || ctx.crossedFlippingFilters || new Map();
+        let filterLast = l.filterMap.get(lastK);
+        if (filterLast === undefined && l.flippingFilterMap.has(lastK)) {
+            const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+            filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK);
+        }
+        if (filterLast && filterLast !== axis) return false;
+        let filterTarget = l.filterMap.get(key);
+        if (filterTarget === undefined && l.flippingFilterMap.has(key)) {
+            const relevantFlipCount = crossedSet.has(key) ? crossedSet.get(key) : flipCount;
+            const baseAxis = l.flippingFilterMap.get(key);
+            filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
+        }
+        if (filterTarget && filterTarget !== axis) return false;
+        return true;
+    }
+
+    const SolverCore = {
+        _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet, options = {}) {
+            return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, {
+                mode: PLAY,
+                flipCount,
+                crossedSet,
+                hazardPolicy: options.hazardPolicy || 'forbid'
+            });
         },
         _buildDistMap(l) {
             const { w, h } = l.grid;
@@ -1313,7 +1327,13 @@
             }
             return best;
         },
-        _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l) {
+        _hazardDecisionForKey(key, state, l, options = {}) {
+            if (!l.gooseSet.has(key)) return { allowed: true, terminal: false };
+            const policy = options.hazardPolicy || 'forbid';
+            if (policy === 'allow_dead_end') return { allowed: true, terminal: true };
+            return { allowed: false, terminal: true };
+        },
+        _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch) {
             const { w, h } = l.grid;
             const p = UNPACK(k);
             const candidates = [];
@@ -1332,26 +1352,31 @@
             const cEnd = (pEnd.x + pEnd.y) % 2;
             const curLen = state.path.length - 1 - state.isJump.size;
             const hasMust = state.mustMask !== 0n;
-            const mustBoundCache = new Map();
             const crossNeed = this._crossNeeds(state);
-            const crossDistCache = crossNeed > 0 ? new Map() : null;
+            const mustBoundCache = scratch.mustBoundCache;
+            const crossDistCache = scratch.crossDistCache;
+            const mustCachePrefix = `${state.mustMask.toString()}|`;
+            const crossCachePrefix = `${state.mustCrossMask?.toString() || '0'}|${crossNeed}|`;
             const getMustBound = (key) => {
                 if (!hasMust) return 0;
-                if (mustBoundCache.has(key)) return mustBoundCache.get(key);
+                const cKey = mustCachePrefix + key;
+                if (mustBoundCache.has(cKey)) return mustBoundCache.get(cKey);
                 const bound = this._estimateMustPassBoundFrom(key, state, l);
-                mustBoundCache.set(key, bound);
+                mustBoundCache.set(cKey, bound);
                 return bound;
             };
             const getCrossBound = (key) => {
                 if (crossNeed <= 0) return 0;
-                if (crossDistCache.has(key)) return crossDistCache.get(key);
+                const cKey = crossCachePrefix + key;
+                if (crossDistCache.has(cKey)) return crossDistCache.get(cKey);
                 const dNearest = this._nearestOutstandingMustCrossDist(key, state, l);
                 const b = dNearest === Infinity ? Infinity : dNearest + Math.max(0, crossNeed - 1);
-                crossDistCache.set(key, b);
+                crossDistCache.set(cKey, b);
                 return b;
             };
             const valid = candidates.filter(nk => {
-                if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers)) return false;
+                if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) return false;
+                if (!this._hazardDecisionForKey(nk, state, l, options).allowed) return false;
                 const isP = (portalDest === nk && portalForced);
                 const nLen = curLen + (isP ? 0 : 1);
                 const rSteps = l.reqLen - nLen;
@@ -1515,6 +1540,8 @@
         async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options) {
             const mustCount = l.mustPassKeys.length;
             const mustCrossCount = l.mustCrossKeys.length;
+            options = options || {};
+            options.hazardPolicy = options.hazardPolicy || 'forbid';
             const state = {
                 path: [startKey],
                 counts: new Map(),
@@ -1530,6 +1557,7 @@
                 mustCrossMask: mustCrossCount > 0 ? ((1n << BigInt(mustCrossCount)) - 1n) : 0n,
                 mustCrossCounts: mustCrossCount > 0 ? new Uint8Array(mustCrossCount) : null
             };
+            const scratch = { mustBoundCache: new Map(), crossDistCache: new Map() };
             state.counts.set(startKey, 1);
             const startMustIdx = l.mustPassIndex ? l.mustPassIndex.get(startKey) : undefined;
             if (startMustIdx !== undefined) state.mustMask &= ~(1n << BigInt(startMustIdx));
@@ -1545,7 +1573,7 @@
                 state.flipParity = state.flipCount % 2;
             }
             const failedStates = new Set();
-            const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l);
+            const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch);
             const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: this._stateSignature(state, l, 0) }];
             let steps = 0;
             while (stack.length > 0) {
@@ -1567,7 +1595,8 @@
                 const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
                 const transLog = this._pushState(state, nextKey, isP, l);
                 const lastK = state.path[state.path.length - 1];
-                if (l.gooseSet.has(nextKey)) {
+                const hazard = this._hazardDecisionForKey(nextKey, state, l, options);
+                if (!hazard.allowed) {
                     this._popState(state, transLog);
                     continue;
                 }
@@ -1621,12 +1650,18 @@
                     this._popState(state, transLog);
                     continue;
                 }
-                const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l);
+                if (hazard.terminal) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch);
                 stack.push({ k: nextKey, neighbors, log: transLog, sig });
             }
             return null;
         },
         async _solveTrapSpots(startKey, l, validSpotsSet, options) {
+            options = options || {};
+            options.hazardPolicy = options.hazardPolicy || 'forbid';
             const { w, h } = l.grid;
             const state = { path: [startKey], counts: new Map(), usage: new Map(), ints: 0, isJump: new Set(), flipCount: 0, crossedFlippers: new Map() };
             state.counts.set(startKey, 1);
@@ -1643,7 +1678,7 @@
                     const nx = p.x + dx, ny = p.y + dy;
                     if (inBounds(nx, ny, w, h)) candidates.push(PACK(nx, ny));
                 });
-                return candidates.filter(nk => this._isMoveValid(nk, s.path, s.counts, s.usage, s.ints, s.isJump, l, s.flipCount, s.crossedFlippers));
+                return candidates.filter(nk => this._isMoveValid(nk, s.path, s.counts, s.usage, s.ints, s.isJump, l, s.flipCount, s.crossedFlippers, options) && this._hazardDecisionForKey(nk, s, l, options).allowed);
             };
             const stack = [{ k: startKey, neighbors: getNeighbors(startKey, state), log: [] }];
             let steps = 0;
@@ -1664,7 +1699,8 @@
                 const topPortal = resolvePortal(l, top.k);
                 const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
                 const transLog = this._pushState(state, nextKey, isP, l);
-                if (l.gooseSet.has(nextKey)) {
+                const hazard = this._hazardDecisionForKey(nextKey, state, l, options);
+                if (!hazard.allowed) {
                     this._popState(state, transLog);
                     continue;
                 }
@@ -1675,6 +1711,10 @@
                 }
                 if (realLen === l.reqLen) {
                     if (state.ints === l.reqInt && this._checkFinalConstraints(state, l)) validSpotsSet.add(nextKey);
+                    this._popState(state, transLog);
+                    continue;
+                }
+                if (hazard.terminal) {
                     this._popState(state, transLog);
                     continue;
                 }
@@ -1689,7 +1729,7 @@
     // ======================================================
     const PathfinderSolver = {
         async solve(level, options = {}) {
-            const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null } = options;
+            const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
             const startTime = Date.now();
             const foundSolutions = [];
             if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
@@ -1843,7 +1883,7 @@
             for (const gateKey of validGates) {
                 if (foundSolutions.length >= maxSolutions) break;
                 await new Promise(r => setTimeout(r, 0));
-                const internalOpts = { timeLimit, startTime, onProgress, signal };
+                const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
                 const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, cellUsageFreq, level, internalOpts);
                 if (result) {
                     const solStr = JSON.stringify(result.path);
@@ -1856,14 +1896,14 @@
             return foundSolutions;
         },
         async findTrapSpots(level, options = {}) {
-            const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null } = options;
+            const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
             const startTime = Date.now();
             const validSpots = new Set();
             if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
             onStateUpdate(`Mapping Traps (${level.gateKeys.length} gates)...`);
             for (const gateKey of level.gateKeys) {
                 await new Promise(r => setTimeout(r, 0));
-                const internalOpts = { timeLimit, startTime, onProgress, signal };
+                const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
                 await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts);
                 if (Date.now() - startTime > timeLimit) break;
             }
@@ -1879,7 +1919,7 @@
     function checkFalseGoalCondition() { const l = ENGINE.level; const curLen = getRealLength(ENGINE); if (curLen === l.reqLen && ENGINE.intersections === l.reqInt) { const allMustPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const allMustCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (allMustPass && allMustCross) { return true; } } return false; }
     function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); $('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); $('winModal').classList.remove('hidden'); SOUND_BUS.play("C5", "8n"); } }
     
-    function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { const { x, y } = UNPACK(key); const { w, h } = l.grid; if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false; if (ENGINE.mode === EDITOR && l.gooseSet.has(key)) return false; const lastK = path[path.length - 1]; if (lastK === undefined) return true; if (ENGINE.mode !== EDITOR) { if (lastK === l.goalKey) return false; if (ENGINE.armedFalseGoals.has(lastK)) return false; if (l.gateKeys.includes(key)) return false; } else { if (path.length > 1 && l.gateKeys.includes(lastK)) return false; } if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false; const lastP = UNPACK(lastK); const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key; if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false; const axis = (y === lastP.y) ? H : V; const u = usage.get(key); if (u && ((axis === H && u.h) || (axis === V && u.v))) return false; const uLast = usage.get(lastK); if (uLast) { let entryAxis = NONE; if (path.length > 1 && !jumpSet.has(path.length - 1)) { const prevP = UNPACK(path[path.length - 2]); const lastP_check = UNPACK(lastK); entryAxis = (prevP.y === lastP_check.y) ? H : V; } if (axis !== entryAxis) { if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false; } } let filterLast = l.filterMap.get(lastK); if (filterLast === undefined && l.flippingFilterMap.has(lastK)) { const relevantFlipCount = ENGINE.crossedFlippingFilters.has(lastK) ? ENGINE.crossedFlippingFilters.get(lastK) : ENGINE.flipCount; filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK); } if (filterLast && filterLast !== axis) return false; let filterTarget = l.filterMap.get(key); if (filterTarget === undefined && l.flippingFilterMap.has(key)) { const relevantFlipCount = ENGINE.crossedFlippingFilters.has(key) ? ENGINE.crossedFlippingFilters.get(key) : ENGINE.flipCount; const baseAxis = l.flippingFilterMap.get(key); filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis; } if (filterTarget && filterTarget !== axis) return false; return true; }
+    function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, { mode: ENGINE.mode, armedFalseGoals: ENGINE.armedFalseGoals, flipCount: ENGINE.flipCount, crossedSet: ENGINE.crossedFlippingFilters }); }
     
     function processStep(key) { const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(ENGINE.logicState) && ENGINE.mode !== EDITOR) return null; if (ENGINE.path.length > 1 && key === ENGINE.path[ENGINE.path.length - 2]) { PathNavigator.truncateTo(ENGINE, ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (isValidMoveEngine(key, ENGINE.path, ENGINE.visitedCounts, ENGINE.cellUsage, ENGINE.intersections, ENGINE.isPortalJump, activeLevel)) { if (ENGINE.mode === EDITOR) ENGINE.editor.isModified = true; if (ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { ENGINE.revealedGeese.add(key); if (!ENGINE.gooseEncounteredThisLevel) { ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } ENGINE.undoStack.push(createSnapshot()); if(ENGINE.undoStack.length > 200) ENGINE.undoStack.shift(); PathNavigator.pushStep(ENGINE, key, false); if (ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { PathNavigator.pushStep(ENGINE, portal.dest, true); ENGINE.ripples.push({x: UNPACK(key).x, y: UNPACK(key).y, startTime: Date.now(), color: portal.color}); ENGINE.ripples.push({x: UNPACK(portal.dest).x, y: UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
     
