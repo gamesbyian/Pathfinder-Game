@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <style>
-        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; }
+        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; }
         canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: white; }
         .modal { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
@@ -106,7 +106,7 @@
             </div>
             <div id="headerMiddle" class="w-[30%] flex-shrink-0 bg-red-700 flex items-center justify-center transition-colors duration-300 relative border-r border-slate-200/20">
                 <div class="absolute left-[40%] top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                    <svg id="completionBurst" viewBox="0 0 100 100" class="w-8 h-8 hidden"><use href="#def-completion"/></svg>
+                    <svg id="completionBurst" viewBox="0 0 100 100" class="w-[1.86rem] h-8 hidden"><use href="#def-completion"/></svg>
                     <div class="flex flex-col items-center">
                         <span id="levelLabelText" class="text-[0.6rem] font-black text-red-100/60 uppercase tracking-widest leading-none mb-1">Level</span>
                         <p id="levelTitle" class="text-white font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
@@ -209,7 +209,7 @@
                     <p class="mb-6 font-medium text-[var(--theme-modal-text)]">Do you need to export this level?</p>
                     <div class="flex justify-center gap-4">
                         <button id="unsavedStayBtn" class="font-bold uppercase tracking-widest transition px-4 py-2 rounded-lg bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] hover:brightness-95">Stay</button>
-                        <button id="unsavedLeaveBtn" class="bg-red-600 text-white px-6 py-2 rounded-lg font-black hover:bg-red-700 transition uppercase tracking-widest shadow-md">Leave</button>
+                        <button id="unsavedLeaveBtn" class="px-6 py-2 rounded-lg font-black transition uppercase tracking-widest shadow-md border bg-[var(--theme-leave-bg)] text-[var(--theme-leave-text)] border-[var(--theme-leave-border)] hover:bg-[var(--theme-leave-hover)]">Leave</button>
                     </div>
                 </div>
             </div>
@@ -696,8 +696,28 @@
     // ======================================================
     // I) Themes
     // ======================================================
+
+    function getLeaveThemeColors(theme, isClassic = false) {
+        if (theme.leave) return theme.leave;
+        if (isClassic) return { bg: '#dc2626', hover: '#b91c1c', text: '#ffffff', border: '#b91c1c' };
+        const base = theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#dc2626';
+        const hex = (base || '').replace('#','');
+        let r = 220, g = 38, b = 38;
+        if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
+        const hover = `#${Math.max(0, Math.floor(r * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.85)).toString(16).padStart(2, '0')}`;
+        const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+        const text = luminance > 0.55 ? '#0f172a' : '#ffffff';
+        return { bg: base, hover, text, border: hover };
+    }
+
+    function ensureThemeLeaveColors() {
+        Object.keys(THEMES).forEach(key => {
+            THEMES[key].leave = getLeaveThemeColors(THEMES[key], key === 'classic');
+        });
+    }
+
     function applyTheme(name) {
-        if (name === 'chaos') { THEMES.chaos = { bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, burst: rc(), check: rc() }; }
+        if (name === 'chaos') { THEMES.chaos = { bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }; }
         currentTheme = name; APP.Themes.currentTheme = currentTheme; const t = THEMES[name]; const root = document.documentElement; 
         root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
         const alertBg = (t.alert?.bg || '#1e40af');
@@ -709,6 +729,8 @@
         root.style.setProperty('--theme-alert-text', alertText);
         root.style.setProperty('--theme-logo-bg', t.canvasBg); root.style.setProperty('--theme-logo-grid', t.grid); root.style.setProperty('--theme-logo-path', t.path === 'rainbow' ? '#3b82f6' : t.path); root.style.setProperty('--theme-logo-gate', t.colors.gate); root.style.setProperty('--theme-logo-goal', t.colors.goal);
         root.style.setProperty('--theme-burst', t.burst || '#fef9c3'); root.style.setProperty('--theme-check', t.check || '#1e293b');
+        const leave = getLeaveThemeColors(t, name === 'classic');
+        root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
         
         document.body.style.backgroundColor = t.bodyBg; cvs.style.backgroundColor = t.canvasBg; 
         $('headerLeft').style.backgroundColor = t.canvasBg;
@@ -2365,7 +2387,8 @@
                     const s = document.createElement('script'); 
                     s.src = "./themes.js"; 
                     s.onload = () => { 
-                        if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE); 
+                        if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
+                        ensureThemeLeaveColors();
                         resolve(); 
                     }; 
                     s.onerror = () => resolve(); 
@@ -2392,6 +2415,7 @@
         };
 
         startBoot();
+        ensureThemeLeaveColors();
         applyTheme('classic');
     };
 </script>
