@@ -922,7 +922,18 @@
             window.ORIGINAL_THEMES = JSON.parse(JSON.stringify(THEMES));
             delete window.ORIGINAL_THEMES['chaos'];
         }
-        const grid = $('themeGrid'); grid.innerHTML = ''; const themeKeys = Object.keys(THEMES); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
+        const grid = $('themeGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+        const themeKeys = Object.keys(THEMES || {}).filter(Boolean);
+        if (!themeKeys.length) {
+            const msg = document.createElement('div');
+            msg.className = 'col-span-3 text-center text-[0.75rem] font-bold uppercase tracking-wider text-[var(--theme-modal-muted)] py-6';
+            msg.innerText = 'No themes available';
+            grid.appendChild(msg);
+            return;
+        }
+        if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
         themeKeys.forEach(key => { const t = THEMES[key] || THEMES.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl hover:bg-slate-100"; btn.onclick = () => { applyTheme(key); $('themeModal').classList.add('hidden'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black text-slate-600 uppercase tracking-widest"; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
     
@@ -1323,8 +1334,40 @@
     
     function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); $('themeSelectFooter').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); $('themeSelectFooter').classList.add('hidden'); } }
     function isModalActive() { return !$('guideModal').classList.contains('hidden') || !$('editorHelpModal').classList.contains('hidden') || !$('winModal').classList.contains('hidden') || !$('megaModal').classList.contains('hidden') || !$('themeModal').classList.contains('hidden') || !$('unsavedModal').classList.contains('hidden'); }
-    function switchMode(newMode) { if (ENGINE.mode === EDITOR && newMode === PLAY) { if (ENGINE.editor.pendingPortal) { showMessage("Finish portal pair first!", "text-red-500 font-bold"); return; } } const isEd = newMode === EDITOR; SolverFacade.cancel('switch-mode'); Engine.setMode(newMode, 'switchMode'); setLogicState(IDLE, 'switch-mode'); setOverlayState(OVERLAY_NONE, 'switch-mode'); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); UI.setModeUI(newMode); const exportArea = $('exportArea'); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); $('themeSelectFooter').classList.remove('hidden'); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); updateCompletionUI(); showMessage("", ""); }
-    function updatePencilState() { const btn = $('editPencilBtn'); const svg = btn.querySelector('svg'); if (ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
+    function switchMode(newMode) { if (ENGINE.mode === EDITOR && newMode === PLAY) { if (ENGINE.editor.pendingPortal) { showMessage("Finish portal pair first!", "text-red-500 font-bold"); return; } } const isEd = newMode === EDITOR; SolverFacade.cancel('switch-mode'); Engine.setMode(newMode, 'switchMode'); setLogicState(IDLE, 'switch-mode'); setOverlayState(OVERLAY_NONE, 'switch-mode'); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); UI.setModeUI(newMode); const exportArea = $('exportArea'); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); setEditorTool(null); $('themeSelectFooter').classList.remove('hidden'); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); updateCompletionUI(); showMessage("", ""); }
+    function updateGridToolState() {
+        document.querySelectorAll('.palette-item[data-type]').forEach(el => {
+            el.classList.toggle('selected', ENGINE.mode === EDITOR && !ENGINE.editor.isPencilMode && ENGINE.editor.selectedTool === el.dataset.type);
+        });
+    }
+    function updatePencilState() {
+        const btn = $('editPencilBtn');
+        if (!btn) return;
+        const svg = btn.querySelector('svg');
+        const active = ENGINE.mode === EDITOR && ENGINE.editor.isPencilMode;
+        btn.classList.toggle('selected', active);
+        if (svg) svg.setAttribute('fill', active ? 'currentColor' : 'none');
+        if (active) ENGINE.editor.selectedTool = null;
+        updateGridToolState();
+    }
+    function setEditorTool(type = null) {
+        ENGINE.editor.selectedTool = type || null;
+        ENGINE.editor.draggedObject = type ? { type } : null;
+        if (type) {
+            ENGINE.editor.isPencilMode = false;
+            setLogicState(EDIT_DRAG, 'editor-tool-select');
+        } else if (ENGINE.logicState === EDIT_DRAG && !ENGINE.editor.draggedObject) {
+            setLogicState(IDLE, 'editor-tool-clear');
+        }
+        updatePencilState();
+    }
+    function isRenderableSolverPath(path, level) {
+        if (!Array.isArray(path) || path.length === 0 || !level?.grid) return false;
+        return path.every((k) => {
+            const p = UNPACK(k);
+            return inBounds(p.x, p.y, level.grid.w, level.grid.h);
+        });
+    }
     function saveEditorState() { ENGINE.editor.isModified = true; ENGINE.editor.undoStack.push(deepCloneLevel(ENGINE.editor.workingLevel)); if (ENGINE.editor.undoStack.length > 50) ENGINE.editor.undoStack.shift(); ENGINE.hinter.pathList = []; }
     function restoreEditorState() { if (ENGINE.editor.undoStack.length === 0) return; ENGINE.editor.isModified = true; ENGINE.editor.workingLevel = ENGINE.editor.undoStack.pop(); let newPending = null; ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); ENGINE.editor.pendingPortal = newPending; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); showMessage("Undo Grid Action", "text-slate-500"); }
     function pickUpObject(k) { if(ENGINE.editor.isPencilMode) return null; saveEditorState(); ENGINE.editor.draggedFromGrid = true; ENGINE.editor.validTrapSpots.clear(); const l = ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (ENGINE.editor.pendingPortal === k) { ENGINE.editor.pendingPortal = null; showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = '#999'; ENGINE.editor.pendingPortal = otherK; showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } return {type: 'portal'}; } ENGINE.editor.undoStack.pop(); ENGINE.editor.draggedFromGrid = false; return null; }
@@ -1404,6 +1447,7 @@
     
     async function runGameSolver() {
         try {
+            const targetLevel = ENGINE.mode === EDITOR ? ENGINE.editor.workingLevel : ENGINE.level;
             const paths = await APP.solver.solveCurrentLevel({
                 timeLimit: 105000,
                 allowEditorLooseRules: ENGINE.mode === EDITOR,
@@ -1412,6 +1456,22 @@
             });
             if (paths.length > 0) {
                 if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
+                const firstPath = paths[0];
+                if (!isRenderableSolverPath(firstPath, targetLevel)) {
+                    outEl.value = 'Solver path invalid/out-of-bounds.';
+                    showMessage('Solver path invalid.', 'text-amber-600');
+                    setOverlayState(OVERLAY_NONE, 'solver-invalid-path');
+                    return;
+                }
+                ENGINE.path = [...firstPath];
+                ENGINE.isPortalJump = new Set();
+                for (let i = 1; i < firstPath.length; i++) {
+                    const prev = firstPath[i - 1];
+                    const portal = resolvePortal(targetLevel, prev);
+                    if (portal && portal.dest === firstPath[i]) ENGINE.isPortalJump.add(i);
+                }
+                ENGINE.activeGateKey = firstPath[0] ?? null;
+                rebuildDerivedPathState(ENGINE);
                 ENGINE.hinter.pathList = paths;
                 ENGINE.hinter.source = 'dynamic';
                 ENGINE.hinter.currentPathIdx = 0;
@@ -1469,7 +1529,7 @@
             $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; 
             $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; 
             ENGINE.editor.isModified = false; 
-            updatePencilState(); 
+            setEditorTool(null); 
         } 
         const lvlStr = `${idx+1}`; 
         $('levelTitle').innerText = lvlStr; 
@@ -1641,7 +1701,7 @@
         $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
         
         const tModal = $('themeModal');
-        $('openThemeModalBtn').onclick = () => { closeAllModals(); tModal.classList.remove('hidden'); };
+        $('openThemeModalBtn').onclick = () => { closeAllModals(); populateThemes(); tModal.classList.remove('hidden'); };
         $('closeThemeModalBtn').onclick = () => tModal.classList.add('hidden');
         $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); const panel = $('themeModalPanel'); panel.classList.remove('max-sm'); panel.classList.add('w-[85vw]', 'h-[85vh]', 'max-w-none'); renderThemeEditors(); };
         const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); const panel = $('themeModalPanel'); panel.classList.add('max-sm', 'w-full'); panel.classList.remove('w-[85vw]', 'h-[85vh]', 'max-w-none'); };
@@ -1679,8 +1739,8 @@
                 ENGINE.activeSolverController = null; 
             } 
         };
-        document.querySelectorAll('.palette-item[data-type]').forEach(el => { el.addEventListener('pointerdown', (e) => { if(ENGINE.mode === EDITOR) { if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.draggedFromGrid = false; ENGINE.editor.emptyClickCount = 0; if (ENGINE.editor.pendingPortal && el.dataset.type !== 'portal' && el.dataset.type !== 'eraser') { showMessage("Finish portal pair!", "text-white font-black"); return; } if (ENGINE.editor.selectedTool === el.dataset.type) { ENGINE.editor.selectedTool = null; el.classList.remove('selected'); } else { ENGINE.editor.selectedTool = el.dataset.type; ENGINE.editor.draggedObject = {type: el.dataset.type}; setLogicState(EDIT_DRAG); document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); el.classList.add('selected'); } ENGINE.editor.isPencilMode = false; updatePencilState(); } }); });
-        $('editPencilBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.isPencilMode = !ENGINE.editor.isPencilMode; if (ENGINE.editor.isPencilMode) { ENGINE.editor.selectedTool = null; document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); } else { setLogicState(IDLE); } updatePencilState(); };
+        document.querySelectorAll('.palette-item[data-type]').forEach(el => { el.addEventListener('pointerdown', (e) => { if(ENGINE.mode === EDITOR) { if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.draggedFromGrid = false; ENGINE.editor.emptyClickCount = 0; if (ENGINE.editor.pendingPortal && el.dataset.type !== 'portal' && el.dataset.type !== 'eraser') { showMessage("Finish portal pair!", "text-white font-black"); return; } e.preventDefault(); if (ENGINE.editor.selectedTool === el.dataset.type && !ENGINE.editor.isPencilMode) setEditorTool(null); else setEditorTool(el.dataset.type); } }); });
+        $('editPencilBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.isPencilMode = !ENGINE.editor.isPencilMode; if (!ENGINE.editor.isPencilMode) { setLogicState(IDLE, 'pencil-off'); } updatePencilState(); };
         
         const eraserBtn = $('editEraserBtn'); let eraserTimer = null, eraserFired = false;
         eraserBtn.addEventListener('pointerdown', (e) => { if (ENGINE.mode !== EDITOR) return; eraserTimer = setTimeout(() => { PathNavigator.clear(ENGINE); showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
@@ -1692,7 +1752,7 @@
         $('editNewLevel').onclick = () => tryNavigate(() => {
             closeAllModals();
             ENGINE.editor.workingLevel = { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [] };
-            PathNavigator.clear(ENGINE); ENGINE.hinter.pathList = []; ENGINE.editor.pendingPortal = null; ENGINE.editor.validTrapSpots.clear(); $('levelTitle').innerText = "??"; $('editReqLen').value = 0; $('editReqInt').value = 0; ENGINE.editor.isPencilMode = false; updatePencilState(); ENGINE.editor.isModified = true; updateViewport(); showMessage("New Level Created", "text-white font-black");
+            PathNavigator.clear(ENGINE); ENGINE.hinter.pathList = []; ENGINE.editor.pendingPortal = null; ENGINE.editor.validTrapSpots.clear(); $('levelTitle').innerText = "??"; $('editReqLen').value = 0; $('editReqInt').value = 0; ENGINE.editor.isPencilMode = false; setEditorTool(null); ENGINE.editor.isModified = true; updateViewport(); showMessage("New Level Created", "text-white font-black");
         });
         $('editHelpBtn').onclick = () => { 
             const isVisible = !$('editorHelpModal').classList.contains('hidden');
@@ -1778,6 +1838,7 @@
                     }
                     this.markStep('validation passed');
                     Object.assign(THEMES, window.THEMES_MORE);
+                    populateThemes();
                     Engine.setDataFromGlobals();
                     this.markStep('Engine.loadLevel start');
                     try { Engine.loadLevel(0); } catch (e) { throw new Error(`Engine.loadLevel failed: ${e?.message || e}`); }
