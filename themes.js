@@ -328,13 +328,31 @@ window.THEMES_MORE = {
 
 (function applyLeaveThemeColors() {
     const leaveFor = (theme) => {
-        const base = theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#dc2626';
-        const hex = (base || '').replace('#', '');
-        let r = 220, g = 38, b = 38;
+        const classic = { bg: '#dc2626', hover: '#b91c1c', border: '#b91c1c' };
+        const requested = theme.leave || {};
+        const baseSource = requested.bg || theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || theme.headerRight || '#2563eb';
+        const hex = (baseSource || '').replace('#', '');
+        let r = 37, g = 99, b = 235;
         if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
-        const hover = `#${Math.max(0, Math.floor(r * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.85)).toString(16).padStart(2, '0')}`;
+
+        let bg = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        if (bg.toLowerCase() === classic.bg) {
+            const sr = Math.max(0, Math.min(255, r - 24));
+            const sg = Math.max(0, Math.min(255, g + 24));
+            const sb = Math.max(0, Math.min(255, b + 24));
+            bg = `#${sr.toString(16).padStart(2, '0')}${sg.toString(16).padStart(2, '0')}${sb.toString(16).padStart(2, '0')}`;
+            r = sr; g = sg; b = sb;
+        }
+
+        let hover = requested.hover || `#${Math.max(0, Math.floor(r * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.85)).toString(16).padStart(2, '0')}`;
+        if (hover.toLowerCase() === classic.hover) {
+            hover = `#${Math.max(0, Math.floor(r * 0.7)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.7)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.7)).toString(16).padStart(2, '0')}`;
+        }
+
         const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
-        return { bg: base, hover, text: luminance > 0.55 ? '#0f172a' : '#ffffff', border: hover };
+        const text = requested.text || (luminance > 0.55 ? '#0f172a' : '#ffffff');
+        const border = requested.border && requested.border.toLowerCase() !== classic.border ? requested.border : hover;
+        return { bg, hover, text, border };
     };
     Object.keys(window.THEMES_MORE).forEach((key) => {
         window.THEMES_MORE[key].leave = leaveFor(window.THEMES_MORE[key]);

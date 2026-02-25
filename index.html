@@ -67,8 +67,8 @@
         <g id="def-flipV"><use href="#def-filterV"/><text x="50" y="55" font-size="45" font-weight="900" font-family="sans-serif" text-anchor="middle" fill="currentColor">↺</text></g>
         <g id="def-close"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></g>
         <g id="def-completion">
-            <path d="M 93.20,50 L 88.25,59.3 L 91.13,69.5 L 82.22,73.5 L 80.60,84.1 L 71.15,82.8 L 65.12,91.2 L 56.75,85.2 L 48.65,91.2 L 40.28,85.2 L 32.00,91.2 L 25.97,82.8 L 16.52,84.1 L 14.90,73.5 L 5.99,69.5 L 8.87,59.3 L 3.92,50 L 8.87,40.7 L 5.99,30.5 L 14.90,26.5 L 16.52,15.9 L 25.97,17.2 L 32.00,8.8 L 40.28,14.8 L 48.65,8.8 L 56.75,14.8 L 65.12,8.8 L 71.15,17.2 L 80.60,15.9 L 82.22,26.5 L 91.13,30.5 L 88.25,40.7 Z" fill="var(--theme-burst)"/>
-            <path d="M35 48 L45 58 L65 38" fill="none" stroke="var(--theme-check)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 93.20,50 L 88.25,59.3 L 91.13,69.5 L 82.22,73.5 L 80.60,84.1 L 71.15,82.8 L 65.12,91.2 L 56.75,85.2 L 48.65,91.2 L 40.28,85.2 L 32.00,91.2 L 25.97,82.8 L 16.52,84.1 L 14.90,73.5 L 5.99,69.5 L 8.87,59.3 L 3.92,50 L 8.87,40.7 L 5.99,30.5 L 14.90,26.5 L 16.52,15.9 L 25.97,17.2 L 32.00,8.8 L 40.28,14.8 L 48.65,8.8 L 56.75,14.8 L 65.12,8.8 L 71.15,17.2 L 80.60,15.9 L 82.22,26.5 L 91.13,30.5 L 88.25,40.7 Z" fill="var(--theme-burst)" transform="translate(50 0) scale(0.923 1) translate(-50 0)"/>
+            <path d="M35 47 L45 57 L65 37" fill="none" stroke="var(--theme-check)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
         </g>
     </defs>
 </svg>
@@ -698,16 +698,33 @@
     // ======================================================
 
     function getLeaveThemeColors(theme, isClassic = false) {
-        if (theme.leave) return theme.leave;
         if (isClassic) return { bg: '#dc2626', hover: '#b91c1c', text: '#ffffff', border: '#b91c1c' };
-        const base = theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#dc2626';
-        const hex = (base || '').replace('#','');
-        let r = 220, g = 38, b = 38;
+
+        const classic = { bg: '#dc2626', hover: '#b91c1c', border: '#b91c1c' };
+        const requested = theme.leave || {};
+        const baseSource = requested.bg || theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || theme.headerRight || '#2563eb';
+        const hex = (baseSource || '').replace('#','');
+        let r = 37, g = 99, b = 235;
         if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
-        const hover = `#${Math.max(0, Math.floor(r * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.85)).toString(16).padStart(2, '0')}`;
+
+        let bg = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        if (bg.toLowerCase() === classic.bg) {
+            const sr = Math.max(0, Math.min(255, r - 24));
+            const sg = Math.max(0, Math.min(255, g + 24));
+            const sb = Math.max(0, Math.min(255, b + 24));
+            bg = `#${sr.toString(16).padStart(2, '0')}${sg.toString(16).padStart(2, '0')}${sb.toString(16).padStart(2, '0')}`;
+            r = sr; g = sg; b = sb;
+        }
+
+        let hover = requested.hover || `#${Math.max(0, Math.floor(r * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.85)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.85)).toString(16).padStart(2, '0')}`;
+        if (hover.toLowerCase() === classic.hover) {
+            hover = `#${Math.max(0, Math.floor(r * 0.7)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * 0.7)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * 0.7)).toString(16).padStart(2, '0')}`;
+        }
+
         const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
-        const text = luminance > 0.55 ? '#0f172a' : '#ffffff';
-        return { bg: base, hover, text, border: hover };
+        const text = requested.text || (luminance > 0.55 ? '#0f172a' : '#ffffff');
+        const border = requested.border && requested.border.toLowerCase() !== classic.border ? requested.border : hover;
+        return { bg, hover, text, border };
     }
 
     function ensureThemeLeaveColors() {
