@@ -35,6 +35,14 @@
         @keyframes shake { 10%, 90% { transform: translate3d(-4px, 0, 0) rotate(-1deg); } 20%, 80% { transform: translate3d(6px, 0, 0) rotate(2deg); } 30%, 50%, 70% { transform: translate3d(-8px, 0, 0) rotate(-2deg); } 40%, 60% { transform: translate3d(8px, 0, 0) rotate(1deg); } }
         @keyframes spin-grow-fade { 0% { transform: scale(1) rotate(0deg); opacity: 1; } 100% { transform: scale(3) rotate(360deg); opacity: 0; } }
         .animate-spin-grow-fade { animation: spin-grow-fade 1s forwards cubic-bezier(0.4, 0, 0.2, 1); }
+        .app-layout { max-width: 65vh; }
+        @media (orientation: landscape) and (min-width: 900px) {
+            .app-layout { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
+            .layout-left-pane { width: min(46vw, 90vh); max-height: 96vh; overflow-y: auto; padding-right: 0.5rem; }
+            .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
+            #themeModal.landscape-left-modal { align-items: flex-start; justify-content: flex-start; padding: 1rem 1rem 1rem 1.5rem; }
+            #themeModal.landscape-left-modal #themeModalPanel { width: min(46vw, 90vh); max-width: min(46vw, 90vh); max-height: calc(100vh - 2rem); }
+        }
         
         .palette-grid { display: grid; grid-template-columns: repeat(6, 2.2rem); gap: 0.35rem; width: max-content; margin: 0; }
         .palette-item { width: 100%; height: 2.2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e1; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; touch-action: none; }
@@ -89,7 +97,8 @@
     </div>
 </div>
 
-<div class="mx-auto flex flex-col h-full w-full max-w-[65vh] justify-start relative gap-[1.5vh] pb-[2vh]">
+<div id="appLayout" class="app-layout mx-auto flex flex-col h-full w-full justify-start relative gap-[1.5vh] pb-[2vh]">
+    <div id="gamePane" class="layout-right-pane">
     <div class="bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-300 flex flex-col shrink-0">
         <div id="headerBar" class="flex h-20 border-b border-slate-200">
             <div id="headerLeft" class="w-[88px] flex-shrink-0 flex items-center justify-center border-r border-slate-200 transition-colors duration-300 bg-[var(--theme-logo-bg)] aspect-square">
@@ -257,7 +266,9 @@
             </div>
         </div>
     </div>
+    </div>
 
+    <div id="controlsPane" class="layout-left-pane">
     <div id="playControls" class="bg-white p-3 rounded-2xl shadow-xl border border-slate-200 relative">
         <div class="relative">
             <div id="gameButtonGrid" class="flex gap-1.5">
@@ -303,6 +314,7 @@
         <button id="muteBtn" class="bg-white/50 backdrop-blur-md text-slate-500 w-[3.25rem] h-[3.25rem] rounded-2xl flex items-center justify-center hover:bg-white/80 transition shrink-0 shadow-lg border border-white/20">
             <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="22"></line><line id="muteSlash" x1="2" y1="2" x2="22" y2="22"></line></svg>
         </button>
+    </div>
     </div>
 </div>
 
@@ -430,6 +442,8 @@
         progressSet: new Set(),
         foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true } 
+        ,ui: { isLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null }
+        ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false }
     };
         return { ENGINE };
     })();
@@ -504,11 +518,21 @@
     }
 
     function updateAppScale() {
-        if (window.innerWidth === ENGINE.viewport.lastWidth) return;
+        if (window.innerWidth === ENGINE.viewport.lastWidth) {
+            updateLayoutMode();
+            return;
+        }
         ENGINE.viewport.lastWidth = window.innerWidth;
         const scale = Math.min(window.innerHeight * 0.02, window.innerWidth * 0.035);
         document.documentElement.style.setProperty('--app-scale', `${scale}px`);
+        updateLayoutMode();
         updateViewport();
+    }
+
+    function updateLayoutMode() {
+        ENGINE.ui.isLandscapeLayout = window.matchMedia('(orientation: landscape)').matches && window.innerWidth >= 900;
+        const themeModal = $('themeModal');
+        if (themeModal) themeModal.classList.toggle('landscape-left-modal', ENGINE.ui.isLandscapeLayout);
     }
 
     const VALID_LOGIC_TRANSITIONS = {
@@ -2047,6 +2071,69 @@
     
     function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); $('themeSelectFooter').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); $('themeSelectFooter').classList.add('hidden'); } }
     function isModalActive() { return !$('guideModal').classList.contains('hidden') || !$('editorHelpModal').classList.contains('hidden') || !$('winModal').classList.contains('hidden') || !$('megaModal').classList.contains('hidden') || !$('themeModal').classList.contains('hidden') || !$('unsavedModal').classList.contains('hidden'); }
+
+    let gamepadGridPrimaryAction = () => {};
+
+    function getFocusableGroups() {
+        const groups = [
+            { name: 'GRID', elements: [$('gameCanvas')] },
+            { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
+            { name: 'LEVEL', elements: [$('prevLevelBtn'), $('nextLevelBtn')].filter(Boolean) }
+        ];
+        if (ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [$('editReqLen'), $('editReqInt')].filter(Boolean) });
+        return groups.filter(g => g.elements.length > 0);
+    }
+
+    function applyFocusVisual(el) {
+        document.querySelectorAll('.gamepad-focus').forEach(node => node.classList.remove('gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2'));
+        if (!el) return;
+        el.classList.add('gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2');
+        if (typeof el.focus === 'function') el.focus({ preventScroll: true });
+    }
+
+    function setFocusGroup(groupName, index = 0) {
+        const groups = getFocusableGroups();
+        const gIdx = Math.max(0, groups.findIndex(g => g.name === groupName));
+        const group = groups[gIdx] || groups[0];
+        if (!group) return;
+        ENGINE.ui.focusGroup = group.name;
+        ENGINE.ui.focusIndex = Math.max(0, Math.min(index, group.elements.length - 1));
+        applyFocusVisual(group.elements[ENGINE.ui.focusIndex]);
+    }
+
+    function cycleFocusGroup() {
+        const groups = getFocusableGroups();
+        if (!groups.length) return;
+        const idx = groups.findIndex(g => g.name === ENGINE.ui.focusGroup);
+        const next = groups[(idx + 1 + groups.length) % groups.length];
+        setFocusGroup(next.name, 0);
+    }
+
+    function moveFocusWithinGroup(delta) {
+        const groups = getFocusableGroups();
+        const group = groups.find(g => g.name === ENGINE.ui.focusGroup);
+        if (!group || !group.elements.length) return;
+        ENGINE.ui.focusIndex = (ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length;
+        applyFocusVisual(group.elements[ENGINE.ui.focusIndex]);
+    }
+
+    function activateFocusedControl() {
+        const groups = getFocusableGroups();
+        const group = groups.find(g => g.name === ENGINE.ui.focusGroup);
+        const el = group?.elements?.[ENGINE.ui.focusIndex];
+        if (!el) return;
+        if (el.id === 'gameCanvas') {
+            gamepadGridPrimaryAction();
+            return;
+        }
+        el.click();
+    }
+
+    function dismissGuideOrHelpModal() {
+        if (!$('guideModal').classList.contains('hidden')) { $('guideModal').classList.add('hidden'); return true; }
+        if (!$('editorHelpModal').classList.contains('hidden')) { $('editorHelpModal').classList.add('hidden'); return true; }
+        return false;
+    }
     function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').style.display = isEd ? 'none' : 'flex'; $('editorMetrics').style.display = isEd ? 'flex' : 'none'; $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); $('themeSelectFooter').classList.remove('hidden'); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); updateCompletionUI(); showMessage("", ""); }
     function updatePencilState() { const btn = $('editPencilBtn'); const svg = btn.querySelector('svg'); if (ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
     function saveEditorState() { ENGINE.editor.isModified = true; ENGINE.editor.undoStack.push(deepCloneLevel(ENGINE.editor.workingLevel)); if (ENGINE.editor.undoStack.length > 50) ENGINE.editor.undoStack.shift(); ENGINE.hinter.pathList = []; }
@@ -2258,6 +2345,12 @@
         $('unsavedStayBtn').onclick = () => { closeAllModals(); pendingAction = null; $('unsavedModal').classList.add('hidden'); };
         $('unsavedLeaveBtn').onclick = () => { closeAllModals(); $('unsavedModal').classList.add('hidden'); if (pendingAction) pendingAction(); };
         
+        const handleGridPressAtPoint = (clientX, clientY) => handleDown({ clientX, clientY });
+        gamepadGridPrimaryAction = () => {
+            const rect = cvs.getBoundingClientRect();
+            handleGridPressAtPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+        };
+
         let activePointerId = null; const handleDown = (e) => {
             if (ENGINE.activeSolverController || [RESOLVED, HAZARD_TRIGGERED].includes(ENGINE.logicState) || [HINT_ANIMATING, FALSE_GOAL_ANIMATING, SOLVER_RUNNING].includes(ENGINE.overlayState)) return;
             const p = getGridCoord(e); const k = PACK(p.x, p.y); const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
@@ -2313,8 +2406,86 @@
             if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = $('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { ghostEl.style.display = 'none'; ghostEl.innerHTML = ''; } if (e.pointerId !== activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) attemptMoveTo(getGridCoord(e));
         });
         window.addEventListener('pointerup', e => { handleUp(e); if (activePointerId !== null && cvs.hasPointerCapture(activePointerId)) cvs.releasePointerCapture(activePointerId); activePointerId = null; });
+
+        [cvs, $('hintBtn'), $('editCopyMetrics')].forEach(el => { if (!el) return; if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); });
+
+        const GAMEPAD_MAP = { A: 0, B: 1, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
+        const GAMEPAD_REPEAT_INITIAL = 220;
+        const GAMEPAD_REPEAT_RATE = 100;
+
+        function gamepadMoveGrid(dx, dy) {
+            if (isModalActive()) return;
+            const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
+            if (!l) return;
+            if (!ENGINE.path.length) {
+                const firstGate = l.gateKeys && l.gateKeys.length ? UNPACK(l.gateKeys[0]) : null;
+                if (!firstGate) return;
+                ENGINE.activeGateKey = l.gateKeys[0];
+                PathNavigator.pushStep(ENGINE, l.gateKeys[0], false);
+                setLogicState(DRAGGING);
+            }
+            const head = UNPACK(ENGINE.path[ENGINE.path.length - 1]);
+            attemptMoveTo({ x: head.x + dx, y: head.y + dy });
+        }
+
+        function handleGamepadDirection(dir) {
+            if (ENGINE.ui.focusGroup === 'GRID') {
+                if (dir === 'UP') gamepadMoveGrid(0, -1);
+                if (dir === 'DOWN') gamepadMoveGrid(0, 1);
+                if (dir === 'LEFT') gamepadMoveGrid(-1, 0);
+                if (dir === 'RIGHT') gamepadMoveGrid(1, 0);
+                return;
+            }
+            moveFocusWithinGroup((dir === 'LEFT' || dir === 'UP') ? -1 : 1);
+        }
+
+        function handleBPress() {
+            const now = Date.now();
+            if (now - ENGINE.ui.bLastPressTime <= 320) {
+                if (ENGINE.ui.bSingleTimer) { clearTimeout(ENGINE.ui.bSingleTimer); ENGINE.ui.bSingleTimer = null; }
+                cycleFocusGroup();
+                ENGINE.ui.bLastPressTime = 0;
+                return;
+            }
+            ENGINE.ui.bLastPressTime = now;
+            ENGINE.ui.bSingleTimer = setTimeout(() => { dismissGuideOrHelpModal(); ENGINE.ui.bSingleTimer = null; }, 320);
+        }
+
+        function pollGamepadInput() {
+            const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+            const pad = pads && pads[0];
+            if (!pad) return;
+            ENGINE.gamepad.hasPad = true;
+            const now = Date.now();
+
+            const pressed = idx => !!pad.buttons[idx] && pad.buttons[idx].pressed;
+            const wasPressed = idx => !!ENGINE.gamepad.lastButtons[idx];
+
+            if (pressed(GAMEPAD_MAP.A) && !wasPressed(GAMEPAD_MAP.A)) activateFocusedControl();
+            if (pressed(GAMEPAD_MAP.B) && !wasPressed(GAMEPAD_MAP.B)) handleBPress();
+
+            const dirs = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+            let activeDir = null;
+            for (const dir of dirs) {
+                const idx = GAMEPAD_MAP[dir];
+                if (pressed(idx)) { activeDir = dir; if (!wasPressed(idx)) { handleGamepadDirection(dir); ENGINE.gamepad.nextMoveAt = now + GAMEPAD_REPEAT_INITIAL; } }
+            }
+            if (activeDir && now >= ENGINE.gamepad.nextMoveAt) {
+                handleGamepadDirection(activeDir);
+                ENGINE.gamepad.nextMoveAt = now + GAMEPAD_REPEAT_RATE;
+            }
+
+            ENGINE.gamepad.lastButtons = pad.buttons.map(b => b.pressed);
+        }
+
+        window.addEventListener('gamepadconnected', () => setFocusGroup(ENGINE.ui.focusGroup || 'GRID', ENGINE.ui.focusIndex || 0));
+        window.addEventListener('gamepaddisconnected', () => { ENGINE.gamepad.hasPad = false; ENGINE.gamepad.lastButtons = []; });
+        setFocusGroup('GRID', 0);
         
-        window.addEventListener('resize', updateAppScale);
+        window.addEventListener('resize', () => {
+            updateAppScale();
+            setFocusGroup(ENGINE.ui.focusGroup || 'GRID', ENGINE.ui.focusIndex || 0);
+        });
         updateAppScale();
 
         $('gridRotateBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); showMessage("Rotated", "text-white font-black"); };
@@ -2463,6 +2634,12 @@
         $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver(); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
         
+        const originalLoop = loop;
+        loop = function() {
+            pollGamepadInput();
+            originalLoop();
+        };
+
         const loader = {
             progress: 0, hasLoaded: false, finish() { const overlay = $('loadingOverlay'); overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 500); populateThemes(); },
             triggerFallback() { if (this.hasLoaded) return; this.hasLoaded = true; window.RAW_LEVELS = FALLBACK_RAW_LEVELS; this.finish(); loadLevel(0); updatePlayModeLayout(); loop(); },
