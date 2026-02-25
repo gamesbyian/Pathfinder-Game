@@ -428,13 +428,6 @@
     const { IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG } = LogicStatus;
     const { NONE: OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = OverlayStatus;
     const ENGINE = AppModules.state.createEngine({ PLAY, IDLE, OVERLAY_NONE });
-    window.__BOOT_LOG = window.__BOOT_LOG || [];
-    function bootLog(step) {
-        const entry = { t: Date.now(), step };
-        window.__BOOT_LOG.push(entry);
-        if (window.__BOOT_LOG.length > 200) window.__BOOT_LOG.shift();
-        if (ENGINE.isDevMode) console.log('[BOOT]', step);
-    }
 
     const UI = {
         el: {},
@@ -464,7 +457,6 @@
             if (status) status.innerText = text;
             console.error(text);
         },
-        showLoadError(text) { this.showError(text); },
         setModeUI(mode) {
             const isEd = mode === EDITOR;
             (this.el.editorPalette || $('editorPalette')).classList.toggle('hidden', !isEd);
@@ -620,16 +612,14 @@
         },
         async solveCurrentLevel(opts = {}) {
             return this.solveLevel(ENGINE.levelIdx, opts);
-        },
-        async findTrapSpots(levelLike, opts = {}) {
-            const { onStateUpdate = () => {}, onProgress = () => {}, ...solverOpts } = opts;
-            const normalized = Engine.normalizeLevel(levelLike || Engine.getCurrentLevel());
-            return PathfinderSolver.findTrapSpots(normalized, { ...solverOpts, onStateUpdate, onProgress });
-        },
-        async findTrapSpotsCurrent(opts = {}) {
-            return this.findTrapSpots(Engine.getCurrentLevel(), opts);
         }
     };
+
+    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
+    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
+
+    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
+    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
 
     const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
     const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
@@ -1396,6 +1386,7 @@
                 onStateUpdate: (msg) => { $('searchLabel').innerText = msg; showMessage(msg, 'text-sky-600'); },
                 onProgress: (elapsedMs) => UI.setSolverTimer((elapsedMs / 1000).toFixed(1) + 's')
             });
+            const paths = await SolverFacade.solveLevel(ENGINE.levelIdx, { timeLimit: 105000 });
             if (paths.length > 0) {
                 if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
                 ENGINE.hinter.pathList = paths;
@@ -1689,93 +1680,84 @@
         $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver(); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
         
-        const Boot = {
-            finished: false,
-            watchdogId: null,
-            markFinished() {
-                this.finished = true;
-                if (this.watchdogId) { clearTimeout(this.watchdogId); this.watchdogId = null; }
-            },
-            finishOk() {
-                if (this.finished) return;
-                this.markFinished();
-                bootLog('finishOk');
+        const loader = {
+            progress: 0,
+            hasLoaded: false,
+            didFinish: false,
+            finish() {
+                if (this.didFinish) return;
+                this.didFinish = true;
+                APP.ui.hideLoading();
                 UI.hideLoading();
                 populateThemes();
             },
-            async finishFallback(reason = 'fallback') {
-                if (this.finished) return;
-                bootLog(`finishFallback:${reason}`);
+            async triggerFallback(reason = 'fallback') {
+                if (this.didFinish) return;
                 UI.showLoading('Loading fallback data...');
                 try {
                     window.RAW_LEVELS = FALLBACK_RAW_LEVELS;
-                    bootLog('Engine.loadLevel(0) start [fallback]');
                     Engine.loadLevel(0);
-                    bootLog('Engine.loadLevel(0) end [fallback]');
                     updatePlayModeLayout();
                     loop();
-                    bootLog('requestAnimationFrame loop started [fallback]');
+                    this.hasLoaded = true;
                 } catch (e) {
-                    UI.showLoadError(`Fallback init failed: ${e?.message || e}`);
+                    UI.showError(`Fallback init failed: ${e?.message || e}`);
                 } finally {
-                    this.markFinished();
-                    UI.hideLoading();
-                    populateThemes();
+                    this.finish();
                 }
             },
-            async finishError(err) {
-                console.error('Boot fatal error', err);
-                UI.showLoadError(`Boot error: ${err?.message || err}`);
-                await this.finishFallback('boot-error');
-            },
-            async start() {
+            start() {
                 UI.showLoading('Initing Systems...');
-                this.watchdogId = setTimeout(() => {
-                    this.finishFallback('Boot timed out');
-                }, 6000);
-                try {
-                    bootLog('UI.init start');
-                    UI.init();
-                    bootLog('UI.init end');
-                    if (firebaseConfigRaw) {
-                        try { await initAuth(); } catch (e) {}
+                const loadThemes = new Promise(resolve => {
+                    const s = document.createElement('script');
+                    s.src = "./themes.js";
+                    s.onload = () => {
+                        try {
+                            if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
+                        } catch (e) {}
+                        resolve();
+                    };
+                    s.onerror = () => resolve();
+                    document.head.appendChild(s);
+                });
+                const loadLevels = new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = "./levels.js";
+                    s.onload = () => resolve();
+                    s.onerror = () => reject(new Error('levels.js missing'));
+                    document.head.appendChild(s);
+                });
+                Promise.all([loadThemes, loadLevels]).then(() => {
+                    if (this.didFinish || this.hasLoaded) return;
+                    try {
+                        if (!Array.isArray(window.RAW_LEVELS) || window.RAW_LEVELS.length === 0) throw new Error('RAW_LEVELS unavailable');
+                        UI.init();
+                        Engine.loadLevel(0);
+                        updatePlayModeLayout();
+                        loop();
+                        this.hasLoaded = true;
+                    } catch (e) {
+                        console.error('Normal boot failed; using fallback.', e);
+                        return this.triggerFallback('normal-boot-error');
                     }
-                    syncProgress(auth?.currentUser);
-                    bootLog('Loader start');
-                    const loadThemes = new Promise(resolve => {
-                        const sc = document.createElement('script');
-                        sc.src = './themes.js';
-                        sc.onload = () => {
-                            try { if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE); } catch (e) {}
-                            bootLog('themes loaded');
-                            resolve();
-                        };
-                        sc.onerror = () => { bootLog('themes failed'); resolve(); };
-                        document.head.appendChild(sc);
-                    });
-                    const loadLevels = new Promise((resolve, reject) => {
-                        const sc = document.createElement('script');
-                        sc.src = './levels.js';
-                        sc.onload = () => { bootLog('levels loaded'); resolve(); };
-                        sc.onerror = () => reject(new Error('levels.js missing'));
-                        document.head.appendChild(sc);
-                    });
-                    await Promise.all([loadThemes, loadLevels]);
-                    if (!Array.isArray(window.RAW_LEVELS) || window.RAW_LEVELS.length === 0) throw new Error('RAW_LEVELS unavailable');
-                    bootLog('Engine.loadLevel(0) start');
-                    Engine.loadLevel(0);
-                    bootLog('Engine.loadLevel(0) end');
-                    updatePlayModeLayout();
-                    loop();
-                    bootLog('requestAnimationFrame loop started');
-                    this.finishOk();
-                } catch (err) {
-                    await this.finishError(err);
-                }
+                    this.finish();
+                }).catch(() => this.triggerFallback('script-load-failure'));
+                setTimeout(() => {
+                    if (!this.hasLoaded && !this.didFinish) this.triggerFallback('timeout');
+                }, 5000);
             }
         };
 
-        Boot.start();
+        const startBoot = async () => {
+            try {
+                if (firebaseConfigRaw) await initAuth();
+            } catch (e) {}
+            syncProgress(auth?.currentUser);
+            loader.start();
+        };
+
+        UI.init();
+        startBoot();
         applyTheme('classic');
         if (ENGINE.isDevMode) Engine.runSanityChecks();
         } catch (bootErr) {
