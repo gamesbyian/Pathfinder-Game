@@ -612,16 +612,14 @@
         },
         async solveCurrentLevel(opts = {}) {
             return this.solveLevel(ENGINE.levelIdx, opts);
-        },
-        async findTrapSpots(levelLike, opts = {}) {
-            const { onStateUpdate = () => {}, onProgress = () => {}, ...solverOpts } = opts;
-            const normalized = Engine.normalizeLevel(levelLike || Engine.getCurrentLevel());
-            return PathfinderSolver.findTrapSpots(normalized, { ...solverOpts, onStateUpdate, onProgress });
-        },
-        async findTrapSpotsCurrent(opts = {}) {
-            return this.findTrapSpots(Engine.getCurrentLevel(), opts);
         }
     };
+
+    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
+    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
+
+    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
+    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
 
     const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
     const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
@@ -1388,6 +1386,7 @@
                 onStateUpdate: (msg) => { $('searchLabel').innerText = msg; showMessage(msg, 'text-sky-600'); },
                 onProgress: (elapsedMs) => UI.setSolverTimer((elapsedMs / 1000).toFixed(1) + 's')
             });
+            const paths = await SolverFacade.solveLevel(ENGINE.levelIdx, { timeLimit: 105000 });
             if (paths.length > 0) {
                 if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
                 ENGINE.hinter.pathList = paths;
@@ -1689,6 +1688,7 @@
                 if (this.didFinish) return;
                 this.didFinish = true;
                 APP.ui.hideLoading();
+                UI.hideLoading();
                 populateThemes();
             },
             async triggerFallback(reason = 'fallback') {
@@ -1756,6 +1756,7 @@
             loader.start();
         };
 
+        UI.init();
         startBoot();
         applyTheme('classic');
         if (ENGINE.isDevMode) Engine.runSanityChecks();
