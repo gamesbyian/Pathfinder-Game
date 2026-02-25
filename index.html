@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <style>
-        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; }
+        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; }
         canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: white; }
         .modal { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
@@ -186,6 +186,34 @@
                     <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Exporting Level Data</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Once you've built something great, click <strong>Generate</strong> to export your level data. If you've drawn a valid solution or used the solver, it will automatically include that as a helpful hint for players! You can also use <strong>Copy Path</strong> to grab the raw coordinate array anytime.</p></section>
                 </div>
             </div>
+            <div id="winModal" class="absolute inset-0 z-30 bg-[var(--theme-modal-bg)] backdrop-blur-md hidden flex flex-col items-center justify-center p-4 modal-content">
+                <div id="winModalContent" class="w-full h-full max-w-[30rem] flex flex-col justify-center gap-4">
+                    <div id="winCircle" class="bg-[var(--theme-win-bg)] rounded-2xl flex flex-col items-center justify-center text-center p-6 shadow-2xl border-4 border-[var(--theme-win-border)] transition-all duration-300">
+                        <h2 class="text-3xl font-black tracking-tighter uppercase leading-none mb-2 text-[var(--theme-win-accent)]">PATH FOUND</h2>
+                        <p id="winSubMessage" class="text-4xl mb-4 text-[var(--theme-win-text)]">well done</p>
+                        <div class="flex flex-col items-center gap-1 w-full">
+                            <button id="nextLevelModalBtn" class="font-black text-2xl uppercase transition leading-none text-[var(--theme-win-accent)] hover:brightness-125">Next Level</button>
+                            <span class="text-[0.675rem] font-black uppercase text-[var(--theme-win-text)]">- or -</span>
+                            <button id="dismissWinModalBtn" class="font-black text-2xl uppercase transition leading-none text-[var(--theme-win-accent)] hover:brightness-125">Rest Here</button>
+                        </div>
+                    </div>
+                    <div id="winExportArea" class="bg-[var(--theme-modal-panel)] p-4 rounded-2xl shadow-xl border border-[var(--theme-modal-border)] w-full hidden">
+                        <div class="flex justify-between items-center mb-2"><label class="text-[0.65rem] uppercase font-black tracking-widest text-[var(--theme-modal-accent)]">Winning Path Data</label><button id="copyWinDataBtn" class="text-[0.65rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-3 py-1 rounded-full font-black transition active:scale-95 hover:brightness-90">COPY ARRAY</button></div>
+                        <textarea id="winSolutionOutput" readonly class="w-full h-20 p-3 rounded-xl border border-slate-700 text-[0.65rem] font-mono leading-relaxed" placeholder="Solution data..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div id="unsavedModal" class="absolute inset-0 z-30 bg-[var(--theme-modal-bg)] backdrop-blur-md hidden flex flex-col items-center justify-center p-4 modal-content">
+                <div class="bg-[var(--theme-modal-panel)] p-6 rounded-2xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-w-sm flex flex-col text-center">
+                    <h2 class="text-xl font-black uppercase tracking-widest mb-2 text-[var(--theme-modal-accent)]">Unsaved Changes</h2>
+                    <p class="mb-6 font-medium text-[var(--theme-modal-text)]">Do you need to export this level?</p>
+                    <div class="flex justify-center gap-4">
+                        <button id="unsavedStayBtn" class="font-bold uppercase tracking-widest transition px-4 py-2 rounded-lg bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] hover:brightness-95">Stay</button>
+                        <button id="unsavedLeaveBtn" class="bg-red-600 text-white px-6 py-2 rounded-lg font-black hover:bg-red-700 transition uppercase tracking-widest shadow-md">Leave</button>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -252,8 +280,8 @@
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 text-white font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
                 <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 text-white font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
             </div>
-            <div id="alertOverlay" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-white/20 rounded-xl flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
-                <p id="message" class="text-white font-black text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
+            <div id="alertOverlay" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-white/20 rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
+                <p id="message" class="font-black text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
             </div>
         </div>
         <div class="flex flex-col gap-2 hidden mt-3 pt-3 border-t border-slate-100" id="exportArea">
@@ -262,7 +290,7 @@
                 <textarea id="solutionOutput" readonly class="flex-grow h-[5rem] p-3 bg-slate-900 text-sky-300 rounded-xl border border-slate-700 text-[0.6rem] font-mono leading-tight" placeholder="Solution data..."></textarea>
                 <div id="exportBtnStack" class="flex flex-col gap-1 w-24 shrink-0">
                     <button id="devCopyBtn" class="flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] hover:bg-slate-300 transition uppercase px-1 leading-none">Copy Path</button>
-                    <button id="devGenBtn" class="flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] hover:bg-slate-300 transition uppercase">Generate</button>
+                    <button id="devGenBtn" class="flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] hover:bg-slate-300 transition uppercase">Copy Hints</button>
                     <button id="editCopyBtn" class="hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
                     <button id="editGenBtn" class="hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
                 </div>
@@ -305,24 +333,7 @@
     </div>
 </div>
 
-<div id="winModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4">
-    <div id="winModalContent" class="flex flex-col items-center gap-6 w-full max-sm transform scale-100 transition-transform modal-content">
-        <div id="winCircle" class="bg-[var(--theme-win-bg)] w-72 h-72 rounded-full flex flex-col items-center justify-center text-center p-8 shadow-2xl border-[12px] border-[var(--theme-win-border)] relative z-10 box-content transition-all duration-300">
-            <h2 class="text-4xl font-black tracking-tighter uppercase leading-none mb-2 text-[var(--theme-win-accent)]">PATH FOUND</h2>
-            <p id="winSubMessage" class="text-4xl mb-6 text-[var(--theme-win-text)]">well done</p>
-            <div class="flex flex-col items-center gap-1 w-full">
-                <button id="nextLevelModalBtn" class="font-black text-2xl uppercase transition leading-none text-[var(--theme-win-accent)] hover:brightness-125">Next Level</button>
-                <span class="text-[0.675rem] font-black uppercase text-[var(--theme-win-text)]">- or -</span>
-                <button id="dismissWinModalBtn" class="font-black text-2xl uppercase transition leading-none text-[var(--theme-win-accent)] hover:brightness-125">Rest Here</button>
-            </div>
-        </div>
-        <div id="winExportArea" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-2xl shadow-2xl border border-[var(--theme-modal-border)] w-full hidden">
-            <div class="flex justify-between items-center mb-2"><label class="text-[0.65rem] uppercase font-black tracking-widest text-[var(--theme-modal-accent)]">Winning Path Data</label><button id="copyWinDataBtn" class="text-[0.65rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-3 py-1 rounded-full font-black transition active:scale-95 hover:brightness-90">COPY ARRAY</button></div>
-            <textarea id="winSolutionOutput" readonly class="w-full h-20 p-3 rounded-xl border border-slate-700 text-[0.65rem] font-mono leading-relaxed" placeholder="Solution data..."></textarea>
-        </div>
-    </div>
-</div>
-
+<div id="megaModal"
 <div id="megaModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4">
     <div id="megaModalContent" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-w-2xl h-[80vh] flex flex-col modal-content">
         <div class="flex justify-between items-center mb-4">
@@ -331,17 +342,6 @@
         </div>
         <textarea id="megaOutput" readonly class="flex-grow p-4 bg-slate-900 text-fuchsia-300 rounded-xl border border-slate-700 text-xs font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500" placeholder="Mega solver results will appear here..."></textarea>
         <div class="mt-4 flex justify-end"><button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-6 py-3 rounded-lg font-black hover:brightness-95 transition uppercase tracking-widest shadow-lg active:scale-95">Copy All</button></div>
-    </div>
-</div>
-
-<div id="unsavedModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4">
-    <div class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-w-sm flex flex-col modal-content text-center">
-        <h2 class="text-xl font-black uppercase tracking-widest mb-2 text-[var(--theme-modal-accent)]">Unsaved Changes</h2>
-        <p class="mb-6 font-medium text-[var(--theme-modal-text)]">Do you need to export this level?</p>
-        <div class="flex justify-center gap-4">
-            <button id="unsavedStayBtn" class="font-bold uppercase tracking-widest transition px-4 py-2 rounded-lg bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] hover:brightness-95">Stay</button>
-            <button id="unsavedLeaveBtn" class="bg-red-600 text-white px-6 py-2 rounded-lg font-black hover:bg-red-700 transition uppercase tracking-widest shadow-md">Leave</button>
-        </div>
     </div>
 </div>
 
@@ -428,6 +428,7 @@
         themeTapSelectedTheme: null, 
         themeTapCategory: null, 
         progressSet: new Set(),
+        foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true } 
     };
         return { ENGINE };
@@ -699,6 +700,13 @@
         if (name === 'chaos') { THEMES.chaos = { bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, burst: rc(), check: rc() }; }
         currentTheme = name; APP.Themes.currentTheme = currentTheme; const t = THEMES[name]; const root = document.documentElement; 
         root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
+        const alertBg = (t.alert?.bg || '#1e40af');
+        const hex = alertBg.replace('#','');
+        let r = 30, g = 64, b = 175;
+        if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
+        const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+        const alertText = name === 'classic' ? '#ffffff' : (luminance > 0.55 ? '#0f172a' : '#ffffff');
+        root.style.setProperty('--theme-alert-text', alertText);
         root.style.setProperty('--theme-logo-bg', t.canvasBg); root.style.setProperty('--theme-logo-grid', t.grid); root.style.setProperty('--theme-logo-path', t.path === 'rainbow' ? '#3b82f6' : t.path); root.style.setProperty('--theme-logo-gate', t.colors.gate); root.style.setProperty('--theme-logo-goal', t.colors.goal);
         root.style.setProperty('--theme-burst', t.burst || '#fef9c3'); root.style.setProperty('--theme-check', t.check || '#1e293b');
         
@@ -1045,7 +1053,7 @@
     
     function shiftLevel(l, dx, dy) { if (dx === 0 && dy === 0) return; const shift = (k) => { if (k === -1) return -1; const p = UNPACK(k); return PACK(p.x + dx, p.y + dy); }; l.goalKey = shift(l.goalKey); l.gateKeys = l.gateKeys.map(shift); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(shift)); l.blockSet = new Set(Array.from(l.blockSet).map(shift)); l.gooseSet = new Set(Array.from(l.gooseSet).map(shift)); l.mustPassKeys = l.mustPassKeys.map(shift); l.mustCrossKeys = l.mustCrossKeys.map(shift); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v)); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v)); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2), color: pv.color })); if (ENGINE.editor.pendingPortal) { ENGINE.editor.pendingPortal = shift(ENGINE.editor.pendingPortal); } ENGINE.path = ENGINE.path.map(shift); rebuildDerivedPathState(ENGINE); l.hints = []; ENGINE.hinter.pathList = []; }
     
-    function changeGridSize(delta) { if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { shiftLevel(l, shiftX, shiftY); ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; ENGINE.editor.isModified = true; updateViewport(); showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
+    function changeGridSize(delta) { if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { shiftLevel(l, shiftX, shiftY); ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = ENGINE.path.some(k => { const p = UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) PathNavigator.clear(ENGINE); ENGINE.editor.isModified = true; updateViewport(); showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
     
     function transformLevel(l, coordMap, newW, newH, axisMap) { saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = UNPACK(k); const tp = coordMap(p.x, p.y); return PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (ENGINE.editor.pendingPortal) { ENGINE.editor.pendingPortal = mapKey(ENGINE.editor.pendingPortal); } ENGINE.path = ENGINE.path.map(mapKey); if(ENGINE.activeGateKey) ENGINE.activeGateKey = mapKey(ENGINE.activeGateKey); rebuildDerivedPathState(ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.isModified = true; updateViewport(); }
     
@@ -1933,7 +1941,7 @@
     
     function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); $('themeSelectFooter').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); $('themeSelectFooter').classList.add('hidden'); } }
     function isModalActive() { return !$('guideModal').classList.contains('hidden') || !$('editorHelpModal').classList.contains('hidden') || !$('winModal').classList.contains('hidden') || !$('megaModal').classList.contains('hidden') || !$('themeModal').classList.contains('hidden') || !$('unsavedModal').classList.contains('hidden'); }
-    function switchMode(newMode) { if (ENGINE.mode === EDITOR && newMode === PLAY) { if (ENGINE.editor.pendingPortal) { showMessage("Finish portal pair first!", "text-red-500 font-bold"); return; } } const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').style.display = isEd ? 'none' : 'flex'; $('editorMetrics').style.display = isEd ? 'flex' : 'none'; $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); $('themeSelectFooter').classList.remove('hidden'); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); updateCompletionUI(); showMessage("", ""); }
+    function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').style.display = isEd ? 'none' : 'flex'; $('editorMetrics').style.display = isEd ? 'flex' : 'none'; $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); $('themeSelectFooter').classList.remove('hidden'); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); updateCompletionUI(); showMessage("", ""); }
     function updatePencilState() { const btn = $('editPencilBtn'); const svg = btn.querySelector('svg'); if (ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
     function saveEditorState() { ENGINE.editor.isModified = true; ENGINE.editor.undoStack.push(deepCloneLevel(ENGINE.editor.workingLevel)); if (ENGINE.editor.undoStack.length > 50) ENGINE.editor.undoStack.shift(); ENGINE.hinter.pathList = []; }
     function restoreEditorState() { if (ENGINE.editor.undoStack.length === 0) return; ENGINE.editor.isModified = true; ENGINE.editor.workingLevel = ENGINE.editor.undoStack.pop(); let newPending = null; ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); ENGINE.editor.pendingPortal = newPending; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); showMessage("Undo Grid Action", "text-slate-500"); }
@@ -2042,6 +2050,9 @@
                 const paths = solutions.map(s => s.path); 
                 if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); } 
                 ENGINE.hinter.pathList = paths; 
+                const seenHints = new Set((ENGINE.foundHintsSinceLoad || []).map(p => JSON.stringify(p)));
+                if (!ENGINE.foundHintsSinceLoad) ENGINE.foundHintsSinceLoad = [];
+                paths.forEach(path => { const key = JSON.stringify(path); if (!seenHints.has(key)) { ENGINE.foundHintsSinceLoad.push(path); seenHints.add(key); } });
                 ENGINE.hinter.source = 'dynamic'; 
                 ENGINE.hinter.currentPathIdx = 0; 
                 outEl.value = JSON.stringify(paths).replace(/\s/g, ''); 
@@ -2097,6 +2108,7 @@
         ENGINE.gooseEncounteredThisLevel = false; 
         ENGINE.armedFalseGoals = new Set(ENGINE.level.falseGoalKeys || []);
         ENGINE.detonatedFalseGoals = new Set();
+        ENGINE.foundHintsSinceLoad = [];
         if (isEditor) { 
             ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); 
             ENGINE.editor.isPencilMode = false; 
@@ -2123,7 +2135,8 @@
     let messageTimer = null;
     function showMessage(t, c) {
         msgEl.innerText = t;
-        msgEl.className = `text-center font-black uppercase tracking-tighter architectural-tight leading-tight text-white drop-shadow-md ${c}`;
+        msgEl.className = "text-center font-black uppercase tracking-tighter architectural-tight leading-tight drop-shadow-md";
+        msgEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--theme-alert-text').trim() || "#ffffff";
         const overlay = $('alertOverlay');
         if (t === "") { overlay.style.opacity = '0'; return; }
         overlay.style.opacity = '1';
@@ -2229,7 +2242,7 @@
         };
 
         $('undoBtn').onclick = () => { closeAllModals(); if(ENGINE.undoStack.length) applySnapshot(ENGINE.undoStack.pop()); };
-        $('devGenBtn').onclick = () => { closeAllModals(); outEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.select(); document.execCommand('copy'); showMessage("Path Captured", "text-white font-black"); };
+        $('devGenBtn').onclick = async () => { closeAllModals(); const hints = ENGINE.foundHintsSinceLoad || []; if (!hints.length) { showMessage("No hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); outEl.value = hintText; try { await navigator.clipboard.writeText(hintText); } catch (e) { outEl.select(); document.execCommand('copy'); } showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
         $('editGenBtn').onclick = () => { closeAllModals(); generateLevelString(); };
         $('devCopyBtn').onclick = () => { closeAllModals(); if (outEl.value) { outEl.select(); document.execCommand('copy'); showMessage("Copied", "text-white font-black"); } };
         $('editCopyBtn').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; outEl.select(); document.execCommand('copy'); showMessage("Path Copied", "text-white font-black"); } };
