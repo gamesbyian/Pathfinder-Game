@@ -1918,7 +1918,11 @@
     // ======================================================
     function areWinMetricsSatisfied(state = ENGINE, level = (state.mode === PLAY ? state.level : state.editor.workingLevel)) { if (!level || !state.path.length) return false; const curLen = getRealLength(state); if (curLen !== level.reqLen || state.intersections !== level.reqInt) return false; const allMustPass = level.mustPassKeys.every(k => state.visitedCounts.get(k) > 0); const allMustCross = level.mustCrossKeys.every(k => (state.visitedCounts.get(k) || 0) >= 2); return allMustPass && allMustCross; }
     function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [HAZARD_TRIGGERED].includes(logicState) || mode === EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return areWinMetricsSatisfied(stubState, level); }
-    function checkFalseGoalCondition() { return areWinMetricsSatisfied(ENGINE, ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel); }
+    function checkFalseGoalCondition() {
+        const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
+        if (!l) return false;
+        return getRealLength() === l.reqLen && ENGINE.intersections === l.reqInt;
+    }
     function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); $('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); $('winModal').classList.remove('hidden'); SOUND_BUS.play("C5", "8n"); } }
     
     function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, { mode: ENGINE.mode, armedFalseGoals: ENGINE.armedFalseGoals, flipCount: ENGINE.flipCount, crossedSet: ENGINE.crossedFlippingFilters }); }
@@ -2136,7 +2140,7 @@
         $('unsavedLeaveBtn').onclick = () => { closeAllModals(); $('unsavedModal').classList.add('hidden'); if (pendingAction) pendingAction(); };
         
         let activePointerId = null; const handleDown = (e) => {
-            if (ENGINE.activeSolverController || [RESOLVED, HAZARD_TRIGGERED].includes(ENGINE.logicState) || [HINT_ANIMATING, SOLVER_RUNNING].includes(ENGINE.overlayState)) return;
+            if (ENGINE.activeSolverController || [RESOLVED, HAZARD_TRIGGERED].includes(ENGINE.logicState) || [HINT_ANIMATING, FALSE_GOAL_ANIMATING, SOLVER_RUNNING].includes(ENGINE.overlayState)) return;
             const p = getGridCoord(e); const k = PACK(p.x, p.y); const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
             ENGINE.resetStreak = 0;
             if (ENGINE.mode === EDITOR && !ENGINE.editor.isPencilMode) {
