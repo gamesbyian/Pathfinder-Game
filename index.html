@@ -1107,23 +1107,771 @@
     
     const SolverCore = {
         _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet) {
-            const { x, y } = UNPACK(key); const { w, h } = l.grid; if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false; if (l.gooseSet.has(key)) return false; const lastK = path[path.length - 1]; if (lastK === undefined) return true; if (lastK === l.goalKey) return false; if (l.gateKeys.includes(key)) return false; if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false; const lastP = UNPACK(lastK); const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key; if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false; const axis = (y === lastP.y) ? H : V; const u = usage.get(key); if (u && ((axis === H && u.h) || (axis === V && u.v))) return false; const uLast = usage.get(lastK); if (uLast) { let entryAxis = NONE; if (path.length > 1 && !jumpSet.has(path.length - 1)) { const prevP = UNPACK(path[path.length - 2]); const lastP_check = UNPACK(lastK); entryAxis = (prevP.y === lastP_check.y) ? H : V; } if (axis !== entryAxis) { if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false; } } let filterLast = l.filterMap.get(lastK); if (filterLast === undefined && l.flippingFilterMap.has(lastK)) { const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount; filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK); } if (filterLast && filterLast !== axis) return false; let filterTarget = l.filterMap.get(key); if (filterTarget === undefined && l.flippingFilterMap.has(key)) { const relevantFlipCount = crossedSet.has(key) ? crossedSet.get(key) : flipCount; const baseAxis = l.flippingFilterMap.get(key); filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis; } if (filterTarget && filterTarget !== axis) return false; return true; 
+            const { x, y } = UNPACK(key);
+            const { w, h } = l.grid;
+            if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false;
+            if (l.gooseSet.has(key)) return false;
+            const lastK = path[path.length - 1];
+            if (lastK === undefined) return true;
+            if (lastK === l.goalKey) return false;
+            if (l.gateKeys.includes(key)) return false;
+            if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
+            const lastP = UNPACK(lastK);
+            const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key;
+            if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
+            const axis = (y === lastP.y) ? H : V;
+            const u = usage.get(key);
+            if (u && ((axis === H && u.h) || (axis === V && u.v))) return false;
+            const uLast = usage.get(lastK);
+            if (uLast) {
+                let entryAxis = NONE;
+                if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+                    const prevP = UNPACK(path[path.length - 2]);
+                    const lastP_check = UNPACK(lastK);
+                    entryAxis = (prevP.y === lastP_check.y) ? H : V;
+                }
+                if (axis !== entryAxis) {
+                    if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false;
+                }
+            }
+            let filterLast = l.filterMap.get(lastK);
+            if (filterLast === undefined && l.flippingFilterMap.has(lastK)) {
+                const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+                filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK);
+            }
+            if (filterLast && filterLast !== axis) return false;
+            let filterTarget = l.filterMap.get(key);
+            if (filterTarget === undefined && l.flippingFilterMap.has(key)) {
+                const relevantFlipCount = crossedSet.has(key) ? crossedSet.get(key) : flipCount;
+                const baseAxis = l.flippingFilterMap.get(key);
+                filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
+            }
+            if (filterTarget && filterTarget !== axis) return false;
+            return true;
         },
-        _buildDistMap(l) { const { w, h } = l.grid; const map = new Map(); const q = [{k: l.goalKey, d: 0}]; map.set(l.goalKey, 0); let head = 0; while(head < q.length) { const {k, d} = q[head++]; const p = UNPACK(k); const neighbors = []; const portal = resolvePortal(l, k); if (portal) neighbors.push(portal.dest); [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx, dy]) => { const nx = p.x+dx, ny = p.y+dy; if(inBounds(nx, ny, w, h)) { const nk = PACK(nx, ny); if (!l.blockSet.has(nk)) neighbors.push(nk); } }); for (const nk of neighbors) { if (!map.has(nk)) { map.set(nk, d + 1); q.push({k: nk, d: d + 1}); } } } return map; },
-        _buildFlipperDistMap(l, flipperSet) { const { w, h } = l.grid; const map = new Map(); const q = []; flipperSet.forEach(k => { map.set(k, 0); q.push({k: k, d: 0}); }); let head = 0; while(head < q.length) { const {k, d} = q[head++]; const p = UNPACK(k); const neighbors = []; const portal = resolvePortal(l, k); if (portal) neighbors.push(portal.dest); [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx, dy]) => { const nx = p.x+dx, ny = p.y+dy; if(inBounds(nx, ny, w, h)) { const nk = PACK(nx, ny); if (!l.blockSet.has(nk)) neighbors.push(nk); } }); for (const nk of neighbors) { if (!map.has(nk)) { map.set(nk, d+1); q.push({k: nk, d: d+1}); } } } return map; },
-        _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l) { const { w, h } = l.grid; const p = UNPACK(k); const candidates = []; const portal = resolvePortal(l, k); const portalDest = portal ? portal.dest : -1; if (portalDest !== -1 && !state.isJump.has(state.path.length-1)) candidates.push(portalDest); [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx, dy]) => { const nx = p.x+dx, ny = p.y+dy; if(inBounds(nx, ny, w, h)) candidates.push(PACK(nx, ny)); }); const pEnd = UNPACK(l.goalKey); const cEnd = (pEnd.x + pEnd.y) % 2; const curLen = state.path.length - 1 - state.isJump.size; const mustMask = state.mustMask; const hasMust = mustMask !== 0n; const mustBoundCache = hasMust ? new Map() : null; const getNearestRemainingMustBound = (key) => { if (!hasMust) return Infinity; if (mustBoundCache.has(key)) return mustBoundCache.get(key); let best = Infinity; for (let i = 0; i < l.mustPassKeys.length; i++) { const bit = 1n << BigInt(i); if ((mustMask & bit) === 0n) continue; const dToMust = l.mustPassDistMaps[i].get(key); if (dToMust === undefined) continue; const bound = dToMust + l.mustPassToGoalDist[i]; if (bound < best) best = bound; } mustBoundCache.set(key, best); return best; }; const valid = candidates.filter(nk => { if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers)) return false; const isP = (portalDest === nk); const nLen = curLen + (isP ? 0 : 1); const rSteps = l.reqLen - nLen; const pN = UNPACK(nk); const cN = (pN.x + pN.y) % 2; if (((Math.abs(cN - cEnd)) % 2) !== (rSteps % 2)) { const dF = flipperDistMap.get(nk); if (dF === undefined || dF > rSteps) return false; } const d = distMap.get(nk); if (d === undefined || d > rSteps) return false; if (hasMust) { const bestBound = getNearestRemainingMustBound(nk); if (bestBound === Infinity || bestBound > rSteps) return false; } return true; }); valid.sort((a, b) => { const fA = usageFreq.get(a) || 0, fB = usageFreq.get(b) || 0; if (fA !== fB) return fA - fB; if (hasMust) { const mA = getNearestRemainingMustBound(a), mB = getNearestRemainingMustBound(b); if (mA !== mB) return mA - mB; } return (distMap.get(a) || 999) - (distMap.get(b) || 999); }); return valid; },
-        _pushState(s, k, isJump, l) { const log = []; const lastK = s.path[s.path.length-1]; if (!isJump) { const lP = UNPACK(lastK), cP = UNPACK(k); const axis = (cP.y === lP.y) ? H : V; const prop = axis === H ? 'h' : 'v'; let uL = s.usage.get(lastK); if (!uL) { uL = {h:false, v:false}; s.usage.set(lastK, uL); log.push({op: 'new_usage', key: lastK}); } if (!uL[prop]) { uL[prop] = true; log.push({op: 'set_prop', key: lastK, prop: prop}); } let uC = s.usage.get(k); if (!uC) { uC = {h:false, v:false}; s.usage.set(k, uC); log.push({op: 'new_usage', key: k}); } if (!uC[prop]) { uC[prop] = true; log.push({op: 'set_prop', key: k, prop: prop}); } } const c = s.counts.get(k) || 0; if (c > 0 && k !== l.goalKey && !l.gateKeys.includes(k)) { s.ints++; log.push({op: 'inc_int'}); } if (c === 0) { s.counts.set(k, 1); log.push({op: 'new_count', key: k}); } else { s.counts.set(k, c + 1); log.push({op: 'inc_count', key: k}); } if (c === 0) { const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(k) : undefined; if (mustIdx !== undefined) { const bit = 1n << BigInt(mustIdx); if ((s.mustMask & bit) !== 0n) { s.mustMask &= ~bit; log.push({op: 'mustmask', bit: bit}); } } } s.path.push(k); if (isJump) s.isJump.add(s.path.length - 1); if (l.flippingFilterMap.has(k) && !s.crossedFlippers.has(k)) { s.crossedFlippers.set(k, s.flipCount); s.flipCount++; log.push({op: 'flip_add', key: k}); } return log; },
-        _popState(s, log) { const k = s.path.pop(); const idx = s.path.length; if (s.isJump.has(idx)) s.isJump.delete(idx); for (let i = log.length - 1; i >= 0; i--) { const entry = log[i]; if (entry.op === 'inc_int') { s.ints--; } else if (entry.op === 'new_count') { s.counts.delete(entry.key); } else if (entry.op === 'inc_count') { s.counts.set(entry.key, s.counts.get(entry.key) - 1); } else if (entry.op === 'set_prop') { const u = s.usage.get(entry.key); if (u) u[entry.prop] = false; } else if (entry.op === 'new_usage') { s.usage.delete(entry.key); } else if (entry.op === 'flip_add') { s.crossedFlippers.delete(entry.key); s.flipCount--; } else if (entry.op === 'mustmask') { s.mustMask |= entry.bit; } } },
-        _checkFinalConstraints(state, l) { for (const k of l.mustPassKeys) if (!state.counts.has(k)) return false; for (const k of l.mustCrossKeys) if ((state.counts.get(k)||0) < 2) return false; for (const k of l.gooseSet) if (state.counts.has(k)) return false; return true; },
-        async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options) { const mustCount = l.mustPassKeys.length; const state = { path: [startKey], counts: new Map(), usage: new Map(), ints: 0, isJump: new Set(), flipCount: 0, crossedFlippers: new Map(), mustMask: mustCount > 0 ? ((1n << BigInt(mustCount)) - 1n) : 0n }; state.counts.set(startKey, 1); const startMustIdx = l.mustPassIndex ? l.mustPassIndex.get(startKey) : undefined; if (startMustIdx !== undefined) { state.mustMask &= ~(1n << BigInt(startMustIdx)); } if (l.flippingFilterMap.has(startKey)) { state.crossedFlippers.set(startKey, state.flipCount); state.flipCount++; } const stack = [ { k: startKey, neighbors: this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l), log: [] } ]; let steps = 0; while (stack.length > 0) { if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError"); if (Date.now() - options.startTime > options.timeLimit) return null; if (++steps % 500 === 0) { await new Promise(r => setTimeout(r, 0)); options.onProgress(Date.now() - options.startTime); } const top = stack[stack.length - 1]; if (top.neighbors.length === 0) { this._popState(state, top.log); stack.pop(); continue; } const nextKey = top.neighbors.pop(); const topPortal = resolvePortal(l, top.k); const isP = topPortal ? topPortal.dest === nextKey : false; const transLog = this._pushState(state, nextKey, isP, l); const lastK = state.path[state.path.length - 1]; if (l.gooseSet.has(nextKey)) { this._popState(state, transLog); continue; } const realLen = state.path.length - 1 - state.isJump.size; if (realLen > l.reqLen) { this._popState(state, transLog); continue; } if (lastK === l.goalKey) { if (realLen === l.reqLen && state.ints === l.reqInt) { if (this._checkFinalConstraints(state, l)) return { path: [...state.path], len: realLen }; } this._popState(state, transLog); continue; } const minRem = distMap.get(lastK) || Infinity; if (realLen + minRem > l.reqLen) { this._popState(state, transLog); continue; } stack.push({ k: nextKey, neighbors: this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l), log: transLog }); } return null; },
-        async _solveTrapSpots(startKey, l, validSpotsSet, options) { const { w, h } = l.grid; const state = { path: [startKey], counts: new Map(), usage: new Map(), ints: 0, isJump: new Set(), flipCount: 0, crossedFlippers: new Map() }; state.counts.set(startKey, 1); if (l.flippingFilterMap.has(startKey)) { state.crossedFlippers.set(startKey, state.flipCount); state.flipCount++; } const getNeighbors = (k, s) => { const p = UNPACK(k); let candidates = []; const portal = resolvePortal(l, k); if (portal && !s.isJump.has(s.path.length-1)) candidates.push(portal.dest); [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx, dy]) => { const nx = p.x+dx, ny = p.y+dy; if(inBounds(nx, ny, w, h)) candidates.push(PACK(nx, ny)); }); return candidates.filter(nk => this._isMoveValid(nk, s.path, s.counts, s.usage, s.ints, s.isJump, l, s.flipCount, s.crossedFlippers)); }; const stack = [ { k: startKey, neighbors: getNeighbors(startKey, state), log: [] } ]; let steps = 0; while (stack.length > 0) { if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError"); if (Date.now() - options.startTime > options.timeLimit) return; if (++steps % 500 === 0) { await new Promise(r => setTimeout(r, 0)); options.onProgress(Date.now() - options.startTime); } const top = stack[stack.length - 1]; if (top.neighbors.length === 0) { this._popState(state, top.log); stack.pop(); continue; } const nextKey = top.neighbors.pop(); const isP = resolvePortal(l, top.k)?.dest === nextKey; const transLog = this._pushState(state, nextKey, isP, l); if (l.gooseSet.has(nextKey)) { this._popState(state, transLog); continue; } const realLen = state.path.length - 1 - state.isJump.size; if (realLen > l.reqLen) { this._popState(state, transLog); continue; } if (realLen === l.reqLen) { if (state.ints === l.reqInt && this._checkFinalConstraints(state, l)) { validSpotsSet.add(nextKey); } this._popState(state, transLog); continue; } stack.push({ k: nextKey, neighbors: getNeighbors(nextKey, state), log: transLog }); } }
+        _buildDistMap(l) {
+            const { w, h } = l.grid;
+            const map = new Map();
+            const q = [{ k: l.goalKey, d: 0 }];
+            map.set(l.goalKey, 0);
+            let head = 0;
+            while (head < q.length) {
+                const { k, d } = q[head++];
+                const p = UNPACK(k);
+                const neighbors = [];
+                const portal = resolvePortal(l, k);
+                if (portal) neighbors.push(portal.dest);
+                [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                    const nx = p.x + dx, ny = p.y + dy;
+                    if (inBounds(nx, ny, w, h)) {
+                        const nk = PACK(nx, ny);
+                        if (!l.blockSet.has(nk)) neighbors.push(nk);
+                    }
+                });
+                for (const nk of neighbors) {
+                    if (!map.has(nk)) {
+                        map.set(nk, d + 1);
+                        q.push({ k: nk, d: d + 1 });
+                    }
+                }
+            }
+            return map;
+        },
+        _buildFlipperDistMap(l, flipperSet) {
+            const { w, h } = l.grid;
+            const map = new Map();
+            const q = [];
+            flipperSet.forEach(k => {
+                map.set(k, 0);
+                q.push({ k: k, d: 0 });
+            });
+            let head = 0;
+            while (head < q.length) {
+                const { k, d } = q[head++];
+                const p = UNPACK(k);
+                const neighbors = [];
+                const portal = resolvePortal(l, k);
+                if (portal) neighbors.push(portal.dest);
+                [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                    const nx = p.x + dx, ny = p.y + dy;
+                    if (inBounds(nx, ny, w, h)) {
+                        const nk = PACK(nx, ny);
+                        if (!l.blockSet.has(nk)) neighbors.push(nk);
+                    }
+                });
+                for (const nk of neighbors) {
+                    if (!map.has(nk)) {
+                        map.set(nk, d + 1);
+                        q.push({ k: nk, d: d + 1 });
+                    }
+                }
+            }
+            return map;
+        },
+        _estimateMustPassBoundFrom(key, state, l) {
+            const mask = state.mustMask;
+            if (mask === 0n) return l.distMapForSolver.get(key) ?? Infinity;
+            if (l.mustPassDpMode === 'exact') {
+                const memoKey = `${key}|${mask.toString()}`;
+                const cached = l.mustPassKeyMaskCache.get(memoKey);
+                if (cached !== undefined) return cached;
+                let best = Infinity;
+                for (let i = 0; i < l.mustPassKeys.length; i++) {
+                    const bit = 1n << BigInt(i);
+                    if ((mask & bit) === 0n) continue;
+                    const dToMust = l.mustPassDistMaps[i].get(key);
+                    if (dToMust === undefined) continue;
+                    const rest = l.mustPassDp(mask ^ bit, i);
+                    if (rest === Infinity) continue;
+                    const total = dToMust + rest;
+                    if (total < best) best = total;
+                }
+                l.mustPassKeyMaskCache.set(memoKey, best);
+                return best;
+            }
+            let nearest = Infinity;
+            const nodes = [];
+            for (let i = 0; i < l.mustPassKeys.length; i++) {
+                const bit = 1n << BigInt(i);
+                if ((mask & bit) === 0n) continue;
+                nodes.push(i);
+                const d = l.mustPassDistMaps[i].get(key);
+                if (d !== undefined && d < nearest) nearest = d;
+            }
+            if (nearest === Infinity) return Infinity;
+            if (nodes.length === 0) return l.distMapForSolver.get(key) ?? Infinity;
+            const nodeCount = nodes.length + 1;
+            const visited = new Array(nodeCount).fill(false);
+            const minEdge = new Array(nodeCount).fill(Infinity);
+            minEdge[0] = 0;
+            const edges = (a, b) => {
+                if (a === b) return 0;
+                if (a === 0) return l.mustPassToGoalDist[nodes[b - 1]];
+                if (b === 0) return l.mustPassToGoalDist[nodes[a - 1]];
+                return l.mustPassPairDist[nodes[a - 1]][nodes[b - 1]];
+            };
+            let mst = 0;
+            for (let i = 0; i < nodeCount; i++) {
+                let v = -1;
+                for (let j = 0; j < nodeCount; j++) {
+                    if (!visited[j] && (v === -1 || minEdge[j] < minEdge[v])) v = j;
+                }
+                if (v === -1 || minEdge[v] === Infinity) return Infinity;
+                visited[v] = true;
+                mst += minEdge[v];
+                for (let to = 0; to < nodeCount; to++) {
+                    if (visited[to]) continue;
+                    const w = edges(v, to);
+                    if (w < minEdge[to]) minEdge[to] = w;
+                }
+            }
+            return nearest + mst;
+        },
+        _encodeMustCrossCounts(state) {
+            if (!state.mustCrossCounts || state.mustCrossCounts.length === 0) return 0n;
+            let code = 0n;
+            for (let i = 0; i < state.mustCrossCounts.length; i++) {
+                code = code * 3n + BigInt(state.mustCrossCounts[i]);
+            }
+            return code;
+        },
+        _portalForced(state, l) {
+            const k = state.path[state.path.length - 1];
+            return l.portalMap.has(k) && !state.isJump.has(state.path.length - 1);
+        },
+        _stateSignature(state, l, realLen) {
+            const posKey = state.path[state.path.length - 1];
+            const portalForced = this._portalForced(state, l) ? 1 : 0;
+            const crossCounts = this._encodeMustCrossCounts(state).toString();
+            return [
+                posKey,
+                realLen,
+                state.ints,
+                state.mustMask.toString(),
+                state.mustCrossMask ? state.mustCrossMask.toString() : '0',
+                crossCounts,
+                portalForced,
+                state.flipParity,
+                state.flipperCrossMask ? state.flipperCrossMask.toString() : '0',
+                state.flipperParityAtCrossMask ? state.flipperParityAtCrossMask.toString() : '0'
+            ].join('|');
+        },
+        _crossNeeds(state) {
+            if (!state.mustCrossCounts) return 0;
+            let needs = 0;
+            for (let i = 0; i < state.mustCrossCounts.length; i++) needs += (2 - state.mustCrossCounts[i]);
+            return needs;
+        },
+        _nearestOutstandingMustCrossDist(key, state, l) {
+            if (!state.mustCrossMask || state.mustCrossMask === 0n) return Infinity;
+            let best = Infinity;
+            for (let i = 0; i < l.mustCrossKeys.length; i++) {
+                const bit = 1n << BigInt(i);
+                if ((state.mustCrossMask & bit) === 0n) continue;
+                const d = l.mustCrossDistMaps[i].get(key);
+                if (d !== undefined && d < best) best = d;
+            }
+            return best;
+        },
+        _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l) {
+            const { w, h } = l.grid;
+            const p = UNPACK(k);
+            const candidates = [];
+            const portal = resolvePortal(l, k);
+            const portalForced = portal && !state.isJump.has(state.path.length - 1);
+            const portalDest = portal ? portal.dest : -1;
+            if (portalForced && portalDest !== -1) {
+                candidates.push(portalDest);
+            } else {
+                [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                    const nx = p.x + dx, ny = p.y + dy;
+                    if (inBounds(nx, ny, w, h)) candidates.push(PACK(nx, ny));
+                });
+            }
+            const pEnd = UNPACK(l.goalKey);
+            const cEnd = (pEnd.x + pEnd.y) % 2;
+            const curLen = state.path.length - 1 - state.isJump.size;
+            const hasMust = state.mustMask !== 0n;
+            const mustBoundCache = new Map();
+            const crossNeed = this._crossNeeds(state);
+            const crossDistCache = crossNeed > 0 ? new Map() : null;
+            const getMustBound = (key) => {
+                if (!hasMust) return 0;
+                if (mustBoundCache.has(key)) return mustBoundCache.get(key);
+                const bound = this._estimateMustPassBoundFrom(key, state, l);
+                mustBoundCache.set(key, bound);
+                return bound;
+            };
+            const getCrossBound = (key) => {
+                if (crossNeed <= 0) return 0;
+                if (crossDistCache.has(key)) return crossDistCache.get(key);
+                const dNearest = this._nearestOutstandingMustCrossDist(key, state, l);
+                const b = dNearest === Infinity ? Infinity : dNearest + Math.max(0, crossNeed - 1);
+                crossDistCache.set(key, b);
+                return b;
+            };
+            const valid = candidates.filter(nk => {
+                if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers)) return false;
+                const isP = (portalDest === nk && portalForced);
+                const nLen = curLen + (isP ? 0 : 1);
+                const rSteps = l.reqLen - nLen;
+                const pN = UNPACK(nk);
+                const cN = (pN.x + pN.y) % 2;
+                if (((Math.abs(cN - cEnd)) % 2) !== (rSteps % 2)) {
+                    const dF = flipperDistMap.get(nk);
+                    if (dF === undefined || dF > rSteps) return false;
+                }
+                const d = distMap.get(nk);
+                if (d === undefined || d > rSteps) return false;
+                if (hasMust) {
+                    const bestBound = getMustBound(nk);
+                    if (bestBound === Infinity || bestBound > rSteps) return false;
+                }
+                if (crossNeed > 0) {
+                    const crossBound = getCrossBound(nk);
+                    if (crossBound === Infinity || crossBound > rSteps) return false;
+                }
+                return true;
+            });
+            valid.sort((a, b) => {
+                const fA = usageFreq.get(a) || 0;
+                const fB = usageFreq.get(b) || 0;
+                if (fA !== fB) return fA - fB;
+                if (hasMust) {
+                    const mA = getMustBound(a), mB = getMustBound(b);
+                    if (mA !== mB) return mA - mB;
+                }
+                if (crossNeed > 0) {
+                    const cA = getCrossBound(a), cB = getCrossBound(b);
+                    if (cA !== cB) return cA - cB;
+                }
+                return (distMap.get(a) || 999) - (distMap.get(b) || 999);
+            });
+            return valid;
+        },
+        _pushState(s, k, isJump, l) {
+            const log = [];
+            const lastK = s.path[s.path.length - 1];
+            if (!isJump) {
+                const lP = UNPACK(lastK), cP = UNPACK(k);
+                const axis = (cP.y === lP.y) ? H : V;
+                const prop = axis === H ? 'h' : 'v';
+                let uL = s.usage.get(lastK);
+                if (!uL) {
+                    uL = { h: false, v: false };
+                    s.usage.set(lastK, uL);
+                    log.push({ op: 'new_usage', key: lastK });
+                }
+                if (!uL[prop]) {
+                    uL[prop] = true;
+                    log.push({ op: 'set_prop', key: lastK, prop: prop });
+                }
+                let uC = s.usage.get(k);
+                if (!uC) {
+                    uC = { h: false, v: false };
+                    s.usage.set(k, uC);
+                    log.push({ op: 'new_usage', key: k });
+                }
+                if (!uC[prop]) {
+                    uC[prop] = true;
+                    log.push({ op: 'set_prop', key: k, prop: prop });
+                }
+            }
+            const c = s.counts.get(k) || 0;
+            if (c > 0 && k !== l.goalKey && !l.gateKeys.includes(k)) {
+                s.ints++;
+                log.push({ op: 'inc_int' });
+            }
+            if (c === 0) {
+                s.counts.set(k, 1);
+                log.push({ op: 'new_count', key: k });
+            } else {
+                s.counts.set(k, c + 1);
+                log.push({ op: 'inc_count', key: k });
+            }
+            if (c === 0) {
+                const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(k) : undefined;
+                if (mustIdx !== undefined) {
+                    const bit = 1n << BigInt(mustIdx);
+                    if ((s.mustMask & bit) !== 0n) {
+                        s.mustMask &= ~bit;
+                        log.push({ op: 'mustmask', bit: bit });
+                    }
+                }
+            }
+            if (s.mustCrossCounts) {
+                const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(k) : undefined;
+                if (crossIdx !== undefined) {
+                    const prev = s.mustCrossCounts[crossIdx];
+                    if (prev < 2) {
+                        s.mustCrossCounts[crossIdx] = prev + 1;
+                        log.push({ op: 'mustcross_inc', idx: crossIdx, prev });
+                        if (prev + 1 >= 2) {
+                            const bit = 1n << BigInt(crossIdx);
+                            if ((s.mustCrossMask & bit) !== 0n) {
+                                s.mustCrossMask &= ~bit;
+                                log.push({ op: 'mustcross_mask_clear', bit });
+                            }
+                        }
+                    }
+                }
+            }
+            s.path.push(k);
+            if (isJump) s.isJump.add(s.path.length - 1);
+            if (l.flippingFilterMap.has(k) && !s.crossedFlippers.has(k)) {
+                s.crossedFlippers.set(k, s.flipCount);
+                const flipIdx = l.flipperIndex ? l.flipperIndex.get(k) : undefined;
+                if (flipIdx !== undefined) {
+                    const bit = 1n << BigInt(flipIdx);
+                    s.flipperCrossMask |= bit;
+                    if ((s.flipParity & 1) === 1) s.flipperParityAtCrossMask |= bit;
+                    log.push({ op: 'flipper_mask_set', bit, hadParity: (s.flipParity & 1) === 1 });
+                }
+                s.flipCount++;
+                s.flipParity = s.flipCount % 2;
+                log.push({ op: 'flip_add', key: k });
+            }
+            return log;
+        },
+        _popState(s, log) {
+            const k = s.path.pop();
+            const idx = s.path.length;
+            if (s.isJump.has(idx)) s.isJump.delete(idx);
+            for (let i = log.length - 1; i >= 0; i--) {
+                const entry = log[i];
+                if (entry.op === 'inc_int') {
+                    s.ints--;
+                } else if (entry.op === 'new_count') {
+                    s.counts.delete(entry.key);
+                } else if (entry.op === 'inc_count') {
+                    s.counts.set(entry.key, s.counts.get(entry.key) - 1);
+                } else if (entry.op === 'set_prop') {
+                    const u = s.usage.get(entry.key);
+                    if (u) u[entry.prop] = false;
+                } else if (entry.op === 'new_usage') {
+                    s.usage.delete(entry.key);
+                } else if (entry.op === 'flip_add') {
+                    s.crossedFlippers.delete(entry.key);
+                    s.flipCount--;
+                    s.flipParity = s.flipCount % 2;
+                } else if (entry.op === 'mustmask') {
+                    s.mustMask |= entry.bit;
+                } else if (entry.op === 'mustcross_inc') {
+                    s.mustCrossCounts[entry.idx] = entry.prev;
+                } else if (entry.op === 'mustcross_mask_clear') {
+                    s.mustCrossMask |= entry.bit;
+                } else if (entry.op === 'flipper_mask_set') {
+                    s.flipperCrossMask &= ~entry.bit;
+                    if (entry.hadParity) s.flipperParityAtCrossMask &= ~entry.bit;
+                }
+            }
+        },
+        _checkFinalConstraints(state, l) {
+            for (const k of l.mustPassKeys) if (!state.counts.has(k)) return false;
+            for (const k of l.mustCrossKeys) if ((state.counts.get(k) || 0) < 2) return false;
+            for (const k of l.gooseSet) if (state.counts.has(k)) return false;
+            return true;
+        },
+        async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options) {
+            const mustCount = l.mustPassKeys.length;
+            const mustCrossCount = l.mustCrossKeys.length;
+            const state = {
+                path: [startKey],
+                counts: new Map(),
+                usage: new Map(),
+                ints: 0,
+                isJump: new Set(),
+                flipCount: 0,
+                flipParity: 0,
+                crossedFlippers: new Map(),
+                flipperCrossMask: 0n,
+                flipperParityAtCrossMask: 0n,
+                mustMask: mustCount > 0 ? ((1n << BigInt(mustCount)) - 1n) : 0n,
+                mustCrossMask: mustCrossCount > 0 ? ((1n << BigInt(mustCrossCount)) - 1n) : 0n,
+                mustCrossCounts: mustCrossCount > 0 ? new Uint8Array(mustCrossCount) : null
+            };
+            state.counts.set(startKey, 1);
+            const startMustIdx = l.mustPassIndex ? l.mustPassIndex.get(startKey) : undefined;
+            if (startMustIdx !== undefined) state.mustMask &= ~(1n << BigInt(startMustIdx));
+            const startCrossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(startKey) : undefined;
+            if (startCrossIdx !== undefined && state.mustCrossCounts) {
+                state.mustCrossCounts[startCrossIdx] = 1;
+            }
+            if (l.flippingFilterMap.has(startKey)) {
+                state.crossedFlippers.set(startKey, state.flipCount);
+                const flipIdx = l.flipperIndex ? l.flipperIndex.get(startKey) : undefined;
+                if (flipIdx !== undefined) state.flipperCrossMask |= (1n << BigInt(flipIdx));
+                state.flipCount++;
+                state.flipParity = state.flipCount % 2;
+            }
+            const failedStates = new Set();
+            const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l);
+            const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: this._stateSignature(state, l, 0) }];
+            let steps = 0;
+            while (stack.length > 0) {
+                if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                if (Date.now() - options.startTime > options.timeLimit) return null;
+                if (++steps % 500 === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                    options.onProgress(Date.now() - options.startTime);
+                }
+                const top = stack[stack.length - 1];
+                if (top.neighbors.length === 0) {
+                    failedStates.add(top.sig);
+                    this._popState(state, top.log);
+                    stack.pop();
+                    continue;
+                }
+                const nextKey = top.neighbors.pop();
+                const topPortal = resolvePortal(l, top.k);
+                const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
+                const transLog = this._pushState(state, nextKey, isP, l);
+                const lastK = state.path[state.path.length - 1];
+                if (l.gooseSet.has(nextKey)) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                const realLen = state.path.length - 1 - state.isJump.size;
+                if (realLen > l.reqLen) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                if (state.ints > l.reqInt) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                const rSteps = l.reqLen - realLen;
+                if ((l.reqInt - state.ints) > rSteps) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                const crossNeeds = this._crossNeeds(state);
+                if (crossNeeds > rSteps) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                if (state.mustMask !== 0n) {
+                    const mustBound = this._estimateMustPassBoundFrom(lastK, state, l);
+                    if (mustBound === Infinity || mustBound > rSteps) {
+                        this._popState(state, transLog);
+                        continue;
+                    }
+                }
+                if (state.mustCrossMask !== 0n) {
+                    const crossDist = this._nearestOutstandingMustCrossDist(lastK, state, l);
+                    if (crossDist === Infinity || (crossDist + Math.max(0, crossNeeds - 1)) > rSteps) {
+                        this._popState(state, transLog);
+                        continue;
+                    }
+                }
+                if (lastK === l.goalKey) {
+                    if (realLen === l.reqLen && state.ints === l.reqInt) {
+                        if (this._checkFinalConstraints(state, l)) return { path: [...state.path], len: realLen };
+                    }
+                    this._popState(state, transLog);
+                    continue;
+                }
+                const minRem = distMap.get(lastK) || Infinity;
+                if (realLen + minRem > l.reqLen) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                const sig = this._stateSignature(state, l, realLen);
+                if (failedStates.has(sig)) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l);
+                stack.push({ k: nextKey, neighbors, log: transLog, sig });
+            }
+            return null;
+        },
+        async _solveTrapSpots(startKey, l, validSpotsSet, options) {
+            const { w, h } = l.grid;
+            const state = { path: [startKey], counts: new Map(), usage: new Map(), ints: 0, isJump: new Set(), flipCount: 0, crossedFlippers: new Map() };
+            state.counts.set(startKey, 1);
+            if (l.flippingFilterMap.has(startKey)) {
+                state.crossedFlippers.set(startKey, state.flipCount);
+                state.flipCount++;
+            }
+            const getNeighbors = (k, s) => {
+                const p = UNPACK(k);
+                let candidates = [];
+                const portal = resolvePortal(l, k);
+                if (portal && !s.isJump.has(s.path.length - 1)) candidates.push(portal.dest);
+                else [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                    const nx = p.x + dx, ny = p.y + dy;
+                    if (inBounds(nx, ny, w, h)) candidates.push(PACK(nx, ny));
+                });
+                return candidates.filter(nk => this._isMoveValid(nk, s.path, s.counts, s.usage, s.ints, s.isJump, l, s.flipCount, s.crossedFlippers));
+            };
+            const stack = [{ k: startKey, neighbors: getNeighbors(startKey, state), log: [] }];
+            let steps = 0;
+            while (stack.length > 0) {
+                if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                if (Date.now() - options.startTime > options.timeLimit) return;
+                if (++steps % 500 === 0) {
+                    await new Promise(r => setTimeout(r, 0));
+                    options.onProgress(Date.now() - options.startTime);
+                }
+                const top = stack[stack.length - 1];
+                if (top.neighbors.length === 0) {
+                    this._popState(state, top.log);
+                    stack.pop();
+                    continue;
+                }
+                const nextKey = top.neighbors.pop();
+                const topPortal = resolvePortal(l, top.k);
+                const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
+                const transLog = this._pushState(state, nextKey, isP, l);
+                if (l.gooseSet.has(nextKey)) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                const realLen = state.path.length - 1 - state.isJump.size;
+                if (realLen > l.reqLen) {
+                    this._popState(state, transLog);
+                    continue;
+                }
+                if (realLen === l.reqLen) {
+                    if (state.ints === l.reqInt && this._checkFinalConstraints(state, l)) validSpotsSet.add(nextKey);
+                    this._popState(state, transLog);
+                    continue;
+                }
+                stack.push({ k: nextKey, neighbors: getNeighbors(nextKey, state), log: transLog });
+            }
+        }
     };
-    
+
+
     // ======================================================
     // H) Solver
     // ======================================================
-    const PathfinderSolver = { async solve(level, options = {}) { const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null } = options; const startTime = Date.now(); const foundSolutions = []; if (signal?.aborted) throw new DOMException("Aborted", "AbortError"); onStateUpdate("Analyzing Bipartite Parity..."); const distMap = SolverCore._buildDistMap(level); level.mustPassIndex = new Map(); level.mustPassDistMaps = []; level.mustPassToGoalDist = []; if (level.mustPassKeys.length > 0) { const { w, h } = level.grid; const buildMustPassDistMap = (targetKey) => { const map = new Map(); const q = [{k: targetKey, d: 0}]; map.set(targetKey, 0); let head = 0; while (head < q.length) { const { k, d } = q[head++]; const p = UNPACK(k); const neighbors = []; const portal = resolvePortal(level, k); if (portal) neighbors.push(portal.dest); [[0,1],[0,-1],[1,0],[-1,0]].forEach(([dx, dy]) => { const nx = p.x + dx, ny = p.y + dy; if (inBounds(nx, ny, w, h)) { const nk = PACK(nx, ny); if (!level.blockSet.has(nk)) neighbors.push(nk); } }); for (const nk of neighbors) { if (!map.has(nk)) { map.set(nk, d + 1); q.push({ k: nk, d: d + 1 }); } } } return map; }; for (let i = 0; i < level.mustPassKeys.length; i++) { const mustKey = level.mustPassKeys[i]; level.mustPassIndex.set(mustKey, i); level.mustPassDistMaps.push(buildMustPassDistMap(mustKey)); level.mustPassToGoalDist.push(distMap.get(mustKey) ?? Infinity); } } const flipperSet = new Set(); level.portalMap.forEach((v, k) => { const p1 = UNPACK(k), p2 = UNPACK(v.dest); if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) flipperSet.add(k); }); const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet); const validGates = level.gateKeys.filter(gk => { const d = distMap.get(gk); if (d === undefined || d > level.reqLen) return false; const pStart = UNPACK(gk), pEnd = UNPACK(level.goalKey); const isMismatch = ((Math.abs((pStart.x+pStart.y)-(pEnd.x+pEnd.y))) % 2) !== (level.reqLen % 2); if (isMismatch) { const dFlip = flipperDistMap.get(gk); if (dFlip === undefined || dFlip > level.reqLen) return false; } return true; }); if (validGates.length === 0) return []; onStateUpdate(`Solving (${validGates.length} viable gates)...`); let cellUsageFreq = new Map(); if (level.hints && level.hints.length > 0) { level.hints.forEach(path => { path.forEach(k => cellUsageFreq.set(k, (cellUsageFreq.get(k) || 0) + 1)); }); } validGates.sort(() => Math.random() - 0.5); for (const gateKey of validGates) { if (foundSolutions.length >= maxSolutions) break; await new Promise(r => setTimeout(r, 0)); const internalOpts = { timeLimit, startTime, onProgress, signal }; const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, cellUsageFreq, level, internalOpts); if (result) { const solStr = JSON.stringify(result.path); if (!foundSolutions.some(s => JSON.stringify(s.path) === solStr)) { foundSolutions.push(result); result.path.forEach(k => cellUsageFreq.set(k, (cellUsageFreq.get(k) || 0) + 1)); } } } return foundSolutions; }, async findTrapSpots(level, options = {}) { const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null } = options; const startTime = Date.now(); const validSpots = new Set(); if (signal?.aborted) throw new DOMException("Aborted", "AbortError"); onStateUpdate(`Mapping Traps (${level.gateKeys.length} gates)...`); for (const gateKey of level.gateKeys) { await new Promise(r => setTimeout(r, 0)); const internalOpts = { timeLimit, startTime, onProgress, signal }; await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts); if (Date.now() - startTime > timeLimit) break; } return validSpots; } };
-    
+    const PathfinderSolver = {
+        async solve(level, options = {}) {
+            const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null } = options;
+            const startTime = Date.now();
+            const foundSolutions = [];
+            if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+            onStateUpdate("Analyzing Bipartite Parity...");
+
+            const distMap = SolverCore._buildDistMap(level);
+            level.distMapForSolver = distMap;
+            level.mustPassIndex = new Map();
+            level.mustPassDistMaps = [];
+            level.mustPassToGoalDist = [];
+            level.mustPassPairDist = [];
+            level.mustPassKeyMaskCache = new Map();
+            level.mustPassDpMode = 'none';
+            level.mustPassDp = () => Infinity;
+
+            if (level.mustPassKeys.length > 0) {
+                const { w, h } = level.grid;
+                const buildMustPassDistMap = (targetKey) => {
+                    const map = new Map();
+                    const q = [{ k: targetKey, d: 0 }];
+                    map.set(targetKey, 0);
+                    let head = 0;
+                    while (head < q.length) {
+                        const { k, d } = q[head++];
+                        const p = UNPACK(k);
+                        const neighbors = [];
+                        const portal = resolvePortal(level, k);
+                        if (portal) neighbors.push(portal.dest);
+                        [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                            const nx = p.x + dx, ny = p.y + dy;
+                            if (inBounds(nx, ny, w, h)) {
+                                const nk = PACK(nx, ny);
+                                if (!level.blockSet.has(nk)) neighbors.push(nk);
+                            }
+                        });
+                        for (const nk of neighbors) {
+                            if (!map.has(nk)) {
+                                map.set(nk, d + 1);
+                                q.push({ k: nk, d: d + 1 });
+                            }
+                        }
+                    }
+                    return map;
+                };
+                for (let i = 0; i < level.mustPassKeys.length; i++) {
+                    const mustKey = level.mustPassKeys[i];
+                    level.mustPassIndex.set(mustKey, i);
+                    level.mustPassDistMaps.push(buildMustPassDistMap(mustKey));
+                    level.mustPassToGoalDist.push(distMap.get(mustKey) ?? Infinity);
+                }
+                const n = level.mustPassKeys.length;
+                level.mustPassPairDist = Array.from({ length: n }, () => Array(n).fill(Infinity));
+                for (let i = 0; i < n; i++) {
+                    level.mustPassPairDist[i][i] = 0;
+                    for (let j = i + 1; j < n; j++) {
+                        const d = level.mustPassDistMaps[i].get(level.mustPassKeys[j]);
+                        const val = d === undefined ? Infinity : d;
+                        level.mustPassPairDist[i][j] = val;
+                        level.mustPassPairDist[j][i] = val;
+                    }
+                }
+                if (n <= 12) {
+                    level.mustPassDpMode = 'exact';
+                    const dpMemo = new Map();
+                    level.mustPassDp = (mask, lastIdx) => {
+                        if (mask === 0n) return level.mustPassToGoalDist[lastIdx];
+                        const key = `${mask.toString()}|${lastIdx}`;
+                        const cached = dpMemo.get(key);
+                        if (cached !== undefined) return cached;
+                        let best = Infinity;
+                        for (let nxt = 0; nxt < n; nxt++) {
+                            const bit = 1n << BigInt(nxt);
+                            if ((mask & bit) === 0n) continue;
+                            const d = level.mustPassPairDist[lastIdx][nxt];
+                            if (d === Infinity) continue;
+                            const rest = level.mustPassDp(mask ^ bit, nxt);
+                            if (rest === Infinity) continue;
+                            const total = d + rest;
+                            if (total < best) best = total;
+                        }
+                        dpMemo.set(key, best);
+                        return best;
+                    };
+                }
+            }
+
+            level.mustCrossIndex = new Map();
+            level.mustCrossDistMaps = [];
+            if (level.mustCrossKeys.length > 0) {
+                for (let i = 0; i < level.mustCrossKeys.length; i++) {
+                    const crossKey = level.mustCrossKeys[i];
+                    level.mustCrossIndex.set(crossKey, i);
+                    const map = new Map();
+                    const q = [{ k: crossKey, d: 0 }];
+                    map.set(crossKey, 0);
+                    let head = 0;
+                    while (head < q.length) {
+                        const { k, d } = q[head++];
+                        const p = UNPACK(k);
+                        const neighbors = [];
+                        const portal = resolvePortal(level, k);
+                        if (portal) neighbors.push(portal.dest);
+                        [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                            const nx = p.x + dx, ny = p.y + dy;
+                            if (inBounds(nx, ny, level.grid.w, level.grid.h)) {
+                                const nk = PACK(nx, ny);
+                                if (!level.blockSet.has(nk)) neighbors.push(nk);
+                            }
+                        });
+                        for (const nk of neighbors) {
+                            if (!map.has(nk)) {
+                                map.set(nk, d + 1);
+                                q.push({ k: nk, d: d + 1 });
+                            }
+                        }
+                    }
+                    level.mustCrossDistMaps.push(map);
+                }
+            }
+
+            level.flipperIndex = new Map();
+            let fIdx = 0;
+            level.flippingFilterMap.forEach((_, k) => level.flipperIndex.set(k, fIdx++));
+
+            const flipperSet = new Set();
+            level.portalMap.forEach((v, k) => {
+                const p1 = UNPACK(k), p2 = UNPACK(v.dest);
+                if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) flipperSet.add(k);
+            });
+            const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
+
+            const validGates = level.gateKeys.filter(gk => {
+                const d = distMap.get(gk);
+                if (d === undefined || d > level.reqLen) return false;
+                const pStart = UNPACK(gk), pEnd = UNPACK(level.goalKey);
+                const isMismatch = ((Math.abs((pStart.x + pStart.y) - (pEnd.x + pEnd.y))) % 2) !== (level.reqLen % 2);
+                if (isMismatch) {
+                    const dFlip = flipperDistMap.get(gk);
+                    if (dFlip === undefined || dFlip > level.reqLen) return false;
+                }
+                return true;
+            });
+            if (validGates.length === 0) return [];
+
+            onStateUpdate(`Solving (${validGates.length} viable gates)...`);
+            let cellUsageFreq = new Map();
+            if (level.hints && level.hints.length > 0) {
+                level.hints.forEach(path => path.forEach(k => cellUsageFreq.set(k, (cellUsageFreq.get(k) || 0) + 1)));
+            }
+            validGates.sort(() => Math.random() - 0.5);
+            for (const gateKey of validGates) {
+                if (foundSolutions.length >= maxSolutions) break;
+                await new Promise(r => setTimeout(r, 0));
+                const internalOpts = { timeLimit, startTime, onProgress, signal };
+                const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, cellUsageFreq, level, internalOpts);
+                if (result) {
+                    const solStr = JSON.stringify(result.path);
+                    if (!foundSolutions.some(s => JSON.stringify(s.path) === solStr)) {
+                        foundSolutions.push(result);
+                        result.path.forEach(k => cellUsageFreq.set(k, (cellUsageFreq.get(k) || 0) + 1));
+                    }
+                }
+            }
+            return foundSolutions;
+        },
+        async findTrapSpots(level, options = {}) {
+            const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null } = options;
+            const startTime = Date.now();
+            const validSpots = new Set();
+            if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+            onStateUpdate(`Mapping Traps (${level.gateKeys.length} gates)...`);
+            for (const gateKey of level.gateKeys) {
+                await new Promise(r => setTimeout(r, 0));
+                const internalOpts = { timeLimit, startTime, onProgress, signal };
+                await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts);
+                if (Date.now() - startTime > timeLimit) break;
+            }
+            return validSpots;
+        }
+    };
+
+
     // ======================================================
     // D) Rules / ValidationAndWin
     // ======================================================
