@@ -431,9 +431,12 @@
 
     const UI = {
         el: {},
+        _inited: false,
         init() {
-            const ids = ['editorPalette','playMetrics','editorMetrics','gameButtonGrid','editorButtonGrid','editCopyBtn','editGenBtn','devCopyBtn','devGenBtn','exportArea','themeSelectFooter','searchIndicator','solverTimer','searchLabel','levelTitle','lengthInfo','intersectionInfo','message'];
+            if (this._inited) return;
+            const ids = ['editorPalette','playMetrics','editorMetrics','gameButtonGrid','editorButtonGrid','editCopyBtn','editGenBtn','devCopyBtn','devGenBtn','exportArea','themeSelectFooter','searchIndicator','solverTimer','searchLabel','levelTitle','lengthInfo','intersectionInfo','message','loadingOverlay','loadStatusLabel'];
             ids.forEach(id => { this.el[id] = document.getElementById(id); });
+            this._inited = true;
         },
         showOverlay(name, onOff) {
             if (name === 'search') this.setSearchIndicator(onOff);
@@ -441,22 +444,23 @@
         setSearchIndicator(onOff) { const el = this.el.searchIndicator || $('searchIndicator'); if (el) el.classList.toggle('hidden', !onOff); },
         setSolverTimer(text) { const el = this.el.solverTimer || $('solverTimer'); if (el) el.innerText = text; },
         showLoading(text = 'Initing Systems...', pct = null) {
-            const overlay = $('loadingOverlay');
-            const status = $('loadStatusLabel');
+            const overlay = this.el.loadingOverlay || $('loadingOverlay');
+            const status = this.el.loadStatusLabel || $('loadStatusLabel');
             if (status) status.innerText = pct === null ? text : `${text} (${pct}%)`;
             if (overlay) { overlay.classList.remove('hidden'); overlay.style.opacity = '1'; }
         },
         hideLoading() {
-            const overlay = $('loadingOverlay');
+            const overlay = this.el.loadingOverlay || $('loadingOverlay');
             if (!overlay) return;
             overlay.style.opacity = '0';
             setTimeout(() => overlay.classList.add('hidden'), 500);
         },
-        showError(text) {
-            const status = $('loadStatusLabel');
+        showLoadError(text) {
+            const status = this.el.loadStatusLabel || $('loadStatusLabel');
             if (status) status.innerText = text;
             console.error(text);
         },
+        showError(text) { this.showLoadError(text); },
         setModeUI(mode) {
             const isEd = mode === EDITOR;
             (this.el.editorPalette || $('editorPalette')).classList.toggle('hidden', !isEd);
@@ -476,12 +480,19 @@
             if (i) { i.innerText = `${ints}/${reqInt}`; i.classList.toggle('text-red-300', ints > reqLen); i.classList.toggle('text-white', ints <= reqLen); }
         },
         updateLevelLabel(text) { const el = this.el.levelTitle || $('levelTitle'); if (el) el.innerText = text; },
+        updateFromState(state) {
+            if (!state || !state.level) return;
+            const reqLen = state.level.reqLen || 0;
+            const reqInt = state.level.reqInt || 0;
+            this.updateMetrics(getRealLength(), state.intersections || 0, reqLen, reqInt);
+        },
         flashMessage(text, ms = 800, className = 'text-white font-black') { showMessage(text, className); if (!text) return; setTimeout(() => showMessage('', ''), ms); }
     };
 
     AppModules.ui = UI;
 
     const Engine = {
+        constants: { AXIS },
         getState() { return ENGINE; },
         getCurrentLevel() { return ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; },
         log(type, msg, meta = null) {
@@ -558,6 +569,11 @@
             if (!allowEditorLooseRules && !l.mustCrossKeys.every(k => (temp.visitedCounts.get(k) || 0) >= 2)) return { ok: false, reason: 'Must-cross unmet' };
             return { ok: true };
         },
+        setDataFromGlobals() {
+            ENGINE.themeData = (typeof window.THEMES_MORE === 'object' && window.THEMES_MORE) ? window.THEMES_MORE : null;
+            ENGINE.levelData = Array.isArray(window.RAW_LEVELS) ? window.RAW_LEVELS : null;
+            return { themes: ENGINE.themeData, levels: ENGINE.levelData };
+        },
         loadLevel(idx, keepVariant = false) { return loadLevel(idx, keepVariant); },
         resetLevel() { return loadLevel(ENGINE.levelIdx, true); },
         runSanityChecks() {
@@ -584,45 +600,53 @@
         runId: 0,
         cancel(reason = 'cancel') {
             this.runId += 1;
-            if (ENGINE.activeSolverController) { try { ENGINE.activeSolverController.abort(); } catch (e) {} }
+            if (ENGINE.activeSolverController && typeof ENGINE.activeSolverController.abort === 'function') {
+                try { ENGINE.activeSolverController.abort(); } catch (e) {}
+            }
             ENGINE.activeSolverController = null;
             Engine.setOverlayState(OVERLAY_NONE, `solver-${reason}`);
         },
-        async solveLevel(levelIdx = ENGINE.levelIdx, opts = {}) {
+        async solveCurrentLevel(opts = {}) {
             if (ENGINE.activeSolverController) return [];
             const { allowEditorLooseRules = false, onStateUpdate = () => {}, onProgress = () => {}, ...solverOpts } = opts;
             const runId = ++this.runId;
-            ENGINE.activeSolverController = new AbortController();
-            Engine.setOverlayState(SOLVER_RUNNING, 'solver-start');
             const normalized = Engine.normalizeLevel(Engine.getCurrentLevel());
-            const solutions = await PathfinderSolver.solve(normalized, {
-                ...solverOpts,
-                signal: ENGINE.activeSolverController.signal,
-                onStateUpdate,
-                onProgress
-            });
+            const controller = (typeof AbortController !== 'undefined') ? new AbortController() : { signal: undefined, abort() {} };
+            ENGINE.activeSolverController = controller;
+            Engine.setOverlayState(SOLVER_RUNNING, 'solver-start');
+            let solutions = [];
+            try {
+                solutions = await PathfinderSolver.solve(normalized, {
+                    ...solverOpts,
+                    signal: controller.signal,
+                    onStateUpdate,
+                    onProgress
+                });
+            } finally {
+                if (runId === this.runId) ENGINE.activeSolverController = null;
+            }
             if (runId !== this.runId) return [];
             const valid = [];
             for (const s of solutions || []) {
-                const r = Engine.validatePath(s.path, normalized, { allowEditorLooseRules });
-                if (r.ok) valid.push(s.path); else Engine.log('solver_invalid_path', r.reason, { levelIdx });
+                const path = Array.isArray(s?.path) ? s.path : s;
+                const r = Engine.validatePath(path, normalized, { allowEditorLooseRules });
+                if (r.ok) valid.push(path);
+                else if (ENGINE.isDevMode) Engine.log('solver_invalid_path', r.reason, { levelIdx: ENGINE.levelIdx });
             }
-            ENGINE.activeSolverController = null;
-            return valid;
-        },
-        async solveCurrentLevel(opts = {}) {
-            return this.solveLevel(ENGINE.levelIdx, opts);
+            if ((solutions || []).length && !valid.length && ENGINE.mode === PLAY) UI.flashMessage('Solver result rejected', 900, 'text-amber-300 font-black');
+            return valid;        },
+        async findTrapSpots(level, opts = {}) {
+            const normalized = Engine.normalizeLevel(level);
+            return PathfinderSolver.findTrapSpots(normalized, opts);
         }
     };
 
-    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
-    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
-
-    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
-    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
-
-    const EditorController = { setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); } };
-    const GameController = { tryMoveTo(target) { return attemptMoveTo(target); } };
+    const EditorController = {
+        setPencilMode(onOff) { ENGINE.editor.isPencilMode = !!onOff; updatePencilState(); }
+    };
+    const GameController = {
+        tryMoveTo(target) { return attemptMoveTo(target); }
+    };
 
     AppModules.engine = Engine;
     AppModules.solver = SolverFacade;
@@ -1386,7 +1410,6 @@
                 onStateUpdate: (msg) => { $('searchLabel').innerText = msg; showMessage(msg, 'text-sky-600'); },
                 onProgress: (elapsedMs) => UI.setSolverTimer((elapsedMs / 1000).toFixed(1) + 's')
             });
-            const paths = await SolverFacade.solveLevel(ENGINE.levelIdx, { timeLimit: 105000 });
             if (paths.length > 0) {
                 if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
                 ENGINE.hinter.pathList = paths;
@@ -1680,86 +1703,108 @@
         $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver(); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
         
-        const loader = {
-            progress: 0,
-            hasLoaded: false,
-            didFinish: false,
-            finish() {
-                if (this.didFinish) return;
-                this.didFinish = true;
-                APP.ui.hideLoading();
-                UI.hideLoading();
-                populateThemes();
+        window.__BOOT_LOG = [];
+        const Boot = {
+            _finished: false,
+            _watchdog: null,
+            markStep(msg) {
+                const entry = `[${new Date().toISOString()}] ${msg}`;
+                window.__BOOT_LOG.push(entry);
+                if (window.__BOOT_LOG.length > 200) window.__BOOT_LOG.shift();
+                if (ENGINE.isDevMode) console.log('[BOOT]', entry);
             },
-            async triggerFallback(reason = 'fallback') {
-                if (this.didFinish) return;
-                UI.showLoading('Loading fallback data...');
-                try {
-                    window.RAW_LEVELS = FALLBACK_RAW_LEVELS;
-                    Engine.loadLevel(0);
-                    updatePlayModeLayout();
-                    loop();
-                    this.hasLoaded = true;
-                } catch (e) {
-                    UI.showError(`Fallback init failed: ${e?.message || e}`);
-                } finally {
-                    this.finish();
+            finishOk() {
+                if (this._finished) return;
+                this._finished = true;
+                if (this._watchdog) clearTimeout(this._watchdog);
+                UI.hideLoading();
+                if (ENGINE.isDevMode) {
+                    try { Engine.runSanityChecks(); } catch (e) { console.warn('[Sanity] failed', e); }
                 }
             },
-            start() {
-                UI.showLoading('Initing Systems...');
-                const loadThemes = new Promise(resolve => {
-                    const s = document.createElement('script');
-                    s.src = "./themes.js";
-                    s.onload = () => {
-                        try {
-                            if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
-                        } catch (e) {}
-                        resolve();
-                    };
-                    s.onerror = () => resolve();
-                    document.head.appendChild(s);
-                });
-                const loadLevels = new Promise((resolve, reject) => {
-                    const s = document.createElement('script');
-                    s.src = "./levels.js";
-                    s.onload = () => resolve();
-                    s.onerror = () => reject(new Error('levels.js missing'));
-                    document.head.appendChild(s);
-                });
-                Promise.all([loadThemes, loadLevels]).then(() => {
-                    if (this.didFinish || this.hasLoaded) return;
-                    try {
-                        if (!Array.isArray(window.RAW_LEVELS) || window.RAW_LEVELS.length === 0) throw new Error('RAW_LEVELS unavailable');
-                        UI.init();
-                        Engine.loadLevel(0);
-                        updatePlayModeLayout();
-                        loop();
-                        this.hasLoaded = true;
-                    } catch (e) {
-                        console.error('Normal boot failed; using fallback.', e);
-                        return this.triggerFallback('normal-boot-error');
+            finishFallback(reason) {
+                if (this._finished) return;
+                this._finished = true;
+                if (this._watchdog) clearTimeout(this._watchdog);
+                UI.showLoadError(`Fallback: ${reason}`);
+                try {
+                    window.RAW_LEVELS = FALLBACK_RAW_LEVELS;
+                    Engine.setDataFromGlobals();
+                    this.markStep('Engine.loadLevel start');
+                    Engine.loadLevel(0);
+                    this.markStep('Engine.loadLevel end');
+                    updatePlayModeLayout();
+                    loop();
+                    this.markStep('Loop started');
+                } catch (e) {
+                    console.error('Fallback init failed', e);
+                } finally {
+                    UI.hideLoading();
+                }
+            },
+            finishError(err) {
+                if (this._finished) return;
+                console.error('Boot error', err?.stack || err);
+                UI.showLoadError(`Boot error: ${err?.message || err}`);
+                this.finishFallback(err?.message || 'unknown boot error');
+            },
+            async start() {
+                if (this._finished) return;
+                UI.showLoading('Initing Systems…', 0);
+                this._watchdog = setTimeout(() => this.finishFallback('Boot timed out'), 6000);
+                try {
+                    this.markStep('UI.init start');
+                    UI.init();
+                    this.markStep('UI.init end');
+                    window.AXIS = Engine.constants.AXIS;
+                    window.MODES = MODES;
+                    this.markStep('Globals attached');
+                    try { if (firebaseConfigRaw) await initAuth(); } catch (e) {}
+                    syncProgress(auth?.currentUser);
+
+                    this.markStep('themes load start');
+                    const themesLoaded = await loadScript('./themes.js');
+                    this.markStep('themes load end');
+                    this.markStep('levels load start');
+                    const levelsLoaded = await loadScript('./levels.js');
+                    this.markStep('levels load end');
+
+                    const themesValid = !!(window.THEMES_MORE && typeof window.THEMES_MORE === 'object' && Object.keys(window.THEMES_MORE).length > 0);
+                    const levelsValid = Array.isArray(window.RAW_LEVELS) && window.RAW_LEVELS.length > 0;
+                    if (!themesLoaded || !levelsLoaded || !themesValid || !levelsValid) {
+                        this.markStep('validation failed');
+                        this.finishFallback('Missing/invalid themes or levels');
+                        return;
                     }
-                    this.finish();
-                }).catch(() => this.triggerFallback('script-load-failure'));
-                setTimeout(() => {
-                    if (!this.hasLoaded && !this.didFinish) this.triggerFallback('timeout');
-                }, 5000);
+                    this.markStep('validation passed');
+                    Object.assign(THEMES, window.THEMES_MORE);
+                    Engine.setDataFromGlobals();
+                    this.markStep('Engine.loadLevel start');
+                    try { Engine.loadLevel(0); } catch (e) { throw new Error(`Engine.loadLevel failed: ${e?.message || e}`); }
+                    this.markStep('Engine.loadLevel end');
+                    updatePlayModeLayout();
+                    loop();
+                    this.markStep('Loop started');
+                    applyTheme('classic');
+                    this.finishOk();
+                } catch (err) {
+                    this.finishError(err);
+                }
             }
         };
 
-        const startBoot = async () => {
-            try {
-                if (firebaseConfigRaw) await initAuth();
-            } catch (e) {}
-            syncProgress(auth?.currentUser);
-            loader.start();
-        };
+        async function loadScript(src) {
+            return new Promise((resolve) => {
+                const sEl = document.createElement('script');
+                sEl.src = src;
+                sEl.onload = () => resolve(true);
+                sEl.onerror = () => resolve(false);
+                document.head.appendChild(sEl);
+            });
+        }
 
-        UI.init();
-        startBoot();
-        applyTheme('classic');
-        if (ENGINE.isDevMode) Engine.runSanityChecks();
+        window.Boot = Boot;
+        Boot.start();
         } catch (bootErr) {
             console.error('Boot error', bootErr);
             APP.ui.showError(`Boot error: ${bootErr?.message || bootErr}`);
