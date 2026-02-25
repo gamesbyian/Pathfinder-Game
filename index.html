@@ -1722,7 +1722,7 @@
             if (isVisible) { $('editorHelpModal').classList.add('hidden'); return; }
             closeAllModals();
             if (ENGINE.activeSolverController) return; 
-            const l = ENGINE.editor.workingLevel; l.reqLen = parseInt($('editReqLen').value); l.reqInt = parseInt($('editReqInt').value); 
+            const l = ENGINE.editor.workingLevel; l.reqLen = parseInt($('editReqLen').value) || 0; l.reqInt = parseInt($('editReqInt').value) || 0; 
             ENGINE.activeSolverController = new AbortController(); 
             setOverlayState(SOLVER_RUNNING);
             const uiTimer = $('solverTimer'); const searchLabel = $('searchLabel'); 
@@ -1765,7 +1765,7 @@
             if (!isVisible) $('editorHelpModal').classList.remove('hidden');
         };
         $('closeEditorHelpX').onclick = () => $('editorHelpModal').classList.add('hidden');
-        $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver(); };
+        $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value) || 0; ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value) || 0; runGameSolver(); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
         
         window.__BOOT_LOG = [];
