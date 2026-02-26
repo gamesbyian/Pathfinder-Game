@@ -40,17 +40,17 @@
         .app-layout { max-width: 65vh; }
         #headerLeft { width: clamp(3.9rem, 9.5vw, 4.1rem); flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem); }
         #headerMiddle { width: clamp(11rem, 24vw, 13rem); min-width: 11rem; flex: 0 0 clamp(11rem, 24vw, 13rem); overflow: hidden; }
-        #headerRight { min-width: clamp(14.5rem, 34vw, 20rem); flex: 1 1 auto; }
+        #headerRight { min-width: clamp(14.5rem, 34vw, 20rem); flex: 1 1 auto; display: flex; align-items: center; justify-content: center; }
         #headerMiddleContent { --header-middle-col-pad: 0.5rem; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); justify-content: stretch; align-items: center; }
         .header-middle-col { min-width: 0; padding: 0 var(--header-middle-col-pad); display: flex; align-items: center; }
         #headerMiddleColLeft { justify-content: flex-end; }
         #headerMiddleColCenter { justify-content: center; }
         #headerMiddleColRight { justify-content: flex-start; }
-        #playMetrics, #editorMetrics { margin: 0 auto; justify-content: center; }
+        #playMetrics, #editorMetrics { margin: 0 auto; justify-content: center; max-width: 100%; }
         #levelInfoWrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 3ch; }
         #levelTitle { min-width: 3ch; text-align: center; }
         #levelNavigator { display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0; align-items: center; }
-        #headerRight > div { width: 100%; justify-content: center; margin: 0 auto; }
+        #headerRight > div { width: max-content; max-width: 100%; justify-content: center; margin: 0 auto; }
         @media (orientation: landscape) and (min-width: 900px) {
             .app-layout { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
             .layout-left-pane { width: clamp(21rem, 34vw, 30rem); max-height: 96vh; overflow: hidden; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
