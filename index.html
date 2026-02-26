@@ -25,6 +25,7 @@
         .modal-content { transition: all 0.3s ease; }
         #winSubMessage { font-family: 'Caveat', cursive; }
         button:active:not(:disabled) { transform: translateY(1px); }
+        button:focus-visible { outline: none; box-shadow: none; }
         button:disabled { cursor: not-allowed; opacity: 0.5; filter: grayscale(1); background-color: #94a3b8 !important; }
         .searching-dot { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
@@ -39,14 +40,15 @@
         .app-layout { max-width: 65vh; }
         @media (orientation: landscape) and (min-width: 900px) {
             .app-layout { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
-            .layout-left-pane { width: min(46vw, 90vh); max-height: 96vh; overflow-y: auto; padding-right: 0.5rem; }
+            .layout-left-pane { width: min(46vw, 90vh); max-height: 96vh; overflow: hidden; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
             .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
-            #themeModal.landscape-left-modal { align-items: flex-start; justify-content: flex-start; padding: 1rem 1rem 1rem 1.5rem; }
+            #themeModal.landscape-left-modal { align-items: center; justify-content: center; padding: 1rem; }
             #themeModal.landscape-left-modal #themeModalPanel { width: min(46vw, 90vh); max-width: min(46vw, 90vh); max-height: calc(100vh - 2rem); }
         }
         .app-layout.forced-landscape { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
-        .app-layout.forced-landscape .layout-left-pane { width: min(46vw, 90vh); max-height: 96vh; overflow-y: auto; padding-right: 0.5rem; }
+        .app-layout.forced-landscape .layout-left-pane { width: min(46vw, 90vh); max-height: 96vh; overflow: hidden; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
         .app-layout.forced-landscape .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
+        .landscape-editor-tools { width: 100%; }
         
         .palette-grid { display: grid; grid-template-columns: repeat(6, 2.2rem); gap: 0.35rem; width: max-content; margin: 0; }
         .palette-item { width: 100%; height: 2.2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e1; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; touch-action: none; }
@@ -105,7 +107,7 @@
     <div id="gamePane" class="layout-right-pane">
     <div class="bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-300 flex flex-col shrink-0">
         <div id="headerBar" class="flex h-20 border-b border-slate-200">
-            <div id="headerLeft" class="w-[88px] flex-shrink-0 flex items-center justify-center border-r border-slate-200 transition-colors duration-300 bg-[var(--theme-logo-bg)] aspect-square">
+            <div id="headerLeft" class="w-[80px] flex-shrink-0 flex items-center justify-center border-r border-slate-200 transition-colors duration-300 bg-[var(--theme-logo-bg)] aspect-square">
                 <svg viewBox="0 0 9 9" class="h-full w-auto p-3">
                     <rect width="9" height="9" fill="var(--theme-logo-bg)"/>
                     <g stroke="var(--theme-logo-grid)" stroke-width="0.05">
@@ -117,15 +119,15 @@
                     <circle cx="3.5" cy="7" r="0.525" fill="var(--theme-logo-goal)"/>
                 </svg>
             </div>
-            <div id="headerMiddle" class="w-[30%] flex-shrink-0 bg-red-700 flex items-center justify-center transition-colors duration-300 relative border-r border-slate-200/20">
-                <div class="absolute left-[40%] top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            <div id="headerMiddle" class="w-[34%] flex-shrink-0 bg-red-700 flex items-center justify-center transition-colors duration-300 relative border-r border-slate-200/20">
+                <div class="absolute left-[37%] top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5">
                     <svg id="completionBurst" viewBox="0 0 100 100" class="w-8 h-8 hidden"><use href="#def-completion"/></svg>
                     <div class="flex flex-col items-center">
                         <span id="levelLabelText" class="text-[0.6rem] font-black text-red-100/60 uppercase tracking-widest leading-none mb-1">Level</span>
                         <p id="levelTitle" class="text-white font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
                     </div>
                 </div>
-                <div id="levelNavigator" class="absolute left-[80%] top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1">
+                <div id="levelNavigator" class="absolute left-[82%] top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1">
                     <button id="prevLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">◄</button>
                     <button id="nextLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">►</button>
                 </div>
@@ -313,26 +315,27 @@
         </div>
     </div>
 
-    <div class="flex w-full items-center justify-end gap-3 shrink-0 pt-2">
-        <button id="orientationToggleBtn" class="px-4 bg-slate-300/60 backdrop-blur-md rounded-2xl h-[3.25rem] border border-white/20 shadow-lg text-slate-700 font-black uppercase tracking-widest hover:bg-slate-400/60 transition text-[0.65rem] flex items-center justify-center">Landscape</button>
-        <button id="openThemeModalBtn" class="px-5 bg-slate-300/60 backdrop-blur-md rounded-2xl h-[3.25rem] border border-white/20 shadow-lg text-slate-700 font-black uppercase tracking-widest hover:bg-slate-400/60 transition text-xs flex items-center justify-center">Themes</button>
-        <button id="muteBtn" class="bg-white/50 backdrop-blur-md text-slate-500 w-[3.25rem] h-[3.25rem] rounded-2xl flex items-center justify-center hover:bg-white/80 transition shrink-0 shadow-lg border border-white/20">
-            <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="22"></line><line id="muteSlash" x1="2" y1="2" x2="22" y2="22"></line></svg>
+    <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2 landscape-editor-tools">
+        <button id="orientationToggleBtn" class="px-3 bg-slate-300/60 backdrop-blur-md rounded-lg h-10 border border-white/20 shadow-md text-slate-700 font-black uppercase tracking-wider hover:bg-slate-400/60 transition text-[0.65rem] flex items-center justify-center min-w-[5.25rem]">Landscape</button>
+        <button id="openThemeModalBtn" class="px-3 bg-slate-300/60 backdrop-blur-md rounded-lg h-10 border border-white/20 shadow-md text-slate-700 font-black uppercase tracking-wider hover:bg-slate-400/60 transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem]">Themes</button>
+        <button id="muteBtn" class="bg-white/50 backdrop-blur-md text-slate-500 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/80 transition shrink-0 shadow-md border border-white/20">
+            <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="22"></line><line id="muteSlash" x1="2" y1="2" x2="22" y2="22"></line></svg>
         </button>
     </div>
     </div>
 </div>
 
-<div id="themeModal" class="fixed inset-0 z-50 flex items-end justify-center hidden modal px-4 pb-8 pt-20">
-    <div id="themeModalPanel" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-sm flex flex-col modal-content max-h-[85vh] transition-all duration-300 overflow-hidden">
+<div id="themeModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4 py-4">
+    <div id="themeModalPanel" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-sm flex flex-col modal-content max-h-[calc(100vh-2rem)] transition-all duration-300 overflow-hidden">
         <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
             <div class="flex justify-between items-center mb-4 shrink-0 px-2">
                 <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
                 <button id="closeThemeModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
             </div>
             <div id="themeGrid" class="flex-grow overflow-y-auto grid grid-cols-3 gap-4 px-2 pb-4 content-start min-h-0"></div>
-            <div id="themeSelectFooter" class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-center shrink-0 hidden">
-                <button id="openThemeEditorBtn" class="text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Modify Themes</button>
+            <div id="themeSelectFooter" class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-center gap-2 shrink-0">
+                <button id="openThemeEditorBtn" class="hidden text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Modify Themes</button>
+                <button id="dismissThemeModalBtn" class="text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Dismiss</button>
             </div>
         </div>
         <div id="themeEditView" class="hidden flex-col w-full h-full min-h-0">
@@ -543,6 +546,22 @@
         if (themeModal) themeModal.classList.toggle('landscape-left-modal', ENGINE.ui.isLandscapeLayout);
         const orientationBtn = $('orientationToggleBtn');
         if (orientationBtn) orientationBtn.innerText = ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape';
+        syncEditorPalettePlacement();
+    }
+
+    function syncEditorPalettePlacement() {
+        const pal = $('editorPalette');
+        const gamePane = $('gamePane');
+        const controlsPane = $('controlsPane');
+        if (!pal || !gamePane || !controlsPane) return;
+        const inLandscape = ENGINE.ui.isLandscapeLayout;
+        if (inLandscape && ENGINE.mode === EDITOR) {
+            if (pal.parentElement !== controlsPane) controlsPane.insertBefore(pal, controlsPane.firstChild);
+            pal.classList.add('landscape-editor-tools');
+        } else {
+            if (pal.parentElement !== gamePane.parentElement) gamePane.parentElement.insertBefore(pal, controlsPane);
+            pal.classList.remove('landscape-editor-tools');
+        }
     }
 
     const VALID_LOGIC_TRANSITIONS = {
@@ -667,13 +686,13 @@
     function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
     
     const THEMES = {
-        classic: { bodyBg: '#e0f2fe', canvasBg: '#ffffff', grid: '#94a3b8', headerLeft: '#dc2626', headerRight: '#2563eb', path: 'rainbow', controls: 'rgba(255, 255, 255, 0.7)', metricText: '#ffffff', btns: { undo: '#4c566a', reset: '#d12929', guide: '#8c33db', whoa: '#2563eb', hint: '#cf6b17', saved: '#0a8a65', mega: '#ba29c9', mute: '#e1e7f0', muteIcon: '#64748b', copy: '#e1e7f0', gen: '#e1e7f0', modeToggle: '#1a2438', solve: '#ba29c9', editClear: '#d12929', editBombs: '#ef4444', editNew: '#0a8a65' }, modal: { bg: 'rgba(248, 250, 252, 0.95)', panelBg: '#ffffff', border: '#cbd5e1', text: '#334155', textMuted: '#64748b', accent: '#0f172a' }, output: { bg: '#0f172a', text: '#38bdf8' }, colors: { gate: '#3b82f6', goal: '#ef4444', block: '#cbd5e1', pin: '#ef4444', pinUnflipped: '#000000', filter: '#000000', portal: '#d946ef', cross: '#000000' }, palette: { bg: '#f8fafc', border: '#cbd5e1', itemBg: '#ffffff', itemBorder: '#cbd5e1', toolBg: '#f1f5f9' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#ffffff', ghostBorder: '#0ea5e9', win: { bg: '#ffffff', border: '#3b82f6', text: '#64748b', accent: '#1e3a8a' }, alert: { bg: '#1e40af', stroke: '#93c5fd' }, ctrlArea: { bg: '#f1f5f9', border: '#cbd5e1' }, burst: '#ffe135', check: '#1e293b' },
-        dark: { bodyBg: '#020617', canvasBg: '#111827', grid: '#475569', headerLeft: '#7f1d1d', headerRight: '#1e3a8a', path: '#22c55e', controls: 'rgba(30, 41, 59, 0.9)', metricText: '#f1f5f9', btns: { undo: '#374151', reset: '#7f1d1d', guide: '#4c1d95', whoa: '#1e3a8a', hint: '#b45309', saved: '#064e3b', mega: '#701a75', mute: '#1e293b', muteIcon: '#94a3b8', copy: '#1e293b', gen: '#1e293b', modeToggle: '#000000', solve: '#374151', editClear: '#7f1d1d', editBombs: '#f43f5e', editNew: '#064e3b' }, modal: { bg: 'rgba(15, 23, 42, 0.95)', panelBg: '#1e293b', border: '#334155', text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8' }, output: { bg: '#020617', text: '#22c55e' }, colors: { gate: '#38bdf8', goal: '#f43f5e', block: '#1e293b', pin: '#f43f5e', pinUnflipped: '#64748b', filter: '#94a3b8', portal: '#d946ef', cross: '#94a3b8' }, palette: { bg: '#0f172a', border: '#334155', itemBg: '#1e293b', itemBorder: '#334155', toolBg: '#0f172a' }, headerLeftText: '#f1f5f9', headerLeftLabel: 'rgba(241, 245, 249, 0.7)', ghostBg: '#1e293b', ghostBorder: '#38bdf8', win: { bg: '#1e293b', border: '#38bdf8', text: '#94a3b8', accent: '#f8fafc' }, alert: { bg: '#7f1d1d', stroke: '#fca5a5' }, ctrlArea: { bg: '#0f172a', border: '#334155' }, burst: '#334155', check: '#f1f5f9' },
-        tron: { bodyBg: '#000000', canvasBg: '#001d3d', grid: '#00d9ff66', headerLeft: '#00d9ff', headerRight: '#ff00ff', path: '#00d9ff', controls: 'rgba(0, 8, 20, 0.95)', metricText: '#000000', btns: { undo: '#003366', reset: '#990099', guide: '#004080', whoa: '#005099', hint: '#008080', saved: '#006600', mega: '#ff9900', mute: '#001d3d', muteIcon: '#00d9ff', copy: '#001d3d', gen: '#001d3d', modeToggle: '#001122', solve: '#003366', editClear: '#990099', editBombs: '#ff00ff', editNew: '#006600' }, modal: { bg: 'rgba(0, 8, 20, 0.95)', panelBg: '#001d3d', border: '#00d9ff', text: '#00d9ff', textMuted: '#004e64', accent: '#ff00ff' }, output: { bg: '#000814', text: '#ff00ff' }, colors: { gate: '#00d9ff', goal: '#ff00ff', block: '#001d3d', pin: '#ff00ff', pinUnflipped: '#004e64', filter: '#00d9ff', portal: '#ff00ff', cross: '#00d9ff' }, palette: { bg: '#000814', border: '#00d9ff', itemBg: '#001d3d', itemBorder: '#00d9ff', toolBg: '#000814' }, headerLeftText: '#000000', headerLeftLabel: 'rgba(0, 0, 0, 0.7)', ghostBg: '#001d3d', ghostBorder: '#ff00ff', win: { bg: '#000814', border: '#ff00ff', text: '#00d9ff', accent: '#ff00ff' }, alert: { bg: '#001d3d', stroke: '#00d9ff' }, ctrlArea: { bg: '#000814', border: '#00d9ff' }, burst: '#00d9ff', check: '#1e293b' },
-        paper: { bodyBg: '#fdf6e3', canvasBg: '#fffaf0', grid: '#3b3b3b66', headerLeft: '#000000', headerRight: '#555555', path: '#000000', controls: 'rgba(255, 250, 240, 0.9)', metricText: '#fdf6e3', btns: { undo: '#5a5a5a', reset: '#333333', guide: '#4a4a4a', whoa: '#3d3d3d', hint: '#6b6b6b', saved: '#2e4a3d', mega: '#2b2b2b', mute: '#eee8d5', muteIcon: '#000000', copy: '#eee8d5', gen: '#eee8d5', modeToggle: '#1a1a1a', solve: '#5a5a5a', editClear: '#333333', editBombs: '#000000', editNew: '#2e4a3d' }, modal: { bg: 'rgba(245, 230, 196, 0.95)', panelBg: '#fdf6e3', border: '#3b3b3b', text: '#1a1a1a', textMuted: '#5a5a5a', accent: '#000000' }, output: { bg: '#eee8d5', text: '#000000' }, colors: { gate: '#000000', goal: '#000000', block: '#cccccc', pin: '#000000', pinUnflipped: '#999999', filter: '#000000', portal: '#555555', cross: '#000000' }, palette: { bg: '#eee8d5', border: '#3b3b3b', itemBg: '#fdf6e3', itemBorder: '#3b3b3b', toolBg: '#eee8d5' }, headerLeftText: '#fdf6e3', headerLeftLabel: 'rgba(253, 246, 227, 0.7)', ghostBg: '#fdf6e3', ghostBorder: '#000000', win: { bg: '#fdf6e3', border: '#3b82f6', text: '#5a5a5a', accent: '#1a1a1a' }, alert: { bg: '#3b3b3b', stroke: '#fdf6e3' }, ctrlArea: { bg: '#eee8d5', border: '#3b3b3b' }, burst: '#eee8d5', check: '#000000' },
-        winter: { bodyBg: '#e0f2fe', canvasBg: '#f0f9ff', grid: '#7dd3fcaa', headerLeft: '#0ea5e9', headerRight: '#0284c7', path: '#2563eb', controls: 'rgba(240, 249, 255, 0.9)', metricText: '#f0f9ff', btns: { undo: '#0369a1', reset: '#be123c', guide: '#6d28d9', whoa: '#1d4ed8', hint: '#0f766e', saved: '#15803d', mega: '#db2777', mute: '#bae6fd', muteIcon: '#0369a1', copy: '#bae6fd', gen: '#bae6fd', modeToggle: '#075985', solve: '#0284c7', editClear: '#be123c', editBombs: '#2563eb', editNew: '#15803d' }, modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#f0f9ff', border: '#0ea5e9', text: '#0c4a6e', textMuted: '#0284c7', accent: '#0369a1' }, output: { bg: '#0c4a6e', text: '#f0f9ff' }, colors: { gate: '#0ea5e9', goal: '#2563eb', block: '#bae6fd', pin: '#2563eb', pinUnflipped: '#7dd3fc', filter: '#0ea5e9', portal: '#38bdf8', cross: '#0ea5e9' }, palette: { bg: '#e0f2fe', border: '#0ea5e9', itemBg: '#f0f9ff', itemBorder: '#0ea5e9', toolBg: '#e0f2fe' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#f0f9ff', ghostBorder: '#0284c7', win: { bg: '#f0f9ff', border: '#0ea5e9', text: '#0284c7', accent: '#0369a1' }, alert: { bg: '#0ea5e9', stroke: '#ffffff' }, ctrlArea: { bg: '#e0f2fe', border: '#0ea5e9' }, burst: '#e0f2fe', check: '#0369a1' },
-        summer: { bodyBg: '#fff7ed', canvasBg: '#ffedd5', grid: '#fb923caa', headerLeft: '#ea580c', headerRight: '#f97316', path: '#16a34a', controls: 'rgba(255, 237, 213, 0.9)', metricText: '#fff7ed', btns: { undo: '#c2410c', reset: '#b91c1c', guide: '#b45309', whoa: '#be185d', hint: '#ca8a04', saved: '#15803d', mega: '#ef4444', mute: '#fed7aa', muteIcon: '#9a3412', copy: '#fed7aa', gen: '#fed7aa', modeToggle: '#431407', solve: '#b45309', editClear: '#991b1b', editBombs: '#16a34a', editNew: '#15803d' }, modal: { bg: 'rgba(254, 243, 199, 0.95)', panelBg: '#fff7ed', border: '#ea580c', text: '#431407', textMuted: '#9a3412', accent: '#ea580c' }, output: { bg: '#431407', text: '#fb923c' }, colors: { gate: '#ea580c', goal: '#16a34a', block: '#fed7aa', pin: '#16a34a', pinUnflipped: '#fb923c', filter: '#ea580c', portal: '#f97316', cross: '#ea580c' }, palette: { bg: '#fff7ed', border: '#ea580c', itemBg: '#ffedd5', itemBorder: '#ea580c', toolBg: '#fff7ed' }, headerLeftText: '#fff7ed', headerLeftLabel: 'rgba(255, 247, 237, 0.7)', ghostBg: '#ffedd5', ghostBorder: '#ea580c', win: { bg: '#ffedd5', border: '#ea580c', text: '#9a3412', accent: '#431407' }, alert: { bg: '#ea580c', stroke: '#ffedd5' }, ctrlArea: { bg: '#fff7ed', border: '#ea580c' }, burst: '#fef9c3', check: '#ea580c' },
-        glf: { bodyBg: '#bdc3c7', canvasBg: '#ecf0f1', grid: '#95a5a6', headerLeft: '#D21F1B', headerRight: '#4A90E2', path: '#F4D03F', controls: 'rgba(236, 240, 241, 0.8)', metricText: '#ecf0f1', btns: { undo: '#34495e', reset: '#D21F1B', guide: '#558735', whoa: '#2a6ebd', hint: '#d35400', saved: '#27ae60', mega: '#a51815', mute: '#bdc3c7', muteIcon: '#2c3e50', copy: '#bdc3c7', gen: '#bdc3c7', modeToggle: '#2c3e50', solve: '#c4a112', editClear: '#a51815', editBombs: '#F4D03F', editNew: '#27ae60' }, modal: { bg: 'rgba(213, 219, 219, 0.95)', panelBg: '#ecf0f1', border: '#95a5a6', text: '#2c3e50', textMuted: '#7f8c8d', accent: '#D21F1B' }, output: { bg: '#2c3e50', text: '#93C572' }, colors: { gate: '#D21F1B', goal: '#F4D03F', block: '#bdc3c7', pin: '#D21F1B', pinUnflipped: '#7f8c8d', filter: '#2c3e50', portal: '#4A90E2', cross: '#D21F1B' }, palette: { bg: '#ecf0f1', border: '#D21F1B', itemBg: '#bdc3c7', itemBorder: '#95a5a6', toolBg: '#ecf0f1' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#bdc3c7', ghostBorder: '#D21F1B', win: { bg: '#ecf0f1', border: '#D21F1B', text: '#7f8c8d', accent: '#2c3e50' }, alert: { bg: '#2c3e50', stroke: '#ecf0f1' }, ctrlArea: { bg: '#ecf0f1', border: '#95a5a6' }, burst: '#ecf0f1', check: '#D21F1B' }
+        classic: { bodyBg: '#e0f2fe', canvasBg: '#ffffff', grid: '#94a3b8', headerLeft: '#dc2626', headerRight: '#2563eb', path: 'rainbow', controls: 'rgba(255, 255, 255, 0.7)', metricText: '#ffffff', btns: { undo: '#4c566a', reset: '#d12929', guide: '#8c33db', whoa: '#2563eb', hint: '#cf6b17', saved: '#0a8a65', mega: '#ba29c9', mute: '#e1e7f0', muteIcon: '#64748b', copy: '#e1e7f0', gen: '#e1e7f0', modeToggle: '#1a2438', orient: '#1a2438', solve: '#ba29c9', editClear: '#d12929', editBombs: '#ef4444', editNew: '#0a8a65' }, modal: { bg: 'rgba(248, 250, 252, 0.95)', panelBg: '#ffffff', border: '#cbd5e1', text: '#334155', textMuted: '#64748b', accent: '#0f172a' }, output: { bg: '#0f172a', text: '#38bdf8' }, colors: { gate: '#3b82f6', goal: '#ef4444', block: '#cbd5e1', pin: '#ef4444', pinUnflipped: '#000000', filter: '#000000', portal: '#d946ef', cross: '#000000' }, palette: { bg: '#f8fafc', border: '#cbd5e1', itemBg: '#ffffff', itemBorder: '#cbd5e1', toolBg: '#f1f5f9' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#ffffff', ghostBorder: '#0ea5e9', win: { bg: '#ffffff', border: '#3b82f6', text: '#64748b', accent: '#1e3a8a' }, alert: { bg: '#1e40af', stroke: '#93c5fd' }, ctrlArea: { bg: '#f1f5f9', border: '#cbd5e1' }, burst: '#ffe135', check: '#1e293b' },
+        dark: { bodyBg: '#020617', canvasBg: '#111827', grid: '#475569', headerLeft: '#7f1d1d', headerRight: '#1e3a8a', path: '#22c55e', controls: 'rgba(30, 41, 59, 0.9)', metricText: '#f1f5f9', btns: { undo: '#374151', reset: '#7f1d1d', guide: '#4c1d95', whoa: '#1e3a8a', hint: '#b45309', saved: '#064e3b', mega: '#701a75', mute: '#1e293b', muteIcon: '#94a3b8', copy: '#1e293b', gen: '#1e293b', modeToggle: '#000000', orient: '#000000', solve: '#374151', editClear: '#7f1d1d', editBombs: '#f43f5e', editNew: '#064e3b' }, modal: { bg: 'rgba(15, 23, 42, 0.95)', panelBg: '#1e293b', border: '#334155', text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8' }, output: { bg: '#020617', text: '#22c55e' }, colors: { gate: '#38bdf8', goal: '#f43f5e', block: '#1e293b', pin: '#f43f5e', pinUnflipped: '#64748b', filter: '#94a3b8', portal: '#d946ef', cross: '#94a3b8' }, palette: { bg: '#0f172a', border: '#334155', itemBg: '#1e293b', itemBorder: '#334155', toolBg: '#0f172a' }, headerLeftText: '#f1f5f9', headerLeftLabel: 'rgba(241, 245, 249, 0.7)', ghostBg: '#1e293b', ghostBorder: '#38bdf8', win: { bg: '#1e293b', border: '#38bdf8', text: '#94a3b8', accent: '#f8fafc' }, alert: { bg: '#7f1d1d', stroke: '#fca5a5' }, ctrlArea: { bg: '#0f172a', border: '#334155' }, burst: '#334155', check: '#f1f5f9' },
+        tron: { bodyBg: '#000000', canvasBg: '#001d3d', grid: '#00d9ff66', headerLeft: '#00d9ff', headerRight: '#ff00ff', path: '#00d9ff', controls: 'rgba(0, 8, 20, 0.95)', metricText: '#000000', btns: { undo: '#003366', reset: '#990099', guide: '#004080', whoa: '#005099', hint: '#008080', saved: '#006600', mega: '#ff9900', mute: '#001d3d', muteIcon: '#00d9ff', copy: '#001d3d', gen: '#001d3d', modeToggle: '#001122', orient: '#001122', solve: '#003366', editClear: '#990099', editBombs: '#ff00ff', editNew: '#006600' }, modal: { bg: 'rgba(0, 8, 20, 0.95)', panelBg: '#001d3d', border: '#00d9ff', text: '#00d9ff', textMuted: '#004e64', accent: '#ff00ff' }, output: { bg: '#000814', text: '#ff00ff' }, colors: { gate: '#00d9ff', goal: '#ff00ff', block: '#001d3d', pin: '#ff00ff', pinUnflipped: '#004e64', filter: '#00d9ff', portal: '#ff00ff', cross: '#00d9ff' }, palette: { bg: '#000814', border: '#00d9ff', itemBg: '#001d3d', itemBorder: '#00d9ff', toolBg: '#000814' }, headerLeftText: '#000000', headerLeftLabel: 'rgba(0, 0, 0, 0.7)', ghostBg: '#001d3d', ghostBorder: '#ff00ff', win: { bg: '#000814', border: '#ff00ff', text: '#00d9ff', accent: '#ff00ff' }, alert: { bg: '#001d3d', stroke: '#00d9ff' }, ctrlArea: { bg: '#000814', border: '#00d9ff' }, burst: '#00d9ff', check: '#1e293b' },
+        paper: { bodyBg: '#fdf6e3', canvasBg: '#fffaf0', grid: '#3b3b3b66', headerLeft: '#000000', headerRight: '#555555', path: '#000000', controls: 'rgba(255, 250, 240, 0.9)', metricText: '#fdf6e3', btns: { undo: '#5a5a5a', reset: '#333333', guide: '#4a4a4a', whoa: '#3d3d3d', hint: '#6b6b6b', saved: '#2e4a3d', mega: '#2b2b2b', mute: '#eee8d5', muteIcon: '#000000', copy: '#eee8d5', gen: '#eee8d5', modeToggle: '#1a1a1a', orient: '#1a1a1a', solve: '#5a5a5a', editClear: '#333333', editBombs: '#000000', editNew: '#2e4a3d' }, modal: { bg: 'rgba(245, 230, 196, 0.95)', panelBg: '#fdf6e3', border: '#3b3b3b', text: '#1a1a1a', textMuted: '#5a5a5a', accent: '#000000' }, output: { bg: '#eee8d5', text: '#000000' }, colors: { gate: '#000000', goal: '#000000', block: '#cccccc', pin: '#000000', pinUnflipped: '#999999', filter: '#000000', portal: '#555555', cross: '#000000' }, palette: { bg: '#eee8d5', border: '#3b3b3b', itemBg: '#fdf6e3', itemBorder: '#3b3b3b', toolBg: '#eee8d5' }, headerLeftText: '#fdf6e3', headerLeftLabel: 'rgba(253, 246, 227, 0.7)', ghostBg: '#fdf6e3', ghostBorder: '#000000', win: { bg: '#fdf6e3', border: '#3b82f6', text: '#5a5a5a', accent: '#1a1a1a' }, alert: { bg: '#3b3b3b', stroke: '#fdf6e3' }, ctrlArea: { bg: '#eee8d5', border: '#3b3b3b' }, burst: '#eee8d5', check: '#000000' },
+        winter: { bodyBg: '#e0f2fe', canvasBg: '#f0f9ff', grid: '#7dd3fcaa', headerLeft: '#0ea5e9', headerRight: '#0284c7', path: '#2563eb', controls: 'rgba(240, 249, 255, 0.9)', metricText: '#f0f9ff', btns: { undo: '#0369a1', reset: '#be123c', guide: '#6d28d9', whoa: '#1d4ed8', hint: '#0f766e', saved: '#15803d', mega: '#db2777', mute: '#bae6fd', muteIcon: '#0369a1', copy: '#bae6fd', gen: '#bae6fd', modeToggle: '#075985', orient: '#075985', solve: '#0284c7', editClear: '#be123c', editBombs: '#2563eb', editNew: '#15803d' }, modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#f0f9ff', border: '#0ea5e9', text: '#0c4a6e', textMuted: '#0284c7', accent: '#0369a1' }, output: { bg: '#0c4a6e', text: '#f0f9ff' }, colors: { gate: '#0ea5e9', goal: '#2563eb', block: '#bae6fd', pin: '#2563eb', pinUnflipped: '#7dd3fc', filter: '#0ea5e9', portal: '#38bdf8', cross: '#0ea5e9' }, palette: { bg: '#e0f2fe', border: '#0ea5e9', itemBg: '#f0f9ff', itemBorder: '#0ea5e9', toolBg: '#e0f2fe' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#f0f9ff', ghostBorder: '#0284c7', win: { bg: '#f0f9ff', border: '#0ea5e9', text: '#0284c7', accent: '#0369a1' }, alert: { bg: '#0ea5e9', stroke: '#ffffff' }, ctrlArea: { bg: '#e0f2fe', border: '#0ea5e9' }, burst: '#e0f2fe', check: '#0369a1' },
+        summer: { bodyBg: '#fff7ed', canvasBg: '#ffedd5', grid: '#fb923caa', headerLeft: '#ea580c', headerRight: '#f97316', path: '#16a34a', controls: 'rgba(255, 237, 213, 0.9)', metricText: '#fff7ed', btns: { undo: '#c2410c', reset: '#b91c1c', guide: '#b45309', whoa: '#be185d', hint: '#ca8a04', saved: '#15803d', mega: '#ef4444', mute: '#fed7aa', muteIcon: '#9a3412', copy: '#fed7aa', gen: '#fed7aa', modeToggle: '#431407', orient: '#431407', solve: '#b45309', editClear: '#991b1b', editBombs: '#16a34a', editNew: '#15803d' }, modal: { bg: 'rgba(254, 243, 199, 0.95)', panelBg: '#fff7ed', border: '#ea580c', text: '#431407', textMuted: '#9a3412', accent: '#ea580c' }, output: { bg: '#431407', text: '#fb923c' }, colors: { gate: '#ea580c', goal: '#16a34a', block: '#fed7aa', pin: '#16a34a', pinUnflipped: '#fb923c', filter: '#ea580c', portal: '#f97316', cross: '#ea580c' }, palette: { bg: '#fff7ed', border: '#ea580c', itemBg: '#ffedd5', itemBorder: '#ea580c', toolBg: '#fff7ed' }, headerLeftText: '#fff7ed', headerLeftLabel: 'rgba(255, 247, 237, 0.7)', ghostBg: '#ffedd5', ghostBorder: '#ea580c', win: { bg: '#ffedd5', border: '#ea580c', text: '#9a3412', accent: '#431407' }, alert: { bg: '#ea580c', stroke: '#ffedd5' }, ctrlArea: { bg: '#fff7ed', border: '#ea580c' }, burst: '#fef9c3', check: '#ea580c' },
+        glf: { bodyBg: '#bdc3c7', canvasBg: '#ecf0f1', grid: '#95a5a6', headerLeft: '#D21F1B', headerRight: '#4A90E2', path: '#F4D03F', controls: 'rgba(236, 240, 241, 0.8)', metricText: '#ecf0f1', btns: { undo: '#34495e', reset: '#D21F1B', guide: '#558735', whoa: '#2a6ebd', hint: '#d35400', saved: '#27ae60', mega: '#a51815', mute: '#bdc3c7', muteIcon: '#2c3e50', copy: '#bdc3c7', gen: '#bdc3c7', modeToggle: '#2c3e50', orient: '#2c3e50', solve: '#c4a112', editClear: '#a51815', editBombs: '#F4D03F', editNew: '#27ae60' }, modal: { bg: 'rgba(213, 219, 219, 0.95)', panelBg: '#ecf0f1', border: '#95a5a6', text: '#2c3e50', textMuted: '#7f8c8d', accent: '#D21F1B' }, output: { bg: '#2c3e50', text: '#93C572' }, colors: { gate: '#D21F1B', goal: '#F4D03F', block: '#bdc3c7', pin: '#D21F1B', pinUnflipped: '#7f8c8d', filter: '#2c3e50', portal: '#4A90E2', cross: '#D21F1B' }, palette: { bg: '#ecf0f1', border: '#D21F1B', itemBg: '#bdc3c7', itemBorder: '#95a5a6', toolBg: '#ecf0f1' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#bdc3c7', ghostBorder: '#D21F1B', win: { bg: '#ecf0f1', border: '#D21F1B', text: '#7f8c8d', accent: '#2c3e50' }, alert: { bg: '#2c3e50', stroke: '#ecf0f1' }, ctrlArea: { bg: '#ecf0f1', border: '#95a5a6' }, burst: '#ecf0f1', check: '#D21F1B' }
     };
 
     function isValidHexColor(value) {
@@ -838,7 +857,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.ghostBg = t.ghostBg || t.canvasBg;
         t.ghostBorder = t.ghostBorder || t.headerRight;
 
-        const btnFallbacks = { undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight, hint: t.headerRight, saved: t.headerRight, mega: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight, copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, solve: t.headerRight, editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight };
+        const btnFallbacks = { undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight, hint: t.headerRight, saved: t.headerRight, mega: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight, copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, orient: t.headerRight, solve: t.headerRight, editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight };
         Object.keys(btnFallbacks).forEach(btnKey => { t.btns[btnKey] = t.btns[btnKey] || btnFallbacks[btnKey]; });
 
         t.modal.bg = t.modal.bg || 'rgba(248, 250, 252, 0.95)';
@@ -890,7 +909,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function applyTheme(name) {
-        if (name === 'chaos') { THEMES.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
+        if (name === 'chaos') { THEMES.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
         currentTheme = name; APP.Themes.currentTheme = currentTheme; const t = THEMES[name]; const root = document.documentElement; 
         root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
         const alertBg = (t.alert?.bg || '#1e40af');
@@ -922,8 +941,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('openThemeModalBtn').style.backgroundColor = neutralBtn;
         $('openThemeModalBtn').style.color = neutralText;
         $('openThemeModalBtn').style.borderColor = t.modal.border;
+        $('orientationToggleBtn').style.backgroundColor = t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b';
+        $('orientationToggleBtn').style.color = '#ffffff';
+        $('orientationToggleBtn').style.borderColor = t.grid;
 
-        $('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; $('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; $('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; $('editHelpBtn').style.backgroundColor = t.btns.guide; $('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; $('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; $('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; $('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = $('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; $('muteIcon').style.color = neutralText; $('muteSlash').style.color = neutralText; $('devCopyBtn').style.backgroundColor = t.btns.copy; $('editCopyBtn').style.backgroundColor = t.btns.copy; $('devGenBtn').style.backgroundColor = t.btns.gen; $('editGenBtn').style.backgroundColor = t.btns.gen; $('devCopyBtn').style.color = t.btns.muteIcon; $('editCopyBtn').style.color = t.btns.muteIcon; $('devGenBtn').style.color = t.btns.muteIcon; $('editGenBtn').style.color = t.btns.muteIcon; $('exportLabel').style.color = t.btns.muteIcon; document.querySelectorAll('.metric-label').forEach(el => el.style.color = t.metricText); [$('solutionOutput'), $('winSolutionOutput'), $('megaOutput')].forEach(el => { if(el) { el.style.backgroundColor = t.output?.bg || '#0f172a'; el.style.color = t.output?.text || '#38bdf8'; el.style.borderColor = t.modal.border; }}); $('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; $('gridSizeMinusBtn').style.color = t.btns.muteIcon; $('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; $('gridSizePlusBtn').style.backgroundColor = t.btns.copy; $('gridSizePlusBtn').style.color = t.btns.muteIcon; $('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; $('gridRotateBtn').style.backgroundColor = t.btns.copy; $('gridRotateBtn').style.color = t.btns.muteIcon; $('gridRotateBtn').style.borderColor = t.palette.itemBorder; $('gridMirrorBtn').style.backgroundColor = t.btns.copy; $('gridMirrorBtn').style.color = t.btns.muteIcon; $('gridMirrorBtn').style.borderColor = t.palette.itemBorder; $('gridSizeLabel').style.color = t.btns.muteIcon;
+        $('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; $('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; $('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; $('editHelpBtn').style.backgroundColor = t.btns.guide; $('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; $('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; $('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; $('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = $('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; muteBtn.style.borderColor = t.modal.border; $('muteIcon').style.color = neutralText; $('muteSlash').style.color = neutralText; $('devCopyBtn').style.backgroundColor = t.btns.copy; $('editCopyBtn').style.backgroundColor = t.btns.copy; $('devGenBtn').style.backgroundColor = t.btns.gen; $('editGenBtn').style.backgroundColor = t.btns.gen; $('devCopyBtn').style.color = t.btns.muteIcon; $('editCopyBtn').style.color = t.btns.muteIcon; $('devGenBtn').style.color = t.btns.muteIcon; $('editGenBtn').style.color = t.btns.muteIcon; $('exportLabel').style.color = t.btns.muteIcon; document.querySelectorAll('.metric-label').forEach(el => el.style.color = t.metricText); [$('solutionOutput'), $('winSolutionOutput'), $('megaOutput')].forEach(el => { if(el) { el.style.backgroundColor = t.output?.bg || '#0f172a'; el.style.color = t.output?.text || '#38bdf8'; el.style.borderColor = t.modal.border; }}); $('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; $('gridSizeMinusBtn').style.color = t.btns.muteIcon; $('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; $('gridSizePlusBtn').style.backgroundColor = t.btns.copy; $('gridSizePlusBtn').style.color = t.btns.muteIcon; $('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; $('gridRotateBtn').style.backgroundColor = t.btns.copy; $('gridRotateBtn').style.color = t.btns.muteIcon; $('gridRotateBtn').style.borderColor = t.palette.itemBorder; $('gridMirrorBtn').style.backgroundColor = t.btns.copy; $('gridMirrorBtn').style.color = t.btns.muteIcon; $('gridMirrorBtn').style.borderColor = t.palette.itemBorder; $('gridSizeLabel').style.color = t.btns.muteIcon;
         const gArea = $('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
         const winModalContent = $('winModalContent'); $('winCircle').style.backgroundColor = t.win.bg; $('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.win.border; winModalContent.querySelector('p').style.color = t.win.text; $('nextLevelModalBtn').style.color = t.headerRight; $('dismissWinModalBtn').style.color = t.headerRight; ENGINE.rainbowActive = (name === 'classic');
     }
@@ -1504,10 +1526,33 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const k = state.path[state.path.length - 1];
             return l.portalMap.has(k) && !state.isJump.has(state.path.length - 1);
         },
+        _encodeUsage(state) {
+            if (!state.usage || state.usage.size === 0) return '';
+            const entries = [];
+            state.usage.forEach((u, k) => {
+                const bits = (u.h ? 1 : 0) | (u.v ? 2 : 0);
+                if (bits) entries.push(`${k}:${bits}`);
+            });
+            entries.sort();
+            return entries.join(',');
+        },
+        _encodeCounts(state, l) {
+            if (!state.counts || state.counts.size === 0) return '';
+            const entries = [];
+            state.counts.forEach((c, k) => {
+                if (c <= 1) return;
+                if (k === l.goalKey || l.gateKeys.includes(k)) return;
+                entries.push(`${k}:${c}`);
+            });
+            entries.sort();
+            return entries.join(',');
+        },
         _stateSignature(state, l, realLen) {
             const posKey = state.path[state.path.length - 1];
             const portalForced = this._portalForced(state, l) ? 1 : 0;
             const crossCounts = this._encodeMustCrossCounts(state).toString();
+            const usageSig = this._encodeUsage(state);
+            const countsSig = this._encodeCounts(state, l);
             return [
                 posKey,
                 realLen,
@@ -1518,7 +1563,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 portalForced,
                 state.flipParity,
                 state.flipperCrossMask ? state.flipperCrossMask.toString() : '0',
-                state.flipperParityAtCrossMask ? state.flipperParityAtCrossMask.toString() : '0'
+                state.flipperParityAtCrossMask ? state.flipperParityAtCrossMask.toString() : '0',
+                usageSig,
+                countsSig
             ].join('|');
         },
         _crossNeeds(state) {
@@ -2071,7 +2118,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const flipperSet = new Set();
             level.portalMap.forEach((v, k) => {
                 const p1 = UNPACK(k), p2 = UNPACK(v.dest);
-                if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) flipperSet.add(k);
+                if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) flipperSet.add(k);
             });
             const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
 
@@ -2148,7 +2195,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     
     function attemptMoveTo(target) { if (ENGINE.mode === EDITOR && !ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(ENGINE.logicState) && ENGINE.mode !== EDITOR) return; if (!ENGINE.path.length) return; const headPos = UNPACK(ENGINE.path[ENGINE.path.length - 1]); if (ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } }
     
-    function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); $('themeSelectFooter').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); $('themeSelectFooter').classList.add('hidden'); } }
+    function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); } }
     function isModalActive() { return !$('guideModal').classList.contains('hidden') || !$('editorHelpModal').classList.contains('hidden') || !$('winModal').classList.contains('hidden') || !$('megaModal').classList.contains('hidden') || !$('themeModal').classList.contains('hidden') || !$('unsavedModal').classList.contains('hidden'); }
 
     let gamepadGridPrimaryAction = () => {};
@@ -2166,7 +2213,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     function applyFocusVisual(el) {
         document.querySelectorAll('.gamepad-focus').forEach(node => node.classList.remove('gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2'));
         if (!el) return;
-        el.classList.add('gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2');
+        el.classList.add('gamepad-focus');
+        if (el.id !== 'resetBtn') el.classList.add('ring-4', 'ring-sky-400', 'ring-offset-2');
         if (typeof el.focus === 'function') el.focus({ preventScroll: true });
     }
 
@@ -2213,7 +2261,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (!$('editorHelpModal').classList.contains('hidden')) { $('editorHelpModal').classList.add('hidden'); return true; }
         return false;
     }
-    function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').style.display = isEd ? 'none' : 'flex'; $('editorMetrics').style.display = isEd ? 'flex' : 'none'; $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); $('themeSelectFooter').classList.remove('hidden'); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); updateCompletionUI(); showMessage("", ""); }
+    function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').style.display = isEd ? 'none' : 'flex'; $('editorMetrics').style.display = isEd ? 'flex' : 'none'; $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); updateCompletionUI(); showMessage("", ""); }
     function updatePencilState() { const btn = $('editPencilBtn'); const svg = btn.querySelector('svg'); if (ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
     function saveEditorState() { ENGINE.editor.isModified = true; ENGINE.editor.undoStack.push(deepCloneLevel(ENGINE.editor.workingLevel)); if (ENGINE.editor.undoStack.length > 50) ENGINE.editor.undoStack.shift(); ENGINE.hinter.pathList = []; }
     function restoreEditorState() { if (ENGINE.editor.undoStack.length === 0) return; ENGINE.editor.isModified = true; ENGINE.editor.workingLevel = ENGINE.editor.undoStack.pop(); let newPending = null; ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); ENGINE.editor.pendingPortal = newPending; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); showMessage("Undo Grid Action", "text-slate-500"); }
@@ -2619,7 +2667,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             } 
             isHintExpanded = !isHintExpanded; 
         };
-        const updateHintLabel = () => { const hasSaved = ENGINE.level && ENGINE.level.hints && ENGINE.level.hints.length > 0; const mainLabel = $('hintMainLabel'); if (isHintExpanded) { mainLabel.innerText = "Saved Hint"; mainLabel.style.color = "white"; } else { mainLabel.innerText = "Hint"; mainLabel.style.color = "white"; } };
+        const updateHintLabel = () => { const hasSaved = ENGINE.level && ENGINE.level.hints && ENGINE.level.hints.length > 0; const mainLabel = $('hintMainLabel'); if (isHintExpanded) { mainLabel.innerText = "Saved Hint"; mainLabel.style.color = hasSaved ? "white" : "#cbd5e1"; } else { mainLabel.innerText = "Hint"; mainLabel.style.color = "white"; } };
         hintBtn.onclick = (e) => {
             closeAllModals();
             if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return;
@@ -2650,10 +2698,21 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
         
         const tModal = $('themeModal');
-        $('openThemeModalBtn').onclick = () => { closeAllModals(); tModal.classList.remove('hidden'); };
-        $('closeThemeModalBtn').onclick = () => tModal.classList.add('hidden');
+        $('openThemeModalBtn').onclick = () => { closeAllModals(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
+        $('closeThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
+        $('dismissThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
         $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); const panel = $('themeModalPanel'); panel.classList.remove('max-sm'); panel.classList.add('w-[85vw]', 'h-[85vh]', 'max-w-none'); renderThemeEditors(); };
-        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); const panel = $('themeModalPanel'); panel.classList.add('max-sm', 'w-full'); panel.classList.remove('w-[85vw]', 'h-[85vh]', 'max-w-none'); };
+        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); const panel = $('themeModalPanel'); panel.classList.add('max-sm', 'w-full'); panel.classList.remove('w-[85vw]', 'h-[85vh]', 'max-w-none'); refreshThemeFooter(); };
+        const refreshThemeFooter = () => {
+            const editBtn = $('openThemeEditorBtn');
+            const footer = $('themeSelectFooter');
+            const dismissBtn = $('dismissThemeModalBtn');
+            const canModify = ENGINE.isDevMode || ENGINE.mode === EDITOR;
+            if (editBtn) editBtn.classList.toggle('hidden', !canModify);
+            if (footer) footer.classList.toggle('justify-center', !canModify);
+            if (footer) footer.classList.toggle('justify-between', canModify);
+            if (dismissBtn) dismissBtn.classList.remove('hidden');
+        };
         $('backToThemeSelectBtn').onclick = closeEditor;
         $('doneThemeEditBtn').onclick = closeEditor;
         $('devToggleBtn').onclick = () => { ENGINE.isDevMode = !ENGINE.isDevMode; updatePlayModeLayout(); showMessage(ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
