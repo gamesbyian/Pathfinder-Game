@@ -82,7 +82,7 @@
         .landscape-editor-tools #gridSizeButtonsRow #gridSizePlusBtn { margin-left: 0; }
         .landscape-editor-tools #gridRotateMirrorRow { padding-right: 0; }
 
-        .grid-area-modal { position: fixed; inset: auto; left: var(--grid-modal-left, 0px); top: var(--grid-modal-top, 0px); width: var(--grid-modal-width, 100vw); height: var(--grid-modal-height, 100vh); align-items: stretch; justify-content: stretch; padding: 0; background-color: transparent; backdrop-filter: none; }
+        .grid-area-modal { position: fixed; inset: auto; left: var(--grid-modal-left, 0px); top: var(--grid-modal-top, 0px); width: var(--grid-modal-width, 100vw); height: var(--grid-modal-height, 100vh); align-items: stretch; justify-content: stretch; padding: 0; }
         .grid-area-modal > .grid-area-modal-panel { width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; border-width: 0; box-shadow: none; padding: 0.75rem; }
         .grid-area-modal textarea { min-height: 0; }
         
@@ -372,8 +372,8 @@
     </div>
 </div>
 
-<div id="themeModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal grid-area-modal">
-    <div id="themeModalPanel" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-w-sm flex flex-col modal-content max-h-[calc(100vh-2rem)] transition-all duration-300 overflow-hidden grid-area-modal-panel">
+<div id="themeModal" class="fixed inset-0 z-50 hidden flex flex-col modal-content border border-[var(--theme-modal-border)] bg-[var(--theme-modal-bg)] backdrop-blur-md grid-area-modal">
+    <div id="themeModalPanel" class="w-full h-full flex flex-col modal-content transition-all duration-300 overflow-hidden p-4 grid-area-modal-panel">
         <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
             <div class="flex justify-between items-center mb-4 shrink-0 px-2">
                 <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
@@ -2756,8 +2756,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
         $('closeThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
         $('dismissThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
-        $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); const panel = $('themeModalPanel'); panel.classList.remove('max-w-sm'); panel.classList.add('w-full', 'h-full', 'max-w-none'); renderThemeEditors(); };
-        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); const panel = $('themeModalPanel'); panel.classList.add('max-w-sm', 'w-full'); panel.classList.remove('h-full', 'max-w-none'); refreshThemeFooter(); };
+        $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); renderThemeEditors(); };
+        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); refreshThemeFooter(); };
         const refreshThemeFooter = () => {
             const editBtn = $('openThemeEditorBtn');
             const footer = $('themeSelectFooter');
