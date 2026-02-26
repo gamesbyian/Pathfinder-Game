@@ -51,17 +51,19 @@
             .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
             #gameButtonGrid:not(.hidden), #editorButtonGrid:not(.hidden) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem; }
             #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
-            #themeModal.landscape-left-modal #themeModalPanel { width: min(36vw, 64vh); max-width: min(36vw, 64vh); max-height: min(72vh, calc(100vh - 2rem)); }
-            .palette-grid { grid-template-columns: repeat(4, 2.2rem); }
+            #themeModal.landscape-left-modal #themeModalPanel { width: min(36vw, 64vh, var(--theme-modal-panel-max-width, 100vw)); max-width: min(36vw, 64vh, var(--theme-modal-panel-max-width, 100vw)); max-height: min(72vh, calc(100vh - 2rem)); }
+            .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, 3rem); }
         }
         .app-layout.forced-landscape { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
         .app-layout.forced-landscape .layout-left-pane { width: clamp(21rem, 34vw, 30rem); max-height: 96vh; overflow: hidden; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
         .app-layout.forced-landscape .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
         .app-layout.forced-landscape #gameButtonGrid:not(.hidden), .app-layout.forced-landscape #editorButtonGrid:not(.hidden) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem; }
         .app-layout.forced-landscape #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
-        .app-layout.forced-landscape .palette-grid { grid-template-columns: repeat(4, 2.2rem); }
+        .app-layout.forced-landscape .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, 3rem); }
         .landscape-editor-tools { width: 100%; }
-        #themeModal.landscape-left-modal { position: fixed; inset: auto; left: var(--theme-modal-left, 0px); top: var(--theme-modal-top, 0px); width: var(--theme-modal-width, 100vw); height: var(--theme-modal-height, 100vh); align-items: stretch; justify-content: stretch; padding: 0; }
+        .landscape-editor-tools .palette-grid .palette-item { height: 3rem; }
+        .landscape-editor-tools #editUndoGridBtn { width: 3rem !important; height: calc((3 * 3rem) + (2 * 0.35rem)) !important; }
+        #themeModal.landscape-left-modal { position: fixed; inset: auto; left: var(--theme-modal-left, 0px); top: var(--theme-modal-top, 0px); width: var(--theme-modal-width, 100vw); height: var(--theme-modal-height, 100vh); align-items: stretch; justify-content: stretch; padding: 0; background-color: transparent; backdrop-filter: none; }
         #themeModal.landscape-left-modal #themeModalPanel { position: fixed; left: var(--theme-modal-center-x, 50vw); top: var(--theme-modal-center-y, 50vh); transform: translate(-50%, -50%); }
         
         .palette-grid { display: grid; grid-template-columns: repeat(6, 2.2rem); gap: 0.35rem; width: max-content; margin: 0; }
@@ -251,7 +253,7 @@
     <div id="editorPalette" class="hidden w-full p-4 rounded-2xl bg-white shadow-xl border border-slate-200 shrink-0 transition-all">
         <div class="flex flex-col gap-4">
             <div class="flex items-stretch gap-1.5">
-                <div class="palette-grid grid grid-cols-6 gap-1.5">
+                <div class="palette-grid flex-grow grid grid-cols-6 gap-1.5">
                     <div class="palette-item" data-type="gate" title="Gate"><svg viewBox="0 0 100 100" style="color: var(--theme-gate)"><use href="#def-gate"/></svg></div>
                     <div class="palette-item" data-type="goal" title="Goal"><svg viewBox="0 0 100 100" style="color: var(--theme-goal)"><use href="#def-goal"/></svg></div>
                     <div class="palette-item" data-type="falseGoal" title="Bomb"><svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg></div>
@@ -265,17 +267,17 @@
                     <div class="palette-item" data-type="flipH" title="Flip-H"><svg viewBox="0 0 100 100" style="color: var(--theme-filter)"><use href="#def-flipH"/></svg></div>
                     <div class="palette-item" data-type="flipV" title="Flip-V"><svg viewBox="0 0 100 100" style="color: var(--theme-filter)"><use href="#def-flipV"/></svg></div>
                 </div>
-                <div class="flex-shrink-0 flex items-center justify-center">
+                <div class="w-12 flex-shrink-0 flex items-center justify-center">
                     <div id="editUndoGridBtn" class="palette-item palette-tool !w-10 !h-[6.95rem]" title="Undo Grid Action"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div>
                 </div>
             </div>
-            <div class="flex items-center justify-between pt-3 border-t border-slate-100 gap-1.5">
+            <div class="flex items-center justify-center pt-3 border-t border-slate-100 gap-1.5">
                 <div class="flex gap-1">
                     <div id="editPencilBtn" class="palette-item palette-tool !w-10 !h-10" title="Pencil"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg></div>
                     <div id="editEraserBtn" class="palette-item palette-tool !w-10 !h-10" title="Undo Step"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></div>
                     <div id="editCopyMetrics" class="bg-red-700 text-white px-4 h-10 flex items-center justify-center rounded-lg text-[0.65rem] font-bold uppercase tracking-wider cursor-pointer hover:brightness-110 active:scale-95 transition-all whitespace-nowrap min-w-[6rem]">Set (0/0)</div>
                 </div>
-                <div id="gridControlArea" class="flex items-center gap-1.5 p-1 rounded-xl border border-slate-200 bg-slate-50 shrink-0 justify-center">
+                <div id="gridControlArea" class="flex items-center gap-1.5 p-1 rounded-xl border border-slate-200 bg-slate-50 flex-grow max-w-[200px] justify-center">
                     <div class="flex items-center px-1.5"><span id="gridSizeLabel" class="text-[0.6rem] font-black uppercase tracking-widest text-slate-400 mr-1.5">GRID:</span>
                         <button id="gridSizeMinusBtn" class="w-8 h-8 rounded-lg font-black transition flex items-center justify-center border border-slate-200">-</button>
                         <button id="gridSizePlusBtn" class="w-8 h-8 rounded-lg font-black transition flex items-center justify-center border border-slate-200 ml-1">+</button>
@@ -562,15 +564,26 @@
         if (themeModal) {
             themeModal.classList.toggle('landscape-left-modal', ENGINE.ui.isLandscapeLayout);
             if (appLayout) {
-                const rect = appLayout.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
+                const layoutRect = appLayout.getBoundingClientRect();
+                const controlsPane = $('controlsPane');
+                const gameCanvas = $('gameCanvas');
+                const gameButtons = $('gameButtonGrid');
+                const editorButtons = $('editorButtonGrid');
+                const activeButtonGrid = (ENGINE.mode === EDITOR && editorButtons && !editorButtons.classList.contains('hidden')) ? editorButtons : gameButtons;
+                const buttonRect = activeButtonGrid ? activeButtonGrid.getBoundingClientRect() : (controlsPane ? controlsPane.getBoundingClientRect() : layoutRect);
+                const canvasRect = gameCanvas ? gameCanvas.getBoundingClientRect() : layoutRect;
+                const leftBound = Math.max(layoutRect.left, buttonRect.left);
+                const rightBound = Math.min(layoutRect.right, canvasRect.right);
+                const boundedWidth = Math.max(0, rightBound - leftBound);
+                const centerX = boundedWidth > 0 ? leftBound + (boundedWidth / 2) : layoutRect.left + (layoutRect.width / 2);
+                const centerY = layoutRect.top + layoutRect.height / 2;
                 document.documentElement.style.setProperty('--theme-modal-center-x', `${centerX}px`);
                 document.documentElement.style.setProperty('--theme-modal-center-y', `${centerY}px`);
-                document.documentElement.style.setProperty('--theme-modal-left', `${rect.left}px`);
-                document.documentElement.style.setProperty('--theme-modal-top', `${rect.top}px`);
-                document.documentElement.style.setProperty('--theme-modal-width', `${rect.width}px`);
-                document.documentElement.style.setProperty('--theme-modal-height', `${rect.height}px`);
+                document.documentElement.style.setProperty('--theme-modal-left', `${layoutRect.left}px`);
+                document.documentElement.style.setProperty('--theme-modal-top', `${layoutRect.top}px`);
+                document.documentElement.style.setProperty('--theme-modal-width', `${layoutRect.width}px`);
+                document.documentElement.style.setProperty('--theme-modal-height', `${layoutRect.height}px`);
+                document.documentElement.style.setProperty('--theme-modal-panel-max-width', `${Math.max(boundedWidth, 0)}px`);
             }
         }
         const orientationBtn = $('orientationToggleBtn');
