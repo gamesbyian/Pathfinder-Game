@@ -113,6 +113,7 @@
         .landscape-editor-tools #gridRotateMirrorRow { padding-right: 0; }
 
         .screen-modal { position: absolute; inset: 0; z-index: 30; background: var(--theme-modal-bg); backdrop-filter: blur(12px); padding: var(--ui-pad); }
+        .screen-modal-top { z-index: 35; }
         .screen-modal-panel { width: 100%; height: 100%; border-radius: var(--ui-radius); padding: var(--ui-panel-pad); }
         #editorPalette { --palette-cell-size: clamp(2.35rem, 5vw, 2.95rem); }
         .palette-grid { display: grid; grid-template-columns: repeat(6, var(--palette-cell-size)); gap: var(--ui-gap-tight); width: max-content; margin: 0; }
@@ -262,6 +263,45 @@
                     <div class="pb-4 border-t border-[var(--theme-modal-border)] pt-3"><p id="devToggleBtn" class="text-center text-[0.8rem] uppercase font-black text-[var(--theme-modal-muted)] tracking-wider cursor-pointer select-none hover:text-[var(--theme-modal-accent)] transition">PATHFINDER GAME BY IAN WALLACE, GEMINI AND CHATGPT. &copy;2025</p></div>
                 </div>
             </div>
+            <div id="themeModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
+                <div id="themeModalPanel" class="screen-modal-panel panel w-full h-full min-h-0 flex flex-col modal-content transition-all duration-300 overflow-hidden">
+                    <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
+                        <div class="flex justify-between items-center mb-4 shrink-0 px-2">
+                            <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
+                            <button id="closeThemeModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                        </div>
+                        <div id="themeGrid" class="flex-grow overflow-y-auto grid grid-cols-3 gap-4 px-2 pb-4 content-start min-h-0"></div>
+                        <div id="themeSelectFooter" class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-center gap-2 shrink-0">
+                            <button id="openThemeEditorBtn" class="hidden text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Modify Themes</button>
+                            <button id="dismissThemeModalBtn" class="text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Dismiss</button>
+                        </div>
+                    </div>
+                    <div id="themeEditView" class="hidden flex-col w-full h-full min-h-0">
+                        <div class="flex justify-between items-center mb-4 shrink-0 px-2">
+                            <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Modify Themes</h2>
+                            <button id="backToThemeSelectBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-1 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            </button>
+                        </div>
+                        <div id="themeEditList" class="flex-grow overflow-y-auto flex flex-col gap-6 px-1 sm:px-2 pb-4 min-h-0"></div>
+                        <div class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-end shrink-0">
+                            <button id="doneThemeEditBtn" class="bg-[var(--theme-modal-accent)] text-[var(--theme-modal-panel)] px-6 py-2 rounded-lg font-black tracking-widest shadow-md hover:brightness-110 transition text-xs uppercase">Done</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="megaModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
+                <div id="megaModalContent" class="screen-modal-panel panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content">
+                    <div class="flex justify-between items-center mb-4 shrink-0">
+                        <div><h2 id="megaModalTitle" class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Mega Solver Results</h2><p id="megaModalSub" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Bulk Solution Generation</p></div>
+                        <button id="closeMegaModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    </div>
+                    <textarea id="megaOutput" readonly class="flex-grow min-h-0 p-4 bg-slate-900 text-fuchsia-300 rounded-xl border border-slate-700 text-xs font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500" placeholder="Mega solver results will appear here..."></textarea>
+                    <div class="mt-4 flex justify-end shrink-0"><button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-6 py-3 rounded-lg font-black hover:brightness-95 transition uppercase tracking-widest shadow-lg active:scale-95">Copy All</button></div>
+                </div>
+            </div>
+
             <div id="editorHelpModal" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                      <div class="flex-grow pr-2"><h3 class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)] text-left w-full">Editor Guide</h3></div>
@@ -300,45 +340,6 @@
                     </div>
                 </div>
             </div>
-
-<div id="themeModal" class="screen-modal hidden flex flex-col modal-content">
-        <div id="themeModalPanel" class="screen-modal-panel panel w-full h-full flex flex-col modal-content transition-all duration-300 overflow-hidden">
-            <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
-                <div class="flex justify-between items-center mb-4 shrink-0 px-2">
-                    <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
-                    <button id="closeThemeModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
-                </div>
-                <div id="themeGrid" class="flex-grow overflow-y-auto grid grid-cols-3 gap-4 px-2 pb-4 content-start min-h-0"></div>
-                <div id="themeSelectFooter" class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-center gap-2 shrink-0">
-                    <button id="openThemeEditorBtn" class="hidden text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Modify Themes</button>
-                    <button id="dismissThemeModalBtn" class="text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Dismiss</button>
-                </div>
-            </div>
-            <div id="themeEditView" class="hidden flex-col w-full h-full min-h-0">
-                <div class="flex justify-between items-center mb-4 shrink-0 px-2">
-                    <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Modify Themes</h2>
-                    <button id="backToThemeSelectBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-1 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    </button>
-                </div>
-                <div id="themeEditList" class="flex-grow overflow-y-auto flex flex-col gap-6 px-1 sm:px-2 pb-4 min-h-0"></div>
-                <div class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-end shrink-0">
-                    <button id="doneThemeEditBtn" class="bg-[var(--theme-modal-accent)] text-[var(--theme-modal-panel)] px-6 py-2 rounded-lg font-black tracking-widest shadow-md hover:brightness-110 transition text-xs uppercase">Done</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="megaModal" class="screen-modal hidden flex flex-col modal-content">
-        <div id="megaModalContent" class="screen-modal-panel panel w-full h-full flex flex-col modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <div><h2 id="megaModalTitle" class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Mega Solver Results</h2><p id="megaModalSub" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Bulk Solution Generation</p></div>
-                <button id="closeMegaModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
-            </div>
-            <textarea id="megaOutput" readonly class="flex-grow p-4 bg-slate-900 text-fuchsia-300 rounded-xl border border-slate-700 text-xs font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500" placeholder="Mega solver results will appear here..."></textarea>
-            <div class="mt-4 flex justify-end"><button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-6 py-3 rounded-lg font-black hover:brightness-95 transition uppercase tracking-widest shadow-lg active:scale-95">Copy All</button></div>
-        </div>
-    </div>
     </div>
 
         </div>
