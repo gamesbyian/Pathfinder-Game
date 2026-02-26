@@ -116,12 +116,17 @@
         .screen-modal-top { z-index: 35; }
         .screen-modal-panel { width: 100%; height: 100%; border-radius: var(--ui-radius); padding: var(--ui-panel-pad); }
         #editorPalette { --palette-cell-size: clamp(2.35rem, 5vw, 2.95rem); }
-        .palette-grid { display: grid; grid-template-columns: repeat(6, var(--palette-cell-size)); gap: var(--ui-gap-tight); width: max-content; margin: 0; }
+        #editorItemPalettePanel { display: grid; grid-template-columns: minmax(0, 1fr) var(--palette-cell-size); }
+        .palette-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--ui-gap-tight); width: 100%; margin: 0; }
         .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); border-radius: var(--ui-radius); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e1; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; touch-action: none; }
+        .palette-grid .palette-item { width: 100%; height: auto; aspect-ratio: 1 / 1; }
         .palette-item svg { width: 65%; height: 65%; }
         .palette-item.selected { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
         .palette-item:active { transform: scale(0.95); }
         #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--ui-gap-tight))) !important; }
+        .landscape-editor-tools #editorItemPalettePanel { display: flex; }
+        .landscape-editor-tools .palette-grid { width: max-content; grid-template-columns: repeat(4, var(--palette-cell-size)); }
+        .landscape-editor-tools .palette-grid .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); aspect-ratio: auto; }
 
         .editor-input { background: rgba(0,0,0,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5rem; width: 4rem; text-align: center; font-weight: 800; font-size: 1.5rem; line-height: 1; padding: 0.25rem 0; outline: none; transition: border-color 0.2s; }
         .editor-input:focus { border-color: white; }
