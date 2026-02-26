@@ -38,16 +38,25 @@
         @keyframes spin-grow-fade { 0% { transform: scale(1) rotate(0deg); opacity: 1; } 100% { transform: scale(3) rotate(360deg); opacity: 0; } }
         .animate-spin-grow-fade { animation: spin-grow-fade 1s forwards cubic-bezier(0.4, 0, 0.2, 1); }
         .app-layout { max-width: 65vh; }
+        #headerLeft { width: 74px; }
+        #headerMiddle { width: 32%; min-width: 15rem; }
+        #headerMiddleContent { width: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 0.65rem 0 0.5rem; gap: 0.65rem; }
+        #levelInfoWrap { display: flex; align-items: center; margin-right: auto; min-width: 0; padding-left: 0.3rem; }
+        #levelNavigator { display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0; }
         @media (orientation: landscape) and (min-width: 900px) {
             .app-layout { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
             .layout-left-pane { width: min(46vw, 90vh); max-height: 96vh; overflow: hidden; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
             .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
+            #headerLeft { width: 70px; }
+            #headerMiddle { width: 36%; min-width: 16rem; }
             #themeModal.landscape-left-modal { align-items: center; justify-content: center; padding: 1rem; }
             #themeModal.landscape-left-modal #themeModalPanel { width: min(46vw, 90vh); max-width: min(46vw, 90vh); max-height: calc(100vh - 2rem); }
         }
         .app-layout.forced-landscape { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
         .app-layout.forced-landscape .layout-left-pane { width: min(46vw, 90vh); max-height: 96vh; overflow: hidden; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
         .app-layout.forced-landscape .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
+        .app-layout.forced-landscape #headerLeft { width: 70px; }
+        .app-layout.forced-landscape #headerMiddle { width: 36%; min-width: 16rem; }
         .landscape-editor-tools { width: 100%; }
         
         .palette-grid { display: grid; grid-template-columns: repeat(6, 2.2rem); gap: 0.35rem; width: max-content; margin: 0; }
@@ -119,17 +128,19 @@
                     <circle cx="3.5" cy="7" r="0.525" fill="var(--theme-logo-goal)"/>
                 </svg>
             </div>
-            <div id="headerMiddle" class="w-[34%] flex-shrink-0 bg-red-700 flex items-center justify-center transition-colors duration-300 relative border-r border-slate-200/20">
-                <div class="absolute left-[37%] top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                    <svg id="completionBurst" viewBox="0 0 100 100" class="w-8 h-8 hidden"><use href="#def-completion"/></svg>
-                    <div class="flex flex-col items-center">
-                        <span id="levelLabelText" class="text-[0.6rem] font-black text-red-100/60 uppercase tracking-widest leading-none mb-1">Level</span>
-                        <p id="levelTitle" class="text-white font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
+            <div id="headerMiddle" class="flex-shrink-0 bg-red-700 flex items-center transition-colors duration-300 relative border-r border-slate-200/20">
+                <div id="headerMiddleContent">
+                    <div id="levelInfoWrap">
+                        <svg id="completionBurst" viewBox="0 0 100 100" class="w-8 h-8 hidden shrink-0"><use href="#def-completion"/></svg>
+                        <div class="flex flex-col items-center min-w-0 ml-1.5">
+                            <span id="levelLabelText" class="text-[0.6rem] font-black text-red-100/60 uppercase tracking-widest leading-none mb-1">Level</span>
+                            <p id="levelTitle" class="text-white font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
+                        </div>
                     </div>
-                </div>
-                <div id="levelNavigator" class="absolute left-[82%] top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col gap-1">
-                    <button id="prevLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">◄</button>
-                    <button id="nextLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">►</button>
+                    <div id="levelNavigator">
+                        <button id="prevLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">◄</button>
+                        <button id="nextLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">►</button>
+                    </div>
                 </div>
             </div>
             <div id="headerRight" class="flex-grow bg-blue-700 flex items-center justify-center transition-colors duration-300">
@@ -450,7 +461,7 @@
         progressSet: new Set(),
         foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true } 
-        ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null }
+        ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false }
     };
         return { ENGINE };
@@ -2212,19 +2223,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function applyFocusVisual(el) {
         document.querySelectorAll('.gamepad-focus').forEach(node => node.classList.remove('gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2'));
-        if (!el) return;
-        el.classList.add('gamepad-focus');
-        if (el.id !== 'resetBtn') el.classList.add('ring-4', 'ring-sky-400', 'ring-offset-2');
+        if (!ENGINE.ui.gamepadFocusEnabled || !el) return;
+        el.classList.add('gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2');
         if (typeof el.focus === 'function') el.focus({ preventScroll: true });
     }
 
-    function setFocusGroup(groupName, index = 0) {
+    function setFocusGroup(groupName, index = 0, forceVisual = false) {
         const groups = getFocusableGroups();
         const gIdx = Math.max(0, groups.findIndex(g => g.name === groupName));
         const group = groups[gIdx] || groups[0];
         if (!group) return;
         ENGINE.ui.focusGroup = group.name;
         ENGINE.ui.focusIndex = Math.max(0, Math.min(index, group.elements.length - 1));
+        if (forceVisual) ENGINE.ui.gamepadFocusEnabled = true;
         applyFocusVisual(group.elements[ENGINE.ui.focusIndex]);
     }
 
@@ -2233,7 +2244,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (!groups.length) return;
         const idx = groups.findIndex(g => g.name === ENGINE.ui.focusGroup);
         const next = groups[(idx + 1 + groups.length) % groups.length];
-        setFocusGroup(next.name, 0);
+        setFocusGroup(next.name, 0, true);
     }
 
     function moveFocusWithinGroup(delta) {
@@ -2587,6 +2598,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
             const pressed = idx => !!pad.buttons[idx] && pad.buttons[idx].pressed;
             const wasPressed = idx => !!ENGINE.gamepad.lastButtons[idx];
+            const anyPressed = pad.buttons.some(b => !!b && b.pressed);
+            if (anyPressed) ENGINE.gamepad.hasPad = true;
 
             if (pressed(GAMEPAD_MAP.A) && !wasPressed(GAMEPAD_MAP.A)) activateFocusedControl();
             if (pressed(GAMEPAD_MAP.B) && !wasPressed(GAMEPAD_MAP.B)) handleBPress();
@@ -2606,7 +2619,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
 
         window.addEventListener('gamepadconnected', () => setFocusGroup(ENGINE.ui.focusGroup || 'GRID', ENGINE.ui.focusIndex || 0));
-        window.addEventListener('gamepaddisconnected', () => { ENGINE.gamepad.hasPad = false; ENGINE.gamepad.lastButtons = []; });
+        window.addEventListener('gamepaddisconnected', () => { ENGINE.gamepad.hasPad = false; ENGINE.gamepad.lastButtons = []; ENGINE.ui.gamepadFocusEnabled = false; applyFocusVisual(null); });
         setFocusGroup('CONTROLS', 0);
         
         window.addEventListener('resize', () => {
