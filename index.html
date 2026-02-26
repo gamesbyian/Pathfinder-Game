@@ -41,7 +41,7 @@
         #headerLeft { width: clamp(3.9rem, 9.5vw, 4.1rem); flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem); }
         #headerMiddle { width: clamp(9.75rem, 20vw, 11.25rem); min-width: 9.75rem; flex: 0 0 clamp(9.75rem, 20vw, 11.25rem); }
         #headerRight { min-width: clamp(14.5rem, 34vw, 20rem); flex: 1 1 auto; }
-        #headerMiddleContent { width: 100%; display: flex; align-items: center; justify-content: flex-end; padding: 0 0.6rem 0 0.45rem; gap: 0.35rem; }
+        #headerMiddleContent { width: 100%; display: flex; align-items: center; justify-content: center; padding: 0 0.6rem; gap: 0.7rem; }
         #playMetrics, #editorMetrics { margin: 0 auto; justify-content: center; }
         #levelInfoWrap { display: flex; align-items: center; margin-right: 0; min-width: 0; padding-left: 0; }
         #levelTitle { min-width: 3ch; text-align: right; }
@@ -62,16 +62,16 @@
         .app-layout.forced-landscape #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
         .app-layout.forced-landscape .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, 3rem); }
         .landscape-editor-tools { width: 100%; }
-        .landscape-editor-tools .palette-grid { flex-grow: 0; margin-left: auto; }
+        .landscape-editor-tools .palette-grid { flex-grow: 0; margin-left: 0; }
         .landscape-editor-tools .palette-grid .palette-item { height: 3rem; }
         .landscape-editor-tools #editUndoGridBtn { width: 3rem !important; height: calc((2 * 3rem) + (1 * 0.35rem)) !important; }
-        .landscape-editor-tools #editorPaletteLayout { display: grid; grid-template-columns: auto 1fr; gap: 0.75rem; align-items: stretch; }
-        .landscape-editor-tools #editorLineGridPanel { border-top: 0; padding-top: 0; justify-content: flex-start; align-items: stretch; }
-        .landscape-editor-tools #editorLineGridPanel::after { content: ''; width: 1px; background: #cbd5e1; margin: 0 0.1rem; align-self: stretch; }
+        .landscape-editor-tools #editorPaletteLayout { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "line palette"; gap: 0.75rem; align-items: stretch; }
+        .landscape-editor-tools #editorLineGridPanel { grid-area: line; border-top: 0; border-right: 1px solid #cbd5e1; padding: 0 0.65rem 0 0; justify-content: flex-start; align-items: stretch; flex-direction: column; }
+        .landscape-editor-tools #editorItemPalettePanel { grid-area: palette; }
         .landscape-editor-tools #lineGridTools { display: flex; flex-direction: column; gap: 0.35rem; align-items: stretch; width: 7rem; }
         .landscape-editor-tools #lineToolRow, .landscape-editor-tools #lineSetRow, .landscape-editor-tools #gridRotateMirrorRow, .landscape-editor-tools #gridSizeButtonsRow { justify-content: center; }
         .landscape-editor-tools #lineSetRow #editCopyMetrics { width: 100%; min-width: 0; }
-        .landscape-editor-tools #gridControlArea { flex-direction: column; gap: 0.35rem; align-items: stretch; max-width: none; flex-grow: 0; padding: 0.35rem; }
+        .landscape-editor-tools #gridControlArea { flex-direction: column; gap: 0.35rem; align-items: stretch; max-width: none; flex-grow: 0; padding: 0.35rem; margin-top: 0.15rem; }
         .landscape-editor-tools #gridLabelRow { justify-content: center; padding: 0; }
         .landscape-editor-tools #gridSizeLabel { margin-right: 0; }
         .landscape-editor-tools #gridSizeButtonsRow { display: flex; gap: 0.35rem; padding: 0; }
@@ -268,7 +268,7 @@
 
     <div id="editorPalette" class="hidden w-full p-4 rounded-2xl bg-white shadow-xl border border-slate-200 shrink-0 transition-all">
         <div id="editorPaletteLayout" class="flex flex-col gap-4">
-            <div class="flex items-stretch gap-1.5">
+            <div id="editorItemPalettePanel" class="flex items-stretch gap-1.5">
                 <div class="palette-grid flex-grow grid grid-cols-6 gap-1.5">
                     <div class="palette-item" data-type="gate" title="Gate"><svg viewBox="0 0 100 100" style="color: var(--theme-gate)"><use href="#def-gate"/></svg></div>
                     <div class="palette-item" data-type="goal" title="Goal"><svg viewBox="0 0 100 100" style="color: var(--theme-goal)"><use href="#def-goal"/></svg></div>
@@ -364,7 +364,7 @@
     </div>
 </div>
 
-<div id="themeModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4 py-4 grid-area-modal">
+<div id="themeModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal grid-area-modal">
     <div id="themeModalPanel" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-sm flex flex-col modal-content max-h-[calc(100vh-2rem)] transition-all duration-300 overflow-hidden grid-area-modal-panel">
         <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
             <div class="flex justify-between items-center mb-4 shrink-0 px-2">
@@ -2745,7 +2745,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
         
         const tModal = $('themeModal');
-        $('openThemeModalBtn').onclick = () => { closeAllModals(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
+        $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
         $('closeThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
         $('dismissThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
         $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); const panel = $('themeModalPanel'); panel.classList.remove('max-sm'); panel.classList.add('w-full', 'h-full', 'max-w-none'); renderThemeEditors(); };
