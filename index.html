@@ -723,7 +723,7 @@
         active: false, results: {}, 
         async run() { 
             if (this.active) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : (typeof FALLBACK_RAW_LEVELS !== 'undefined' ? FALLBACK_RAW_LEVELS : null); if (!levels) return; 
-            this.active = true; this.results = {}; const targets = []; for (let i = 0; i < levels.length; i++) { if (!levels[i].hints || levels[i].hints.length === 0) { targets.push(i); } } 
+            this.active = true; this.results = {}; this.debugFailures = {}; const targets = []; for (let i = 0; i < levels.length; i++) { if (!levels[i].hints || levels[i].hints.length === 0) { targets.push(i); } } 
             if (targets.length === 0) { showMessage("All levels have hints!", "text-green-600"); this.active = false; return; } 
             
             const btn = $('megaSolverBtn'); const originalText = btn.innerText; btn.disabled = true; 
@@ -736,20 +736,23 @@
             for (let i = 0; i < targets.length; i++) { 
                 const idx = targets[i]; statusEl.innerText = `BATCH PROGRESS: ${i + 1}/${targets.length}\nSCANNING LEVEL ${idx + 1}`; const l = normalizeLevel(idx); 
                 try { 
-                    const solutions = await PathfinderSolver.solve(l, { 
+                    const solverResult = await PathfinderSolver.solve(l, { 
                         timeLimit: 15000, 
                         signal: ENGINE.activeSolverController.signal, 
                         onStateUpdate: (msg) => { searchLabel.innerText = msg; }, 
-                        onProgress: () => { uiTimer.innerText = ((Date.now() - megaStartTime) / 1000).toFixed(1) + 's'; } 
+                        onProgress: () => { uiTimer.innerText = ((Date.now() - megaStartTime) / 1000).toFixed(1) + 's'; },
+                        debug: true,
+                        debugLevel: idx + 1
                     }); 
-                    if (solutions && solutions.length > 0) { const simplified = solutions.map(s => s.path); this.results[idx + 1] = simplified; } 
+                    if (solverResult && solverResult.ok) { const simplified = solverResult.solution.map(s => s.path); this.results[idx + 1] = simplified; }
+                    else if (solverResult && solverResult.debug) { this.debugFailures[idx + 1] = solverResult.debug; } 
                 } catch(e) { if (e.name === 'AbortError') break; console.log(`Skipped level ${idx+1}`); } 
             } 
             ENGINE.activeSolverController = null; statusEl.classList.add('hidden'); 
             setOverlayState(OVERLAY_NONE);
             this.showReport(); this.active = false; btn.disabled = false; btn.innerText = originalText; 
         }, 
-        showReport() { let text = ""; for (const [lvl, paths] of Object.entries(this.results)) { text += `/* Level ${lvl} */\n${JSON.stringify(paths)}\n\n`; } $('megaOutput').value = text; $('megaModal').classList.remove('hidden'); } 
+        showReport() { let text = ""; for (const [lvl, paths] of Object.entries(this.results)) { text += `/* Level ${lvl} */\n${JSON.stringify(paths)}\n\n`; } for (const [lvl, debug] of Object.entries(this.debugFailures || {})) { text += `${formatSolverDebugBlock(lvl, debug)}\n\n`; } $('megaOutput').value = text; $('megaModal').classList.remove('hidden'); } 
     };
     
     function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
@@ -1713,7 +1716,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (policy === 'allow_dead_end') return { allowed: true, terminal: true };
             return { allowed: false, terminal: true };
         },
-        _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch) {
+        _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats = null) {
             const { w, h } = l.grid;
             const p = UNPACK(k);
             const candidates = [];
@@ -1755,8 +1758,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 return b;
             };
             const valid = candidates.filter(nk => {
-                if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) return false;
-                if (!this._hazardDecisionForKey(nk, state, l, options).allowed) return false;
+                if (debugStats) debugStats.branchesTried++;
+                if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) {
+                    if (debugStats) debugStats.prune.illegalMove++;
+                    return false;
+                }
+                if (!this._hazardDecisionForKey(nk, state, l, options).allowed) {
+                    if (debugStats) debugStats.prune.other++;
+                    return false;
+                }
                 const isP = (portalDest === nk && portalForced);
                 const nLen = curLen + (isP ? 0 : 1);
                 const rSteps = l.reqLen - nLen;
@@ -1764,17 +1774,29 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const cN = (pN.x + pN.y) % 2;
                 if (((Math.abs(cN - cEnd)) % 2) !== (rSteps % 2)) {
                     const dF = flipperDistMap.get(nk);
-                    if (dF === undefined || dF > rSteps) return false;
+                    if (dF === undefined || dF > rSteps) {
+                        if (debugStats) debugStats.prune.other++;
+                        return false;
+                    }
                 }
                 const d = distMap.get(nk);
-                if (d === undefined || d > rSteps) return false;
+                if (d === undefined || d > rSteps) {
+                    if (debugStats) debugStats.prune.minRemOverflow++;
+                    return false;
+                }
                 if (hasMust) {
                     const bestBound = getMustBound(nk);
-                    if (bestBound === Infinity || bestBound > rSteps) return false;
+                    if (bestBound === Infinity || bestBound > rSteps) {
+                        if (debugStats) debugStats.prune.mustPassBound++;
+                        return false;
+                    }
                 }
                 if (crossNeed > 0) {
                     const crossBound = getCrossBound(nk);
-                    if (crossBound === Infinity || crossBound > rSteps) return false;
+                    if (crossBound === Infinity || crossBound > rSteps) {
+                        if (debugStats) debugStats.prune.mustCrossBound++;
+                        return false;
+                    }
                 }
                 return true;
             });
@@ -1917,7 +1939,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             for (const k of l.gooseSet) if (state.counts.has(k)) return false;
             return true;
         },
-        async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options) {
+        async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options, debugStats = null) {
             const mustCount = l.mustPassKeys.length;
             const mustCrossCount = l.mustCrossKeys.length;
             options = options || {};
@@ -1953,11 +1975,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 state.flipParity = state.flipCount % 2;
             }
             const failedStates = new Set();
-            const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch);
+            const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
             const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: this._stateSignature(state, l, 0) }];
             let steps = 0;
             while (stack.length > 0) {
-                if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                if (options.signal?.aborted) return SOLVER_ABORTED;
                 if (Date.now() - options.startTime > options.timeLimit) return SOLVER_TIMEOUT;
                 if (++steps % 500 === 0) {
                     await new Promise(r => setTimeout(r, 0));
@@ -1965,12 +1987,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 }
                 const top = stack[stack.length - 1];
                 if (top.neighbors.length === 0) {
+                    if (debugStats) debugStats.prune.deadEnd++;
                     failedStates.add(top.sig);
                     this._popState(state, top.log);
                     stack.pop();
                     continue;
                 }
                 const nextKey = top.neighbors.pop();
+                if (debugStats) debugStats.nodesExpanded++;
                 const topPortal = resolvePortal(l, top.k);
                 const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
                 const transLog = this._pushState(state, nextKey, isP, l);
@@ -1981,27 +2005,33 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     continue;
                 }
                 const realLen = state.path.length - 1 - state.isJump.size;
+                if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
                 if (realLen > l.reqLen) {
+                    if (debugStats) debugStats.prune.lenOverflow++;
                     this._popState(state, transLog);
                     continue;
                 }
                 if (state.ints > l.reqInt) {
+                    if (debugStats) debugStats.prune.intsOverflow++;
                     this._popState(state, transLog);
                     continue;
                 }
                 const rSteps = l.reqLen - realLen;
                 if ((l.reqInt - state.ints) > rSteps) {
+                    if (debugStats) debugStats.prune.intsOverflow++;
                     this._popState(state, transLog);
                     continue;
                 }
                 const crossNeeds = this._crossNeeds(state);
                 if (crossNeeds > rSteps) {
+                    if (debugStats) debugStats.prune.mustCrossBound++;
                     this._popState(state, transLog);
                     continue;
                 }
                 if (state.mustMask !== 0n) {
                     const mustBound = this._estimateMustPassBoundFrom(lastK, state, l);
                     if (mustBound === Infinity || mustBound > rSteps) {
+                        if (debugStats) debugStats.prune.mustPassBound++;
                         this._popState(state, transLog);
                         continue;
                     }
@@ -2009,6 +2039,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (state.mustCrossMask !== 0n) {
                     const crossDist = this._nearestOutstandingMustCrossDist(lastK, state, l);
                     if (crossDist === Infinity || (crossDist + Math.max(0, crossNeeds - 1)) > rSteps) {
+                        if (debugStats) debugStats.prune.mustCrossBound++;
                         this._popState(state, transLog);
                         continue;
                     }
@@ -2022,19 +2053,22 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 }
                 const minRem = distMap.get(lastK) || Infinity;
                 if (realLen + minRem > l.reqLen) {
+                    if (debugStats) debugStats.prune.minRemOverflow++;
                     this._popState(state, transLog);
                     continue;
                 }
                 const sig = this._stateSignature(state, l, realLen);
                 if (failedStates.has(sig)) {
+                    if (debugStats) debugStats.prune.failedStateHit++;
                     this._popState(state, transLog);
                     continue;
                 }
                 if (hazard.terminal) {
+                    if (debugStats) debugStats.prune.deadEnd++;
                     this._popState(state, transLog);
                     continue;
                 }
-                const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch);
+                const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
                 stack.push({ k: nextKey, neighbors, log: transLog, sig });
             }
             return null;
@@ -2105,15 +2139,56 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
 
     const SOLVER_TIMEOUT = Symbol("solver-timeout");
+    const SOLVER_ABORTED = Symbol("solver-aborted");
+
+    function createSolverDebugStats(levelIndex = null) {
+        return {
+            levelIndex,
+            status: "",
+            nodesExpanded: 0,
+            branchesTried: 0,
+            maxDepth: 0,
+            elapsedMs: 0,
+            prune: {
+                lenOverflow: 0,
+                intsOverflow: 0,
+                minRemOverflow: 0,
+                mustPassBound: 0,
+                mustCrossBound: 0,
+                deadEnd: 0,
+                failedStateHit: 0,
+                illegalMove: 0,
+                other: 0
+            },
+            notes: []
+        };
+    }
+
+    function finalizeSolverDebugStats(debugStats, status, startPerf) {
+        if (!debugStats) return;
+        debugStats.status = status;
+        debugStats.elapsedMs = Math.round(performance.now() - startPerf);
+    }
+
+    function formatSolverDebugBlock(levelNumber, debug) {
+        const prune = debug?.prune || {};
+        return [
+            `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
+            `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0}`,
+            `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
+        ].join('\n');
+    }
 
     // ======================================================
     // H) Solver
     // ======================================================
     const PathfinderSolver = {
         async solve(level, options = {}) {
-            const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
+            const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null } = options;
             const startTime = Date.now();
+            const perfStart = performance.now();
             const foundSolutions = [];
+            const debugStats = debug ? createSolverDebugStats(debugLevel ?? ((typeof level.id === "number") ? level.id + 1 : null)) : null;
             foundSolutions.timedOut = false;
             if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
             onStateUpdate("Analyzing Bipartite Parity...");
@@ -2255,7 +2330,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 }
                 return true;
             });
-            if (validGates.length === 0) return [];
+            if (validGates.length === 0) {
+                if (debugStats) {
+                    debugStats.prune.other++;
+                    finalizeSolverDebugStats(debugStats, "invalid", perfStart);
+                    return { ok: false, solution: null, debug: debugStats };
+                }
+                return [];
+            }
 
             onStateUpdate(`Solving (${validGates.length} viable gates)...`);
             let cellUsageFreq = new Map();
@@ -2267,18 +2349,35 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (foundSolutions.length >= maxSolutions) break;
                 await new Promise(r => setTimeout(r, 0));
                 const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
-                const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, cellUsageFreq, level, internalOpts);
+                const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, cellUsageFreq, level, internalOpts, debugStats);
+                if (result === SOLVER_ABORTED) {
+                    if (debugStats) {
+                        finalizeSolverDebugStats(debugStats, "aborted", perfStart);
+                        return { ok: false, solution: null, debug: debugStats };
+                    }
+                    throw new DOMException("Aborted", "AbortError");
+                }
                 if (result === SOLVER_TIMEOUT) {
                     foundSolutions.timedOut = true;
+                    if (debugStats) {
+                        finalizeSolverDebugStats(debugStats, "timeout", perfStart);
+                        return { ok: false, solution: null, debug: debugStats };
+                    }
                     break;
                 }
                 if (result) {
+                    if (debugStats) debugStats.status = "solved";
                     const solStr = JSON.stringify(result.path);
                     if (!foundSolutions.some(s => JSON.stringify(s.path) === solStr)) {
                         foundSolutions.push(result);
                         result.path.forEach(k => cellUsageFreq.set(k, (cellUsageFreq.get(k) || 0) + 1));
                     }
                 }
+            }
+            if (debugStats) {
+                const solved = foundSolutions.length > 0;
+                finalizeSolverDebugStats(debugStats, solved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution"), perfStart);
+                return { ok: solved, solution: solved ? foundSolutions : null, debug: debugStats };
             }
             return foundSolutions;
         },
@@ -2478,15 +2577,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         try { 
             const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; 
-            const solutions = await PathfinderSolver.solve(activeLevel, { 
+            const solverResult = await PathfinderSolver.solve(activeLevel, { 
                 timeLimit: 105000, 
                 signal: ENGINE.activeSolverController.signal, 
                 onStateUpdate: (msg) => { 
                     searchLabel.innerText = msg; 
                     showMessage(msg, "text-sky-600"); 
                 }, 
-                onProgress: (elapsedMs) => { uiTimer.innerText = (elapsedMs / 1000).toFixed(1) + 's'; } 
+                onProgress: (elapsedMs) => { uiTimer.innerText = (elapsedMs / 1000).toFixed(1) + 's'; },
+                debug: ENGINE.isDevMode || ENGINE.mode === EDITOR,
+                debugLevel: (typeof activeLevel.id === "number") ? activeLevel.id + 1 : null
             }); 
+            const solutions = solverResult && typeof solverResult.ok === "boolean" ? (solverResult.ok ? (solverResult.solution || []) : []) : solverResult;
             
             if (solutions.length > 0) { 
                 const paths = solutions.map(s => s.path); 
@@ -2500,8 +2602,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 outEl.value = JSON.stringify(paths).replace(/\s/g, ''); 
                 startHintAnimation(); 
             } else { 
-                outEl.value = solutions.timedOut ? "Solver timed out before proving unsat." : "No strict solutions found."; 
-                showMessage(solutions.timedOut ? "Solver timed out." : "No valid path found.", "text-amber-600"); 
+                const debugInfo = solverResult && typeof solverResult.ok === "boolean" ? solverResult.debug : null;
+                if ((ENGINE.isDevMode || ENGINE.mode === EDITOR) && debugInfo) {
+                    const levelNumber = debugInfo.levelIndex || (typeof activeLevel.id === "number" ? activeLevel.id + 1 : (ENGINE.levelIdx + 1));
+                    outEl.value = formatSolverDebugBlock(levelNumber, debugInfo);
+                } else {
+                    outEl.value = solutions.timedOut ? "Solver timed out before proving unsat." : "No strict solutions found.";
+                }
+                const timedOut = debugInfo ? debugInfo.status === "timeout" : !!solutions.timedOut;
+                showMessage(timedOut ? "Solver timed out." : "No valid path found.", "text-amber-600"); 
                 setOverlayState(OVERLAY_NONE);
             } 
         } catch (err) { 
