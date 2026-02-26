@@ -1703,6 +1703,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             for (let i = 0; i < state.mustCrossCounts.length; i++) needs += (2 - state.mustCrossCounts[i]);
             return needs;
         },
+        _mustCrossExtraVisitsLowerBound(mask, crossNeed, l) {
+            const outstandingNodes = mask ? l._popcountMask(mask) : 0;
+            const extraVisitsLB = Math.max(0, crossNeed - outstandingNodes);
+            return { outstandingNodes, extraVisitsLB };
+        },
         _nearestOutstandingMustCrossDist(key, state, l) {
             if (!state.mustCrossMask || state.mustCrossMask === 0n) return Infinity;
             let best = Infinity;
@@ -1716,35 +1721,44 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         },
         _estimateMustCrossBoundFrom(key, state, l) {
             const mask = state.mustCrossMask;
-            if (!mask || mask === 0n) return l.distMapForSolver.get(key) ?? Infinity;
-            if (l.mustCrossDpMode === 'exact') {
+            const crossNeed = this._crossNeeds(state);
+            let baseBound;
+            if (!mask || mask === 0n) {
+                baseBound = l.distMapForSolver.get(key) ?? Infinity;
+            } else if (l.mustCrossDpMode === 'exact') {
                 const memoKey = `${key}|${mask.toString()}`;
                 const cached = l.mustCrossKeyMaskCache.get(memoKey);
-                if (cached !== undefined) return cached;
-                let best = Infinity;
+                if (cached !== undefined) baseBound = cached;
+                else {
+                    let best = Infinity;
+                    for (let i = 0; i < l.mustCrossKeys.length; i++) {
+                        const bit = 1n << BigInt(i);
+                        if ((mask & bit) === 0n) continue;
+                        const dToCross = l.mustCrossDistMaps[i].get(key);
+                        if (dToCross === undefined) continue;
+                        const rest = l.mustCrossDp(mask ^ bit, i);
+                        if (rest === Infinity) continue;
+                        const total = dToCross + rest;
+                        if (total < best) best = total;
+                    }
+                    l.mustCrossKeyMaskCache.set(memoKey, best);
+                    baseBound = best;
+                }
+            } else {
+                let nearest = Infinity;
+                const nodes = [];
                 for (let i = 0; i < l.mustCrossKeys.length; i++) {
                     const bit = 1n << BigInt(i);
                     if ((mask & bit) === 0n) continue;
-                    const dToCross = l.mustCrossDistMaps[i].get(key);
-                    if (dToCross === undefined) continue;
-                    const rest = l.mustCrossDp(mask ^ bit, i);
-                    if (rest === Infinity) continue;
-                    const total = dToCross + rest;
-                    if (total < best) best = total;
+                    nodes.push(i);
+                    const d = l.mustCrossDistMaps[i].get(key);
+                    if (d !== undefined && d < nearest) nearest = d;
                 }
-                l.mustCrossKeyMaskCache.set(memoKey, best);
-                return best;
+                baseBound = this._mstBoundFromNodes(nodes, l.mustCrossPairDist, l.mustCrossToGoalDist, nearest);
             }
-            let nearest = Infinity;
-            const nodes = [];
-            for (let i = 0; i < l.mustCrossKeys.length; i++) {
-                const bit = 1n << BigInt(i);
-                if ((mask & bit) === 0n) continue;
-                nodes.push(i);
-                const d = l.mustCrossDistMaps[i].get(key);
-                if (d !== undefined && d < nearest) nearest = d;
-            }
-            return this._mstBoundFromNodes(nodes, l.mustCrossPairDist, l.mustCrossToGoalDist, nearest);
+            if (baseBound === Infinity) return Infinity;
+            const extraVisitsLB = this._mustCrossExtraVisitsLowerBound(mask, crossNeed, l).extraVisitsLB;
+            return baseBound + extraVisitsLB;
         },
         _hazardDecisionForKey(key, state, l, options = {}) {
             if (!l.gooseSet.has(key)) return { allowed: true, terminal: false };
@@ -1842,7 +1856,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const crossBound = getCrossBound(nk);
                     if (crossBound === Infinity || crossBound > rSteps) {
                         if (debugStats) debugStats.prune.mustCrossBound++;
-                        if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound} rSteps=${rSteps}`);
+                        if (state.path.length === 1) {
+                            const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeed, l);
+                            this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeed} outstandingNodes=${outstandingNodes}`);
+                        }
                         return false;
                     }
                 }
@@ -1863,7 +1880,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const mustBound = hasMust ? getMustBound(nk) : 0;
                 const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
                 score += (mustBound === Infinity ? 100000 : mustBound * 6);
-                score += (crossBound === Infinity ? 100000 : crossBound * 5);
+                score += (crossBound === Infinity ? 100000 : crossBound * 6);
+                if (crossNeed > 0) score += crossNeed * 2;
                 score += (distMap.get(nk) ?? 999) * 2;
                 score += (usageFreq.get(nk) || 0);
                 score -= this._staticNeighborDegree(nk, l) * 3;
@@ -2106,7 +2124,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const crossBound = this._estimateMustCrossBoundFrom(lastK, state, l);
                     if (crossBound === Infinity || crossBound > rSteps) {
                         if (debugStats) debugStats.prune.mustCrossBound++;
-                        if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound === Infinity ? 'inf' : crossBound} rSteps=${rSteps}`);
+                        if (state.path.length === 2) {
+                            const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeeds, l);
+                            this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound === Infinity ? 'inf' : crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeeds} outstandingNodes=${outstandingNodes}`);
+                        }
                         this._popState(state, transLog);
                         continue;
                     }
