@@ -6,6 +6,10 @@
     <title>Pathfinder</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'><rect width='9' height='9' fill='%23f8fafc'/><g stroke='%2394a3b8' stroke-width='0.05'><line x1='0' y1='0' x2='9' y2='0'/><line x1='0' y1='2' x2='9' y2='2'/><line x1='0' y1='4' x2='9' y2='4'/><line x1='0' y1='6' x2='9' y2='6'/><line x1='0' y1='8' x2='9' y2='8'/><line x1='2' y1='0' x2='2' y2='9'/><line x1='4' y1='0' x2='4' y2='9'/><line x1='6' y1='0' x2='6' y2='9'/><line x1='8' y1='0' x2='8' y2='9'/></g><path d='M2.5 5H6.5V2H3.5V7' fill='none' stroke='%233b82f6' stroke-width='0.9' stroke-linecap='round' stroke-linejoin='round'/><circle cx='2.5' cy='5' r='0.525' fill='%233b82f6'/><circle cx='3.5' cy='7' r='0.525' fill='%23ef4444'/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <style>
-        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; }
+        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; }
         canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: white; }
         canvas:focus { outline: none; }
@@ -530,7 +534,6 @@
         return { ENGINE };
     })();
     const { ENGINE } = APP.State;
-    let IS_DEV = ENGINE.isDevMode;
 
     // ======================================================
     // J) Persistence
@@ -538,54 +541,15 @@
     const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
     let auth = null;
     let db = null;
-    let firebaseReady = false;
-    let firebaseLoadPromise = null;
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
 
-    function loadScriptOnce(src) {
-        return new Promise((resolve, reject) => {
-            const existing = document.querySelector(`script[src="${src}"]`);
-            if (existing) {
-                if (existing.dataset.loaded === 'true') return resolve();
-                existing.addEventListener('load', () => resolve(), { once: true });
-                existing.addEventListener('error', () => reject(new Error(`Failed to load ${src}`)), { once: true });
-                return;
-            }
-            const s = document.createElement('script');
-            s.src = src;
-            s.onload = () => {
-                s.dataset.loaded = 'true';
-                resolve();
-            };
-            s.onerror = () => reject(new Error(`Failed to load ${src}`));
-            document.head.appendChild(s);
-        });
-    }
-
-    async function ensureFirebaseReady() {
-        if (!firebaseConfigRaw) return false;
-        if (firebaseReady) return true;
-        if (firebaseLoadPromise) return firebaseLoadPromise;
-
-        firebaseLoadPromise = (async () => {
-            try {
-                await loadScriptOnce('https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js');
-                await loadScriptOnce('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js');
-                await loadScriptOnce('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js');
-                const config = JSON.parse(firebaseConfigRaw);
-                if (!window.firebase) return false;
-                if (!window.firebase.apps?.length) window.firebase.initializeApp(config);
-                auth = window.firebase.auth();
-                db = window.firebase.firestore();
-                firebaseReady = !!(auth && db);
-                return firebaseReady;
-            } catch (e) {
-                firebaseReady = false;
-                return false;
-            }
-        })();
-
-        return firebaseLoadPromise;
+    if (firebaseConfigRaw) {
+        try {
+            const config = JSON.parse(firebaseConfigRaw);
+            firebase.initializeApp(config);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } catch (e) {}
     }
 
     async function initAuth() {
@@ -765,37 +729,7 @@
     
     function resolvePortal(level, key) { return level.portalMap.has(key) ? level.portalMap.get(key) : null; }
     
-    let toneLoadPromise = null;
-    function ensureToneLoaded() {
-        if (window.Tone) return Promise.resolve(window.Tone);
-        if (toneLoadPromise) return toneLoadPromise;
-        toneLoadPromise = loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js')
-            .then(() => window.Tone || null)
-            .catch(() => null);
-        return toneLoadPromise;
-    }
-
-    async function ensureToneReady(fromUserGesture = false) {
-        const ToneRef = await ensureToneLoaded();
-        if (!ToneRef) return null;
-        try {
-            if (fromUserGesture && ToneRef.context.state !== 'running') await ToneRef.start();
-            if (fromUserGesture && ToneRef.context.state !== 'running' && ToneRef.context.resume) await ToneRef.context.resume();
-        } catch (e) {}
-        return ToneRef;
-    }
-
-    const SOUND_BUS = {
-        play(freq, dur = "16n") {
-            if (ENGINE.muted) return;
-            const ToneRef = window.Tone;
-            if (!ToneRef || ToneRef.context.state !== 'running') {
-                ensureToneReady(false);
-                return;
-            }
-            new ToneRef.Synth().toDestination().triggerAttackRelease(freq, dur);
-        }
-    };
+    const SOUND_BUS = { play(freq, dur = "16n") { if (!ENGINE.muted && window.Tone && Tone.context.state === 'running') { new Tone.Synth().toDestination().triggerAttackRelease(freq, dur); } } };
     
     function loop() {
         if (ENGINE.overlayState === HINT_ANIMATING && ENGINE.hinter.pathList.length) {
@@ -815,9 +749,7 @@
         render(); requestAnimationFrame(loop);
     }
     
-    let MEGA = null;
-
-    const createMegaTooling = () => ({ 
+    const MEGA = { 
         active: false, results: {}, 
         async run() { 
             if (this.active) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : (typeof FALLBACK_RAW_LEVELS !== 'undefined' ? FALLBACK_RAW_LEVELS : null); if (!levels) return; 
@@ -851,13 +783,8 @@
             this.showReport(); this.active = false; btn.disabled = false; btn.innerText = originalText; 
         }, 
         showReport() { let text = ""; for (const [lvl, paths] of Object.entries(this.results)) { text += `/* Level ${lvl} */\n${JSON.stringify(paths)}\n\n`; } for (const [lvl, debug] of Object.entries(this.debugFailures || {})) { text += `${formatSolverDebugBlock(lvl, debug)}\n\n`; } $('megaOutput').value = text; $('megaModal').classList.remove('hidden'); } 
-    });
-
-    function ensureMegaTooling() {
-        if (MEGA || !IS_DEV) return;
-        MEGA = createMegaTooling();
-    }
-
+    };
+    
     function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
     
     const THEMES = {
@@ -3291,7 +3218,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('gridMirrorBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; ENGINE.editor.mirrorHorizontal = !ENGINE.editor.mirrorHorizontal; $('mirrorIconSvg').style.transform = ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'; if (ENGINE.editor.mirrorHorizontal) { transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } showMessage("Mirrored", "text-white font-black"); };
         $('gridSizeMinusBtn').onclick = () => { closeAllModals(); changeGridSize(-1); };
         $('gridSizePlusBtn').onclick = () => { closeAllModals(); changeGridSize(1); };
-        $('muteBtn').onclick = async () => { closeAllModals(); ENGINE.muted = !ENGINE.muted; $('muteSlash').style.display = ENGINE.muted ? 'block' : 'none'; if (!ENGINE.muted) await ensureToneReady(true); };
+        $('muteBtn').onclick = () => { closeAllModals(); ENGINE.muted = !ENGINE.muted; $('muteSlash').style.display = ENGINE.muted ? 'block' : 'none'; };
         $('orientationToggleBtn').onclick = () => { closeAllModals(); ENGINE.ui.forceLandscapeLayout = !ENGINE.ui.forceLandscapeLayout; updateLayoutMode(); updateAppScale(); updateViewport(); showMessage(ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
         
         const perspectiveAction = () => { closeAllModals(); if (ENGINE.activeSolverController) return; ENGINE.variant = (ENGINE.variant + 1) % 8; updateViewport(); rebuildDerivedPathState(ENGINE); SOUND_BUS.play("D5", "32n"); };
@@ -3365,9 +3292,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!isVisible) $('guideModal').classList.remove('hidden');
         };
         $('closeGuideX').onclick = () => $('guideModal').classList.add('hidden');
-        $('megaSolverBtn').onclick = () => { closeAllModals(); if (!IS_DEV) return; ensureMegaTooling(); MEGA?.run(); };
+        $('megaSolverBtn').onclick = () => { closeAllModals(); MEGA.run(); };
         $('closeMegaModalBtn').onclick = () => { $('megaModal').classList.add('hidden'); if(ENGINE.activeSolverController) ENGINE.activeSolverController.abort(); };
-        $('copyMegaDataBtn').onclick = () => { if (!IS_DEV) return; const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
+        $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
         
         const tModal = $('themeModal');
         $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
@@ -3387,7 +3314,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         $('backToThemeSelectBtn').onclick = closeEditor;
         $('doneThemeEditBtn').onclick = closeEditor;
-        $('devToggleBtn').onclick = () => { ENGINE.isDevMode = !ENGINE.isDevMode; IS_DEV = ENGINE.isDevMode; if (IS_DEV) ensureMegaTooling(); updatePlayModeLayout(); showMessage(ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
+        $('devToggleBtn').onclick = () => { ENGINE.isDevMode = !ENGINE.isDevMode; updatePlayModeLayout(); showMessage(ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
         document.querySelectorAll('.editor-input').forEach(el => el.addEventListener('input', () => { ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.isModified = true; }));
         $('modeToggleBtn').onclick = () => { closeAllModals(); switchMode(EDITOR); };
         $('editModeToggleBtn').onclick = () => tryNavigate(() => { closeAllModals(); switchMode(PLAY); });
@@ -3474,10 +3401,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const startBoot = async () => {
             try {
-                if (await ensureFirebaseReady()) await initAuth();
+                if (firebaseConfigRaw) await initAuth();
             } catch (e) {}
             syncProgress(auth?.currentUser);
-            if (IS_DEV) ensureMegaTooling();
             loader.start();
         };
 
@@ -3485,14 +3411,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         ensureThemeLeaveColors();
         applyTheme('classic');
     };
-    /*
-     * Cleanup summary:
-     * - Duplicates removed: duplicate :root custom property declaration for --theme-win-accent (theme modal IDs were already unique).
-     * - Gated behind IS_DEV: MEGA batch tooling creation and MEGA modal action handlers.
-     * - Lazy-loaded: Firebase compat SDKs when __firebase_config is present (before auth init); Tone.js on first audio need/unmute gesture.
-     * - Unused code removed: unconditional external Tone/Firebase script tags in <head>.
-     */
-
 </script>
 </body>
 </html>
