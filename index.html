@@ -85,7 +85,7 @@
             .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
             #gameButtonGrid:not(.hidden), #editorButtonGrid:not(.hidden) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-gap-tight); }
             #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
-            .landscape-editor-tools #editorPalette { --palette-cell-size: clamp(2.3rem, 3.8vw, 2.8rem); }
+            .landscape-editor-tools #editorPalette { --palette-cell-size: clamp(2.55rem, 4.1vw, 3.05rem); --palette-grid-gap: clamp(0.28rem, 0.7vw, 0.42rem); }
             .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, var(--palette-cell-size)); }
         }
         .app-layout.forced-landscape { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: calc(var(--ui-gap) * 1.6); }
@@ -93,12 +93,12 @@
         .app-layout.forced-landscape .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
         .app-layout.forced-landscape #gameButtonGrid:not(.hidden), .app-layout.forced-landscape #editorButtonGrid:not(.hidden) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-gap-tight); }
         .app-layout.forced-landscape #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
-        .app-layout.forced-landscape .landscape-editor-tools #editorPalette { --palette-cell-size: clamp(2.3rem, 3.8vw, 2.8rem); }
+        .app-layout.forced-landscape .landscape-editor-tools #editorPalette { --palette-cell-size: clamp(2.55rem, 4.1vw, 3.05rem); --palette-grid-gap: clamp(0.28rem, 0.7vw, 0.42rem); }
         .app-layout.forced-landscape .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, var(--palette-cell-size)); }
         .landscape-editor-tools { width: 100%; }
-        .landscape-editor-tools .palette-grid { flex-grow: 0; margin-left: 0; }
+        .landscape-editor-tools .palette-grid { flex-grow: 0; margin-left: 0; gap: var(--palette-grid-gap, var(--ui-gap-tight)); }
         .landscape-editor-tools .palette-grid .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); }
-        .landscape-editor-tools #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--ui-gap-tight))) !important; }
+        .landscape-editor-tools #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--palette-grid-gap, var(--ui-gap-tight)))) !important; }
         .landscape-editor-tools #editorPaletteLayout { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "line palette"; gap: var(--ui-gap); align-items: stretch; }
         .landscape-editor-tools #editorLineGridPanel { grid-area: line; border-top: 0; border-right: 1px solid #cbd5e1; padding: 0 calc(var(--ui-gap) * 0.9) 0 0; justify-content: flex-start; align-items: stretch; flex-direction: column; }
         .landscape-editor-tools #editorItemPalettePanel { grid-area: palette; }
