@@ -3380,7 +3380,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         
         const loader = {
             progress: 0, hasLoaded: false, finish() { const overlay = $('loadingOverlay'); overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 500); populateThemes(); },
-            triggerFallback() { if (this.hasLoaded) return; this.hasLoaded = true; window.RAW_LEVELS = FALLBACK_RAW_LEVELS; this.finish(); loadLevel(0); updatePlayModeLayout(); loop(); },
+            triggerFallback(reason = 'missing window.RAW_LEVELS') { if (this.hasLoaded) return; this.hasLoaded = true; console.warn(`[Using fallback levels] ${reason}`); window.RAW_LEVELS = FALLBACK_RAW_LEVELS; this.finish(); loadLevel(0); updatePlayModeLayout(); loop(); },
             start() {
                 const loadThemes = new Promise(resolve => { 
                     const s = document.createElement('script'); 
@@ -3400,8 +3400,26 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     s.onerror = () => reject(); 
                     document.head.appendChild(s); 
                 });
-                Promise.all([loadThemes, loadLevels]).then(() => { if (this.hasLoaded) return; this.hasLoaded = true; loadLevel(0); updatePlayModeLayout(); loop(); this.finish(); }).catch(() => this.triggerFallback());
-                setTimeout(() => this.triggerFallback(), 5000);
+                loadThemes
+                    .then(() => loadLevels)
+                    .then(() => {
+                        if (this.hasLoaded) return;
+                        if (!Array.isArray(window.RAW_LEVELS)) {
+                            this.triggerFallback('missing window.RAW_LEVELS after external script load');
+                            return;
+                        }
+                        console.log('RAW_LEVELS loaded:', Array.isArray(window.RAW_LEVELS), window.RAW_LEVELS?.length);
+                        this.hasLoaded = true;
+                        loadLevel(0);
+                        updatePlayModeLayout();
+                        loop();
+                        this.finish();
+                    })
+                    .catch(err => {
+                        console.error('[External level/theme load failed]', err);
+                        this.triggerFallback('exception during external level/theme load');
+                    });
+                setTimeout(() => this.triggerFallback('loader timeout after 5000ms'), 5000);
             }
         };
 
