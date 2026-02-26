@@ -2003,6 +2003,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const mustCrossCount = l.mustCrossKeys.length;
             options = options || {};
             options.hazardPolicy = options.hazardPolicy || 'forbid';
+            const disabledPruneSet = new Set(options.disabledPrunes || []);
+            const useFailMemo = options.useFailMemo !== false && disabledPruneSet.size === 0;
+            const disableMustPassBound = disabledPruneSet.has('mustPassBound');
+            const disableMustCrossBound = disabledPruneSet.has('mustCrossBound');
             const state = {
                 path: [startKey],
                 counts: new Map(),
@@ -2033,7 +2037,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 state.flipCount++;
                 state.flipParity = state.flipCount % 2;
             }
-            const failMemo = new Map();
+            const failMemo = useFailMemo ? new Map() : null;
             const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
             const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: this._stateSignature(state, l, 0) }];
             let steps = 0;
@@ -2047,7 +2051,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const top = stack[stack.length - 1];
                 if (top.neighbors.length === 0) {
                     if (debugStats) debugStats.prune.deadEnd++;
-                    failMemo.set(top.sig, true);
+                    if (useFailMemo) failMemo.set(top.sig, true);
                     this._popState(state, top.log);
                     stack.pop();
                     continue;
@@ -2088,7 +2092,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     this._popState(state, transLog);
                     continue;
                 }
-                if (state.mustMask !== 0n) {
+                if (!disableMustPassBound && state.mustMask !== 0n) {
                     const mustDetails = this._estimateMustPassBoundDetailed(lastK, state, l);
                     const mustBound = mustDetails.bound;
                     if (mustBound === Infinity || mustBound > rSteps) {
@@ -2098,7 +2102,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         continue;
                     }
                 }
-                if (state.mustCrossMask !== 0n) {
+                if (!disableMustCrossBound && state.mustCrossMask !== 0n) {
                     const crossBound = this._estimateMustCrossBoundFrom(lastK, state, l);
                     if (crossBound === Infinity || crossBound > rSteps) {
                         if (debugStats) debugStats.prune.mustCrossBound++;
@@ -2109,7 +2113,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 }
                 if (lastK === l.goalKey) {
                     if (realLen === l.reqLen && state.ints === l.reqInt) {
-                        if (this._checkFinalConstraints(state, l)) return { path: [...state.path], len: realLen };
+                        if (this._checkFinalConstraints(state, l)) return { path: state.path.slice(), len: realLen };
                     }
                     this._popState(state, transLog);
                     continue;
@@ -2122,7 +2126,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     continue;
                 }
                 const sig = this._stateSignature(state, l, realLen);
-                if (failMemo.has(sig)) {
+                if (useFailMemo && failMemo.has(sig)) {
                     if (debugStats) debugStats.prune.failedStateHit++;
                     this._popState(state, transLog);
                     continue;
@@ -2135,7 +2139,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
                 stack.push({ k: nextKey, neighbors, log: transLog, sig });
             }
-            if (debugStats) debugStats.memoSize = failMemo.size;
+            if (debugStats) debugStats.memoSize = useFailMemo ? failMemo.size : 0;
             return null;
         },
         async _solveTrapSpots(startKey, l, validSpotsSet, options) {
@@ -2215,6 +2219,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             maxDepth: 0,
             elapsedMs: 0,
             memoSize: 0,
+            pass: "primary",
+            disabledPrunes: [],
+            failMemoUsed: true,
             invalidReasons: [],
             depth0: null,
             prune: {
@@ -2238,14 +2245,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         debugStats.elapsedMs = Math.round(performance.now() - startPerf);
     }
 
-    function appendReachabilitySanityNote(level, debugStats, solveStatus) {
-        if (!debugStats || !level || (solveStatus !== 'no-solution' && solveStatus !== 'invalid')) return;
+    function isGoalReachableFromAnyGate(level) {
+        if (!level) return false;
         const goalDistMap = SolverCore._buildDistMap(level);
-        const gateReachable = Array.isArray(level.gateKeys) && level.gateKeys.some(gk => {
+        return Array.isArray(level.gateKeys) && level.gateKeys.some(gk => {
             const d = goalDistMap.get(gk);
             return d !== undefined && d !== Infinity;
         });
-        if (gateReachable) {
+    }
+
+    function appendReachabilitySanityNote(level, debugStats, solveStatus, gateReachable = null) {
+        if (!debugStats || !level || (solveStatus !== 'no-solution' && solveStatus !== 'invalid')) return;
+        const reachable = gateReachable === null ? isGoalReachableFromAnyGate(level) : gateReachable;
+        if (reachable) {
             debugStats.notes.push("SANITY: goal reachable from at least one gate; solver returned NO-SOLUTION — check pruning/memoization");
         } else {
             debugStats.notes.push("SANITY: goal unreachable from all gates (including portals)");
@@ -2256,7 +2268,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const prune = debug?.prune || {};
         const lines = [
             `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
-            `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0}`,
+            `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
             `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
         ];
         if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
@@ -2442,45 +2454,110 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 return [];
             }
 
-            onStateUpdate(`Solving (${validGates.length} viable gates)...`);
-            let cellUsageFreq = new Map();
-            if (level.hints && level.hints.length > 0) {
-                level.hints.forEach(path => path.forEach(k => cellUsageFreq.set(k, (cellUsageFreq.get(k) || 0) + 1)));
+            const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null }) => {
+                const passSolutions = [];
+                passSolutions.timedOut = false;
+                let passCellUsageFreq = new Map();
+                if (level.hints && level.hints.length > 0) {
+                    level.hints.forEach(path => path.forEach(k => passCellUsageFreq.set(k, (passCellUsageFreq.get(k) || 0) + 1)));
+                }
+                const shuffledGates = validGates.slice();
+                shuffledGates.sort(() => Math.random() - 0.5);
+                if (debugStats) {
+                    debugStats.pass = passName;
+                    debugStats.disabledPrunes = disabledPrunes.slice();
+                    debugStats.failMemoUsed = useFailMemo && disabledPrunes.length === 0;
+                }
+                onStateUpdate(statusLabel || `Solving (${shuffledGates.length} viable gates)...`);
+                for (const gateKey of shuffledGates) {
+                    if (passSolutions.length >= maxSolutions) break;
+                    await new Promise(r => setTimeout(r, 0));
+                    const internalOpts = {
+                        timeLimit: localTimeLimit,
+                        startTime,
+                        onProgress,
+                        signal,
+                        hazardPolicy,
+                        disabledPrunes,
+                        useFailMemo
+                    };
+                    const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
+                    if (result === SOLVER_ABORTED) {
+                        if (debugStats) {
+                            finalizeSolverDebugStats(debugStats, "aborted", perfStart);
+                            return { kind: "aborted", solutions: null };
+                        }
+                        throw new DOMException("Aborted", "AbortError");
+                    }
+                    if (result === SOLVER_TIMEOUT) {
+                        passSolutions.timedOut = true;
+                        if (debugStats) {
+                            finalizeSolverDebugStats(debugStats, "timeout", perfStart);
+                            return { kind: "timeout", solutions: null };
+                        }
+                        break;
+                    }
+                    if (result) {
+                        const solStr = JSON.stringify(result.path);
+                        if (!passSolutions.some(s => JSON.stringify(s.path) === solStr)) {
+                            passSolutions.push(result);
+                            result.path.forEach(k => passCellUsageFreq.set(k, (passCellUsageFreq.get(k) || 0) + 1));
+                        }
+                    }
+                }
+                return { kind: "ok", solutions: passSolutions };
+            };
+
+            const primaryRun = await runSolvePass({ passName: "primary", localTimeLimit: timeLimit, disabledPrunes: [], useFailMemo: true });
+            if (primaryRun.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
+            if (primaryRun.kind === "timeout") return { ok: false, solution: null, debug: debugStats };
+
+            foundSolutions.push(...(primaryRun.solutions || []));
+            foundSolutions.timedOut = !!primaryRun.solutions?.timedOut;
+
+            const goalReachable = isGoalReachableFromAnyGate(level);
+            const primarySolved = foundSolutions.length > 0;
+            const primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
+
+            if (debugStats && !primarySolved && primaryStatus === "no-solution") {
+                appendReachabilitySanityNote(level, debugStats, primaryStatus, goalReachable);
             }
-            validGates.sort(() => Math.random() - 0.5);
-            for (const gateKey of validGates) {
-                if (foundSolutions.length >= maxSolutions) break;
-                await new Promise(r => setTimeout(r, 0));
-                const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
-                const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, cellUsageFreq, level, internalOpts, debugStats);
-                if (result === SOLVER_ABORTED) {
-                    if (debugStats) {
-                        finalizeSolverDebugStats(debugStats, "aborted", perfStart);
-                        return { ok: false, solution: null, debug: debugStats };
-                    }
-                    throw new DOMException("Aborted", "AbortError");
-                }
-                if (result === SOLVER_TIMEOUT) {
-                    foundSolutions.timedOut = true;
-                    if (debugStats) {
-                        finalizeSolverDebugStats(debugStats, "timeout", perfStart);
-                        return { ok: false, solution: null, debug: debugStats };
-                    }
-                    break;
-                }
-                if (result) {
-                    if (debugStats) debugStats.status = "solved";
-                    const solStr = JSON.stringify(result.path);
-                    if (!foundSolutions.some(s => JSON.stringify(s.path) === solStr)) {
-                        foundSolutions.push(result);
-                        result.path.forEach(k => cellUsageFreq.set(k, (cellUsageFreq.get(k) || 0) + 1));
-                    }
+
+            if (debugStats && !primarySolved && primaryStatus === "no-solution" && goalReachable) {
+                const primaryPruneSnapshot = {
+                    mustPassBound: debugStats.prune.mustPassBound || 0,
+                    mustCrossBound: debugStats.prune.mustCrossBound || 0,
+                    failedStateHit: debugStats.prune.failedStateHit || 0,
+                    minRemOverflow: debugStats.prune.minRemOverflow || 0,
+                    deadEnd: debugStats.prune.deadEnd || 0
+                };
+                debugStats.notes.push("SANITY PASS: retrying with memo disabled and mustPass/mustCross bounds disabled.");
+                const diagnosticBudget = Math.min(Math.max(Math.floor(timeLimit * 0.25), 2000), 5000);
+                const sanityRun = await runSolvePass({
+                    passName: "sanity-pass",
+                    localTimeLimit: diagnosticBudget,
+                    disabledPrunes: ["mustPassBound", "mustCrossBound"],
+                    useFailMemo: false,
+                    statusLabel: `Sanity pass (${validGates.length} viable gates)...`
+                });
+                if (sanityRun.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
+                if (sanityRun.kind === "timeout") return { ok: false, solution: null, debug: debugStats };
+                if ((sanityRun.solutions || []).length > 0) {
+                    foundSolutions.length = 0;
+                    foundSolutions.push(...sanityRun.solutions);
+                    debugStats.notes.push("SANITY OVERRIDE: Solution found only after disabling memo/bounds. Original pruning/memo likely incorrect.");
+                    debugStats.notes.push(`LIKELY CULPRIT: mustPassBound and/or failMemo (primary prunes: mustPassBound=${primaryPruneSnapshot.mustPassBound} mustCrossBound=${primaryPruneSnapshot.mustCrossBound} failedStateHit=${primaryPruneSnapshot.failedStateHit} minRemOverflow=${primaryPruneSnapshot.minRemOverflow} deadEnd=${primaryPruneSnapshot.deadEnd})`);
+                } else {
+                    debugStats.notes.push("SANITY CONFIRMED: Reachable but still no strict solution under relaxed pruning; likely truly unsat given constraints.");
                 }
             }
+
             if (debugStats) {
                 const solved = foundSolutions.length > 0;
                 const status = solved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
-                appendReachabilitySanityNote(level, debugStats, status);
+                if (status === "no-solution" && !(debugStats.notes || []).some(n => n.startsWith("SANITY:"))) {
+                    appendReachabilitySanityNote(level, debugStats, status, goalReachable);
+                }
                 finalizeSolverDebugStats(debugStats, status, perfStart);
                 return { ok: solved, solution: solved ? foundSolutions : null, debug: debugStats };
             }
