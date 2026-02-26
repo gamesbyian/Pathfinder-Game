@@ -1651,33 +1651,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const k = state.path[state.path.length - 1];
             return l.portalMap.has(k) && !state.isJump.has(state.path.length - 1);
         },
-        _encodeUsage(state) {
-            if (!state.usage || state.usage.size === 0) return '';
-            const entries = [];
-            state.usage.forEach((u, k) => {
-                const bits = (u.h ? 1 : 0) | (u.v ? 2 : 0);
-                if (bits) entries.push(`${k}:${bits}`);
-            });
-            entries.sort();
-            return entries.join(',');
-        },
-        _encodeCounts(state, l) {
-            if (!state.counts || state.counts.size === 0) return '';
-            const entries = [];
-            state.counts.forEach((c, k) => {
-                if (c <= 1) return;
-                if (k === l.goalKey || l.gateKeys.includes(k)) return;
-                entries.push(`${k}:${c}`);
-            });
-            entries.sort();
-            return entries.join(',');
-        },
         _stateSignature(state, l, realLen) {
             const posKey = state.path[state.path.length - 1];
             const portalForced = this._portalForced(state, l) ? 1 : 0;
             const crossCounts = this._encodeMustCrossCounts(state).toString();
-            const usageSig = this._encodeUsage(state);
-            const countsSig = this._encodeCounts(state, l);
             return [
                 posKey,
                 realLen,
@@ -1688,9 +1665,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 portalForced,
                 state.flipParity,
                 state.flipperCrossMask ? state.flipperCrossMask.toString() : '0',
-                state.flipperParityAtCrossMask ? state.flipperParityAtCrossMask.toString() : '0',
-                usageSig,
-                countsSig
+                state.flipperParityAtCrossMask ? state.flipperParityAtCrossMask.toString() : '0'
             ].join('|');
         },
         _crossNeeds(state) {
@@ -1715,6 +1690,23 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const policy = options.hazardPolicy || 'forbid';
             if (policy === 'allow_dead_end') return { allowed: true, terminal: true };
             return { allowed: false, terminal: true };
+        },
+        _recordDepth0Prune(debugStats, reason, details) {
+            if (!debugStats || debugStats.depth0) return;
+            debugStats.depth0 = { reason, details };
+        },
+        _staticNeighborDegree(key, l) {
+            const { w, h } = l.grid;
+            const p = UNPACK(key);
+            let degree = 0;
+            [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                const nx = p.x + dx, ny = p.y + dy;
+                if (!inBounds(nx, ny, w, h)) return;
+                const nk = PACK(nx, ny);
+                if (!l.blockSet.has(nk)) degree++;
+            });
+            if (l.portalMap.has(key)) degree++;
+            return degree;
         },
         _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats = null) {
             const { w, h } = l.grid;
@@ -1765,6 +1757,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 }
                 if (!this._hazardDecisionForKey(nk, state, l, options).allowed) {
                     if (debugStats) debugStats.prune.other++;
+                    if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'hazardBlocked', `gooseBlockedAt=${nk}`);
                     return false;
                 }
                 const isP = (portalDest === nk && portalForced);
@@ -1776,18 +1769,21 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const dF = flipperDistMap.get(nk);
                     if (dF === undefined || dF > rSteps) {
                         if (debugStats) debugStats.prune.other++;
+                        if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'parityBound', `flipperDist=${dF === undefined ? 'inf' : dF} rSteps=${rSteps}`);
                         return false;
                     }
                 }
                 const d = distMap.get(nk);
                 if (d === undefined || d > rSteps) {
                     if (debugStats) debugStats.prune.minRemOverflow++;
+                    if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'minRemOverflow', `goalDist=${d === undefined ? 'inf' : d} rSteps=${rSteps}`);
                     return false;
                 }
                 if (hasMust) {
                     const bestBound = getMustBound(nk);
                     if (bestBound === Infinity || bestBound > rSteps) {
                         if (debugStats) debugStats.prune.mustPassBound++;
+                        if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${bestBound} rSteps=${rSteps}`);
                         return false;
                     }
                 }
@@ -1795,26 +1791,38 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const crossBound = getCrossBound(nk);
                     if (crossBound === Infinity || crossBound > rSteps) {
                         if (debugStats) debugStats.prune.mustCrossBound++;
+                        if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound} rSteps=${rSteps}`);
                         return false;
                     }
                 }
                 return true;
             });
-            valid.sort((a, b) => {
-                const fA = usageFreq.get(a) || 0;
-                const fB = usageFreq.get(b) || 0;
-                if (fA !== fB) return fA - fB;
-                if (hasMust) {
-                    const mA = getMustBound(a), mB = getMustBound(b);
-                    if (mA !== mB) return mA - mB;
+            const scored = valid.map(nk => {
+                let score = 0;
+                const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
+                if (mustIdx !== undefined) {
+                    const bit = 1n << BigInt(mustIdx);
+                    if ((state.mustMask & bit) !== 0n) score -= 1000;
                 }
-                if (crossNeed > 0) {
-                    const cA = getCrossBound(a), cB = getCrossBound(b);
-                    if (cA !== cB) return cA - cB;
+                const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(nk) : undefined;
+                if (crossIdx !== undefined && state.mustCrossCounts) {
+                    const crossCount = state.mustCrossCounts[crossIdx] || 0;
+                    if (crossCount < 2) score -= 800;
                 }
-                return (distMap.get(a) || 999) - (distMap.get(b) || 999);
+                const mustBound = hasMust ? getMustBound(nk) : 0;
+                const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
+                score += (mustBound === Infinity ? 100000 : mustBound * 6);
+                score += (crossBound === Infinity ? 100000 : crossBound * 5);
+                score += (distMap.get(nk) ?? 999) * 2;
+                score += (usageFreq.get(nk) || 0);
+                score -= this._staticNeighborDegree(nk, l) * 3;
+                return { nk, score };
             });
-            return valid;
+            scored.sort((a, b) => {
+                if (a.score !== b.score) return b.score - a.score;
+                return b.nk - a.nk;
+            });
+            return scored.map(item => item.nk);
         },
         _pushState(s, k, isJump, l) {
             const log = [];
@@ -1974,7 +1982,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 state.flipCount++;
                 state.flipParity = state.flipCount % 2;
             }
-            const failedStates = new Set();
+            const failMemo = new Map();
             const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
             const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: this._stateSignature(state, l, 0) }];
             let steps = 0;
@@ -1988,7 +1996,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const top = stack[stack.length - 1];
                 if (top.neighbors.length === 0) {
                     if (debugStats) debugStats.prune.deadEnd++;
-                    failedStates.add(top.sig);
+                    failMemo.set(top.sig, true);
                     this._popState(state, top.log);
                     stack.pop();
                     continue;
@@ -2025,6 +2033,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const crossNeeds = this._crossNeeds(state);
                 if (crossNeeds > rSteps) {
                     if (debugStats) debugStats.prune.mustCrossBound++;
+                    if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustCrossNeed', `crossNeeds=${crossNeeds} rSteps=${rSteps}`);
                     this._popState(state, transLog);
                     continue;
                 }
@@ -2032,6 +2041,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const mustBound = this._estimateMustPassBoundFrom(lastK, state, l);
                     if (mustBound === Infinity || mustBound > rSteps) {
                         if (debugStats) debugStats.prune.mustPassBound++;
+                        if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${mustBound} rSteps=${rSteps}`);
                         this._popState(state, transLog);
                         continue;
                     }
@@ -2040,6 +2050,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const crossDist = this._nearestOutstandingMustCrossDist(lastK, state, l);
                     if (crossDist === Infinity || (crossDist + Math.max(0, crossNeeds - 1)) > rSteps) {
                         if (debugStats) debugStats.prune.mustCrossBound++;
+                        if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossDist === Infinity ? 'inf' : crossDist + Math.max(0, crossNeeds - 1)} rSteps=${rSteps}`);
                         this._popState(state, transLog);
                         continue;
                     }
@@ -2054,11 +2065,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const minRem = distMap.get(lastK) || Infinity;
                 if (realLen + minRem > l.reqLen) {
                     if (debugStats) debugStats.prune.minRemOverflow++;
+                    if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'minRemOverflow', `minRem=${minRem} realLen=${realLen} reqLen=${l.reqLen}`);
                     this._popState(state, transLog);
                     continue;
                 }
                 const sig = this._stateSignature(state, l, realLen);
-                if (failedStates.has(sig)) {
+                if (failMemo.has(sig)) {
                     if (debugStats) debugStats.prune.failedStateHit++;
                     this._popState(state, transLog);
                     continue;
@@ -2071,6 +2083,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
                 stack.push({ k: nextKey, neighbors, log: transLog, sig });
             }
+            if (debugStats) debugStats.memoSize = failMemo.size;
             return null;
         },
         async _solveTrapSpots(startKey, l, validSpotsSet, options) {
@@ -2149,6 +2162,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             branchesTried: 0,
             maxDepth: 0,
             elapsedMs: 0,
+            memoSize: 0,
+            invalidReasons: [],
+            depth0: null,
             prune: {
                 lenOverflow: 0,
                 intsOverflow: 0,
@@ -2172,11 +2188,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function formatSolverDebugBlock(levelNumber, debug) {
         const prune = debug?.prune || {};
-        return [
+        const lines = [
             `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
-            `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0}`,
+            `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0}`,
             `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
-        ].join('\n');
+        ];
+        if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
+            lines[0] = `Level ${levelNumber}: UNSOLVED (INVALID) reasons: ${debug.invalidReasons.join('; ')}`;
+        }
+        if (debug?.depth0 && (debug.nodesExpanded === 0 || debug.maxDepth === 0 || debug.status === 'no-solution')) {
+            lines.push(`depth0Prune: ${debug.depth0.reason} ${debug.depth0.details}`);
+        }
+        return lines.join('\n');
     }
 
     // ======================================================
@@ -2188,8 +2211,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const startTime = Date.now();
             const perfStart = performance.now();
             const foundSolutions = [];
+            const validity = validateLevelDetailed(level);
             const debugStats = debug ? createSolverDebugStats(debugLevel ?? ((typeof level.id === "number") ? level.id + 1 : null)) : null;
             foundSolutions.timedOut = false;
+            if (!validity.ok) {
+                if (debugStats) {
+                    debugStats.invalidReasons = validity.reasons || [];
+                    finalizeSolverDebugStats(debugStats, "invalid", perfStart);
+                    return { ok: false, solution: null, debug: debugStats };
+                }
+                return [];
+            }
             if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
             onStateUpdate("Analyzing Bipartite Parity...");
 
@@ -2333,7 +2365,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (validGates.length === 0) {
                 if (debugStats) {
                     debugStats.prune.other++;
-                    finalizeSolverDebugStats(debugStats, "invalid", perfStart);
+                    if (!debugStats.depth0) debugStats.depth0 = { reason: "noViableGate", details: "all gates pruned by distance/parity bounds" };
+                    finalizeSolverDebugStats(debugStats, "no-solution", perfStart);
                     return { ok: false, solution: null, debug: debugStats };
                 }
                 return [];
@@ -2489,7 +2522,95 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     function pickUpObject(k) { if(ENGINE.editor.isPencilMode) return null; saveEditorState(); ENGINE.editor.draggedFromGrid = true; ENGINE.editor.validTrapSpots.clear(); const l = ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (ENGINE.editor.pendingPortal === k) { ENGINE.editor.pendingPortal = null; showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = '#999'; ENGINE.editor.pendingPortal = otherK; showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } return {type: 'portal'}; } ENGINE.editor.undoStack.pop(); ENGINE.editor.draggedFromGrid = false; return null; }
     function placeEditorObject(k) { const l = ENGINE.editor.workingLevel; const toolType = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; if (!toolType) return; if (ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, H); break; case 'filterV': l.filterMap.set(k, V); break; case 'flipH': l.flippingFilterMap.set(k, H); break; case 'flipV': l.flippingFilterMap.set(k, V); break; case 'portal': if (!ENGINE.editor.pendingPortal) { ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: '#999' }); showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = ENGINE.editor.pendingPortal; if (k === k1) return; const color = ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); ENGINE.editor.pendingPortal = null; showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } ENGINE.editor.draggedObject = null; }
     
-    function validateLevel(l) { const { w, h } = l.grid; const err = (msg) => { showMessage(msg, "text-red-500 font-bold"); return false; }; if (ENGINE.editor.pendingPortal) return err("Incomplete portal pair."); let unpaired = false; l.portalMap.forEach(v => { if(!l.portalMap.has(v.dest)) unpaired = true; }); if (unpaired) return err("Unpaired portal exists."); for (let x = 0; x < w; x++) { for (let y = 0; y < h; y++) { const k = PACK(x,y); if (l.mustCrossKeys.includes(k)) { const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(x+dx, y+dy)); const diags = [[1,1],[1,-1],[-1,1],[-1,-1]].map(([dx,dy]) => PACK(x+dx, y+dy)); if (neighbors.some(nk => l.blockSet.has(nk))) return err("Block touches MustCross"); if (neighbors.some(nk => l.gooseSet.has(nk))) return err("Goose touches MustCross"); const left = PACK(x-1,y), right = PACK(x+1,y), up = PACK(x,y-1), down = PACK(x,y+1); if ([left, right].some(nk => l.filterMap.get(nk) === V || l.flippingFilterMap.get(nk) === V)) return err("Vertical Filter adj to MustCross"); if ([up, down].some(nk => l.filterMap.get(nk) === H || l.flippingFilterMap.get(nk) === H)) return err("Horizontal Filter adj to MustCross"); if (diags.some(nk => l.filterMap.has(nk) || l.flippingFilterMap.has(nk))) return err("Filter diag to MustCross"); } const f = l.filterMap.get(k); if (f) { const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(x+dx, y+dy)); for (const nk of neighbors) { const nf = l.filterMap.get(nk); if (nf && nf !== f) return err("Opposing filters adjacent."); } } } } const barrier = (k) => l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k); const walkable = []; for(let x=0; x<w; x++) for(let y=0; y<h; y++) { const k = PACK(x,y); if (!barrier(k)) walkable.push(k); } if (walkable.length > 0) { const q = [walkable[0]]; const visited = new Set([walkable[0]]); let head = 0; while(head < q.length) { const k = q[head++]; const p = UNPACK(k); const nks = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy)); if (l.portalMap.has(k)) nks.push(l.portalMap.get(k).dest); for(const nk of nks) { const np = UNPACK(nk); if (inBounds(np.x, np.y, w, h) && !visited.has(nk) && !barrier(nk)) { visited.add(nk); q.push(nk); } } } if (visited.size !== walkable.length) return err("Grid partitioned by barriers."); } return true; }
+    function validateLevelDetailed(l) {
+        const reasons = [];
+        if (!l) return { ok: false, reasons: ["Level missing"] };
+        const { w, h } = l.grid;
+        const inGrid = (k) => {
+            const p = UNPACK(k);
+            return inBounds(p.x, p.y, w, h);
+        };
+        const addOutOfBounds = (label, key) => {
+            const p = UNPACK(key);
+            reasons.push(`Out of bounds item: ${label} (${p.x + 1},${p.y + 1})`);
+        };
+
+        if (!Array.isArray(l.gateKeys) || l.gateKeys.length === 0) reasons.push("No gates");
+        if (l.goalKey === -1 || l.goalKey === undefined) reasons.push("Goal missing");
+        if (ENGINE.editor.pendingPortal) reasons.push("Portal terminals incomplete");
+
+        l.gateKeys.forEach(k => { if (!inGrid(k)) addOutOfBounds('gates', k); });
+        if (l.goalKey !== -1 && l.goalKey !== undefined && !inGrid(l.goalKey)) addOutOfBounds('goal', l.goalKey);
+        l.mustPassKeys.forEach(k => { if (!inGrid(k)) addOutOfBounds('mustPass', k); });
+        l.mustCrossKeys.forEach(k => { if (!inGrid(k)) addOutOfBounds('mustCross', k); });
+        l.gooseSet.forEach(k => { if (!inGrid(k)) addOutOfBounds('geese', k); });
+        l.blockSet.forEach(k => { if (!inGrid(k)) addOutOfBounds('blocks', k); });
+
+        let unpaired = false;
+        l.portalMap.forEach((v, k) => {
+            if (!l.portalMap.has(v.dest)) unpaired = true;
+            if (!inGrid(k)) addOutOfBounds('portals', k);
+            if (v.dest !== -1 && !inGrid(v.dest)) addOutOfBounds('portals', v.dest);
+        });
+        if (unpaired) reasons.push("Portal terminals incomplete");
+
+        for (const k of l.mustCrossKeys) {
+            const p = UNPACK(k);
+            if (l.blockSet.has(k)) reasons.push(`MustCross overlaps block at (${p.x + 1},${p.y + 1})`);
+            const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy));
+            const diags = [[1,1],[1,-1],[-1,1],[-1,-1]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy));
+            if (neighbors.some(nk => l.blockSet.has(nk))) reasons.push(`Block touches MustCross at (${p.x + 1},${p.y + 1})`);
+            if (neighbors.some(nk => l.gooseSet.has(nk))) reasons.push(`Goose touches MustCross at (${p.x + 1},${p.y + 1})`);
+            const left = PACK(p.x-1,p.y), right = PACK(p.x+1,p.y), up = PACK(p.x,p.y-1), down = PACK(p.x,p.y+1);
+            if ([left, right].some(nk => l.filterMap.get(nk) === V || l.flippingFilterMap.get(nk) === V)) reasons.push(`Vertical Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
+            if ([up, down].some(nk => l.filterMap.get(nk) === H || l.flippingFilterMap.get(nk) === H)) reasons.push(`Horizontal Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
+            if (diags.some(nk => l.filterMap.has(nk) || l.flippingFilterMap.has(nk))) reasons.push(`Filter diag to MustCross at (${p.x + 1},${p.y + 1})`);
+        }
+
+        l.filterMap.forEach((f, k) => {
+            const p = UNPACK(k);
+            const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy));
+            for (const nk of neighbors) {
+                const nf = l.filterMap.get(nk);
+                if (nf && nf !== f) reasons.push(`Opposing filters adjacent at (${p.x + 1},${p.y + 1})`);
+            }
+        });
+
+        const barrier = (k) => l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k);
+        const walkable = [];
+        for (let x = 0; x < w; x++) for (let y = 0; y < h; y++) {
+            const k = PACK(x, y);
+            if (!barrier(k)) walkable.push(k);
+        }
+        if (walkable.length > 0) {
+            const q = [walkable[0]];
+            const visited = new Set([walkable[0]]);
+            let head = 0;
+            while (head < q.length) {
+                const k = q[head++];
+                const p = UNPACK(k);
+                const nks = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy));
+                if (l.portalMap.has(k)) nks.push(l.portalMap.get(k).dest);
+                for (const nk of nks) {
+                    const np = UNPACK(nk);
+                    if (inBounds(np.x, np.y, w, h) && !visited.has(nk) && !barrier(nk)) {
+                        visited.add(nk);
+                        q.push(nk);
+                    }
+                }
+            }
+            if (visited.size !== walkable.length) reasons.push("Grid partitioned by barriers");
+        }
+
+        return { ok: reasons.length === 0, reasons: Array.from(new Set(reasons)) };
+    }
+
+    function validateLevel(l) {
+        const res = validateLevelDetailed(l);
+        if (!res.ok) showMessage(res.reasons[0], "text-red-500 font-bold");
+        return res.ok;
+    }
+
     function generateLevelString() { const l = ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt($('editReqLen').value) || 0; const reqInt = parseInt($('editReqInt').value) || 0; let exportedHints = l.hints || []; if (ENGINE.path.length > 1 && ENGINE.path[ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: expCoords(l.gateKeys), goal: {x:UNPACK(l.goalKey).x+1, y:UNPACK(l.goalKey).y+1}, falseGoals: expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: expCoords(l.blockSet), mustPass: expCoords(l.mustPassKeys), mustCross: expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: UNPACK(pv.k1).x+1, y1: UNPACK(pv.k1).y+1, x2: UNPACK(pv.k2).x+1, y2: UNPACK(pv.k2).y+1, color: pv.color })), geese: expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); outEl.value = json; outEl.select(); document.execCommand('copy'); ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
     
     function getScreenPos(cx, cy) { const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; const { tx, ty } = transformPoint(cx, cy, ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * ENGINE.viewport.cellW, sy: (ty + 0.5) * ENGINE.viewport.cellH }; }
