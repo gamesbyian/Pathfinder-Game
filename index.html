@@ -39,13 +39,13 @@
         .animate-spin-grow-fade { animation: spin-grow-fade 1s forwards cubic-bezier(0.4, 0, 0.2, 1); }
         .app-layout { max-width: 65vh; }
         #headerLeft { width: clamp(3.9rem, 9.5vw, 4.1rem); flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem); }
-        #headerMiddle { width: clamp(9.75rem, 20vw, 11.25rem); min-width: 9.75rem; flex: 0 0 clamp(9.75rem, 20vw, 11.25rem); }
+        #headerMiddle { width: clamp(9.75rem, 20vw, 11.25rem); min-width: 9.75rem; flex: 0 0 clamp(9.75rem, 20vw, 11.25rem); overflow: hidden; }
         #headerRight { min-width: clamp(14.5rem, 34vw, 20rem); flex: 1 1 auto; }
-        #headerMiddleContent { --header-middle-col-pad: 0.6rem; width: 100%; display: grid; grid-template-columns: max-content max-content max-content; justify-content: center; align-items: center; }
-        .header-middle-col { padding: 0 var(--header-middle-col-pad); display: flex; align-items: center; }
+        #headerMiddleContent { --header-middle-col-pad: 0.5rem; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); justify-content: stretch; align-items: center; }
+        .header-middle-col { min-width: 0; padding: 0 var(--header-middle-col-pad); display: flex; align-items: center; }
         #headerMiddleColLeft { justify-content: flex-end; }
         #headerMiddleColCenter { justify-content: center; }
-        #headerMiddleColRight { justify-content: center; }
+        #headerMiddleColRight { justify-content: flex-start; }
         #playMetrics, #editorMetrics { margin: 0 auto; justify-content: center; }
         #levelInfoWrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 3ch; }
         #levelTitle { min-width: 3ch; text-align: center; }
@@ -1018,37 +1018,55 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (!window.THEME_UNDO_STACKS) window.THEME_UNDO_STACKS = {};
         if (!window.THEME_UNDO_STACKS[themeKey]) window.THEME_UNDO_STACKS[themeKey] = [];
         window.THEME_UNDO_STACKS[themeKey].push(JSON.parse(JSON.stringify(THEMES[themeKey])));
-        
-        const t = THEMES[themeKey];
-        function replaceDeep(obj, targetScope = null) {
-            for (let k in obj) {
-                if (typeof obj[k] === 'object' && obj[k] !== null) {
-                    if (targetScope && k !== targetScope) continue;
-                    replaceDeep(obj[k]);
-                } else if (obj[k] === oldColor) {
-                    obj[k] = newColor;
-                }
-            }
-        }
 
-        if (category === "Buttons") replaceDeep(t.btns);
-        else if (category === "Grid Items") { replaceDeep(t.colors); if (t.grid === oldColor) t.grid = newColor; if (t.path === oldColor) t.path = newColor; }
-        else if (category === "Misc") { 
-            if (t.bodyBg === oldColor) t.bodyBg = newColor;
-            if (t.canvasBg === oldColor) t.canvasBg = newColor;
-            if (t.headerLeft === oldColor) t.headerLeft = newColor;
-            if (t.headerRight === oldColor) t.headerRight = newColor;
-            replaceDeep(t.modal);
-            replaceDeep(t.palette);
-            replaceDeep(t.win);
-            replaceDeep(t.alert);
-            replaceDeep(t.ctrlArea);
-            if (t.burst === oldColor) t.burst = newColor;
-            if (t.check === oldColor) t.check = newColor;
+        const t = THEMES[themeKey];
+        const LINE_KEY_GROUPS = {
+            modal: ['border'],
+            palette: ['border', 'itemBorder'],
+            win: ['border'],
+            alert: ['stroke'],
+            ctrlArea: ['border']
+        };
+        const replaceInKeys = (obj, keys) => {
+            if (!obj) return;
+            keys.forEach(key => {
+                if (obj[key] === oldColor) obj[key] = newColor;
+            });
+        };
+
+        if (category === "Buttons") replaceInKeys(t.btns, Object.keys(t.btns || {}));
+        else if (category === "Grid Items") {
+            replaceInKeys(t.colors, Object.keys(t.colors || {}));
+            if (t.path === oldColor) t.path = newColor;
+        }
+        else if (category === "Misc") {
+            ['bodyBg', 'canvasBg', 'headerLeft', 'headerRight', 'controls', 'metricText', 'headerLeftText', 'headerLeftLabel', 'ghostBg', 'ghostBorder', 'burst', 'check'].forEach(key => {
+                if (t[key] === oldColor) t[key] = newColor;
+            });
+            replaceInKeys(t.modal, ['bg', 'panelBg', 'text', 'textMuted', 'accent']);
+            replaceInKeys(t.output, ['bg', 'text']);
+            replaceInKeys(t.palette, ['bg', 'itemBg', 'toolBg']);
+            replaceInKeys(t.win, ['bg', 'text', 'accent']);
+            replaceInKeys(t.alert, ['bg']);
+            replaceInKeys(t.ctrlArea, ['bg']);
+        } else if (category === "Lines") {
+            if (t.grid === oldColor) t.grid = newColor;
+            replaceInKeys(t.modal, LINE_KEY_GROUPS.modal);
+            replaceInKeys(t.palette, LINE_KEY_GROUPS.palette);
+            replaceInKeys(t.win, LINE_KEY_GROUPS.win);
+            replaceInKeys(t.alert, LINE_KEY_GROUPS.alert);
+            replaceInKeys(t.ctrlArea, LINE_KEY_GROUPS.ctrlArea);
         } else {
+            const replaceDeep = (obj) => {
+                if (!obj || typeof obj !== 'object') return;
+                for (let k in obj) {
+                    if (typeof obj[k] === 'object' && obj[k] !== null) replaceDeep(obj[k]);
+                    else if (obj[k] === oldColor) obj[k] = newColor;
+                }
+            };
             replaceDeep(t);
         }
-        
+
         renderThemeEditors();
         populateThemes();
     }
@@ -1063,15 +1081,24 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         container.appendChild(header);
 
         const t = THEMES[themeKey];
-        const btnColors = new Set(Object.values(t.btns || {}));
-        const gridColorsArr = [ t.colors.gate, t.colors.goal, t.colors.block, t.colors.pin, t.colors.pinUnflipped, t.colors.filter, t.colors.portal, t.colors.cross, t.grid ];
+        const lineColors = new Set([
+            t.grid,
+            t.modal?.border,
+            t.palette?.border,
+            t.palette?.itemBorder,
+            t.win?.border,
+            t.alert?.stroke,
+            t.ctrlArea?.border
+        ].filter(Boolean));
+        const btnColors = new Set(Object.values(t.btns || {}).filter(c => !lineColors.has(c)));
+        const gridColorsArr = [t.colors.gate, t.colors.goal, t.colors.block, t.colors.pin, t.colors.pinUnflipped, t.colors.filter, t.colors.portal, t.colors.cross];
         if (t.path !== 'rainbow') gridColorsArr.push(t.path);
-        const gridColors = new Set(gridColorsArr.filter(Boolean));
+        const gridColors = new Set(gridColorsArr.filter(c => c && !lineColors.has(c)));
 
         const miscColors = new Set();
         const skipMiscKeys = ['btns', 'colors', 'path', 'grid'];
         function extractMisc(obj, isRoot=false) {
-            for(let k in obj) {
+            for (let k in obj) {
                 if (isRoot && skipMiscKeys.includes(k)) continue;
                 if (typeof obj[k] === 'object' && obj[k] !== null) extractMisc(obj[k], false);
                 else if (typeof obj[k] === 'string' && (obj[k].startsWith('#') || obj[k].startsWith('rgb') || obj[k].startsWith('rgba'))) {
@@ -1083,7 +1110,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         let arrBtns = Array.from(btnColors);
         let arrGrid = Array.from(gridColors);
-        let arrMisc = Array.from(miscColors);
+        let arrLines = Array.from(lineColors);
+        let arrMisc = Array.from(miscColors).filter(c => !lineColors.has(c));
 
         const hl = t.headerLeft;
         const hr = t.headerRight;
@@ -1091,8 +1119,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (hr) arrMisc.unshift(hr);
         if (hl) arrMisc.unshift(hl);
 
-        const columnsContainer = document.createElement('div');
-        columnsContainer.className = "flex w-full justify-between items-stretch gap-0.5 mb-1";
+        const sectionsContainer = document.createElement('div');
+        sectionsContainer.className = "grid grid-cols-2 gap-2 mb-1";
 
         const buildSwatch = (c, isOverflow, category) => {
             const swatch = document.createElement('div');
@@ -1157,32 +1185,29 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             return swatch;
         };
 
-        const buildCol = (title, colorArr) => {
-            const col = document.createElement('div');
-            col.className = "flex-1 flex flex-col items-center p-0.5 rounded bg-black/5";
+        const buildSection = (title, colorArr) => {
+            const section = document.createElement('div');
+            section.className = "flex flex-col items-center p-1 rounded bg-black/5 min-h-[6.5rem]";
             const ctitle = document.createElement('div');
             ctitle.className = "text-[0.6rem] font-black uppercase text-[var(--theme-modal-muted)] mb-1.5 tracking-widest text-center";
             ctitle.innerText = title;
-            col.appendChild(ctitle);
+            section.appendChild(ctitle);
 
             const grid = document.createElement('div');
-            grid.className = "grid grid-cols-3 gap-0.5 w-full justify-items-center";
+            grid.className = "grid grid-cols-4 gap-0.5 w-full justify-items-center";
             colorArr.forEach(c => {
                 grid.appendChild(buildSwatch(c, false, title));
             });
-            col.appendChild(grid);
-            return col;
+            section.appendChild(grid);
+            return section;
         };
 
-        columnsContainer.appendChild(buildCol("Buttons", arrBtns));
-        const div1 = document.createElement('div'); div1.className = "w-[2px] bg-[var(--theme-modal-border)] opacity-30 mx-0.5 flex-shrink-0 my-2 rounded-full";
-        columnsContainer.appendChild(div1);
-        columnsContainer.appendChild(buildCol("Grid Items", arrGrid));
-        const div2 = document.createElement('div'); div2.className = "w-[2px] bg-[var(--theme-modal-border)] opacity-30 mx-0.5 flex-shrink-0 my-2 rounded-full";
-        columnsContainer.appendChild(div2);
-        columnsContainer.appendChild(buildCol("Misc", arrMisc));
-        
-        container.appendChild(columnsContainer);
+        sectionsContainer.appendChild(buildSection("Buttons", arrBtns));
+        sectionsContainer.appendChild(buildSection("Grid Items", arrGrid));
+        sectionsContainer.appendChild(buildSection("Misc", arrMisc));
+        sectionsContainer.appendChild(buildSection("Lines", arrLines));
+
+        container.appendChild(sectionsContainer);
 
         const aiColorsContainer = document.createElement('div');
         aiColorsContainer.className = "flex flex-col items-center w-full mt-1 bg-black/5 rounded p-1.5";
