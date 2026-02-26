@@ -51,7 +51,6 @@
             .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
             #gameButtonGrid:not(.hidden), #editorButtonGrid:not(.hidden) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.35rem; }
             #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
-            #themeModal.landscape-left-modal #themeModalPanel { width: min(36vw, 64vh, var(--theme-modal-panel-max-width, 100vw)); max-width: min(36vw, 64vh, var(--theme-modal-panel-max-width, 100vw)); max-height: min(72vh, calc(100vh - 2rem)); }
             .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, 3rem); }
         }
         .app-layout.forced-landscape { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
@@ -64,8 +63,10 @@
         .landscape-editor-tools .palette-grid { flex-grow: 0; margin-left: auto; }
         .landscape-editor-tools .palette-grid .palette-item { height: 3rem; }
         .landscape-editor-tools #editUndoGridBtn { width: 3rem !important; height: calc((2 * 3rem) + (1 * 0.35rem)) !important; }
-        #themeModal.landscape-left-modal { position: fixed; inset: auto; left: var(--theme-modal-left, 0px); top: var(--theme-modal-top, 0px); width: var(--theme-modal-width, 100vw); height: var(--theme-modal-height, 100vh); align-items: stretch; justify-content: stretch; padding: 0; background-color: transparent; backdrop-filter: none; }
-        #themeModal.landscape-left-modal #themeModalPanel { position: fixed; left: var(--theme-modal-center-x, 50vw); top: var(--theme-modal-center-y, 50vh); transform: translate(-50%, -50%); }
+
+        .grid-area-modal { position: fixed; inset: auto; left: var(--grid-modal-left, 0px); top: var(--grid-modal-top, 0px); width: var(--grid-modal-width, 100vw); height: var(--grid-modal-height, 100vh); align-items: stretch; justify-content: stretch; padding: 0; background-color: transparent; backdrop-filter: none; }
+        .grid-area-modal > .grid-area-modal-panel { width: 100%; height: 100%; max-width: none; max-height: none; border-radius: 0; border-width: 0; box-shadow: none; padding: 0.75rem; }
+        .grid-area-modal textarea { min-height: 0; }
         
         .palette-grid { display: grid; grid-template-columns: repeat(6, 2.2rem); gap: 0.35rem; width: max-content; margin: 0; }
         .palette-item { width: 100%; height: 2.2rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e1; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; touch-action: none; }
@@ -221,8 +222,8 @@
                 </div>
             </div>
             <div id="winModal" class="absolute inset-0 z-30 bg-[var(--theme-modal-bg)] backdrop-blur-md hidden flex flex-col items-center justify-center p-4 modal-content">
-                <div id="winModalContent" class="w-full h-full max-w-[30rem] flex flex-col justify-center gap-4">
-                    <div id="winCircle" class="bg-[var(--theme-win-bg)] rounded-2xl flex flex-col items-center justify-center text-center p-6 shadow-2xl border-4 border-[var(--theme-win-border)] transition-all duration-300">
+                <div id="winModalContent" class="w-full h-full flex flex-col justify-center gap-3">
+                    <div id="winCircle" class="bg-[var(--theme-win-bg)] flex-1 flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
                         <h2 class="text-3xl font-black tracking-tighter uppercase leading-none mb-2 text-[var(--theme-win-accent)]">PATH FOUND</h2>
                         <p id="winSubMessage" class="text-4xl mb-4 text-[var(--theme-win-text)]">well done</p>
                         <div class="flex flex-col items-center gap-1 w-full">
@@ -231,7 +232,7 @@
                             <button id="dismissWinModalBtn" class="font-black text-2xl uppercase transition leading-none text-[var(--theme-win-accent)] hover:brightness-125">Rest Here</button>
                         </div>
                     </div>
-                    <div id="winExportArea" class="bg-[var(--theme-modal-panel)] p-4 rounded-2xl shadow-xl border border-[var(--theme-modal-border)] w-full hidden">
+                    <div id="winExportArea" class="bg-[var(--theme-modal-panel)] p-4 w-full hidden">
                         <div class="flex justify-between items-center mb-2"><label class="text-[0.65rem] uppercase font-black tracking-widest text-[var(--theme-modal-accent)]">Winning Path Data</label><button id="copyWinDataBtn" class="text-[0.65rem] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-3 py-1 rounded-full font-black transition active:scale-95 hover:brightness-90">COPY ARRAY</button></div>
                         <textarea id="winSolutionOutput" readonly class="w-full h-20 p-3 rounded-xl border border-slate-700 text-[0.65rem] font-mono leading-relaxed" placeholder="Solution data..."></textarea>
                     </div>
@@ -344,8 +345,8 @@
     </div>
 </div>
 
-<div id="themeModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4 py-4">
-    <div id="themeModalPanel" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-sm flex flex-col modal-content max-h-[calc(100vh-2rem)] transition-all duration-300 overflow-hidden">
+<div id="themeModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4 py-4 grid-area-modal">
+    <div id="themeModalPanel" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-sm flex flex-col modal-content max-h-[calc(100vh-2rem)] transition-all duration-300 overflow-hidden grid-area-modal-panel">
         <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
             <div class="flex justify-between items-center mb-4 shrink-0 px-2">
                 <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
@@ -372,9 +373,8 @@
     </div>
 </div>
 
-<div id="megaModal"
-<div id="megaModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4">
-    <div id="megaModalContent" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-w-2xl h-[80vh] flex flex-col modal-content">
+<div id="megaModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal px-4 grid-area-modal">
+    <div id="megaModalContent" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-6 rounded-2xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-w-2xl h-[80vh] flex flex-col modal-content grid-area-modal-panel">
         <div class="flex justify-between items-center mb-4">
             <div><h2 id="megaModalTitle" class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Mega Solver Results</h2><p id="megaModalSub" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Bulk Solution Generation</p></div>
             <button id="closeMegaModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
@@ -561,32 +561,14 @@
         ENGINE.ui.isLandscapeLayout = naturalLandscape || ENGINE.ui.forceLandscapeLayout;
         const appLayout = $('appLayout');
         if (appLayout) appLayout.classList.toggle('forced-landscape', ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
-        const themeModal = $('themeModal');
-        if (themeModal) {
-            themeModal.classList.toggle('landscape-left-modal', ENGINE.ui.isLandscapeLayout);
-            if (appLayout) {
-                const layoutRect = appLayout.getBoundingClientRect();
-                const controlsPane = $('controlsPane');
-                const gameCanvas = $('gameCanvas');
-                const gameButtons = $('gameButtonGrid');
-                const editorButtons = $('editorButtonGrid');
-                const activeButtonGrid = (ENGINE.mode === EDITOR && editorButtons && !editorButtons.classList.contains('hidden')) ? editorButtons : gameButtons;
-                const buttonRect = activeButtonGrid ? activeButtonGrid.getBoundingClientRect() : (controlsPane ? controlsPane.getBoundingClientRect() : layoutRect);
-                const canvasRect = gameCanvas ? gameCanvas.getBoundingClientRect() : layoutRect;
-                const leftBound = Math.max(layoutRect.left, buttonRect.left);
-                const rightBound = Math.min(layoutRect.right, canvasRect.right);
-                const boundedWidth = Math.max(0, rightBound - leftBound);
-                const modalWidth = Math.max(0, boundedWidth - 24);
-                const centerX = modalWidth > 0 ? leftBound + (boundedWidth / 2) : layoutRect.left + (layoutRect.width / 2);
-                const centerY = layoutRect.top + layoutRect.height / 2;
-                document.documentElement.style.setProperty('--theme-modal-center-x', `${centerX}px`);
-                document.documentElement.style.setProperty('--theme-modal-center-y', `${centerY}px`);
-                document.documentElement.style.setProperty('--theme-modal-left', `${layoutRect.left}px`);
-                document.documentElement.style.setProperty('--theme-modal-top', `${layoutRect.top}px`);
-                document.documentElement.style.setProperty('--theme-modal-width', `${layoutRect.width}px`);
-                document.documentElement.style.setProperty('--theme-modal-height', `${layoutRect.height}px`);
-                document.documentElement.style.setProperty('--theme-modal-panel-max-width', `${modalWidth}px`);
-            }
+        const canvasContainer = $('canvasContainer');
+        const modalRectSource = canvasContainer || appLayout;
+        if (modalRectSource) {
+            const modalRect = modalRectSource.getBoundingClientRect();
+            document.documentElement.style.setProperty('--grid-modal-left', `${modalRect.left}px`);
+            document.documentElement.style.setProperty('--grid-modal-top', `${modalRect.top}px`);
+            document.documentElement.style.setProperty('--grid-modal-width', `${modalRect.width}px`);
+            document.documentElement.style.setProperty('--grid-modal-height', `${modalRect.height}px`);
         }
         const orientationBtn = $('orientationToggleBtn');
         if (orientationBtn) orientationBtn.innerText = ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape';
@@ -2747,8 +2729,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('openThemeModalBtn').onclick = () => { closeAllModals(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
         $('closeThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
         $('dismissThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
-        $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); const panel = $('themeModalPanel'); panel.classList.remove('max-sm'); panel.classList.add('w-[85vw]', 'h-[85vh]', 'max-w-none'); renderThemeEditors(); };
-        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); const panel = $('themeModalPanel'); panel.classList.add('max-sm', 'w-full'); panel.classList.remove('w-[85vw]', 'h-[85vh]', 'max-w-none'); refreshThemeFooter(); };
+        $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); const panel = $('themeModalPanel'); panel.classList.remove('max-sm'); panel.classList.add('w-full', 'h-full', 'max-w-none'); renderThemeEditors(); };
+        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); const panel = $('themeModalPanel'); panel.classList.add('max-sm', 'w-full'); panel.classList.remove('h-full', 'max-w-none'); refreshThemeFooter(); };
         const refreshThemeFooter = () => {
             const editBtn = $('openThemeEditorBtn');
             const footer = $('themeSelectFooter');
