@@ -488,7 +488,7 @@
         cheatTimer: null, 
         hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none' }, 
         activeSolverController: null, 
-        viewport: { cellW: 0, cellH: 0, swapped: false, lastWidth: 0 }, 
+        viewport: { cellW: 0, cellH: 0, swapped: false, lastWidth: 0, lastHeight: 0 },
         themeDragColor: null, 
         themeDragTheme: null, 
         themeDragCategory: null, 
@@ -499,7 +499,7 @@
         foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true } 
         ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
-        ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false }
+        ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
     };
         return { ENGINE };
     })();
@@ -573,35 +573,49 @@
         if (burst) burst.classList.toggle('hidden', !isComplete || !isPlayMode);
     }
 
+    function getViewportDimensions() {
+        const vv = window.visualViewport;
+        if (vv) return { width: vv.width, height: vv.height };
+        return { width: window.innerWidth, height: window.innerHeight };
+    }
+
+    function measureGridModalRect() {
+        const appLayout = $('appLayout');
+        const canvasContainer = $('canvasContainer');
+        const modalRectSource = canvasContainer || appLayout;
+        if (!modalRectSource) return;
+        const modalRect = modalRectSource.getBoundingClientRect();
+        document.documentElement.style.setProperty('--grid-modal-left', `${modalRect.left}px`);
+        document.documentElement.style.setProperty('--grid-modal-top', `${modalRect.top}px`);
+        document.documentElement.style.setProperty('--grid-modal-width', `${modalRect.width}px`);
+        document.documentElement.style.setProperty('--grid-modal-height', `${modalRect.height}px`);
+    }
+
     function updateAppScale() {
-        if (window.innerWidth === ENGINE.viewport.lastWidth) {
-            updateLayoutMode();
-            return;
-        }
-        ENGINE.viewport.lastWidth = window.innerWidth;
-        const scale = Math.min(window.innerHeight * 0.02, window.innerWidth * 0.035);
-        document.documentElement.style.setProperty('--app-scale', `${scale}px`);
+        const VIEWPORT_EPSILON = 2;
+        const viewport = getViewportDimensions();
+        const widthChanged = Math.abs(viewport.width - ENGINE.viewport.lastWidth) > VIEWPORT_EPSILON;
+        const heightChanged = Math.abs(viewport.height - ENGINE.viewport.lastHeight) > VIEWPORT_EPSILON;
         updateLayoutMode();
+        if (!widthChanged && !heightChanged) return;
+        ENGINE.viewport.lastWidth = viewport.width;
+        ENGINE.viewport.lastHeight = viewport.height;
+        const scale = Math.min(viewport.height * 0.02, viewport.width * 0.035);
+        document.documentElement.style.setProperty('--app-scale', `${scale}px`);
         updateViewport();
     }
 
     function updateLayoutMode() {
-        const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && window.innerWidth >= 900;
+        const viewport = getViewportDimensions();
+        const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && viewport.width >= 900;
         ENGINE.ui.isLandscapeLayout = naturalLandscape || ENGINE.ui.forceLandscapeLayout;
         const appLayout = $('appLayout');
         if (appLayout) appLayout.classList.toggle('forced-landscape', ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
-        const canvasContainer = $('canvasContainer');
-        const modalRectSource = canvasContainer || appLayout;
-        if (modalRectSource) {
-            const modalRect = modalRectSource.getBoundingClientRect();
-            document.documentElement.style.setProperty('--grid-modal-left', `${modalRect.left}px`);
-            document.documentElement.style.setProperty('--grid-modal-top', `${modalRect.top}px`);
-            document.documentElement.style.setProperty('--grid-modal-width', `${modalRect.width}px`);
-            document.documentElement.style.setProperty('--grid-modal-height', `${modalRect.height}px`);
-        }
+        syncEditorPalettePlacement();
+        measureGridModalRect();
+        requestAnimationFrame(() => measureGridModalRect());
         const orientationBtn = $('orientationToggleBtn');
         if (orientationBtn) orientationBtn.innerText = ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape';
-        syncEditorPalettePlacement();
     }
 
     function syncEditorPalettePlacement() {
@@ -2711,14 +2725,61 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             ENGINE.gamepad.lastButtons = pad.buttons.map(b => b.pressed);
         }
 
-        window.addEventListener('gamepadconnected', () => setFocusGroup(ENGINE.ui.focusGroup || 'GRID', ENGINE.ui.focusIndex || 0));
-        window.addEventListener('gamepaddisconnected', () => { ENGINE.gamepad.hasPad = false; ENGINE.gamepad.lastButtons = []; ENGINE.ui.gamepadFocusEnabled = false; applyFocusVisual(null); });
-        setFocusGroup('CONTROLS', 0);
-        
-        window.addEventListener('resize', () => {
-            updateAppScale();
+        function hasConnectedGamepad() {
+            const pads = navigator.getGamepads ? navigator.getGamepads() : [];
+            return !!(pads && Array.from(pads).some(pad => !!pad));
+        }
+
+        function stopGamepadPollingLoop() {
+            if (ENGINE.gamepad.rafId !== null) cancelAnimationFrame(ENGINE.gamepad.rafId);
+            ENGINE.gamepad.rafId = null;
+            ENGINE.gamepad.rafActive = false;
+        }
+
+        function gamepadPollingTick() {
+            pollGamepadInput();
+            if (!hasConnectedGamepad()) {
+                ENGINE.gamepad.hasPad = false;
+                ENGINE.gamepad.lastButtons = [];
+                stopGamepadPollingLoop();
+                return;
+            }
+            ENGINE.gamepad.rafId = requestAnimationFrame(gamepadPollingTick);
+        }
+
+        function startGamepadPollingLoop() {
+            if (ENGINE.gamepad.rafActive) return;
+            ENGINE.gamepad.rafActive = true;
+            ENGINE.gamepad.rafId = requestAnimationFrame(gamepadPollingTick);
+        }
+
+        window.addEventListener('gamepadconnected', () => {
+            ENGINE.gamepad.hasPad = true;
+            pollGamepadInput();
+            startGamepadPollingLoop();
             setFocusGroup(ENGINE.ui.focusGroup || 'GRID', ENGINE.ui.focusIndex || 0);
         });
+        window.addEventListener('gamepaddisconnected', () => {
+            if (hasConnectedGamepad()) return;
+            ENGINE.gamepad.hasPad = false;
+            ENGINE.gamepad.lastButtons = [];
+            ENGINE.ui.gamepadFocusEnabled = false;
+            applyFocusVisual(null);
+            stopGamepadPollingLoop();
+        });
+        if (hasConnectedGamepad()) startGamepadPollingLoop();
+        setFocusGroup('CONTROLS', 0);
+        
+        const viewportUpdateHandler = () => {
+            updateAppScale();
+            setFocusGroup(ENGINE.ui.focusGroup || 'GRID', ENGINE.ui.focusIndex || 0);
+        };
+        window.addEventListener('resize', viewportUpdateHandler);
+        window.addEventListener('orientationchange', viewportUpdateHandler);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', viewportUpdateHandler);
+            window.visualViewport.addEventListener('scroll', viewportUpdateHandler);
+        }
         updateAppScale();
 
         $('gridRotateBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); showMessage("Rotated", "text-white font-black"); };
@@ -2879,12 +2940,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver(); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
         
-        const originalLoop = loop;
-        loop = function() {
-            pollGamepadInput();
-            originalLoop();
-        };
-
         const loader = {
             progress: 0, hasLoaded: false, finish() { const overlay = $('loadingOverlay'); overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 500); populateThemes(); },
             triggerFallback() { if (this.hasLoaded) return; this.hasLoaded = true; window.RAW_LEVELS = FALLBACK_RAW_LEVELS; this.finish(); loadLevel(0); updatePlayModeLayout(); loop(); },
