@@ -61,8 +61,9 @@
         .app-layout.forced-landscape #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
         .app-layout.forced-landscape .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, 3rem); }
         .landscape-editor-tools { width: 100%; }
+        .landscape-editor-tools .palette-grid { flex-grow: 0; margin-left: auto; }
         .landscape-editor-tools .palette-grid .palette-item { height: 3rem; }
-        .landscape-editor-tools #editUndoGridBtn { width: 3rem !important; height: calc((3 * 3rem) + (2 * 0.35rem)) !important; }
+        .landscape-editor-tools #editUndoGridBtn { width: 3rem !important; height: calc((2 * 3rem) + (1 * 0.35rem)) !important; }
         #themeModal.landscape-left-modal { position: fixed; inset: auto; left: var(--theme-modal-left, 0px); top: var(--theme-modal-top, 0px); width: var(--theme-modal-width, 100vw); height: var(--theme-modal-height, 100vh); align-items: stretch; justify-content: stretch; padding: 0; background-color: transparent; backdrop-filter: none; }
         #themeModal.landscape-left-modal #themeModalPanel { position: fixed; left: var(--theme-modal-center-x, 50vw); top: var(--theme-modal-center-y, 50vh); transform: translate(-50%, -50%); }
         
@@ -268,7 +269,7 @@
                     <div class="palette-item" data-type="flipV" title="Flip-V"><svg viewBox="0 0 100 100" style="color: var(--theme-filter)"><use href="#def-flipV"/></svg></div>
                 </div>
                 <div class="w-12 flex-shrink-0 flex items-center justify-center">
-                    <div id="editUndoGridBtn" class="palette-item palette-tool !w-10 !h-[6.95rem]" title="Undo Grid Action"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div>
+                    <div id="editUndoGridBtn" class="palette-item palette-tool !w-10 !h-[4.75rem]" title="Undo Grid Action"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div>
                 </div>
             </div>
             <div class="flex items-center justify-center pt-3 border-t border-slate-100 gap-1.5">
@@ -575,7 +576,8 @@
                 const leftBound = Math.max(layoutRect.left, buttonRect.left);
                 const rightBound = Math.min(layoutRect.right, canvasRect.right);
                 const boundedWidth = Math.max(0, rightBound - leftBound);
-                const centerX = boundedWidth > 0 ? leftBound + (boundedWidth / 2) : layoutRect.left + (layoutRect.width / 2);
+                const modalWidth = Math.max(0, boundedWidth - 24);
+                const centerX = modalWidth > 0 ? leftBound + (boundedWidth / 2) : layoutRect.left + (layoutRect.width / 2);
                 const centerY = layoutRect.top + layoutRect.height / 2;
                 document.documentElement.style.setProperty('--theme-modal-center-x', `${centerX}px`);
                 document.documentElement.style.setProperty('--theme-modal-center-y', `${centerY}px`);
@@ -583,7 +585,7 @@
                 document.documentElement.style.setProperty('--theme-modal-top', `${layoutRect.top}px`);
                 document.documentElement.style.setProperty('--theme-modal-width', `${layoutRect.width}px`);
                 document.documentElement.style.setProperty('--theme-modal-height', `${layoutRect.height}px`);
-                document.documentElement.style.setProperty('--theme-modal-panel-max-width', `${Math.max(boundedWidth, 0)}px`);
+                document.documentElement.style.setProperty('--theme-modal-panel-max-width', `${modalWidth}px`);
             }
         }
         const orientationBtn = $('orientationToggleBtn');
