@@ -39,7 +39,7 @@
         .animate-spin-grow-fade { animation: spin-grow-fade 1s forwards cubic-bezier(0.4, 0, 0.2, 1); }
         .app-layout { max-width: 65vh; }
         #headerLeft { width: clamp(3.9rem, 9.5vw, 4.1rem); flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem); }
-        #headerMiddle { width: clamp(9.75rem, 20vw, 11.25rem); min-width: 9.75rem; flex: 0 0 clamp(9.75rem, 20vw, 11.25rem); overflow: hidden; }
+        #headerMiddle { width: clamp(11rem, 24vw, 13rem); min-width: 11rem; flex: 0 0 clamp(11rem, 24vw, 13rem); overflow: hidden; }
         #headerRight { min-width: clamp(14.5rem, 34vw, 20rem); flex: 1 1 auto; }
         #headerMiddleContent { --header-middle-col-pad: 0.5rem; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); justify-content: stretch; align-items: center; }
         .header-middle-col { min-width: 0; padding: 0 var(--header-middle-col-pad); display: flex; align-items: center; }
@@ -1034,13 +1034,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             });
         };
 
-        if (category === "Buttons") replaceInKeys(t.btns, Object.keys(t.btns || {}));
+        if (category === "Buttons") {
+            replaceInKeys(t.btns, Object.keys(t.btns || {}));
+            replaceInKeys(t.leave, ['bg', 'hover', 'text']);
+        }
         else if (category === "Grid Items") {
             replaceInKeys(t.colors, Object.keys(t.colors || {}));
             if (t.path === oldColor) t.path = newColor;
+            if (t.grid === oldColor) t.grid = newColor;
         }
         else if (category === "Misc") {
-            ['bodyBg', 'canvasBg', 'headerLeft', 'headerRight', 'controls', 'metricText', 'headerLeftText', 'headerLeftLabel', 'ghostBg', 'ghostBorder', 'burst', 'check'].forEach(key => {
+            ['bodyBg', 'canvasBg', 'headerLeft', 'headerRight', 'controls', 'metricText', 'headerLeftText', 'headerLeftLabel', 'ghostBg', 'burst', 'check'].forEach(key => {
                 if (t[key] === oldColor) t[key] = newColor;
             });
             replaceInKeys(t.modal, ['bg', 'panelBg', 'text', 'textMuted', 'accent']);
@@ -1050,12 +1054,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             replaceInKeys(t.alert, ['bg']);
             replaceInKeys(t.ctrlArea, ['bg']);
         } else if (category === "Lines") {
-            if (t.grid === oldColor) t.grid = newColor;
             replaceInKeys(t.modal, LINE_KEY_GROUPS.modal);
             replaceInKeys(t.palette, LINE_KEY_GROUPS.palette);
             replaceInKeys(t.win, LINE_KEY_GROUPS.win);
             replaceInKeys(t.alert, LINE_KEY_GROUPS.alert);
             replaceInKeys(t.ctrlArea, LINE_KEY_GROUPS.ctrlArea);
+            if (t.ghostBorder === oldColor) t.ghostBorder = newColor;
+            replaceInKeys(t.leave, ['border']);
         } else {
             const replaceDeep = (obj) => {
                 if (!obj || typeof obj !== 'object') return;
@@ -1081,43 +1086,68 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         container.appendChild(header);
 
         const t = THEMES[themeKey];
-        const lineColors = new Set([
-            t.grid,
+        const toColorSet = (arr) => new Set(arr.filter(c => c && typeof c === 'string' && c !== 'rainbow'));
+        const lineColors = toColorSet([
             t.modal?.border,
             t.palette?.border,
             t.palette?.itemBorder,
             t.win?.border,
             t.alert?.stroke,
-            t.ctrlArea?.border
-        ].filter(Boolean));
-        const btnColors = new Set(Object.values(t.btns || {}).filter(c => !lineColors.has(c)));
-        const gridColorsArr = [t.colors.gate, t.colors.goal, t.colors.block, t.colors.pin, t.colors.pinUnflipped, t.colors.filter, t.colors.portal, t.colors.cross];
-        if (t.path !== 'rainbow') gridColorsArr.push(t.path);
-        const gridColors = new Set(gridColorsArr.filter(c => c && !lineColors.has(c)));
+            t.ctrlArea?.border,
+            t.ghostBorder,
+            t.leave?.border
+        ]);
+        const btnColors = toColorSet([
+            ...Object.values(t.btns || {}),
+            t.leave?.bg,
+            t.leave?.hover,
+            t.leave?.text
+        ]);
+        const gridColors = toColorSet([
+            t.colors?.gate,
+            t.colors?.goal,
+            t.colors?.block,
+            t.colors?.pin,
+            t.colors?.pinUnflipped,
+            t.colors?.filter,
+            t.colors?.portal,
+            t.colors?.cross,
+            t.path,
+            t.grid
+        ]);
+        const miscColors = toColorSet([
+            t.bodyBg,
+            t.canvasBg,
+            t.headerLeft,
+            t.headerRight,
+            t.controls,
+            t.metricText,
+            t.headerLeftText,
+            t.headerLeftLabel,
+            t.ghostBg,
+            t.modal?.bg,
+            t.modal?.panelBg,
+            t.modal?.text,
+            t.modal?.textMuted,
+            t.modal?.accent,
+            t.output?.bg,
+            t.output?.text,
+            t.palette?.bg,
+            t.palette?.itemBg,
+            t.palette?.toolBg,
+            t.win?.bg,
+            t.win?.text,
+            t.win?.accent,
+            t.alert?.bg,
+            t.ctrlArea?.bg,
+            t.burst,
+            t.check
+        ]);
 
-        const miscColors = new Set();
-        const skipMiscKeys = ['btns', 'colors', 'path', 'grid'];
-        function extractMisc(obj, isRoot=false) {
-            for (let k in obj) {
-                if (isRoot && skipMiscKeys.includes(k)) continue;
-                if (typeof obj[k] === 'object' && obj[k] !== null) extractMisc(obj[k], false);
-                else if (typeof obj[k] === 'string' && (obj[k].startsWith('#') || obj[k].startsWith('rgb') || obj[k].startsWith('rgba'))) {
-                    miscColors.add(obj[k]);
-                }
-            }
-        }
-        extractMisc(t, true);
-
-        let arrBtns = Array.from(btnColors);
-        let arrGrid = Array.from(gridColors);
-        let arrLines = Array.from(lineColors);
-        let arrMisc = Array.from(miscColors).filter(c => !lineColors.has(c));
-
-        const hl = t.headerLeft;
-        const hr = t.headerRight;
-        arrMisc = arrMisc.filter(c => c !== hl && c !== hr);
-        if (hr) arrMisc.unshift(hr);
-        if (hl) arrMisc.unshift(hl);
+        const arrBtns = Array.from(btnColors);
+        const arrGrid = Array.from(gridColors);
+        const arrLines = Array.from(lineColors);
+        const arrMisc = Array.from(miscColors);
 
         const sectionsContainer = document.createElement('div');
         sectionsContainer.className = "grid grid-cols-2 gap-2 mb-1";
@@ -1145,10 +1175,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const sourceCategory = ENGINE.themeTapCategory;
                     const targetCategory = swatch.dataset.category;
                     
-                    if (sourceColor !== targetColor && sourceCategory === targetCategory) {
+                    if (sourceColor !== targetColor) {
                         replaceThemeColor(themeKey, targetColor, sourceColor, targetCategory);
-                    } else if (sourceCategory !== targetCategory) {
-                        showMessage("Mismatched Categories", "text-white font-black");
                     }
                     
                     ENGINE.themeTapSelectedColor = null;
@@ -2595,11 +2623,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
                 let isSameElement = (dropTarget && dropTarget.dataset.themeColor === ENGINE.themeDragColor);
                 if (dropTarget && dropTarget.dataset.themeColor && !isSameElement) {
-                    if (ENGINE.themeDragCategory === dropTarget.dataset.category) {
-                        replaceThemeColor(ENGINE.themeDragTheme, dropTarget.dataset.themeColor, ENGINE.themeDragColor, dropTarget.dataset.category);
-                    } else {
-                        showMessage("Mismatched Categories", "text-white font-black");
-                    }
+                    replaceThemeColor(ENGINE.themeDragTheme, dropTarget.dataset.themeColor, ENGINE.themeDragColor, dropTarget.dataset.category);
                 }
                 setLogicState(IDLE); ENGINE.themeDragColor = null; ENGINE.themeDragTheme = null; ENGINE.themeDragCategory = null; ghostEl.style.display = 'none'; ghostEl.innerHTML = '';
                 if (!ENGINE.themeTapSelectedColor) { document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110')); }
