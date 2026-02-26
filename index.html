@@ -39,18 +39,25 @@
         .animate-spin-grow-fade { animation: spin-grow-fade 1s forwards cubic-bezier(0.4, 0, 0.2, 1); }
         .app-layout { max-width: 65vh; }
         #headerLeft { width: clamp(3.9rem, 9.5vw, 4.1rem); flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem); }
-        #headerMiddle { width: clamp(11rem, 24vw, 13rem); min-width: 11rem; flex: 0 0 clamp(11rem, 24vw, 13rem); overflow: hidden; }
-        #headerRight { min-width: clamp(14.5rem, 34vw, 20rem); flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding-inline: clamp(0.35rem, 1vw, 0.75rem); }
+        #headerMiddle { min-width: 0; flex: 1 1 32%; flex-basis: clamp(8.25rem, 32%, 11rem); max-width: 13rem; overflow: hidden; }
+        #headerRight { min-width: 0; flex: 1 1 44%; flex-basis: clamp(9.5rem, 44%, 16rem); display: flex; align-items: center; justify-content: center; padding-inline: clamp(0.35rem, 1vw, 0.75rem); }
         #headerMiddleContent { --header-middle-col-pad: 0.5rem; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); justify-content: stretch; align-items: center; }
         .header-middle-col { min-width: 0; padding: 0 var(--header-middle-col-pad); display: flex; align-items: center; }
         #headerMiddleColLeft { justify-content: flex-end; }
         #headerMiddleColCenter { justify-content: center; }
         #headerMiddleColRight { justify-content: flex-start; }
-        #playMetrics, #editorMetrics { width: 100%; justify-content: center; align-items: center; }
+        #playMetrics, #editorMetrics { width: 100%; min-width: 0; justify-content: center; align-items: center; }
         #levelInfoWrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 3ch; }
         #levelTitle { min-width: 3ch; text-align: center; }
         #levelNavigator { display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0; align-items: center; }
+        @media (orientation: portrait) {
+            #headerMiddle { flex-basis: clamp(7.5rem, 30%, 10rem); }
+            #headerRight { flex-basis: clamp(8.75rem, 40%, 14rem); padding-inline: clamp(0.25rem, 1vw, 0.5rem); }
+        }
+
         @media (orientation: landscape) and (min-width: 900px) {
+            #headerMiddle { flex-basis: clamp(11rem, 24vw, 13rem); }
+            #headerRight { flex-basis: clamp(14.5rem, 34vw, 20rem); }
             .app-layout { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
             .layout-left-pane { width: clamp(21rem, 34vw, 30rem); max-height: 96vh; overflow: hidden; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
             .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
