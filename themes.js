@@ -12,7 +12,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#111111', border: '#333333' },
         burst: '#ffcc99', check: '#000000'
     },
-    Candy Apple: {
+    Candy.Apple: {
         bodyBg: '#ffe5e5', canvasBg: '#ffffff', grid: '#ff9999', headerLeft: '#cc0000', headerRight: '#ff0800', path: '#ff0800', controls: 'rgba(255, 229, 229, 0.9)', metricText: '#ffffff',
         btns: { undo: '#ff4d4d', reset: '#800000', guide: '#ff0800', whoa: '#cc0000', hint: '#ff0800', saved: '#ff4d4d', mega: '#800000', mute: '#ffcccc', muteIcon: '#cc0000', copy: '#ffcccc', gen: '#ffcccc', modeToggle: '#cc0000', orient: '#cc0000', solve: '#ff0800', editClear: '#cc0000', editBombs: '#800000', editNew: '#ff4d4d' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#ffffff', border: '#ff0800', text: '#cc0000', textMuted: '#ff4d4d', accent: '#800000' }, 
@@ -25,7 +25,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#ffe5e5', border: '#ff9999' },
         burst: '#ffcccc', check: '#800000'
     },
-    Platinum Blonde: {
+    Platinum.Blonde: {
         bodyBg: '#fdfbf7', canvasBg: '#ffffff', grid: '#e6dfc8', headerLeft: '#e5d68e', headerRight: '#d4c271', path: '#d4c271', controls: 'rgba(253, 251, 247, 0.95)', metricText: '#ffffff',
         btns: { undo: '#e6dfc8', reset: '#b5a452', guide: '#d4c271', whoa: '#e5d68e', hint: '#d4c271', saved: '#e6dfc8', mega: '#b5a452', mute: '#f4f0e6', muteIcon: '#b5a452', copy: '#f4f0e6', gen: '#f4f0e6', modeToggle: '#d4c271', orient: '#d4c271', solve: '#e5d68e', editClear: '#d4c271', editBombs: '#b5a452', editNew: '#e6dfc8' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#ffffff', border: '#d4c271', text: '#b5a452', textMuted: '#e6dfc8', accent: '#d4c271' }, 
@@ -38,7 +38,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#fdfbf7', border: '#e6dfc8' },
         burst: '#f4f0e6', check: '#b5a452'
     },
-    David Fincher: {
+    David.Fincher: {
         bodyBg: '#0d110e', canvasBg: '#121a15', grid: '#354536', headerLeft: '#5e6a4b', headerRight: '#79875f', path: '#8c9d6f', controls: 'rgba(13, 17, 14, 0.95)', metricText: '#0d110e',
         btns: { undo: '#354536', reset: '#a34233', guide: '#6b7a54', whoa: '#5e6a4b', hint: '#79875f', saved: '#354536', mega: '#a34233', mute: '#1f2b23', muteIcon: '#79875f', copy: '#1f2b23', gen: '#1f2b23', modeToggle: '#79875f', orient: '#79875f', solve: '#a34233', editClear: '#a34233', editBombs: '#a34233', editNew: '#354536' },
         modal: { bg: 'rgba(18, 26, 21, 0.95)', panelBg: '#0d110e', border: '#79875f', text: '#8c9d6f', textMuted: '#5e6a4b', accent: '#a34233' }, 
@@ -64,7 +64,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#f8f9fa', border: '#e2e8f0' },
         burst: '#ffff00', check: '#4b0082'
     },
-    SO Purple: {
+    SO.Purple: {
         bodyBg: '#2e1065', canvasBg: '#3b0764', grid: '#581c87', headerLeft: '#7e22ce', headerRight: '#9333ea', path: '#c084fc', controls: 'rgba(46, 16, 101, 0.9)', metricText: '#e9d5ff',
         btns: { undo: '#6b21a8', reset: '#d8b4fe', guide: '#a855f7', whoa: '#7e22ce', hint: '#c084fc', saved: '#6b21a8', mega: '#e9d5ff', mute: '#4c1d95', muteIcon: '#c084fc', copy: '#4c1d95', gen: '#4c1d95', modeToggle: '#9333ea', orient: '#9333ea', solve: '#d8b4fe', editClear: '#6b21a8', editBombs: '#d8b4fe', editNew: '#6b21a8' },
         modal: { bg: 'rgba(59, 7, 100, 0.95)', panelBg: '#2e1065', border: '#a855f7', text: '#e9d5ff', textMuted: '#c084fc', accent: '#7e22ce' }, 
@@ -77,7 +77,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#2e1065', border: '#581c87' },
         burst: '#d8b4fe', check: '#2e1065'
     },
-    Denim on Denim: {
+    Denim.on.Denim: {
         bodyBg: '#0f172a', canvasBg: '#1e293b', grid: '#334155', headerLeft: '#1d4ed8', headerRight: '#2563eb', path: '#60a5fa', controls: 'rgba(15, 23, 42, 0.9)', metricText: '#94a3b8',
         btns: { undo: '#475569', reset: '#3b82f6', guide: '#2563eb', whoa: '#1e40af', hint: '#60a5fa', saved: '#475569', mega: '#93c5fd', mute: '#334155', muteIcon: '#93c5fd', copy: '#334155', gen: '#334155', modeToggle: '#2563eb', orient: '#2563eb', solve: '#1d4ed8', editClear: '#3b82f6', editBombs: '#1e40af', editNew: '#475569' },
         modal: { bg: 'rgba(30, 41, 59, 0.95)', panelBg: '#0f172a', border: '#3b82f6', text: '#93c5fd', textMuted: '#60a5fa', accent: '#1d4ed8' }, 
@@ -90,7 +90,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#0f172a', border: '#334155' },
         burst: '#93c5fd', check: '#0f172a'
     },
-    Hello Kitty: {
+    Hello.Kitty: {
         bodyBg: '#ffe4e1', canvasBg: '#fff0f5', grid: '#ffb6c1', headerLeft: '#ff69b4', headerRight: '#ff1493', path: '#ff1493', controls: 'rgba(255, 255, 255, 0.8)', metricText: '#ffb6c1',
         btns: { undo: '#ffb6c1', reset: '#ff1493', guide: '#ff69b4', whoa: '#db7093', hint: '#ff69b4', saved: '#ffb6c1', mega: '#ff1493', mute: '#fff0f5', muteIcon: '#ff69b4', copy: '#fff0f5', gen: '#fff0f5', modeToggle: '#ff1493', orient: '#ff1493', solve: '#ff1493', editClear: '#ff1493', editBombs: '#ff1493', editNew: '#ffb6c1' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#fff0f5', border: '#ff69b4', text: '#db7093', textMuted: '#ffb6c1', accent: '#ff1493' }, 
@@ -103,7 +103,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#fff0f5', border: '#ffb6c1' },
         burst: '#ffc0cb', check: '#ff1493'
     },
-    Black Tie Affair: {
+    Black.Tie.Affair: {
         bodyBg: '#1a1a1a', canvasBg: '#f0f0f0', grid: '#cccccc', headerLeft: '#000000', headerRight: '#333333', path: '#000000', controls: 'rgba(240, 240, 240, 0.95)', metricText: '#999999',
         btns: { undo: '#666666', reset: '#000000', guide: '#444444', whoa: '#222222', hint: '#333333', saved: '#666666', mega: '#000000', mute: '#e0e0e0', muteIcon: '#000000', copy: '#e0e0e0', gen: '#e0e0e0', modeToggle: '#222222', orient: '#222222', solve: '#444444', editClear: '#000000', editBombs: '#000000', editNew: '#666666' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#f0f0f0', border: '#000000', text: '#333333', textMuted: '#999999', accent: '#000000' }, 
@@ -129,7 +129,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#0b001a', border: '#3d1c5e' },
         burst: '#ffea00', check: '#0b001a'
     },
-    Raspberry Sherbet: {
+    Raspberry.Sherbet: {
         bodyBg: '#ffebd6', canvasBg: '#fff5ec', grid: '#ffb3c6', headerLeft: '#d92550', headerRight: '#ff4d6d', path: '#ff7b00', controls: 'rgba(255, 245, 236, 0.9)', metricText: '#ffb3c6',
         btns: { undo: '#ff8fa3', reset: '#d92550', guide: '#ff4d6d', whoa: '#ff7b00', hint: '#ff4d6d', saved: '#ff8fa3', mega: '#d92550', mute: '#ffe0e9', muteIcon: '#d92550', copy: '#ffe0e9', gen: '#ffe0e9', modeToggle: '#d92550', orient: '#d92550', solve: '#ff4d6d', editClear: '#ff7b00', editBombs: '#d92550', editNew: '#ff8fa3' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#ffffff', border: '#ff4d6d', text: '#d92550', textMuted: '#ffb3c6', accent: '#ff7b00' }, 
@@ -142,7 +142,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#fff5ec', border: '#ffb3c6' },
         burst: '#ffe0e9', check: '#d92550'
     },
-    Shiny and Chrome: {
+    Shiny.and.Chrome: {
         bodyBg: '#8c92ac', canvasBg: '#e6e8fa', grid: '#b0b7c6', headerLeft: '#555d50', headerRight: '#7f8796', path: '#2c3539', controls: 'rgba(230, 232, 250, 0.9)', metricText: '#b0b7c6',
         btns: { undo: '#a0a5b0', reset: '#555d50', guide: '#8c92ac', whoa: '#2c3539', hint: '#7f8796', saved: '#a0a5b0', mega: '#555d50', mute: '#cfd4df', muteIcon: '#2c3539', copy: '#cfd4df', gen: '#cfd4df', modeToggle: '#2c3539', orient: '#2c3539', solve: '#7f8796', editClear: '#2c3539', editBombs: '#555d50', editNew: '#a0a5b0' },
         modal: { bg: 'rgba(230, 232, 250, 0.95)', panelBg: '#e6e8fa', border: '#555d50', text: '#2c3539', textMuted: '#7f8796', accent: '#555d50' }, 
@@ -155,7 +155,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#d9dce5', border: '#b0b7c6' },
         burst: '#cfd4df', check: '#2c3539'
     },
-    NY Yankees: {
+    NY.Yankees: {
         bodyBg: '#e4e5e8', canvasBg: '#ffffff', grid: '#b0b7bc', headerLeft: '#0c2340', headerRight: '#c4ced4', path: '#0c2340', controls: 'rgba(255, 255, 255, 0.95)', metricText: '#b0b7bc',
         btns: { undo: '#8b969e', reset: '#e31837', guide: '#0c2340', whoa: '#c4ced4', hint: '#0c2340', saved: '#8b969e', mega: '#e31837', mute: '#f0f2f5', muteIcon: '#0c2340', copy: '#f0f2f5', gen: '#f0f2f5', modeToggle: '#0c2340', orient: '#0c2340', solve: '#c4ced4', editClear: '#e31837', editBombs: '#e31837', editNew: '#8b969e' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#ffffff', border: '#0c2340', text: '#0c2340', textMuted: '#8b969e', accent: '#e31837' }, 
@@ -168,7 +168,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#f0f2f5', border: '#b0b7bc' },
         burst: '#e4e5e8', check: '#0c2340'
     },
-    Ketchup and Mustard: {
+    Ketchup.and.Mustard: {
         bodyBg: '#fff3cd', canvasBg: '#ffffff', grid: '#ffe8a1', headerLeft: '#d22b2b', headerRight: '#ffc107', path: '#d22b2b', controls: 'rgba(255, 255, 255, 0.9)', metricText: '#ffe8a1',
         btns: { undo: '#ffdd57', reset: '#a01e1e', guide: '#ffc107', whoa: '#d22b2b', hint: '#d22b2b', saved: '#ffdd57', mega: '#a01e1e', mute: '#fff8e1', muteIcon: '#d22b2b', copy: '#fff8e1', gen: '#fff8e1', modeToggle: '#a01e1e', orient: '#a01e1e', solve: '#d22b2b', editClear: '#a01e1e', editBombs: '#a01e1e', editNew: '#ffdd57' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#ffffff', border: '#d22b2b', text: '#a01e1e', textMuted: '#ffc107', accent: '#d22b2b' }, 
@@ -207,7 +207,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#2a2515', border: '#5c4a10' },
         burst: '#daa520', check: '#2a2515'
     },
-    70s Tupperware: {
+    70s.Tupperware: {
         bodyBg: '#f4ebd0', canvasBg: '#dfd3ae', grid: '#c9bb8e', headerLeft: '#cc5500', headerRight: '#5b7c2f', path: '#e49b0f', controls: 'rgba(223, 211, 174, 0.9)', metricText: '#c9bb8e',
         btns: { undo: '#9c8e63', reset: '#cc5500', guide: '#4d3826', whoa: '#5b7c2f', hint: '#e49b0f', saved: '#9c8e63', mega: '#cc5500', mute: '#f4ebd0', muteIcon: '#4d3826', copy: '#f4ebd0', gen: '#f4ebd0', modeToggle: '#4d3826', orient: '#4d3826', solve: '#cc5500', editClear: '#cc5500', editBombs: '#cc5500', editNew: '#9c8e63' },
         modal: { bg: 'rgba(223, 211, 174, 0.95)', panelBg: '#f4ebd0', border: '#5b7c2f', text: '#4d3826', textMuted: '#cc5500', accent: '#e49b0f' }, 
@@ -220,7 +220,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#e8ddbc', border: '#c9bb8e' },
         burst: '#f4ebd0', check: '#4d3826'
     },
-    Paddy's Day: {
+    Paddys.Day: {
         bodyBg: '#e8f5e9', canvasBg: '#ffffff', grid: '#a5d6a7', headerLeft: '#e65100', headerRight: '#006400', path: '#FFD700', controls: 'rgba(232, 245, 233, 0.95)', metricText: '#FFD700',
         btns: { undo: '#81c784', reset: '#e65100', guide: '#388e3c', whoa: '#e65100', hint: '#388e3c', saved: '#81c784', mega: '#e65100', mute: '#c8e6c9', muteIcon: '#006400', copy: '#c8e6c9', gen: '#c8e6c9', modeToggle: '#006400', orient: '#006400', solve: '#388e3c', editClear: '#e65100', editBombs: '#e65100', editNew: '#81c784' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#e8f5e9', border: '#006400', text: '#1b5e20', textMuted: '#e65100', accent: '#388e3c' }, 
@@ -233,7 +233,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#e8f5e9', border: '#a5d6a7' },
         burst: '#c8e6c9', check: '#006400'
     },
-    USA USA USA: {
+    USA.USA.USA: {
         bodyBg: '#f0f4f8', canvasBg: '#ffffff', grid: '#b3c6d6', headerLeft: '#bf0a30', headerRight: '#002868', path: '#bf0a30', controls: 'rgba(240, 244, 248, 0.95)', metricText: '#ffffff',
         btns: { undo: '#8da4b8', reset: '#bf0a30', guide: '#002868', whoa: '#bf0a30', hint: '#002868', saved: '#8da4b8', mega: '#bf0a30', mute: '#dbe4ec', muteIcon: '#002868', copy: '#dbe4ec', gen: '#dbe4ec', modeToggle: '#002868', orient: '#002868', solve: '#bf0a30', editClear: '#bf0a30', editBombs: '#bf0a30', editNew: '#8da4b8' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#f0f4f8', border: '#002868', text: '#002868', textMuted: '#bf0a30', accent: '#bf0a30' }, 
@@ -259,7 +259,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#fff8e7', border: '#d7ccc8' },
         burst: '#efebe9', check: '#000000'
     },
-    Cozy Cottage: {
+    Cozy.Cottage: {
         bodyBg: '#fdf6e3', canvasBg: '#ffffff', grid: '#d7ccc8', headerLeft: '#d291bc', headerRight: '#8fbc8f', path: '#8d6e63', controls: 'rgba(253, 246, 227, 0.95)', metricText: '#2f4f4f',
         btns: { undo: '#bcaaa4', reset: '#ad6c93', guide: '#6e9c6e', whoa: '#8d6e63', hint: '#6e9c6e', saved: '#bcaaa4', mega: '#ad6c93', mute: '#efebe9', muteIcon: '#5d4037', copy: '#efebe9', gen: '#efebe9', modeToggle: '#6e9c6e', orient: '#6e9c6e', solve: '#8d6e63', editClear: '#ad6c93', editBombs: '#ad6c93', editNew: '#bcaaa4' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#fdf6e3', border: '#8fbc8f', text: '#5d4037', textMuted: '#8d6e63', accent: '#d291bc' }, 
@@ -272,7 +272,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#fdf6e3', border: '#d7ccc8' },
         burst: '#efebe9', check: '#8d6e63'
     },
-    Patchwork Quilt: {
+    Patchwork.Quilt: {
         bodyBg: '#f4eedd', canvasBg: '#faf8f5', grid: '#b5a8b3', headerLeft: '#ab5a50', headerRight: '#5c8397', path: '#d99b48', controls: 'rgba(244, 238, 221, 0.95)', metricText: '#fdfbf7',
         btns: { undo: '#8a7b88', reset: '#ab5a50', guide: '#5c8397', whoa: '#b57a30', hint: '#5c8397', saved: '#8a7b88', mega: '#ab5a50', mute: '#e6e0e5', muteIcon: '#4a3e49', copy: '#e6e0e5', gen: '#e6e0e5', modeToggle: '#5c8397', orient: '#5c8397', solve: '#b57a30', editClear: '#ab5a50', editBombs: '#ab5a50', editNew: '#8a7b88' },
         modal: { bg: 'rgba(250, 248, 245, 0.95)', panelBg: '#f4eedd', border: '#5c8397', text: '#4a3e49', textMuted: '#d99b48', accent: '#ab5a50' }, 
@@ -285,7 +285,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#f4eedd', border: '#b5a8b3' },
         burst: '#e6e0e5', check: '#4a3e49'
     },
-    Oh Canada: {
+    Oh.Canada: {
         bodyBg: '#f8f9fa', canvasBg: '#ffffff', grid: '#cbd5e1', headerLeft: '#222222', headerRight: '#c8102e', path: '#c8102e', controls: 'rgba(248, 249, 250, 0.95)', metricText: '#ffffff',
         btns: { undo: '#64748b', reset: '#c8102e', guide: '#222222', whoa: '#c8102e', hint: '#c8102e', saved: '#64748b', mega: '#c8102e', mute: '#e2e8f0', muteIcon: '#c8102e', copy: '#e2e8f0', gen: '#e2e8f0', modeToggle: '#222222', orient: '#222222', solve: '#c8102e', editClear: '#c8102e', editBombs: '#222222', editNew: '#64748b' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#f8f9fa', border: '#c8102e', text: '#222222', textMuted: '#64748b', accent: '#c8102e' }, 
@@ -298,7 +298,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#f8f9fa', border: '#cbd5e1' },
         burst: '#e2e8f0', check: '#222222'
     },
-    Poodle Skirt: {
+    Poodle.Skirt: {
         bodyBg: '#e0ffff', canvasBg: '#ffffff', grid: '#aaaaaa', headerLeft: '#ff69b4', headerRight: '#008b8b', path: '#ff1493', controls: 'rgba(224, 255, 255, 0.95)', metricText: '#ffffff',
         btns: { undo: '#999999', reset: '#ff1493', guide: '#008b8b', whoa: '#c71585', hint: '#008b8b', saved: '#999999', mega: '#ff1493', mute: '#f0f8ff', muteIcon: '#008b8b', copy: '#f0f8ff', gen: '#f0f8ff', modeToggle: '#008b8b', orient: '#008b8b', solve: '#c71585', editClear: '#dc143c', editBombs: '#ff1493', editNew: '#999999' },
         modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#e0ffff', border: '#008b8b', text: '#ff1493', textMuted: '#ff69b4', accent: '#00ced1' }, 
@@ -311,7 +311,7 @@ window.THEMES_MORE = {
         ctrlArea: { bg: '#e0ffff', border: '#aaaaaa' },
         burst: '#fef9c3', check: '#ff1493'
     },
-    Ultra Modern: {
+    Ultra.Modern: {
         bodyBg: '#111111', canvasBg: '#1a1a1a', grid: '#444444', headerLeft: '#000000', headerRight: '#222222', path: '#bf00ff', controls: 'rgba(17, 17, 17, 0.95)', metricText: '#00ffff',
         btns: { undo: '#444444', reset: '#ff0055', guide: '#bf00ff', whoa: '#333333', hint: '#bf00ff', saved: '#444444', mega: '#bf00ff', mute: '#333333', muteIcon: '#bf00ff', copy: '#333333', gen: '#333333', modeToggle: '#000000', orient: '#000000', solve: '#bf00ff', editClear: '#ff0055', editBombs: '#cc0044', editNew: '#444444' },
         modal: { bg: 'rgba(26, 26, 26, 0.95)', panelBg: '#111111', border: '#ffffff', text: '#00ffff', textMuted: '#666666', accent: '#bf00ff' }, 
