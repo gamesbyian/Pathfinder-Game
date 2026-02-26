@@ -46,11 +46,10 @@
         #headerMiddleColLeft { justify-content: flex-end; }
         #headerMiddleColCenter { justify-content: center; }
         #headerMiddleColRight { justify-content: flex-start; }
-        #playMetrics, #editorMetrics { margin: 0 auto; justify-content: center; max-width: 100%; }
+        #playMetrics, #editorMetrics { width: 100%; display: flex; justify-content: center; align-items: center; }
         #levelInfoWrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 3ch; }
         #levelTitle { min-width: 3ch; text-align: center; }
         #levelNavigator { display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0; align-items: center; }
-        #headerRight > div { width: max-content; max-width: 100%; justify-content: center; margin: 0 auto; }
         @media (orientation: landscape) and (min-width: 900px) {
             .app-layout { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
             .layout-left-pane { width: clamp(21rem, 34vw, 30rem); max-height: 96vh; overflow: hidden; padding-right: 0.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
