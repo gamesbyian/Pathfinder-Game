@@ -41,11 +41,15 @@
         #headerLeft { width: clamp(3.9rem, 9.5vw, 4.1rem); flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem); }
         #headerMiddle { width: clamp(9.75rem, 20vw, 11.25rem); min-width: 9.75rem; flex: 0 0 clamp(9.75rem, 20vw, 11.25rem); }
         #headerRight { min-width: clamp(14.5rem, 34vw, 20rem); flex: 1 1 auto; }
-        #headerMiddleContent { width: 100%; display: flex; align-items: center; justify-content: center; padding: 0 0.6rem; gap: 0.7rem; }
+        #headerMiddleContent { --header-middle-col-pad: 0.6rem; width: 100%; display: grid; grid-template-columns: max-content max-content max-content; justify-content: center; align-items: center; }
+        .header-middle-col { padding: 0 var(--header-middle-col-pad); display: flex; align-items: center; }
+        #headerMiddleColLeft { justify-content: flex-end; }
+        #headerMiddleColCenter { justify-content: center; }
+        #headerMiddleColRight { justify-content: center; }
         #playMetrics, #editorMetrics { margin: 0 auto; justify-content: center; }
-        #levelInfoWrap { display: flex; align-items: center; margin-right: 0; min-width: 0; padding-left: 0; }
-        #levelTitle { min-width: 3ch; text-align: right; }
-        #levelNavigator { display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0; }
+        #levelInfoWrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 3ch; }
+        #levelTitle { min-width: 3ch; text-align: center; }
+        #levelNavigator { display: flex; flex-direction: column; gap: 0.25rem; flex-shrink: 0; align-items: center; }
         #headerRight > div { width: 100%; justify-content: center; margin: 0 auto; }
         @media (orientation: landscape) and (min-width: 900px) {
             .app-layout { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: 2vh; }
@@ -153,16 +157,20 @@
             </div>
             <div id="headerMiddle" class="flex-shrink-0 bg-red-700 flex items-center transition-colors duration-300 relative border-r border-slate-200/20">
                 <div id="headerMiddleContent">
-                    <div id="levelInfoWrap">
+                    <div id="headerMiddleColLeft" class="header-middle-col">
                         <svg id="completionBurst" viewBox="0 0 100 100" class="w-8 h-8 hidden shrink-0"><use href="#def-completion"/></svg>
-                        <div class="flex flex-col items-center min-w-0 ml-1.5">
+                    </div>
+                    <div id="headerMiddleColCenter" class="header-middle-col">
+                        <div id="levelInfoWrap" class="min-w-0">
                             <span id="levelLabelText" class="text-[0.6rem] font-black text-red-100/60 uppercase tracking-widest leading-none mb-1">Level</span>
                             <p id="levelTitle" class="text-white font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
                         </div>
                     </div>
-                    <div id="levelNavigator">
-                        <button id="prevLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">◄</button>
-                        <button id="nextLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">►</button>
+                    <div id="headerMiddleColRight" class="header-middle-col">
+                        <div id="levelNavigator">
+                            <button id="prevLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">◄</button>
+                            <button id="nextLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">►</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -332,7 +340,7 @@
                 <button id="editResetGrid" class="flex-1 h-10 bg-red-600 text-white font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Clear</button>
                 <button id="editNewLevel" class="flex-1 h-10 bg-emerald-600 text-white font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">New</button>
                 <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 text-white font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
-                <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 text-white font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Spots</button>
+                <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 text-white font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 text-white font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
                 <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 text-white font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
             </div>
@@ -365,7 +373,7 @@
 </div>
 
 <div id="themeModal" class="fixed inset-0 z-50 flex items-center justify-center hidden modal grid-area-modal">
-    <div id="themeModalPanel" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-sm flex flex-col modal-content max-h-[calc(100vh-2rem)] transition-all duration-300 overflow-hidden grid-area-modal-panel">
+    <div id="themeModalPanel" class="bg-[var(--theme-modal-bg)] backdrop-blur-md p-4 rounded-3xl shadow-2xl border border-[var(--theme-modal-border)] w-full max-w-sm flex flex-col modal-content max-h-[calc(100vh-2rem)] transition-all duration-300 overflow-hidden grid-area-modal-panel">
         <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
             <div class="flex justify-between items-center mb-4 shrink-0 px-2">
                 <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
@@ -2748,8 +2756,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
         $('closeThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
         $('dismissThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
-        $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); const panel = $('themeModalPanel'); panel.classList.remove('max-sm'); panel.classList.add('w-full', 'h-full', 'max-w-none'); renderThemeEditors(); };
-        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); const panel = $('themeModalPanel'); panel.classList.add('max-sm', 'w-full'); panel.classList.remove('h-full', 'max-w-none'); refreshThemeFooter(); };
+        $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); const panel = $('themeModalPanel'); panel.classList.remove('max-w-sm'); panel.classList.add('w-full', 'h-full', 'max-w-none'); renderThemeEditors(); };
+        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); const panel = $('themeModalPanel'); panel.classList.add('max-w-sm', 'w-full'); panel.classList.remove('h-full', 'max-w-none'); refreshThemeFooter(); };
         const refreshThemeFooter = () => {
             const editBtn = $('openThemeEditorBtn');
             const footer = $('themeSelectFooter');
