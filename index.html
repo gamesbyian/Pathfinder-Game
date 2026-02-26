@@ -1650,6 +1650,28 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             return code;
         },
+        _encodeCounts(state) {
+            if (!state?.counts || state.counts.size === 0) return '';
+            const entries = [];
+            state.counts.forEach((count, key) => {
+                if (count > 0) entries.push([key, count]);
+            });
+            entries.sort((a, b) => a[0] - b[0]);
+            return entries.map(([key, count]) => `${key}:${count}`).join(',');
+        },
+        _encodeUsage(state) {
+            if (!state?.usage || state.usage.size === 0) return '';
+            const entries = [];
+            state.usage.forEach((usage, key) => {
+                if (!usage) return;
+                const h = usage.h ? 1 : 0;
+                const v = usage.v ? 1 : 0;
+                const encoded = h + (v << 1);
+                if (encoded > 0) entries.push([key, encoded]);
+            });
+            entries.sort((a, b) => a[0] - b[0]);
+            return entries.map(([key, usage]) => `${key}:${usage}`).join(',');
+        },
         _portalForced(state, l) {
             const k = state.path[state.path.length - 1];
             return l.portalMap.has(k) && !state.isJump.has(state.path.length - 1);
@@ -1658,6 +1680,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const posKey = state.path[state.path.length - 1];
             const portalForced = this._portalForced(state, l) ? 1 : 0;
             const crossCounts = this._encodeMustCrossCounts(state).toString();
+            const countsSig = this._encodeCounts(state);
+            const usageSig = this._encodeUsage(state);
             return [
                 posKey,
                 realLen,
@@ -1668,7 +1692,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 portalForced,
                 state.flipParity,
                 state.flipperCrossMask ? state.flipperCrossMask.toString() : '0',
-                state.flipperParityAtCrossMask ? state.flipperParityAtCrossMask.toString() : '0'
+                state.flipperParityAtCrossMask ? state.flipperParityAtCrossMask.toString() : '0',
+                countsSig,
+                usageSig
             ].join('|');
         },
         _crossNeeds(state) {
@@ -2212,6 +2238,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         debugStats.elapsedMs = Math.round(performance.now() - startPerf);
     }
 
+    function appendReachabilitySanityNote(level, debugStats, solveStatus) {
+        if (!debugStats || !level || (solveStatus !== 'no-solution' && solveStatus !== 'invalid')) return;
+        const goalDistMap = SolverCore._buildDistMap(level);
+        const gateReachable = Array.isArray(level.gateKeys) && level.gateKeys.some(gk => {
+            const d = goalDistMap.get(gk);
+            return d !== undefined && d !== Infinity;
+        });
+        if (gateReachable) {
+            debugStats.notes.push("SANITY: goal reachable from at least one gate; solver returned NO-SOLUTION — check pruning/memoization");
+        } else {
+            debugStats.notes.push("SANITY: goal unreachable from all gates (including portals)");
+        }
+    }
+
     function formatSolverDebugBlock(levelNumber, debug) {
         const prune = debug?.prune || {};
         const lines = [
@@ -2224,6 +2264,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
         if (debug?.depth0 && (debug.nodesExpanded === 0 || debug.maxDepth === 0 || debug.status === 'no-solution')) {
             lines.push(`depth0Prune: ${debug.depth0.reason} ${debug.depth0.details}`);
+        }
+        if (Array.isArray(debug?.notes) && debug.notes.length > 0) {
+            lines.push(...debug.notes);
         }
         return lines.join('\n');
     }
@@ -2243,6 +2286,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!validity.ok) {
                 if (debugStats) {
                     debugStats.invalidReasons = validity.reasons || [];
+                    appendReachabilitySanityNote(level, debugStats, "invalid");
                     finalizeSolverDebugStats(debugStats, "invalid", perfStart);
                     return { ok: false, solution: null, debug: debugStats };
                 }
@@ -2391,6 +2435,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     debugStats.prune.other++;
                     const suffix = gatePruneReasons.length ? ` (${gatePruneReasons.join('; ')})` : '';
                     if (!debugStats.depth0) debugStats.depth0 = { reason: "noViableGate", details: `all gates pruned by safe bounds${suffix}` };
+                    appendReachabilitySanityNote(level, debugStats, "no-solution");
                     finalizeSolverDebugStats(debugStats, "no-solution", perfStart);
                     return { ok: false, solution: null, debug: debugStats };
                 }
@@ -2434,7 +2479,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             if (debugStats) {
                 const solved = foundSolutions.length > 0;
-                finalizeSolverDebugStats(debugStats, solved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution"), perfStart);
+                const status = solved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
+                appendReachabilitySanityNote(level, debugStats, status);
+                finalizeSolverDebugStats(debugStats, status, perfStart);
                 return { ok: solved, solution: solved ? foundSolutions : null, debug: debugStats };
             }
             return foundSolutions;
@@ -2602,14 +2649,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         });
 
         const barrier = (k) => l.blockSet.has(k);
-        const walkable = [];
-        for (let x = 0; x < w; x++) for (let y = 0; y < h; y++) {
-            const k = PACK(x, y);
-            if (!barrier(k)) walkable.push(k);
-        }
-        if (walkable.length > 0) {
-            const q = [walkable[0]];
-            const visited = new Set([walkable[0]]);
+        const reachableFrom = (startKey) => {
+            if (startKey === -1 || startKey === undefined || barrier(startKey)) return new Set();
+            const q = [startKey];
+            const visited = new Set([startKey]);
             let head = 0;
             while (head < q.length) {
                 const k = q[head++];
@@ -2625,7 +2668,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }
                 }
             }
-            if (visited.size !== walkable.length) reasons.push("Grid partitioned by barriers");
+            return visited;
+        };
+        if (l.goalKey !== -1 && l.goalKey !== undefined && !barrier(l.goalKey) && Array.isArray(l.gateKeys) && l.gateKeys.length > 0) {
+            const goalReach = reachableFrom(l.goalKey);
+            const hasConnectedGate = l.gateKeys.some(gk => goalReach.has(gk));
+            if (!hasConnectedGate) reasons.push("Grid partitioned by barriers");
         }
 
         return { ok: reasons.length === 0, reasons: Array.from(new Set(reasons)) };
