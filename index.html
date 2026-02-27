@@ -466,6 +466,12 @@
 
     // ======================================================
     // A) Core / ConstantsAndUtils
+    // Purpose: shared constants and tiny cross-module helpers.
+    // Owns:
+    // - DOM id helper
+    // - mode/status enums
+    // - overlay enum constants
+    // Public API: $, AXIS/H/V/NONE, DEV, MODES/PLAY/EDITOR, LogicStatus constants, OverlayStatus constants.
     // ======================================================
     APP.Core = (() => {
         const $ = id => document.getElementById(id);
@@ -501,6 +507,21 @@
     const { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = APP.Core;
     if (DEV) window.AXIS = AXIS;
 
+    // Purpose: sole DOM mutation boundary for non-canvas UI.
+    // Owns:
+    // - cached UI element refs
+    // - modal/overlay visibility
+    // - shared status/progress copy
+    // - button and class/style toggles
+    // - solver/theme-editor chrome updates
+    // Public API:
+    // - initDom, getEl
+    // - setStatus, setProgress, flashMessage, reportError
+    // - showOverlay, hideOverlay, setOverlayOpacity, applyOverlayState
+    // - openModal, closeModal, toggleModal, isModalOpen, setModalContent
+    // - setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText
+    // - setClassState, clearClass, setInlineStyle, setTextContent, setInputValue
+    // - setCompletionBurstVisible, ThemeEditor
     // APP.UI Public API:
     // - initDom(): cache shared UI DOM refs once at boot.
     // - getEl(key): read cached element by key.
@@ -598,6 +619,30 @@
             if (className !== null) el.className = className;
         };
 
+        const setClassState = (idOrEl, cls, on) => {
+            const el = typeof idOrEl === 'string' ? (getEl(idOrEl) || document.getElementById(idOrEl)) : idOrEl;
+            if (!el) return;
+            toggleClass(el, cls, !!on);
+        };
+        const clearClass = (selector, cls) => {
+            document.querySelectorAll(selector).forEach(el => removeClass(el, cls));
+        };
+        const queryAll = (selector) => Array.from(document.querySelectorAll(selector));
+        const addClasses = (el, classes = []) => { if (!el) return; classes.forEach(cls => addClass(el, cls)); };
+        const removeClasses = (el, classes = []) => { if (!el) return; classes.forEach(cls => removeClass(el, cls)); };
+        const setInlineStyle = (idOrEl, key, value) => {
+            const el = typeof idOrEl === 'string' ? (getEl(idOrEl) || document.getElementById(idOrEl)) : idOrEl;
+            setStyle(el, key, value);
+        };
+        const setTextContent = (idOrEl, value = '') => {
+            const el = typeof idOrEl === 'string' ? (getEl(idOrEl) || document.getElementById(idOrEl)) : idOrEl;
+            setText(el, value);
+        };
+        const setInputValue = (idOrEl, value = '') => {
+            const el = typeof idOrEl === 'string' ? (getEl(idOrEl) || document.getElementById(idOrEl)) : idOrEl;
+            if (el) el.value = value;
+        };
+
         // Overlay boundary: state decisions live outside APP.UI; APP.UI owns all related DOM rendering/mutations.
         const setSearchIndicatorVisible = (visible) => {
             if (visible) showOverlay('searchIndicator');
@@ -657,6 +702,13 @@
             setStatus(`Startup error (${kind})`, 'error', 'text-red-200');
         };
 
+        // Purpose: theme customization UI state + drag interactions.
+        // Owns:
+        // - theme editor DOM refs
+        // - swatch selection/drag ghost
+        // - editor list rendering
+        // - edit/select view switching
+        // Public API: init, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView.
         // APP.UI.ThemeEditor Public API:
         // - init(): cache theme editor refs used for rendering and view toggles.
         // - renderAll(): render every editable theme block.
@@ -919,11 +971,18 @@
             return { init: ensureInit, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView };
         })();
 
-        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setCompletionBurstVisible, flashMessage, reportError, ThemeEditor };
+        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, queryAll, addClasses, removeClasses, setInlineStyle, setTextContent, setInputValue, setCompletionBurstVisible, flashMessage, reportError, ThemeEditor };
     })();
 
     // ======================================================
     // I) APP.Solver
+    // Purpose: async hint/solve orchestration and run lifecycle state.
+    // Owns:
+    // - active run timer/labels
+    // - solver status flags
+    // - solution application + output text
+    // - mega solver coordination
+    // Public API: isRunning, stop, runGameSolver, runMegaSolver, findTrapSpots.
     // ======================================================
     APP.Solver = (() => {
         let timerTick = null;
@@ -963,7 +1022,7 @@
 
         const applySolutionsToEngine = (paths, purpose = 'solve') => {
             if (!Array.isArray(paths) || paths.length === 0) return;
-            if (ENGINE.mode === EDITOR) ENGINE.editor.workingLevel.hints = paths.slice(0, 4);
+            if (ENGINE.mode === EDITOR) APP.Editor.setWorkingHints(paths.slice(0, 4));
             ENGINE.hinter.pathList = paths;
             const seenHints = new Set((ENGINE.foundHintsSinceLoad || []).map(p => JSON.stringify(p)));
             if (!ENGINE.foundHintsSinceLoad) ENGINE.foundHintsSinceLoad = [];
@@ -1136,12 +1195,13 @@
         };
     })();
 
-    // APP.Loader lifecycle guarantees:
-    // - init() always resolves to a terminal mode ('ready' or 'fallback') within timeout/error paths.
-    // - finish() is idempotent and used exactly once for successful boot completion.
-    // - fail() is terminal for boot progression and routes startup exceptions to overlay error UX.
-    // APP.Loader Public API: init(), finish(), fail(kind, payload), getStatus().
-    // Owns startup overlay/progress/error UX, external script loading, and level/theme ingestion + fallback decisions.
+    // Purpose: startup loading flow and fallback/error orchestration.
+    // Owns:
+    // - loader progress state
+    // - external themes/levels script loading
+    // - fallback activation and timeout handling
+    // - startup error finalization
+    // Public API: init, finish, fail, getStatus.
     APP.Loader = (() => {
         const state = {
             progress: 0,
@@ -1284,6 +1344,13 @@
 
     // ======================================================
     // B) State / Engine
+    // Purpose: single mutable app/game state container.
+    // Owns:
+    // - play/editor runtime state
+    // - solver/theme transient flags
+    // - ui/gamepad state snapshots
+    // - persistence-facing progress data
+    // Public API: ENGINE.
     // ======================================================
     APP.State = (() => {
         const ENGINE = {
@@ -1330,6 +1397,7 @@
         foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true }
         ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
+        ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, isHintExpanded: false }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
         ,flags: { useRefereeSolver: false, refereeDebug: false }
     };
@@ -1339,7 +1407,20 @@
 
     // ======================================================
     // B2) Engine + Editor API Facades
+    // Purpose: stable bridge APIs between input/event layer and internals.
+    // Owns:
+    // - Engine facade entry points
+    // - Editor facade entry points
+    // - dependency binding to ENGINE/UI
+    // Public API (Engine): init, bind, loadLevel, resetRunState, handleCellClick, attemptMoveTo, processStep, checkWinCondition, areWinMetricsSatisfied, checkFalseGoalCondition, triggerJumpScare, triggerBombDetonation, getPackedPath, getIntersections.
+    // Public API (Editor): init, bind, enterEditorMode, exitEditorMode, loadWorkingLevel, commitWorkingLevel, pickUpObject, placeEditorObject, validateLevelDetailed, saveEditorState, restoreEditorState, setWorkingHints.
     // ======================================================
+    // Purpose: play/runtime mechanics facade.
+    // Owns:
+    // - level/run lifecycle wrappers
+    // - movement/win/hazard entrypoints
+    // - read-only runtime snapshots for UI/tools
+    // Public API: init, bind, loadLevel, resetRunState, handleCellClick, attemptMoveTo, processStep, checkWinCondition, areWinMetricsSatisfied, checkFalseGoalCondition, triggerJumpScare, triggerBombDetonation, getPackedPath, getIntersections.
     APP.Engine = (() => {
         let refs = { ENGINE: null, UI: null };
         const bind = ({ ENGINE: engineRef, UI: uiRef }) => { refs = { ENGINE: engineRef, UI: uiRef }; };
@@ -1379,6 +1460,12 @@
         };
     })();
 
+    // Purpose: editor-mode mechanics facade.
+    // Owns:
+    // - editor mode transitions
+    // - editor level mutate/validate helpers
+    // - editor undo/restore wrappers
+    // Public API: init, bind, enterEditorMode, exitEditorMode, loadWorkingLevel, commitWorkingLevel, setWorkingHints, pickUpObject, placeEditorObject, validateLevelDetailed, saveEditorState, restoreEditorState.
     APP.Editor = (() => {
         let refs = { ENGINE: null, UI: null, Engine: null };
         const bind = ({ ENGINE: engineRef, UI: uiRef, Engine: engineApi }) => { refs = { ENGINE: engineRef, UI: uiRef, Engine: engineApi }; };
@@ -1390,6 +1477,7 @@
             exitEditorMode() { switchMode(PLAY); },
             loadWorkingLevel(fromLevelObjOrBlank) { refs.ENGINE.editor.workingLevel = deepCloneLevel(fromLevelObjOrBlank); refs.ENGINE.editor.isModified = false; },
             commitWorkingLevel() { refs.ENGINE.level = deepCloneLevel(refs.ENGINE.editor.workingLevel); refs.ENGINE.editor.isModified = false; },
+            setWorkingHints(hints = []) { if (refs.ENGINE?.editor?.workingLevel) refs.ENGINE.editor.workingLevel.hints = hints; },
             pickUpObject(k) { return pickUpObject(k); },
             placeEditorObject(k) { return placeEditorObject(k); },
             validateLevelDetailed(level) { return validateLevelDetailed(level); },
@@ -2867,7 +2955,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     APP.Themes = APP.Themes || {};
     APP.Themes.THEMES = THEMES;
-    let currentTheme = 'classic';
+    const getCurrentTheme = () => ENGINE.runtime.currentTheme;
     // ======================================================
     // I) Themes
     // ======================================================
@@ -3006,7 +3094,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function applyTheme(name) {
         if (name === 'chaos') { THEMES.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
-        currentTheme = name; APP.Themes.currentTheme = currentTheme; const t = THEMES[name]; const root = document.documentElement;
+        ENGINE.runtime.currentTheme = name; APP.Themes.currentTheme = ENGINE.runtime.currentTheme; const t = THEMES[name]; const root = document.documentElement;
         root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
         const alertBg = (t.alert?.bg || '#1e40af');
         const hex = alertBg.replace('#','');
@@ -4422,15 +4510,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function attemptMoveTo(target) { if (ENGINE.mode === EDITOR && !ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(ENGINE.logicState) && ENGINE.mode !== EDITOR) return; if (!ENGINE.path.length) return; const headPos = UNPACK(ENGINE.path[ENGINE.path.length - 1]); if (ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } }
 
-    function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); } }
+    function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !ENGINE.isDevMode); }
     function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal'); }
 
-    let gamepadGridPrimaryAction = () => {};
+    ENGINE.ui.gamepadGridPrimaryAction = () => {};
 
     function getFocusableGroups() {
         const groups = [
             { name: 'GRID', elements: [$('gameCanvas')] },
-            { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
+            { name: 'CONTROLS', elements: APP.UI.queryAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn').filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
             { name: 'LEVEL', elements: [$('prevLevelBtn'), $('nextLevelBtn')].filter(Boolean) }
         ];
         if (ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [$('editReqLen'), $('editReqInt')].filter(Boolean) });
@@ -4438,9 +4526,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function applyFocusVisual(el) {
-        document.querySelectorAll('.gamepad-focus').forEach(node => node.classList.remove('gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2'));
+        APP.UI.queryAll('.gamepad-focus').forEach(node => APP.UI.removeClasses(node, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']));
         if (!ENGINE.ui.gamepadFocusEnabled || !el) return;
-        el.classList.add('gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2');
+        APP.UI.addClasses(el, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']);
         if (typeof el.focus === 'function') el.focus({ preventScroll: true });
     }
 
@@ -4477,7 +4565,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const el = group?.elements?.[ENGINE.ui.focusIndex];
         if (!el) return;
         if (el.id === 'gameCanvas') {
-            gamepadGridPrimaryAction();
+            ENGINE.ui.gamepadGridPrimaryAction();
             return;
         }
         el.click();
@@ -4603,7 +4691,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // E) Render / Canvas
     // ======================================================
     function render() {
-        const vp = ENGINE.viewport, l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!vp.cellW || !l) return; const th = THEMES[currentTheme]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = ENGINE.viewport.swapped ? H : W, dispH = ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke();
+        const vp = ENGINE.viewport, l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!vp.cellW || !l) return; const th = THEMES[getCurrentTheme()]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = ENGINE.viewport.swapped ? H : W, dispH = ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke();
 
         if (ENGINE.mode === EDITOR && ENGINE.editor.validTrapSpots && ENGINE.editor.validTrapSpots.size > 0) { ENGINE.editor.validTrapSpots.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2; ctx.save(); ctx.fillStyle = th.colors.goal + '40'; ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = 3; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]); ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.restore(); }); }
 
@@ -4748,32 +4836,32 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function updateViewport() { const rect = cvs.getBoundingClientRect(); if (rect.width === 0) return; const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!l) return; const swaps = [1, 3, 6, 7]; ENGINE.viewport.swapped = swaps.includes(ENGINE.variant); const gridW = ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = ENGINE.viewport.swapped ? l.grid.w : l.grid.h; ENGINE.viewport.cellW = cvs.width / gridW; ENGINE.viewport.cellH = cvs.height / gridH; }
 
-    let messageTimer = null;
+    
     function showMessage(t, c) {
         APP.UI.setStatus(t, 'info', c || '');
         const overlay = $('alertOverlay');
         if (!overlay) return;
         if (t === "") { overlay.style.opacity = '0'; return; }
         overlay.style.opacity = '1';
-        if (messageTimer) clearTimeout(messageTimer);
-        messageTimer = setTimeout(() => { overlay.style.opacity = '0'; }, 2000);
+        if (ENGINE.runtime.messageTimer) clearTimeout(ENGINE.runtime.messageTimer);
+        ENGINE.runtime.messageTimer = setTimeout(() => { APP.UI.setInlineStyle(overlay, 'opacity', '0'); }, 2000);
     }
 
     // ======================================================
     // F/G/H) Input + UI Wiring + Solver Boot
     // ======================================================
     window.onload = () => {
-        let pendingAction = null; const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
-        $('unsavedStayBtn').onclick = () => { closeAllModals(); pendingAction = null; APP.UI.closeModal('unsavedModal'); };
-        $('unsavedLeaveBtn').onclick = () => { closeAllModals(); APP.UI.closeModal('unsavedModal'); if (pendingAction) pendingAction(); };
+        const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
+        $('unsavedStayBtn').onclick = () => { closeAllModals(); ENGINE.runtime.pendingAction = null; APP.UI.closeModal('unsavedModal'); };
+        $('unsavedLeaveBtn').onclick = () => { closeAllModals(); APP.UI.closeModal('unsavedModal'); if (ENGINE.runtime.pendingAction) ENGINE.runtime.pendingAction(); };
 
         const handleGridPressAtPoint = (clientX, clientY) => handleDown({ clientX, clientY });
-        gamepadGridPrimaryAction = () => {
+        ENGINE.ui.gamepadGridPrimaryAction = () => {
             const rect = cvs.getBoundingClientRect();
             handleGridPressAtPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
         };
 
-        let activePointerId = null; const handleDown = (e) => {
+        const handleDown = (e) => {
             if (ENGINE.activeSolverController || [RESOLVED, HAZARD_TRIGGERED].includes(ENGINE.logicState) || [HINT_ANIMATING, FALSE_GOAL_ANIMATING, SOLVER_RUNNING].includes(ENGINE.overlayState)) return;
             const p = getGridCoord(e); const k = PACK(p.x, p.y); const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
             ENGINE.resetStreak = 0;
@@ -4818,12 +4906,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (ENGINE.logicState === EDIT_DRAG && ENGINE.mode === EDITOR) { const crect = cvs.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(PACK(getGridCoord(e).x, getGridCoord(e).y)); } else { if (ENGINE.editor.draggedFromGrid) { ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); showMessage("Deleted", "text-white font-black"); } } ENGINE.editor.draggedObject = null; setLogicState(IDLE); } if (ENGINE.logicState === DRAGGING) setLogicState(IDLE);
         };
 
-        cvs.addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (activePointerId !== null) return; e.preventDefault(); activePointerId = e.pointerId; cvs.setPointerCapture(activePointerId); handleDown(e); });
+        cvs.addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); ENGINE.runtime.activePointerId = e.pointerId; cvs.setPointerCapture(ENGINE.runtime.activePointerId); handleDown(e); });
         window.addEventListener('pointermove', e => {
             if (ENGINE.logicState === THEME_DRAG) { APP.UI.ThemeEditor.setDragGhost({ visible: true, color: ENGINE.themeDragColor, x: e.clientX, y: e.clientY }); e.preventDefault(); return; }
-            if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = $('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { ghostEl.style.display = 'none'; ghostEl.innerHTML = ''; } if (e.pointerId !== activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) APP.Engine.attemptMoveTo(getGridCoord(e));
+            if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = $('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { ghostEl.style.display = 'none'; ghostEl.innerHTML = ''; } if (e.pointerId !== ENGINE.runtime.activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) APP.Engine.attemptMoveTo(getGridCoord(e));
         });
-        window.addEventListener('pointerup', e => { handleUp(e); if (activePointerId !== null && cvs.hasPointerCapture(activePointerId)) cvs.releasePointerCapture(activePointerId); activePointerId = null; });
+        window.addEventListener('pointerup', e => { handleUp(e); if (ENGINE.runtime.activePointerId !== null && cvs.hasPointerCapture(ENGINE.runtime.activePointerId)) cvs.releasePointerCapture(ENGINE.runtime.activePointerId); ENGINE.runtime.activePointerId = null; });
 
         [cvs, $('hintBtn'), $('editCopyMetrics')].forEach(el => { if (!el) return; if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); });
 
@@ -4992,32 +5080,32 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('devCopyBtn').onclick = () => { closeAllModals(); if (outEl.value) { outEl.select(); document.execCommand('copy'); showMessage("Copied", "text-white font-black"); } };
         $('editCopyBtn').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; outEl.select(); document.execCommand('copy'); showMessage("Path Copied", "text-white font-black"); } };
 
-        const hintBtn = $('hintBtn'); const hintTopHalf = $('hintTopHalf'); let isHintExpanded = false;
+        const hintBtn = $('hintBtn'); const hintTopHalf = $('hintTopHalf');
         const toggleHint = () => {
-            if (isHintExpanded) {
-                hintTopHalf.classList.add('hidden');
-                hintTopHalf.classList.remove('flex');
-                hintBtn.style.height = '2.5rem';
-                hintBtn.style.marginTop = '0';
+            if (ENGINE.runtime.isHintExpanded) {
+                APP.UI.setClassState(hintTopHalf, 'hidden', true);
+                APP.UI.setClassState(hintTopHalf, 'flex', false);
+                APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem');
+                APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
             } else {
-                hintTopHalf.classList.remove('hidden');
-                hintTopHalf.classList.add('flex');
-                hintBtn.style.height = '5.275rem';
-                hintBtn.style.marginTop = '-2.775rem';
+                APP.UI.setClassState(hintTopHalf, 'hidden', false);
+                APP.UI.setClassState(hintTopHalf, 'flex', true);
+                APP.UI.setInlineStyle(hintBtn, 'height', '5.275rem');
+                APP.UI.setInlineStyle(hintBtn, 'marginTop', '-2.775rem');
             }
-            isHintExpanded = !isHintExpanded;
+            ENGINE.runtime.isHintExpanded = !ENGINE.runtime.isHintExpanded;
         };
-        const updateHintLabel = () => { const hasSaved = ENGINE.level && ENGINE.level.hints && ENGINE.level.hints.length > 0; const mainLabel = $('hintMainLabel'); if (isHintExpanded) { mainLabel.innerText = "Saved Hint"; mainLabel.style.color = hasSaved ? "white" : "#cbd5e1"; } else { mainLabel.innerText = "Hint"; mainLabel.style.color = "white"; } };
+        const updateHintLabel = () => { const hasSaved = ENGINE.level && ENGINE.level.hints && ENGINE.level.hints.length > 0; const mainLabel = $('hintMainLabel'); if (ENGINE.runtime.isHintExpanded) { APP.UI.setTextContent(mainLabel, 'Saved Hint'); APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1'); } else { APP.UI.setTextContent(mainLabel, 'Hint'); APP.UI.setInlineStyle(mainLabel, 'color', 'white'); } };
         hintBtn.onclick = (e) => {
             closeAllModals();
             if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return;
-            if (!isHintExpanded) { toggleHint(); updateHintLabel(); } else {
+            if (!ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); } else {
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
                 if (isTopHalf) runGameSolver('hint'); else { if (ENGINE.level?.hints?.length > 0) { ENGINE.hinter.pathList = ENGINE.level.hints; ENGINE.hinter.currentPathIdx = (ENGINE.hinter.source === 'saved' ? (ENGINE.hinter.currentPathIdx + 1) % ENGINE.hinter.pathList.length : 0); ENGINE.hinter.source = 'saved'; startHintAnimation(); } else showMessage("No saved hint.", "text-white font-black"); }
                 toggleHint(); updateHintLabel();
             }
         };
-        document.addEventListener('click', (e) => { if (isHintExpanded && !hintBtn.contains(e.target)) { toggleHint(); updateHintLabel(); } });
+        document.addEventListener('click', (e) => { if (ENGINE.runtime.isHintExpanded && !hintBtn.contains(e.target)) { toggleHint(); updateHintLabel(); } });
 
         $('solverCloseBtn').onclick = () => {
             if (!APP.Solver.isRunning()) {
