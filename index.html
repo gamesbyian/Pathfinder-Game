@@ -534,7 +534,8 @@
                 'message','searchIndicator','searchLabel','solverCloseBtn','solverTimer',
                 'megaStatus','megaSummary','megaOutput','megaModal','megaSolverBtn',
                 'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
-                'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst'
+                'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
+                'themeEditList','themeSelectView','themeEditView','dragGhost'
             ].forEach(id => { dom[id] = document.getElementById(id); });
         };
 
@@ -656,7 +657,269 @@
             setStatus(`Startup error (${kind})`, 'error', 'text-red-200');
         };
 
-        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setCompletionBurstVisible, flashMessage, reportError };
+        // APP.UI.ThemeEditor Public API:
+        // - init(): cache theme editor refs used for rendering and view toggles.
+        // - renderAll(): render every editable theme block.
+        // - renderThemeKey(key): build one theme editor block.
+        // - setSwatchSelected(elOrNull): maintain single selected swatch visual state.
+        // - setDragGhost({ visible, color, x, y }): render theme drag ghost appearance/position.
+        const ThemeEditor = (() => {
+            const selectedClasses = ['ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110'];
+            const teDom = { inited: false, list: null, selectView: null, editView: null, ghost: null };
+            const ensureInit = () => {
+                if (teDom.inited) return;
+                teDom.inited = true;
+                teDom.list = getEl('themeEditList') || document.getElementById('themeEditList');
+                teDom.selectView = getEl('themeSelectView') || document.getElementById('themeSelectView');
+                teDom.editView = getEl('themeEditView') || document.getElementById('themeEditView');
+                teDom.ghost = getEl('dragGhost') || document.getElementById('dragGhost');
+            };
+            const copyThemeCode = (text, textarea) => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).catch(() => {
+                        textarea.select();
+                        document.execCommand('copy');
+                    });
+                    return;
+                }
+                textarea.select();
+                document.execCommand('copy');
+            };
+            const setSwatchSelected = (elOrNull) => {
+                document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove(...selectedClasses));
+                if (elOrNull) elOrNull.classList.add(...selectedClasses);
+            };
+            const setDragGhost = ({ visible = false, color = null, x = null, y = null } = {}) => {
+                ensureInit();
+                const ghost = teDom.ghost;
+                if (!ghost) return;
+                if (!visible) {
+                    ghost.style.display = 'none';
+                    ghost.innerHTML = '';
+                    return;
+                }
+                ghost.style.width = '32px';
+                ghost.style.height = '32px';
+                if (color) ghost.style.backgroundColor = color;
+                ghost.style.borderColor = '#000';
+                ghost.className = 'flex items-center justify-center rounded shadow-lg border-2 border-black border-dashed fixed pointer-events-none z-[1000]';
+                ghost.innerHTML = '';
+                ghost.style.display = 'flex';
+                if (x !== null) ghost.style.left = `${x}px`;
+                if (y !== null) ghost.style.top = `${y}px`;
+            };
+
+            const renderThemeKey = (themeKey) => {
+                const container = document.createElement('div');
+                container.className = "flex flex-col gap-2";
+                const header = document.createElement('h4');
+                header.className = "font-black text-[var(--theme-modal-accent)] uppercase tracking-widest text-sm";
+                header.innerText = themeKey.replace('_', ' ');
+                container.appendChild(header);
+                const t = THEMES[themeKey];
+                const toColorSet = (arr) => new Set(arr.filter(c => c && typeof c === 'string' && c !== 'rainbow'));
+                const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border]);
+                const btnColors = toColorSet([...Object.values(t.btns || {}), t.leave?.bg, t.leave?.hover]);
+                const gridColors = toColorSet([t.colors?.gate, t.colors?.goal, t.colors?.block, t.colors?.pin, t.colors?.pinUnflipped, t.colors?.filter, t.colors?.portal, t.colors?.cross, t.path, t.grid]);
+                const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.palette?.toolBg, t.win?.bg, t.alert?.bg, t.ctrlArea?.bg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.burst, t.check]);
+                const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.leave?.text]);
+                const buildSwatch = (c, category) => {
+                    const swatch = document.createElement('div');
+                    swatch.className = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
+                    swatch.style.backgroundColor = c;
+                    swatch.style.pointerEvents = 'auto';
+                    swatch.classList.add('border-slate-300');
+                    swatch.draggable = false;
+                    swatch.dataset.themeColor = c;
+                    swatch.dataset.themeKey = themeKey;
+                    swatch.dataset.category = category;
+                    swatch.style.touchAction = 'none';
+                    swatch.onpointerdown = e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (ENGINE.themeTapSelectedColor && ENGINE.themeTapSelectedTheme === themeKey) {
+                            const sourceColor = ENGINE.themeTapSelectedColor;
+                            const targetColor = c;
+                            const sourceCategory = ENGINE.themeTapCategory;
+                            const targetCategory = swatch.dataset.category;
+                            if (sourceColor !== targetColor && sourceCategory === targetCategory) replaceThemeColor(themeKey, targetColor, sourceColor, targetCategory);
+                            ENGINE.themeTapSelectedColor = null;
+                            ENGINE.themeTapSelectedTheme = null;
+                            ENGINE.themeTapCategory = null;
+                            setSwatchSelected(null);
+                            setLogicState(IDLE);
+                            setDragGhost({ visible: false });
+                            return;
+                        }
+                        ENGINE.themeTapSelectedColor = c;
+                        ENGINE.themeTapSelectedTheme = themeKey;
+                        ENGINE.themeTapCategory = category;
+                        setSwatchSelected(swatch);
+                        ENGINE.themeDragColor = c;
+                        ENGINE.themeDragTheme = themeKey;
+                        ENGINE.themeDragCategory = category;
+                        setLogicState(THEME_DRAG);
+                        setDragGhost({ visible: true, color: c, x: e.clientX, y: e.clientY });
+                    };
+                    return swatch;
+                };
+                const buildSection = (title, colorArr) => {
+                    const section = document.createElement('div');
+                    section.className = "flex flex-col items-center p-1 rounded bg-black/5 min-h-[6.5rem]";
+                    const ctitle = document.createElement('div');
+                    ctitle.className = "text-[0.6rem] font-black uppercase text-[var(--theme-modal-muted)] mb-1.5 tracking-widest text-center";
+                    ctitle.innerText = title;
+                    section.appendChild(ctitle);
+                    const grid = document.createElement('div');
+                    grid.className = "grid grid-cols-4 gap-0.5 w-full justify-items-center";
+                    colorArr.forEach(c => grid.appendChild(buildSwatch(c, title)));
+                    section.appendChild(grid);
+                    return section;
+                };
+                const sectionsContainer = document.createElement('div');
+                sectionsContainer.className = "grid grid-cols-2 gap-2 mb-1";
+                sectionsContainer.appendChild(buildSection("Buttons", Array.from(btnColors)));
+                sectionsContainer.appendChild(buildSection("Grid Items", Array.from(gridColors)));
+                sectionsContainer.appendChild(buildSection("Misc", Array.from(miscColors)));
+                sectionsContainer.appendChild(buildSection("Lines", Array.from(lineColors)));
+                const textRow = document.createElement('div');
+                textRow.className = "mb-1";
+                textRow.appendChild(buildSection("Text", Array.from(textColors)));
+                container.appendChild(sectionsContainer);
+                container.appendChild(textRow);
+                const aiColorsContainer = document.createElement('div');
+                aiColorsContainer.className = "flex flex-col items-center w-full mt-1 bg-black/5 rounded p-1.5";
+                const aiTitle = document.createElement('div');
+                aiTitle.className = "text-[0.55rem] font-black uppercase text-[var(--theme-modal-accent)] mb-1 tracking-widest";
+                aiTitle.innerText = "Complementary Palette (AI)";
+                aiColorsContainer.appendChild(aiTitle);
+                const aiGrid = document.createElement('div');
+                aiGrid.className = "flex justify-center gap-1.5 w-full min-h-[2.5rem] flex-wrap items-center";
+                aiColorsContainer.appendChild(aiGrid);
+                const handleAiGeneration = async () => {
+                    aiGrid.innerHTML = '<span class="text-[0.55rem] font-bold text-[var(--theme-modal-muted)] animate-pulse uppercase tracking-widest">Calling Specialist...</span>';
+                    const { colors, error } = await fetchGeminiThemeColors(themeKey, t);
+                    if (colors && colors.length >= 6) {
+                        if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
+                        window.THEME_AI_COLORS[themeKey] = colors.slice(0, 6);
+                        aiGrid.innerHTML = '';
+                        window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, "Misc")));
+                    } else {
+                        aiGrid.innerHTML = '';
+                        const failWrap = document.createElement('div');
+                        failWrap.className = "flex flex-col items-center gap-1";
+                        const failBtn = document.createElement('button');
+                        failBtn.className = "text-[0.55rem] text-red-500 font-bold uppercase tracking-widest hover:scale-105 transition-transform";
+                        failBtn.innerText = "Generation Failed - Retry?";
+                        failBtn.onclick = handleAiGeneration;
+                        const detail = document.createElement('div');
+                        detail.className = "text-[0.5rem] text-[var(--theme-modal-muted)] max-w-[16rem] text-center leading-tight";
+                        detail.innerText = error || "Unknown Gemini error.";
+                        failWrap.appendChild(failBtn);
+                        failWrap.appendChild(detail);
+                        aiGrid.appendChild(failWrap);
+                    }
+                };
+                if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
+                if (window.THEME_AI_COLORS[themeKey]) window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, "Misc")));
+                else {
+                    const genBtn = document.createElement('button');
+                    genBtn.className = "bg-[var(--theme-modal-panel)] border border-[var(--theme-modal-border)] text-[var(--theme-modal-text)] px-4 py-2 rounded-lg font-black text-[0.6rem] uppercase tracking-widest shadow-sm hover:brightness-95 transition active:scale-95";
+                    genBtn.innerText = "Generate Suggestions";
+                    genBtn.onclick = handleAiGeneration;
+                    aiGrid.appendChild(genBtn);
+                }
+                container.appendChild(aiColorsContainer);
+                const controlsRow = document.createElement('div');
+                controlsRow.className = "flex gap-2 items-center mt-2";
+                const textarea = document.createElement('textarea');
+                textarea.className = "flex-grow h-8 bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] rounded px-2 py-1.5 text-[0.6rem] font-mono no-scrollbar whitespace-nowrap overflow-x-auto resize-none leading-tight";
+                textarea.readOnly = true;
+                textarea.placeholder = "Export code will appear here...";
+                const exportBtn = document.createElement('button');
+                exportBtn.className = "bg-[var(--theme-modal-panel)] border border-[var(--theme-modal-border)] text-[var(--theme-modal-text)] px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:brightness-95 transition shrink-0";
+                exportBtn.innerText = "Export";
+                exportBtn.onclick = () => {
+                    const code = `${themeKey}: ${JSON.stringify(THEMES[themeKey])},`;
+                    textarea.value = code;
+                    copyThemeCode(code, textarea);
+                    const origText = exportBtn.innerText;
+                    exportBtn.innerText = "Copied!";
+                    setTimeout(() => exportBtn.innerText = origText, 1500);
+                };
+                const undoBtn = document.createElement('button');
+                undoBtn.className = "bg-slate-500 text-white px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:bg-slate-600 transition shadow-sm shrink-0";
+                undoBtn.innerText = "Undo";
+                const canUndo = window.THEME_UNDO_STACKS && window.THEME_UNDO_STACKS[themeKey] && window.THEME_UNDO_STACKS[themeKey].length > 0;
+                if (!canUndo) { undoBtn.disabled = true; undoBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
+                undoBtn.onclick = () => {
+                    if (canUndo) {
+                        const prev = window.THEME_UNDO_STACKS[themeKey].pop();
+                        THEMES[themeKey] = JSON.parse(JSON.stringify(prev));
+                        renderAll();
+                        populateThemes();
+                    }
+                };
+                const resetBtn = document.createElement('button');
+                resetBtn.className = "bg-red-600 text-white px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:bg-red-700 transition shadow-sm shrink-0";
+                resetBtn.innerText = "Reset";
+                resetBtn.onclick = () => {
+                    if (window.ORIGINAL_THEMES && window.ORIGINAL_THEMES[themeKey]) {
+                        THEMES[themeKey] = JSON.parse(JSON.stringify(window.ORIGINAL_THEMES[themeKey]));
+                        if (!window.THEME_UNDO_STACKS) window.THEME_UNDO_STACKS = {};
+                        window.THEME_UNDO_STACKS[themeKey] = [];
+                        renderAll();
+                        populateThemes();
+                    }
+                };
+                controlsRow.appendChild(textarea);
+                controlsRow.appendChild(exportBtn);
+                controlsRow.appendChild(undoBtn);
+                controlsRow.appendChild(resetBtn);
+                container.appendChild(controlsRow);
+                return container;
+            };
+
+            const renderAll = () => {
+                ensureInit();
+                if (!teDom.list || !window.ORIGINAL_THEMES) return;
+                teDom.list.innerHTML = '';
+                const keys = Object.keys(window.ORIGINAL_THEMES).filter(k => k !== 'classic');
+                keys.forEach((key, idx) => {
+                    teDom.list.appendChild(renderThemeKey(key));
+                    if (idx < keys.length - 1) {
+                        const hr = document.createElement('hr');
+                        hr.className = "border-[var(--theme-modal-border)] opacity-30 my-4";
+                        teDom.list.appendChild(hr);
+                    }
+                });
+            };
+
+            const openEditorView = () => {
+                ensureInit();
+                if (teDom.selectView) teDom.selectView.classList.add('hidden');
+                if (teDom.editView) {
+                    teDom.editView.classList.remove('hidden');
+                    teDom.editView.classList.add('flex');
+                }
+                renderAll();
+            };
+
+            const closeEditorView = () => {
+                ensureInit();
+                if (teDom.editView) {
+                    teDom.editView.classList.add('hidden');
+                    teDom.editView.classList.remove('flex');
+                }
+                if (teDom.selectView) teDom.selectView.classList.remove('hidden');
+                setSwatchSelected(null);
+                setDragGhost({ visible: false });
+            };
+
+            return { init: ensureInit, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView };
+        })();
+
+        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setCompletionBurstVisible, flashMessage, reportError, ThemeEditor };
     })();
 
     // ======================================================
@@ -2866,322 +3129,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             replaceDeep(t);
         }
 
-        renderThemeEditors();
+        APP.UI.ThemeEditor.renderAll();
         populateThemes();
-    }
-
-    function createThemeEditorBlock(themeKey) {
-        const container = document.createElement('div');
-        container.className = "flex flex-col gap-2";
-
-        const header = document.createElement('h4');
-        header.className = "font-black text-[var(--theme-modal-accent)] uppercase tracking-widest text-sm";
-        header.innerText = themeKey.replace('_', ' ');
-        container.appendChild(header);
-
-        const t = THEMES[themeKey];
-        const toColorSet = (arr) => new Set(arr.filter(c => c && typeof c === 'string' && c !== 'rainbow'));
-        const lineColors = toColorSet([
-            t.modal?.border,
-            t.palette?.border,
-            t.palette?.itemBorder,
-            t.win?.border,
-            t.alert?.stroke,
-            t.ctrlArea?.border,
-            t.mega?.outputBorder,
-            t.mega?.primaryBorder,
-            t.mega?.secondaryBorder,
-            t.mega?.geminiBorder,
-            t.mega?.copyBorder,
-            t.ghostBorder,
-            t.leave?.border
-        ]);
-        const btnColors = toColorSet([
-            ...Object.values(t.btns || {}),
-            t.leave?.bg,
-            t.leave?.hover
-        ]);
-        const gridColors = toColorSet([
-            t.colors?.gate,
-            t.colors?.goal,
-            t.colors?.block,
-            t.colors?.pin,
-            t.colors?.pinUnflipped,
-            t.colors?.filter,
-            t.colors?.portal,
-            t.colors?.cross,
-            t.path,
-            t.grid
-        ]);
-        const miscColors = toColorSet([
-            t.bodyBg,
-            t.canvasBg,
-            t.headerLeft,
-            t.headerRight,
-            t.controls,
-            t.ghostBg,
-            t.modal?.bg,
-            t.modal?.panelBg,
-            t.output?.bg,
-            t.palette?.bg,
-            t.palette?.itemBg,
-            t.palette?.toolBg,
-            t.win?.bg,
-            t.alert?.bg,
-            t.ctrlArea?.bg,
-            t.mega?.outputBg,
-            t.mega?.primaryBg,
-            t.mega?.secondaryBg,
-            t.mega?.geminiBg,
-            t.mega?.copyBg,
-            t.burst,
-            t.check
-        ]);
-        const textColors = toColorSet([
-            t.metricText,
-            t.headerLeftText,
-            t.headerLeftLabel,
-            t.modal?.text,
-            t.modal?.textMuted,
-            t.modal?.accent,
-            t.output?.text,
-            t.win?.text,
-            t.win?.accent,
-            t.text?.modal,
-            t.text?.modalMuted,
-            t.text?.modalAccent,
-            t.text?.output,
-            t.text?.metric,
-            t.text?.headerMain,
-            t.text?.headerSub,
-            t.text?.win,
-            t.text?.winAccent,
-            t.text?.megaDesc,
-            t.text?.megaOutput,
-            t.text?.megaPrimary,
-            t.text?.megaSecondary,
-            t.text?.megaGemini,
-            t.text?.megaCopy,
-            t.leave?.text
-        ]);
-
-        const arrBtns = Array.from(btnColors);
-        const arrGrid = Array.from(gridColors);
-        const arrLines = Array.from(lineColors);
-        const arrMisc = Array.from(miscColors);
-        const arrText = Array.from(textColors);
-
-        const sectionsContainer = document.createElement('div');
-        sectionsContainer.className = "grid grid-cols-2 gap-2 mb-1";
-
-        const buildSwatch = (c, isOverflow, category) => {
-            const swatch = document.createElement('div');
-            swatch.className = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
-            swatch.style.backgroundColor = c;
-            swatch.style.pointerEvents = 'auto';
-            swatch.classList.add('border-slate-300');
-
-            swatch.draggable = false;
-            swatch.dataset.themeColor = c;
-            swatch.dataset.themeKey = themeKey;
-            swatch.dataset.category = category;
-            swatch.style.touchAction = 'none';
-
-            swatch.onpointerdown = e => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                if (ENGINE.themeTapSelectedColor && ENGINE.themeTapSelectedTheme === themeKey) {
-                    const sourceColor = ENGINE.themeTapSelectedColor;
-                    const targetColor = c;
-                    const sourceCategory = ENGINE.themeTapCategory;
-                    const targetCategory = swatch.dataset.category;
-
-                    if (sourceColor !== targetColor && sourceCategory === targetCategory) {
-                        replaceThemeColor(themeKey, targetColor, sourceColor, targetCategory);
-                    }
-
-                    ENGINE.themeTapSelectedColor = null;
-                    ENGINE.themeTapSelectedTheme = null;
-                    ENGINE.themeTapCategory = null;
-                    document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110'));
-
-                    setLogicState(IDLE);
-                    ghostEl.style.display = 'none';
-                    return;
-                }
-
-                ENGINE.themeTapSelectedColor = c;
-                ENGINE.themeTapSelectedTheme = themeKey;
-                ENGINE.themeTapCategory = category;
-
-                document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110'));
-                swatch.classList.add('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110');
-
-                ENGINE.themeDragColor = c;
-                ENGINE.themeDragTheme = themeKey;
-                ENGINE.themeDragCategory = category;
-                setLogicState(THEME_DRAG);
-                ghostEl.style.width = '32px';
-                ghostEl.style.height = '32px';
-                ghostEl.style.backgroundColor = c;
-                ghostEl.style.borderColor = '#000';
-                ghostEl.className = 'flex items-center justify-center rounded shadow-lg border-2 border-black border-dashed fixed pointer-events-none z-[1000]';
-                ghostEl.innerHTML = '';
-                ghostEl.style.display = 'flex';
-                ghostEl.style.left = e.clientX + 'px';
-                ghostEl.style.top = e.clientY + 'px';
-            };
-            return swatch;
-        };
-
-        const buildSection = (title, colorArr) => {
-            const section = document.createElement('div');
-            section.className = "flex flex-col items-center p-1 rounded bg-black/5 min-h-[6.5rem]";
-            const ctitle = document.createElement('div');
-            ctitle.className = "text-[0.6rem] font-black uppercase text-[var(--theme-modal-muted)] mb-1.5 tracking-widest text-center";
-            ctitle.innerText = title;
-            section.appendChild(ctitle);
-
-            const grid = document.createElement('div');
-            grid.className = "grid grid-cols-4 gap-0.5 w-full justify-items-center";
-            colorArr.forEach(c => {
-                grid.appendChild(buildSwatch(c, false, title));
-            });
-            section.appendChild(grid);
-            return section;
-        };
-
-        sectionsContainer.appendChild(buildSection("Buttons", arrBtns));
-        sectionsContainer.appendChild(buildSection("Grid Items", arrGrid));
-        sectionsContainer.appendChild(buildSection("Misc", arrMisc));
-        sectionsContainer.appendChild(buildSection("Lines", arrLines));
-
-        const textRow = document.createElement('div');
-        textRow.className = "mb-1";
-        textRow.appendChild(buildSection("Text", arrText));
-
-        container.appendChild(sectionsContainer);
-        container.appendChild(textRow);
-
-        const aiColorsContainer = document.createElement('div');
-        aiColorsContainer.className = "flex flex-col items-center w-full mt-1 bg-black/5 rounded p-1.5";
-
-        const aiTitle = document.createElement('div');
-        aiTitle.className = "text-[0.55rem] font-black uppercase text-[var(--theme-modal-accent)] mb-1 tracking-widest";
-        aiTitle.innerText = "Complementary Palette (AI)";
-        aiColorsContainer.appendChild(aiTitle);
-
-        const aiGrid = document.createElement('div');
-        aiGrid.className = "flex justify-center gap-1.5 w-full min-h-[2.5rem] flex-wrap items-center";
-        aiColorsContainer.appendChild(aiGrid);
-
-        const handleAiGeneration = async () => {
-            aiGrid.innerHTML = '<span class="text-[0.55rem] font-bold text-[var(--theme-modal-muted)] animate-pulse uppercase tracking-widest">Calling Specialist...</span>';
-            const { colors, error } = await fetchGeminiThemeColors(themeKey, t);
-            if (colors && colors.length >= 6) {
-                if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
-                window.THEME_AI_COLORS[themeKey] = colors.slice(0, 6);
-                aiGrid.innerHTML = '';
-                window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, false, "Misc")));
-            } else {
-                aiGrid.innerHTML = '';
-                const failWrap = document.createElement('div');
-                failWrap.className = "flex flex-col items-center gap-1";
-                const failBtn = document.createElement('button');
-                failBtn.className = "text-[0.55rem] text-red-500 font-bold uppercase tracking-widest hover:scale-105 transition-transform";
-                failBtn.innerText = "Generation Failed - Retry?";
-                failBtn.onclick = handleAiGeneration;
-                const detail = document.createElement('div');
-                detail.className = "text-[0.5rem] text-[var(--theme-modal-muted)] max-w-[16rem] text-center leading-tight";
-                detail.innerText = error || "Unknown Gemini error.";
-                failWrap.appendChild(failBtn);
-                failWrap.appendChild(detail);
-                aiGrid.appendChild(failWrap);
-            }
-        };
-
-        if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
-        if (window.THEME_AI_COLORS[themeKey]) {
-            window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, false, "Misc")));
-        } else {
-            const genBtn = document.createElement('button');
-            genBtn.className = "bg-[var(--theme-modal-panel)] border border-[var(--theme-modal-border)] text-[var(--theme-modal-text)] px-4 py-2 rounded-lg font-black text-[0.6rem] uppercase tracking-widest shadow-sm hover:brightness-95 transition active:scale-95";
-            genBtn.innerText = "Generate Suggestions";
-            genBtn.onclick = handleAiGeneration;
-            aiGrid.appendChild(genBtn);
-        }
-        container.appendChild(aiColorsContainer);
-
-        const controlsRow = document.createElement('div');
-        controlsRow.className = "flex gap-2 items-center mt-2";
-
-        const textarea = document.createElement('textarea');
-        textarea.className = "flex-grow h-8 bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] rounded px-2 py-1.5 text-[0.6rem] font-mono no-scrollbar whitespace-nowrap overflow-x-auto resize-none leading-tight";
-        textarea.readOnly = true;
-        textarea.placeholder = "Export code will appear here...";
-
-        const exportBtn = document.createElement('button');
-        exportBtn.className = "bg-[var(--theme-modal-panel)] border border-[var(--theme-modal-border)] text-[var(--theme-modal-text)] px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:brightness-95 transition shrink-0";
-        exportBtn.innerText = "Export";
-        exportBtn.onclick = () => {
-            const code = `${themeKey}: ${JSON.stringify(THEMES[themeKey])},`;
-            textarea.value = code;
-            textarea.select();
-            document.execCommand('copy');
-            const origText = exportBtn.innerText;
-            exportBtn.innerText = "Copied!";
-            setTimeout(() => exportBtn.innerText = origText, 1500);
-        };
-
-        const undoBtn = document.createElement('button');
-        undoBtn.className = "bg-slate-500 text-white px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:bg-slate-600 transition shadow-sm shrink-0";
-        undoBtn.innerText = "Undo";
-        const canUndo = window.THEME_UNDO_STACKS && window.THEME_UNDO_STACKS[themeKey] && window.THEME_UNDO_STACKS[themeKey].length > 0;
-        if (!canUndo) { undoBtn.disabled = true; undoBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
-        undoBtn.onclick = () => {
-            if (canUndo) {
-                const prev = window.THEME_UNDO_STACKS[themeKey].pop();
-                THEMES[themeKey] = JSON.parse(JSON.stringify(prev));
-                renderThemeEditors();
-                populateThemes();
-            }
-        };
-
-        const resetBtn = document.createElement('button');
-        resetBtn.className = "bg-red-600 text-white px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:bg-red-700 transition shadow-sm shrink-0";
-        resetBtn.innerText = "Reset";
-        resetBtn.onclick = () => {
-            if (window.ORIGINAL_THEMES && window.ORIGINAL_THEMES[themeKey]) {
-                THEMES[themeKey] = JSON.parse(JSON.stringify(window.ORIGINAL_THEMES[themeKey]));
-                if (!window.THEME_UNDO_STACKS) window.THEME_UNDO_STACKS = {};
-                window.THEME_UNDO_STACKS[themeKey] = [];
-                renderThemeEditors();
-                populateThemes();
-            }
-        };
-
-        controlsRow.appendChild(textarea);
-        controlsRow.appendChild(exportBtn);
-        controlsRow.appendChild(undoBtn);
-        controlsRow.appendChild(resetBtn);
-        container.appendChild(controlsRow);
-
-        return container;
-    }
-
-    function renderThemeEditors() {
-        const list = $('themeEditList');
-        list.innerHTML = '';
-        const keys = Object.keys(window.ORIGINAL_THEMES).filter(k => k !== 'classic');
-        keys.forEach((key, idx) => {
-            list.appendChild(createThemeEditorBlock(key));
-            if (idx < keys.length - 1) {
-                const hr = document.createElement('hr');
-                hr.className = "border-[var(--theme-modal-border)] opacity-30 my-4";
-                list.appendChild(hr);
-            }
-        });
     }
 
     function closeAllModals() {
@@ -4863,15 +4812,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (dropTarget && dropTarget.dataset.themeColor && !isSameElement && dropTarget.dataset.category === ENGINE.themeDragCategory) {
                     replaceThemeColor(ENGINE.themeDragTheme, dropTarget.dataset.themeColor, ENGINE.themeDragColor, dropTarget.dataset.category);
                 }
-                setLogicState(IDLE); ENGINE.themeDragColor = null; ENGINE.themeDragTheme = null; ENGINE.themeDragCategory = null; ghostEl.style.display = 'none'; ghostEl.innerHTML = '';
-                if (!ENGINE.themeTapSelectedColor) { document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110')); }
+                setLogicState(IDLE); ENGINE.themeDragColor = null; ENGINE.themeDragTheme = null; ENGINE.themeDragCategory = null; APP.UI.ThemeEditor.setDragGhost({ visible: false });
+                if (!ENGINE.themeTapSelectedColor) APP.UI.ThemeEditor.setSwatchSelected(null);
             }
             if (ENGINE.logicState === EDIT_DRAG && ENGINE.mode === EDITOR) { const crect = cvs.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(PACK(getGridCoord(e).x, getGridCoord(e).y)); } else { if (ENGINE.editor.draggedFromGrid) { ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); showMessage("Deleted", "text-white font-black"); } } ENGINE.editor.draggedObject = null; setLogicState(IDLE); } if (ENGINE.logicState === DRAGGING) setLogicState(IDLE);
         };
 
         cvs.addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (activePointerId !== null) return; e.preventDefault(); activePointerId = e.pointerId; cvs.setPointerCapture(activePointerId); handleDown(e); });
         window.addEventListener('pointermove', e => {
-            if (ENGINE.logicState === THEME_DRAG) { ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; e.preventDefault(); return; }
+            if (ENGINE.logicState === THEME_DRAG) { APP.UI.ThemeEditor.setDragGhost({ visible: true, color: ENGINE.themeDragColor, x: e.clientX, y: e.clientY }); e.preventDefault(); return; }
             if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = $('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { ghostEl.style.display = 'none'; ghostEl.innerHTML = ''; } if (e.pointerId !== activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) APP.Engine.attemptMoveTo(getGridCoord(e));
         });
         window.addEventListener('pointerup', e => { handleUp(e); if (activePointerId !== null && cvs.hasPointerCapture(activePointerId)) cvs.releasePointerCapture(activePointerId); activePointerId = null; });
@@ -5111,8 +5060,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
         $('closeThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
         $('dismissThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
-        $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); renderThemeEditors(); };
-        const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); refreshThemeFooter(); };
+        $('openThemeEditorBtn').onclick = () => { APP.UI.ThemeEditor.openEditorView(); };
+        const closeEditor = () => { APP.UI.ThemeEditor.closeEditorView(); refreshThemeFooter(); };
         const refreshThemeFooter = () => {
             const editBtn = $('openThemeEditorBtn');
             const footer = $('themeSelectFooter');
@@ -5182,6 +5131,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 started = true;
 
                 APP.UI.initDom();
+                APP.UI.ThemeEditor.init();
                 ensureThemeLeaveColors();
                 applyTheme('classic');
 
