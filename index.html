@@ -3443,7 +3443,7 @@ Stages: ${stageInfo}` : ''}`;
     // ======================================================
     // F/G/H) Input + UI Wiring + Solver Boot
     // ======================================================
-    window.onload = () => {
+    document.addEventListener('DOMContentLoaded', () => {
         let pendingAction = null; const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { pendingAction = actionFn; $('unsavedModal').classList.remove('hidden'); } else { actionFn(); } };
         $('unsavedStayBtn').onclick = () => { closeAllModals(); pendingAction = null; $('unsavedModal').classList.add('hidden'); };
         $('unsavedLeaveBtn').onclick = () => { closeAllModals(); $('unsavedModal').classList.add('hidden'); if (pendingAction) pendingAction(); };
@@ -3867,7 +3867,7 @@ Stages: ${stageInfo}` : ''}`;
         startBoot();
         ensureThemeLeaveColors();
         applyTheme('classic');
-    };
+    });
 </script>
 </body>
 </html>
