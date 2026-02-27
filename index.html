@@ -1069,6 +1069,70 @@
     const { ENGINE } = APP.State;
 
     // ======================================================
+    // B2) Engine + Editor API Facades
+    // ======================================================
+    APP.Engine = (() => {
+        let refs = { ENGINE: null, UI: null };
+        const bind = ({ ENGINE: engineRef, UI: uiRef }) => { refs = { ENGINE: engineRef, UI: uiRef }; };
+        const init = bind;
+        return {
+            init,
+            bind,
+            loadLevel(levelObjOrIdx, options = {}) {
+                if (typeof levelObjOrIdx === 'number') return loadLevel(levelObjOrIdx, !!options.keepVariant);
+                if (!refs.ENGINE) return;
+                const mode = options.mode || refs.ENGINE.mode;
+                if (mode === PLAY) refs.ENGINE.level = levelObjOrIdx;
+                else refs.ENGINE.editor.workingLevel = levelObjOrIdx;
+                this.resetRunState({ keepLevel: true });
+            },
+            resetRunState({ keepLevel = true } = {}) {
+                if (!refs.ENGINE) return;
+                PathNavigator.clear(refs.ENGINE);
+                refs.ENGINE.undoStack = [];
+                refs.ENGINE.revealedGeese.clear();
+                refs.ENGINE.ripples = [];
+                refs.ENGINE.gooseEncounteredThisLevel = false;
+                if (!keepLevel) refs.ENGINE.level = null;
+                refs.ENGINE.armedFalseGoals = new Set((refs.ENGINE.level?.falseGoalKeys) || []);
+                refs.ENGINE.detonatedFalseGoals = new Set();
+            },
+            handleCellClick(k, opts) { return this.attemptMoveTo(k, opts); },
+            attemptMoveTo(target, opts) { return attemptMoveTo(target, opts); },
+            processStep(key) { return processStep(key); },
+            checkWinCondition() { return checkWinCondition(); },
+            areWinMetricsSatisfied(state, level) { return areWinMetricsSatisfied(state, level); },
+            checkFalseGoalCondition() { return checkFalseGoalCondition(); },
+            triggerJumpScare() { return triggerJumpScare(); },
+            triggerBombDetonation(key) { return triggerBombDetonation(key); },
+            getPackedPath() { return [...(refs.ENGINE?.path || [])]; },
+            getIntersections() { return refs.ENGINE?.intersections ?? 0; }
+        };
+    })();
+
+    APP.Editor = (() => {
+        let refs = { ENGINE: null, UI: null, Engine: null };
+        const bind = ({ ENGINE: engineRef, UI: uiRef, Engine: engineApi }) => { refs = { ENGINE: engineRef, UI: uiRef, Engine: engineApi }; };
+        const init = bind;
+        return {
+            init,
+            bind,
+            enterEditorMode() { switchMode(EDITOR); },
+            exitEditorMode() { switchMode(PLAY); },
+            loadWorkingLevel(fromLevelObjOrBlank) { refs.ENGINE.editor.workingLevel = deepCloneLevel(fromLevelObjOrBlank); refs.ENGINE.editor.isModified = false; },
+            commitWorkingLevel() { refs.ENGINE.level = deepCloneLevel(refs.ENGINE.editor.workingLevel); refs.ENGINE.editor.isModified = false; },
+            pickUpObject(k) { return pickUpObject(k); },
+            placeEditorObject(k) { return placeEditorObject(k); },
+            validateLevelDetailed(level) { return validateLevelDetailed(level); },
+            saveEditorState() { return saveEditorState(); },
+            restoreEditorState() { return restoreEditorState(); }
+        };
+    })();
+
+    APP.Engine.init({ ENGINE, UI: APP.UI });
+    APP.Editor.init({ ENGINE, UI: APP.UI, Engine: APP.Engine });
+
+    // ======================================================
     // J) Persistence
     // ======================================================
     const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
@@ -4095,7 +4159,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const startTime = Date.now();
             const perfStart = performance.now();
             const foundSolutions = [];
-            const validity = validateLevelDetailed(level);
+            const validity = APP.Editor.validateLevelDetailed(level);
             const debugStats = debug ? createSolverDebugStats(debugLevel ?? ((typeof level.id === "number") ? level.id + 1 : null)) : null;
             foundSolutions.timedOut = false;
             if (!validity.ok) {
@@ -4469,7 +4533,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (APP.UI.isModalOpen('editorHelpModal')) { APP.UI.closeModal('editorHelpModal'); return true; }
         return false;
     }
-    function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').classList.toggle('hidden', isEd); $('editorMetrics').classList.toggle('hidden', !isEd); $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); updateCompletionUI(); showMessage("", ""); }
+    function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').classList.toggle('hidden', isEd); $('editorMetrics').classList.toggle('hidden', !isEd); $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); updateCompletionUI(); showMessage("", ""); }
     function updatePencilState() { const btn = $('editPencilBtn'); const svg = btn.querySelector('svg'); if (ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
     function saveEditorState() { ENGINE.editor.isModified = true; ENGINE.editor.undoStack.push(deepCloneLevel(ENGINE.editor.workingLevel)); if (ENGINE.editor.undoStack.length > 50) ENGINE.editor.undoStack.shift(); ENGINE.hinter.pathList = []; }
     function restoreEditorState() { if (ENGINE.editor.undoStack.length === 0) return; ENGINE.editor.isModified = true; ENGINE.editor.workingLevel = ENGINE.editor.undoStack.pop(); let newPending = null; ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); ENGINE.editor.pendingPortal = newPending; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); showMessage("Undo Grid Action", "text-slate-500"); }
@@ -4562,7 +4626,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function validateLevel(l) {
-        const res = validateLevelDetailed(l);
+        const res = APP.Editor.validateLevelDetailed(l);
         if (!res.ok) showMessage(res.reasons[0], "text-red-500 font-bold");
         return res.ok;
     }
@@ -4760,7 +4824,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             ENGINE.resetStreak = 0;
             if (ENGINE.mode === EDITOR && !ENGINE.editor.isPencilMode) {
                 const occupied = activeLevel.gateKeys.includes(k) || activeLevel.goalKey === k || activeLevel.falseGoalKeys.has(k) || activeLevel.blockSet.has(k) || activeLevel.gooseSet.has(k) || activeLevel.filterMap.has(k) || activeLevel.flippingFilterMap.has(k) || activeLevel.portalMap.has(k) || activeLevel.mustPassKeys.includes(k) || activeLevel.mustCrossKeys.includes(k);
-                if (occupied) { ENGINE.editor.emptyClickCount = 0; ENGINE.editor.draggedObject = pickUpObject(k); if (ENGINE.editor.draggedObject) { setLogicState(EDIT_DRAG); ghostEl.style.display = 'flex'; } } else if (ENGINE.editor.selectedTool) { ENGINE.editor.emptyClickCount = 0; placeEditorObject(k); } else { ENGINE.editor.emptyClickCount++; if (ENGINE.editor.emptyClickCount >= 2) { showMessage("Click pencil to draw.", "text-white font-bold"); } } return;
+                if (occupied) { ENGINE.editor.emptyClickCount = 0; ENGINE.editor.draggedObject = APP.Editor.pickUpObject(k); if (ENGINE.editor.draggedObject) { setLogicState(EDIT_DRAG); ghostEl.style.display = 'flex'; } } else if (ENGINE.editor.selectedTool) { ENGINE.editor.emptyClickCount = 0; APP.Editor.placeEditorObject(k); } else { ENGINE.editor.emptyClickCount++; if (ENGINE.editor.emptyClickCount >= 2) { showMessage("Click pencil to draw.", "text-white font-bold"); } } return;
             }
             if (ENGINE.path.length > 0) {
                 if (ENGINE.path.length === 1 && activeLevel.gateKeys.includes(k) && k !== ENGINE.activeGateKey) {
@@ -4776,12 +4840,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     if (shouldReverse) { ENGINE.path.reverse(); const newJumps = new Set(); ENGINE.isPortalJump.forEach(jIdx => newJumps.add(ENGINE.path.length - jIdx)); ENGINE.isPortalJump = newJumps; rebuildDerivedPathState(ENGINE); }
                 }
                 const lastIdx = ENGINE.path.lastIndexOf(k); if (lastIdx !== -1 && lastIdx < ENGINE.path.length - 1) { PathNavigator.truncateTo(ENGINE, lastIdx); setLogicState(DRAGGING); return; }
-                setLogicState(DRAGGING); attemptMoveTo(p);
+                setLogicState(DRAGGING); APP.Engine.attemptMoveTo(p);
             } else {
                 if (!activeLevel) return;
-                if (ENGINE.mode === EDITOR && ENGINE.editor.isPencilMode) { ENGINE.activeGateKey = null; PathNavigator.pushStep(ENGINE, k, false); setLogicState(DRAGGING); attemptMoveTo(p); } else {
+                if (ENGINE.mode === EDITOR && ENGINE.editor.isPencilMode) { ENGINE.activeGateKey = null; PathNavigator.pushStep(ENGINE, k, false); setLogicState(DRAGGING); APP.Engine.attemptMoveTo(p); } else {
                     let bestGate = null; if (activeLevel.gateKeys.includes(k)) { bestGate = k; } else { let minDist = Infinity; for (let i = 0; i < activeLevel.gateKeys.length; i++) { const gk = activeLevel.gateKeys[i]; const gp = UNPACK(gk); if (p.x === gp.x || p.y === gp.y) { const dist = Math.abs(p.x - gp.x) + Math.abs(p.y - gp.y); if (dist > 0 && dist < minDist) { minDist = dist; bestGate = gk; } } } }
-                    if (bestGate !== null) { ENGINE.activeGateKey = bestGate; PathNavigator.pushStep(ENGINE, bestGate, false); setLogicState(DRAGGING); if (bestGate !== k) { attemptMoveTo(p); } }
+                    if (bestGate !== null) { ENGINE.activeGateKey = bestGate; PathNavigator.pushStep(ENGINE, bestGate, false); setLogicState(DRAGGING); if (bestGate !== k) { APP.Engine.attemptMoveTo(p); } }
                 }
             }
         };
@@ -4796,13 +4860,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 setLogicState(IDLE); ENGINE.themeDragColor = null; ENGINE.themeDragTheme = null; ENGINE.themeDragCategory = null; ghostEl.style.display = 'none'; ghostEl.innerHTML = '';
                 if (!ENGINE.themeTapSelectedColor) { document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110')); }
             }
-            if (ENGINE.logicState === EDIT_DRAG && ENGINE.mode === EDITOR) { const crect = cvs.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { placeEditorObject(PACK(getGridCoord(e).x, getGridCoord(e).y)); } else { if (ENGINE.editor.draggedFromGrid) { ENGINE.editor.draggedObject = null; saveEditorState(); showMessage("Deleted", "text-white font-black"); } } ENGINE.editor.draggedObject = null; setLogicState(IDLE); } if (ENGINE.logicState === DRAGGING) setLogicState(IDLE);
+            if (ENGINE.logicState === EDIT_DRAG && ENGINE.mode === EDITOR) { const crect = cvs.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(PACK(getGridCoord(e).x, getGridCoord(e).y)); } else { if (ENGINE.editor.draggedFromGrid) { ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); showMessage("Deleted", "text-white font-black"); } } ENGINE.editor.draggedObject = null; setLogicState(IDLE); } if (ENGINE.logicState === DRAGGING) setLogicState(IDLE);
         };
 
         cvs.addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (activePointerId !== null) return; e.preventDefault(); activePointerId = e.pointerId; cvs.setPointerCapture(activePointerId); handleDown(e); });
         window.addEventListener('pointermove', e => {
             if (ENGINE.logicState === THEME_DRAG) { ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; e.preventDefault(); return; }
-            if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = $('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { ghostEl.style.display = 'none'; ghostEl.innerHTML = ''; } if (e.pointerId !== activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) attemptMoveTo(getGridCoord(e));
+            if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = $('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { ghostEl.style.display = 'none'; ghostEl.innerHTML = ''; } if (e.pointerId !== activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) APP.Engine.attemptMoveTo(getGridCoord(e));
         });
         window.addEventListener('pointerup', e => { handleUp(e); if (activePointerId !== null && cvs.hasPointerCapture(activePointerId)) cvs.releasePointerCapture(activePointerId); activePointerId = null; });
 
@@ -4824,7 +4888,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 setLogicState(DRAGGING);
             }
             const head = UNPACK(ENGINE.path[ENGINE.path.length - 1]);
-            attemptMoveTo({ x: head.x + dx, y: head.y + dy });
+            APP.Engine.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
         }
 
         function handleGamepadDirection(dir) {
@@ -4964,7 +5028,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }, 3000);
                 }
             }
-            loadLevel(ENGINE.levelIdx, true);
+            APP.Engine.loadLevel(ENGINE.levelIdx, { keepVariant: true });
         };
 
         $('undoBtn').onclick = () => { closeAllModals(); if(ENGINE.undoStack.length) applySnapshot(ENGINE.undoStack.pop()); };
@@ -5017,9 +5081,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         });
         const handleWinClose = (callback) => { const circle = $('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
         $('copyWinDataBtn').onclick = () => { if (winOutEl.value) { winOutEl.select(); document.execCommand('copy'); } };
-        $('prevLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; loadLevel(ENGINE.levelIdx > 0 ? ENGINE.levelIdx - 1 : levels.length - 1); outEl.value = ''; });
-        $('nextLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; loadLevel(ENGINE.levelIdx < levels.length - 1 ? ENGINE.levelIdx + 1 : 0); outEl.value = ''; });
-        $('nextLevelModalBtn').onclick = () => { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; handleWinClose(() => { if (ENGINE.levelIdx < levels.length - 1) loadLevel(ENGINE.levelIdx + 1); }); };
+        $('prevLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(ENGINE.levelIdx > 0 ? ENGINE.levelIdx - 1 : levels.length - 1); outEl.value = ''; });
+        $('nextLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(ENGINE.levelIdx < levels.length - 1 ? ENGINE.levelIdx + 1 : 0); outEl.value = ''; });
+        $('nextLevelModalBtn').onclick = () => { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; handleWinClose(() => { if (ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(ENGINE.levelIdx + 1); }); };
         $('dismissWinModalBtn').onclick = () => handleWinClose(() => { setLogicState(IDLE); });
 
         $('guideBtn').onclick = () => {
@@ -5057,8 +5121,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('doneThemeEditBtn').onclick = closeEditor;
         $('devToggleBtn').onclick = () => { ENGINE.isDevMode = !ENGINE.isDevMode; updatePlayModeLayout(); showMessage(ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
         document.querySelectorAll('.editor-input').forEach(el => el.addEventListener('input', () => { ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.isModified = true; }));
-        $('modeToggleBtn').onclick = () => { closeAllModals(); switchMode(EDITOR); };
-        $('editModeToggleBtn').onclick = () => tryNavigate(() => { closeAllModals(); switchMode(PLAY); });
+        $('modeToggleBtn').onclick = () => { closeAllModals(); APP.Editor.enterEditorMode(); };
+        $('editModeToggleBtn').onclick = () => tryNavigate(() => { closeAllModals(); APP.Editor.exitEditorMode(); });
 
         $('editTrapSpotsBtn').onclick = async () => {
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
@@ -5082,8 +5146,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const handleEraserRelease = () => { if (eraserTimer) { clearTimeout(eraserTimer); if (!eraserFired) { if (ENGINE.path.length > 1) PathNavigator.truncateTo(ENGINE, ENGINE.path.length - 2); else PathNavigator.clear(ENGINE); } eraserTimer = null; eraserFired = false; } };
         eraserBtn.addEventListener('pointerup', handleEraserRelease); eraserBtn.addEventListener('pointerleave', handleEraserRelease);
 
-        $('editUndoGridBtn').onclick = () => { closeAllModals(); restoreEditorState(); };
-        $('editResetGrid').onclick = () => { closeAllModals(); saveEditorState(); const l = ENGINE.editor.workingLevel; Object.assign(l, {gateKeys: [], goalKey: -1, falseGoalKeys: new Set(), blockSet: new Set(), gooseSet: new Set(), mustPassKeys: [], mustCrossKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map(), portalVisuals: []}); PathNavigator.clear(ENGINE); showMessage("Reset", "text-white font-black"); };
+        $('editUndoGridBtn').onclick = () => { closeAllModals(); APP.Editor.restoreEditorState(); };
+        $('editResetGrid').onclick = () => { closeAllModals(); APP.Editor.saveEditorState(); const l = ENGINE.editor.workingLevel; Object.assign(l, {gateKeys: [], goalKey: -1, falseGoalKeys: new Set(), blockSet: new Set(), gooseSet: new Set(), mustPassKeys: [], mustCrossKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map(), portalVisuals: []}); PathNavigator.clear(ENGINE); showMessage("Reset", "text-white font-black"); };
         $('editNewLevel').onclick = () => tryNavigate(() => {
             closeAllModals();
             ENGINE.editor.workingLevel = { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [] };
@@ -5128,7 +5192,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }
                     if (APP.Loader.getStatus().phase === 'failed') return;
 
-                    loadLevel(0);
+                    APP.Engine.loadLevel(0);
                     updatePlayModeLayout();
                     loop();
                     APP.Loader.finish();
