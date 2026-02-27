@@ -596,6 +596,36 @@
             if (className !== null) el.className = className;
         };
 
+        // Overlay boundary: state decisions live outside APP.UI; APP.UI owns all related DOM rendering/mutations.
+        const setSearchIndicatorVisible = (visible) => {
+            if (visible) showOverlay('searchIndicator');
+            else hideOverlay('searchIndicator');
+        };
+
+        const setSolverControlsEnabled = (enabled) => {
+            setButtonState('editMegaSolver', { enabled });
+            setButtonState('editTrapSpotsBtn', { enabled });
+            const hintEl = getEl('hintBtn') || document.getElementById('hintBtn');
+            if (!hintEl) return;
+            setStyle(hintEl, 'pointerEvents', enabled ? 'auto' : 'none');
+            setStyle(hintEl, 'opacity', enabled ? '1' : '0.5');
+        };
+
+        const setSolverTimerText = (text) => setModalContent('solverTimer', text, 'text');
+
+        const applyOverlayState = (state, { abortRequested = false } = {}) => {
+            if (state === SOLVER_RUNNING) {
+                setSearchIndicatorVisible(true);
+                setButtonState('solverCloseBtn', { enabled: true });
+                if (!abortRequested) setModalContent('searchLabel', 'Finding Solutions...', 'text');
+                setSolverControlsEnabled(false);
+                return;
+            }
+            setSearchIndicatorVisible(false);
+            setButtonState('solverCloseBtn', { enabled: true });
+            setSolverControlsEnabled(true);
+        };
+
         const flashMessage = (text = '', className = '', duration = 1200) => {
             const overlay = document.getElementById('alertOverlay');
             setStatus(text, 'info', className);
@@ -619,7 +649,7 @@
             setStatus(`Startup error (${kind})`, 'error', 'text-red-200');
         };
 
-        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, flashMessage, reportError };
+        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, flashMessage, reportError };
     })();
 
     // ======================================================
@@ -644,9 +674,9 @@
             runStart = Date.now();
             status = { running: true, mode, startedAt: runStart };
             APP.UI.setModalContent('searchLabel', label, 'text');
-            APP.UI.setModalContent('solverTimer', '0.0s', 'text');
+            APP.UI.setSolverTimerText('0.0s');
             timerTick = setInterval(() => {
-                APP.UI.setModalContent('solverTimer', ((Date.now() - runStart) / 1000).toFixed(1) + 's', 'text');
+                APP.UI.setSolverTimerText(((Date.now() - runStart) / 1000).toFixed(1) + 's');
             }, 100);
             return ENGINE.activeSolverController;
         };
@@ -654,9 +684,11 @@
         const finishRun = () => {
             if (timerTick) clearInterval(timerTick);
             timerTick = null;
-            ENGINE.solverAbortRequested = false;
             ENGINE.activeSolverController = null;
             status = { running: false, mode: null, startedAt: 0 };
+            ENGINE.solverAbortRequested = false;
+            setOverlayState(OVERLAY_NONE);
+            APP.UI.setButtonState('solverCloseBtn', { enabled: true });
         };
 
         const applySolutionsToEngine = (paths, purpose = 'solve') => {
@@ -802,7 +834,7 @@
                         showMessage(msg, 'text-white font-black');
                     },
                     onProgress: (elapsedMs) => {
-                        APP.UI.setModalContent('solverTimer', (elapsedMs / 1000).toFixed(1) + 's', 'text');
+                        APP.UI.setSolverTimerText((elapsedMs / 1000).toFixed(1) + 's');
                     }
                 });
                 return { ok: true, status: 'solved', spots };
@@ -1189,27 +1221,14 @@
         return true;
     }
 
+    // Overlay boundary: setOverlayState decides transitions/gating; APP.UI renders all overlay visuals.
     function setOverlayState(newState) {
-        if (ENGINE.overlayState === SOLVER_RUNNING && newState !== SOLVER_RUNNING) {
-            APP.UI.hideOverlay('searchIndicator');
-            setSolversActive(true);
-        }
         if (ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
             ENGINE.hinter.alpha = 0;
-            setSolversActive(true);
         }
 
         ENGINE.overlayState = newState;
-
-        if (newState === SOLVER_RUNNING) {
-            APP.UI.showOverlay('searchIndicator');
-            APP.UI.setButtonState('solverCloseBtn', { enabled: true });
-            if (!ENGINE.solverAbortRequested) APP.UI.setModalContent('searchLabel', 'Finding Solutions...', 'text');
-            setSolversActive(false);
-        }
-        if (newState === HINT_ANIMATING) {
-            setSolversActive(true);
-        }
+        APP.UI.applyOverlayState(newState, { abortRequested: !!ENGINE.solverAbortRequested });
 
         return true;
     }
@@ -1222,12 +1241,7 @@
     const expCoords = (items) => (Array.isArray(items) ? items : Array.from(items)).map(k => { const p = UNPACK(k); return {x: p.x + 1, y: p.y + 1}; });
 
     const setSolversActive = (active) => {
-        ['editMegaSolver', 'editTrapSpotsBtn'].forEach(id => { const el = $(id); if(el) el.disabled = !active; });
-        const hintEl = $('hintBtn');
-        if (hintEl) {
-            hintEl.style.pointerEvents = active ? 'auto' : 'none';
-            hintEl.style.opacity = active ? '1' : '0.5';
-        }
+        APP.UI.setSolverControlsEnabled(active);
     };
 
     function resolvePortal(level, key) { return level.portalMap.has(key) ? level.portalMap.get(key) : null; }
@@ -4987,7 +5001,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.addEventListener('click', (e) => { if (isHintExpanded && !hintBtn.contains(e.target)) { toggleHint(); updateHintLabel(); } });
 
         $('solverCloseBtn').onclick = () => {
-            if (!APP.Solver.isRunning()) return;
+            if (!APP.Solver.isRunning()) {
+                setOverlayState(OVERLAY_NONE);
+                return;
+            }
             showMessage('Stopping solver…', 'text-amber-400 font-bold');
             APP.Solver.cancel();
         };
