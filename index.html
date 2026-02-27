@@ -474,7 +474,7 @@
     // Public API: $, AXIS/H/V/NONE, DEV, MODES/PLAY/EDITOR, LogicStatus constants, OverlayStatus constants.
     // ======================================================
     APP.Core = (() => {
-        const $ = id => document.getElementById(id);
+        const $ = id => (APP.UI && typeof APP.UI.getEl === 'function') ? APP.UI.getEl(id) : null;
         const AXIS = { NONE: 0, H: 1, V: 2 };
         const { H, V, NONE } = AXIS;
         const DEV = false;
@@ -521,7 +521,7 @@
     // - openModal, closeModal, toggleModal, isModalOpen, setModalContent
     // - setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText
     // - setClassState, clearClass, setInlineStyle, setTextContent, setInputValue
-    // - setCompletionBurstVisible, ThemeEditor
+    // - setCompletionBurstVisible, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, ThemeEditor
     // APP.UI Public API:
     // - initDom(): cache shared UI DOM refs once at boot.
     // - getEl(key): read cached element by key.
@@ -560,7 +560,15 @@
             ].forEach(id => { dom[id] = document.getElementById(id); });
         };
 
-        const getEl = (key) => dom[key] || null;
+        const resolveEl = (idOrEl) => {
+            if (!idOrEl) return null;
+            if (typeof idOrEl !== 'string') return idOrEl;
+            if (dom[idOrEl]) return dom[idOrEl];
+            const found = document.getElementById(idOrEl);
+            if (found) dom[idOrEl] = found;
+            return found;
+        };
+        const getEl = (key) => resolveEl(key);
 
         const setStatus = (text = '', severity = 'info', className = '') => {
             const el = getEl('message');
@@ -588,15 +596,15 @@
         const hideOverlay = (key) => hide(getEl(key));
         const setOverlayOpacity = (key, value) => setStyle(getEl(key), 'opacity', value);
 
-        const openModal = (id) => removeClass(getEl(id) || document.getElementById(id), 'hidden');
-        const closeModal = (id) => addClass(getEl(id) || document.getElementById(id), 'hidden');
+        const openModal = (id) => removeClass(resolveEl(id), 'hidden');
+        const closeModal = (id) => addClass(resolveEl(id), 'hidden');
         const isModalOpen = (id) => {
-            const el = getEl(id) || document.getElementById(id);
+            const el = resolveEl(id);
             return !!el && !el.classList.contains('hidden');
         };
 
         const toggleModal = (id, force = null) => {
-            const el = getEl(id) || document.getElementById(id);
+            const el = resolveEl(id);
             if (!el) return false;
             const next = (force === null) ? el.classList.contains('hidden') : force;
             toggleClass(el, 'hidden', !next);
@@ -604,14 +612,14 @@
         };
 
         const setModalContent = (id, value, mode = 'text') => {
-            const el = getEl(id) || document.getElementById(id);
+            const el = resolveEl(id);
             if (!el) return;
             if (mode === 'html') setHTML(el, value);
             else setText(el, value);
         };
 
         const setButtonState = (id, { enabled = true, active = null, label = null, className = null } = {}) => {
-            const el = getEl(id) || document.getElementById(id);
+            const el = resolveEl(id);
             if (!el) return;
             safeEnable(el, enabled);
             if (active !== null) toggleClass(el, 'selected', !!active);
@@ -620,7 +628,7 @@
         };
 
         const setClassState = (idOrEl, cls, on) => {
-            const el = typeof idOrEl === 'string' ? (getEl(idOrEl) || document.getElementById(idOrEl)) : idOrEl;
+            const el = resolveEl(idOrEl);
             if (!el) return;
             toggleClass(el, cls, !!on);
         };
@@ -631,16 +639,53 @@
         const addClasses = (el, classes = []) => { if (!el) return; classes.forEach(cls => addClass(el, cls)); };
         const removeClasses = (el, classes = []) => { if (!el) return; classes.forEach(cls => removeClass(el, cls)); };
         const setInlineStyle = (idOrEl, key, value) => {
-            const el = typeof idOrEl === 'string' ? (getEl(idOrEl) || document.getElementById(idOrEl)) : idOrEl;
+            const el = resolveEl(idOrEl);
             setStyle(el, key, value);
         };
         const setTextContent = (idOrEl, value = '') => {
-            const el = typeof idOrEl === 'string' ? (getEl(idOrEl) || document.getElementById(idOrEl)) : idOrEl;
+            const el = resolveEl(idOrEl);
             setText(el, value);
         };
         const setInputValue = (idOrEl, value = '') => {
-            const el = typeof idOrEl === 'string' ? (getEl(idOrEl) || document.getElementById(idOrEl)) : idOrEl;
+            const el = resolveEl(idOrEl);
             if (el) el.value = value;
+        };
+
+        const setRootCssVar = (name, value) => {
+            document.documentElement.style.setProperty(name, value);
+        };
+        const setBodyStyle = (key, value) => setStyle(document.body, key, value);
+        const queryOne = (idOrEl, selector) => {
+            const el = resolveEl(idOrEl);
+            return el ? el.querySelector(selector) : null;
+        };
+
+        const showGooseJumpScare = () => {
+            const overlay = getEl('gooseJumpScare');
+            show(overlay);
+        };
+
+        const hideGooseJumpScare = () => {
+            const overlay = getEl('gooseJumpScare');
+            hide(overlay);
+        };
+
+        const showBombDetonation = ({ explodedMarkup } = {}) => {
+            const overlay = getEl('bombJumpScare');
+            show(overlay);
+            if (explodedMarkup) {
+                const bomb = overlay ? overlay.querySelector('#scaryBomb') : null;
+                setHTML(bomb, explodedMarkup);
+            }
+        };
+
+        const hideBombDetonation = ({ resetMarkup } = {}) => {
+            const overlay = getEl('bombJumpScare');
+            hide(overlay);
+            if (resetMarkup) {
+                const bomb = overlay ? overlay.querySelector('#scaryBomb') : null;
+                setHTML(bomb, resetMarkup);
+            }
         };
 
         // Overlay boundary: state decisions live outside APP.UI; APP.UI owns all related DOM rendering/mutations.
@@ -652,7 +697,7 @@
         const setSolverControlsEnabled = (enabled) => {
             setButtonState('editMegaSolver', { enabled });
             setButtonState('editTrapSpotsBtn', { enabled });
-            const hintEl = getEl('hintBtn') || document.getElementById('hintBtn');
+            const hintEl = resolveEl('hintBtn');
             if (!hintEl) return;
             setStyle(hintEl, 'pointerEvents', enabled ? 'auto' : 'none');
             setStyle(hintEl, 'opacity', enabled ? '1' : '0.5');
@@ -675,7 +720,7 @@
         };
 
         const setCompletionBurstVisible = (isVisible) => {
-            const burst = getEl('completionBurst') || document.getElementById('completionBurst');
+            const burst = resolveEl('completionBurst');
             toggleClass(burst, 'hidden', !isVisible);
         };
 
@@ -721,10 +766,10 @@
             const ensureInit = () => {
                 if (teDom.inited) return;
                 teDom.inited = true;
-                teDom.list = getEl('themeEditList') || document.getElementById('themeEditList');
-                teDom.selectView = getEl('themeSelectView') || document.getElementById('themeSelectView');
-                teDom.editView = getEl('themeEditView') || document.getElementById('themeEditView');
-                teDom.ghost = getEl('dragGhost') || document.getElementById('dragGhost');
+                teDom.list = resolveEl('themeEditList');
+                teDom.selectView = resolveEl('themeSelectView');
+                teDom.editView = resolveEl('themeEditView');
+                teDom.ghost = resolveEl('dragGhost');
             };
             const copyThemeCode = (text, textarea) => {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -971,7 +1016,7 @@
             return { init: ensureInit, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView };
         })();
 
-        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, queryAll, addClasses, removeClasses, setInlineStyle, setTextContent, setInputValue, setCompletionBurstVisible, flashMessage, reportError, ThemeEditor };
+        return { initDom, getEl, resolveEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, queryAll, queryOne, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, reportError, ThemeEditor };
     })();
 
     // ======================================================
@@ -1244,7 +1289,7 @@
             if (state.hasFinished) return;
             state.hasFinished = true;
             setProgress(100, state.mode === 'fallback' ? 'Fallback Ready' : 'Ready');
-            if (APP.UI.getEl('loadingOverlay') || $('loadingOverlay')) {
+            if (APP.UI.getEl('loadingOverlay') || APP.UI.getEl('loadingOverlay')) {
                 APP.UI.setOverlayOpacity('loadingOverlay', '0');
                 setTimeout(() => APP.UI.hideOverlay('loadingOverlay'), 500);
             }
@@ -1563,15 +1608,15 @@
     }
 
     function measureGridModalRect() {
-        const appLayout = $('appLayout');
-        const canvasContainer = $('canvasContainer');
+        const appLayout = APP.UI.getEl('appLayout');
+        const canvasContainer = APP.UI.getEl('canvasContainer');
         const modalRectSource = canvasContainer || appLayout;
         if (!modalRectSource) return;
         const modalRect = modalRectSource.getBoundingClientRect();
-        document.documentElement.style.setProperty('--grid-modal-left', `${modalRect.left}px`);
-        document.documentElement.style.setProperty('--grid-modal-top', `${modalRect.top}px`);
-        document.documentElement.style.setProperty('--grid-modal-width', `${modalRect.width}px`);
-        document.documentElement.style.setProperty('--grid-modal-height', `${modalRect.height}px`);
+        APP.UI.setRootCssVar('--grid-modal-left', `${modalRect.left}px`);
+        APP.UI.setRootCssVar('--grid-modal-top', `${modalRect.top}px`);
+        APP.UI.setRootCssVar('--grid-modal-width', `${modalRect.width}px`);
+        APP.UI.setRootCssVar('--grid-modal-height', `${modalRect.height}px`);
     }
 
     function updateAppScale() {
@@ -1584,7 +1629,7 @@
         ENGINE.viewport.lastWidth = viewport.width;
         ENGINE.viewport.lastHeight = viewport.height;
         const scale = Math.min(viewport.height * 0.02, viewport.width * 0.035);
-        document.documentElement.style.setProperty('--app-scale', `${scale}px`);
+        APP.UI.setRootCssVar('--app-scale', `${scale}px`);
         updateViewport();
     }
 
@@ -1592,27 +1637,27 @@
         const viewport = getViewportDimensions();
         const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && viewport.width >= 900;
         ENGINE.ui.isLandscapeLayout = naturalLandscape || ENGINE.ui.forceLandscapeLayout;
-        const appLayout = $('appLayout');
-        if (appLayout) appLayout.classList.toggle('forced-landscape', ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
+        const appLayout = APP.UI.getEl('appLayout');
+        APP.UI.setClassState(appLayout, 'forced-landscape', ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
         syncEditorPalettePlacement();
         measureGridModalRect();
         requestAnimationFrame(() => measureGridModalRect());
-        const orientationBtn = $('orientationToggleBtn');
-        if (orientationBtn) orientationBtn.innerText = ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape';
+        const orientationBtn = APP.UI.getEl('orientationToggleBtn');
+        APP.UI.setTextContent(orientationBtn, ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape');
     }
 
     function syncEditorPalettePlacement() {
-        const pal = $('editorPalette');
-        const gamePane = $('gamePane');
-        const controlsPane = $('controlsPane');
+        const pal = APP.UI.getEl('editorPalette');
+        const gamePane = APP.UI.getEl('gamePane');
+        const controlsPane = APP.UI.getEl('controlsPane');
         if (!pal || !gamePane || !controlsPane) return;
         const inLandscape = ENGINE.ui.isLandscapeLayout;
         if (inLandscape && ENGINE.mode === EDITOR) {
             if (pal.parentElement !== controlsPane) controlsPane.insertBefore(pal, controlsPane.firstChild);
-            pal.classList.add('landscape-editor-tools');
+            APP.UI.setClassState(pal, 'landscape-editor-tools', true);
         } else {
             if (pal.parentElement !== gamePane.parentElement) gamePane.parentElement.insertBefore(pal, controlsPane);
-            pal.classList.remove('landscape-editor-tools');
+            APP.UI.setClassState(pal, 'landscape-editor-tools', false);
         }
     }
 
@@ -1633,8 +1678,8 @@
         }
 
         if (ENGINE.logicState === EDIT_DRAG && newState !== EDIT_DRAG) {
-            ghostEl.style.display = 'none';
-            ghostEl.innerHTML = '';
+            APP.UI.setInlineStyle(ghostEl, 'display', 'none');
+            APP.UI.setModalContent(ghostEl, '', 'html');
         }
 
         ENGINE.logicState = newState;
@@ -1986,7 +2031,7 @@
             const errors = values.filter(v => ['error', 'cancelled', 'gemini-invalid', 'gemini-failed'].includes(v.status)).length;
             APP.UI.setModalContent('megaSummary', `Solved: ${solved} | Timeout: ${timeout} | Inconclusive: ${inconclusive} | Proven Unsat: ${proven} | Error: ${errors}`, 'text');
         },
-        appendOutput(line) { const el = APP.UI.getEl('megaOutput') || $('megaOutput'); el.value += `${line}\n`; el.scrollTop = el.scrollHeight; },
+        appendOutput(line) { const el = APP.UI.getEl('megaOutput') || APP.UI.getEl('megaOutput'); el.value += `${line}\n`; el.scrollTop = el.scrollHeight; },
         setProgress(text) {
             APP.UI.openModal('megaStatus');
             APP.UI.setModalContent('megaStatus', text, 'text');
@@ -2008,7 +2053,7 @@
             }
             this.active = true;
             showMessage(allowGemini ? 'Mega Gemini attempt started…' : (targets ? `Mega retry started (${Math.round(timeLimitMs / 1000)}s)…` : 'Mega solver started…'), 'text-sky-600');
-            const btn = APP.UI.getEl('megaSolverBtn') || $('megaSolverBtn');
+            const btn = APP.UI.getEl('megaSolverBtn') || APP.UI.getEl('megaSolverBtn');
             const orig = btn.innerText;
             APP.UI.setButtonState('megaSolverBtn', { enabled: false });
 
@@ -3115,29 +3160,29 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
 
         document.body.style.backgroundColor = t.bodyBg; cvs.style.backgroundColor = t.canvasBg;
-        $('headerLeft').style.backgroundColor = t.canvasBg;
-        $('headerMiddle').style.backgroundColor = t.headerLeft;
-        $('headerRight').style.backgroundColor = t.headerRight;
+        APP.UI.getEl('headerLeft').style.backgroundColor = t.canvasBg;
+        APP.UI.getEl('headerMiddle').style.backgroundColor = t.headerLeft;
+        APP.UI.getEl('headerRight').style.backgroundColor = t.headerRight;
 
-        $('headerBar').style.borderColor = t.grid;
-        $('levelTitle').style.color = t.text.headerMain;
-        $('levelLabelText').style.color = t.text.headerSub;
-        const ghost = $('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; const pal = $('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; document.querySelectorAll('.palette-item').forEach(item => { if (item.classList.contains('palette-tool')) { item.style.backgroundColor = t.palette.toolBg; } else if (item.id !== 'editCopyMetrics') { item.style.backgroundColor = t.palette.itemBg; } item.style.borderColor = t.palette.itemBorder; }); $('editCopyMetrics').style.backgroundColor = t.headerLeft; $('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = $('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; $('undoBtn').style.backgroundColor = t.btns.undo; $('resetBtn').style.backgroundColor = t.btns.reset; $('guideBtn').style.backgroundColor = t.btns.guide; $('whoaBtn').style.backgroundColor = t.btns.whoa;
+        APP.UI.getEl('headerBar').style.borderColor = t.grid;
+        APP.UI.getEl('levelTitle').style.color = t.text.headerMain;
+        APP.UI.getEl('levelLabelText').style.color = t.text.headerSub;
+        const ghost = APP.UI.getEl('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; const pal = APP.UI.getEl('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; document.querySelectorAll('.palette-item').forEach(item => { if (item.classList.contains('palette-tool')) { item.style.backgroundColor = t.palette.toolBg; } else if (item.id !== 'editCopyMetrics') { item.style.backgroundColor = t.palette.itemBg; } item.style.borderColor = t.palette.itemBorder; }); APP.UI.getEl('editCopyMetrics').style.backgroundColor = t.headerLeft; APP.UI.getEl('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = APP.UI.getEl('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; APP.UI.getEl('undoBtn').style.backgroundColor = t.btns.undo; APP.UI.getEl('resetBtn').style.backgroundColor = t.btns.reset; APP.UI.getEl('guideBtn').style.backgroundColor = t.btns.guide; APP.UI.getEl('whoaBtn').style.backgroundColor = t.btns.whoa;
 
         const isDark = (t.bodyBg === '#020617' || t.bodyBg === '#000000');
         const neutralBtn = isDark ? '#334155' : '#e2e8f0';
         const neutralText = isDark ? '#f8fafc' : '#475569';
 
-        $('openThemeModalBtn').style.backgroundColor = neutralBtn;
-        $('openThemeModalBtn').style.color = neutralText;
-        $('openThemeModalBtn').style.borderColor = t.modal.border;
-        $('orientationToggleBtn').style.backgroundColor = t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b';
-        $('orientationToggleBtn').style.color = '#ffffff';
-        $('orientationToggleBtn').style.borderColor = t.grid;
+        APP.UI.getEl('openThemeModalBtn').style.backgroundColor = neutralBtn;
+        APP.UI.getEl('openThemeModalBtn').style.color = neutralText;
+        APP.UI.getEl('openThemeModalBtn').style.borderColor = t.modal.border;
+        APP.UI.getEl('orientationToggleBtn').style.backgroundColor = t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b';
+        APP.UI.getEl('orientationToggleBtn').style.color = '#ffffff';
+        APP.UI.getEl('orientationToggleBtn').style.borderColor = t.grid;
 
-        $('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; $('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; $('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; $('editHelpBtn').style.backgroundColor = t.btns.guide; $('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; $('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; $('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; $('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = $('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; muteBtn.style.borderColor = t.modal.border; $('muteIcon').style.color = neutralText; $('muteSlash').style.color = neutralText; $('devCopyBtn').style.backgroundColor = t.btns.copy; $('editCopyBtn').style.backgroundColor = t.btns.copy; $('devGenBtn').style.backgroundColor = t.btns.gen; $('editGenBtn').style.backgroundColor = t.btns.gen; $('devCopyBtn').style.color = t.btns.muteIcon; $('editCopyBtn').style.color = t.btns.muteIcon; $('devGenBtn').style.color = t.btns.muteIcon; $('editGenBtn').style.color = t.btns.muteIcon; $('exportLabel').style.color = t.text.metric; document.querySelectorAll('.metric-label').forEach(el => el.style.color = t.text.metric); $('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; $('solutionOutput').style.color = t.text.output; $('solutionOutput').style.borderColor = t.modal.border; $('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; $('winSolutionOutput').style.color = t.text.output; $('winSolutionOutput').style.borderColor = t.modal.border; $('megaOutput').style.backgroundColor = t.mega.outputBg; $('megaOutput').style.color = t.text.megaOutput; $('megaOutput').style.borderColor = t.mega.outputBorder; $('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; $('copyMegaDataBtn').style.color = t.text.megaCopy; $('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = $(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); $('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; $('gridSizeMinusBtn').style.color = t.btns.muteIcon; $('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; $('gridSizePlusBtn').style.backgroundColor = t.btns.copy; $('gridSizePlusBtn').style.color = t.btns.muteIcon; $('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; $('gridRotateBtn').style.backgroundColor = t.btns.copy; $('gridRotateBtn').style.color = t.btns.muteIcon; $('gridRotateBtn').style.borderColor = t.palette.itemBorder; $('gridMirrorBtn').style.backgroundColor = t.btns.copy; $('gridMirrorBtn').style.color = t.btns.muteIcon; $('gridMirrorBtn').style.borderColor = t.palette.itemBorder; $('gridSizeLabel').style.color = t.btns.muteIcon;
-        const gArea = $('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
-        const winModalContent = $('winModalContent'); $('winCircle').style.backgroundColor = t.win.bg; $('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.text.winAccent; winModalContent.querySelector('p').style.color = t.text.win; $('nextLevelModalBtn').style.color = t.text.winAccent; $('dismissWinModalBtn').style.color = t.text.winAccent; ENGINE.rainbowActive = (name === 'classic');
+        APP.UI.getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; APP.UI.getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; APP.UI.getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; APP.UI.getEl('editHelpBtn').style.backgroundColor = t.btns.guide; APP.UI.getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; APP.UI.getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; APP.UI.getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; APP.UI.getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = APP.UI.getEl('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; muteBtn.style.borderColor = t.modal.border; APP.UI.getEl('muteIcon').style.color = neutralText; APP.UI.getEl('muteSlash').style.color = neutralText; APP.UI.getEl('devCopyBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('editCopyBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('devGenBtn').style.backgroundColor = t.btns.gen; APP.UI.getEl('editGenBtn').style.backgroundColor = t.btns.gen; APP.UI.getEl('devCopyBtn').style.color = t.btns.muteIcon; APP.UI.getEl('editCopyBtn').style.color = t.btns.muteIcon; APP.UI.getEl('devGenBtn').style.color = t.btns.muteIcon; APP.UI.getEl('editGenBtn').style.color = t.btns.muteIcon; APP.UI.getEl('exportLabel').style.color = t.text.metric; document.querySelectorAll('.metric-label').forEach(el => el.style.color = t.text.metric); APP.UI.getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; APP.UI.getEl('solutionOutput').style.color = t.text.output; APP.UI.getEl('solutionOutput').style.borderColor = t.modal.border; APP.UI.getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; APP.UI.getEl('winSolutionOutput').style.color = t.text.output; APP.UI.getEl('winSolutionOutput').style.borderColor = t.modal.border; APP.UI.getEl('megaOutput').style.backgroundColor = t.mega.outputBg; APP.UI.getEl('megaOutput').style.color = t.text.megaOutput; APP.UI.getEl('megaOutput').style.borderColor = t.mega.outputBorder; APP.UI.getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; APP.UI.getEl('copyMegaDataBtn').style.color = t.text.megaCopy; APP.UI.getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = APP.UI.getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); APP.UI.getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; APP.UI.getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; APP.UI.getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; APP.UI.getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; APP.UI.getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('gridRotateBtn').style.color = t.btns.muteIcon; APP.UI.getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; APP.UI.getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('gridMirrorBtn').style.color = t.btns.muteIcon; APP.UI.getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; APP.UI.getEl('gridSizeLabel').style.color = t.btns.muteIcon;
+        const gArea = APP.UI.getEl('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
+        const winModalContent = APP.UI.getEl('winModalContent'); APP.UI.getEl('winCircle').style.backgroundColor = t.win.bg; APP.UI.getEl('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.text.winAccent; winModalContent.querySelector('p').style.color = t.text.win; APP.UI.getEl('nextLevelModalBtn').style.color = t.text.winAccent; APP.UI.getEl('dismissWinModalBtn').style.color = t.text.winAccent; ENGINE.rainbowActive = (name === 'classic');
     }
 
     function populateThemes() {
@@ -3145,7 +3190,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             window.ORIGINAL_THEMES = JSON.parse(JSON.stringify(THEMES));
             delete window.ORIGINAL_THEMES['chaos'];
         }
-        const grid = $('themeGrid'); grid.innerHTML = ''; const themeKeys = Object.keys(THEMES); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
+        const grid = APP.UI.getEl('themeGrid'); grid.innerHTML = ''; const themeKeys = Object.keys(THEMES); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
         themeKeys.forEach(key => { const t = THEMES[key] || THEMES.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl hover:bg-slate-100"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black text-slate-600 uppercase tracking-widest"; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
 
@@ -3263,7 +3308,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         clear(state) { state.path = []; state.isPortalJump.clear(); state.activeGateKey = null; if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(state.logicState)) { setLogicState(IDLE); } if (state.mode === EDITOR) state.editor.isModified = true; rebuildDerivedPathState(state); assertStateConsistency(state); }
     };
 
-    const cvs = $('gameCanvas'); const ctx = cvs.getContext('2d'); const msgEl = $('message'); const outEl = $('solutionOutput'); const winOutEl = $('winSolutionOutput'); const ghostEl = $('dragGhost');
+    const cvs = APP.UI.getEl('gameCanvas'); const ctx = cvs.getContext('2d'); const msgEl = APP.UI.getEl('message'); const outEl = APP.UI.getEl('solutionOutput'); const winOutEl = APP.UI.getEl('winSolutionOutput'); const ghostEl = APP.UI.getEl('dragGhost');
 
     function transformPoint(x, y, variant, W, H) { switch (variant) { case 0: return { tx: x, ty: y }; case 1: return { tx: H - 1 - y, ty: x }; case 2: return { tx: W - 1 - x, ty: H - 1 - y }; case 3: return { tx: y, ty: W - 1 - x }; case 4: return { tx: W - 1 - x, ty: y }; case 5: return { tx: x, ty: H - 1 - y }; case 6: return { tx: y, ty: x }; case 7: return { tx: H - 1 - y, ty: W - 1 - x }; default: return { tx: x, ty: y }; } }
     function inverseTransformPoint(tx, ty, variant, W, H) { switch (variant) { case 0: return { x: tx, y: ty }; case 1: return { x: ty, y: H - 1 - tx }; case 2: return { x: W - 1 - tx, y: H - 1 - ty }; case 3: return { x: W - 1 - ty, y: tx }; case 4: return { x: W - 1 - tx, y: ty }; case 5: return { x: tx, y: H - 1 - ty }; case 6: return { x: ty, y:tx }; case 7: return { x: W - 1 - ty, y: H - 1 - tx }; default: return { x: tx, y: ty }; } }
@@ -3271,12 +3316,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     function getGridCoord(e) { const rect = cvs.getBoundingClientRect(); const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (cvs.width / rect.width) / ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (cvs.height / rect.height) / ENGINE.viewport.cellH))); return inverseTransformPoint(tx, ty, ENGINE.variant, l.grid.w, l.grid.h); }
 
     function triggerJumpScare() {
-        $('gooseJumpScare').classList.remove('hidden');
-        $('gooseJumpScare').classList.add('flex');
+        APP.UI.showGooseJumpScare();
         setOverlayState(GOOSE_OVERLAY);
         setTimeout(() => {
-            $('gooseJumpScare').classList.add('hidden');
-            $('gooseJumpScare').classList.remove('flex');
+            APP.UI.hideGooseJumpScare();
             setOverlayState(OVERLAY_NONE);
         }, 2500);
     }
@@ -3285,12 +3328,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         ENGINE.armedFalseGoals.delete(key);
         ENGINE.detonatedFalseGoals.add(key);
         setOverlayState(FALSE_GOAL_ANIMATING);
-        const overlay = $('bombJumpScare'); overlay.classList.remove('hidden'); overlay.classList.add('flex'); SOUND_BUS.play("C2", "8n");
+        APP.UI.showBombDetonation();
+        SOUND_BUS.play("C2", "8n");
         setTimeout(() => {
-            overlay.querySelector('#scaryBomb').innerHTML = `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="#f97316" stroke-width="8"/></svg>`;
+            APP.UI.showBombDetonation({ explodedMarkup: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="#f97316" stroke-width="8"/></svg>` });
             SOUND_BUS.play("F1", "4n");
             setTimeout(() => {
-                overlay.classList.add('hidden'); overlay.classList.remove('flex'); overlay.querySelector('#scaryBomb').innerHTML = `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>`;
+                APP.UI.hideBombDetonation({ resetMarkup: `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>` });
                 setOverlayState(OVERLAY_NONE);
             }, 1000);
         }, 1000);
@@ -4502,7 +4546,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (!l) return false;
         return getRealLength() === l.reqLen && ENGINE.intersections === l.reqInt;
     }
-    function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); $('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
+    function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); APP.UI.getEl('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
 
     function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, { mode: ENGINE.mode, armedFalseGoals: ENGINE.armedFalseGoals, flipCount: ENGINE.flipCount, crossedSet: ENGINE.crossedFlippingFilters }); }
 
@@ -4517,11 +4561,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function getFocusableGroups() {
         const groups = [
-            { name: 'GRID', elements: [$('gameCanvas')] },
+            { name: 'GRID', elements: [APP.UI.getEl('gameCanvas')] },
             { name: 'CONTROLS', elements: APP.UI.queryAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn').filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
-            { name: 'LEVEL', elements: [$('prevLevelBtn'), $('nextLevelBtn')].filter(Boolean) }
+            { name: 'LEVEL', elements: [APP.UI.getEl('prevLevelBtn'), APP.UI.getEl('nextLevelBtn')].filter(Boolean) }
         ];
-        if (ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [$('editReqLen'), $('editReqInt')].filter(Boolean) });
+        if (ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [APP.UI.getEl('editReqLen'), APP.UI.getEl('editReqInt')].filter(Boolean) });
         return groups.filter(g => g.elements.length > 0);
     }
 
@@ -4576,8 +4620,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (APP.UI.isModalOpen('editorHelpModal')) { APP.UI.closeModal('editorHelpModal'); return true; }
         return false;
     }
-    function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').classList.toggle('hidden', isEd); $('editorMetrics').classList.toggle('hidden', !isEd); $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); updateCompletionUI(); showMessage("", ""); }
-    function updatePencilState() { const btn = $('editPencilBtn'); const svg = btn.querySelector('svg'); if (ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
+    function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); APP.UI.getEl('editorPalette').classList.toggle('hidden', !isEd); APP.UI.getEl('playMetrics').classList.toggle('hidden', isEd); APP.UI.getEl('editorMetrics').classList.toggle('hidden', !isEd); APP.UI.getEl('gameButtonGrid').classList.toggle('hidden', isEd); APP.UI.getEl('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = APP.UI.getEl('exportArea'); APP.UI.getEl('editCopyBtn').classList.toggle('hidden', !isEd); APP.UI.getEl('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.getEl('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); APP.UI.getEl('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; APP.UI.getEl('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; APP.UI.getEl('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); updateCompletionUI(); showMessage("", ""); }
+    function updatePencilState() { const btn = APP.UI.getEl('editPencilBtn'); const svg = btn.querySelector('svg'); if (ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
     function saveEditorState() { ENGINE.editor.isModified = true; ENGINE.editor.undoStack.push(deepCloneLevel(ENGINE.editor.workingLevel)); if (ENGINE.editor.undoStack.length > 50) ENGINE.editor.undoStack.shift(); ENGINE.hinter.pathList = []; }
     function restoreEditorState() { if (ENGINE.editor.undoStack.length === 0) return; ENGINE.editor.isModified = true; ENGINE.editor.workingLevel = ENGINE.editor.undoStack.pop(); let newPending = null; ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); ENGINE.editor.pendingPortal = newPending; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); showMessage("Undo Grid Action", "text-slate-500"); }
     function pickUpObject(k) { if(ENGINE.editor.isPencilMode) return null; saveEditorState(); ENGINE.editor.draggedFromGrid = true; ENGINE.editor.validTrapSpots.clear(); const l = ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (ENGINE.editor.pendingPortal === k) { ENGINE.editor.pendingPortal = null; showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = '#999'; ENGINE.editor.pendingPortal = otherK; showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } return {type: 'portal'}; } ENGINE.editor.undoStack.pop(); ENGINE.editor.draggedFromGrid = false; return null; }
@@ -4674,7 +4718,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         return res.ok;
     }
 
-    function generateLevelString() { const l = ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt($('editReqLen').value) || 0; const reqInt = parseInt($('editReqInt').value) || 0; let exportedHints = l.hints || []; if (ENGINE.path.length > 1 && ENGINE.path[ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: expCoords(l.gateKeys), goal: {x:UNPACK(l.goalKey).x+1, y:UNPACK(l.goalKey).y+1}, falseGoals: expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: expCoords(l.blockSet), mustPass: expCoords(l.mustPassKeys), mustCross: expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: UNPACK(pv.k1).x+1, y1: UNPACK(pv.k1).y+1, x2: UNPACK(pv.k2).x+1, y2: UNPACK(pv.k2).y+1, color: pv.color })), geese: expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); outEl.value = json; outEl.select(); document.execCommand('copy'); ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
+    function generateLevelString() { const l = ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getEl('editReqLen').value) || 0; const reqInt = parseInt(APP.UI.getEl('editReqInt').value) || 0; let exportedHints = l.hints || []; if (ENGINE.path.length > 1 && ENGINE.path[ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: expCoords(l.gateKeys), goal: {x:UNPACK(l.goalKey).x+1, y:UNPACK(l.goalKey).y+1}, falseGoals: expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: expCoords(l.blockSet), mustPass: expCoords(l.mustPassKeys), mustCross: expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: UNPACK(pv.k1).x+1, y1: UNPACK(pv.k1).y+1, x2: UNPACK(pv.k2).x+1, y2: UNPACK(pv.k2).y+1, color: pv.color })), geese: expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); outEl.value = json; outEl.select(); document.execCommand('copy'); ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
 
     function getScreenPos(cx, cy) { const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; const { tx, ty } = transformPoint(cx, cy, ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * ENGINE.viewport.cellW, sy: (ty + 0.5) * ENGINE.viewport.cellH }; }
     function drawBombAsset(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const scale = s / 100; ctx.scale(scale, scale); ctx.beginPath(); ctx.arc(0, 10, 25, 0, Math.PI * 2); ctx.fillStyle = '#334155'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, -15); ctx.quadraticCurveTo(15, -30, 30, -25); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 4; ctx.stroke(); ctx.beginPath(); ctx.arc(30, -25, 5, 0, Math.PI * 2); ctx.fillStyle = '#ef4444'; ctx.fill(); ctx.beginPath(); ctx.arc(30, -25, 2.5, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill(); ctx.beginPath(); ctx.moveTo(-5, -15); ctx.lineTo(5, -15); ctx.lineTo(5, -5); ctx.lineTo(-5, -5); ctx.closePath(); ctx.fillStyle = '#64748b'; ctx.fill(); ctx.restore(); }
@@ -4697,7 +4741,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
         if ((ENGINE.mode === EDITOR || ENGINE.cheatActive) && l.goalKey !== -1) {
-            reqLen = ENGINE.mode === EDITOR ? (parseInt($('editReqLen').value) || 0) : l.reqLen;
+            reqLen = ENGINE.mode === EDITOR ? (parseInt(APP.UI.getEl('editReqLen').value) || 0) : l.reqLen;
             if (reqLen > 0 || ENGINE.path.length > 0 || ENGINE.cheatActive) {
                 showParityWarnings = true; const gp = UNPACK(l.goalKey); targetParity = (gp.x + gp.y + reqLen) % 2;
                 l.portalVisuals.forEach(pv => { const p1 = UNPACK(pv.k1), p2 = UNPACK(pv.k2); if ((p1.x + p1.y) % 2 === (p2.x + p2.y) % 2) hasFlippingPortal = true; });
@@ -4744,8 +4788,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         l.gooseSet.forEach(k => { if (ENGINE.revealedGeese.has(k) || ENGINE.cheatActive || ENGINE.mode === EDITOR) { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawGooseAsset(ctx, sx, sy, vp.cellW, ENGINE.cheatActive && !ENGINE.revealedGeese.has(k)); } });
 
-        if (ENGINE.mode === PLAY) { const curLen = getRealLength(ENGINE); $('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = $('intersectionInfo'); intEl.innerText = `${ENGINE.intersections}/${l.reqInt}`; if (ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } }
-        else if (ENGINE.mode === EDITOR) { const curLen = getRealLength(ENGINE); const lMet = $('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${ENGINE.intersections})`; }
+        if (ENGINE.mode === PLAY) { const curLen = getRealLength(ENGINE); APP.UI.getEl('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = APP.UI.getEl('intersectionInfo'); intEl.innerText = `${ENGINE.intersections}/${l.reqInt}`; if (ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } }
+        else if (ENGINE.mode === EDITOR) { const curLen = getRealLength(ENGINE); const lMet = APP.UI.getEl('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${ENGINE.intersections})`; }
     }
 
     async function runGameSolver(purpose = 'solve') {
@@ -4819,14 +4863,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             ENGINE.editor.undoStack = [];
             ENGINE.editor.validTrapSpots.clear();
             ENGINE.editor.emptyClickCount = 0;
-            $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0;
-            $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0;
+            APP.UI.getEl('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0;
+            APP.UI.getEl('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0;
             ENGINE.editor.isModified = false;
             updatePencilState();
         }
         const lvlStr = `${idx+1}`;
         APP.UI.setModalContent('levelTitle', lvlStr, 'text');
-        $('levelTitle').style.fontSize = lvlStr.length >= 3 ? '2.5rem' : '';
+        APP.UI.getEl('levelTitle').style.fontSize = lvlStr.length >= 3 ? '2.5rem' : '';
         APP.UI.closeModal('winModal');
         showMessage("", "");
         updateAppScale();
@@ -4839,10 +4883,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     
     function showMessage(t, c) {
         APP.UI.setStatus(t, 'info', c || '');
-        const overlay = $('alertOverlay');
+        const overlay = APP.UI.getEl('alertOverlay');
         if (!overlay) return;
-        if (t === "") { overlay.style.opacity = '0'; return; }
-        overlay.style.opacity = '1';
+        if (t === "") { APP.UI.setInlineStyle(overlay, 'opacity', '0'); return; }
+        APP.UI.setInlineStyle(overlay, 'opacity', '1');
         if (ENGINE.runtime.messageTimer) clearTimeout(ENGINE.runtime.messageTimer);
         ENGINE.runtime.messageTimer = setTimeout(() => { APP.UI.setInlineStyle(overlay, 'opacity', '0'); }, 2000);
     }
@@ -4852,8 +4896,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // ======================================================
     window.onload = () => {
         const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
-        $('unsavedStayBtn').onclick = () => { closeAllModals(); ENGINE.runtime.pendingAction = null; APP.UI.closeModal('unsavedModal'); };
-        $('unsavedLeaveBtn').onclick = () => { closeAllModals(); APP.UI.closeModal('unsavedModal'); if (ENGINE.runtime.pendingAction) ENGINE.runtime.pendingAction(); };
+        APP.UI.getEl('unsavedStayBtn').onclick = () => { closeAllModals(); ENGINE.runtime.pendingAction = null; APP.UI.closeModal('unsavedModal'); };
+        APP.UI.getEl('unsavedLeaveBtn').onclick = () => { closeAllModals(); APP.UI.closeModal('unsavedModal'); if (ENGINE.runtime.pendingAction) ENGINE.runtime.pendingAction(); };
 
         const handleGridPressAtPoint = (clientX, clientY) => handleDown({ clientX, clientY });
         ENGINE.ui.gamepadGridPrimaryAction = () => {
@@ -4909,11 +4953,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         cvs.addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); ENGINE.runtime.activePointerId = e.pointerId; cvs.setPointerCapture(ENGINE.runtime.activePointerId); handleDown(e); });
         window.addEventListener('pointermove', e => {
             if (ENGINE.logicState === THEME_DRAG) { APP.UI.ThemeEditor.setDragGhost({ visible: true, color: ENGINE.themeDragColor, x: e.clientX, y: e.clientY }); e.preventDefault(); return; }
-            if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = $('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { ghostEl.style.display = 'none'; ghostEl.innerHTML = ''; } if (e.pointerId !== ENGINE.runtime.activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) APP.Engine.attemptMoveTo(getGridCoord(e));
+            if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = APP.UI.getEl('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { APP.UI.setInlineStyle(ghostEl, 'display', 'none'); APP.UI.setModalContent(ghostEl, '', 'html'); } if (e.pointerId !== ENGINE.runtime.activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) APP.Engine.attemptMoveTo(getGridCoord(e));
         });
         window.addEventListener('pointerup', e => { handleUp(e); if (ENGINE.runtime.activePointerId !== null && cvs.hasPointerCapture(ENGINE.runtime.activePointerId)) cvs.releasePointerCapture(ENGINE.runtime.activePointerId); ENGINE.runtime.activePointerId = null; });
 
-        [cvs, $('hintBtn'), $('editCopyMetrics')].forEach(el => { if (!el) return; if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); });
+        [cvs, APP.UI.getEl('hintBtn'), APP.UI.getEl('editCopyMetrics')].forEach(el => { if (!el) return; if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); });
 
         const GAMEPAD_MAP = { A: 0, B: 1, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
         const GAMEPAD_REPEAT_INITIAL = 220;
@@ -5043,17 +5087,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
         updateAppScale();
 
-        $('gridRotateBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); showMessage("Rotated", "text-white font-black"); };
-        $('gridMirrorBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; ENGINE.editor.mirrorHorizontal = !ENGINE.editor.mirrorHorizontal; $('mirrorIconSvg').style.transform = ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'; if (ENGINE.editor.mirrorHorizontal) { transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } showMessage("Mirrored", "text-white font-black"); };
-        $('gridSizeMinusBtn').onclick = () => { closeAllModals(); changeGridSize(-1); };
-        $('gridSizePlusBtn').onclick = () => { closeAllModals(); changeGridSize(1); };
-        $('muteBtn').onclick = () => { closeAllModals(); ENGINE.muted = !ENGINE.muted; $('muteSlash').style.display = ENGINE.muted ? 'block' : 'none'; };
-        $('orientationToggleBtn').onclick = () => { closeAllModals(); ENGINE.ui.forceLandscapeLayout = !ENGINE.ui.forceLandscapeLayout; updateLayoutMode(); updateAppScale(); updateViewport(); showMessage(ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
+        APP.UI.getEl('gridRotateBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); showMessage("Rotated", "text-white font-black"); };
+        APP.UI.getEl('gridMirrorBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; ENGINE.editor.mirrorHorizontal = !ENGINE.editor.mirrorHorizontal; APP.UI.getEl('mirrorIconSvg').style.transform = ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'; if (ENGINE.editor.mirrorHorizontal) { transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } showMessage("Mirrored", "text-white font-black"); };
+        APP.UI.getEl('gridSizeMinusBtn').onclick = () => { closeAllModals(); changeGridSize(-1); };
+        APP.UI.getEl('gridSizePlusBtn').onclick = () => { closeAllModals(); changeGridSize(1); };
+        APP.UI.getEl('muteBtn').onclick = () => { closeAllModals(); ENGINE.muted = !ENGINE.muted; APP.UI.getEl('muteSlash').style.display = ENGINE.muted ? 'block' : 'none'; };
+        APP.UI.getEl('orientationToggleBtn').onclick = () => { closeAllModals(); ENGINE.ui.forceLandscapeLayout = !ENGINE.ui.forceLandscapeLayout; updateLayoutMode(); updateAppScale(); updateViewport(); showMessage(ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
 
         const perspectiveAction = () => { closeAllModals(); if (ENGINE.activeSolverController) return; ENGINE.variant = (ENGINE.variant + 1) % 8; updateViewport(); rebuildDerivedPathState(ENGINE); SOUND_BUS.play("D5", "32n"); };
-        $('whoaBtn').onclick = perspectiveAction;
+        APP.UI.getEl('whoaBtn').onclick = perspectiveAction;
 
-        $('resetBtn').onclick = () => {
+        APP.UI.getEl('resetBtn').onclick = () => {
             closeAllModals();
             if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return;
             if (ENGINE.cheatActive) {
@@ -5074,13 +5118,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Engine.loadLevel(ENGINE.levelIdx, { keepVariant: true });
         };
 
-        $('undoBtn').onclick = () => { closeAllModals(); if(ENGINE.undoStack.length) applySnapshot(ENGINE.undoStack.pop()); };
-        $('devGenBtn').onclick = async () => { closeAllModals(); const hints = ENGINE.foundHintsSinceLoad || []; if (!hints.length) { showMessage("No hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); outEl.value = hintText; try { await navigator.clipboard.writeText(hintText); } catch (e) { outEl.select(); document.execCommand('copy'); } showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
-        $('editGenBtn').onclick = () => { closeAllModals(); generateLevelString(); };
-        $('devCopyBtn').onclick = () => { closeAllModals(); if (outEl.value) { outEl.select(); document.execCommand('copy'); showMessage("Copied", "text-white font-black"); } };
-        $('editCopyBtn').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; outEl.select(); document.execCommand('copy'); showMessage("Path Copied", "text-white font-black"); } };
+        APP.UI.getEl('undoBtn').onclick = () => { closeAllModals(); if(ENGINE.undoStack.length) applySnapshot(ENGINE.undoStack.pop()); };
+        APP.UI.getEl('devGenBtn').onclick = async () => { closeAllModals(); const hints = ENGINE.foundHintsSinceLoad || []; if (!hints.length) { showMessage("No hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); outEl.value = hintText; try { await navigator.clipboard.writeText(hintText); } catch (e) { outEl.select(); document.execCommand('copy'); } showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
+        APP.UI.getEl('editGenBtn').onclick = () => { closeAllModals(); generateLevelString(); };
+        APP.UI.getEl('devCopyBtn').onclick = () => { closeAllModals(); if (outEl.value) { outEl.select(); document.execCommand('copy'); showMessage("Copied", "text-white font-black"); } };
+        APP.UI.getEl('editCopyBtn').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; outEl.select(); document.execCommand('copy'); showMessage("Path Copied", "text-white font-black"); } };
 
-        const hintBtn = $('hintBtn'); const hintTopHalf = $('hintTopHalf');
+        const hintBtn = APP.UI.getEl('hintBtn'); const hintTopHalf = APP.UI.getEl('hintTopHalf');
         const toggleHint = () => {
             if (ENGINE.runtime.isHintExpanded) {
                 APP.UI.setClassState(hintTopHalf, 'hidden', true);
@@ -5095,7 +5139,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             ENGINE.runtime.isHintExpanded = !ENGINE.runtime.isHintExpanded;
         };
-        const updateHintLabel = () => { const hasSaved = ENGINE.level && ENGINE.level.hints && ENGINE.level.hints.length > 0; const mainLabel = $('hintMainLabel'); if (ENGINE.runtime.isHintExpanded) { APP.UI.setTextContent(mainLabel, 'Saved Hint'); APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1'); } else { APP.UI.setTextContent(mainLabel, 'Hint'); APP.UI.setInlineStyle(mainLabel, 'color', 'white'); } };
+        const updateHintLabel = () => { const hasSaved = ENGINE.level && ENGINE.level.hints && ENGINE.level.hints.length > 0; const mainLabel = APP.UI.getEl('hintMainLabel'); if (ENGINE.runtime.isHintExpanded) { APP.UI.setTextContent(mainLabel, 'Saved Hint'); APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1'); } else { APP.UI.setTextContent(mainLabel, 'Hint'); APP.UI.setInlineStyle(mainLabel, 'color', 'white'); } };
         hintBtn.onclick = (e) => {
             closeAllModals();
             if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return;
@@ -5107,7 +5151,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         document.addEventListener('click', (e) => { if (ENGINE.runtime.isHintExpanded && !hintBtn.contains(e.target)) { toggleHint(); updateHintLabel(); } });
 
-        $('solverCloseBtn').onclick = () => {
+        APP.UI.getEl('solverCloseBtn').onclick = () => {
             if (!APP.Solver.isRunning()) {
                 setOverlayState(OVERLAY_NONE);
                 return;
@@ -5122,58 +5166,58 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 showMessage(`Referee solver ${ENGINE.flags.useRefereeSolver ? 'ON' : 'OFF'}`, 'text-white font-black');
             }
         });
-        const handleWinClose = (callback) => { const circle = $('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
-        $('copyWinDataBtn').onclick = () => { if (winOutEl.value) { winOutEl.select(); document.execCommand('copy'); } };
-        $('prevLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(ENGINE.levelIdx > 0 ? ENGINE.levelIdx - 1 : levels.length - 1); outEl.value = ''; });
-        $('nextLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(ENGINE.levelIdx < levels.length - 1 ? ENGINE.levelIdx + 1 : 0); outEl.value = ''; });
-        $('nextLevelModalBtn').onclick = () => { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; handleWinClose(() => { if (ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(ENGINE.levelIdx + 1); }); };
-        $('dismissWinModalBtn').onclick = () => handleWinClose(() => { setLogicState(IDLE); });
+        const handleWinClose = (callback) => { const circle = APP.UI.getEl('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
+        APP.UI.getEl('copyWinDataBtn').onclick = () => { if (winOutEl.value) { winOutEl.select(); document.execCommand('copy'); } };
+        APP.UI.getEl('prevLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(ENGINE.levelIdx > 0 ? ENGINE.levelIdx - 1 : levels.length - 1); outEl.value = ''; });
+        APP.UI.getEl('nextLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(ENGINE.levelIdx < levels.length - 1 ? ENGINE.levelIdx + 1 : 0); outEl.value = ''; });
+        APP.UI.getEl('nextLevelModalBtn').onclick = () => { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; handleWinClose(() => { if (ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(ENGINE.levelIdx + 1); }); };
+        APP.UI.getEl('dismissWinModalBtn').onclick = () => handleWinClose(() => { setLogicState(IDLE); });
 
-        $('guideBtn').onclick = () => {
+        APP.UI.getEl('guideBtn').onclick = () => {
             const isVisible = APP.UI.isModalOpen('guideModal');
             closeAllModals();
             if (!isVisible) APP.UI.openModal('guideModal');
         };
-        $('closeGuideX').onclick = () => APP.UI.closeModal('guideModal');
-        $('megaSolverBtn').onclick = () => { closeAllModals(); MEGA.run(); };
-        $('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
-        $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
-        $('megaRetry30Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
-        $('megaRetry60Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
-        $('megaRetry120Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
-        $('megaRetryAltBtn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 60000, variant: 'altOrder' }); };
-        $('megaGeminiRetryBtn').onclick = () => { closeAllModals(); MEGA.askGeminiForFailed(); };
+        APP.UI.getEl('closeGuideX').onclick = () => APP.UI.closeModal('guideModal');
+        APP.UI.getEl('megaSolverBtn').onclick = () => { closeAllModals(); MEGA.run(); };
+        APP.UI.getEl('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
+        APP.UI.getEl('copyMegaDataBtn').onclick = () => { const el = APP.UI.getEl('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
+        APP.UI.getEl('megaRetry30Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
+        APP.UI.getEl('megaRetry60Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
+        APP.UI.getEl('megaRetry120Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
+        APP.UI.getEl('megaRetryAltBtn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 60000, variant: 'altOrder' }); };
+        APP.UI.getEl('megaGeminiRetryBtn').onclick = () => { closeAllModals(); MEGA.askGeminiForFailed(); };
 
-        const tModal = $('themeModal');
-        $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
-        $('closeThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
-        $('dismissThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
-        $('openThemeEditorBtn').onclick = () => { APP.UI.ThemeEditor.openEditorView(); };
+        const tModal = APP.UI.getEl('themeModal');
+        APP.UI.getEl('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
+        APP.UI.getEl('closeThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
+        APP.UI.getEl('dismissThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
+        APP.UI.getEl('openThemeEditorBtn').onclick = () => { APP.UI.ThemeEditor.openEditorView(); };
         const closeEditor = () => { APP.UI.ThemeEditor.closeEditorView(); refreshThemeFooter(); };
         const refreshThemeFooter = () => {
-            const editBtn = $('openThemeEditorBtn');
-            const footer = $('themeSelectFooter');
-            const dismissBtn = $('dismissThemeModalBtn');
+            const editBtn = APP.UI.getEl('openThemeEditorBtn');
+            const footer = APP.UI.getEl('themeSelectFooter');
+            const dismissBtn = APP.UI.getEl('dismissThemeModalBtn');
             const canModify = ENGINE.isDevMode || ENGINE.mode === EDITOR;
             if (editBtn) editBtn.classList.toggle('hidden', !canModify);
             if (footer) footer.classList.toggle('justify-center', !canModify);
             if (footer) footer.classList.toggle('justify-between', canModify);
             if (dismissBtn) dismissBtn.classList.remove('hidden');
         };
-        $('backToThemeSelectBtn').onclick = closeEditor;
-        $('doneThemeEditBtn').onclick = closeEditor;
-        $('devToggleBtn').onclick = () => { ENGINE.isDevMode = !ENGINE.isDevMode; updatePlayModeLayout(); showMessage(ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
+        APP.UI.getEl('backToThemeSelectBtn').onclick = closeEditor;
+        APP.UI.getEl('doneThemeEditBtn').onclick = closeEditor;
+        APP.UI.getEl('devToggleBtn').onclick = () => { ENGINE.isDevMode = !ENGINE.isDevMode; updatePlayModeLayout(); showMessage(ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
         document.querySelectorAll('.editor-input').forEach(el => el.addEventListener('input', () => { ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.isModified = true; }));
-        $('modeToggleBtn').onclick = () => { closeAllModals(); APP.Editor.enterEditorMode(); };
-        $('editModeToggleBtn').onclick = () => tryNavigate(() => { closeAllModals(); APP.Editor.exitEditorMode(); });
+        APP.UI.getEl('modeToggleBtn').onclick = () => { closeAllModals(); APP.Editor.enterEditorMode(); };
+        APP.UI.getEl('editModeToggleBtn').onclick = () => tryNavigate(() => { closeAllModals(); APP.Editor.exitEditorMode(); });
 
-        $('editTrapSpotsBtn').onclick = async () => {
+        APP.UI.getEl('editTrapSpotsBtn').onclick = async () => {
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
             if (isVisible) { APP.UI.closeModal('editorHelpModal'); return; }
             closeAllModals();
             if (APP.Solver.isRunning()) return;
             stopHintAnimation();
-            const l = ENGINE.editor.workingLevel; l.reqLen = parseInt($('editReqLen').value); l.reqInt = parseInt($('editReqInt').value);
+            const l = ENGINE.editor.workingLevel; l.reqLen = parseInt(APP.UI.getEl('editReqLen').value); l.reqInt = parseInt(APP.UI.getEl('editReqInt').value);
             const res = await APP.Solver.findTrapSpots(l, { timeLimit: 8000 });
             ENGINE.editor.validTrapSpots = res.spots || new Set();
             render();
@@ -5182,28 +5226,28 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             setOverlayState(OVERLAY_NONE);
         };
         document.querySelectorAll('.palette-item[data-type]').forEach(el => { el.addEventListener('pointerdown', (e) => { if(ENGINE.mode === EDITOR) { if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.draggedFromGrid = false; ENGINE.editor.emptyClickCount = 0; if (ENGINE.editor.pendingPortal && el.dataset.type !== 'portal' && el.dataset.type !== 'eraser') { showMessage("Finish portal pair!", "text-white font-black"); return; } if (ENGINE.editor.selectedTool === el.dataset.type) { ENGINE.editor.selectedTool = null; el.classList.remove('selected'); } else { ENGINE.editor.selectedTool = el.dataset.type; ENGINE.editor.draggedObject = {type: el.dataset.type}; setLogicState(EDIT_DRAG); document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); el.classList.add('selected'); } ENGINE.editor.isPencilMode = false; updatePencilState(); } }); });
-        $('editPencilBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.isPencilMode = !ENGINE.editor.isPencilMode; if (ENGINE.editor.isPencilMode) { ENGINE.editor.selectedTool = null; document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); } else { setLogicState(IDLE); } updatePencilState(); };
+        APP.UI.getEl('editPencilBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.isPencilMode = !ENGINE.editor.isPencilMode; if (ENGINE.editor.isPencilMode) { ENGINE.editor.selectedTool = null; document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); } else { setLogicState(IDLE); } updatePencilState(); };
 
-        const eraserBtn = $('editEraserBtn'); let eraserTimer = null, eraserFired = false;
+        const eraserBtn = APP.UI.getEl('editEraserBtn'); let eraserTimer = null, eraserFired = false;
         eraserBtn.addEventListener('pointerdown', (e) => { if (ENGINE.mode !== EDITOR) return; eraserTimer = setTimeout(() => { PathNavigator.clear(ENGINE); showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
         const handleEraserRelease = () => { if (eraserTimer) { clearTimeout(eraserTimer); if (!eraserFired) { if (ENGINE.path.length > 1) PathNavigator.truncateTo(ENGINE, ENGINE.path.length - 2); else PathNavigator.clear(ENGINE); } eraserTimer = null; eraserFired = false; } };
         eraserBtn.addEventListener('pointerup', handleEraserRelease); eraserBtn.addEventListener('pointerleave', handleEraserRelease);
 
-        $('editUndoGridBtn').onclick = () => { closeAllModals(); APP.Editor.restoreEditorState(); };
-        $('editResetGrid').onclick = () => { closeAllModals(); APP.Editor.saveEditorState(); const l = ENGINE.editor.workingLevel; Object.assign(l, {gateKeys: [], goalKey: -1, falseGoalKeys: new Set(), blockSet: new Set(), gooseSet: new Set(), mustPassKeys: [], mustCrossKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map(), portalVisuals: []}); PathNavigator.clear(ENGINE); showMessage("Reset", "text-white font-black"); };
-        $('editNewLevel').onclick = () => tryNavigate(() => {
+        APP.UI.getEl('editUndoGridBtn').onclick = () => { closeAllModals(); APP.Editor.restoreEditorState(); };
+        APP.UI.getEl('editResetGrid').onclick = () => { closeAllModals(); APP.Editor.saveEditorState(); const l = ENGINE.editor.workingLevel; Object.assign(l, {gateKeys: [], goalKey: -1, falseGoalKeys: new Set(), blockSet: new Set(), gooseSet: new Set(), mustPassKeys: [], mustCrossKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map(), portalVisuals: []}); PathNavigator.clear(ENGINE); showMessage("Reset", "text-white font-black"); };
+        APP.UI.getEl('editNewLevel').onclick = () => tryNavigate(() => {
             closeAllModals();
             ENGINE.editor.workingLevel = { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [] };
-            PathNavigator.clear(ENGINE); ENGINE.hinter.pathList = []; ENGINE.editor.pendingPortal = null; ENGINE.editor.validTrapSpots.clear(); $('levelTitle').innerText = "??"; $('editReqLen').value = 0; $('editReqInt').value = 0; ENGINE.editor.isPencilMode = false; updatePencilState(); ENGINE.editor.isModified = true; updateViewport(); showMessage("New Level Created", "text-white font-black");
+            PathNavigator.clear(ENGINE); ENGINE.hinter.pathList = []; ENGINE.editor.pendingPortal = null; ENGINE.editor.validTrapSpots.clear(); APP.UI.getEl('levelTitle').innerText = "??"; APP.UI.getEl('editReqLen').value = 0; APP.UI.getEl('editReqInt').value = 0; ENGINE.editor.isPencilMode = false; updatePencilState(); ENGINE.editor.isModified = true; updateViewport(); showMessage("New Level Created", "text-white font-black");
         });
-        $('editHelpBtn').onclick = () => {
+        APP.UI.getEl('editHelpBtn').onclick = () => {
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
             closeAllModals();
             if (!isVisible) APP.UI.openModal('editorHelpModal');
         };
-        $('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
-        $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver('solve'); };
-        $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
+        APP.UI.getEl('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
+        APP.UI.getEl('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt(APP.UI.getEl('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt(APP.UI.getEl('editReqInt').value); runGameSolver('solve'); };
+        APP.UI.getEl('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); APP.UI.getEl('editReqLen').value = len; APP.UI.getEl('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
 
         // APP.Boot lifecycle guarantees:
         // - start() is the single authoritative init entrypoint.
