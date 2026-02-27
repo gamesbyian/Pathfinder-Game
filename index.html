@@ -304,13 +304,13 @@
                     </div>
                     <div id="megaSummary" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)] mb-2">No run yet.</div>
                     <textarea id="megaOutput" readonly class="flex-grow min-h-0 p-4 bg-slate-900 text-fuchsia-300 rounded-xl border border-slate-700 text-xs font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500" placeholder="Mega solver results will appear here..."></textarea>
-                    <div class="mt-4 flex flex-wrap gap-2 shrink-0">
-                        <button id="megaRetry30Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry failed (30s, same ladder)</button>
-                        <button id="megaRetry60Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry failed (60s, same ladder)</button>
-                        <button id="megaRetry120Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry failed (120s, same ladder)</button>
-                        <button id="megaRetryAltBtn" class="bg-fuchsia-800 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry failed (60s, alt ordering)</button>
-                        <button id="megaGeminiRetryBtn" class="bg-indigo-700 text-white border border-indigo-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Ask Gemini for failed (proposal + validate)</button>
-                        <div class="ml-auto"><button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-6 py-3 rounded-lg font-black hover:brightness-95 transition uppercase tracking-widest shadow-lg active:scale-95">Copy All</button></div>
+                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
+                        <button id="megaRetry30Btn" class="text-left bg-fuchsia-700 text-white border border-fuchsia-500 px-4 py-3 rounded-xl hover:brightness-110 transition"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Quick Retry (30s)</span><span class="block text-[0.68rem] leading-tight opacity-90">Retries only levels that failed this run, using the same stage order with a short time budget.</span></button>
+                        <button id="megaRetry60Btn" class="text-left bg-fuchsia-700 text-white border border-fuchsia-500 px-4 py-3 rounded-xl hover:brightness-110 transition"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Standard Retry (60s)</span><span class="block text-[0.68rem] leading-tight opacity-90">Same strategy as your first run, but gives each failed level a longer chance before timing out.</span></button>
+                        <button id="megaRetry120Btn" class="text-left bg-fuchsia-700 text-white border border-fuchsia-500 px-4 py-3 rounded-xl hover:brightness-110 transition"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Deep Retry (120s)</span><span class="block text-[0.68rem] leading-tight opacity-90">Longest same-ladder retry for stubborn levels that might solve with more search time.</span></button>
+                        <button id="megaRetryAltBtn" class="text-left bg-fuchsia-800 text-white border border-fuchsia-500 px-4 py-3 rounded-xl hover:brightness-110 transition"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Alternate Order Retry</span><span class="block text-[0.68rem] leading-tight opacity-90">Retries failed levels with the 60s budget but starts with a different stage ordering to shake loose new paths.</span></button>
+                        <button id="megaGeminiRetryBtn" class="text-left bg-indigo-700 text-white border border-indigo-500 px-4 py-3 rounded-xl hover:brightness-110 transition sm:col-span-2"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Ask Gemini + Validate</span><span class="block text-[0.68rem] leading-tight opacity-90">For unresolved levels only: Gemini proposes a path, then Pathfinder validation checks whether it truly satisfies the puzzle rules.</span></button>
+                        <button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-4 py-3 rounded-xl font-black hover:brightness-95 transition uppercase tracking-widest active:scale-95 sm:col-span-2">Copy All Results</button>
                     </div>
                 </div>
             </div>
@@ -561,6 +561,7 @@
         cheatTimer: null,
         hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none' },
         activeSolverController: null,
+        solverAbortRequested: false,
         viewport: { cellW: 0, cellH: 0, swapped: false, lastWidth: 0, lastHeight: 0 },
         themeDragColor: null,
         themeDragTheme: null,
@@ -746,6 +747,8 @@
 
         if (newState === SOLVER_RUNNING) {
             $('searchIndicator').classList.remove('hidden');
+            $('solverCloseBtn').disabled = false;
+            if (!ENGINE.solverAbortRequested) $('searchLabel').innerText = 'Finding Solutions...';
             setSolversActive(false);
         }
         if (newState === HINT_ANIMATING) {
@@ -883,10 +886,15 @@
     async function requestGeminiSolverSuggestion(level, purpose, attempt = 1, timeoutMs = 15000) {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), timeoutMs);
+        const startedAt = Date.now();
+        const payloadLevel = denormalizeLevel(level);
+        if (!payloadLevel?.goal || !Array.isArray(payloadLevel.gates) || payloadLevel.gates.length === 0) {
+            return { ok: false, reason: 'Gemini request blocked: level is missing gate or goal data.', details: { code: 'invalid-level', hasGoal: !!payloadLevel?.goal, gateCount: payloadLevel?.gates?.length || 0 } };
+        }
         try {
             const payload = {
                 model: 'gemini-2.5-flash',
-                level: denormalizeLevel(level),
+                level: payloadLevel,
                 attempt,
                 purpose
             };
@@ -897,7 +905,18 @@
                 signal: controller.signal
             });
             const data = await resp.json();
-            if (!data?.ok) return { ok: false, reason: data?.error || 'Gemini request failed.' };
+            if (!data?.ok) {
+                return {
+                    ok: false,
+                    reason: data?.error || 'Gemini request failed.',
+                    details: {
+                        code: data?.error || 'unknown',
+                        httpStatus: data?.status || resp.status || 0,
+                        upstream: data?.details || '',
+                        elapsedMs: Date.now() - startedAt
+                    }
+                };
+            }
             const candidates = [];
             if (typeof data.text === 'string' && data.text.trim()) {
                 candidates.push(data.text.trim());
@@ -908,10 +927,17 @@
             for (const c of candidates) {
                 try { parsed = JSON.parse(c); break; } catch {}
             }
-            if (!parsed || !Array.isArray(parsed.path)) return { ok: false, reason: 'Gemini did not return valid path JSON.' };
-            return { ok: true, candidate: parsed.path, notes: parsed.notes || '' };
+            if (!parsed || !Array.isArray(parsed.path)) {
+                return { ok: false, reason: 'Gemini did not return valid path JSON.', details: { code: 'invalid-json-shape', elapsedMs: Date.now() - startedAt } };
+            }
+            return { ok: true, candidate: parsed.path, notes: parsed.notes || '', elapsedMs: Date.now() - startedAt };
         } catch (err) {
-            return { ok: false, reason: err.name === 'AbortError' ? 'Gemini request timed out.' : `Gemini error: ${err.message}` };
+            const isAbort = err?.name === 'AbortError';
+            return {
+                ok: false,
+                reason: isAbort ? 'Gemini request timed out.' : `Gemini error: ${err?.message || 'Unknown error'}`,
+                details: { code: isAbort ? 'timeout' : 'fetch-error', elapsedMs: Date.now() - startedAt, errorName: err?.name || 'Error' }
+            };
         } finally { clearTimeout(timer); }
     }
 
@@ -1027,7 +1053,7 @@
                         last = { ok: false, status: 'gemini-invalid', stage: 3, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried };
                     }
                 } else {
-                    last = { ok: false, status: 'gemini-failed', stage: 3, stats: { reason: gem.reason }, message: `Gemini failed: ${gem.reason}`, stagesTried };
+                    last = { ok: false, status: 'gemini-failed', stage: 3, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
                 }
                 stagesTried.push({ stage: 3, name: 'Stage 3', variant: 'gemini', budgetMs: 15000, elapsedMs: Date.now() - t3, result: toStageResultStatus(last.status) });
             }
@@ -1095,6 +1121,9 @@
             const uiTimer = $('solverTimer');
             const searchLabel = $('searchLabel');
             const runStart = Date.now();
+            const timerTick = setInterval(() => {
+                uiTimer.innerText = ((Date.now() - runStart) / 1000).toFixed(1) + 's';
+            }, 100);
 
             try {
                 for (let i = 0; i < toRun.length; i++) {
@@ -1106,8 +1135,6 @@
                     const attempt = prevMeta.attempts + 1;
                     this.setProgress(`MEGA ${i + 1}/${toRun.length} • Level ${lvlNum} • Attempt ${attempt}`);
                     searchLabel.innerText = `Mega solving level ${lvlNum}/${toRun.length}…`;
-                    uiTimer.innerText = ((Date.now() - runStart) / 1000).toFixed(1) + 's';
-
                     const res = await SolverReferee.solve(l, {
                         purpose: 'mega',
                         timeBudgetMs: timeLimitMs,
@@ -1115,6 +1142,7 @@
                         variant,
                         onStage: ({ name, variant: stageVariant, budgetMs }) => {
                             searchLabel.innerText = `${name} (${stageVariant}, ${Math.round(budgetMs / 1000)}s)`;
+                            if (ENGINE.solverAbortRequested) searchLabel.innerText = 'Stopping… finishing current stage safely.';
                         }
                     });
                     const stagesText = (res.stagesTried || []).map(st => `${st.name}/${st.variant}:${st.result}@${st.elapsedMs}ms`).join(' | ');
@@ -1129,11 +1157,18 @@
                     this.appendOutput(`/* Level ${lvlNum} | status=${res.status} | attempts=${attempt} | lastBudgetMs=${timeLimitMs} | lastStage=${res.stage} */`);
                     this.appendOutput(`/* stages: ${stagesText || 'none'} */`);
                     if (res.ok) this.appendOutput(JSON.stringify(this.results[lvlNum]));
-                    else this.appendOutput(`FAIL: ${res.message}${res.stats?.reason ? ` (${res.stats.reason})` : ''}`);
+                    else {
+                        this.appendOutput(`FAIL: ${res.message}${res.stats?.reason ? ` (${res.stats.reason})` : ''}`);
+                        if (res.status === 'gemini-failed' && res.stats?.details) {
+                            this.appendOutput(`FAIL_DETAIL: ${JSON.stringify(res.stats.details)}`);
+                        }
+                    }
                     this.appendOutput('');
                     this.updateSummary();
                 }
             } finally {
+                clearInterval(timerTick);
+                ENGINE.solverAbortRequested = false;
                 ENGINE.activeSolverController = null;
                 setOverlayState(OVERLAY_NONE);
                 this.clearProgress();
@@ -1855,6 +1890,49 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // C) Level / NormalizeAndCaches
     // ======================================================
     function normalizeLevel(idx) { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [] }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = PACK(adj(p.x1), adj(p.y1)), k2 = PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); }); return l; }
+
+    function denormalizeLevel(level) {
+        if (!level || !level.grid) return null;
+        const toCoord = (k) => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
+        const sortCoords = (arr) => arr.sort((a, b) => (a.y - b.y) || (a.x - b.x));
+        const blocks = sortCoords(Array.from(level.blockSet || []).map(toCoord));
+        const geese = sortCoords(Array.from(level.gooseSet || []).map(toCoord));
+        const falseGoals = sortCoords(Array.from(level.falseGoalKeys || []).map(toCoord));
+        const mustPass = sortCoords((level.mustPassKeys || []).map(toCoord));
+        const mustCross = sortCoords((level.mustCrossKeys || []).map(toCoord));
+        const filters = sortCoords(Array.from(level.filterMap?.entries?.() || []).map(([k, axis]) => ({ ...toCoord(k), axis })));
+        const flippingFilters = sortCoords(Array.from(level.flippingFilterMap?.entries?.() || []).map(([k, axis]) => ({ ...toCoord(k), axis })));
+        const seenPortals = new Set();
+        const portals = [];
+        (level.portalMap || new Map()).forEach((v, k) => {
+            if (!v || typeof v.dest !== 'number' || v.dest < 0) return;
+            const pair = [k, v.dest].sort((a, b) => a - b).join(':');
+            if (seenPortals.has(pair)) return;
+            seenPortals.add(pair);
+            const a = toCoord(k);
+            const b = toCoord(v.dest);
+            portals.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y, color: v.color || '#d946ef' });
+        });
+        portals.sort((a, b) => (a.y1 - b.y1) || (a.x1 - b.x1) || (a.y2 - b.y2) || (a.x2 - b.x2));
+
+        return {
+            grid: { w: level.grid.w, h: level.grid.h },
+            gates: sortCoords((level.gateKeys || []).map(toCoord)),
+            goal: typeof level.goalKey === 'number' && level.goalKey >= 0 ? toCoord(level.goalKey) : null,
+            reqLen: level.reqLen || 0,
+            reqInt: level.reqInt || 0,
+            blocks,
+            geese,
+            falseGoals,
+            mustPass,
+            mustCross,
+            filters,
+            flippingFilters,
+            portals,
+            hints: Array.isArray(level.hints) ? level.hints : [],
+            levelId: typeof level.id === 'number' ? level.id + 1 : null
+        };
+    }
 
     function createSnapshot() { return { path: [...ENGINE.path], isPortalJump: new Set(ENGINE.isPortalJump), activeGateKey: ENGINE.activeGateKey, logicState: ENGINE.logicState, detonatedFalseGoals: new Set(ENGINE.detonatedFalseGoals) }; }
     function applySnapshot(snap) { ENGINE.path = [...snap.path]; ENGINE.isPortalJump = new Set(snap.isPortalJump); ENGINE.activeGateKey = snap.activeGateKey; setLogicState(snap.logicState); ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); ENGINE.armedFalseGoals = armed; rebuildDerivedPathState(ENGINE); showMessage("", ""); }
@@ -3263,6 +3341,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const uiTimer = $('solverTimer');
         const searchLabel = $('searchLabel');
         const startTime = Date.now();
+        const timerTick = setInterval(() => {
+            uiTimer.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
+        }, 100);
 
         try {
             const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
@@ -3294,7 +3375,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 });
             }
 
-            uiTimer.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
             const solutions = solverResult.ok ? (solverResult.solution || []) : [];
 
             if (solutions.length > 0) {
@@ -3327,6 +3407,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (err.name === 'AbortError') showMessage("Solver cancelled.", "text-amber-600");
             else console.error("Solver error:", err);
         } finally {
+            clearInterval(timerTick);
+            ENGINE.solverAbortRequested = false;
             ENGINE.activeSolverController = null;
         }
     }
@@ -3664,7 +3746,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         document.addEventListener('click', (e) => { if (isHintExpanded && !hintBtn.contains(e.target)) { toggleHint(); updateHintLabel(); } });
 
-        $('solverCloseBtn').onclick = () => { if (ENGINE.activeSolverController) ENGINE.activeSolverController.abort(); };
+        $('solverCloseBtn').onclick = () => {
+            if (!ENGINE.activeSolverController) return;
+            ENGINE.solverAbortRequested = true;
+            $('searchLabel').innerText = 'Stopping… finishing current stage safely.';
+            $('solverCloseBtn').disabled = true;
+            showMessage('Stopping solver…', 'text-amber-400 font-bold');
+            ENGINE.activeSolverController.abort();
+        };
         document.addEventListener('keydown', (e) => {
             if (!ENGINE.isDevMode) return;
             if (e.shiftKey && e.key.toLowerCase() === 'r') {
@@ -3688,11 +3777,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('megaSolverBtn').onclick = () => { closeAllModals(); MEGA.run(); };
         $('closeMegaModalBtn').onclick = () => { $('megaModal').classList.add('hidden'); };
         $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
-        $('megaRetry30Btn').onclick = () => { MEGA.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
-        $('megaRetry60Btn').onclick = () => { MEGA.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
-        $('megaRetry120Btn').onclick = () => { MEGA.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
-        $('megaRetryAltBtn').onclick = () => { MEGA.retryFailed({ timeLimitMs: 60000, variant: 'altOrder' }); };
-        $('megaGeminiRetryBtn').onclick = () => { MEGA.askGeminiForFailed(); };
+        $('megaRetry30Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
+        $('megaRetry60Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
+        $('megaRetry120Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
+        $('megaRetryAltBtn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 60000, variant: 'altOrder' }); };
+        $('megaGeminiRetryBtn').onclick = () => { closeAllModals(); MEGA.askGeminiForFailed(); };
 
         const tModal = $('themeModal');
         $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
