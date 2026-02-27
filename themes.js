@@ -362,6 +362,8 @@ window.THEMES_MORE = {
         t.win = t.win || {};
         t.alert = t.alert || {};
         t.ctrlArea = t.ctrlArea || {};
+        t.text = t.text || {};
+        t.mega = t.mega || {};
 
         t.bodyBg = t.bodyBg || '#e0f2fe';
         t.canvasBg = t.canvasBg || '#ffffff';
@@ -414,6 +416,33 @@ window.THEMES_MORE = {
 
         t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
         t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
+
+        t.text.modal = t.text.modal || t.modal.text;
+        t.text.modalMuted = t.text.modalMuted || t.modal.textMuted;
+        t.text.modalAccent = t.text.modalAccent || t.modal.accent;
+        t.text.output = t.text.output || t.output.text;
+        t.text.metric = t.text.metric || t.metricText;
+        t.text.headerMain = t.text.headerMain || t.headerLeftText;
+        t.text.headerSub = t.text.headerSub || t.headerLeftLabel;
+        t.text.win = t.text.win || t.win.text;
+        t.text.winAccent = t.text.winAccent || t.win.accent;
+        t.text.megaDesc = t.text.megaDesc || t.modal.textMuted;
+        t.text.megaOutput = t.text.megaOutput || t.output.text;
+        t.text.megaPrimary = t.text.megaPrimary || '#ffffff';
+        t.text.megaSecondary = t.text.megaSecondary || '#ffffff';
+        t.text.megaGemini = t.text.megaGemini || '#ffffff';
+        t.text.megaCopy = t.text.megaCopy || t.modal.text;
+
+        t.mega.outputBg = t.mega.outputBg || t.output.bg;
+        t.mega.outputBorder = t.mega.outputBorder || t.modal.border;
+        t.mega.primaryBg = t.mega.primaryBg || t.btns.mega || t.headerRight;
+        t.mega.primaryBorder = t.mega.primaryBorder || t.modal.border;
+        t.mega.secondaryBg = t.mega.secondaryBg || darkenHex(t.mega.primaryBg, 0.88);
+        t.mega.secondaryBorder = t.mega.secondaryBorder || t.modal.border;
+        t.mega.geminiBg = t.mega.geminiBg || t.btns.guide || t.headerRight;
+        t.mega.geminiBorder = t.mega.geminiBorder || t.modal.border;
+        t.mega.copyBg = t.mega.copyBg || t.btns.copy || t.modal.panelBg;
+        t.mega.copyBorder = t.mega.copyBorder || t.modal.border;
 
         t.burst = t.burst || t.palette.itemBg;
         t.check = t.check || t.colors.filter;
