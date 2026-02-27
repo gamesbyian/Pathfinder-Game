@@ -534,7 +534,7 @@
                 'message','searchIndicator','searchLabel','solverCloseBtn','solverTimer',
                 'megaStatus','megaSummary','megaOutput','megaModal','megaSolverBtn',
                 'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
-                'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput'
+                'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst'
             ].forEach(id => { dom[id] = document.getElementById(id); });
         };
 
@@ -564,6 +564,7 @@
 
         const showOverlay = (key) => show(getEl(key));
         const hideOverlay = (key) => hide(getEl(key));
+        const setOverlayOpacity = (key, value) => setStyle(getEl(key), 'opacity', value);
 
         const openModal = (id) => removeClass(getEl(id) || document.getElementById(id), 'hidden');
         const closeModal = (id) => addClass(getEl(id) || document.getElementById(id), 'hidden');
@@ -613,17 +614,23 @@
 
         const setSolverTimerText = (text) => setModalContent('solverTimer', text, 'text');
 
-        const applyOverlayState = (state, { abortRequested = false } = {}) => {
+        // setOverlayState updates state only; APP.UI.applyOverlayState renders it.
+        const applyOverlayState = (state) => {
             if (state === SOLVER_RUNNING) {
                 setSearchIndicatorVisible(true);
                 setButtonState('solverCloseBtn', { enabled: true });
-                if (!abortRequested) setModalContent('searchLabel', 'Finding Solutions...', 'text');
+                if (!ENGINE.solverAbortRequested) setModalContent('searchLabel', 'Finding Solutions...', 'text');
                 setSolverControlsEnabled(false);
                 return;
             }
             setSearchIndicatorVisible(false);
             setButtonState('solverCloseBtn', { enabled: true });
             setSolverControlsEnabled(true);
+        };
+
+        const setCompletionBurstVisible = (isVisible) => {
+            const burst = getEl('completionBurst') || document.getElementById('completionBurst');
+            toggleClass(burst, 'hidden', !isVisible);
         };
 
         const flashMessage = (text = '', className = '', duration = 1200) => {
@@ -649,7 +656,7 @@
             setStatus(`Startup error (${kind})`, 'error', 'text-red-200');
         };
 
-        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, flashMessage, reportError };
+        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setCompletionBurstVisible, flashMessage, reportError };
     })();
 
     // ======================================================
@@ -914,9 +921,8 @@
             if (state.hasFinished) return;
             state.hasFinished = true;
             setProgress(100, state.mode === 'fallback' ? 'Fallback Ready' : 'Ready');
-            const overlay = APP.UI.getEl('loadingOverlay') || $('loadingOverlay');
-            if (overlay) {
-                overlay.style.opacity = '0';
+            if (APP.UI.getEl('loadingOverlay') || $('loadingOverlay')) {
+                APP.UI.setOverlayOpacity('loadingOverlay', '0');
                 setTimeout(() => APP.UI.hideOverlay('loadingOverlay'), 500);
             }
             populateThemes();
@@ -1196,8 +1202,7 @@
     function updateCompletionUI() {
         const isComplete = ENGINE.progressSet.has(ENGINE.levelIdx);
         const isPlayMode = ENGINE.mode === PLAY;
-        const burst = $('completionBurst');
-        if (burst) burst.classList.toggle('hidden', !isComplete || !isPlayMode);
+        APP.UI.setCompletionBurstVisible(isComplete && isPlayMode);
     }
 
     function getViewportDimensions() {
@@ -1285,14 +1290,15 @@
         return true;
     }
 
-    // Overlay boundary: setOverlayState decides transitions/gating; APP.UI renders all overlay visuals.
+    // setOverlayState updates state only; APP.UI.applyOverlayState renders it.
     function setOverlayState(newState) {
+        if (ENGINE.overlayState === newState) return true;
         if (ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
             ENGINE.hinter.alpha = 0;
         }
 
         ENGINE.overlayState = newState;
-        APP.UI.applyOverlayState(newState, { abortRequested: !!ENGINE.solverAbortRequested });
+        APP.UI.applyOverlayState(newState);
 
         return true;
     }
