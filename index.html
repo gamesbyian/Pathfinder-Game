@@ -474,7 +474,13 @@
     // Public API: $, AXIS/H/V/NONE, DEV, MODES/PLAY/EDITOR, LogicStatus constants, OverlayStatus constants.
     // ======================================================
     APP.Core = (() => {
-        const $ = id => (APP.UI && typeof APP.UI.getEl === 'function') ? APP.UI.getEl(id) : null;
+        const $ = id => {
+            if (APP.UI && typeof APP.UI.getEl === 'function') {
+                const el = APP.UI.getEl(id);
+                if (el) return el;
+            }
+            return document.getElementById(id);
+        };
         const AXIS = { NONE: 0, H: 1, V: 2 };
         const { H, V, NONE } = AXIS;
         const DEV = false;
@@ -537,6 +543,8 @@
     // Owns shared UI concerns: overlays, modal visibility, status/progress text, and common button state updates.
     APP.UI = (() => {
         const dom = {};
+        let messageTimer = null;
+        let solverAbortRequested = false;
 
         const addClass = (el, cls) => { if (el && cls) el.classList.add(cls); };
         const removeClass = (el, cls) => { if (el && cls) el.classList.remove(cls); };
@@ -734,7 +742,7 @@
             if (state === SOLVER_RUNNING) {
                 setSearchIndicatorVisible(true);
                 setButtonState('solverCloseBtn', { enabled: true });
-                if (!ENGINE.solverAbortRequested) setModalContent('searchLabel', 'Finding Solutions...', 'text');
+                if (!solverAbortRequested) setModalContent('searchLabel', 'Finding Solutions...', 'text');
                 setSolverControlsEnabled(false);
                 return;
             }
@@ -770,8 +778,80 @@
             if (!overlay) return;
             if (text === '') { setInlineStyle(overlay, 'opacity', '0'); return; }
             setInlineStyle(overlay, 'opacity', '1');
-            if (ENGINE.runtime.messageTimer) clearTimeout(ENGINE.runtime.messageTimer);
-            ENGINE.runtime.messageTimer = setTimeout(() => { setInlineStyle(overlay, 'opacity', '0'); }, 2000);
+            if (messageTimer) clearTimeout(messageTimer);
+            messageTimer = setTimeout(() => { setInlineStyle(overlay, 'opacity', '0'); }, 2000);
+        };
+
+
+        const setSolverAbortRequested = (requested) => {
+            solverAbortRequested = !!requested;
+        };
+
+        const copyText = async (text, opts = {}) => {
+            const value = `${text ?? ''}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(value);
+                    return true;
+                } catch (_) {}
+            }
+            const fallbackEl = opts.fallbackEl || (opts.fallbackElId ? resolveEl(opts.fallbackElId) : null);
+            if (!fallbackEl) return false;
+            if ('value' in fallbackEl) fallbackEl.value = value;
+            else fallbackEl.textContent = value;
+            if (typeof fallbackEl.select === 'function') fallbackEl.select();
+            try {
+                return document.execCommand('copy');
+            } catch (_) {
+                return false;
+            }
+        };
+
+        const applyTheme = (t, opts = {}) => {
+            const { themeName = '' } = opts;
+            const root = document.documentElement;
+            root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
+            const alertBg = (t.alert?.bg || '#1e40af');
+            const hex = alertBg.replace('#','');
+            let r = 30, g = 64, b = 175;
+            if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
+            const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+            const alertText = themeName === 'classic' ? '#ffffff' : (luminance > 0.55 ? '#0f172a' : '#ffffff');
+            root.style.setProperty('--theme-alert-text', alertText);
+            root.style.setProperty('--theme-logo-bg', t.canvasBg); root.style.setProperty('--theme-logo-grid', t.grid); root.style.setProperty('--theme-logo-path', t.path === 'rainbow' ? '#3b82f6' : t.path); root.style.setProperty('--theme-logo-gate', t.colors.gate); root.style.setProperty('--theme-logo-goal', t.colors.goal);
+            root.style.setProperty('--theme-burst', t.burst || '#fef9c3'); root.style.setProperty('--theme-check', t.check || '#1e293b');
+            root.style.setProperty('--theme-mega-output-bg', t.mega.outputBg); root.style.setProperty('--theme-mega-output-text', t.text.megaOutput); root.style.setProperty('--theme-mega-output-border', t.mega.outputBorder);
+            root.style.setProperty('--theme-mega-primary-bg', t.mega.primaryBg); root.style.setProperty('--theme-mega-primary-text', t.text.megaPrimary); root.style.setProperty('--theme-mega-primary-border', t.mega.primaryBorder);
+            root.style.setProperty('--theme-mega-secondary-bg', t.mega.secondaryBg); root.style.setProperty('--theme-mega-secondary-text', t.text.megaSecondary); root.style.setProperty('--theme-mega-secondary-border', t.mega.secondaryBorder);
+            root.style.setProperty('--theme-mega-gemini-bg', t.mega.geminiBg); root.style.setProperty('--theme-mega-gemini-text', t.text.megaGemini); root.style.setProperty('--theme-mega-gemini-border', t.mega.geminiBorder);
+            root.style.setProperty('--theme-mega-copy-bg', t.mega.copyBg); root.style.setProperty('--theme-mega-copy-text', t.text.megaCopy); root.style.setProperty('--theme-mega-copy-border', t.mega.copyBorder);
+            root.style.setProperty('--theme-mega-desc-text', t.text.megaDesc);
+            const leave = getLeaveThemeColors(t, themeName === 'classic');
+            root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
+
+            document.body.style.backgroundColor = t.bodyBg; cvs.style.backgroundColor = t.canvasBg;
+            getEl('headerLeft').style.backgroundColor = t.canvasBg;
+            getEl('headerMiddle').style.backgroundColor = t.headerLeft;
+            getEl('headerRight').style.backgroundColor = t.headerRight;
+            getEl('headerBar').style.borderColor = t.grid;
+            getEl('levelTitle').style.color = t.text.headerMain;
+            getEl('levelLabelText').style.color = t.text.headerSub;
+            const ghost = getEl('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; const pal = getEl('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; queryAll('.palette-item').forEach(item => { item.style.backgroundColor = t.palette.itemBg; item.style.borderColor = t.palette.itemBorder; }); getEl('editCopyMetrics').style.backgroundColor = t.headerLeft; getEl('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = getEl('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; getEl('undoBtn').style.backgroundColor = t.btns.undo; getEl('resetBtn').style.backgroundColor = t.btns.reset; getEl('guideBtn').style.backgroundColor = t.btns.guide; getEl('whoaBtn').style.backgroundColor = t.btns.whoa;
+
+            const isDark = (t.bodyBg === '#020617' || t.bodyBg === '#000000');
+            const neutralBtn = isDark ? '#334155' : '#e2e8f0';
+            const neutralText = isDark ? '#f8fafc' : '#475569';
+
+            getEl('openThemeModalBtn').style.backgroundColor = neutralBtn;
+            getEl('openThemeModalBtn').style.color = neutralText;
+            getEl('openThemeModalBtn').style.borderColor = t.modal.border;
+            getEl('orientationToggleBtn').style.backgroundColor = t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b';
+            getEl('orientationToggleBtn').style.color = '#ffffff';
+            getEl('orientationToggleBtn').style.borderColor = t.grid;
+
+            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; muteBtn.style.borderColor = t.modal.border; getEl('muteIcon').style.color = neutralText; getEl('muteSlash').style.color = neutralText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.btns.muteIcon; getEl('editCopyBtn').style.color = t.btns.muteIcon; getEl('devGenBtn').style.color = t.btns.muteIcon; getEl('editGenBtn').style.color = t.btns.muteIcon; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
+            const gArea = getEl('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
+            const winModalContent = getEl('winModalContent'); getEl('winCircle').style.backgroundColor = t.win.bg; getEl('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.text.winAccent; winModalContent.querySelector('p').style.color = t.text.win; getEl('nextLevelModalBtn').style.color = t.text.winAccent; getEl('dismissWinModalBtn').style.color = t.text.winAccent;
         };
 
         const closeAllModals = () => {
@@ -810,18 +890,8 @@
                 teDom.editView = resolveEl('themeEditView');
                 teDom.ghost = resolveEl('dragGhost');
             };
-            const copyThemeCode = (text, textarea) => {
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(text).catch(() => {
-                        textarea.select();
-                        document.execCommand('copy');
-                    });
-                    return;
-                }
-                textarea.select();
-                document.execCommand('copy');
-            };
-            const setSwatchSelected = (elOrNull) => {
+            const dragState = { color: null, theme: null, category: null, tapColor: null, tapTheme: null, tapCategory: null };
+                        const setSwatchSelected = (elOrNull) => {
                 document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove(...selectedClasses));
                 if (elOrNull) elOrNull.classList.add(...selectedClasses);
             };
@@ -873,27 +943,27 @@
                     swatch.onpointerdown = e => {
                         e.preventDefault();
                         e.stopPropagation();
-                        if (ENGINE.themeTapSelectedColor && ENGINE.themeTapSelectedTheme === themeKey) {
-                            const sourceColor = ENGINE.themeTapSelectedColor;
+                        if (dragState.tapColor && dragState.tapTheme === themeKey) {
+                            const sourceColor = dragState.tapColor;
                             const targetColor = c;
-                            const sourceCategory = ENGINE.themeTapCategory;
+                            const sourceCategory = dragState.tapCategory;
                             const targetCategory = swatch.dataset.category;
                             if (sourceColor !== targetColor && sourceCategory === targetCategory) replaceThemeColor(themeKey, targetColor, sourceColor, targetCategory);
-                            ENGINE.themeTapSelectedColor = null;
-                            ENGINE.themeTapSelectedTheme = null;
-                            ENGINE.themeTapCategory = null;
+                            dragState.tapColor = null;
+                            dragState.tapTheme = null;
+                            dragState.tapCategory = null;
                             setSwatchSelected(null);
                             setLogicState(IDLE);
                             setDragGhost({ visible: false });
                             return;
                         }
-                        ENGINE.themeTapSelectedColor = c;
-                        ENGINE.themeTapSelectedTheme = themeKey;
-                        ENGINE.themeTapCategory = category;
+                        dragState.tapColor = c;
+                        dragState.tapTheme = themeKey;
+                        dragState.tapCategory = category;
                         setSwatchSelected(swatch);
-                        ENGINE.themeDragColor = c;
-                        ENGINE.themeDragTheme = themeKey;
-                        ENGINE.themeDragCategory = category;
+                        dragState.color = c;
+                        dragState.theme = themeKey;
+                        dragState.category = category;
                         setLogicState(THEME_DRAG);
                         setDragGhost({ visible: true, color: c, x: e.clientX, y: e.clientY });
                     };
@@ -978,7 +1048,7 @@
                 exportBtn.onclick = () => {
                     const code = `${themeKey}: ${JSON.stringify(THEMES[themeKey])},`;
                     textarea.value = code;
-                    copyThemeCode(code, textarea);
+                    copyText(code, { fallbackEl: textarea, fallbackElId: 'solutionOutput' });
                     const origText = exportBtn.innerText;
                     exportBtn.innerText = "Copied!";
                     setTimeout(() => exportBtn.innerText = origText, 1500);
@@ -1049,13 +1119,14 @@
                 }
                 if (teDom.selectView) teDom.selectView.classList.remove('hidden');
                 setSwatchSelected(null);
+                dragState.color = null; dragState.theme = null; dragState.category = null; dragState.tapColor = null; dragState.tapTheme = null; dragState.tapCategory = null;
                 setDragGhost({ visible: false });
             };
 
-            return { init: ensureInit, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView };
+            return { init: ensureInit, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView, getDragState: () => ({ ...dragState }), clearDragState: () => { dragState.color = null; dragState.theme = null; dragState.category = null; }, hasTapSelection: () => !!dragState.tapColor };
         })();
 
-        return { initDom, getEl, resolveEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, queryAll, queryOne, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, reportError, ThemeEditor };
+        return { initDom, getEl, resolveEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, queryAll, queryOne, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor };
     })();
 
     // ======================================================
@@ -1814,6 +1885,7 @@
         }
 
         ENGINE.overlayState = newState;
+        APP.UI.setSolverAbortRequested(ENGINE.solverAbortRequested);
         APP.UI.applyOverlayState(newState);
 
         return true;
@@ -3259,50 +3331,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function applyTheme(name) {
         if (name === 'chaos') { THEMES.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
-        ENGINE.runtime.currentTheme = name; APP.Themes.currentTheme = ENGINE.runtime.currentTheme; const t = THEMES[name]; const root = document.documentElement;
-        root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
-        const alertBg = (t.alert?.bg || '#1e40af');
-        const hex = alertBg.replace('#','');
-        let r = 30, g = 64, b = 175;
-        if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
-        const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
-        const alertText = name === 'classic' ? '#ffffff' : (luminance > 0.55 ? '#0f172a' : '#ffffff');
-        root.style.setProperty('--theme-alert-text', alertText);
-        root.style.setProperty('--theme-logo-bg', t.canvasBg); root.style.setProperty('--theme-logo-grid', t.grid); root.style.setProperty('--theme-logo-path', t.path === 'rainbow' ? '#3b82f6' : t.path); root.style.setProperty('--theme-logo-gate', t.colors.gate); root.style.setProperty('--theme-logo-goal', t.colors.goal);
-        root.style.setProperty('--theme-burst', t.burst || '#fef9c3'); root.style.setProperty('--theme-check', t.check || '#1e293b');
-        root.style.setProperty('--theme-mega-output-bg', t.mega.outputBg); root.style.setProperty('--theme-mega-output-text', t.text.megaOutput); root.style.setProperty('--theme-mega-output-border', t.mega.outputBorder);
-        root.style.setProperty('--theme-mega-primary-bg', t.mega.primaryBg); root.style.setProperty('--theme-mega-primary-text', t.text.megaPrimary); root.style.setProperty('--theme-mega-primary-border', t.mega.primaryBorder);
-        root.style.setProperty('--theme-mega-secondary-bg', t.mega.secondaryBg); root.style.setProperty('--theme-mega-secondary-text', t.text.megaSecondary); root.style.setProperty('--theme-mega-secondary-border', t.mega.secondaryBorder);
-        root.style.setProperty('--theme-mega-gemini-bg', t.mega.geminiBg); root.style.setProperty('--theme-mega-gemini-text', t.text.megaGemini); root.style.setProperty('--theme-mega-gemini-border', t.mega.geminiBorder);
-        root.style.setProperty('--theme-mega-copy-bg', t.mega.copyBg); root.style.setProperty('--theme-mega-copy-text', t.text.megaCopy); root.style.setProperty('--theme-mega-copy-border', t.mega.copyBorder);
-        root.style.setProperty('--theme-mega-desc-text', t.text.megaDesc);
-        const leave = getLeaveThemeColors(t, name === 'classic');
-        root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
-
-        document.body.style.backgroundColor = t.bodyBg; cvs.style.backgroundColor = t.canvasBg;
-        APP.UI.getEl('headerLeft').style.backgroundColor = t.canvasBg;
-        APP.UI.getEl('headerMiddle').style.backgroundColor = t.headerLeft;
-        APP.UI.getEl('headerRight').style.backgroundColor = t.headerRight;
-
-        APP.UI.getEl('headerBar').style.borderColor = t.grid;
-        APP.UI.getEl('levelTitle').style.color = t.text.headerMain;
-        APP.UI.getEl('levelLabelText').style.color = t.text.headerSub;
-        const ghost = APP.UI.getEl('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; const pal = APP.UI.getEl('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; document.querySelectorAll('.palette-item').forEach(item => { if (item.classList.contains('palette-tool')) { item.style.backgroundColor = t.palette.toolBg; } else if (item.id !== 'editCopyMetrics') { item.style.backgroundColor = t.palette.itemBg; } item.style.borderColor = t.palette.itemBorder; }); APP.UI.getEl('editCopyMetrics').style.backgroundColor = t.headerLeft; APP.UI.getEl('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = APP.UI.getEl('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; APP.UI.getEl('undoBtn').style.backgroundColor = t.btns.undo; APP.UI.getEl('resetBtn').style.backgroundColor = t.btns.reset; APP.UI.getEl('guideBtn').style.backgroundColor = t.btns.guide; APP.UI.getEl('whoaBtn').style.backgroundColor = t.btns.whoa;
-
-        const isDark = (t.bodyBg === '#020617' || t.bodyBg === '#000000');
-        const neutralBtn = isDark ? '#334155' : '#e2e8f0';
-        const neutralText = isDark ? '#f8fafc' : '#475569';
-
-        APP.UI.getEl('openThemeModalBtn').style.backgroundColor = neutralBtn;
-        APP.UI.getEl('openThemeModalBtn').style.color = neutralText;
-        APP.UI.getEl('openThemeModalBtn').style.borderColor = t.modal.border;
-        APP.UI.getEl('orientationToggleBtn').style.backgroundColor = t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b';
-        APP.UI.getEl('orientationToggleBtn').style.color = '#ffffff';
-        APP.UI.getEl('orientationToggleBtn').style.borderColor = t.grid;
-
-        APP.UI.getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; APP.UI.getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; APP.UI.getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; APP.UI.getEl('editHelpBtn').style.backgroundColor = t.btns.guide; APP.UI.getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; APP.UI.getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; APP.UI.getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; APP.UI.getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = APP.UI.getEl('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; muteBtn.style.borderColor = t.modal.border; APP.UI.getEl('muteIcon').style.color = neutralText; APP.UI.getEl('muteSlash').style.color = neutralText; APP.UI.getEl('devCopyBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('editCopyBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('devGenBtn').style.backgroundColor = t.btns.gen; APP.UI.getEl('editGenBtn').style.backgroundColor = t.btns.gen; APP.UI.getEl('devCopyBtn').style.color = t.btns.muteIcon; APP.UI.getEl('editCopyBtn').style.color = t.btns.muteIcon; APP.UI.getEl('devGenBtn').style.color = t.btns.muteIcon; APP.UI.getEl('editGenBtn').style.color = t.btns.muteIcon; APP.UI.getEl('exportLabel').style.color = t.text.metric; document.querySelectorAll('.metric-label').forEach(el => el.style.color = t.text.metric); APP.UI.getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; APP.UI.getEl('solutionOutput').style.color = t.text.output; APP.UI.getEl('solutionOutput').style.borderColor = t.modal.border; APP.UI.getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; APP.UI.getEl('winSolutionOutput').style.color = t.text.output; APP.UI.getEl('winSolutionOutput').style.borderColor = t.modal.border; APP.UI.getEl('megaOutput').style.backgroundColor = t.mega.outputBg; APP.UI.getEl('megaOutput').style.color = t.text.megaOutput; APP.UI.getEl('megaOutput').style.borderColor = t.mega.outputBorder; APP.UI.getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; APP.UI.getEl('copyMegaDataBtn').style.color = t.text.megaCopy; APP.UI.getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = APP.UI.getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); APP.UI.getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; APP.UI.getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; APP.UI.getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; APP.UI.getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; APP.UI.getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('gridRotateBtn').style.color = t.btns.muteIcon; APP.UI.getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; APP.UI.getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; APP.UI.getEl('gridMirrorBtn').style.color = t.btns.muteIcon; APP.UI.getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; APP.UI.getEl('gridSizeLabel').style.color = t.btns.muteIcon;
-        const gArea = APP.UI.getEl('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
-        const winModalContent = APP.UI.getEl('winModalContent'); APP.UI.getEl('winCircle').style.backgroundColor = t.win.bg; APP.UI.getEl('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.text.winAccent; winModalContent.querySelector('p').style.color = t.text.win; APP.UI.getEl('nextLevelModalBtn').style.color = t.text.winAccent; APP.UI.getEl('dismissWinModalBtn').style.color = t.text.winAccent; ENGINE.rainbowActive = (name === 'classic');
+        ENGINE.runtime.currentTheme = name;
+        APP.Themes.currentTheme = ENGINE.runtime.currentTheme;
+        const t = THEMES[name];
+        APP.UI.applyTheme(t, { themeName: name });
+        ENGINE.rainbowActive = (name === 'classic');
     }
 
     function populateThemes() {
@@ -4836,7 +4869,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         return res.ok;
     }
 
-    function generateLevelString() { const l = ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getEl('editReqLen').value) || 0; const reqInt = parseInt(APP.UI.getEl('editReqInt').value) || 0; let exportedHints = l.hints || []; if (ENGINE.path.length > 1 && ENGINE.path[ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: expCoords(l.gateKeys), goal: {x:UNPACK(l.goalKey).x+1, y:UNPACK(l.goalKey).y+1}, falseGoals: expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: expCoords(l.blockSet), mustPass: expCoords(l.mustPassKeys), mustCross: expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: UNPACK(pv.k1).x+1, y1: UNPACK(pv.k1).y+1, x2: UNPACK(pv.k2).x+1, y2: UNPACK(pv.k2).y+1, color: pv.color })), geese: expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); outEl.value = json; outEl.select(); document.execCommand('copy'); ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
+    async function generateLevelString() { const l = ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getEl('editReqLen').value) || 0; const reqInt = parseInt(APP.UI.getEl('editReqInt').value) || 0; let exportedHints = l.hints || []; if (ENGINE.path.length > 1 && ENGINE.path[ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: expCoords(l.gateKeys), goal: {x:UNPACK(l.goalKey).x+1, y:UNPACK(l.goalKey).y+1}, falseGoals: expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: expCoords(l.blockSet), mustPass: expCoords(l.mustPassKeys), mustCross: expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: UNPACK(pv.k1).x+1, y1: UNPACK(pv.k1).y+1, x2: UNPACK(pv.k2).x+1, y2: UNPACK(pv.k2).y+1, color: pv.color })), geese: expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); outEl.value = json; await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' }); ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
 
     function getScreenPos(cx, cy) { const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; const { tx, ty } = transformPoint(cx, cy, ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * ENGINE.viewport.cellW, sy: (ty + 0.5) * ENGINE.viewport.cellH }; }
     function drawBombAsset(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const scale = s / 100; ctx.scale(scale, scale); ctx.beginPath(); ctx.arc(0, 10, 25, 0, Math.PI * 2); ctx.fillStyle = '#334155'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, -15); ctx.quadraticCurveTo(15, -30, 30, -25); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 4; ctx.stroke(); ctx.beginPath(); ctx.arc(30, -25, 5, 0, Math.PI * 2); ctx.fillStyle = '#ef4444'; ctx.fill(); ctx.beginPath(); ctx.arc(30, -25, 2.5, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill(); ctx.beginPath(); ctx.moveTo(-5, -15); ctx.lineTo(5, -15); ctx.lineTo(5, -5); ctx.lineTo(-5, -5); ctx.closePath(); ctx.fillStyle = '#64748b'; ctx.fill(); ctx.restore(); }
@@ -5050,19 +5083,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const handleUp = (e) => {
             if (ENGINE.logicState === THEME_DRAG) {
                 const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
-                let isSameElement = (dropTarget && dropTarget.dataset.themeColor === ENGINE.themeDragColor);
-                if (dropTarget && dropTarget.dataset.themeColor && !isSameElement && dropTarget.dataset.category === ENGINE.themeDragCategory) {
-                    replaceThemeColor(ENGINE.themeDragTheme, dropTarget.dataset.themeColor, ENGINE.themeDragColor, dropTarget.dataset.category);
+                const dragState = APP.UI.ThemeEditor.getDragState();
+                let isSameElement = (dropTarget && dropTarget.dataset.themeColor === dragState.color);
+                if (dropTarget && dropTarget.dataset.themeColor && !isSameElement && dropTarget.dataset.category === dragState.category) {
+                    replaceThemeColor(dragState.theme, dropTarget.dataset.themeColor, dragState.color, dropTarget.dataset.category);
                 }
-                setLogicState(IDLE); ENGINE.themeDragColor = null; ENGINE.themeDragTheme = null; ENGINE.themeDragCategory = null; APP.UI.ThemeEditor.setDragGhost({ visible: false });
-                if (!ENGINE.themeTapSelectedColor) APP.UI.ThemeEditor.setSwatchSelected(null);
+                setLogicState(IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
+                if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
             }
             if (ENGINE.logicState === EDIT_DRAG && ENGINE.mode === EDITOR) { const crect = cvs.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(PACK(getGridCoord(e).x, getGridCoord(e).y)); } else { if (ENGINE.editor.draggedFromGrid) { ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); showMessage("Deleted", "text-white font-black"); } } ENGINE.editor.draggedObject = null; setLogicState(IDLE); } if (ENGINE.logicState === DRAGGING) setLogicState(IDLE);
         };
 
         cvs.addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); ENGINE.runtime.activePointerId = e.pointerId; cvs.setPointerCapture(ENGINE.runtime.activePointerId); handleDown(e); });
         window.addEventListener('pointermove', e => {
-            if (ENGINE.logicState === THEME_DRAG) { APP.UI.ThemeEditor.setDragGhost({ visible: true, color: ENGINE.themeDragColor, x: e.clientX, y: e.clientY }); e.preventDefault(); return; }
+            if (ENGINE.logicState === THEME_DRAG) { const dragState = APP.UI.ThemeEditor.getDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: true, color: dragState.color, x: e.clientX, y: e.clientY }); e.preventDefault(); return; }
             if (ENGINE.mode === EDITOR && (ENGINE.editor.draggedObject || (ENGINE.editor.selectedTool && ENGINE.logicState === EDIT_DRAG))) { const size = ENGINE.viewport.cellW, ghostSize = size * 1.15; ghostEl.style.width = ghostSize + 'px'; ghostEl.style.height = ghostSize + 'px'; ghostEl.style.left = e.clientX + 'px'; ghostEl.style.top = e.clientY + 'px'; const type = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; const paletteIcon = document.querySelector(`.palette-item[data-type="${type}"] svg`); if (paletteIcon && ghostEl.innerHTML === '') { ghostEl.innerHTML = paletteIcon.outerHTML; } const palEl = APP.UI.getEl('editorPalette'); let isOverPalette = false; if (!palEl.classList.contains('hidden')) { const palRect = palEl.getBoundingClientRect(); isOverPalette = e.clientX >= palRect.left && e.clientX <= palRect.right && e.clientY >= palRect.top && e.clientY <= palRect.bottom; } ghostEl.style.display = isOverPalette ? 'none' : 'flex'; } else { APP.UI.setInlineStyle(ghostEl, 'display', 'none'); APP.UI.setModalContent(ghostEl, '', 'html'); } if (e.pointerId !== ENGINE.runtime.activePointerId && ENGINE.logicState !== EDIT_DRAG) return; e.preventDefault(); if (ENGINE.logicState === DRAGGING) APP.Engine.handlePrimaryGridInput(getGridCoord(e));
         });
         window.addEventListener('pointerup', e => { handleUp(e); if (ENGINE.runtime.activePointerId !== null && cvs.hasPointerCapture(ENGINE.runtime.activePointerId)) cvs.releasePointerCapture(ENGINE.runtime.activePointerId); ENGINE.runtime.activePointerId = null; });
@@ -5229,10 +5263,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
 
         APP.UI.getEl('undoBtn').onclick = () => { APP.UI.closeAllModals(); if(ENGINE.undoStack.length) applySnapshot(ENGINE.undoStack.pop()); };
-        APP.UI.getEl('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = ENGINE.foundHintsSinceLoad || []; if (!hints.length) { showMessage("No hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); outEl.value = hintText; try { await navigator.clipboard.writeText(hintText); } catch (e) { outEl.select(); document.execCommand('copy'); } showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
+        APP.UI.getEl('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = ENGINE.foundHintsSinceLoad || []; if (!hints.length) { showMessage("No hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); outEl.value = hintText; await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
         APP.UI.getEl('editGenBtn').onclick = () => { APP.UI.closeAllModals(); generateLevelString(); };
-        APP.UI.getEl('devCopyBtn').onclick = () => { APP.UI.closeAllModals(); if (outEl.value) { outEl.select(); document.execCommand('copy'); showMessage("Copied", "text-white font-black"); } };
-        APP.UI.getEl('editCopyBtn').onclick = () => { APP.UI.closeAllModals(); if (ENGINE.path.length > 0) { const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; outEl.select(); document.execCommand('copy'); showMessage("Path Copied", "text-white font-black"); } };
+        APP.UI.getEl('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (outEl.value) { if (await APP.UI.copyText(outEl.value, { fallbackElId: 'solutionOutput' })) showMessage("Copied", "text-white font-black"); } };
+        APP.UI.getEl('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (ENGINE.path.length > 0) { const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); showMessage("Path Copied", "text-white font-black"); } };
 
         const hintBtn = APP.UI.getEl('hintBtn'); const hintTopHalf = APP.UI.getEl('hintTopHalf');
         const toggleHint = () => {
@@ -5277,7 +5311,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
         });
         const handleWinClose = (callback) => { const circle = APP.UI.getEl('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
-        APP.UI.getEl('copyWinDataBtn').onclick = () => { if (winOutEl.value) { winOutEl.select(); document.execCommand('copy'); } };
+        APP.UI.getEl('copyWinDataBtn').onclick = async () => { if (winOutEl.value) await APP.UI.copyText(winOutEl.value, { fallbackElId: 'winSolutionOutput' }); };
         APP.UI.getEl('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(ENGINE.levelIdx > 0 ? ENGINE.levelIdx - 1 : levels.length - 1); outEl.value = ''; });
         APP.UI.getEl('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(ENGINE.levelIdx < levels.length - 1 ? ENGINE.levelIdx + 1 : 0); outEl.value = ''; });
         APP.UI.getEl('nextLevelModalBtn').onclick = () => { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; handleWinClose(() => { if (ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(ENGINE.levelIdx + 1); }); };
@@ -5291,7 +5325,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('closeGuideX').onclick = () => APP.UI.closeModal('guideModal');
         APP.UI.getEl('megaSolverBtn').onclick = () => { APP.UI.closeAllModals(); MEGA.run(); };
         APP.UI.getEl('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
-        APP.UI.getEl('copyMegaDataBtn').onclick = () => { const el = APP.UI.getEl('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
+        APP.UI.getEl('copyMegaDataBtn').onclick = async () => { const el = APP.UI.getEl('megaOutput'); if (el.value) await APP.UI.copyText(el.value, { fallbackElId: 'megaOutput' }); };
         APP.UI.getEl('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); MEGA.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
         APP.UI.getEl('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); MEGA.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
         APP.UI.getEl('megaRetry120Btn').onclick = () => { APP.UI.closeAllModals(); MEGA.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
