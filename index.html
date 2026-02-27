@@ -500,34 +500,157 @@
     const { $, AXIS, H, V, NONE, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = APP.Core;
     window.AXIS = AXIS;
 
-    function trapInitFailure(kind, payload) {
-        try {
-            const msgEl = $('loadErrorMessage');
-            if (msgEl) {
-                const details = payload?.message || payload?.reason || 'Unknown initialization failure.';
-                msgEl.textContent = `Startup error (${kind}): ${details}`;
-                msgEl.classList.remove('hidden');
+    // APP.Loader Public API: init(), finish(), fail(kind, payload), getStatus().
+    // Owns startup overlay/progress/error UX, external script loading, and level/theme ingestion + fallback decisions.
+    APP.Loader = (() => {
+        const state = {
+            progress: 0,
+            hasLoaded: false,
+            hasFinished: false,
+            status: 'idle',
+            mode: 'unknown',
+            initPromise: null,
+            timeoutId: null,
+            settled: false
+        };
+
+        const setProgress = (nextProgress, label = 'Initing Systems...') => {
+            state.progress = Math.max(0, Math.min(100, nextProgress));
+            const pct = $('loadPercent');
+            const bar = $('loadProgressBar');
+            const status = $('loadStatusLabel');
+            if (pct) pct.textContent = `${Math.round(state.progress)}%`;
+            if (bar) bar.style.width = `${state.progress}%`;
+            if (status && label) status.textContent = label;
+        };
+
+        const finalizeInit = (mode) => {
+            if (state.settled) return;
+            state.settled = true;
+            if (state.timeoutId) {
+                clearTimeout(state.timeoutId);
+                state.timeoutId = null;
             }
+            state.mode = mode;
+        };
+
+        const triggerFallback = (reason = 'missing window.RAW_LEVELS') => {
+            if (state.hasLoaded) return 'ready';
+            state.hasLoaded = true;
+            state.status = 'fallback';
+            setProgress(100, 'Using Local Fallback...');
+            console.warn(`[Using fallback levels] ${reason}`);
+            window.RAW_LEVELS = FALLBACK_RAW_LEVELS;
+            return 'fallback';
+        };
+
+        const finish = () => {
+            if (state.hasFinished) return;
+            state.hasFinished = true;
+            setProgress(100, state.mode === 'fallback' ? 'Fallback Ready' : 'Ready');
+            const overlay = $('loadingOverlay');
+            if (overlay) {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.classList.add('hidden'), 500);
+            }
+            populateThemes();
+        };
+
+        const fail = (kind, payload) => {
             try {
-                if (window.__loaderRef?.finish) window.__loaderRef.finish();
-                else {
-                    const overlay = $('loadingOverlay');
-                    if (overlay) {
-                        overlay.style.opacity = '0';
-                        overlay.classList.add('hidden');
-                    }
+                const msgEl = $('loadErrorMessage');
+                if (msgEl) {
+                    const details = payload?.message || payload?.reason || 'Unknown initialization failure.';
+                    msgEl.textContent = `Startup error (${kind}): ${details}`;
+                    msgEl.classList.remove('hidden');
                 }
-            } catch {
-                const overlay = $('loadingOverlay');
-                if (overlay) {
-                    overlay.style.opacity = '0';
-                    overlay.classList.add('hidden');
-                }
-            }
-        } catch {}
-    }
-    window.addEventListener('error', (event) => trapInitFailure('error', event?.error || event));
-    window.addEventListener('unhandledrejection', (event) => trapInitFailure('promise', event?.reason || event));
+            } catch {}
+            state.status = 'failed';
+            finish();
+        };
+
+        const init = () => {
+            if (state.initPromise) return state.initPromise;
+            state.status = 'loading';
+            state.settled = false;
+            state.hasFinished = false;
+            setProgress(5, 'Initing Systems...');
+
+            state.initPromise = new Promise((resolve) => {
+                const done = (mode) => {
+                    finalizeInit(mode);
+                    resolve(mode);
+                };
+
+                const loadThemes = new Promise(innerResolve => {
+                    setProgress(20, 'Loading Themes...');
+                    const s = document.createElement('script');
+                    s.src = './themes.js';
+                    s.onload = () => {
+                        if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
+                        ensureThemeLeaveColors();
+                        setProgress(55, 'Themes Ready');
+                        innerResolve();
+                    };
+                    s.onerror = () => {
+                        setProgress(55, 'Themes Fallback');
+                        innerResolve();
+                    };
+                    document.head.appendChild(s);
+                });
+
+                const loadLevels = new Promise((innerResolve, reject) => {
+                    setProgress(70, 'Loading Levels...');
+                    const s = document.createElement('script');
+                    s.src = './levels.js';
+                    s.onload = () => innerResolve();
+                    s.onerror = () => reject(new Error('levels.js failed to load'));
+                    document.head.appendChild(s);
+                });
+
+                loadThemes
+                    .then(() => loadLevels)
+                    .then(() => {
+                        if (state.hasLoaded) {
+                            done(state.mode === 'unknown' ? 'fallback' : state.mode);
+                            return;
+                        }
+                        if (!Array.isArray(window.RAW_LEVELS)) {
+                            done(triggerFallback('missing window.RAW_LEVELS after external script load'));
+                            return;
+                        }
+                        state.hasLoaded = true;
+                        state.status = 'ready';
+                        setProgress(95, 'Levels Ready');
+                        console.log('RAW_LEVELS loaded:', Array.isArray(window.RAW_LEVELS), window.RAW_LEVELS?.length);
+                        done('ready');
+                    })
+                    .catch(err => {
+                        console.error('[External level/theme load failed]', err);
+                        done(triggerFallback('exception during external level/theme load'));
+                    });
+
+                state.timeoutId = setTimeout(() => {
+                    done(triggerFallback('loader timeout after 5000ms'));
+                }, 5000);
+            });
+
+            return state.initPromise;
+        };
+
+        const getStatus = () => ({
+            progress: state.progress,
+            hasLoaded: state.hasLoaded,
+            hasFinished: state.hasFinished,
+            status: state.status,
+            mode: state.mode
+        });
+
+        return { init, finish, fail, getStatus };
+    })();
+
+    window.addEventListener('error', (event) => APP.Loader.fail('error', event?.error || event));
+    window.addEventListener('unhandledrejection', (event) => APP.Loader.fail('promise', event?.reason || event));
 
     // ======================================================
     // B) State / Engine
@@ -4738,64 +4861,39 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver('solve'); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
 
-        const loader = {
-            progress: 0, hasLoaded: false, finish() { const overlay = $('loadingOverlay'); overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 500); populateThemes(); },
-            triggerFallback(reason = 'missing window.RAW_LEVELS') { if (this.hasLoaded) return; this.hasLoaded = true; console.warn(`[Using fallback levels] ${reason}`); window.RAW_LEVELS = FALLBACK_RAW_LEVELS; this.finish(); loadLevel(0); updatePlayModeLayout(); loop(); },
-            start() {
-                const loadThemes = new Promise(resolve => {
-                    const s = document.createElement('script');
-                    s.src = "./themes.js";
-                    s.onload = () => {
-                        if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
-                        ensureThemeLeaveColors();
-                        resolve();
-                    };
-                    s.onerror = () => resolve();
-                    document.head.appendChild(s);
-                });
-                const loadLevels = new Promise((resolve, reject) => {
-                    const s = document.createElement('script');
-                    s.src = "./levels.js";
-                    s.onload = () => resolve();
-                    s.onerror = () => reject();
-                    document.head.appendChild(s);
-                });
-                loadThemes
-                    .then(() => loadLevels)
-                    .then(() => {
-                        if (this.hasLoaded) return;
-                        if (!Array.isArray(window.RAW_LEVELS)) {
-                            this.triggerFallback('missing window.RAW_LEVELS after external script load');
-                            return;
-                        }
-                        console.log('RAW_LEVELS loaded:', Array.isArray(window.RAW_LEVELS), window.RAW_LEVELS?.length);
-                        this.hasLoaded = true;
-                        loadLevel(0);
-                        updatePlayModeLayout();
-                        loop();
-                        this.finish();
-                    })
-                    .catch(err => {
-                        console.error('[External level/theme load failed]', err);
-                        this.triggerFallback('exception during external level/theme load');
-                    });
-                setTimeout(() => this.triggerFallback('loader timeout after 5000ms'), 5000);
-            }
-        };
+        // APP.Boot Public API: start().
+        // Owns the single initialization entrypoint and orchestrates auth/progress sync, loader completion, and post-load system startup.
+        APP.Boot = (() => {
+            let started = false;
 
-        window.__loaderRef = loader;
+            const start = async () => {
+                if (started) return;
+                started = true;
 
-        const startBoot = async () => {
-            try {
-                if (firebaseConfigRaw) await initAuth();
-            } catch (e) {}
-            syncProgress(auth?.currentUser);
-            loader.start();
-        };
+                ensureThemeLeaveColors();
+                applyTheme('classic');
 
-        startBoot();
-        ensureThemeLeaveColors();
-        applyTheme('classic');
+                try {
+                    if (firebaseConfigRaw) await initAuth();
+                } catch (e) {}
+                syncProgress(auth?.currentUser);
+
+                const mode = await APP.Loader.init();
+                if (mode !== 'ready' && mode !== 'fallback') {
+                    APP.Loader.fail('boot', { message: `Unexpected loader mode: ${mode}` });
+                    return;
+                }
+
+                loadLevel(0);
+                updatePlayModeLayout();
+                loop();
+                APP.Loader.finish();
+            };
+
+            return { start };
+        })();
+
+        APP.Boot.start();
     };
 </script>
 </body>
