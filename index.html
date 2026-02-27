@@ -848,7 +848,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const prompt = `${systemPrompt}\n\n${userPrompt}`;
         const payload = {
             prompt,
-            model: 'gemini-2.0-flash',
+            model: 'gemini-2.5-flash',
             generationConfig: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -870,7 +870,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         let lastError = null;
         for (let i = 0; i < 6; i++) {
             try {
-                const res = await fetch('/api/gemini_color_suggest.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const res = await fetch('./api/gemini_color_suggest.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const body = await res.json().catch(() => ({}));
 
                 if (res.status === 429) {
