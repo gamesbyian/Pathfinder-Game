@@ -3802,6 +3802,23 @@ Stages: ${stageInfo}` : ''}`;
         const loader = {
             progress: 0,
             hasLoaded: false,
+            safeInitialize() {
+                try {
+                    loadLevel(0);
+                } catch (e) {
+                    console.error('Failed to load level 0:', e);
+                }
+                try {
+                    updatePlayModeLayout();
+                } catch (e) {
+                    console.error('Failed to update play mode layout:', e);
+                }
+                try {
+                    if (typeof loop === 'function') loop();
+                } catch (e) {
+                    console.error('Failed to start loop:', e);
+                }
+            },
             finish() {
                 const overlay = $('loadingOverlay');
                 if (overlay) {
@@ -3815,20 +3832,13 @@ Stages: ${stageInfo}` : ''}`;
                 this.hasLoaded = true;
                 console.warn(`[Pathfinder Loader] Falling back: ${reason}`);
                 window.RAW_LEVELS = (typeof FALLBACK_RAW_LEVELS !== 'undefined') ? FALLBACK_RAW_LEVELS : [];
-                try {
-                    loadLevel(0);
-                    updatePlayModeLayout();
-                    if (typeof loop === 'function') loop();
-                } catch (e) {
-                    console.error('Critical boot failure during fallback:', e);
-                } finally {
-                    this.finish();
-                }
+                this.finish();
+                this.safeInitialize();
             },
             start() {
                 const loadThemes = new Promise(resolve => {
                     const s = document.createElement('script');
-                    s.src = `./themes.js?v=${Date.now()}`;
+                    s.src = "./themes.js?v=" + Date.now();
                     s.onload = () => {
                         if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
                         ensureThemeLeaveColors();
@@ -3842,7 +3852,7 @@ Stages: ${stageInfo}` : ''}`;
                 });
                 const loadLevels = new Promise(resolve => {
                     const s = document.createElement('script');
-                    s.src = `./levels.js?v=${Date.now()}`;
+                    s.src = "./levels.js?v=" + Date.now();
                     s.onload = () => resolve();
                     s.onerror = () => {
                         console.warn('levels.js not found');
@@ -3853,21 +3863,15 @@ Stages: ${stageInfo}` : ''}`;
 
                 Promise.all([loadThemes, loadLevels]).then(() => {
                     if (this.hasLoaded) return;
+                    this.hasLoaded = true;
+                    this.finish();
 
-                    if (Array.isArray(window.RAW_LEVELS) && window.RAW_LEVELS.length > 0) {
-                        this.hasLoaded = true;
-                        try {
-                            loadLevel(0);
-                            updatePlayModeLayout();
-                            if (typeof loop === 'function') loop();
-                        } catch (e) {
-                            this.triggerFallback(`Initialization error: ${e.message}`);
-                        } finally {
-                            this.finish();
-                        }
-                    } else {
-                        this.triggerFallback('RAW_LEVELS empty or missing');
+                    if (!Array.isArray(window.RAW_LEVELS) || window.RAW_LEVELS.length === 0) {
+                        console.warn('[Pathfinder Loader] RAW_LEVELS empty or missing; using fallback levels.');
+                        window.RAW_LEVELS = (typeof FALLBACK_RAW_LEVELS !== 'undefined') ? FALLBACK_RAW_LEVELS : [];
                     }
+
+                    this.safeInitialize();
                 });
 
                 setTimeout(() => this.triggerFallback('Network timeout'), 5000);
