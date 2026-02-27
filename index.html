@@ -3800,47 +3800,77 @@ Stages: ${stageInfo}` : ''}`;
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
 
         const loader = {
-            progress: 0, hasLoaded: false, finish() { const overlay = $('loadingOverlay'); overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 500); populateThemes(); },
-            triggerFallback(reason = 'missing window.RAW_LEVELS') { if (this.hasLoaded) return; this.hasLoaded = true; console.warn(`[Using fallback levels] ${reason}`); window.RAW_LEVELS = FALLBACK_RAW_LEVELS; this.finish(); loadLevel(0); updatePlayModeLayout(); loop(); },
+            progress: 0,
+            hasLoaded: false,
+            finish() {
+                const overlay = $('loadingOverlay');
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    setTimeout(() => overlay.classList.add('hidden'), 500);
+                }
+                if (typeof populateThemes === 'function') populateThemes();
+            },
+            triggerFallback(reason = 'missing data') {
+                if (this.hasLoaded) return;
+                this.hasLoaded = true;
+                console.warn(`[Pathfinder Loader] Falling back: ${reason}`);
+                window.RAW_LEVELS = (typeof FALLBACK_RAW_LEVELS !== 'undefined') ? FALLBACK_RAW_LEVELS : [];
+                try {
+                    loadLevel(0);
+                    updatePlayModeLayout();
+                    if (typeof loop === 'function') loop();
+                } catch (e) {
+                    console.error('Critical boot failure during fallback:', e);
+                } finally {
+                    this.finish();
+                }
+            },
             start() {
                 const loadThemes = new Promise(resolve => {
                     const s = document.createElement('script');
-                    s.src = "./themes.js";
+                    s.src = `./themes.js?v=${Date.now()}`;
                     s.onload = () => {
                         if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
                         ensureThemeLeaveColors();
                         resolve();
                     };
-                    s.onerror = () => resolve();
+                    s.onerror = () => {
+                        console.warn('themes.js not found');
+                        resolve();
+                    };
                     document.head.appendChild(s);
                 });
-                const loadLevels = new Promise((resolve, reject) => {
+                const loadLevels = new Promise(resolve => {
                     const s = document.createElement('script');
-                    s.src = "./levels.js";
+                    s.src = `./levels.js?v=${Date.now()}`;
                     s.onload = () => resolve();
-                    s.onerror = () => reject();
+                    s.onerror = () => {
+                        console.warn('levels.js not found');
+                        resolve();
+                    };
                     document.head.appendChild(s);
                 });
-                loadThemes
-                    .then(() => loadLevels)
-                    .then(() => {
-                        if (this.hasLoaded) return;
-                        if (!Array.isArray(window.RAW_LEVELS)) {
-                            this.triggerFallback('missing window.RAW_LEVELS after external script load');
-                            return;
-                        }
-                        console.log('RAW_LEVELS loaded:', Array.isArray(window.RAW_LEVELS), window.RAW_LEVELS?.length);
+
+                Promise.all([loadThemes, loadLevels]).then(() => {
+                    if (this.hasLoaded) return;
+
+                    if (Array.isArray(window.RAW_LEVELS) && window.RAW_LEVELS.length > 0) {
                         this.hasLoaded = true;
-                        loadLevel(0);
-                        updatePlayModeLayout();
-                        loop();
-                        this.finish();
-                    })
-                    .catch(err => {
-                        console.error('[External level/theme load failed]', err);
-                        this.triggerFallback('exception during external level/theme load');
-                    });
-                setTimeout(() => this.triggerFallback('loader timeout after 5000ms'), 5000);
+                        try {
+                            loadLevel(0);
+                            updatePlayModeLayout();
+                            if (typeof loop === 'function') loop();
+                        } catch (e) {
+                            this.triggerFallback(`Initialization error: ${e.message}`);
+                        } finally {
+                            this.finish();
+                        }
+                    } else {
+                        this.triggerFallback('RAW_LEVELS empty or missing');
+                    }
+                });
+
+                setTimeout(() => this.triggerFallback('Network timeout'), 5000);
             }
         };
 
