@@ -1214,14 +1214,798 @@
     function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
 
     const THEMES = {
-        classic: { bodyBg: '#e0f2fe', canvasBg: '#ffffff', grid: '#94a3b8', headerLeft: '#dc2626', headerRight: '#2563eb', path: 'rainbow', controls: 'rgba(255, 255, 255, 0.7)', metricText: '#ffffff', btns: { undo: '#4c566a', reset: '#d12929', guide: '#8c33db', whoa: '#2563eb', hint: '#cf6b17', saved: '#0a8a65', mega: '#ba29c9', mute: '#e1e7f0', muteIcon: '#64748b', copy: '#e1e7f0', gen: '#e1e7f0', modeToggle: '#1a2438', orient: '#1a2438', solve: '#ba29c9', editClear: '#d12929', editBombs: '#ef4444', editNew: '#0a8a65' }, modal: { bg: 'rgba(248, 250, 252, 0.95)', panelBg: '#ffffff', border: '#cbd5e1', text: '#334155', textMuted: '#64748b', accent: '#0f172a' }, output: { bg: '#0f172a', text: '#38bdf8' }, colors: { gate: '#3b82f6', goal: '#ef4444', block: '#cbd5e1', pin: '#ef4444', pinUnflipped: '#000000', filter: '#000000', portal: '#d946ef', cross: '#000000' }, palette: { bg: '#f8fafc', border: '#cbd5e1', itemBg: '#ffffff', itemBorder: '#cbd5e1', toolBg: '#f1f5f9' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#ffffff', ghostBorder: '#0ea5e9', win: { bg: '#ffffff', border: '#3b82f6', text: '#64748b', accent: '#1e3a8a' }, alert: { bg: '#1e40af', stroke: '#93c5fd' }, ctrlArea: { bg: '#f1f5f9', border: '#cbd5e1' }, text: { modal: '#334155', modalMuted: '#64748b', modalAccent: '#0f172a', output: '#38bdf8', metric: '#ffffff', headerMain: '#ffffff', headerSub: 'rgba(255, 255, 255, 0.7)', win: '#64748b', winAccent: '#1e3a8a', megaDesc: '#64748b', megaOutput: '#38bdf8', megaPrimary: '#ffffff', megaSecondary: '#ffffff', megaGemini: '#ffffff', megaCopy: '#334155' }, mega: { outputBg: '#0f172a', outputBorder: '#cbd5e1', primaryBg: '#ba29c9', primaryBorder: '#d946ef', secondaryBg: '#86198f', secondaryBorder: '#d946ef', geminiBg: '#4338ca', geminiBorder: '#6366f1', copyBg: '#e1e7f0', copyBorder: '#cbd5e1' }, burst: '#ffe135', check: '#1e293b' },
-        dark: { bodyBg: '#020617', canvasBg: '#111827', grid: '#475569', headerLeft: '#7f1d1d', headerRight: '#1e3a8a', path: '#22c55e', controls: 'rgba(30, 41, 59, 0.9)', metricText: '#f1f5f9', btns: { undo: '#374151', reset: '#7f1d1d', guide: '#4c1d95', whoa: '#1e3a8a', hint: '#b45309', saved: '#064e3b', mega: '#701a75', mute: '#1e293b', muteIcon: '#94a3b8', copy: '#1e293b', gen: '#1e293b', modeToggle: '#000000', orient: '#000000', solve: '#374151', editClear: '#7f1d1d', editBombs: '#f43f5e', editNew: '#064e3b' }, modal: { bg: 'rgba(15, 23, 42, 0.95)', panelBg: '#1e293b', border: '#334155', text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8' }, output: { bg: '#020617', text: '#22c55e' }, colors: { gate: '#38bdf8', goal: '#f43f5e', block: '#1e293b', pin: '#f43f5e', pinUnflipped: '#64748b', filter: '#94a3b8', portal: '#d946ef', cross: '#94a3b8' }, palette: { bg: '#0f172a', border: '#334155', itemBg: '#1e293b', itemBorder: '#334155', toolBg: '#0f172a' }, headerLeftText: '#f1f5f9', headerLeftLabel: 'rgba(241, 245, 249, 0.7)', ghostBg: '#1e293b', ghostBorder: '#38bdf8', win: { bg: '#1e293b', border: '#38bdf8', text: '#94a3b8', accent: '#f8fafc' }, alert: { bg: '#7f1d1d', stroke: '#fca5a5' }, ctrlArea: { bg: '#0f172a', border: '#334155' }, burst: '#334155', check: '#f1f5f9' },
-        tron: { bodyBg: '#000000', canvasBg: '#001d3d', grid: '#00d9ff66', headerLeft: '#00d9ff', headerRight: '#ff00ff', path: '#00d9ff', controls: 'rgba(0, 8, 20, 0.95)', metricText: '#000000', btns: { undo: '#003366', reset: '#990099', guide: '#004080', whoa: '#005099', hint: '#008080', saved: '#006600', mega: '#ff9900', mute: '#001d3d', muteIcon: '#00d9ff', copy: '#001d3d', gen: '#001d3d', modeToggle: '#001122', orient: '#001122', solve: '#003366', editClear: '#990099', editBombs: '#ff00ff', editNew: '#006600' }, modal: { bg: 'rgba(0, 8, 20, 0.95)', panelBg: '#001d3d', border: '#00d9ff', text: '#00d9ff', textMuted: '#004e64', accent: '#ff00ff' }, output: { bg: '#000814', text: '#ff00ff' }, colors: { gate: '#00d9ff', goal: '#ff00ff', block: '#001d3d', pin: '#ff00ff', pinUnflipped: '#004e64', filter: '#00d9ff', portal: '#ff00ff', cross: '#00d9ff' }, palette: { bg: '#000814', border: '#00d9ff', itemBg: '#001d3d', itemBorder: '#00d9ff', toolBg: '#000814' }, headerLeftText: '#000000', headerLeftLabel: 'rgba(0, 0, 0, 0.7)', ghostBg: '#001d3d', ghostBorder: '#ff00ff', win: { bg: '#000814', border: '#ff00ff', text: '#00d9ff', accent: '#ff00ff' }, alert: { bg: '#001d3d', stroke: '#00d9ff' }, ctrlArea: { bg: '#000814', border: '#00d9ff' }, burst: '#00d9ff', check: '#1e293b' },
-        paper: { bodyBg: '#fdf6e3', canvasBg: '#fffaf0', grid: '#3b3b3b66', headerLeft: '#000000', headerRight: '#555555', path: '#000000', controls: 'rgba(255, 250, 240, 0.9)', metricText: '#fdf6e3', btns: { undo: '#5a5a5a', reset: '#333333', guide: '#4a4a4a', whoa: '#3d3d3d', hint: '#6b6b6b', saved: '#2e4a3d', mega: '#2b2b2b', mute: '#eee8d5', muteIcon: '#000000', copy: '#eee8d5', gen: '#eee8d5', modeToggle: '#1a1a1a', orient: '#1a1a1a', solve: '#5a5a5a', editClear: '#333333', editBombs: '#000000', editNew: '#2e4a3d' }, modal: { bg: 'rgba(245, 230, 196, 0.95)', panelBg: '#fdf6e3', border: '#3b3b3b', text: '#1a1a1a', textMuted: '#5a5a5a', accent: '#000000' }, output: { bg: '#eee8d5', text: '#000000' }, colors: { gate: '#000000', goal: '#000000', block: '#cccccc', pin: '#000000', pinUnflipped: '#999999', filter: '#000000', portal: '#555555', cross: '#000000' }, palette: { bg: '#eee8d5', border: '#3b3b3b', itemBg: '#fdf6e3', itemBorder: '#3b3b3b', toolBg: '#eee8d5' }, headerLeftText: '#fdf6e3', headerLeftLabel: 'rgba(253, 246, 227, 0.7)', ghostBg: '#fdf6e3', ghostBorder: '#000000', win: { bg: '#fdf6e3', border: '#3b82f6', text: '#5a5a5a', accent: '#1a1a1a' }, alert: { bg: '#3b3b3b', stroke: '#fdf6e3' }, ctrlArea: { bg: '#eee8d5', border: '#3b3b3b' }, burst: '#eee8d5', check: '#000000' },
-        winter: { bodyBg: '#e0f2fe', canvasBg: '#f0f9ff', grid: '#7dd3fcaa', headerLeft: '#0ea5e9', headerRight: '#0284c7', path: '#2563eb', controls: 'rgba(240, 249, 255, 0.9)', metricText: '#f0f9ff', btns: { undo: '#0369a1', reset: '#be123c', guide: '#6d28d9', whoa: '#1d4ed8', hint: '#0f766e', saved: '#15803d', mega: '#db2777', mute: '#bae6fd', muteIcon: '#0369a1', copy: '#bae6fd', gen: '#bae6fd', modeToggle: '#075985', orient: '#075985', solve: '#0284c7', editClear: '#be123c', editBombs: '#2563eb', editNew: '#15803d' }, modal: { bg: 'rgba(255, 255, 255, 0.95)', panelBg: '#f0f9ff', border: '#0ea5e9', text: '#0c4a6e', textMuted: '#0284c7', accent: '#0369a1' }, output: { bg: '#0c4a6e', text: '#f0f9ff' }, colors: { gate: '#0ea5e9', goal: '#2563eb', block: '#bae6fd', pin: '#2563eb', pinUnflipped: '#7dd3fc', filter: '#0ea5e9', portal: '#38bdf8', cross: '#0ea5e9' }, palette: { bg: '#e0f2fe', border: '#0ea5e9', itemBg: '#f0f9ff', itemBorder: '#0ea5e9', toolBg: '#e0f2fe' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#f0f9ff', ghostBorder: '#0284c7', win: { bg: '#f0f9ff', border: '#0ea5e9', text: '#0284c7', accent: '#0369a1' }, alert: { bg: '#0ea5e9', stroke: '#ffffff' }, ctrlArea: { bg: '#e0f2fe', border: '#0ea5e9' }, burst: '#e0f2fe', check: '#0369a1' },
-        summer: { bodyBg: '#fff7ed', canvasBg: '#ffedd5', grid: '#fb923caa', headerLeft: '#ea580c', headerRight: '#f97316', path: '#16a34a', controls: 'rgba(255, 237, 213, 0.9)', metricText: '#fff7ed', btns: { undo: '#c2410c', reset: '#b91c1c', guide: '#b45309', whoa: '#be185d', hint: '#ca8a04', saved: '#15803d', mega: '#ef4444', mute: '#fed7aa', muteIcon: '#9a3412', copy: '#fed7aa', gen: '#fed7aa', modeToggle: '#431407', orient: '#431407', solve: '#b45309', editClear: '#991b1b', editBombs: '#16a34a', editNew: '#15803d' }, modal: { bg: 'rgba(254, 243, 199, 0.95)', panelBg: '#fff7ed', border: '#ea580c', text: '#431407', textMuted: '#9a3412', accent: '#ea580c' }, output: { bg: '#431407', text: '#fb923c' }, colors: { gate: '#ea580c', goal: '#16a34a', block: '#fed7aa', pin: '#16a34a', pinUnflipped: '#fb923c', filter: '#ea580c', portal: '#f97316', cross: '#ea580c' }, palette: { bg: '#fff7ed', border: '#ea580c', itemBg: '#ffedd5', itemBorder: '#ea580c', toolBg: '#fff7ed' }, headerLeftText: '#fff7ed', headerLeftLabel: 'rgba(255, 247, 237, 0.7)', ghostBg: '#ffedd5', ghostBorder: '#ea580c', win: { bg: '#ffedd5', border: '#ea580c', text: '#9a3412', accent: '#431407' }, alert: { bg: '#ea580c', stroke: '#ffedd5' }, ctrlArea: { bg: '#fff7ed', border: '#ea580c' }, burst: '#fef9c3', check: '#ea580c' },
-        glf: { bodyBg: '#bdc3c7', canvasBg: '#ecf0f1', grid: '#95a5a6', headerLeft: '#D21F1B', headerRight: '#4A90E2', path: '#F4D03F', controls: 'rgba(236, 240, 241, 0.8)', metricText: '#ecf0f1', btns: { undo: '#34495e', reset: '#D21F1B', guide: '#558735', whoa: '#2a6ebd', hint: '#d35400', saved: '#27ae60', mega: '#a51815', mute: '#bdc3c7', muteIcon: '#2c3e50', copy: '#bdc3c7', gen: '#bdc3c7', modeToggle: '#2c3e50', orient: '#2c3e50', solve: '#c4a112', editClear: '#a51815', editBombs: '#F4D03F', editNew: '#27ae60' }, modal: { bg: 'rgba(213, 219, 219, 0.95)', panelBg: '#ecf0f1', border: '#95a5a6', text: '#2c3e50', textMuted: '#7f8c8d', accent: '#D21F1B' }, output: { bg: '#2c3e50', text: '#93C572' }, colors: { gate: '#D21F1B', goal: '#F4D03F', block: '#bdc3c7', pin: '#D21F1B', pinUnflipped: '#7f8c8d', filter: '#2c3e50', portal: '#4A90E2', cross: '#D21F1B' }, palette: { bg: '#ecf0f1', border: '#D21F1B', itemBg: '#bdc3c7', itemBorder: '#95a5a6', toolBg: '#ecf0f1' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#bdc3c7', ghostBorder: '#D21F1B', win: { bg: '#ecf0f1', border: '#D21F1B', text: '#7f8c8d', accent: '#2c3e50' }, alert: { bg: '#2c3e50', stroke: '#ecf0f1' }, ctrlArea: { bg: '#ecf0f1', border: '#95a5a6' }, burst: '#ecf0f1', check: '#D21F1B' }
-    };
+    "classic": {
+        "bodyBg": "#e0f2fe",
+        "canvasBg": "#ffffff",
+        "grid": "#94a3b8",
+        "headerLeft": "#dc2626",
+        "headerRight": "#2563eb",
+        "path": "rainbow",
+        "controls": "rgba(255, 255, 255, 0.7)",
+        "metricText": "#ffffff",
+        "btns": {
+            "undo": "#4c566a",
+            "reset": "#d12929",
+            "guide": "#8c33db",
+            "whoa": "#2563eb",
+            "hint": "#cf6b17",
+            "saved": "#0a8a65",
+            "mega": "#ba29c9",
+            "mute": "#e1e7f0",
+            "muteIcon": "#64748b",
+            "copy": "#e1e7f0",
+            "gen": "#e1e7f0",
+            "modeToggle": "#1a2438",
+            "orient": "#1a2438",
+            "solve": "#ba29c9",
+            "editClear": "#d12929",
+            "editBombs": "#ef4444",
+            "editNew": "#0a8a65"
+        },
+        "modal": {
+            "bg": "rgba(248, 250, 252, 0.95)",
+            "panelBg": "#ffffff",
+            "border": "#cbd5e1",
+            "text": "#334155",
+            "textMuted": "#64748b",
+            "accent": "#0f172a"
+        },
+        "output": {
+            "bg": "#0f172a",
+            "text": "#38bdf8"
+        },
+        "colors": {
+            "gate": "#3b82f6",
+            "goal": "#ef4444",
+            "block": "#cbd5e1",
+            "pin": "#ef4444",
+            "pinUnflipped": "#000000",
+            "filter": "#000000",
+            "portal": "#d946ef",
+            "cross": "#000000"
+        },
+        "palette": {
+            "bg": "#f8fafc",
+            "border": "#cbd5e1",
+            "itemBg": "#ffffff",
+            "itemBorder": "#cbd5e1",
+            "toolBg": "#f1f5f9"
+        },
+        "headerLeftText": "#ffffff",
+        "headerLeftLabel": "rgba(255, 255, 255, 0.7)",
+        "ghostBg": "#ffffff",
+        "ghostBorder": "#0ea5e9",
+        "win": {
+            "bg": "#ffffff",
+            "border": "#3b82f6",
+            "text": "#64748b",
+            "accent": "#1e3a8a"
+        },
+        "alert": {
+            "bg": "#1e40af",
+            "stroke": "#93c5fd"
+        },
+        "ctrlArea": {
+            "bg": "#f1f5f9",
+            "border": "#cbd5e1"
+        },
+        "text": {
+            "modal": "#334155",
+            "modalMuted": "#64748b",
+            "modalAccent": "#0f172a",
+            "output": "#38bdf8",
+            "metric": "#ffffff",
+            "headerMain": "#ffffff",
+            "headerSub": "rgba(255, 255, 255, 0.7)",
+            "win": "#64748b",
+            "winAccent": "#1e3a8a",
+            "megaDesc": "#64748b",
+            "megaOutput": "#38bdf8",
+            "megaPrimary": "#ffffff",
+            "megaSecondary": "#ffffff",
+            "megaGemini": "#ffffff",
+            "megaCopy": "#334155"
+        },
+        "mega": {
+            "outputBg": "#0f172a",
+            "outputBorder": "#cbd5e1",
+            "primaryBg": "#ba29c9",
+            "primaryBorder": "#d946ef",
+            "secondaryBg": "#86198f",
+            "secondaryBorder": "#d946ef",
+            "geminiBg": "#4338ca",
+            "geminiBorder": "#6366f1",
+            "copyBg": "#e1e7f0",
+            "copyBorder": "#cbd5e1"
+        },
+        "burst": "#ffe135",
+        "check": "#1e293b",
+        "leave": {
+            "bg": "#dc2626",
+            "hover": "#b91c1c",
+            "text": "#ffffff",
+            "border": "#b91c1c"
+        }
+    },
+    "dark": {
+        "bodyBg": "#020617",
+        "canvasBg": "#111827",
+        "grid": "#475569",
+        "headerLeft": "#7f1d1d",
+        "headerRight": "#1e3a8a",
+        "path": "#22c55e",
+        "controls": "rgba(30, 41, 59, 0.9)",
+        "metricText": "#f1f5f9",
+        "btns": {
+            "undo": "#374151",
+            "reset": "#7f1d1d",
+            "guide": "#4c1d95",
+            "whoa": "#1e3a8a",
+            "hint": "#b45309",
+            "saved": "#064e3b",
+            "mega": "#701a75",
+            "mute": "#1e293b",
+            "muteIcon": "#94a3b8",
+            "copy": "#1e293b",
+            "gen": "#1e293b",
+            "modeToggle": "#000000",
+            "orient": "#000000",
+            "solve": "#374151",
+            "editClear": "#7f1d1d",
+            "editBombs": "#f43f5e",
+            "editNew": "#064e3b"
+        },
+        "modal": {
+            "bg": "rgba(15, 23, 42, 0.95)",
+            "panelBg": "#1e293b",
+            "border": "#334155",
+            "text": "#f8fafc",
+            "textMuted": "#94a3b8",
+            "accent": "#38bdf8"
+        },
+        "output": {
+            "bg": "#020617",
+            "text": "#22c55e"
+        },
+        "colors": {
+            "gate": "#38bdf8",
+            "goal": "#f43f5e",
+            "block": "#1e293b",
+            "pin": "#f43f5e",
+            "pinUnflipped": "#64748b",
+            "filter": "#94a3b8",
+            "portal": "#d946ef",
+            "cross": "#94a3b8"
+        },
+        "palette": {
+            "bg": "#0f172a",
+            "border": "#334155",
+            "itemBg": "#1e293b",
+            "itemBorder": "#334155",
+            "toolBg": "#0f172a"
+        },
+        "headerLeftText": "#f1f5f9",
+        "headerLeftLabel": "rgba(241, 245, 249, 0.7)",
+        "ghostBg": "#1e293b",
+        "ghostBorder": "#38bdf8",
+        "win": {
+            "bg": "#1e293b",
+            "border": "#38bdf8",
+            "text": "#94a3b8",
+            "accent": "#f8fafc"
+        },
+        "alert": {
+            "bg": "#7f1d1d",
+            "stroke": "#fca5a5"
+        },
+        "ctrlArea": {
+            "bg": "#0f172a",
+            "border": "#334155"
+        },
+        "burst": "#334155",
+        "check": "#f1f5f9",
+        "text": {
+            "modal": "#f8fafc",
+            "modalMuted": "#94a3b8",
+            "modalAccent": "#38bdf8",
+            "output": "#22c55e",
+            "metric": "#f1f5f9",
+            "headerMain": "#f1f5f9",
+            "headerSub": "rgba(241, 245, 249, 0.7)",
+            "win": "#94a3b8",
+            "winAccent": "#f8fafc",
+            "megaDesc": "#94a3b8",
+            "megaOutput": "#22c55e",
+            "megaPrimary": "#ffffff",
+            "megaSecondary": "#ffffff",
+            "megaGemini": "#ffffff",
+            "megaCopy": "#f8fafc"
+        },
+        "mega": {
+            "outputBg": "#020617",
+            "outputBorder": "#334155",
+            "primaryBg": "#701a75",
+            "primaryBorder": "#334155",
+            "secondaryBg": "#621666",
+            "secondaryBorder": "#334155",
+            "geminiBg": "#4c1d95",
+            "geminiBorder": "#334155",
+            "copyBg": "#1e293b",
+            "copyBorder": "#334155"
+        },
+        "leave": {
+            "bg": "#1e3a8a",
+            "hover": "#193175",
+            "text": "#ffffff",
+            "border": "#193175"
+        }
+    },
+    "tron": {
+        "bodyBg": "#000000",
+        "canvasBg": "#001d3d",
+        "grid": "#00d9ff66",
+        "headerLeft": "#00d9ff",
+        "headerRight": "#ff00ff",
+        "path": "#00d9ff",
+        "controls": "rgba(0, 8, 20, 0.95)",
+        "metricText": "#000000",
+        "btns": {
+            "undo": "#003366",
+            "reset": "#990099",
+            "guide": "#004080",
+            "whoa": "#005099",
+            "hint": "#008080",
+            "saved": "#006600",
+            "mega": "#ff9900",
+            "mute": "#001d3d",
+            "muteIcon": "#00d9ff",
+            "copy": "#001d3d",
+            "gen": "#001d3d",
+            "modeToggle": "#001122",
+            "orient": "#001122",
+            "solve": "#003366",
+            "editClear": "#990099",
+            "editBombs": "#ff00ff",
+            "editNew": "#006600"
+        },
+        "modal": {
+            "bg": "rgba(0, 8, 20, 0.95)",
+            "panelBg": "#001d3d",
+            "border": "#00d9ff",
+            "text": "#00d9ff",
+            "textMuted": "#004e64",
+            "accent": "#ff00ff"
+        },
+        "output": {
+            "bg": "#000814",
+            "text": "#ff00ff"
+        },
+        "colors": {
+            "gate": "#00d9ff",
+            "goal": "#ff00ff",
+            "block": "#001d3d",
+            "pin": "#ff00ff",
+            "pinUnflipped": "#004e64",
+            "filter": "#00d9ff",
+            "portal": "#ff00ff",
+            "cross": "#00d9ff"
+        },
+        "palette": {
+            "bg": "#000814",
+            "border": "#00d9ff",
+            "itemBg": "#001d3d",
+            "itemBorder": "#00d9ff",
+            "toolBg": "#000814"
+        },
+        "headerLeftText": "#000000",
+        "headerLeftLabel": "rgba(0, 0, 0, 0.7)",
+        "ghostBg": "#001d3d",
+        "ghostBorder": "#ff00ff",
+        "win": {
+            "bg": "#000814",
+            "border": "#ff00ff",
+            "text": "#00d9ff",
+            "accent": "#ff00ff"
+        },
+        "alert": {
+            "bg": "#001d3d",
+            "stroke": "#00d9ff"
+        },
+        "ctrlArea": {
+            "bg": "#000814",
+            "border": "#00d9ff"
+        },
+        "burst": "#00d9ff",
+        "check": "#1e293b",
+        "text": {
+            "modal": "#00d9ff",
+            "modalMuted": "#004e64",
+            "modalAccent": "#ff00ff",
+            "output": "#ff00ff",
+            "metric": "#000000",
+            "headerMain": "#000000",
+            "headerSub": "rgba(0, 0, 0, 0.7)",
+            "win": "#00d9ff",
+            "winAccent": "#ff00ff",
+            "megaDesc": "#004e64",
+            "megaOutput": "#ff00ff",
+            "megaPrimary": "#ffffff",
+            "megaSecondary": "#ffffff",
+            "megaGemini": "#ffffff",
+            "megaCopy": "#00d9ff"
+        },
+        "mega": {
+            "outputBg": "#000814",
+            "outputBorder": "#00d9ff",
+            "primaryBg": "#ff9900",
+            "primaryBorder": "#00d9ff",
+            "secondaryBg": "#e08600",
+            "secondaryBorder": "#00d9ff",
+            "geminiBg": "#004080",
+            "geminiBorder": "#00d9ff",
+            "copyBg": "#001d3d",
+            "copyBorder": "#00d9ff"
+        },
+        "leave": {
+            "bg": "#ff00ff",
+            "hover": "#d800d8",
+            "text": "#ffffff",
+            "border": "#d800d8"
+        }
+    },
+    "paper": {
+        "bodyBg": "#fdf6e3",
+        "canvasBg": "#fffaf0",
+        "grid": "#3b3b3b66",
+        "headerLeft": "#000000",
+        "headerRight": "#555555",
+        "path": "#000000",
+        "controls": "rgba(255, 250, 240, 0.9)",
+        "metricText": "#fdf6e3",
+        "btns": {
+            "undo": "#5a5a5a",
+            "reset": "#333333",
+            "guide": "#4a4a4a",
+            "whoa": "#3d3d3d",
+            "hint": "#6b6b6b",
+            "saved": "#2e4a3d",
+            "mega": "#2b2b2b",
+            "mute": "#eee8d5",
+            "muteIcon": "#000000",
+            "copy": "#eee8d5",
+            "gen": "#eee8d5",
+            "modeToggle": "#1a1a1a",
+            "orient": "#1a1a1a",
+            "solve": "#5a5a5a",
+            "editClear": "#333333",
+            "editBombs": "#000000",
+            "editNew": "#2e4a3d"
+        },
+        "modal": {
+            "bg": "rgba(245, 230, 196, 0.95)",
+            "panelBg": "#fdf6e3",
+            "border": "#3b3b3b",
+            "text": "#1a1a1a",
+            "textMuted": "#5a5a5a",
+            "accent": "#000000"
+        },
+        "output": {
+            "bg": "#eee8d5",
+            "text": "#000000"
+        },
+        "colors": {
+            "gate": "#000000",
+            "goal": "#000000",
+            "block": "#cccccc",
+            "pin": "#000000",
+            "pinUnflipped": "#999999",
+            "filter": "#000000",
+            "portal": "#555555",
+            "cross": "#000000"
+        },
+        "palette": {
+            "bg": "#eee8d5",
+            "border": "#3b3b3b",
+            "itemBg": "#fdf6e3",
+            "itemBorder": "#3b3b3b",
+            "toolBg": "#eee8d5"
+        },
+        "headerLeftText": "#fdf6e3",
+        "headerLeftLabel": "rgba(253, 246, 227, 0.7)",
+        "ghostBg": "#fdf6e3",
+        "ghostBorder": "#000000",
+        "win": {
+            "bg": "#fdf6e3",
+            "border": "#3b82f6",
+            "text": "#5a5a5a",
+            "accent": "#1a1a1a"
+        },
+        "alert": {
+            "bg": "#3b3b3b",
+            "stroke": "#fdf6e3"
+        },
+        "ctrlArea": {
+            "bg": "#eee8d5",
+            "border": "#3b3b3b"
+        },
+        "burst": "#eee8d5",
+        "check": "#000000",
+        "text": {
+            "modal": "#1a1a1a",
+            "modalMuted": "#5a5a5a",
+            "modalAccent": "#000000",
+            "output": "#000000",
+            "metric": "#fdf6e3",
+            "headerMain": "#fdf6e3",
+            "headerSub": "rgba(253, 246, 227, 0.7)",
+            "win": "#5a5a5a",
+            "winAccent": "#1a1a1a",
+            "megaDesc": "#5a5a5a",
+            "megaOutput": "#000000",
+            "megaPrimary": "#ffffff",
+            "megaSecondary": "#ffffff",
+            "megaGemini": "#ffffff",
+            "megaCopy": "#1a1a1a"
+        },
+        "mega": {
+            "outputBg": "#eee8d5",
+            "outputBorder": "#3b3b3b",
+            "primaryBg": "#2b2b2b",
+            "primaryBorder": "#3b3b3b",
+            "secondaryBg": "#252525",
+            "secondaryBorder": "#3b3b3b",
+            "geminiBg": "#4a4a4a",
+            "geminiBorder": "#3b3b3b",
+            "copyBg": "#eee8d5",
+            "copyBorder": "#3b3b3b"
+        },
+        "leave": {
+            "bg": "#555555",
+            "hover": "#484848",
+            "text": "#ffffff",
+            "border": "#484848"
+        }
+    },
+    "winter": {
+        "bodyBg": "#e0f2fe",
+        "canvasBg": "#f0f9ff",
+        "grid": "#7dd3fcaa",
+        "headerLeft": "#0ea5e9",
+        "headerRight": "#0284c7",
+        "path": "#2563eb",
+        "controls": "rgba(240, 249, 255, 0.9)",
+        "metricText": "#f0f9ff",
+        "btns": {
+            "undo": "#0369a1",
+            "reset": "#be123c",
+            "guide": "#6d28d9",
+            "whoa": "#1d4ed8",
+            "hint": "#0f766e",
+            "saved": "#15803d",
+            "mega": "#db2777",
+            "mute": "#bae6fd",
+            "muteIcon": "#0369a1",
+            "copy": "#bae6fd",
+            "gen": "#bae6fd",
+            "modeToggle": "#075985",
+            "orient": "#075985",
+            "solve": "#0284c7",
+            "editClear": "#be123c",
+            "editBombs": "#2563eb",
+            "editNew": "#15803d"
+        },
+        "modal": {
+            "bg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#f0f9ff",
+            "border": "#0ea5e9",
+            "text": "#0c4a6e",
+            "textMuted": "#0284c7",
+            "accent": "#0369a1"
+        },
+        "output": {
+            "bg": "#0c4a6e",
+            "text": "#f0f9ff"
+        },
+        "colors": {
+            "gate": "#0ea5e9",
+            "goal": "#2563eb",
+            "block": "#bae6fd",
+            "pin": "#2563eb",
+            "pinUnflipped": "#7dd3fc",
+            "filter": "#0ea5e9",
+            "portal": "#38bdf8",
+            "cross": "#0ea5e9"
+        },
+        "palette": {
+            "bg": "#e0f2fe",
+            "border": "#0ea5e9",
+            "itemBg": "#f0f9ff",
+            "itemBorder": "#0ea5e9",
+            "toolBg": "#e0f2fe"
+        },
+        "headerLeftText": "#ffffff",
+        "headerLeftLabel": "rgba(255, 255, 255, 0.7)",
+        "ghostBg": "#f0f9ff",
+        "ghostBorder": "#0284c7",
+        "win": {
+            "bg": "#f0f9ff",
+            "border": "#0ea5e9",
+            "text": "#0284c7",
+            "accent": "#0369a1"
+        },
+        "alert": {
+            "bg": "#0ea5e9",
+            "stroke": "#ffffff"
+        },
+        "ctrlArea": {
+            "bg": "#e0f2fe",
+            "border": "#0ea5e9"
+        },
+        "burst": "#e0f2fe",
+        "check": "#0369a1",
+        "text": {
+            "modal": "#0c4a6e",
+            "modalMuted": "#0284c7",
+            "modalAccent": "#0369a1",
+            "output": "#f0f9ff",
+            "metric": "#f0f9ff",
+            "headerMain": "#ffffff",
+            "headerSub": "rgba(255, 255, 255, 0.7)",
+            "win": "#0284c7",
+            "winAccent": "#0369a1",
+            "megaDesc": "#0284c7",
+            "megaOutput": "#f0f9ff",
+            "megaPrimary": "#ffffff",
+            "megaSecondary": "#ffffff",
+            "megaGemini": "#ffffff",
+            "megaCopy": "#0c4a6e"
+        },
+        "mega": {
+            "outputBg": "#0c4a6e",
+            "outputBorder": "#0ea5e9",
+            "primaryBg": "#db2777",
+            "primaryBorder": "#0ea5e9",
+            "secondaryBg": "#c02268",
+            "secondaryBorder": "#0ea5e9",
+            "geminiBg": "#6d28d9",
+            "geminiBorder": "#0ea5e9",
+            "copyBg": "#bae6fd",
+            "copyBorder": "#0ea5e9"
+        },
+        "leave": {
+            "bg": "#0284c7",
+            "hover": "#0170a9",
+            "text": "#ffffff",
+            "border": "#0170a9"
+        }
+    },
+    "summer": {
+        "bodyBg": "#fff7ed",
+        "canvasBg": "#ffedd5",
+        "grid": "#fb923caa",
+        "headerLeft": "#ea580c",
+        "headerRight": "#f97316",
+        "path": "#16a34a",
+        "controls": "rgba(255, 237, 213, 0.9)",
+        "metricText": "#fff7ed",
+        "btns": {
+            "undo": "#c2410c",
+            "reset": "#b91c1c",
+            "guide": "#b45309",
+            "whoa": "#be185d",
+            "hint": "#ca8a04",
+            "saved": "#15803d",
+            "mega": "#ef4444",
+            "mute": "#fed7aa",
+            "muteIcon": "#9a3412",
+            "copy": "#fed7aa",
+            "gen": "#fed7aa",
+            "modeToggle": "#431407",
+            "orient": "#431407",
+            "solve": "#b45309",
+            "editClear": "#991b1b",
+            "editBombs": "#16a34a",
+            "editNew": "#15803d"
+        },
+        "modal": {
+            "bg": "rgba(254, 243, 199, 0.95)",
+            "panelBg": "#fff7ed",
+            "border": "#ea580c",
+            "text": "#431407",
+            "textMuted": "#9a3412",
+            "accent": "#ea580c"
+        },
+        "output": {
+            "bg": "#431407",
+            "text": "#fb923c"
+        },
+        "colors": {
+            "gate": "#ea580c",
+            "goal": "#16a34a",
+            "block": "#fed7aa",
+            "pin": "#16a34a",
+            "pinUnflipped": "#fb923c",
+            "filter": "#ea580c",
+            "portal": "#f97316",
+            "cross": "#ea580c"
+        },
+        "palette": {
+            "bg": "#fff7ed",
+            "border": "#ea580c",
+            "itemBg": "#ffedd5",
+            "itemBorder": "#ea580c",
+            "toolBg": "#fff7ed"
+        },
+        "headerLeftText": "#fff7ed",
+        "headerLeftLabel": "rgba(255, 247, 237, 0.7)",
+        "ghostBg": "#ffedd5",
+        "ghostBorder": "#ea580c",
+        "win": {
+            "bg": "#ffedd5",
+            "border": "#ea580c",
+            "text": "#9a3412",
+            "accent": "#431407"
+        },
+        "alert": {
+            "bg": "#ea580c",
+            "stroke": "#ffedd5"
+        },
+        "ctrlArea": {
+            "bg": "#fff7ed",
+            "border": "#ea580c"
+        },
+        "burst": "#fef9c3",
+        "check": "#ea580c",
+        "text": {
+            "modal": "#431407",
+            "modalMuted": "#9a3412",
+            "modalAccent": "#ea580c",
+            "output": "#fb923c",
+            "metric": "#fff7ed",
+            "headerMain": "#fff7ed",
+            "headerSub": "rgba(255, 247, 237, 0.7)",
+            "win": "#9a3412",
+            "winAccent": "#431407",
+            "megaDesc": "#9a3412",
+            "megaOutput": "#fb923c",
+            "megaPrimary": "#ffffff",
+            "megaSecondary": "#ffffff",
+            "megaGemini": "#ffffff",
+            "megaCopy": "#431407"
+        },
+        "mega": {
+            "outputBg": "#431407",
+            "outputBorder": "#ea580c",
+            "primaryBg": "#ef4444",
+            "primaryBorder": "#ea580c",
+            "secondaryBg": "#d23b3b",
+            "secondaryBorder": "#ea580c",
+            "geminiBg": "#b45309",
+            "geminiBorder": "#ea580c",
+            "copyBg": "#fed7aa",
+            "copyBorder": "#ea580c"
+        },
+        "leave": {
+            "bg": "#f97316",
+            "hover": "#d36112",
+            "text": "#ffffff",
+            "border": "#d36112"
+        }
+    },
+    "glf": {
+        "bodyBg": "#bdc3c7",
+        "canvasBg": "#ecf0f1",
+        "grid": "#95a5a6",
+        "headerLeft": "#D21F1B",
+        "headerRight": "#4A90E2",
+        "path": "#F4D03F",
+        "controls": "rgba(236, 240, 241, 0.8)",
+        "metricText": "#ecf0f1",
+        "btns": {
+            "undo": "#34495e",
+            "reset": "#D21F1B",
+            "guide": "#558735",
+            "whoa": "#2a6ebd",
+            "hint": "#d35400",
+            "saved": "#27ae60",
+            "mega": "#a51815",
+            "mute": "#bdc3c7",
+            "muteIcon": "#2c3e50",
+            "copy": "#bdc3c7",
+            "gen": "#bdc3c7",
+            "modeToggle": "#2c3e50",
+            "orient": "#2c3e50",
+            "solve": "#c4a112",
+            "editClear": "#a51815",
+            "editBombs": "#F4D03F",
+            "editNew": "#27ae60"
+        },
+        "modal": {
+            "bg": "rgba(213, 219, 219, 0.95)",
+            "panelBg": "#ecf0f1",
+            "border": "#95a5a6",
+            "text": "#2c3e50",
+            "textMuted": "#7f8c8d",
+            "accent": "#D21F1B"
+        },
+        "output": {
+            "bg": "#2c3e50",
+            "text": "#93C572"
+        },
+        "colors": {
+            "gate": "#D21F1B",
+            "goal": "#F4D03F",
+            "block": "#bdc3c7",
+            "pin": "#D21F1B",
+            "pinUnflipped": "#7f8c8d",
+            "filter": "#2c3e50",
+            "portal": "#4A90E2",
+            "cross": "#D21F1B"
+        },
+        "palette": {
+            "bg": "#ecf0f1",
+            "border": "#D21F1B",
+            "itemBg": "#bdc3c7",
+            "itemBorder": "#95a5a6",
+            "toolBg": "#ecf0f1"
+        },
+        "headerLeftText": "#ffffff",
+        "headerLeftLabel": "rgba(255, 255, 255, 0.7)",
+        "ghostBg": "#bdc3c7",
+        "ghostBorder": "#D21F1B",
+        "win": {
+            "bg": "#ecf0f1",
+            "border": "#D21F1B",
+            "text": "#7f8c8d",
+            "accent": "#2c3e50"
+        },
+        "alert": {
+            "bg": "#2c3e50",
+            "stroke": "#ecf0f1"
+        },
+        "ctrlArea": {
+            "bg": "#ecf0f1",
+            "border": "#95a5a6"
+        },
+        "burst": "#ecf0f1",
+        "check": "#D21F1B",
+        "text": {
+            "modal": "#2c3e50",
+            "modalMuted": "#7f8c8d",
+            "modalAccent": "#D21F1B",
+            "output": "#93C572",
+            "metric": "#ecf0f1",
+            "headerMain": "#ffffff",
+            "headerSub": "rgba(255, 255, 255, 0.7)",
+            "win": "#7f8c8d",
+            "winAccent": "#2c3e50",
+            "megaDesc": "#7f8c8d",
+            "megaOutput": "#93C572",
+            "megaPrimary": "#ffffff",
+            "megaSecondary": "#ffffff",
+            "megaGemini": "#ffffff",
+            "megaCopy": "#2c3e50"
+        },
+        "mega": {
+            "outputBg": "#2c3e50",
+            "outputBorder": "#95a5a6",
+            "primaryBg": "#a51815",
+            "primaryBorder": "#95a5a6",
+            "secondaryBg": "#911512",
+            "secondaryBorder": "#95a5a6",
+            "geminiBg": "#558735",
+            "geminiBorder": "#95a5a6",
+            "copyBg": "#bdc3c7",
+            "copyBorder": "#95a5a6"
+        },
+        "leave": {
+            "bg": "#4A90E2",
+            "hover": "#3e7ac0",
+            "text": "#ffffff",
+            "border": "#3e7ac0"
+        }
+    }
+};
 
     function isValidHexColor(value) {
         return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());
@@ -1600,6 +2384,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             t.win?.border,
             t.alert?.stroke,
             t.ctrlArea?.border,
+            t.mega?.outputBorder,
+            t.mega?.primaryBorder,
+            t.mega?.secondaryBorder,
+            t.mega?.geminiBorder,
+            t.mega?.copyBorder,
             t.ghostBorder,
             t.leave?.border
         ]);
