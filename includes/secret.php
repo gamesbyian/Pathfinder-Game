@@ -1,3 +1,3 @@
 <?php
-return 'AIzaSyAZAfRUrmEtq1eWJsbVxV4tZIW3GrwtW8s';
+return 'PASTE_REAL_GEMINI_KEY_HERE';
 ?>
