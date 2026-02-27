@@ -130,7 +130,7 @@
 
         .editor-input { background: rgba(0,0,0,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5rem; width: 4rem; text-align: center; font-weight: 800; font-size: 1.5rem; line-height: 1; padding: 0.25rem 0; outline: none; transition: border-color 0.2s; }
         .editor-input:focus { border-color: white; }
-        
+
         #dragGhost { position: fixed; pointer-events: none; z-index: 1000; opacity: 0.9; transform: translate(-50%, -50%); filter: drop-shadow(0 8px 12px rgba(0,0,0,0.4)); display: none; }
         #dragGhost svg { width: 100%; height: 100%; }
         #alertOverlay { pointer-events: none; transition: opacity 0.2s ease; }
@@ -221,7 +221,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="canvasContainer" class="relative overflow-hidden bg-white">
             <canvas id="gameCanvas" width="800" height="800"></canvas>
             <div id="gooseJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-black/40 backdrop-blur-sm overflow-hidden pointer-events-none">
@@ -302,8 +302,16 @@
                         <div><h2 id="megaModalTitle" class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Mega Solver Results</h2><p id="megaModalSub" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Bulk Solution Generation</p></div>
                         <button id="closeMegaModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                     </div>
+                    <div id="megaSummary" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)] mb-2">No run yet.</div>
                     <textarea id="megaOutput" readonly class="flex-grow min-h-0 p-4 bg-slate-900 text-fuchsia-300 rounded-xl border border-slate-700 text-xs font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500" placeholder="Mega solver results will appear here..."></textarea>
-                    <div class="mt-4 flex justify-end shrink-0"><button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-6 py-3 rounded-lg font-black hover:brightness-95 transition uppercase tracking-widest shadow-lg active:scale-95">Copy All</button></div>
+                    <div class="mt-4 flex flex-wrap gap-2 shrink-0">
+                        <button id="megaRetry30Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Timed-Out (30s)</button>
+                        <button id="megaRetry60Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Timed-Out (60s)</button>
+                        <button id="megaRetry120Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Timed-Out (120s)</button>
+                        <button id="megaRetryAltBtn" class="bg-fuchsia-800 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Timed-Out (Alt Order)</button>
+                        <button id="megaGeminiRetryBtn" class="bg-indigo-700 text-white border border-indigo-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Ask Gemini for Timed-Out</button>
+                        <div class="ml-auto"><button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-6 py-3 rounded-lg font-black hover:brightness-95 transition uppercase tracking-widest shadow-lg active:scale-95">Copy All</button></div>
+                    </div>
                 </div>
             </div>
 
@@ -396,7 +404,7 @@
         </div>
     </div>
 
-    
+
 
     <div id="controlsPane" class="layout-left-pane">
     <div id="playControls" class="bg-white p-3 rounded-2xl shadow-xl border border-slate-200 relative">
@@ -493,47 +501,47 @@
     // ======================================================
     APP.State = (() => {
         const ENGINE = {
-        mode: PLAY, 
+        mode: PLAY,
         logicState: IDLE,
         overlayState: OVERLAY_NONE,
-        isDevMode: false, 
-        levelIdx: 0, 
-        variant: 0, 
-        level: null, 
-        path: [], 
-        isPortalJump: new Set(), 
-        visitedCounts: new Map(), 
-        cellUsage: new Map(), 
-        intersections: 0, 
-        activeGateKey: null, 
-        flipCount: 0, 
-        visualFlipCount: 0, 
-        crossedFlippingFilters: new Map(), 
-        detonatedFalseGoals: new Set(), 
-        armedFalseGoals: new Set(), 
-        undoStack: [], 
-        revealedGeese: new Set(), 
-        ripples: [], 
-        gooseEncounteredThisLevel: false, 
-        muted: true, 
-        rainbowActive: true, 
-        titleClickCount: 0, 
-        titleClickTimer: null, 
-        resetStreak: 0, 
-        lastFlipTime: 0, 
-        cheatTimer: null, 
-        hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none' }, 
-        activeSolverController: null, 
+        isDevMode: false,
+        levelIdx: 0,
+        variant: 0,
+        level: null,
+        path: [],
+        isPortalJump: new Set(),
+        visitedCounts: new Map(),
+        cellUsage: new Map(),
+        intersections: 0,
+        activeGateKey: null,
+        flipCount: 0,
+        visualFlipCount: 0,
+        crossedFlippingFilters: new Map(),
+        detonatedFalseGoals: new Set(),
+        armedFalseGoals: new Set(),
+        undoStack: [],
+        revealedGeese: new Set(),
+        ripples: [],
+        gooseEncounteredThisLevel: false,
+        muted: true,
+        rainbowActive: true,
+        titleClickCount: 0,
+        titleClickTimer: null,
+        resetStreak: 0,
+        lastFlipTime: 0,
+        cheatTimer: null,
+        hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none' },
+        activeSolverController: null,
         viewport: { cellW: 0, cellH: 0, swapped: false, lastWidth: 0, lastHeight: 0 },
-        themeDragColor: null, 
-        themeDragTheme: null, 
-        themeDragCategory: null, 
-        themeTapSelectedColor: null, 
-        themeTapSelectedTheme: null, 
-        themeTapCategory: null, 
+        themeDragColor: null,
+        themeDragTheme: null,
+        themeDragCategory: null,
+        themeTapSelectedColor: null,
+        themeTapSelectedTheme: null,
+        themeTapCategory: null,
         progressSet: new Set(),
         foundHintsSinceLoad: [],
-        editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true } 
+        editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true }
         ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
     };
@@ -718,34 +726,34 @@
     }
 
     const FALLBACK_RAW_LEVELS = [ { grid: {w:10, h:10}, gates: [{x:2,y:2}, {x:2,y:4}], goal: {x:9,y:9}, reqLen: 14, reqInt: 0, blocks: [{x:4,y:4}, {x:5,y:4}, {x:4,y:5}, {x:5,y:5}], mustPass: [{x:6,y:6}], geese: [{x:6,y:7}], flippingFilters: [{x:8, y:2, axis: 2}, {x:3, y:8, axis: 1}, {x:5, y:2, axis: 1}, {x:7, y:2, axis: 1}], falseGoals: [{x:2, y:8}], hints: [] } ];
-    
+
     const PACK = (x, y) => (y << 16) | x;
     const UNPACK = (k) => ({ x: k & 0xFFFF, y: k >> 16 });
     const inBounds = (x, y, w, h) => x >= 0 && x < w && y >= 0 && y < h;
     const expCoords = (items) => (Array.isArray(items) ? items : Array.from(items)).map(k => { const p = UNPACK(k); return {x: p.x + 1, y: p.y + 1}; });
-    
-    const setSolversActive = (active) => { 
-        ['editMegaSolver', 'editTrapSpotsBtn'].forEach(id => { const el = $(id); if(el) el.disabled = !active; }); 
+
+    const setSolversActive = (active) => {
+        ['editMegaSolver', 'editTrapSpotsBtn'].forEach(id => { const el = $(id); if(el) el.disabled = !active; });
         const hintEl = $('hintBtn');
         if (hintEl) {
             hintEl.style.pointerEvents = active ? 'auto' : 'none';
             hintEl.style.opacity = active ? '1' : '0.5';
         }
     };
-    
+
     function resolvePortal(level, key) { return level.portalMap.has(key) ? level.portalMap.get(key) : null; }
-    
+
     const SOUND_BUS = { play(freq, dur = "16n") { if (!ENGINE.muted && window.Tone && Tone.context.state === 'running') { new Tone.Synth().toDestination().triggerAttackRelease(freq, dur); } } };
-    
+
     function loop() {
         if (ENGINE.overlayState === HINT_ANIMATING && ENGINE.hinter.pathList.length) {
             ENGINE.hinter.index += 0.5; const hPath = ENGINE.hinter.pathList[ENGINE.hinter.currentPathIdx];
-            if (ENGINE.hinter.index >= hPath.length + 40) { 
-                ENGINE.hinter.alpha -= 0.05; 
-                if (ENGINE.hinter.alpha <= 0) { 
-                    setOverlayState(OVERLAY_NONE); 
-                    showMessage("", ""); 
-                } 
+            if (ENGINE.hinter.index >= hPath.length + 40) {
+                ENGINE.hinter.alpha -= 0.05;
+                if (ENGINE.hinter.alpha <= 0) {
+                    setOverlayState(OVERLAY_NONE);
+                    showMessage("", "");
+                }
             }
         }
         if (ENGINE.visualFlipCount !== undefined) {
@@ -754,45 +762,371 @@
         }
         render(); requestAnimationFrame(loop);
     }
-    
-    const MEGA = { 
-        active: false, results: {}, 
-        async run() { 
-            if (this.active) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : (typeof FALLBACK_RAW_LEVELS !== 'undefined' ? FALLBACK_RAW_LEVELS : null); if (!levels) return; 
-            this.active = true; this.results = {}; this.debugFailures = {}; const targets = []; for (let i = 0; i < levels.length; i++) { if (!levels[i].hints || levels[i].hints.length === 0) { targets.push(i); } } 
-            if (targets.length === 0) { showMessage("All levels have hints!", "text-green-600"); this.active = false; return; } 
-            
-            const btn = $('megaSolverBtn'); const originalText = btn.innerText; btn.disabled = true; 
-            const statusEl = $('megaStatus'); statusEl.classList.remove('hidden'); 
-            const uiTimer = $('solverTimer'); const searchLabel = $('searchLabel'); const megaStartTime = Date.now();
-            
+
+    const attemptHistory = {};
+
+    function getLevelAttemptKey(level, purpose) {
+        const levelNum = (typeof level?.id === 'number') ? (level.id + 1) : (ENGINE.levelIdx + 1);
+        return `${levelNum}:${purpose}`;
+    }
+
+    function validateCandidatePath(level, pathCoordsOrKeys) {
+        if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2) return { ok: false, reason: 'Path must contain at least 2 nodes.' };
+        const toKey = (node) => {
+            if (typeof node === 'number') return node;
+            if (Array.isArray(node) && node.length >= 2) return PACK(Number(node[0]) - 1, Number(node[1]) - 1);
+            if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y)) {
+                const x = Number(node.x);
+                const y = Number(node.y);
+                if (x >= 1 && y >= 1 && (x > level.grid.w || y > level.grid.h)) return PACK(x - 1, y - 1);
+                return PACK(x, y);
+            }
+            return NaN;
+        };
+        const path = pathCoordsOrKeys.map(toKey);
+        if (path.some(k => !Number.isFinite(k))) return { ok: false, reason: 'Invalid path coordinate format.' };
+        if (!level.gateKeys.includes(path[0])) return { ok: false, reason: 'Path must start on a gate.' };
+        const counts = new Map();
+        const usage = new Map();
+        const jumpSet = new Set();
+        let intersections = 0;
+        let flipCount = 0;
+        const crossedSet = new Map();
+        counts.set(path[0], 1);
+        for (let i = 1; i < path.length; i++) {
+            const prev = path[i - 1];
+            const cur = path[i];
+            if (!isValidMoveCommon(cur, path.slice(0, i), counts, usage, intersections, jumpSet, level, { mode: PLAY, flipCount, crossedSet, hazardPolicy: 'forbid' })) {
+                return { ok: false, reason: `Invalid move at step ${i + 1}.` };
+            }
+            const prevP = UNPACK(prev);
+            const curP = UNPACK(cur);
+            const axis = (prevP.y === curP.y) ? H : V;
+            const updateUsage = (from, ax) => {
+                if (!usage.has(from)) usage.set(from, { h: false, v: false });
+                usage.get(from)[ax === H ? 'h' : 'v'] = true;
+            };
+            updateUsage(prev, axis);
+            updateUsage(cur, axis);
+            const c = counts.get(cur) || 0;
+            if (c > 0 && cur !== level.goalKey && !level.gateKeys.includes(cur)) intersections++;
+            counts.set(cur, c + 1);
+            if (level.flippingFilterMap.has(cur) && !crossedSet.has(cur)) {
+                crossedSet.set(cur, flipCount);
+                flipCount++;
+            }
+            const portal = resolvePortal(level, prev);
+            if (portal && portal.dest === cur) jumpSet.add(i);
+        }
+        const finalState = { mode: PLAY, level, editor: { workingLevel: level }, path, isPortalJump: jumpSet, visitedCounts: counts, intersections };
+        if (path[path.length - 1] !== level.goalKey) return { ok: false, reason: 'Path does not end at goal.' };
+        if (!areWinMetricsSatisfied(finalState, level)) return { ok: false, reason: 'Path fails reqLen/reqInt/must rules.' };
+        return { ok: true, path };
+    }
+
+    async function requestGeminiSolverSuggestion(level, purpose, attempt = 1, timeoutMs = 15000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            const payload = {
+                model: 'gemini-2.5-flash',
+                level: denormalizeLevel(level),
+                attempt,
+                purpose
+            };
+            const resp = await fetch('./api/gemini_solver_suggest.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                signal: controller.signal
+            });
+            const data = await resp.json();
+            if (!data?.ok) return { ok: false, reason: data?.error || 'Gemini request failed.' };
+            const candidates = [];
+            if (typeof data.text === 'string' && data.text.trim()) {
+                candidates.push(data.text.trim());
+                const m = data.text.match(/```(?:json)?\s*([\s\S]*?)```/i);
+                if (m?.[1]) candidates.push(m[1].trim());
+            }
+            let parsed = null;
+            for (const c of candidates) {
+                try { parsed = JSON.parse(c); break; } catch {}
+            }
+            if (!parsed || !Array.isArray(parsed.path)) return { ok: false, reason: 'Gemini did not return valid path JSON.' };
+            return { ok: true, candidate: parsed.path, notes: parsed.notes || '' };
+        } catch (err) {
+            return { ok: false, reason: err.name === 'AbortError' ? 'Gemini request timed out.' : `Gemini error: ${err.message}` };
+        } finally { clearTimeout(timer); }
+    }
+
+    const SolverReferee = {
+        async runStage1Exact(level, stageBudgetMs, opts = {}) {
+            const started = Date.now();
+            const distMap = SolverCore._buildDistMap(level);
+            const crossIndex = new Map(level.mustCrossKeys.map((k, i) => [k, i]));
+            const totalCross = level.mustCrossKeys.length;
+            const gridSize = level.grid.w * level.grid.h;
+            const words = Math.ceil(gridSize / 32);
+            const cellIdx = (k) => { const p = UNPACK(k); return p.y * level.grid.w + p.x; };
+            const setBit = (arr, idx) => { arr[idx >>> 5] |= (1 << (idx & 31)); };
+            const clearBit = (arr, idx) => { arr[idx >>> 5] &= ~(1 << (idx & 31)); };
+            const hasBit = (arr, idx) => !!(arr[idx >>> 5] & (1 << (idx & 31)));
+            const dirs = opts.altOrder ? [[0,1],[1,0],[0,-1],[-1,0]] : [[1,0],[0,1],[-1,0],[0,-1]];
+            const deadline = started + stageBudgetMs;
+            let expanded = 0;
+            let timedOut = false;
+            const tryGate = (startKey) => {
+                const path = [startKey];
+                const jumpSet = new Set();
+                const counts = new Map([[startKey, 1]]);
+                const usage = new Map();
+                let intersections = 0;
+                let flipCount = 0;
+                const crossedSet = new Map();
+                const visitedBits = new Uint32Array(words);
+                setBit(visitedBits, cellIdx(startKey));
+                let mustCrossMask = totalCross > 0 ? ((1n << BigInt(totalCross)) - 1n) : 0n;
+                const mustCrossCounts = totalCross > 0 ? new Uint8Array(totalCross) : null;
+                const startCross = crossIndex.get(startKey);
+                if (startCross !== undefined) mustCrossCounts[startCross] = 1;
+                const memo = new Set();
+
+                const popcount = (mask) => {
+                    let c = 0n, m = mask;
+                    while (m) { c += (m & 1n); m >>= 1n; }
+                    return Number(c);
+                };
+
+                const dfs = () => {
+                    if (Date.now() > deadline) { timedOut = true; return null; }
+                    expanded++;
+                    const stepsUsed = getRealLength({ path, isPortalJump: jumpSet });
+                    const rem = level.reqLen - stepsUsed;
+                    const head = path[path.length - 1];
+                    if (rem < 0) return null;
+                    const dGoal = distMap.get(head) ?? Infinity;
+                    if (dGoal > rem) return null;
+                    const pendingCross = popcount(mustCrossMask);
+                    if (pendingCross > rem) return null;
+                    if (intersections > level.reqInt) return null;
+                    if (intersections + rem < level.reqInt) return null;
+                    const key = `${head}|${stepsUsed}|${intersections}|${mustCrossMask}|${Array.from(visitedBits).join('.')}`;
+                    if (memo.has(key)) return null;
+                    memo.add(key);
+
+                    if (head === level.goalKey && rem === 0) {
+                        const res = validateCandidatePath(level, path);
+                        if (res.ok) return path.slice();
+                    }
+                    const hp = UNPACK(head);
+                    for (const [dx, dy] of dirs) {
+                        const nx = hp.x + dx, ny = hp.y + dy;
+                        if (!inBounds(nx, ny, level.grid.w, level.grid.h)) continue;
+                        const nk = PACK(nx, ny);
+                        const beforeLen = path.length;
+                        const beforeInts = intersections;
+                        const prevCnt = counts.get(nk) || 0;
+                        if (!isValidMoveCommon(nk, path, counts, usage, intersections, jumpSet, level, { mode: PLAY, flipCount, crossedSet, hazardPolicy: 'forbid' })) continue;
+                        const axis = (ny === hp.y) ? H : V;
+                        if (!usage.has(head)) usage.set(head, { h: false, v: false });
+                        if (!usage.has(nk)) usage.set(nk, { h: false, v: false });
+                        usage.get(head)[axis === H ? 'h' : 'v'] = true;
+                        usage.get(nk)[axis === H ? 'h' : 'v'] = true;
+                        if (prevCnt > 0 && nk !== level.goalKey && !level.gateKeys.includes(nk)) intersections++;
+                        counts.set(nk, prevCnt + 1);
+                        path.push(nk);
+                        const nkIdx = cellIdx(nk);
+                        const wasVisited = hasBit(visitedBits, nkIdx);
+                        if (!wasVisited) setBit(visitedBits, nkIdx);
+                        const crossIdx = crossIndex.get(nk);
+                        let crossPrev = null;
+                        if (crossIdx !== undefined && mustCrossCounts) {
+                            crossPrev = mustCrossCounts[crossIdx];
+                            if (crossPrev < 2) {
+                                mustCrossCounts[crossIdx] = crossPrev + 1;
+                                if (mustCrossCounts[crossIdx] >= 2) mustCrossMask &= ~(1n << BigInt(crossIdx));
+                            }
+                        }
+                        const portal = resolvePortal(level, nk);
+                        let portalMeta = null;
+                        if (portal && portal.dest !== -1) {
+                            const dk = portal.dest;
+                            if (isValidMoveCommon(dk, path, counts, usage, intersections, jumpSet, level, { mode: PLAY, flipCount, crossedSet, hazardPolicy: 'forbid' })) {
+                                const dc = counts.get(dk) || 0;
+                                if (dc > 0 && dk !== level.goalKey && !level.gateKeys.includes(dk)) intersections++;
+                                counts.set(dk, dc + 1);
+                                path.push(dk);
+                                jumpSet.add(path.length - 1);
+                                const didx = cellIdx(dk);
+                                const dPrevVisited = hasBit(visitedBits, didx);
+                                if (!dPrevVisited) setBit(visitedBits, didx);
+                                let dCrossPrev = null;
+                                const dCrossIdx = crossIndex.get(dk);
+                                if (dCrossIdx !== undefined && mustCrossCounts) {
+                                    dCrossPrev = mustCrossCounts[dCrossIdx];
+                                    if (dCrossPrev < 2) {
+                                        mustCrossCounts[dCrossIdx] = dCrossPrev + 1;
+                                        if (mustCrossCounts[dCrossIdx] >= 2) mustCrossMask &= ~(1n << BigInt(dCrossIdx));
+                                    }
+                                }
+                                portalMeta = { dk, dc, didx, dPrevVisited, dCrossIdx, dCrossPrev };
+                            }
+                        }
+
+                        const found = dfs();
+                        if (found) return found;
+
+                        if (portalMeta) {
+                            jumpSet.delete(path.length - 1);
+                            path.pop();
+                            counts.set(portalMeta.dk, portalMeta.dc);
+                            if (portalMeta.dc === 0) counts.delete(portalMeta.dk);
+                            if (!portalMeta.dPrevVisited) clearBit(visitedBits, portalMeta.didx);
+                            if (portalMeta.dCrossIdx !== undefined && mustCrossCounts) {
+                                mustCrossCounts[portalMeta.dCrossIdx] = portalMeta.dCrossPrev;
+                                if (portalMeta.dCrossPrev < 2) mustCrossMask |= (1n << BigInt(portalMeta.dCrossIdx));
+                            }
+                            intersections = beforeInts + ((prevCnt > 0 && nk !== level.goalKey && !level.gateKeys.includes(nk)) ? 1 : 0);
+                        }
+                        path.length = beforeLen;
+                        counts.set(nk, prevCnt);
+                        if (prevCnt === 0) counts.delete(nk);
+                        if (!wasVisited) clearBit(visitedBits, nkIdx);
+                        if (crossIdx !== undefined && mustCrossCounts) {
+                            mustCrossCounts[crossIdx] = crossPrev;
+                            if (crossPrev < 2) mustCrossMask |= (1n << BigInt(crossIdx));
+                        }
+                        intersections = beforeInts;
+                    }
+                    return null;
+                };
+                return dfs();
+            };
+
+            for (const gate of level.gateKeys) {
+                const path = tryGate(gate);
+                if (path) return { ok: true, status: 'solved', stage: 1, solution: [{ path }], stats: { expanded, stageBudgetMs }, message: 'Solved (hard mode exact search).' };
+                if (timedOut) return { ok: false, status: 'timeout', stage: 1, stats: { expanded, stageBudgetMs }, message: `Hard mode timed out (${Math.round(stageBudgetMs / 1000)}s).` };
+            }
+            return { ok: false, status: 'no-solution-proven', stage: 1, stats: { expanded, stageBudgetMs }, message: 'No solution exists for this level (proven by exhaustive search).' };
+        },
+
+        async solve(levelInput, opts = {}) {
+            const level = levelInput.gateKeys ? levelInput : normalizeLevel(levelInput.id ?? ENGINE.levelIdx);
+            const purpose = opts.purpose || 'solve';
+            const baseBudget = opts.timeBudgetMs || (purpose === 'hint' ? 5000 : 15000);
+            const key = getLevelAttemptKey(level, purpose);
+            const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
+            const timesTried = prev.timesTried + 1;
+            const hardAuto = !!opts.hardMode || prev.lastStatus === 'timeout';
+            const startStage = opts.stageOverrides?.startStage ?? (hardAuto ? 1 : 0);
+            const maxStage = opts.stageOverrides?.maxStage ?? 3;
+            const budgetMs = (timesTried > 1 && prev.lastStatus === 'timeout') ? Math.min(baseBudget * 4, 120000) : baseBudget;
+            const stage0Budget = Math.max(600, Math.floor(budgetMs * 0.2));
+            const stage1Budget = Math.max(1000, Math.floor(budgetMs * 0.6));
+            const stage2Budget = Math.max(800, budgetMs - stage0Budget - stage1Budget);
+
+            const resultFromSolver = async (timeLimit, stageNum, stageMsg) => {
+                const r = await PathfinderSolver.solve(level, { timeLimit, debug: true, debugLevel: (typeof level.id === 'number' ? level.id + 1 : null) });
+                if (r?.ok && Array.isArray(r.solution) && r.solution.length > 0) return { ok: true, status: 'solved', stage: stageNum, solution: r.solution, stats: { debug: r.debug }, message: stageMsg };
+                const status = r?.debug?.status === 'timeout' ? 'timeout' : (r?.debug?.status === 'no-solution' ? 'no-solution-proven' : 'timeout');
+                return { ok: false, status, stage: stageNum, stats: { debug: r?.debug }, message: status === 'timeout' ? 'Search timed out.' : 'No solution exists for this level (proven by exhaustive search).' };
+            };
+
+            let last = { ok: false, status: 'timeout', stage: startStage, message: 'No solution found.' };
+            for (let stage = startStage; stage <= maxStage; stage++) {
+                if (stage === 0) {
+                    showMessage('Solving… (fast pass)', 'text-sky-600');
+                    last = await resultFromSolver(stage0Budget, 0, 'Solved (fast pass).');
+                    if (last.ok || last.status === 'no-solution-proven') break;
+                    showMessage("Fast pass didn’t find a path. Trying hard mode…", 'text-amber-600');
+                } else if (stage === 1) {
+                    last = await this.runStage1Exact(level, stage1Budget, { altOrder: opts.altOrder });
+                    if (last.ok || last.status === 'no-solution-proven') break;
+                } else if (stage === 2) {
+                    last = await resultFromSolver(stage2Budget, 2, 'Solved (beam fallback).');
+                    if (last.ok || last.status === 'no-solution-proven') break;
+                } else if (stage === 3 && opts.allowGemini) {
+                    const gem = await requestGeminiSolverSuggestion(level, purpose, timesTried, 15000);
+                    if (gem.ok) {
+                        const validation = validateCandidatePath(level, gem.candidate);
+                        if (validation.ok) {
+                            last = { ok: true, status: 'solved', stage: 3, solution: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).' };
+                        } else {
+                            last = { ok: false, status: 'gemini-invalid', stage: 3, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}` };
+                        }
+                    } else {
+                        last = { ok: false, status: 'gemini-failed', stage: 3, stats: { reason: gem.reason }, message: `Gemini failed: ${gem.reason}` };
+                    }
+                    break;
+                }
+            }
+            attemptHistory[key] = { timesTried, lastStageReached: last.stage, lastStatus: last.status };
+            return last;
+        }
+    };
+
+    const MEGA = {
+        active: false, results: {}, meta: {},
+        getTimedOutLevels() { return Object.entries(this.meta).filter(([, m]) => m.status === 'timeout').map(([lvl]) => Number(lvl)); },
+        updateSummary() {
+            const values = Object.values(this.meta || {});
+            const solved = values.filter(v => v.status === 'solved').length;
+            const timeout = values.filter(v => v.status === 'timeout').length;
+            const noSolution = values.filter(v => v.status === 'no-solution-proven').length;
+            const errors = values.filter(v => !['solved', 'timeout', 'no-solution-proven'].includes(v.status)).length;
+            $('megaSummary').innerText = `Solved: ${solved} | Timed out: ${timeout} | No-solution: ${noSolution} | Errors: ${errors}`;
+        },
+        appendOutput(line) { const el = $('megaOutput'); el.value += `${line}
+`; el.scrollTop = el.scrollHeight; },
+        async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, altOrder: false, allowGemini: false }); },
+        async runTargets({ targets = null, timeLimitMs = 15000, altOrder = false, allowGemini = false }) {
+            if (this.active) return;
+            const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS;
+            this.active = true;
+            if (!targets) { this.results = {}; this.meta = {}; $('megaOutput').value = ''; }
+            const toRun = targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
+            if (toRun.length === 0) { showMessage('All levels have hints!', 'text-green-600'); this.active = false; return; }
+            const btn = $('megaSolverBtn'); const orig = btn.innerText; btn.disabled = true;
             setOverlayState(SOLVER_RUNNING);
             ENGINE.activeSolverController = new AbortController();
-
-            for (let i = 0; i < targets.length; i++) { 
-                const idx = targets[i]; statusEl.innerText = `BATCH PROGRESS: ${i + 1}/${targets.length}\nSCANNING LEVEL ${idx + 1}`; const l = normalizeLevel(idx); 
-                try { 
-                    const solverResult = await PathfinderSolver.solve(l, { 
-                        timeLimit: 15000, 
-                        signal: ENGINE.activeSolverController.signal, 
-                        onStateUpdate: (msg) => { searchLabel.innerText = msg; }, 
-                        onProgress: () => { uiTimer.innerText = ((Date.now() - megaStartTime) / 1000).toFixed(1) + 's'; },
-                        debug: true,
-                        debugLevel: idx + 1
-                    }); 
-                    if (solverResult && solverResult.ok) { const simplified = solverResult.solution.map(s => s.path); this.results[idx + 1] = simplified; }
-                    else if (solverResult && solverResult.debug) { this.debugFailures[idx + 1] = solverResult.debug; } 
-                } catch(e) { if (e.name === 'AbortError') break; console.log(`Skipped level ${idx+1}`); } 
-            } 
-            ENGINE.activeSolverController = null; statusEl.classList.add('hidden'); 
+            for (let i = 0; i < toRun.length; i++) {
+                const lvlNum = toRun[i];
+                const idx = lvlNum - 1;
+                const l = normalizeLevel(idx);
+                const prevMeta = this.meta[lvlNum] || { attempts: 0 };
+                const attempt = prevMeta.attempts + 1;
+                showMessage(`${allowGemini ? 'Mega: Gemini attempt' : 'Mega retry'}: Level ${lvlNum} (attempt ${attempt}/${toRun.length}) — hard mode ${Math.round(timeLimitMs / 1000)}s…`, 'text-sky-600');
+                const res = await SolverReferee.solve(l, { purpose: 'mega', timeBudgetMs: timeLimitMs, allowGemini, hardMode: true, altOrder, stageOverrides: { startStage: altOrder ? 1 : 0, maxStage: allowGemini ? 3 : 2 } });
+                this.meta[lvlNum] = { status: res.status, attempts: attempt, lastStage: res.stage, timeLimitMs, lastMessage: res.message };
+                if (res.ok) this.results[lvlNum] = res.solution.map(s => s.path);
+                this.appendOutput(`/* Level ${lvlNum} | status=${res.status} | stage=${res.stage} | attempts=${attempt} | timeLimit=${timeLimitMs}ms */`);
+                if (res.ok) this.appendOutput(JSON.stringify(this.results[lvlNum]));
+                else this.appendOutput(`FAIL: ${res.message}${res.stats?.reason ? ` (${res.stats.reason})` : ''}`);
+                this.appendOutput('');
+                this.updateSummary();
+            }
+            ENGINE.activeSolverController = null;
             setOverlayState(OVERLAY_NONE);
-            this.showReport(); this.active = false; btn.disabled = false; btn.innerText = originalText; 
-        }, 
-        showReport() { let text = ""; for (const [lvl, paths] of Object.entries(this.results)) { text += `/* Level ${lvl} */\n${JSON.stringify(paths)}\n\n`; } for (const [lvl, debug] of Object.entries(this.debugFailures || {})) { text += `${formatSolverDebugBlock(lvl, debug)}\n\n`; } $('megaOutput').value = text; $('megaModal').classList.remove('hidden'); } 
+            this.showReport();
+            this.active = false;
+            btn.disabled = false; btn.innerText = orig;
+        },
+        async retryTimedOut({ timeLimitMs = 60000, altOrder = false }) {
+            const timeouts = this.getTimedOutLevels();
+            if (!timeouts.length) { showMessage('Mega retry: no timed-out levels.', 'text-emerald-600'); return; }
+            return this.runTargets({ targets: timeouts, timeLimitMs, altOrder, allowGemini: false });
+        },
+        async askGeminiTimedOut() {
+            const timeouts = this.getTimedOutLevels();
+            if (!timeouts.length) { showMessage('Mega Gemini: no timed-out levels.', 'text-emerald-600'); return; }
+            return this.runTargets({ targets: timeouts, timeLimitMs: 5000, altOrder: false, allowGemini: true });
+        },
+        showReport() { this.updateSummary(); $('megaModal').classList.remove('hidden'); }
     };
-    
+
     function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
-    
+
     const THEMES = {
         classic: { bodyBg: '#e0f2fe', canvasBg: '#ffffff', grid: '#94a3b8', headerLeft: '#dc2626', headerRight: '#2563eb', path: 'rainbow', controls: 'rgba(255, 255, 255, 0.7)', metricText: '#ffffff', btns: { undo: '#4c566a', reset: '#d12929', guide: '#8c33db', whoa: '#2563eb', hint: '#cf6b17', saved: '#0a8a65', mega: '#ba29c9', mute: '#e1e7f0', muteIcon: '#64748b', copy: '#e1e7f0', gen: '#e1e7f0', modeToggle: '#1a2438', orient: '#1a2438', solve: '#ba29c9', editClear: '#d12929', editBombs: '#ef4444', editNew: '#0a8a65' }, modal: { bg: 'rgba(248, 250, 252, 0.95)', panelBg: '#ffffff', border: '#cbd5e1', text: '#334155', textMuted: '#64748b', accent: '#0f172a' }, output: { bg: '#0f172a', text: '#38bdf8' }, colors: { gate: '#3b82f6', goal: '#ef4444', block: '#cbd5e1', pin: '#ef4444', pinUnflipped: '#000000', filter: '#000000', portal: '#d946ef', cross: '#000000' }, palette: { bg: '#f8fafc', border: '#cbd5e1', itemBg: '#ffffff', itemBorder: '#cbd5e1', toolBg: '#f1f5f9' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#ffffff', ghostBorder: '#0ea5e9', win: { bg: '#ffffff', border: '#3b82f6', text: '#64748b', accent: '#1e3a8a' }, alert: { bg: '#1e40af', stroke: '#93c5fd' }, ctrlArea: { bg: '#f1f5f9', border: '#cbd5e1' }, burst: '#ffe135', check: '#1e293b' },
         dark: { bodyBg: '#020617', canvasBg: '#111827', grid: '#475569', headerLeft: '#7f1d1d', headerRight: '#1e3a8a', path: '#22c55e', controls: 'rgba(30, 41, 59, 0.9)', metricText: '#f1f5f9', btns: { undo: '#374151', reset: '#7f1d1d', guide: '#4c1d95', whoa: '#1e3a8a', hint: '#b45309', saved: '#064e3b', mega: '#701a75', mute: '#1e293b', muteIcon: '#94a3b8', copy: '#1e293b', gen: '#1e293b', modeToggle: '#000000', orient: '#000000', solve: '#374151', editClear: '#7f1d1d', editBombs: '#f43f5e', editNew: '#064e3b' }, modal: { bg: 'rgba(15, 23, 42, 0.95)', panelBg: '#1e293b', border: '#334155', text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8' }, output: { bg: '#020617', text: '#22c55e' }, colors: { gate: '#38bdf8', goal: '#f43f5e', block: '#1e293b', pin: '#f43f5e', pinUnflipped: '#64748b', filter: '#94a3b8', portal: '#d946ef', cross: '#94a3b8' }, palette: { bg: '#0f172a', border: '#334155', itemBg: '#1e293b', itemBorder: '#334155', toolBg: '#0f172a' }, headerLeftText: '#f1f5f9', headerLeftLabel: 'rgba(241, 245, 249, 0.7)', ghostBg: '#1e293b', ghostBorder: '#38bdf8', win: { bg: '#1e293b', border: '#38bdf8', text: '#94a3b8', accent: '#f8fafc' }, alert: { bg: '#7f1d1d', stroke: '#fca5a5' }, ctrlArea: { bg: '#0f172a', border: '#334155' }, burst: '#334155', check: '#f1f5f9' },
@@ -1006,7 +1340,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function applyTheme(name) {
         if (name === 'chaos') { THEMES.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
-        currentTheme = name; APP.Themes.currentTheme = currentTheme; const t = THEMES[name]; const root = document.documentElement; 
+        currentTheme = name; APP.Themes.currentTheme = currentTheme; const t = THEMES[name]; const root = document.documentElement;
         root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
         const alertBg = (t.alert?.bg || '#1e40af');
         const hex = alertBg.replace('#','');
@@ -1019,21 +1353,21 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         root.style.setProperty('--theme-burst', t.burst || '#fef9c3'); root.style.setProperty('--theme-check', t.check || '#1e293b');
         const leave = getLeaveThemeColors(t, name === 'classic');
         root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
-        
-        document.body.style.backgroundColor = t.bodyBg; cvs.style.backgroundColor = t.canvasBg; 
+
+        document.body.style.backgroundColor = t.bodyBg; cvs.style.backgroundColor = t.canvasBg;
         $('headerLeft').style.backgroundColor = t.canvasBg;
         $('headerMiddle').style.backgroundColor = t.headerLeft;
         $('headerRight').style.backgroundColor = t.headerRight;
 
-        $('headerBar').style.borderColor = t.grid; 
-        $('levelTitle').style.color = t.headerLeftText; 
-        $('levelLabelText').style.color = t.headerLeftLabel; 
+        $('headerBar').style.borderColor = t.grid;
+        $('levelTitle').style.color = t.headerLeftText;
+        $('levelLabelText').style.color = t.headerLeftLabel;
         const ghost = $('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; const pal = $('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; document.querySelectorAll('.palette-item').forEach(item => { if (item.classList.contains('palette-tool')) { item.style.backgroundColor = t.palette.toolBg; } else if (item.id !== 'editCopyMetrics') { item.style.backgroundColor = t.palette.itemBg; } item.style.borderColor = t.palette.itemBorder; }); $('editCopyMetrics').style.backgroundColor = t.headerLeft; $('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = $('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; $('undoBtn').style.backgroundColor = t.btns.undo; $('resetBtn').style.backgroundColor = t.btns.reset; $('guideBtn').style.backgroundColor = t.btns.guide; $('whoaBtn').style.backgroundColor = t.btns.whoa;
-        
+
         const isDark = (t.bodyBg === '#020617' || t.bodyBg === '#000000');
         const neutralBtn = isDark ? '#334155' : '#e2e8f0';
         const neutralText = isDark ? '#f8fafc' : '#475569';
-        
+
         $('openThemeModalBtn').style.backgroundColor = neutralBtn;
         $('openThemeModalBtn').style.color = neutralText;
         $('openThemeModalBtn').style.borderColor = t.modal.border;
@@ -1045,7 +1379,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const gArea = $('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
         const winModalContent = $('winModalContent'); $('winCircle').style.backgroundColor = t.win.bg; $('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.win.border; winModalContent.querySelector('p').style.color = t.win.text; $('nextLevelModalBtn').style.color = t.headerRight; $('dismissWinModalBtn').style.color = t.headerRight; ENGINE.rainbowActive = (name === 'classic');
     }
-    
+
     function populateThemes() {
         if (!window.ORIGINAL_THEMES) {
             window.ORIGINAL_THEMES = JSON.parse(JSON.stringify(THEMES));
@@ -1054,7 +1388,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const grid = $('themeGrid'); grid.innerHTML = ''; const themeKeys = Object.keys(THEMES); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
         themeKeys.forEach(key => { const t = THEMES[key] || THEMES.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl hover:bg-slate-100"; btn.onclick = () => { applyTheme(key); $('themeModal').classList.add('hidden'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black text-slate-600 uppercase tracking-widest"; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
-    
+
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
         if (!window.THEME_UNDO_STACKS) window.THEME_UNDO_STACKS = {};
         if (!window.THEME_UNDO_STACKS[themeKey]) window.THEME_UNDO_STACKS[themeKey] = [];
@@ -1116,11 +1450,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         renderThemeEditors();
         populateThemes();
     }
-    
+
     function createThemeEditorBlock(themeKey) {
         const container = document.createElement('div');
         container.className = "flex flex-col gap-2";
-        
+
         const header = document.createElement('h4');
         header.className = "font-black text-[var(--theme-modal-accent)] uppercase tracking-widest text-sm";
         header.innerText = themeKey.replace('_', ' ');
@@ -1199,13 +1533,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             swatch.style.backgroundColor = c;
             swatch.style.pointerEvents = 'auto';
             swatch.classList.add('border-slate-300');
-            
+
             swatch.draggable = false;
             swatch.dataset.themeColor = c;
             swatch.dataset.themeKey = themeKey;
             swatch.dataset.category = category;
             swatch.style.touchAction = 'none';
-            
+
             swatch.onpointerdown = e => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1215,16 +1549,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const targetColor = c;
                     const sourceCategory = ENGINE.themeTapCategory;
                     const targetCategory = swatch.dataset.category;
-                    
+
                     if (sourceColor !== targetColor) {
                         replaceThemeColor(themeKey, targetColor, sourceColor, targetCategory);
                     }
-                    
+
                     ENGINE.themeTapSelectedColor = null;
                     ENGINE.themeTapSelectedTheme = null;
                     ENGINE.themeTapCategory = null;
                     document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110'));
-                    
+
                     setLogicState(IDLE);
                     ghostEl.style.display = 'none';
                     return;
@@ -1233,7 +1567,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ENGINE.themeTapSelectedColor = c;
                 ENGINE.themeTapSelectedTheme = themeKey;
                 ENGINE.themeTapCategory = category;
-                
+
                 document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110'));
                 swatch.classList.add('ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110');
 
@@ -1280,7 +1614,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const aiColorsContainer = document.createElement('div');
         aiColorsContainer.className = "flex flex-col items-center w-full mt-1 bg-black/5 rounded p-1.5";
-        
+
         const aiTitle = document.createElement('div');
         aiTitle.className = "text-[0.55rem] font-black uppercase text-[var(--theme-modal-accent)] mb-1 tracking-widest";
         aiTitle.innerText = "Complementary Palette (AI)";
@@ -1383,7 +1717,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         return container;
     }
-    
+
     function renderThemeEditors() {
         const list = $('themeEditList');
         list.innerHTML = '';
@@ -1406,9 +1740,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('themeModal').classList.add('hidden');
         $('unsavedModal').classList.add('hidden');
     }
-    
+
     function getRealLength(state = ENGINE) { return state.path.length > 0 ? state.path.length - 1 - state.isPortalJump.size : 0; }
-    
+
     function rebuildDerivedPathState(state = ENGINE) {
         const oldFlipCount = state.flipCount;
         state.visitedCounts.clear(); state.cellUsage.clear(); state.intersections = 0; state.flipCount = 0; state.crossedFlippingFilters.clear(); const l = state.mode === PLAY ? state.level : state.editor.workingLevel; if (state.path.length === 0) { if (oldFlipCount !== 0) state.lastFlipTime = Date.now(); return; }
@@ -1419,17 +1753,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
         if (state.flipCount !== oldFlipCount) state.lastFlipTime = Date.now();
     }
-    
+
     function assertStateConsistency(state = ENGINE) { if (!state.isDevMode) return; const l = state.mode === PLAY ? state.level : state.editor.workingLevel; if (!l) return; const originalIntersections = state.intersections; const originalCounts = new Map(state.visitedCounts); rebuildDerivedPathState(state); if (originalIntersections !== state.intersections) { console.error("Invariant broken: Intersections mismatch."); } originalCounts.forEach((v, k) => { if (state.visitedCounts.get(k) !== v) console.error("Invariant broken: Visited count mismatch."); }); }
     function assertLevelShape(level) { if (!level) throw new Error("Level object is null"); if (level.goalKey === undefined || level.goalKey === -1) throw new Error("Level missing goal"); if (!Array.isArray(level.gateKeys) || level.gateKeys.length === 0) throw new Error("Level missing gates"); if (!level.grid || !level.grid.w || !level.grid.h) throw new Error("Grid dimensions missing"); }
     function getLevelBounds(l) { let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity; const update = (k) => { if (k === -1) return; const p = UNPACK(k); if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; }; if (l.goalKey !== -1) update(l.goalKey); l.gateKeys.forEach(update); l.falseGoalKeys.forEach(update); l.blockSet.forEach(update); l.gooseSet.forEach(update); l.mustPassKeys.forEach(update); l.mustCrossKeys.forEach(update); l.filterMap.forEach((v, k) => update(k)); l.flippingFilterMap.forEach((v, k) => update(k)); l.portalMap.forEach((v, k) => update(k)); if (minX === Infinity) return null; return { minX, minY, maxX, maxY }; }
-    
+
     function shiftLevel(l, dx, dy) { if (dx === 0 && dy === 0) return; const shift = (k) => { if (k === -1) return -1; const p = UNPACK(k); return PACK(p.x + dx, p.y + dy); }; l.goalKey = shift(l.goalKey); l.gateKeys = l.gateKeys.map(shift); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(shift)); l.blockSet = new Set(Array.from(l.blockSet).map(shift)); l.gooseSet = new Set(Array.from(l.gooseSet).map(shift)); l.mustPassKeys = l.mustPassKeys.map(shift); l.mustCrossKeys = l.mustCrossKeys.map(shift); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v)); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v)); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2), color: pv.color })); if (ENGINE.editor.pendingPortal) { ENGINE.editor.pendingPortal = shift(ENGINE.editor.pendingPortal); } ENGINE.path = ENGINE.path.map(shift); rebuildDerivedPathState(ENGINE); l.hints = []; ENGINE.hinter.pathList = []; }
-    
+
     function changeGridSize(delta) { if (ENGINE.overlayState !== OVERLAY_NONE || !ENGINE.editor.workingLevel) return; const l = ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { shiftLevel(l, shiftX, shiftY); ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = ENGINE.path.some(k => { const p = UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) PathNavigator.clear(ENGINE); ENGINE.editor.isModified = true; updateViewport(); showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
-    
+
     function transformLevel(l, coordMap, newW, newH, axisMap) { saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = UNPACK(k); const tp = coordMap(p.x, p.y); return PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (ENGINE.editor.pendingPortal) { ENGINE.editor.pendingPortal = mapKey(ENGINE.editor.pendingPortal); } ENGINE.path = ENGINE.path.map(mapKey); if(ENGINE.activeGateKey) ENGINE.activeGateKey = mapKey(ENGINE.activeGateKey); rebuildDerivedPathState(ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.isModified = true; updateViewport(); }
-    
+
     const PathNavigator = {
         pushStep(state, key, isJump) {
             const l = state.mode === PLAY ? state.level : state.editor.workingLevel; const lastK = state.path[state.path.length - 1];
@@ -1444,49 +1778,49 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         },
         clear(state) { state.path = []; state.isPortalJump.clear(); state.activeGateKey = null; if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(state.logicState)) { setLogicState(IDLE); } if (state.mode === EDITOR) state.editor.isModified = true; rebuildDerivedPathState(state); assertStateConsistency(state); }
     };
-    
+
     const cvs = $('gameCanvas'); const ctx = cvs.getContext('2d'); const msgEl = $('message'); const outEl = $('solutionOutput'); const winOutEl = $('winSolutionOutput'); const ghostEl = $('dragGhost');
-    
+
     function transformPoint(x, y, variant, W, H) { switch (variant) { case 0: return { tx: x, ty: y }; case 1: return { tx: H - 1 - y, ty: x }; case 2: return { tx: W - 1 - x, ty: H - 1 - y }; case 3: return { tx: y, ty: W - 1 - x }; case 4: return { tx: W - 1 - x, ty: y }; case 5: return { tx: x, ty: H - 1 - y }; case 6: return { tx: y, ty: x }; case 7: return { tx: H - 1 - y, ty: W - 1 - x }; default: return { tx: x, ty: y }; } }
     function inverseTransformPoint(tx, ty, variant, W, H) { switch (variant) { case 0: return { x: tx, y: ty }; case 1: return { x: ty, y: H - 1 - tx }; case 2: return { x: W - 1 - tx, y: H - 1 - ty }; case 3: return { x: W - 1 - ty, y: tx }; case 4: return { x: W - 1 - tx, y: ty }; case 5: return { x: tx, y: H - 1 - ty }; case 6: return { x: ty, y:tx }; case 7: return { x: W - 1 - ty, y: H - 1 - tx }; default: return { x: tx, y: ty }; } }
     function transformAxis(axis, variant) { const swaps = [1, 3, 6, 7]; if (swaps.includes(variant)) { if (axis === H) return V; if (axis === V) return H; } return axis; }
     function getGridCoord(e) { const rect = cvs.getBoundingClientRect(); const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (cvs.width / rect.width) / ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (cvs.height / rect.height) / ENGINE.viewport.cellH))); return inverseTransformPoint(tx, ty, ENGINE.variant, l.grid.w, l.grid.h); }
-    
-    function triggerJumpScare() { 
-        $('gooseJumpScare').classList.remove('hidden'); 
-        $('gooseJumpScare').classList.add('flex'); 
+
+    function triggerJumpScare() {
+        $('gooseJumpScare').classList.remove('hidden');
+        $('gooseJumpScare').classList.add('flex');
         setOverlayState(GOOSE_OVERLAY);
-        setTimeout(() => { 
-            $('gooseJumpScare').classList.add('hidden'); 
-            $('gooseJumpScare').classList.remove('flex'); 
+        setTimeout(() => {
+            $('gooseJumpScare').classList.add('hidden');
+            $('gooseJumpScare').classList.remove('flex');
             setOverlayState(OVERLAY_NONE);
-        }, 2500); 
+        }, 2500);
     }
-    
-    function triggerBombDetonation(key) { 
+
+    function triggerBombDetonation(key) {
         ENGINE.armedFalseGoals.delete(key);
         ENGINE.detonatedFalseGoals.add(key);
         setOverlayState(FALSE_GOAL_ANIMATING);
-        const overlay = $('bombJumpScare'); overlay.classList.remove('hidden'); overlay.classList.add('flex'); SOUND_BUS.play("C2", "8n"); 
-        setTimeout(() => { 
-            overlay.querySelector('#scaryBomb').innerHTML = `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="#f97316" stroke-width="8"/></svg>`; 
-            SOUND_BUS.play("F1", "4n"); 
-            setTimeout(() => { 
-                overlay.classList.add('hidden'); overlay.classList.remove('flex'); overlay.querySelector('#scaryBomb').innerHTML = `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>`; 
+        const overlay = $('bombJumpScare'); overlay.classList.remove('hidden'); overlay.classList.add('flex'); SOUND_BUS.play("C2", "8n");
+        setTimeout(() => {
+            overlay.querySelector('#scaryBomb').innerHTML = `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="#f97316" stroke-width="8"/></svg>`;
+            SOUND_BUS.play("F1", "4n");
+            setTimeout(() => {
+                overlay.classList.add('hidden'); overlay.classList.remove('flex'); overlay.querySelector('#scaryBomb').innerHTML = `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>`;
                 setOverlayState(OVERLAY_NONE);
-            }, 1000); 
-        }, 1000); 
+            }, 1000);
+        }, 1000);
     }
-    
+
     function deepCloneLevel(src) { const l = JSON.parse(JSON.stringify(src)); l.blockSet = new Set(src.blockSet); l.gooseSet = new Set(src.gooseSet); l.falseGoalKeys = new Set(src.falseGoalKeys); l.portalMap = new Map(); if(src.portalMap) src.portalMap.forEach((v, k) => l.portalMap.set(k, v)); l.filterMap = new Map(); if(src.filterMap) src.filterMap.forEach((v, k) => l.filterMap.set(k, v)); l.flippingFilterMap = new Map(); if(src.flippingFilterMap) src.flippingFilterMap.forEach((v, k) => l.flippingFilterMap.set(k, v)); return l; }
     // ======================================================
     // C) Level / NormalizeAndCaches
     // ======================================================
     function normalizeLevel(idx) { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [] }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = PACK(adj(p.x1), adj(p.y1)), k2 = PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); }); return l; }
-    
+
     function createSnapshot() { return { path: [...ENGINE.path], isPortalJump: new Set(ENGINE.isPortalJump), activeGateKey: ENGINE.activeGateKey, logicState: ENGINE.logicState, detonatedFalseGoals: new Set(ENGINE.detonatedFalseGoals) }; }
     function applySnapshot(snap) { ENGINE.path = [...snap.path]; ENGINE.isPortalJump = new Set(snap.isPortalJump); ENGINE.activeGateKey = snap.activeGateKey; setLogicState(snap.logicState); ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); ENGINE.armedFalseGoals = armed; rebuildDerivedPathState(ENGINE); showMessage("", ""); }
-    
+
     function isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) {
         const { x, y } = UNPACK(key);
         const { w, h } = l.grid;
@@ -2636,13 +2970,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         return getRealLength() === l.reqLen && ENGINE.intersections === l.reqInt;
     }
     function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); $('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); $('winModal').classList.remove('hidden'); SOUND_BUS.play("C5", "8n"); } }
-    
+
     function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, { mode: ENGINE.mode, armedFalseGoals: ENGINE.armedFalseGoals, flipCount: ENGINE.flipCount, crossedSet: ENGINE.crossedFlippingFilters }); }
-    
+
     function processStep(key) { const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(ENGINE.logicState) && ENGINE.mode !== EDITOR) return null; if (ENGINE.path.length > 1 && key === ENGINE.path[ENGINE.path.length - 2]) { PathNavigator.truncateTo(ENGINE, ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (isValidMoveEngine(key, ENGINE.path, ENGINE.visitedCounts, ENGINE.cellUsage, ENGINE.intersections, ENGINE.isPortalJump, activeLevel)) { if (ENGINE.mode === EDITOR) ENGINE.editor.isModified = true; if (ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { ENGINE.revealedGeese.add(key); if (!ENGINE.gooseEncounteredThisLevel) { ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } ENGINE.undoStack.push(createSnapshot()); if(ENGINE.undoStack.length > 200) ENGINE.undoStack.shift(); PathNavigator.pushStep(ENGINE, key, false); if (ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { PathNavigator.pushStep(ENGINE, portal.dest, true); if (ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } ENGINE.ripples.push({x: UNPACK(key).x, y: UNPACK(key).y, startTime: Date.now(), color: portal.color}); ENGINE.ripples.push({x: UNPACK(portal.dest).x, y: UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
-    
+
     function attemptMoveTo(target) { if (ENGINE.mode === EDITOR && !ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(ENGINE.logicState) && ENGINE.mode !== EDITOR) return; if (!ENGINE.path.length) return; const headPos = UNPACK(ENGINE.path[ENGINE.path.length - 1]); if (ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } }
-    
+
     function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); } }
     function isModalActive() { return !$('guideModal').classList.contains('hidden') || !$('editorHelpModal').classList.contains('hidden') || !$('winModal').classList.contains('hidden') || !$('megaModal').classList.contains('hidden') || !$('themeModal').classList.contains('hidden') || !$('unsavedModal').classList.contains('hidden'); }
 
@@ -2715,7 +3049,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     function restoreEditorState() { if (ENGINE.editor.undoStack.length === 0) return; ENGINE.editor.isModified = true; ENGINE.editor.workingLevel = ENGINE.editor.undoStack.pop(); let newPending = null; ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); ENGINE.editor.pendingPortal = newPending; ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); showMessage("Undo Grid Action", "text-slate-500"); }
     function pickUpObject(k) { if(ENGINE.editor.isPencilMode) return null; saveEditorState(); ENGINE.editor.draggedFromGrid = true; ENGINE.editor.validTrapSpots.clear(); const l = ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (ENGINE.editor.pendingPortal === k) { ENGINE.editor.pendingPortal = null; showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = '#999'; ENGINE.editor.pendingPortal = otherK; showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } return {type: 'portal'}; } ENGINE.editor.undoStack.pop(); ENGINE.editor.draggedFromGrid = false; return null; }
     function placeEditorObject(k) { const l = ENGINE.editor.workingLevel; const toolType = ENGINE.editor.draggedObject ? ENGINE.editor.draggedObject.type : ENGINE.editor.selectedTool; if (!toolType) return; if (ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, H); break; case 'filterV': l.filterMap.set(k, V); break; case 'flipH': l.flippingFilterMap.set(k, H); break; case 'flipV': l.flippingFilterMap.set(k, V); break; case 'portal': if (!ENGINE.editor.pendingPortal) { ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: '#999' }); showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = ENGINE.editor.pendingPortal; if (k === k1) return; const color = ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); ENGINE.editor.pendingPortal = null; showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } ENGINE.editor.draggedObject = null; }
-    
+
     function validateLevelDetailed(l) {
         const reasons = [];
         if (!l) return { ok: false, reasons: ["Level missing"] };
@@ -2808,7 +3142,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function generateLevelString() { const l = ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt($('editReqLen').value) || 0; const reqInt = parseInt($('editReqInt').value) || 0; let exportedHints = l.hints || []; if (ENGINE.path.length > 1 && ENGINE.path[ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: expCoords(l.gateKeys), goal: {x:UNPACK(l.goalKey).x+1, y:UNPACK(l.goalKey).y+1}, falseGoals: expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: expCoords(l.blockSet), mustPass: expCoords(l.mustPassKeys), mustCross: expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: UNPACK(pv.k1).x+1, y1: UNPACK(pv.k1).y+1, x2: UNPACK(pv.k2).x+1, y2: UNPACK(pv.k2).y+1, color: pv.color })), geese: expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); outEl.value = json; outEl.select(); document.execCommand('copy'); ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
-    
+
     function getScreenPos(cx, cy) { const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; const { tx, ty } = transformPoint(cx, cy, ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * ENGINE.viewport.cellW, sy: (ty + 0.5) * ENGINE.viewport.cellH }; }
     function drawBombAsset(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const scale = s / 100; ctx.scale(scale, scale); ctx.beginPath(); ctx.arc(0, 10, 25, 0, Math.PI * 2); ctx.fillStyle = '#334155'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, -15); ctx.quadraticCurveTo(15, -30, 30, -25); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 4; ctx.stroke(); ctx.beginPath(); ctx.arc(30, -25, 5, 0, Math.PI * 2); ctx.fillStyle = '#ef4444'; ctx.fill(); ctx.beginPath(); ctx.arc(30, -25, 2.5, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill(); ctx.beginPath(); ctx.moveTo(-5, -15); ctx.lineTo(5, -15); ctx.lineTo(5, -5); ctx.lineTo(-5, -5); ctx.closePath(); ctx.fillStyle = '#64748b'; ctx.fill(); ctx.restore(); }
     function drawPath(pathArr, isJumpSet, strokeStyle, width, isCaution = false) { if (!pathArr.length) return; ctx.save(); ctx.lineWidth = width; ctx.lineCap = isCaution ? 'butt' : 'round'; ctx.lineJoin = 'round'; const drawDot = (sx, sy, color) => { ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(sx, sy, width / 2, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }; if (pathArr.length === 1 && !isCaution) { const start = UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); drawDot(sStart.sx, sStart.sy, (strokeStyle === 'rainbow') ? '#ff0000' : strokeStyle); ctx.restore(); return; } if (isCaution) { const trace = () => { const start = UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); ctx.beginPath(); ctx.moveTo(sStart.sx, sStart.sy); ctx.lineTo(sStart.sx, sStart.sy); for (let i = 1; i < pathArr.length; i++) { const p = UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); if (isJumpSet.has(i)) { ctx.moveTo(s.sx, s.sy); ctx.lineTo(s.sx, s.sy); } else { ctx.lineTo(s.sx, s.sy); } } }; ctx.strokeStyle = '#fbbf24'; trace(); ctx.stroke(); ctx.strokeStyle = '#000000'; ctx.setLineDash([width, width]); trace(); ctx.stroke(); ctx.setLineDash([]); } else if (ENGINE.rainbowActive) { const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']; let totalLength = 0; const segments = []; for (let i = 1; i < pathArr.length; i++) { if (isJumpSet.has(i)) continue; const p1 = UNPACK(pathArr[i - 1]); const p2 = UNPACK(pathArr[i]); const s1 = getScreenPos(p1.x, p1.y); const s2 = getScreenPos(p2.x, p2.y); const dx = s2.sx - s1.sx; const dy = s2.sy - s1.sy; const len = Math.hypot(dx, dy); segments.push({ s1, s2, len }); totalLength += len; } const start = UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); drawDot(sStart.sx, sStart.sy, colors[0]); let curTravel = 0; segments.forEach(seg => { const mid = curTravel + seg.len / 2; const t = mid / Math.max(totalLength, 1); const colorIndex = Math.floor(t * colors.length) % colors.length; ctx.strokeStyle = colors[colorIndex]; ctx.beginPath(); ctx.moveTo(seg.s1.sx, seg.s1.sy); ctx.lineTo(seg.s2.sx, seg.s2.sy); ctx.stroke(); curTravel += seg.len; }); let jumpTravel = 0; for (let i = 1; i < pathArr.length; i++) { if (isJumpSet.has(i)) { const p = UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); const t = jumpTravel / Math.max(totalLength, 1); const colorIndex = Math.floor(t * colors.length) % colors.length; drawDot(s.sx, s.sy, colorIndex >= 0 ? colors[colorIndex] : colors[0]); } else { const p1 = UNPACK(pathArr[i - 1]); const p2 = UNPACK(pathArr[i]); jumpTravel += Math.hypot(p2.x - p1.x, p2.y - p1.y) * ENGINE.viewport.cellW; } } } else { ctx.strokeStyle = strokeStyle; const trace = () => { const start = UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); ctx.beginPath(); ctx.moveTo(sStart.sx, sStart.sy); ctx.lineTo(sStart.sx, sStart.sy); for (let i = 1; i < pathArr.length; i++) { const p = UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); if (isJumpSet.has(i)) { ctx.moveTo(s.sx, s.sy); ctx.lineTo(s.sx, s.sy); } else { ctx.lineTo(s.sx, s.sy); } } }; trace(); ctx.stroke(); } ctx.restore(); }
@@ -2819,131 +3153,131 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     function drawFilterAsset(ctx, cx, cy, s, axis, color) { ctx.save(); ctx.translate(cx, cy); if (axis === V) ctx.rotate(Math.PI / 2); ctx.fillStyle = color; ctx.globalAlpha = 0.25; const w = s * 0.45, t = s * 0.08; ctx.fillRect(-s/2 + s*0.1, -w/2, s*0.8, t); ctx.fillRect(-s/2 + s*0.1, w/2 - t, s*0.8, t); ctx.restore(); }
     function drawFlippingFilter(ctx, cx, cy, s, axis, color, rotation, crossed) { ctx.save(); ctx.translate(cx, cy); ctx.rotate(rotation); if (axis === V) ctx.rotate(Math.PI / 2); ctx.fillStyle = color; ctx.globalAlpha = 0.25; const w = s * 0.45, t = s * 0.08; ctx.fillRect(-s/2 + s*0.1, -w/2, s*0.8, t); ctx.fillRect(-s/2 + s*0.1, w/2 - t, s*0.8, t); if (ENGINE.mode === EDITOR) { ctx.globalAlpha = crossed ? 0.4 : 1.0; ctx.fillStyle = color; ctx.font = `900 ${s * 0.45}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('↺', 0, 0); } ctx.restore(); }
     function drawScorchMark(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 0.4); grad.addColorStop(0, 'rgba(0,0,0,0.5)'); grad.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = grad; ctx.beginPath(); const radii = [0.35, 0.15, 0.4, 0.2, 0.3, 0.15, 0.35, 0.2, 0.4, 0.15, 0.3, 0.25, 0.35, 0.15, 0.4, 0.2]; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; const r = s * radii[i]; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.restore(); }
-    
+
     // ======================================================
     // E) Render / Canvas
     // ======================================================
-    function render() { 
-        const vp = ENGINE.viewport, l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!vp.cellW || !l) return; const th = THEMES[currentTheme]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = ENGINE.viewport.swapped ? H : W, dispH = ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke(); 
-        
-        if (ENGINE.mode === EDITOR && ENGINE.editor.validTrapSpots && ENGINE.editor.validTrapSpots.size > 0) { ENGINE.editor.validTrapSpots.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2; ctx.save(); ctx.fillStyle = th.colors.goal + '40'; ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = 3; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]); ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.restore(); }); } 
-        
-        let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false; 
-        if ((ENGINE.mode === EDITOR || ENGINE.cheatActive) && l.goalKey !== -1) { 
-            reqLen = ENGINE.mode === EDITOR ? (parseInt($('editReqLen').value) || 0) : l.reqLen; 
-            if (reqLen > 0 || ENGINE.path.length > 0 || ENGINE.cheatActive) { 
-                showParityWarnings = true; const gp = UNPACK(l.goalKey); targetParity = (gp.x + gp.y + reqLen) % 2; 
-                l.portalVisuals.forEach(pv => { const p1 = UNPACK(pv.k1), p2 = UNPACK(pv.k2); if ((p1.x + p1.y) % 2 === (p2.x + p2.y) % 2) hasFlippingPortal = true; }); 
-            } 
-        } 
-        
-        l.filterMap.forEach((axis, k) => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawFilterAsset(ctx, sx, sy, vp.cellW, transformAxis(axis, ENGINE.variant), th.colors.filter); }); 
-        
-        l.flippingFilterMap.forEach((baseAxis, k) => { 
-            const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); 
-            const crossed = ENGINE.crossedFlippingFilters.has(k); 
-            const targetFlips = crossed ? ENGINE.crossedFlippingFilters.get(k) : ENGINE.flipCount; 
-            let currentVisualFlips = targetFlips; 
-            if (!crossed && ENGINE.visualFlipCount !== undefined) { currentVisualFlips = ENGINE.visualFlipCount; } 
-            const rotation = currentVisualFlips * (Math.PI / 2); 
-            drawFlippingFilter(ctx, sx, sy, vp.cellW, transformAxis(baseAxis, ENGINE.variant), th.colors.filter, rotation, crossed); 
-        }); 
-        
-        l.mustCrossKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawMustCrossAsset(ctx, sx, sy, vp.cellW, th.colors.cross); }); 
-        l.blockSet.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2, cr = vp.cellW * 0.2; ctx.fillStyle = th.colors.block; ctx.beginPath(); ctx.roundRect(cx + 1, cy + 1, vp.cellW - 2, vp.cellH - 2, cr); ctx.fill(); ctx.fillStyle = th.grid; for(let r=1;r<=3;r++) for(let c=1;c<=3;c++) { ctx.beginPath(); ctx.arc(cx+(c*0.25*vp.cellW),cy+(r*0.25*vp.cellH),vp.cellW*0.045,0,Math.PI*2); ctx.fill(); } }); 
-        
-        l.portalVisuals.forEach(pv => { const color = ENGINE.mode === EDITOR ? pv.color : th.colors.portal; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [UNPACK(pv.k1), UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } }); }); ctx.setLineDash([]); 
-        
-        if (ENGINE.editor.pendingPortal) { const pp = UNPACK(ENGINE.editor.pendingPortal), { sx, sy } = getScreenPos(pp.x, pp.y); ctx.strokeStyle = th.colors.portal; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = th.colors.portal + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); } 
-        l.mustPassKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const isHit = ENGINE.visitedCounts.get(k) > 0; drawRequiredAsset(ctx, sx, sy, vp.cellW, isHit, th.colors); }); 
-        
-        const now = Date.now(); ENGINE.ripples = ENGINE.ripples.filter(r => now - r.startTime < 600); ENGINE.ripples.forEach(r => { const pct = (now - r.startTime) / 600, { sx, sy } = getScreenPos(r.x, r.y); ctx.save(); ctx.globalAlpha = 1 - pct; ctx.strokeStyle = r.color; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * (0.3 + pct * 1.2), 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }); 
-        
-        l.gateKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); ctx.save(); ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4); const color = (ENGINE.activeGateKey === k || !ENGINE.activeGateKey) ? th.colors.gate : '#94a3b8'; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for(let i=0; i<2; i++) { const offset = (i - 0.5) * vp.cellW * 0.32; ctx.beginPath(); ctx.moveTo(offset - vp.cellW * 0.1, -vp.cellW * 0.2); ctx.lineTo(offset + vp.cellW * 0.1, 0); ctx.lineTo(offset - vp.cellW * 0.1, vp.cellW * 0.2); ctx.stroke(); } ctx.restore(); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } }); 
-        
-        if (ENGINE.path.length) { const stroke = ENGINE.rainbowActive ? 'rainbow' : th.path; drawPath(ENGINE.path, ENGINE.isPortalJump, stroke, vp.cellW * 0.25); } 
-        
-        if (ENGINE.overlayState === HINT_ANIMATING && ENGINE.hinter.pathList.length) { 
-            ctx.save(); ctx.globalAlpha = ENGINE.hinter.alpha; 
-            const hPath = ENGINE.hinter.pathList[ENGINE.hinter.currentPathIdx], displayPath = hPath.slice(0, Math.floor(ENGINE.hinter.index)), hintsJumps = new Set(); 
-            for(let i=1; i<displayPath.length; i++){ const p1 = UNPACK(displayPath[i-1]), p2 = UNPACK(displayPath[i]); if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) hintsJumps.add(i); } 
-            drawPath(displayPath, hintsJumps, '#22c55e', vp.cellW * 0.3, true); 
-            ctx.restore(); 
-        } 
-        
-        if (l.goalKey !== -1) { const goalP = UNPACK(l.goalKey), sGoal = getScreenPos(goalP.x, goalP.y); ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } 
-        
-        l.falseGoalKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (ENGINE.mode === EDITOR) { drawBombAsset(ctx, sx, sy, vp.cellW); } }); 
-        
-        l.gooseSet.forEach(k => { if (ENGINE.revealedGeese.has(k) || ENGINE.cheatActive || ENGINE.mode === EDITOR) { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawGooseAsset(ctx, sx, sy, vp.cellW, ENGINE.cheatActive && !ENGINE.revealedGeese.has(k)); } }); 
-        
-        if (ENGINE.mode === PLAY) { const curLen = getRealLength(ENGINE); $('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = $('intersectionInfo'); intEl.innerText = `${ENGINE.intersections}/${l.reqInt}`; if (ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } } 
+    function render() {
+        const vp = ENGINE.viewport, l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!vp.cellW || !l) return; const th = THEMES[currentTheme]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = ENGINE.viewport.swapped ? H : W, dispH = ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke();
+
+        if (ENGINE.mode === EDITOR && ENGINE.editor.validTrapSpots && ENGINE.editor.validTrapSpots.size > 0) { ENGINE.editor.validTrapSpots.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2; ctx.save(); ctx.fillStyle = th.colors.goal + '40'; ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = 3; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]); ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.restore(); }); }
+
+        let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
+        if ((ENGINE.mode === EDITOR || ENGINE.cheatActive) && l.goalKey !== -1) {
+            reqLen = ENGINE.mode === EDITOR ? (parseInt($('editReqLen').value) || 0) : l.reqLen;
+            if (reqLen > 0 || ENGINE.path.length > 0 || ENGINE.cheatActive) {
+                showParityWarnings = true; const gp = UNPACK(l.goalKey); targetParity = (gp.x + gp.y + reqLen) % 2;
+                l.portalVisuals.forEach(pv => { const p1 = UNPACK(pv.k1), p2 = UNPACK(pv.k2); if ((p1.x + p1.y) % 2 === (p2.x + p2.y) % 2) hasFlippingPortal = true; });
+            }
+        }
+
+        l.filterMap.forEach((axis, k) => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawFilterAsset(ctx, sx, sy, vp.cellW, transformAxis(axis, ENGINE.variant), th.colors.filter); });
+
+        l.flippingFilterMap.forEach((baseAxis, k) => {
+            const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y);
+            const crossed = ENGINE.crossedFlippingFilters.has(k);
+            const targetFlips = crossed ? ENGINE.crossedFlippingFilters.get(k) : ENGINE.flipCount;
+            let currentVisualFlips = targetFlips;
+            if (!crossed && ENGINE.visualFlipCount !== undefined) { currentVisualFlips = ENGINE.visualFlipCount; }
+            const rotation = currentVisualFlips * (Math.PI / 2);
+            drawFlippingFilter(ctx, sx, sy, vp.cellW, transformAxis(baseAxis, ENGINE.variant), th.colors.filter, rotation, crossed);
+        });
+
+        l.mustCrossKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawMustCrossAsset(ctx, sx, sy, vp.cellW, th.colors.cross); });
+        l.blockSet.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2, cr = vp.cellW * 0.2; ctx.fillStyle = th.colors.block; ctx.beginPath(); ctx.roundRect(cx + 1, cy + 1, vp.cellW - 2, vp.cellH - 2, cr); ctx.fill(); ctx.fillStyle = th.grid; for(let r=1;r<=3;r++) for(let c=1;c<=3;c++) { ctx.beginPath(); ctx.arc(cx+(c*0.25*vp.cellW),cy+(r*0.25*vp.cellH),vp.cellW*0.045,0,Math.PI*2); ctx.fill(); } });
+
+        l.portalVisuals.forEach(pv => { const color = ENGINE.mode === EDITOR ? pv.color : th.colors.portal; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [UNPACK(pv.k1), UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } }); }); ctx.setLineDash([]);
+
+        if (ENGINE.editor.pendingPortal) { const pp = UNPACK(ENGINE.editor.pendingPortal), { sx, sy } = getScreenPos(pp.x, pp.y); ctx.strokeStyle = th.colors.portal; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = th.colors.portal + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); }
+        l.mustPassKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const isHit = ENGINE.visitedCounts.get(k) > 0; drawRequiredAsset(ctx, sx, sy, vp.cellW, isHit, th.colors); });
+
+        const now = Date.now(); ENGINE.ripples = ENGINE.ripples.filter(r => now - r.startTime < 600); ENGINE.ripples.forEach(r => { const pct = (now - r.startTime) / 600, { sx, sy } = getScreenPos(r.x, r.y); ctx.save(); ctx.globalAlpha = 1 - pct; ctx.strokeStyle = r.color; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * (0.3 + pct * 1.2), 0, Math.PI * 2); ctx.stroke(); ctx.restore(); });
+
+        l.gateKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); ctx.save(); ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4); const color = (ENGINE.activeGateKey === k || !ENGINE.activeGateKey) ? th.colors.gate : '#94a3b8'; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for(let i=0; i<2; i++) { const offset = (i - 0.5) * vp.cellW * 0.32; ctx.beginPath(); ctx.moveTo(offset - vp.cellW * 0.1, -vp.cellW * 0.2); ctx.lineTo(offset + vp.cellW * 0.1, 0); ctx.lineTo(offset - vp.cellW * 0.1, vp.cellW * 0.2); ctx.stroke(); } ctx.restore(); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } });
+
+        if (ENGINE.path.length) { const stroke = ENGINE.rainbowActive ? 'rainbow' : th.path; drawPath(ENGINE.path, ENGINE.isPortalJump, stroke, vp.cellW * 0.25); }
+
+        if (ENGINE.overlayState === HINT_ANIMATING && ENGINE.hinter.pathList.length) {
+            ctx.save(); ctx.globalAlpha = ENGINE.hinter.alpha;
+            const hPath = ENGINE.hinter.pathList[ENGINE.hinter.currentPathIdx], displayPath = hPath.slice(0, Math.floor(ENGINE.hinter.index)), hintsJumps = new Set();
+            for(let i=1; i<displayPath.length; i++){ const p1 = UNPACK(displayPath[i-1]), p2 = UNPACK(displayPath[i]); if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) hintsJumps.add(i); }
+            drawPath(displayPath, hintsJumps, '#22c55e', vp.cellW * 0.3, true);
+            ctx.restore();
+        }
+
+        if (l.goalKey !== -1) { const goalP = UNPACK(l.goalKey), sGoal = getScreenPos(goalP.x, goalP.y); ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+
+        l.falseGoalKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (ENGINE.mode === EDITOR) { drawBombAsset(ctx, sx, sy, vp.cellW); } });
+
+        l.gooseSet.forEach(k => { if (ENGINE.revealedGeese.has(k) || ENGINE.cheatActive || ENGINE.mode === EDITOR) { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawGooseAsset(ctx, sx, sy, vp.cellW, ENGINE.cheatActive && !ENGINE.revealedGeese.has(k)); } });
+
+        if (ENGINE.mode === PLAY) { const curLen = getRealLength(ENGINE); $('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = $('intersectionInfo'); intEl.innerText = `${ENGINE.intersections}/${l.reqInt}`; if (ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } }
         else if (ENGINE.mode === EDITOR) { const curLen = getRealLength(ENGINE); const lMet = $('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${ENGINE.intersections})`; }
     }
-    
-    async function runGameSolver() { 
-        if (ENGINE.activeSolverController) return; 
+
+    async function runGameSolver(purpose = 'solve') {
+        if (ENGINE.activeSolverController) return;
         stopHintAnimation();
-        
-        ENGINE.activeSolverController = new AbortController(); 
+        ENGINE.activeSolverController = new AbortController();
         setOverlayState(SOLVER_RUNNING);
-        
-        const uiTimer = $('solverTimer'); 
-        const searchLabel = $('searchLabel'); 
+        const uiTimer = $('solverTimer');
+        const searchLabel = $('searchLabel');
         const startTime = Date.now();
 
-        try { 
-            const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; 
-            const solverResult = await PathfinderSolver.solve(activeLevel, { 
-                timeLimit: 105000, 
-                signal: ENGINE.activeSolverController.signal, 
-                onStateUpdate: (msg) => { 
-                    searchLabel.innerText = msg; 
-                    showMessage(msg, "text-sky-600"); 
-                }, 
-                onProgress: (elapsedMs) => { uiTimer.innerText = (elapsedMs / 1000).toFixed(1) + 's'; },
-                debug: ENGINE.isDevMode || ENGINE.mode === EDITOR,
-                debugLevel: (typeof activeLevel.id === "number") ? activeLevel.id + 1 : null
-            }); 
-            const solutions = solverResult && typeof solverResult.ok === "boolean" ? (solverResult.ok ? (solverResult.solution || []) : []) : solverResult;
-            
-            if (solutions.length > 0) { 
-                const paths = solutions.map(s => s.path); 
-                if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); } 
-                ENGINE.hinter.pathList = paths; 
+        try {
+            const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
+            const hardAuto = (activeLevel.reqInt > 0) || (activeLevel.mustCrossKeys?.length > 0) || activeLevel.reqLen >= 24;
+            const timeBudgetMs = purpose === 'hint' ? 5000 : 15000;
+            searchLabel.innerText = purpose === 'hint' ? 'Hint search running…' : 'Solve search running…';
+            showMessage('Solving… (fast pass)', 'text-sky-600');
+            const solverResult = await SolverReferee.solve(activeLevel, { purpose, timeBudgetMs, allowGemini: false, hardMode: purpose === 'solve' ? true : hardAuto });
+            uiTimer.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
+            const solutions = solverResult.ok ? (solverResult.solution || []) : [];
+
+            if (solutions.length > 0) {
+                const paths = solutions.map(s => s.path);
+                if (ENGINE.mode === EDITOR) { ENGINE.editor.workingLevel.hints = paths.slice(0, 4); }
+                ENGINE.hinter.pathList = paths;
                 const seenHints = new Set((ENGINE.foundHintsSinceLoad || []).map(p => JSON.stringify(p)));
                 if (!ENGINE.foundHintsSinceLoad) ENGINE.foundHintsSinceLoad = [];
                 paths.forEach(path => { const key = JSON.stringify(path); if (!seenHints.has(key)) { ENGINE.foundHintsSinceLoad.push(path); seenHints.add(key); } });
-                ENGINE.hinter.source = 'dynamic'; 
-                ENGINE.hinter.currentPathIdx = 0; 
-                outEl.value = JSON.stringify(paths).replace(/\s/g, ''); 
-                startHintAnimation(); 
-            } else { 
-                const debugInfo = solverResult && typeof solverResult.ok === "boolean" ? solverResult.debug : null;
-                if ((ENGINE.isDevMode || ENGINE.mode === EDITOR) && debugInfo) {
-                    const levelNumber = debugInfo.levelIndex || (typeof activeLevel.id === "number" ? activeLevel.id + 1 : (ENGINE.levelIdx + 1));
-                    outEl.value = formatSolverDebugBlock(levelNumber, debugInfo);
+                ENGINE.hinter.source = 'dynamic';
+                ENGINE.hinter.currentPathIdx = 0;
+                outEl.value = JSON.stringify(paths).replace(/\s/g, '');
+                if (purpose === 'hint') startHintAnimation();
+                else startHintAnimation();
+                showMessage(purpose === 'hint' ? (solverResult.stage === 0 ? 'Hint found (fast).' : 'Hint found (hard mode).') : (solverResult.stage === 0 ? 'Solved (fast).' : 'Solved (hard mode).'), 'text-emerald-600');
+            } else {
+                const h = attemptHistory[getLevelAttemptKey(activeLevel, purpose)] || { timesTried: 1 };
+                if (solverResult.status === 'no-solution-proven') {
+                    showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
+                    outEl.value = solverResult.message || 'No solution proven.';
                 } else {
-                    outEl.value = solutions.timedOut ? "Solver timed out before proving unsat." : "No strict solutions found.";
+                    if (purpose === 'hint') {
+                        showMessage(h.timesTried <= 1
+                            ? 'Hint search timed out (5s). Tap “New Hint” again to try hard mode (slower, more thorough).'
+                            : 'Hard mode timed out. Tap again to try an even deeper search, or use Mega Solver retries in dev mode.', 'text-amber-600');
+                    } else {
+                        showMessage('Solve timed out (15s). Tap “Solve” again to retry with extended time (60s) and alternate search order.', 'text-amber-600');
+                    }
+                    outEl.value = solverResult.message || 'No solution found within budget.';
                 }
-                const timedOut = debugInfo ? debugInfo.status === "timeout" : !!solutions.timedOut;
-                showMessage(timedOut ? "Solver timed out." : "No valid path found.", "text-amber-600"); 
                 setOverlayState(OVERLAY_NONE);
-            } 
-        } catch (err) { 
+            }
+        } catch (err) {
             setOverlayState(OVERLAY_NONE);
-            if (err.name === 'AbortError') { showMessage("Solver cancelled.", "text-amber-600"); } 
-            else { console.error("Solver error:", err); } 
-        } finally { 
-            ENGINE.activeSolverController = null; 
-        } 
+            if (err.name === 'AbortError') { showMessage("Solver cancelled.", "text-amber-600"); }
+            else { console.error("Solver error:", err); }
+        } finally {
+            ENGINE.activeSolverController = null;
+        }
     }
-    
-    function startHintAnimation() { 
-        if (!ENGINE.hinter.pathList.length) return; 
+
+    function startHintAnimation() {
+        if (!ENGINE.hinter.pathList.length) return;
         setOverlayState(HINT_ANIMATING);
-        ENGINE.hinter.alpha = 1; ENGINE.hinter.index = 0; 
-        showMessage(`Solution ${ENGINE.hinter.currentPathIdx + 1}/${ENGINE.hinter.pathList.length}`, "text-emerald-600"); 
+        ENGINE.hinter.alpha = 1; ENGINE.hinter.index = 0;
+        showMessage(`Solution ${ENGINE.hinter.currentPathIdx + 1}/${ENGINE.hinter.pathList.length}`, "text-emerald-600");
     }
 
     function stopHintAnimation() {
@@ -2953,53 +3287,53 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         ENGINE.hinter.alpha = 0;
         setOverlayState(OVERLAY_NONE);
     }
-    
-    function loadLevel(idx, keepVariant = false) { 
-        if (ENGINE.activeSolverController) return; 
-        const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : (typeof FALLBACK_RAW_LEVELS !== 'undefined' ? FALLBACK_RAW_LEVELS : null); 
-        if (!levels) return; 
 
-        ENGINE.levelIdx = idx; 
-        const isEditor = ENGINE.mode === EDITOR; 
-        if (isEditor) { ENGINE.variant = 0; } 
-        else if (!keepVariant) { ENGINE.variant = Math.floor(Math.random() * 8); } 
-        
+    function loadLevel(idx, keepVariant = false) {
+        if (ENGINE.activeSolverController) return;
+        const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : (typeof FALLBACK_RAW_LEVELS !== 'undefined' ? FALLBACK_RAW_LEVELS : null);
+        if (!levels) return;
+
+        ENGINE.levelIdx = idx;
+        const isEditor = ENGINE.mode === EDITOR;
+        if (isEditor) { ENGINE.variant = 0; }
+        else if (!keepVariant) { ENGINE.variant = Math.floor(Math.random() * 8); }
+
         setLogicState(IDLE);
         setOverlayState(OVERLAY_NONE);
-        
-        ENGINE.level = normalizeLevel(idx); 
-        assertLevelShape(ENGINE.level); 
-        PathNavigator.clear(ENGINE); 
-        ENGINE.undoStack = []; 
-        ENGINE.revealedGeese.clear(); 
-        ENGINE.ripples = []; 
-        ENGINE.gooseEncounteredThisLevel = false; 
+
+        ENGINE.level = normalizeLevel(idx);
+        assertLevelShape(ENGINE.level);
+        PathNavigator.clear(ENGINE);
+        ENGINE.undoStack = [];
+        ENGINE.revealedGeese.clear();
+        ENGINE.ripples = [];
+        ENGINE.gooseEncounteredThisLevel = false;
         ENGINE.armedFalseGoals = new Set(ENGINE.level.falseGoalKeys || []);
         ENGINE.detonatedFalseGoals = new Set();
         ENGINE.foundHintsSinceLoad = [];
-        if (isEditor) { 
-            ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); 
-            ENGINE.editor.isPencilMode = false; 
-            ENGINE.editor.undoStack = []; 
-            ENGINE.editor.validTrapSpots.clear(); 
-            ENGINE.editor.emptyClickCount = 0; 
-            $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; 
-            $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; 
-            ENGINE.editor.isModified = false; 
-            updatePencilState(); 
-        } 
-        const lvlStr = `${idx+1}`; 
-        $('levelTitle').innerText = lvlStr; 
-        $('levelTitle').style.fontSize = lvlStr.length >= 3 ? '2.5rem' : ''; 
-        $('winModal').classList.add('hidden'); 
-        showMessage("", ""); 
+        if (isEditor) {
+            ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level);
+            ENGINE.editor.isPencilMode = false;
+            ENGINE.editor.undoStack = [];
+            ENGINE.editor.validTrapSpots.clear();
+            ENGINE.editor.emptyClickCount = 0;
+            $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0;
+            $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0;
+            ENGINE.editor.isModified = false;
+            updatePencilState();
+        }
+        const lvlStr = `${idx+1}`;
+        $('levelTitle').innerText = lvlStr;
+        $('levelTitle').style.fontSize = lvlStr.length >= 3 ? '2.5rem' : '';
+        $('winModal').classList.add('hidden');
+        showMessage("", "");
         updateAppScale();
-        updateViewport(); 
+        updateViewport();
         updateCompletionUI();
     }
-    
+
     function updateViewport() { const rect = cvs.getBoundingClientRect(); if (rect.width === 0) return; const l = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel; if (!l) return; const swaps = [1, 3, 6, 7]; ENGINE.viewport.swapped = swaps.includes(ENGINE.variant); const gridW = ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = ENGINE.viewport.swapped ? l.grid.w : l.grid.h; ENGINE.viewport.cellW = cvs.width / gridW; ENGINE.viewport.cellH = cvs.height / gridH; }
-    
+
     let messageTimer = null;
     function showMessage(t, c) {
         msgEl.innerText = t;
@@ -3011,7 +3345,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (messageTimer) clearTimeout(messageTimer);
         messageTimer = setTimeout(() => { overlay.style.opacity = '0'; }, 2000);
     }
-    
+
     // ======================================================
     // F/G/H) Input + UI Wiring + Solver Boot
     // ======================================================
@@ -3019,7 +3353,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         let pendingAction = null; const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { pendingAction = actionFn; $('unsavedModal').classList.remove('hidden'); } else { actionFn(); } };
         $('unsavedStayBtn').onclick = () => { closeAllModals(); pendingAction = null; $('unsavedModal').classList.add('hidden'); };
         $('unsavedLeaveBtn').onclick = () => { closeAllModals(); $('unsavedModal').classList.add('hidden'); if (pendingAction) pendingAction(); };
-        
+
         const handleGridPressAtPoint = (clientX, clientY) => handleDown({ clientX, clientY });
         gamepadGridPrimaryAction = () => {
             const rect = cvs.getBoundingClientRect();
@@ -3195,7 +3529,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         });
         if (hasConnectedGamepad()) startGamepadPollingLoop();
         setFocusGroup('CONTROLS', 0);
-        
+
         const viewportUpdateHandler = () => {
             updateAppScale();
             setFocusGroup(ENGINE.ui.focusGroup || 'GRID', ENGINE.ui.focusIndex || 0);
@@ -3214,29 +3548,29 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('gridSizePlusBtn').onclick = () => { closeAllModals(); changeGridSize(1); };
         $('muteBtn').onclick = () => { closeAllModals(); ENGINE.muted = !ENGINE.muted; $('muteSlash').style.display = ENGINE.muted ? 'block' : 'none'; };
         $('orientationToggleBtn').onclick = () => { closeAllModals(); ENGINE.ui.forceLandscapeLayout = !ENGINE.ui.forceLandscapeLayout; updateLayoutMode(); updateAppScale(); updateViewport(); showMessage(ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
-        
+
         const perspectiveAction = () => { closeAllModals(); if (ENGINE.activeSolverController) return; ENGINE.variant = (ENGINE.variant + 1) % 8; updateViewport(); rebuildDerivedPathState(ENGINE); SOUND_BUS.play("D5", "32n"); };
         $('whoaBtn').onclick = perspectiveAction;
-        
-        $('resetBtn').onclick = () => { 
+
+        $('resetBtn').onclick = () => {
             closeAllModals();
-            if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; 
+            if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return;
             if (ENGINE.cheatActive) {
                 if (ENGINE.cheatTimer) clearTimeout(ENGINE.cheatTimer);
                 ENGINE.cheatTimer = setTimeout(() => { ENGINE.cheatActive = false; }, 3000);
             } else {
-                ENGINE.resetStreak++; 
-                if (ENGINE.resetStreak >= 5) { 
-                    ENGINE.cheatActive = true; 
-                    SOUND_BUS.play("F5", "8n"); 
+                ENGINE.resetStreak++;
+                if (ENGINE.resetStreak >= 5) {
+                    ENGINE.cheatActive = true;
+                    SOUND_BUS.play("F5", "8n");
                     if (ENGINE.cheatTimer) clearTimeout(ENGINE.cheatTimer);
-                    ENGINE.cheatTimer = setTimeout(() => { 
-                        ENGINE.cheatActive = false; 
-                        ENGINE.resetStreak = 0; 
-                    }, 3000); 
-                } 
+                    ENGINE.cheatTimer = setTimeout(() => {
+                        ENGINE.cheatActive = false;
+                        ENGINE.resetStreak = 0;
+                    }, 3000);
+                }
             }
-            loadLevel(ENGINE.levelIdx, true); 
+            loadLevel(ENGINE.levelIdx, true);
         };
 
         $('undoBtn').onclick = () => { closeAllModals(); if(ENGINE.undoStack.length) applySnapshot(ENGINE.undoStack.pop()); };
@@ -3246,19 +3580,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('editCopyBtn').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const pathStr = JSON.stringify(ENGINE.path).replace(/\s/g, ''); outEl.value = pathStr; outEl.select(); document.execCommand('copy'); showMessage("Path Copied", "text-white font-black"); } };
 
         const hintBtn = $('hintBtn'); const hintTopHalf = $('hintTopHalf'); let isHintExpanded = false;
-        const toggleHint = () => { 
-            if (isHintExpanded) { 
-                hintTopHalf.classList.add('hidden'); 
-                hintTopHalf.classList.remove('flex'); 
+        const toggleHint = () => {
+            if (isHintExpanded) {
+                hintTopHalf.classList.add('hidden');
+                hintTopHalf.classList.remove('flex');
                 hintBtn.style.height = '2.5rem';
                 hintBtn.style.marginTop = '0';
-            } else { 
-                hintTopHalf.classList.remove('hidden'); 
-                hintTopHalf.classList.add('flex'); 
+            } else {
+                hintTopHalf.classList.remove('hidden');
+                hintTopHalf.classList.add('flex');
                 hintBtn.style.height = '5.275rem';
                 hintBtn.style.marginTop = '-2.775rem';
-            } 
-            isHintExpanded = !isHintExpanded; 
+            }
+            isHintExpanded = !isHintExpanded;
         };
         const updateHintLabel = () => { const hasSaved = ENGINE.level && ENGINE.level.hints && ENGINE.level.hints.length > 0; const mainLabel = $('hintMainLabel'); if (isHintExpanded) { mainLabel.innerText = "Saved Hint"; mainLabel.style.color = hasSaved ? "white" : "#cbd5e1"; } else { mainLabel.innerText = "Hint"; mainLabel.style.color = "white"; } };
         hintBtn.onclick = (e) => {
@@ -3266,7 +3600,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return;
             if (!isHintExpanded) { toggleHint(); updateHintLabel(); } else {
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
-                if (isTopHalf) runGameSolver(); else { if (ENGINE.level?.hints?.length > 0) { ENGINE.hinter.pathList = ENGINE.level.hints; ENGINE.hinter.currentPathIdx = (ENGINE.hinter.source === 'saved' ? (ENGINE.hinter.currentPathIdx + 1) % ENGINE.hinter.pathList.length : 0); ENGINE.hinter.source = 'saved'; startHintAnimation(); } else showMessage("No saved hint.", "text-white font-black"); }
+                if (isTopHalf) runGameSolver('hint'); else { if (ENGINE.level?.hints?.length > 0) { ENGINE.hinter.pathList = ENGINE.level.hints; ENGINE.hinter.currentPathIdx = (ENGINE.hinter.source === 'saved' ? (ENGINE.hinter.currentPathIdx + 1) % ENGINE.hinter.pathList.length : 0); ENGINE.hinter.source = 'saved'; startHintAnimation(); } else showMessage("No saved hint.", "text-white font-black"); }
                 toggleHint(); updateHintLabel();
             }
         };
@@ -3279,8 +3613,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('nextLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; loadLevel(ENGINE.levelIdx < levels.length - 1 ? ENGINE.levelIdx + 1 : 0); outEl.value = ''; });
         $('nextLevelModalBtn').onclick = () => { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; handleWinClose(() => { if (ENGINE.levelIdx < levels.length - 1) loadLevel(ENGINE.levelIdx + 1); }); };
         $('dismissWinModalBtn').onclick = () => handleWinClose(() => { setLogicState(IDLE); });
-        
-        $('guideBtn').onclick = () => { 
+
+        $('guideBtn').onclick = () => {
             const isVisible = !$('guideModal').classList.contains('hidden');
             closeAllModals();
             if (!isVisible) $('guideModal').classList.remove('hidden');
@@ -3289,7 +3623,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('megaSolverBtn').onclick = () => { closeAllModals(); MEGA.run(); };
         $('closeMegaModalBtn').onclick = () => { $('megaModal').classList.add('hidden'); if(ENGINE.activeSolverController) ENGINE.activeSolverController.abort(); };
         $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
-        
+        $('megaRetry30Btn').onclick = () => { MEGA.retryTimedOut({ timeLimitMs: 30000, altOrder: false }); };
+        $('megaRetry60Btn').onclick = () => { MEGA.retryTimedOut({ timeLimitMs: 60000, altOrder: false }); };
+        $('megaRetry120Btn').onclick = () => { MEGA.retryTimedOut({ timeLimitMs: 120000, altOrder: false }); };
+        $('megaRetryAltBtn').onclick = () => { MEGA.retryTimedOut({ timeLimitMs: 60000, altOrder: true }); };
+        $('megaGeminiRetryBtn').onclick = () => { MEGA.askGeminiTimedOut(); };
+
         const tModal = $('themeModal');
         $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
         $('closeThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
@@ -3312,44 +3651,44 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.querySelectorAll('.editor-input').forEach(el => el.addEventListener('input', () => { ENGINE.hinter.pathList = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.isModified = true; }));
         $('modeToggleBtn').onclick = () => { closeAllModals(); switchMode(EDITOR); };
         $('editModeToggleBtn').onclick = () => tryNavigate(() => { closeAllModals(); switchMode(PLAY); });
-        
-        $('editTrapSpotsBtn').onclick = async () => { 
+
+        $('editTrapSpotsBtn').onclick = async () => {
             const isVisible = !$('editorHelpModal').classList.contains('hidden');
             if (isVisible) { $('editorHelpModal').classList.add('hidden'); return; }
             closeAllModals();
-            if (ENGINE.activeSolverController) return; 
+            if (ENGINE.activeSolverController) return;
             stopHintAnimation();
-            const l = ENGINE.editor.workingLevel; l.reqLen = parseInt($('editReqLen').value); l.reqInt = parseInt($('editReqInt').value); 
-            ENGINE.activeSolverController = new AbortController(); 
+            const l = ENGINE.editor.workingLevel; l.reqLen = parseInt($('editReqLen').value); l.reqInt = parseInt($('editReqInt').value);
+            ENGINE.activeSolverController = new AbortController();
             setOverlayState(SOLVER_RUNNING);
-            const uiTimer = $('solverTimer'); const searchLabel = $('searchLabel'); 
-            try { 
-                const spots = await PathfinderSolver.findTrapSpots(l, { 
-                    timeLimit: 8000, 
-                    signal: ENGINE.activeSolverController.signal, 
-                    onStateUpdate: (msg) => { searchLabel.innerText = msg; showMessage(msg, "text-white font-black"); }, 
-                    onProgress: (elapsedMs) => { uiTimer.innerText = (elapsedMs / 1000).toFixed(1) + 's'; } 
-                }); 
-                ENGINE.editor.validTrapSpots = spots; 
+            const uiTimer = $('solverTimer'); const searchLabel = $('searchLabel');
+            try {
+                const spots = await PathfinderSolver.findTrapSpots(l, {
+                    timeLimit: 8000,
+                    signal: ENGINE.activeSolverController.signal,
+                    onStateUpdate: (msg) => { searchLabel.innerText = msg; showMessage(msg, "text-white font-black"); },
+                    onProgress: (elapsedMs) => { uiTimer.innerText = (elapsedMs / 1000).toFixed(1) + 's'; }
+                });
+                ENGINE.editor.validTrapSpots = spots;
                 render();
-                if (spots.size > 0) showMessage(`Found ${spots.size} spots.`, "text-white font-black"); 
-                else showMessage("No spots found.", "text-white font-black"); 
+                if (spots.size > 0) showMessage(`Found ${spots.size} spots.`, "text-white font-black");
+                else showMessage("No spots found.", "text-white font-black");
                 setOverlayState(OVERLAY_NONE);
-            } catch (err) { 
+            } catch (err) {
                 setOverlayState(OVERLAY_NONE);
-                if (err.name !== 'AbortError') console.error(err); 
-            } finally { 
-                ENGINE.activeSolverController = null; 
-            } 
+                if (err.name !== 'AbortError') console.error(err);
+            } finally {
+                ENGINE.activeSolverController = null;
+            }
         };
         document.querySelectorAll('.palette-item[data-type]').forEach(el => { el.addEventListener('pointerdown', (e) => { if(ENGINE.mode === EDITOR) { if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.draggedFromGrid = false; ENGINE.editor.emptyClickCount = 0; if (ENGINE.editor.pendingPortal && el.dataset.type !== 'portal' && el.dataset.type !== 'eraser') { showMessage("Finish portal pair!", "text-white font-black"); return; } if (ENGINE.editor.selectedTool === el.dataset.type) { ENGINE.editor.selectedTool = null; el.classList.remove('selected'); } else { ENGINE.editor.selectedTool = el.dataset.type; ENGINE.editor.draggedObject = {type: el.dataset.type}; setLogicState(EDIT_DRAG); document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); el.classList.add('selected'); } ENGINE.editor.isPencilMode = false; updatePencilState(); } }); });
         $('editPencilBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.isPencilMode = !ENGINE.editor.isPencilMode; if (ENGINE.editor.isPencilMode) { ENGINE.editor.selectedTool = null; document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); } else { setLogicState(IDLE); } updatePencilState(); };
-        
+
         const eraserBtn = $('editEraserBtn'); let eraserTimer = null, eraserFired = false;
         eraserBtn.addEventListener('pointerdown', (e) => { if (ENGINE.mode !== EDITOR) return; eraserTimer = setTimeout(() => { PathNavigator.clear(ENGINE); showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
         const handleEraserRelease = () => { if (eraserTimer) { clearTimeout(eraserTimer); if (!eraserFired) { if (ENGINE.path.length > 1) PathNavigator.truncateTo(ENGINE, ENGINE.path.length - 2); else PathNavigator.clear(ENGINE); } eraserTimer = null; eraserFired = false; } };
         eraserBtn.addEventListener('pointerup', handleEraserRelease); eraserBtn.addEventListener('pointerleave', handleEraserRelease);
-        
+
         $('editUndoGridBtn').onclick = () => { closeAllModals(); restoreEditorState(); };
         $('editResetGrid').onclick = () => { closeAllModals(); saveEditorState(); const l = ENGINE.editor.workingLevel; Object.assign(l, {gateKeys: [], goalKey: -1, falseGoalKeys: new Set(), blockSet: new Set(), gooseSet: new Set(), mustPassKeys: [], mustCrossKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map(), portalVisuals: []}); PathNavigator.clear(ENGINE); showMessage("Reset", "text-white font-black"); };
         $('editNewLevel').onclick = () => tryNavigate(() => {
@@ -3357,36 +3696,36 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             ENGINE.editor.workingLevel = { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [] };
             PathNavigator.clear(ENGINE); ENGINE.hinter.pathList = []; ENGINE.editor.pendingPortal = null; ENGINE.editor.validTrapSpots.clear(); $('levelTitle').innerText = "??"; $('editReqLen').value = 0; $('editReqInt').value = 0; ENGINE.editor.isPencilMode = false; updatePencilState(); ENGINE.editor.isModified = true; updateViewport(); showMessage("New Level Created", "text-white font-black");
         });
-        $('editHelpBtn').onclick = () => { 
+        $('editHelpBtn').onclick = () => {
             const isVisible = !$('editorHelpModal').classList.contains('hidden');
             closeAllModals();
             if (!isVisible) $('editorHelpModal').classList.remove('hidden');
         };
         $('closeEditorHelpX').onclick = () => $('editorHelpModal').classList.add('hidden');
-        $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver(); };
+        $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver('solve'); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
-        
+
         const loader = {
             progress: 0, hasLoaded: false, finish() { const overlay = $('loadingOverlay'); overlay.style.opacity = '0'; setTimeout(() => overlay.classList.add('hidden'), 500); populateThemes(); },
             triggerFallback(reason = 'missing window.RAW_LEVELS') { if (this.hasLoaded) return; this.hasLoaded = true; console.warn(`[Using fallback levels] ${reason}`); window.RAW_LEVELS = FALLBACK_RAW_LEVELS; this.finish(); loadLevel(0); updatePlayModeLayout(); loop(); },
             start() {
-                const loadThemes = new Promise(resolve => { 
-                    const s = document.createElement('script'); 
-                    s.src = "./themes.js"; 
-                    s.onload = () => { 
+                const loadThemes = new Promise(resolve => {
+                    const s = document.createElement('script');
+                    s.src = "./themes.js";
+                    s.onload = () => {
                         if (window.THEMES_MORE) Object.assign(THEMES, window.THEMES_MORE);
                         ensureThemeLeaveColors();
-                        resolve(); 
-                    }; 
-                    s.onerror = () => resolve(); 
-                    document.head.appendChild(s); 
+                        resolve();
+                    };
+                    s.onerror = () => resolve();
+                    document.head.appendChild(s);
                 });
-                const loadLevels = new Promise((resolve, reject) => { 
-                    const s = document.createElement('script'); 
-                    s.src = "./levels.js"; 
-                    s.onload = () => resolve(); 
-                    s.onerror = () => reject(); 
-                    document.head.appendChild(s); 
+                const loadLevels = new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = "./levels.js";
+                    s.onload = () => resolve();
+                    s.onerror = () => reject();
+                    document.head.appendChild(s);
                 });
                 loadThemes
                     .then(() => loadLevels)
