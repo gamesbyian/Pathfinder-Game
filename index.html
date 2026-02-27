@@ -807,24 +807,13 @@
         return typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value.trim());
     }
 
-    function parseGeminiSuggestionsPayload(data) {
-        const textParts = [];
-        const candidates = Array.isArray(data?.candidates) ? data.candidates : [];
-        candidates.forEach(candidate => {
-            const parts = candidate?.content?.parts;
-            if (Array.isArray(parts)) {
-                parts.forEach(part => {
-                    if (typeof part?.text === 'string') textParts.push(part.text);
-                });
-            }
-        });
-
+    function parseGeminiSuggestionsText(text) {
         const parseCandidates = [];
-        textParts.forEach(text => {
+        if (typeof text === 'string' && text.trim()) {
             parseCandidates.push(text);
             const fencedMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/i);
             if (fencedMatch?.[1]) parseCandidates.push(fencedMatch[1]);
-        });
+        }
 
         let parsed = null;
         let parseError = null;
@@ -851,17 +840,15 @@
     }
 
     async function fetchGeminiThemeColors(themeName, themeObj) {
-        const apiKey = "AIzaSyC7rfddVJfU4X9qziTa1le6Q2AWDRCTzn4";
         const systemPrompt = "You are a professional UI/UX color palette specialist. Your goal is to analyze the provided Pathfinder game theme and suggest exactly 6 new hex colors that expand the existing palette while maintaining visual consistency and accessibility.";
         const userPrompt = `Theme Name: ${themeName}
 Current Colors: ${JSON.stringify(themeObj)}
 
 Suggest 6 complementary hex colors in #RRGGBB format.`;
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
+        const prompt = `${systemPrompt}\n\n${userPrompt}`;
         const payload = {
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ parts: [{ text: userPrompt }] }],
+            prompt,
+            model: 'gemini-2.0-flash',
             generationConfig: {
                 responseMimeType: "application/json",
                 responseSchema: {
@@ -883,7 +870,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         let lastError = null;
         for (let i = 0; i < 6; i++) {
             try {
-                const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const res = await fetch('/api/gemini_color_suggest.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const body = await res.json().catch(() => ({}));
 
                 if (res.status === 429) {
@@ -891,11 +878,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     throw new Error('Rate Limit');
                 }
                 if (!res.ok) {
-                    const apiMessage = body?.error?.message || `HTTP ${res.status}`;
-                    return { colors: null, error: `Gemini API error: ${apiMessage}` };
+                    const apiMessage = body?.error || `HTTP ${res.status}`;
+                    return { colors: null, error: `Suggestion API error: ${apiMessage}` };
                 }
+                if (!body?.ok) return { colors: null, error: body?.error || 'Unable to generate suggestions.' };
 
-                const parsed = parseGeminiSuggestionsPayload(body);
+                const parsed = parseGeminiSuggestionsText(body?.text);
                 if (parsed.colors) return { colors: parsed.colors, error: null };
                 lastError = parsed.error;
             } catch (err) {
