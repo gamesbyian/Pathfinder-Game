@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <style>
-        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; --theme-mega-output-bg: #0f172a; --theme-mega-output-text: #f0abfc; --theme-mega-output-border: #334155; --theme-mega-primary-bg: #a21caf; --theme-mega-primary-text: #ffffff; --theme-mega-primary-border: #d946ef; --theme-mega-secondary-bg: #86198f; --theme-mega-secondary-text: #ffffff; --theme-mega-secondary-border: #d946ef; --theme-mega-gemini-bg: #4338ca; --theme-mega-gemini-text: #ffffff; --theme-mega-gemini-border: #6366f1; --theme-mega-copy-bg: #ffffff; --theme-mega-copy-text: #334155; --theme-mega-copy-border: #cbd5e1; --theme-mega-desc-text: #64748b; }
+        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; --theme-mega-output-bg: #0f172a; --theme-mega-output-text: #f0abfc; --theme-mega-output-border: #334155; --theme-mega-primary-bg: #a21caf; --theme-mega-primary-text: #ffffff; --theme-mega-primary-border: #d946ef; --theme-mega-secondary-bg: #86198f; --theme-mega-secondary-text: #ffffff; --theme-mega-secondary-border: #d946ef; --theme-mega-gemini-bg: #4338ca; --theme-mega-gemini-text: #ffffff; --theme-mega-gemini-border: #6366f1; --theme-mega-copy-bg: #ffffff; --theme-mega-copy-text: #334155; --theme-mega-copy-border: #cbd5e1; --theme-mega-desc-text: #64748b; }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; }
         canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: white; }
         canvas:focus { outline: none; }
@@ -471,6 +471,7 @@
         const $ = id => document.getElementById(id);
         const AXIS = { NONE: 0, H: 1, V: 2 };
         const { H, V, NONE } = AXIS;
+        const DEV = false;
         const MODES = { PLAY: 0, EDITOR: 1 };
         const { PLAY, EDITOR } = MODES;
 
@@ -494,12 +495,16 @@
         };
         const { NONE: OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = OverlayStatus;
 
-        return { $, AXIS, H, V, NONE, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING };
+        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING };
     })();
 
-    const { $, AXIS, H, V, NONE, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = APP.Core;
-    window.AXIS = AXIS;
+    const { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = APP.Core;
+    if (DEV) window.AXIS = AXIS;
 
+    // APP.Loader lifecycle guarantees:
+    // - init() always resolves to a terminal mode ('ready' or 'fallback') within timeout/error paths.
+    // - finish() is idempotent and used exactly once for successful boot completion.
+    // - fail() is terminal for boot progression and routes startup exceptions to overlay error UX.
     // APP.Loader Public API: init(), finish(), fail(kind, payload), getStatus().
     // Owns startup overlay/progress/error UX, external script loading, and level/theme ingestion + fallback decisions.
     APP.Loader = (() => {
@@ -535,9 +540,10 @@
         };
 
         const triggerFallback = (reason = 'missing window.RAW_LEVELS') => {
-            if (state.hasLoaded) return 'ready';
+            if (state.mode === 'ready' || (state.hasLoaded && state.status === 'ready')) return 'ready';
             state.hasLoaded = true;
             state.status = 'fallback';
+            state.mode = 'fallback';
             setProgress(100, 'Using Local Fallback...');
             console.warn(`[Using fallback levels] ${reason}`);
             window.RAW_LEVELS = FALLBACK_RAW_LEVELS;
@@ -566,6 +572,7 @@
                 }
             } catch {}
             state.status = 'failed';
+            state.mode = 'failed';
             finish();
         };
 
@@ -639,6 +646,7 @@
         };
 
         const getStatus = () => ({
+            phase: state.status,
             progress: state.progress,
             hasLoaded: state.hasLoaded,
             hasFinished: state.hasFinished,
@@ -4861,6 +4869,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver('solve'); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
 
+        // APP.Boot lifecycle guarantees:
+        // - start() is the single authoritative init entrypoint.
+        // - loader/init errors route through APP.Loader.fail(...) and stop further boot progression.
+        // - successful path reaches APP.Loader.finish() exactly once.
         // APP.Boot Public API: start().
         // Owns the single initialization entrypoint and orchestrates auth/progress sync, loader completion, and post-load system startup.
         APP.Boot = (() => {
@@ -4874,20 +4886,25 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 applyTheme('classic');
 
                 try {
-                    if (firebaseConfigRaw) await initAuth();
-                } catch (e) {}
-                syncProgress(auth?.currentUser);
+                    try {
+                        if (firebaseConfigRaw) await initAuth();
+                    } catch (e) {}
+                    syncProgress(auth?.currentUser);
 
-                const mode = await APP.Loader.init();
-                if (mode !== 'ready' && mode !== 'fallback') {
-                    APP.Loader.fail('boot', { message: `Unexpected loader mode: ${mode}` });
-                    return;
+                    const mode = await APP.Loader.init();
+                    if (mode !== 'ready' && mode !== 'fallback') {
+                        APP.Loader.fail('boot', { message: `Unexpected loader mode: ${mode}` });
+                        return;
+                    }
+                    if (APP.Loader.getStatus().phase === 'failed') return;
+
+                    loadLevel(0);
+                    updatePlayModeLayout();
+                    loop();
+                    APP.Loader.finish();
+                } catch (error) {
+                    APP.Loader.fail('boot', error);
                 }
-
-                loadLevel(0);
-                updatePlayModeLayout();
-                loop();
-                APP.Loader.finish();
             };
 
             return { start };
