@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <style>
-        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; }
+        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; --theme-mega-output-bg: #0f172a; --theme-mega-output-text: #f0abfc; --theme-mega-output-border: #334155; --theme-mega-primary-bg: #a21caf; --theme-mega-primary-text: #ffffff; --theme-mega-primary-border: #d946ef; --theme-mega-secondary-bg: #86198f; --theme-mega-secondary-text: #ffffff; --theme-mega-secondary-border: #d946ef; --theme-mega-gemini-bg: #4338ca; --theme-mega-gemini-text: #ffffff; --theme-mega-gemini-border: #6366f1; --theme-mega-copy-bg: #ffffff; --theme-mega-copy-text: #334155; --theme-mega-copy-border: #cbd5e1; --theme-mega-desc-text: #64748b; }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; }
         canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: white; }
         canvas:focus { outline: none; }
@@ -298,19 +298,23 @@
 
             <div id="megaModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
                 <div id="megaModalContent" class="screen-modal-panel panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content">
-                    <div class="flex justify-between items-center mb-4 shrink-0">
+                    <div class="flex justify-between items-center mb-3 shrink-0">
                         <div><h2 id="megaModalTitle" class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Mega Solver Results</h2><p id="megaModalSub" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Bulk Solution Generation</p></div>
                         <button id="closeMegaModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                     </div>
-                    <div id="megaSummary" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)] mb-2">No run yet.</div>
-                    <textarea id="megaOutput" readonly class="flex-grow min-h-0 p-4 bg-slate-900 text-fuchsia-300 rounded-xl border border-slate-700 text-xs font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500" placeholder="Mega solver results will appear here..."></textarea>
-                    <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
-                        <button id="megaRetry30Btn" class="text-left bg-fuchsia-700 text-white border border-fuchsia-500 px-4 py-3 rounded-xl hover:brightness-110 transition"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Quick Retry (30s)</span><span class="block text-[0.68rem] leading-tight opacity-90">Retries only levels that failed this run, using the same stage order with a short time budget.</span></button>
-                        <button id="megaRetry60Btn" class="text-left bg-fuchsia-700 text-white border border-fuchsia-500 px-4 py-3 rounded-xl hover:brightness-110 transition"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Standard Retry (60s)</span><span class="block text-[0.68rem] leading-tight opacity-90">Same strategy as your first run, but gives each failed level a longer chance before timing out.</span></button>
-                        <button id="megaRetry120Btn" class="text-left bg-fuchsia-700 text-white border border-fuchsia-500 px-4 py-3 rounded-xl hover:brightness-110 transition"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Deep Retry (120s)</span><span class="block text-[0.68rem] leading-tight opacity-90">Longest same-ladder retry for stubborn levels that might solve with more search time.</span></button>
-                        <button id="megaRetryAltBtn" class="text-left bg-fuchsia-800 text-white border border-fuchsia-500 px-4 py-3 rounded-xl hover:brightness-110 transition"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Alternate Order Retry</span><span class="block text-[0.68rem] leading-tight opacity-90">Retries failed levels with the 60s budget but starts with a different stage ordering to shake loose new paths.</span></button>
-                        <button id="megaGeminiRetryBtn" class="text-left bg-indigo-700 text-white border border-indigo-500 px-4 py-3 rounded-xl hover:brightness-110 transition sm:col-span-2"><span class="block font-black text-[0.68rem] uppercase tracking-wider">Ask Gemini + Validate</span><span class="block text-[0.68rem] leading-tight opacity-90">For unresolved levels only: Gemini proposes a path, then Pathfinder validation checks whether it truly satisfies the puzzle rules.</span></button>
-                        <button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-4 py-3 rounded-xl font-black hover:brightness-95 transition uppercase tracking-widest active:scale-95 sm:col-span-2">Copy All Results</button>
+                    <div class="flex-grow min-h-0 overflow-y-auto pr-1">
+                        <div id="megaSummary" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-mega-desc-text)] mb-2">No run yet.</div>
+                        <div class="flex gap-2 items-stretch w-full mb-3">
+                            <textarea id="megaOutput" readonly class="flex-grow min-h-[8rem] h-[11rem] p-3 rounded-xl border text-[0.6rem] font-mono leading-tight resize-none" placeholder="Mega solver results will appear here..."></textarea>
+                            <button id="copyMegaDataBtn" class="w-24 shrink-0 rounded-lg border font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy</button>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div class="rounded-xl border p-2 border-[var(--theme-mega-primary-border)]/40"><button id="megaRetry30Btn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Quick Retry</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">30s per failed level. Same stage order.</p></div>
+                            <div class="rounded-xl border p-2 border-[var(--theme-mega-primary-border)]/40"><button id="megaRetry60Btn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Standard Retry</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">60s per failed level. Same strategy.</p></div>
+                            <div class="rounded-xl border p-2 border-[var(--theme-mega-primary-border)]/40"><button id="megaRetry120Btn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Deep Retry</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">120s per failed level for stubborn puzzles.</p></div>
+                            <div class="rounded-xl border p-2 border-[var(--theme-mega-secondary-border)]/40"><button id="megaRetryAltBtn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Alternate Order</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">60s with a different stage order.</p></div>
+                            <div class="sm:col-span-2 rounded-xl border p-2 border-[var(--theme-mega-gemini-border)]/40"><button id="megaGeminiRetryBtn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Ask Gemini + Validate</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">Gemini suggests paths only for unresolved levels, then Pathfinder verifies puzzle legality.</p></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1210,7 +1214,7 @@
     function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
 
     const THEMES = {
-        classic: { bodyBg: '#e0f2fe', canvasBg: '#ffffff', grid: '#94a3b8', headerLeft: '#dc2626', headerRight: '#2563eb', path: 'rainbow', controls: 'rgba(255, 255, 255, 0.7)', metricText: '#ffffff', btns: { undo: '#4c566a', reset: '#d12929', guide: '#8c33db', whoa: '#2563eb', hint: '#cf6b17', saved: '#0a8a65', mega: '#ba29c9', mute: '#e1e7f0', muteIcon: '#64748b', copy: '#e1e7f0', gen: '#e1e7f0', modeToggle: '#1a2438', orient: '#1a2438', solve: '#ba29c9', editClear: '#d12929', editBombs: '#ef4444', editNew: '#0a8a65' }, modal: { bg: 'rgba(248, 250, 252, 0.95)', panelBg: '#ffffff', border: '#cbd5e1', text: '#334155', textMuted: '#64748b', accent: '#0f172a' }, output: { bg: '#0f172a', text: '#38bdf8' }, colors: { gate: '#3b82f6', goal: '#ef4444', block: '#cbd5e1', pin: '#ef4444', pinUnflipped: '#000000', filter: '#000000', portal: '#d946ef', cross: '#000000' }, palette: { bg: '#f8fafc', border: '#cbd5e1', itemBg: '#ffffff', itemBorder: '#cbd5e1', toolBg: '#f1f5f9' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#ffffff', ghostBorder: '#0ea5e9', win: { bg: '#ffffff', border: '#3b82f6', text: '#64748b', accent: '#1e3a8a' }, alert: { bg: '#1e40af', stroke: '#93c5fd' }, ctrlArea: { bg: '#f1f5f9', border: '#cbd5e1' }, burst: '#ffe135', check: '#1e293b' },
+        classic: { bodyBg: '#e0f2fe', canvasBg: '#ffffff', grid: '#94a3b8', headerLeft: '#dc2626', headerRight: '#2563eb', path: 'rainbow', controls: 'rgba(255, 255, 255, 0.7)', metricText: '#ffffff', btns: { undo: '#4c566a', reset: '#d12929', guide: '#8c33db', whoa: '#2563eb', hint: '#cf6b17', saved: '#0a8a65', mega: '#ba29c9', mute: '#e1e7f0', muteIcon: '#64748b', copy: '#e1e7f0', gen: '#e1e7f0', modeToggle: '#1a2438', orient: '#1a2438', solve: '#ba29c9', editClear: '#d12929', editBombs: '#ef4444', editNew: '#0a8a65' }, modal: { bg: 'rgba(248, 250, 252, 0.95)', panelBg: '#ffffff', border: '#cbd5e1', text: '#334155', textMuted: '#64748b', accent: '#0f172a' }, output: { bg: '#0f172a', text: '#38bdf8' }, colors: { gate: '#3b82f6', goal: '#ef4444', block: '#cbd5e1', pin: '#ef4444', pinUnflipped: '#000000', filter: '#000000', portal: '#d946ef', cross: '#000000' }, palette: { bg: '#f8fafc', border: '#cbd5e1', itemBg: '#ffffff', itemBorder: '#cbd5e1', toolBg: '#f1f5f9' }, headerLeftText: '#ffffff', headerLeftLabel: 'rgba(255, 255, 255, 0.7)', ghostBg: '#ffffff', ghostBorder: '#0ea5e9', win: { bg: '#ffffff', border: '#3b82f6', text: '#64748b', accent: '#1e3a8a' }, alert: { bg: '#1e40af', stroke: '#93c5fd' }, ctrlArea: { bg: '#f1f5f9', border: '#cbd5e1' }, text: { modal: '#334155', modalMuted: '#64748b', modalAccent: '#0f172a', output: '#38bdf8', metric: '#ffffff', headerMain: '#ffffff', headerSub: 'rgba(255, 255, 255, 0.7)', win: '#64748b', winAccent: '#1e3a8a', megaDesc: '#64748b', megaOutput: '#38bdf8', megaPrimary: '#ffffff', megaSecondary: '#ffffff', megaGemini: '#ffffff', megaCopy: '#334155' }, mega: { outputBg: '#0f172a', outputBorder: '#cbd5e1', primaryBg: '#ba29c9', primaryBorder: '#d946ef', secondaryBg: '#86198f', secondaryBorder: '#d946ef', geminiBg: '#4338ca', geminiBorder: '#6366f1', copyBg: '#e1e7f0', copyBorder: '#cbd5e1' }, burst: '#ffe135', check: '#1e293b' },
         dark: { bodyBg: '#020617', canvasBg: '#111827', grid: '#475569', headerLeft: '#7f1d1d', headerRight: '#1e3a8a', path: '#22c55e', controls: 'rgba(30, 41, 59, 0.9)', metricText: '#f1f5f9', btns: { undo: '#374151', reset: '#7f1d1d', guide: '#4c1d95', whoa: '#1e3a8a', hint: '#b45309', saved: '#064e3b', mega: '#701a75', mute: '#1e293b', muteIcon: '#94a3b8', copy: '#1e293b', gen: '#1e293b', modeToggle: '#000000', orient: '#000000', solve: '#374151', editClear: '#7f1d1d', editBombs: '#f43f5e', editNew: '#064e3b' }, modal: { bg: 'rgba(15, 23, 42, 0.95)', panelBg: '#1e293b', border: '#334155', text: '#f8fafc', textMuted: '#94a3b8', accent: '#38bdf8' }, output: { bg: '#020617', text: '#22c55e' }, colors: { gate: '#38bdf8', goal: '#f43f5e', block: '#1e293b', pin: '#f43f5e', pinUnflipped: '#64748b', filter: '#94a3b8', portal: '#d946ef', cross: '#94a3b8' }, palette: { bg: '#0f172a', border: '#334155', itemBg: '#1e293b', itemBorder: '#334155', toolBg: '#0f172a' }, headerLeftText: '#f1f5f9', headerLeftLabel: 'rgba(241, 245, 249, 0.7)', ghostBg: '#1e293b', ghostBorder: '#38bdf8', win: { bg: '#1e293b', border: '#38bdf8', text: '#94a3b8', accent: '#f8fafc' }, alert: { bg: '#7f1d1d', stroke: '#fca5a5' }, ctrlArea: { bg: '#0f172a', border: '#334155' }, burst: '#334155', check: '#f1f5f9' },
         tron: { bodyBg: '#000000', canvasBg: '#001d3d', grid: '#00d9ff66', headerLeft: '#00d9ff', headerRight: '#ff00ff', path: '#00d9ff', controls: 'rgba(0, 8, 20, 0.95)', metricText: '#000000', btns: { undo: '#003366', reset: '#990099', guide: '#004080', whoa: '#005099', hint: '#008080', saved: '#006600', mega: '#ff9900', mute: '#001d3d', muteIcon: '#00d9ff', copy: '#001d3d', gen: '#001d3d', modeToggle: '#001122', orient: '#001122', solve: '#003366', editClear: '#990099', editBombs: '#ff00ff', editNew: '#006600' }, modal: { bg: 'rgba(0, 8, 20, 0.95)', panelBg: '#001d3d', border: '#00d9ff', text: '#00d9ff', textMuted: '#004e64', accent: '#ff00ff' }, output: { bg: '#000814', text: '#ff00ff' }, colors: { gate: '#00d9ff', goal: '#ff00ff', block: '#001d3d', pin: '#ff00ff', pinUnflipped: '#004e64', filter: '#00d9ff', portal: '#ff00ff', cross: '#00d9ff' }, palette: { bg: '#000814', border: '#00d9ff', itemBg: '#001d3d', itemBorder: '#00d9ff', toolBg: '#000814' }, headerLeftText: '#000000', headerLeftLabel: 'rgba(0, 0, 0, 0.7)', ghostBg: '#001d3d', ghostBorder: '#ff00ff', win: { bg: '#000814', border: '#ff00ff', text: '#00d9ff', accent: '#ff00ff' }, alert: { bg: '#001d3d', stroke: '#00d9ff' }, ctrlArea: { bg: '#000814', border: '#00d9ff' }, burst: '#00d9ff', check: '#1e293b' },
         paper: { bodyBg: '#fdf6e3', canvasBg: '#fffaf0', grid: '#3b3b3b66', headerLeft: '#000000', headerRight: '#555555', path: '#000000', controls: 'rgba(255, 250, 240, 0.9)', metricText: '#fdf6e3', btns: { undo: '#5a5a5a', reset: '#333333', guide: '#4a4a4a', whoa: '#3d3d3d', hint: '#6b6b6b', saved: '#2e4a3d', mega: '#2b2b2b', mute: '#eee8d5', muteIcon: '#000000', copy: '#eee8d5', gen: '#eee8d5', modeToggle: '#1a1a1a', orient: '#1a1a1a', solve: '#5a5a5a', editClear: '#333333', editBombs: '#000000', editNew: '#2e4a3d' }, modal: { bg: 'rgba(245, 230, 196, 0.95)', panelBg: '#fdf6e3', border: '#3b3b3b', text: '#1a1a1a', textMuted: '#5a5a5a', accent: '#000000' }, output: { bg: '#eee8d5', text: '#000000' }, colors: { gate: '#000000', goal: '#000000', block: '#cccccc', pin: '#000000', pinUnflipped: '#999999', filter: '#000000', portal: '#555555', cross: '#000000' }, palette: { bg: '#eee8d5', border: '#3b3b3b', itemBg: '#fdf6e3', itemBorder: '#3b3b3b', toolBg: '#eee8d5' }, headerLeftText: '#fdf6e3', headerLeftLabel: 'rgba(253, 246, 227, 0.7)', ghostBg: '#fdf6e3', ghostBorder: '#000000', win: { bg: '#fdf6e3', border: '#3b82f6', text: '#5a5a5a', accent: '#1a1a1a' }, alert: { bg: '#3b3b3b', stroke: '#fdf6e3' }, ctrlArea: { bg: '#eee8d5', border: '#3b3b3b' }, burst: '#eee8d5', check: '#000000' },
@@ -1355,6 +1359,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.win = t.win || {};
         t.alert = t.alert || {};
         t.ctrlArea = t.ctrlArea || {};
+        t.text = t.text || {};
+        t.mega = t.mega || {};
 
         t.bodyBg = t.bodyBg || '#e0f2fe';
         t.canvasBg = t.canvasBg || '#ffffff';
@@ -1408,6 +1414,33 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
         t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
 
+        t.text.modal = t.text.modal || t.modal.text;
+        t.text.modalMuted = t.text.modalMuted || t.modal.textMuted;
+        t.text.modalAccent = t.text.modalAccent || t.modal.accent;
+        t.text.output = t.text.output || t.output.text;
+        t.text.metric = t.text.metric || t.metricText;
+        t.text.headerMain = t.text.headerMain || t.headerLeftText;
+        t.text.headerSub = t.text.headerSub || t.headerLeftLabel;
+        t.text.win = t.text.win || t.win.text;
+        t.text.winAccent = t.text.winAccent || t.win.accent;
+        t.text.megaDesc = t.text.megaDesc || t.modal.textMuted;
+        t.text.megaOutput = t.text.megaOutput || t.output.text;
+        t.text.megaPrimary = t.text.megaPrimary || '#ffffff';
+        t.text.megaSecondary = t.text.megaSecondary || '#ffffff';
+        t.text.megaGemini = t.text.megaGemini || '#ffffff';
+        t.text.megaCopy = t.text.megaCopy || t.modal.text;
+
+        t.mega.outputBg = t.mega.outputBg || t.output.bg;
+        t.mega.outputBorder = t.mega.outputBorder || t.modal.border;
+        t.mega.primaryBg = t.mega.primaryBg || t.btns.mega || t.headerRight;
+        t.mega.primaryBorder = t.mega.primaryBorder || t.modal.border;
+        t.mega.secondaryBg = t.mega.secondaryBg || darkenHex(t.mega.primaryBg, 0.88);
+        t.mega.secondaryBorder = t.mega.secondaryBorder || t.modal.border;
+        t.mega.geminiBg = t.mega.geminiBg || t.btns.guide || t.headerRight;
+        t.mega.geminiBorder = t.mega.geminiBorder || t.modal.border;
+        t.mega.copyBg = t.mega.copyBg || t.btns.copy || t.modal.panelBg;
+        t.mega.copyBorder = t.mega.copyBorder || t.modal.border;
+
         t.burst = t.burst || t.palette.itemBg;
         t.check = t.check || t.colors.filter;
         t.leave = getLeaveThemeColors(t, key === 'classic');
@@ -1421,7 +1454,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function applyTheme(name) {
-        if (name === 'chaos') { THEMES.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
+        if (name === 'chaos') { THEMES.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
         currentTheme = name; APP.Themes.currentTheme = currentTheme; const t = THEMES[name]; const root = document.documentElement;
         root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
         const alertBg = (t.alert?.bg || '#1e40af');
@@ -1433,6 +1466,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         root.style.setProperty('--theme-alert-text', alertText);
         root.style.setProperty('--theme-logo-bg', t.canvasBg); root.style.setProperty('--theme-logo-grid', t.grid); root.style.setProperty('--theme-logo-path', t.path === 'rainbow' ? '#3b82f6' : t.path); root.style.setProperty('--theme-logo-gate', t.colors.gate); root.style.setProperty('--theme-logo-goal', t.colors.goal);
         root.style.setProperty('--theme-burst', t.burst || '#fef9c3'); root.style.setProperty('--theme-check', t.check || '#1e293b');
+        root.style.setProperty('--theme-mega-output-bg', t.mega.outputBg); root.style.setProperty('--theme-mega-output-text', t.text.megaOutput); root.style.setProperty('--theme-mega-output-border', t.mega.outputBorder);
+        root.style.setProperty('--theme-mega-primary-bg', t.mega.primaryBg); root.style.setProperty('--theme-mega-primary-text', t.text.megaPrimary); root.style.setProperty('--theme-mega-primary-border', t.mega.primaryBorder);
+        root.style.setProperty('--theme-mega-secondary-bg', t.mega.secondaryBg); root.style.setProperty('--theme-mega-secondary-text', t.text.megaSecondary); root.style.setProperty('--theme-mega-secondary-border', t.mega.secondaryBorder);
+        root.style.setProperty('--theme-mega-gemini-bg', t.mega.geminiBg); root.style.setProperty('--theme-mega-gemini-text', t.text.megaGemini); root.style.setProperty('--theme-mega-gemini-border', t.mega.geminiBorder);
+        root.style.setProperty('--theme-mega-copy-bg', t.mega.copyBg); root.style.setProperty('--theme-mega-copy-text', t.text.megaCopy); root.style.setProperty('--theme-mega-copy-border', t.mega.copyBorder);
+        root.style.setProperty('--theme-mega-desc-text', t.text.megaDesc);
         const leave = getLeaveThemeColors(t, name === 'classic');
         root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
 
@@ -1442,8 +1481,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('headerRight').style.backgroundColor = t.headerRight;
 
         $('headerBar').style.borderColor = t.grid;
-        $('levelTitle').style.color = t.headerLeftText;
-        $('levelLabelText').style.color = t.headerLeftLabel;
+        $('levelTitle').style.color = t.text.headerMain;
+        $('levelLabelText').style.color = t.text.headerSub;
         const ghost = $('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; const pal = $('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; document.querySelectorAll('.palette-item').forEach(item => { if (item.classList.contains('palette-tool')) { item.style.backgroundColor = t.palette.toolBg; } else if (item.id !== 'editCopyMetrics') { item.style.backgroundColor = t.palette.itemBg; } item.style.borderColor = t.palette.itemBorder; }); $('editCopyMetrics').style.backgroundColor = t.headerLeft; $('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = $('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; $('undoBtn').style.backgroundColor = t.btns.undo; $('resetBtn').style.backgroundColor = t.btns.reset; $('guideBtn').style.backgroundColor = t.btns.guide; $('whoaBtn').style.backgroundColor = t.btns.whoa;
 
         const isDark = (t.bodyBg === '#020617' || t.bodyBg === '#000000');
@@ -1457,9 +1496,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('orientationToggleBtn').style.color = '#ffffff';
         $('orientationToggleBtn').style.borderColor = t.grid;
 
-        $('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; $('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; $('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; $('editHelpBtn').style.backgroundColor = t.btns.guide; $('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; $('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; $('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; $('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = $('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; muteBtn.style.borderColor = t.modal.border; $('muteIcon').style.color = neutralText; $('muteSlash').style.color = neutralText; $('devCopyBtn').style.backgroundColor = t.btns.copy; $('editCopyBtn').style.backgroundColor = t.btns.copy; $('devGenBtn').style.backgroundColor = t.btns.gen; $('editGenBtn').style.backgroundColor = t.btns.gen; $('devCopyBtn').style.color = t.btns.muteIcon; $('editCopyBtn').style.color = t.btns.muteIcon; $('devGenBtn').style.color = t.btns.muteIcon; $('editGenBtn').style.color = t.btns.muteIcon; $('exportLabel').style.color = t.btns.muteIcon; document.querySelectorAll('.metric-label').forEach(el => el.style.color = t.metricText); [$('solutionOutput'), $('winSolutionOutput'), $('megaOutput')].forEach(el => { if(el) { el.style.backgroundColor = t.output?.bg || '#0f172a'; el.style.color = t.output?.text || '#38bdf8'; el.style.borderColor = t.modal.border; }}); $('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; $('gridSizeMinusBtn').style.color = t.btns.muteIcon; $('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; $('gridSizePlusBtn').style.backgroundColor = t.btns.copy; $('gridSizePlusBtn').style.color = t.btns.muteIcon; $('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; $('gridRotateBtn').style.backgroundColor = t.btns.copy; $('gridRotateBtn').style.color = t.btns.muteIcon; $('gridRotateBtn').style.borderColor = t.palette.itemBorder; $('gridMirrorBtn').style.backgroundColor = t.btns.copy; $('gridMirrorBtn').style.color = t.btns.muteIcon; $('gridMirrorBtn').style.borderColor = t.palette.itemBorder; $('gridSizeLabel').style.color = t.btns.muteIcon;
+        $('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; $('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; $('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; $('editHelpBtn').style.backgroundColor = t.btns.guide; $('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; $('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; $('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; $('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = $('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; muteBtn.style.borderColor = t.modal.border; $('muteIcon').style.color = neutralText; $('muteSlash').style.color = neutralText; $('devCopyBtn').style.backgroundColor = t.btns.copy; $('editCopyBtn').style.backgroundColor = t.btns.copy; $('devGenBtn').style.backgroundColor = t.btns.gen; $('editGenBtn').style.backgroundColor = t.btns.gen; $('devCopyBtn').style.color = t.btns.muteIcon; $('editCopyBtn').style.color = t.btns.muteIcon; $('devGenBtn').style.color = t.btns.muteIcon; $('editGenBtn').style.color = t.btns.muteIcon; $('exportLabel').style.color = t.text.metric; document.querySelectorAll('.metric-label').forEach(el => el.style.color = t.text.metric); $('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; $('solutionOutput').style.color = t.text.output; $('solutionOutput').style.borderColor = t.modal.border; $('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; $('winSolutionOutput').style.color = t.text.output; $('winSolutionOutput').style.borderColor = t.modal.border; $('megaOutput').style.backgroundColor = t.mega.outputBg; $('megaOutput').style.color = t.text.megaOutput; $('megaOutput').style.borderColor = t.mega.outputBorder; $('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; $('copyMegaDataBtn').style.color = t.text.megaCopy; $('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = $(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); $('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; $('gridSizeMinusBtn').style.color = t.btns.muteIcon; $('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; $('gridSizePlusBtn').style.backgroundColor = t.btns.copy; $('gridSizePlusBtn').style.color = t.btns.muteIcon; $('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; $('gridRotateBtn').style.backgroundColor = t.btns.copy; $('gridRotateBtn').style.color = t.btns.muteIcon; $('gridRotateBtn').style.borderColor = t.palette.itemBorder; $('gridMirrorBtn').style.backgroundColor = t.btns.copy; $('gridMirrorBtn').style.color = t.btns.muteIcon; $('gridMirrorBtn').style.borderColor = t.palette.itemBorder; $('gridSizeLabel').style.color = t.btns.muteIcon;
         const gArea = $('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
-        const winModalContent = $('winModalContent'); $('winCircle').style.backgroundColor = t.win.bg; $('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.win.border; winModalContent.querySelector('p').style.color = t.win.text; $('nextLevelModalBtn').style.color = t.headerRight; $('dismissWinModalBtn').style.color = t.headerRight; ENGINE.rainbowActive = (name === 'classic');
+        const winModalContent = $('winModalContent'); $('winCircle').style.backgroundColor = t.win.bg; $('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.text.winAccent; winModalContent.querySelector('p').style.color = t.text.win; $('nextLevelModalBtn').style.color = t.text.winAccent; $('dismissWinModalBtn').style.color = t.text.winAccent; ENGINE.rainbowActive = (name === 'classic');
     }
 
     function populateThemes() {
@@ -1493,7 +1532,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         if (category === "Buttons") {
             replaceInKeys(t.btns, Object.keys(t.btns || {}));
-            replaceInKeys(t.leave, ['bg', 'hover', 'text']);
         }
         else if (category === "Grid Items") {
             replaceInKeys(t.colors, Object.keys(t.colors || {}));
@@ -1501,24 +1539,35 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (t.grid === oldColor) t.grid = newColor;
         }
         else if (category === "Misc") {
-            ['bodyBg', 'canvasBg', 'headerLeft', 'headerRight', 'controls', 'metricText', 'headerLeftText', 'headerLeftLabel', 'ghostBg', 'burst', 'check'].forEach(key => {
+            ['bodyBg', 'canvasBg', 'headerLeft', 'headerRight', 'controls', 'ghostBg', 'burst', 'check'].forEach(key => {
                 if (t[key] === oldColor) t[key] = newColor;
             });
-            replaceInKeys(t.modal, ['bg', 'panelBg', 'text', 'textMuted', 'accent']);
-            replaceInKeys(t.output, ['bg', 'text']);
+            replaceInKeys(t.modal, ['bg', 'panelBg']);
+            replaceInKeys(t.output, ['bg']);
             replaceInKeys(t.palette, ['bg', 'itemBg', 'toolBg']);
-            replaceInKeys(t.win, ['bg', 'text', 'accent']);
+            replaceInKeys(t.win, ['bg']);
             replaceInKeys(t.alert, ['bg']);
             replaceInKeys(t.ctrlArea, ['bg']);
+            replaceInKeys(t.mega, ['outputBg', 'primaryBg', 'secondaryBg', 'geminiBg', 'copyBg']);
         } else if (category === "Lines") {
             replaceInKeys(t.modal, LINE_KEY_GROUPS.modal);
             replaceInKeys(t.palette, LINE_KEY_GROUPS.palette);
             replaceInKeys(t.win, LINE_KEY_GROUPS.win);
             replaceInKeys(t.alert, LINE_KEY_GROUPS.alert);
             replaceInKeys(t.ctrlArea, LINE_KEY_GROUPS.ctrlArea);
+            replaceInKeys(t.mega, ['outputBorder', 'primaryBorder', 'secondaryBorder', 'geminiBorder', 'copyBorder']);
             if (t.ghostBorder === oldColor) t.ghostBorder = newColor;
             replaceInKeys(t.leave, ['border']);
-        } else {
+        } else if (category === "Text") {
+            ['metricText', 'headerLeftText', 'headerLeftLabel'].forEach(key => {
+                if (t[key] === oldColor) t[key] = newColor;
+            });
+            replaceInKeys(t.modal, ['text', 'textMuted', 'accent']);
+            replaceInKeys(t.output, ['text']);
+            replaceInKeys(t.win, ['text', 'accent']);
+            replaceInKeys(t.text, Object.keys(t.text || {}));
+            replaceInKeys(t.leave, ['text']);
+                } else {
             const replaceDeep = (obj) => {
                 if (!obj || typeof obj !== 'object') return;
                 for (let k in obj) {
@@ -1557,8 +1606,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const btnColors = toColorSet([
             ...Object.values(t.btns || {}),
             t.leave?.bg,
-            t.leave?.hover,
-            t.leave?.text
+            t.leave?.hover
         ]);
         const gridColors = toColorSet([
             t.colors?.gate,
@@ -1578,33 +1626,57 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             t.headerLeft,
             t.headerRight,
             t.controls,
-            t.metricText,
-            t.headerLeftText,
-            t.headerLeftLabel,
             t.ghostBg,
             t.modal?.bg,
             t.modal?.panelBg,
-            t.modal?.text,
-            t.modal?.textMuted,
-            t.modal?.accent,
             t.output?.bg,
-            t.output?.text,
             t.palette?.bg,
             t.palette?.itemBg,
             t.palette?.toolBg,
             t.win?.bg,
-            t.win?.text,
-            t.win?.accent,
             t.alert?.bg,
             t.ctrlArea?.bg,
+            t.mega?.outputBg,
+            t.mega?.primaryBg,
+            t.mega?.secondaryBg,
+            t.mega?.geminiBg,
+            t.mega?.copyBg,
             t.burst,
             t.check
+        ]);
+        const textColors = toColorSet([
+            t.metricText,
+            t.headerLeftText,
+            t.headerLeftLabel,
+            t.modal?.text,
+            t.modal?.textMuted,
+            t.modal?.accent,
+            t.output?.text,
+            t.win?.text,
+            t.win?.accent,
+            t.text?.modal,
+            t.text?.modalMuted,
+            t.text?.modalAccent,
+            t.text?.output,
+            t.text?.metric,
+            t.text?.headerMain,
+            t.text?.headerSub,
+            t.text?.win,
+            t.text?.winAccent,
+            t.text?.megaDesc,
+            t.text?.megaOutput,
+            t.text?.megaPrimary,
+            t.text?.megaSecondary,
+            t.text?.megaGemini,
+            t.text?.megaCopy,
+            t.leave?.text
         ]);
 
         const arrBtns = Array.from(btnColors);
         const arrGrid = Array.from(gridColors);
         const arrLines = Array.from(lineColors);
         const arrMisc = Array.from(miscColors);
+        const arrText = Array.from(textColors);
 
         const sectionsContainer = document.createElement('div');
         sectionsContainer.className = "grid grid-cols-2 gap-2 mb-1";
@@ -1632,7 +1704,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const sourceCategory = ENGINE.themeTapCategory;
                     const targetCategory = swatch.dataset.category;
 
-                    if (sourceColor !== targetColor) {
+                    if (sourceColor !== targetColor && sourceCategory === targetCategory) {
                         replaceThemeColor(themeKey, targetColor, sourceColor, targetCategory);
                     }
 
@@ -1692,7 +1764,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         sectionsContainer.appendChild(buildSection("Misc", arrMisc));
         sectionsContainer.appendChild(buildSection("Lines", arrLines));
 
+        const textRow = document.createElement('div');
+        textRow.className = "mb-1";
+        textRow.appendChild(buildSection("Text", arrText));
+
         container.appendChild(sectionsContainer);
+        container.appendChild(textRow);
 
         const aiColorsContainer = document.createElement('div');
         aiColorsContainer.className = "flex flex-col items-center w-full mt-1 bg-black/5 rounded p-1.5";
@@ -3549,7 +3626,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (ENGINE.logicState === THEME_DRAG) {
                 const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
                 let isSameElement = (dropTarget && dropTarget.dataset.themeColor === ENGINE.themeDragColor);
-                if (dropTarget && dropTarget.dataset.themeColor && !isSameElement) {
+                if (dropTarget && dropTarget.dataset.themeColor && !isSameElement && dropTarget.dataset.category === ENGINE.themeDragCategory) {
                     replaceThemeColor(ENGINE.themeDragTheme, dropTarget.dataset.themeColor, ENGINE.themeDragColor, dropTarget.dataset.category);
                 }
                 setLogicState(IDLE); ENGINE.themeDragColor = null; ENGINE.themeDragTheme = null; ENGINE.themeDragCategory = null; ghostEl.style.display = 'none'; ghostEl.innerHTML = '';
