@@ -501,6 +501,127 @@
     const { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = APP.Core;
     if (DEV) window.AXIS = AXIS;
 
+    // APP.UI Public API:
+    // - initDom(): cache shared UI DOM refs once at boot.
+    // - getEl(key): read cached element by key.
+    // - setStatus(text, severity, className): update shared alert/status message copy/styling.
+    // - setProgress({ phase, current, total, pct, detail, mode }): update loader/solver progress labels and bars.
+    // - showOverlay(key)/hideOverlay(key): shared overlay visibility controls.
+    // - openModal(id)/closeModal(id)/toggleModal(id, force): centralized modal visibility.
+    // - setModalContent(id, value, mode): safe modal region text/html updates.
+    // - setButtonState(id, opts): shared button disabled/active/label state updates.
+    // - flashMessage(text, className): shared transient message banner helper.
+    // - reportError(kind, payload): centralized startup/runtime user-visible error handling.
+    // Owns shared UI concerns: overlays, modal visibility, status/progress text, and common button state updates.
+    APP.UI = (() => {
+        const dom = {};
+
+        const addClass = (el, cls) => { if (el && cls) el.classList.add(cls); };
+        const removeClass = (el, cls) => { if (el && cls) el.classList.remove(cls); };
+        const toggleClass = (el, cls, force) => { if (el && cls) el.classList.toggle(cls, force); };
+        const setText = (el, value = '') => { if (el) el.textContent = `${value}`; };
+        const setHTML = (el, value = '') => { if (el) el.innerHTML = `${value}`; };
+        const setStyle = (el, key, value) => { if (el) el.style[key] = value; };
+        const safeEnable = (el, enabled = true) => { if (el) el.disabled = !enabled; };
+        const show = (el, displayClass = 'flex') => { if (!el) return; removeClass(el, 'hidden'); if (displayClass) addClass(el, displayClass); };
+        const hide = (el, displayClass = 'flex') => { if (!el) return; addClass(el, 'hidden'); if (displayClass) removeClass(el, displayClass); };
+
+        const initDom = () => {
+            if (dom.__inited) return;
+            dom.__inited = true;
+            [
+                'loadingOverlay','loadPercent','loadProgressBar','loadStatusLabel','loadErrorMessage',
+                'message','searchIndicator','searchLabel','solverCloseBtn','solverTimer',
+                'megaStatus','megaSummary','megaOutput','megaModal','megaSolverBtn',
+                'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
+                'gooseJumpScare','bombJumpScare'
+            ].forEach(id => { dom[id] = document.getElementById(id); });
+        };
+
+        const getEl = (key) => dom[key] || null;
+
+        const setStatus = (text = '', severity = 'info', className = '') => {
+            const el = getEl('message');
+            if (!el) return;
+            el.className = `font-black text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg ${className}`.trim();
+            el.dataset.severity = severity;
+            setText(el, text);
+        };
+
+        const setProgress = ({ phase = '', current = null, total = null, pct = null, detail = '', mode = '' } = {}) => {
+            if (pct !== null && pct !== undefined) {
+                const clamped = Math.max(0, Math.min(100, Number(pct)));
+                setText(getEl('loadPercent'), `${Math.round(clamped)}%`);
+                setStyle(getEl('loadProgressBar'), 'width', `${clamped}%`);
+            }
+            const parts = [];
+            if (phase) parts.push(phase);
+            if (current !== null && total !== null) parts.push(`${current}/${total}`);
+            if (detail) parts.push(detail);
+            if (mode) parts.push(mode);
+            if (parts.length) setText(getEl('loadStatusLabel'), parts.join(' • '));
+        };
+
+        const showOverlay = (key) => show(getEl(key));
+        const hideOverlay = (key) => hide(getEl(key));
+
+        const openModal = (id) => removeClass(getEl(id) || document.getElementById(id), 'hidden');
+        const closeModal = (id) => addClass(getEl(id) || document.getElementById(id), 'hidden');
+        const isModalOpen = (id) => {
+            const el = getEl(id) || document.getElementById(id);
+            return !!el && !el.classList.contains('hidden');
+        };
+
+        const toggleModal = (id, force = null) => {
+            const el = getEl(id) || document.getElementById(id);
+            if (!el) return false;
+            const next = (force === null) ? el.classList.contains('hidden') : force;
+            toggleClass(el, 'hidden', !next);
+            return next;
+        };
+
+        const setModalContent = (id, value, mode = 'text') => {
+            const el = getEl(id) || document.getElementById(id);
+            if (!el) return;
+            if (mode === 'html') setHTML(el, value);
+            else setText(el, value);
+        };
+
+        const setButtonState = (id, { enabled = true, active = null, label = null, className = null } = {}) => {
+            const el = getEl(id) || document.getElementById(id);
+            if (!el) return;
+            safeEnable(el, enabled);
+            if (active !== null) toggleClass(el, 'selected', !!active);
+            if (label !== null) setText(el, label);
+            if (className !== null) el.className = className;
+        };
+
+        const flashMessage = (text = '', className = '', duration = 1200) => {
+            const overlay = document.getElementById('alertOverlay');
+            setStatus(text, 'info', className);
+            if (!overlay) return;
+            removeClass(overlay, 'pointer-events-none');
+            setStyle(overlay, 'opacity', text ? '1' : '0');
+            if (!text) {
+                addClass(overlay, 'pointer-events-none');
+                return;
+            }
+            setTimeout(() => {
+                setStyle(overlay, 'opacity', '0');
+                addClass(overlay, 'pointer-events-none');
+            }, duration);
+        };
+
+        const reportError = (kind, payload) => {
+            const details = payload?.message || payload?.reason || 'Unknown initialization failure.';
+            setModalContent('loadErrorMessage', `Startup error (${kind}): ${details}`, 'text');
+            removeClass(getEl('loadErrorMessage'), 'hidden');
+            setStatus(`Startup error (${kind})`, 'error', 'text-red-200');
+        };
+
+        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, flashMessage, reportError };
+    })();
+
     // APP.Loader lifecycle guarantees:
     // - init() always resolves to a terminal mode ('ready' or 'fallback') within timeout/error paths.
     // - finish() is idempotent and used exactly once for successful boot completion.
@@ -521,12 +642,7 @@
 
         const setProgress = (nextProgress, label = 'Initing Systems...') => {
             state.progress = Math.max(0, Math.min(100, nextProgress));
-            const pct = $('loadPercent');
-            const bar = $('loadProgressBar');
-            const status = $('loadStatusLabel');
-            if (pct) pct.textContent = `${Math.round(state.progress)}%`;
-            if (bar) bar.style.width = `${state.progress}%`;
-            if (status && label) status.textContent = label;
+            APP.UI.setProgress({ pct: state.progress, phase: label });
         };
 
         const finalizeInit = (mode) => {
@@ -554,23 +670,16 @@
             if (state.hasFinished) return;
             state.hasFinished = true;
             setProgress(100, state.mode === 'fallback' ? 'Fallback Ready' : 'Ready');
-            const overlay = $('loadingOverlay');
+            const overlay = APP.UI.getEl('loadingOverlay') || $('loadingOverlay');
             if (overlay) {
                 overlay.style.opacity = '0';
-                setTimeout(() => overlay.classList.add('hidden'), 500);
+                setTimeout(() => APP.UI.hideOverlay('loadingOverlay'), 500);
             }
             populateThemes();
         };
 
         const fail = (kind, payload) => {
-            try {
-                const msgEl = $('loadErrorMessage');
-                if (msgEl) {
-                    const details = payload?.message || payload?.reason || 'Unknown initialization failure.';
-                    msgEl.textContent = `Startup error (${kind}): ${details}`;
-                    msgEl.classList.remove('hidden');
-                }
-            } catch {}
+            try { APP.UI.reportError(kind, payload); } catch {}
             state.status = 'failed';
             state.mode = 'failed';
             finish();
@@ -870,7 +979,7 @@
 
     function setOverlayState(newState) {
         if (ENGINE.overlayState === SOLVER_RUNNING && newState !== SOLVER_RUNNING) {
-            $('searchIndicator').classList.add('hidden');
+            APP.UI.hideOverlay('searchIndicator');
             setSolversActive(true);
         }
         if (ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
@@ -881,9 +990,9 @@
         ENGINE.overlayState = newState;
 
         if (newState === SOLVER_RUNNING) {
-            $('searchIndicator').classList.remove('hidden');
-            $('solverCloseBtn').disabled = false;
-            if (!ENGINE.solverAbortRequested) $('searchLabel').innerText = 'Finding Solutions...';
+            APP.UI.showOverlay('searchIndicator');
+            APP.UI.setButtonState('solverCloseBtn', { enabled: true });
+            if (!ENGINE.solverAbortRequested) APP.UI.setModalContent('searchLabel', 'Finding Solutions...', 'text');
             setSolversActive(false);
         }
         if (newState === HINT_ANIMATING) {
@@ -1229,19 +1338,18 @@
             const inconclusive = values.filter(v => v.status === 'no-solution-inconclusive').length;
             const proven = values.filter(v => v.status === 'no-solution-proven').length;
             const errors = values.filter(v => ['error', 'cancelled', 'gemini-invalid', 'gemini-failed'].includes(v.status)).length;
-            $('megaSummary').innerText = `Solved: ${solved} | Timeout: ${timeout} | Inconclusive: ${inconclusive} | Proven Unsat: ${proven} | Error: ${errors}`;
+            APP.UI.setModalContent('megaSummary', `Solved: ${solved} | Timeout: ${timeout} | Inconclusive: ${inconclusive} | Proven Unsat: ${proven} | Error: ${errors}`, 'text');
         },
         appendOutput(line) { const el = $('megaOutput'); el.value += `${line}
 `; el.scrollTop = el.scrollHeight; },
         setProgress(text) {
-            const status = $('megaStatus');
-            status.classList.remove('hidden');
-            status.innerText = text;
+            APP.UI.openModal('megaStatus');
+            APP.UI.setModalContent('megaStatus', text, 'text');
+            APP.UI.setStatus(text, 'info');
         },
         clearProgress() {
-            const status = $('megaStatus');
-            status.classList.add('hidden');
-            status.innerText = '';
+            APP.UI.closeModal('megaStatus');
+            APP.UI.setModalContent('megaStatus', '', 'text');
         },
         async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, variant: 'default', allowGemini: false }); },
         async runTargets({ targets = null, timeLimitMs = 15000, variant = 'default', allowGemini = false }) {
@@ -1249,7 +1357,7 @@
             const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS;
             this.active = true;
             const myToken = ++this.runToken;
-            if (!targets) { this.results = {}; this.meta = {}; $('megaOutput').value = ''; }
+            if (!targets) { this.results = {}; this.meta = {}; APP.UI.getEl('megaOutput').value = ''; }
             const toRun = targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
             if (toRun.length === 0) {
                 showMessage('All levels have hints!', 'text-green-600');
@@ -1257,16 +1365,14 @@
                 return;
             }
             showMessage(allowGemini ? 'Mega Gemini attempt started…' : (targets ? `Mega retry started (${Math.round(timeLimitMs / 1000)}s)…` : 'Mega solver started…'), 'text-sky-600');
-            const btn = $('megaSolverBtn');
+            const btn = APP.UI.getEl('megaSolverBtn') || $('megaSolverBtn');
             const orig = btn.innerText;
-            btn.disabled = true;
+            APP.UI.setButtonState('megaSolverBtn', { enabled: false });
             setOverlayState(SOLVER_RUNNING);
             ENGINE.activeSolverController = new AbortController();
-            const uiTimer = $('solverTimer');
-            const searchLabel = $('searchLabel');
             const runStart = Date.now();
             const timerTick = setInterval(() => {
-                uiTimer.innerText = ((Date.now() - runStart) / 1000).toFixed(1) + 's';
+                APP.UI.setModalContent('solverTimer', ((Date.now() - runStart) / 1000).toFixed(1) + 's', 'text');
             }, 100);
 
             try {
@@ -1278,15 +1384,15 @@
                     const prevMeta = this.meta[lvlNum] || { attempts: 0 };
                     const attempt = prevMeta.attempts + 1;
                     this.setProgress(`MEGA ${i + 1}/${toRun.length} • Level ${lvlNum} • Attempt ${attempt}`);
-                    searchLabel.innerText = `Mega solving level ${lvlNum}/${toRun.length}…`;
+                    APP.UI.setModalContent('searchLabel', `Mega solving level ${lvlNum}/${toRun.length}…`, 'text');
                     const res = await SolverReferee.solve(l, {
                         purpose: 'mega',
                         timeBudgetMs: timeLimitMs,
                         allowGemini,
                         variant,
                         onStage: ({ name, variant: stageVariant, budgetMs }) => {
-                            searchLabel.innerText = `${name} (${stageVariant}, ${Math.round(budgetMs / 1000)}s)`;
-                            if (ENGINE.solverAbortRequested) searchLabel.innerText = 'Stopping… finishing current stage safely.';
+                            APP.UI.setModalContent('searchLabel', `${name} (${stageVariant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
+                            if (ENGINE.solverAbortRequested) APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
                         }
                     });
                     const stagesText = (res.stagesTried || []).map(st => `${st.name}/${st.variant}:${st.result}@${st.elapsedMs}ms`).join(' | ');
@@ -1318,8 +1424,7 @@
                 this.clearProgress();
                 this.showReport();
                 this.active = false;
-                btn.disabled = false;
-                btn.innerText = orig;
+                APP.UI.setButtonState('megaSolverBtn', { enabled: true, label: orig });
                 showMessage('Mega solver finished…', 'text-emerald-600');
             }
         },
@@ -1339,7 +1444,7 @@
             }
             return this.runTargets({ targets: failed, timeLimitMs: 15000, variant: 'default', allowGemini: true });
         },
-        showReport() { this.updateSummary(); $('megaModal').classList.remove('hidden'); }
+        showReport() { this.updateSummary(); APP.UI.openModal('megaModal'); }
     };
 
     function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
@@ -2422,7 +2527,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             delete window.ORIGINAL_THEMES['chaos'];
         }
         const grid = $('themeGrid'); grid.innerHTML = ''; const themeKeys = Object.keys(THEMES); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
-        themeKeys.forEach(key => { const t = THEMES[key] || THEMES.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl hover:bg-slate-100"; btn.onclick = () => { applyTheme(key); $('themeModal').classList.add('hidden'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black text-slate-600 uppercase tracking-widest"; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
+        themeKeys.forEach(key => { const t = THEMES[key] || THEMES.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl hover:bg-slate-100"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black text-slate-600 uppercase tracking-widest"; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
 
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
@@ -2812,12 +2917,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function closeAllModals() {
-        $('guideModal').classList.add('hidden');
-        $('editorHelpModal').classList.add('hidden');
-        $('winModal').classList.add('hidden');
-        $('megaModal').classList.add('hidden');
-        $('themeModal').classList.add('hidden');
-        $('unsavedModal').classList.add('hidden');
+        ['guideModal', 'editorHelpModal', 'winModal', 'megaModal', 'themeModal', 'unsavedModal'].forEach(id => APP.UI.closeModal(id));
     }
 
     function getRealLength(state = ENGINE) { return state.path.length > 0 ? state.path.length - 1 - state.isPortalJump.size : 0; }
@@ -4097,7 +4197,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (!l) return false;
         return getRealLength() === l.reqLen && ENGINE.intersections === l.reqInt;
     }
-    function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); $('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); $('winModal').classList.remove('hidden'); SOUND_BUS.play("C5", "8n"); } }
+    function checkWinCondition() { if (checkWinConditionImpl(ENGINE.path, ENGINE.level, ENGINE.mode, ENGINE.logicState, ENGINE.isPortalJump, ENGINE.visitedCounts, ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(ENGINE.path).replace(/\s/g, ''); $('winExportArea').classList.toggle('hidden', !ENGINE.isDevMode); if (ENGINE.mode === PLAY) markLevelComplete(ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
 
     function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, { mode: ENGINE.mode, armedFalseGoals: ENGINE.armedFalseGoals, flipCount: ENGINE.flipCount, crossedSet: ENGINE.crossedFlippingFilters }); }
 
@@ -4106,7 +4206,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     function attemptMoveTo(target) { if (ENGINE.mode === EDITOR && !ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(ENGINE.logicState) && ENGINE.mode !== EDITOR) return; if (!ENGINE.path.length) return; const headPos = UNPACK(ENGINE.path[ENGINE.path.length - 1]); if (ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } }
 
     function updatePlayModeLayout() { if (ENGINE.mode !== PLAY) return; const megaBtn = $('megaSolverBtn'); const exportArea = $('exportArea'); if (ENGINE.isDevMode) { megaBtn.classList.remove('hidden'); exportArea.classList.remove('hidden'); $('devCopyBtn').classList.remove('hidden'); $('devGenBtn').classList.remove('hidden'); } else { megaBtn.classList.add('hidden'); exportArea.classList.add('hidden'); } }
-    function isModalActive() { return !$('guideModal').classList.contains('hidden') || !$('editorHelpModal').classList.contains('hidden') || !$('winModal').classList.contains('hidden') || !$('megaModal').classList.contains('hidden') || !$('themeModal').classList.contains('hidden') || !$('unsavedModal').classList.contains('hidden'); }
+    function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal'); }
 
     let gamepadGridPrimaryAction = () => {};
 
@@ -4167,8 +4267,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function dismissGuideOrHelpModal() {
-        if (!$('guideModal').classList.contains('hidden')) { $('guideModal').classList.add('hidden'); return true; }
-        if (!$('editorHelpModal').classList.contains('hidden')) { $('editorHelpModal').classList.add('hidden'); return true; }
+        if (APP.UI.isModalOpen('guideModal')) { APP.UI.closeModal('guideModal'); return true; }
+        if (APP.UI.isModalOpen('editorHelpModal')) { APP.UI.closeModal('editorHelpModal'); return true; }
         return false;
     }
     function switchMode(newMode) { const isEd = newMode === EDITOR; ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(ENGINE); ENGINE.undoStack = []; ENGINE.revealedGeese.clear(); ENGINE.gooseEncounteredThisLevel = false; ENGINE.armedFalseGoals.clear(); ENGINE.detonatedFalseGoals.clear(); $('editorPalette').classList.toggle('hidden', !isEd); $('playMetrics').classList.toggle('hidden', isEd); $('editorMetrics').classList.toggle('hidden', !isEd); $('gameButtonGrid').classList.toggle('hidden', isEd); $('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = $('exportArea'); $('editCopyBtn').classList.toggle('hidden', !isEd); $('editGenBtn').classList.toggle('hidden', !isEd); $('devCopyBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); $('devGenBtn').classList.toggle('hidden', isEd || !ENGINE.isDevMode); if (isEd) { ENGINE.variant = 0; ENGINE.editor.workingLevel = deepCloneLevel(ENGINE.level); ENGINE.editor.isPencilMode = false; ENGINE.editor.undoStack = []; ENGINE.editor.validTrapSpots.clear(); ENGINE.editor.emptyClickCount = 0; $('editReqLen').value = ENGINE.editor.workingLevel.reqLen || 0; $('editReqInt').value = ENGINE.editor.workingLevel.reqInt || 0; ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); loadLevel(ENGINE.levelIdx, true); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); updateCompletionUI(); showMessage("", ""); }
@@ -4348,17 +4448,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         stopHintAnimation();
         ENGINE.activeSolverController = new AbortController();
         setOverlayState(SOLVER_RUNNING);
-        const uiTimer = $('solverTimer');
-        const searchLabel = $('searchLabel');
         const startTime = Date.now();
         const timerTick = setInterval(() => {
-            uiTimer.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
+            APP.UI.setModalContent('solverTimer', ((Date.now() - startTime) / 1000).toFixed(1) + 's', 'text');
         }, 100);
 
         try {
             const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
             const timeBudgetMs = purpose === 'hint' ? 5000 : 15000;
-            searchLabel.innerText = purpose === 'hint' ? 'Hint search running…' : 'Solve search running…';
+            APP.UI.setModalContent('searchLabel', purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', 'text');
 
             let solverResult;
             if (!ENGINE.flags?.useRefereeSolver) {
@@ -4379,7 +4477,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     timeBudgetMs,
                     allowGemini: false,
                     onStage: ({ name, variant, budgetMs }) => {
-                        searchLabel.innerText = `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`;
+                        APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
                         if (ENGINE.flags.refereeDebug) showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
                     }
                 });
@@ -4473,9 +4571,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             updatePencilState();
         }
         const lvlStr = `${idx+1}`;
-        $('levelTitle').innerText = lvlStr;
+        APP.UI.setModalContent('levelTitle', lvlStr, 'text');
         $('levelTitle').style.fontSize = lvlStr.length >= 3 ? '2.5rem' : '';
-        $('winModal').classList.add('hidden');
+        APP.UI.closeModal('winModal');
         showMessage("", "");
         updateAppScale();
         updateViewport();
@@ -4486,10 +4584,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     let messageTimer = null;
     function showMessage(t, c) {
-        msgEl.innerText = t;
-        msgEl.className = "text-center font-black uppercase tracking-tighter architectural-tight leading-tight drop-shadow-md";
-        msgEl.style.color = getComputedStyle(document.documentElement).getPropertyValue('--theme-alert-text').trim() || "#ffffff";
+        APP.UI.setStatus(t, 'info', c || '');
         const overlay = $('alertOverlay');
+        if (!overlay) return;
         if (t === "") { overlay.style.opacity = '0'; return; }
         overlay.style.opacity = '1';
         if (messageTimer) clearTimeout(messageTimer);
@@ -4500,9 +4597,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // F/G/H) Input + UI Wiring + Solver Boot
     // ======================================================
     window.onload = () => {
-        let pendingAction = null; const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { pendingAction = actionFn; $('unsavedModal').classList.remove('hidden'); } else { actionFn(); } };
-        $('unsavedStayBtn').onclick = () => { closeAllModals(); pendingAction = null; $('unsavedModal').classList.add('hidden'); };
-        $('unsavedLeaveBtn').onclick = () => { closeAllModals(); $('unsavedModal').classList.add('hidden'); if (pendingAction) pendingAction(); };
+        let pendingAction = null; const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
+        $('unsavedStayBtn').onclick = () => { closeAllModals(); pendingAction = null; APP.UI.closeModal('unsavedModal'); };
+        $('unsavedLeaveBtn').onclick = () => { closeAllModals(); APP.UI.closeModal('unsavedModal'); if (pendingAction) pendingAction(); };
 
         const handleGridPressAtPoint = (clientX, clientY) => handleDown({ clientX, clientY });
         gamepadGridPrimaryAction = () => {
@@ -4759,7 +4856,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('solverCloseBtn').onclick = () => {
             if (!ENGINE.activeSolverController) return;
             ENGINE.solverAbortRequested = true;
-            $('searchLabel').innerText = 'Stopping… finishing current stage safely.';
+            APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
             $('solverCloseBtn').disabled = true;
             showMessage('Stopping solver…', 'text-amber-400 font-bold');
             ENGINE.activeSolverController.abort();
@@ -4771,7 +4868,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 showMessage(`Referee solver ${ENGINE.flags.useRefereeSolver ? 'ON' : 'OFF'}`, 'text-white font-black');
             }
         });
-        const handleWinClose = (callback) => { const circle = $('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); $('winModal').classList.add('hidden'); callback(); }, 1000); };
+        const handleWinClose = (callback) => { const circle = $('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
         $('copyWinDataBtn').onclick = () => { if (winOutEl.value) { winOutEl.select(); document.execCommand('copy'); } };
         $('prevLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; loadLevel(ENGINE.levelIdx > 0 ? ENGINE.levelIdx - 1 : levels.length - 1); outEl.value = ''; });
         $('nextLevelBtn').onclick = () => tryNavigate(() => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE || ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; loadLevel(ENGINE.levelIdx < levels.length - 1 ? ENGINE.levelIdx + 1 : 0); outEl.value = ''; });
@@ -4779,13 +4876,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('dismissWinModalBtn').onclick = () => handleWinClose(() => { setLogicState(IDLE); });
 
         $('guideBtn').onclick = () => {
-            const isVisible = !$('guideModal').classList.contains('hidden');
+            const isVisible = APP.UI.isModalOpen('guideModal');
             closeAllModals();
-            if (!isVisible) $('guideModal').classList.remove('hidden');
+            if (!isVisible) APP.UI.openModal('guideModal');
         };
-        $('closeGuideX').onclick = () => $('guideModal').classList.add('hidden');
+        $('closeGuideX').onclick = () => APP.UI.closeModal('guideModal');
         $('megaSolverBtn').onclick = () => { closeAllModals(); MEGA.run(); };
-        $('closeMegaModalBtn').onclick = () => { $('megaModal').classList.add('hidden'); };
+        $('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
         $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
         $('megaRetry30Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
         $('megaRetry60Btn').onclick = () => { closeAllModals(); MEGA.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
@@ -4794,9 +4891,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('megaGeminiRetryBtn').onclick = () => { closeAllModals(); MEGA.askGeminiForFailed(); };
 
         const tModal = $('themeModal');
-        $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); tModal.classList.remove('hidden'); };
-        $('closeThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
-        $('dismissThemeModalBtn').onclick = () => { tModal.classList.add('hidden'); closeEditor(); };
+        $('openThemeModalBtn').onclick = () => { closeAllModals(); updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
+        $('closeThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
+        $('dismissThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
         $('openThemeEditorBtn').onclick = () => { $('themeSelectView').classList.add('hidden'); $('themeEditView').classList.remove('hidden'); $('themeEditView').classList.add('flex'); renderThemeEditors(); };
         const closeEditor = () => { $('themeEditView').classList.add('hidden'); $('themeEditView').classList.remove('flex'); $('themeSelectView').classList.remove('hidden'); refreshThemeFooter(); };
         const refreshThemeFooter = () => {
@@ -4817,21 +4914,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         $('editModeToggleBtn').onclick = () => tryNavigate(() => { closeAllModals(); switchMode(PLAY); });
 
         $('editTrapSpotsBtn').onclick = async () => {
-            const isVisible = !$('editorHelpModal').classList.contains('hidden');
-            if (isVisible) { $('editorHelpModal').classList.add('hidden'); return; }
+            const isVisible = APP.UI.isModalOpen('editorHelpModal');
+            if (isVisible) { APP.UI.closeModal('editorHelpModal'); return; }
             closeAllModals();
             if (ENGINE.activeSolverController) return;
             stopHintAnimation();
             const l = ENGINE.editor.workingLevel; l.reqLen = parseInt($('editReqLen').value); l.reqInt = parseInt($('editReqInt').value);
             ENGINE.activeSolverController = new AbortController();
             setOverlayState(SOLVER_RUNNING);
-            const uiTimer = $('solverTimer'); const searchLabel = $('searchLabel');
             try {
                 const spots = await PathfinderSolver.findTrapSpots(l, {
                     timeLimit: 8000,
                     signal: ENGINE.activeSolverController.signal,
-                    onStateUpdate: (msg) => { searchLabel.innerText = msg; showMessage(msg, "text-white font-black"); },
-                    onProgress: (elapsedMs) => { uiTimer.innerText = (elapsedMs / 1000).toFixed(1) + 's'; }
+                    onStateUpdate: (msg) => { APP.UI.setModalContent('searchLabel', msg, 'text'); showMessage(msg, "text-white font-black"); },
+                    onProgress: (elapsedMs) => { APP.UI.setModalContent('solverTimer', (elapsedMs / 1000).toFixed(1) + 's', 'text'); }
                 });
                 ENGINE.editor.validTrapSpots = spots;
                 render();
@@ -4861,11 +4957,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             PathNavigator.clear(ENGINE); ENGINE.hinter.pathList = []; ENGINE.editor.pendingPortal = null; ENGINE.editor.validTrapSpots.clear(); $('levelTitle').innerText = "??"; $('editReqLen').value = 0; $('editReqInt').value = 0; ENGINE.editor.isPencilMode = false; updatePencilState(); ENGINE.editor.isModified = true; updateViewport(); showMessage("New Level Created", "text-white font-black");
         });
         $('editHelpBtn').onclick = () => {
-            const isVisible = !$('editorHelpModal').classList.contains('hidden');
+            const isVisible = APP.UI.isModalOpen('editorHelpModal');
             closeAllModals();
-            if (!isVisible) $('editorHelpModal').classList.remove('hidden');
+            if (!isVisible) APP.UI.openModal('editorHelpModal');
         };
-        $('closeEditorHelpX').onclick = () => $('editorHelpModal').classList.add('hidden');
+        $('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
         $('editMegaSolver').onclick = () => { closeAllModals(); if (!ENGINE.editor.workingLevel) return; ENGINE.editor.workingLevel.reqLen = parseInt($('editReqLen').value); ENGINE.editor.workingLevel.reqInt = parseInt($('editReqInt').value); runGameSolver('solve'); };
         $('editCopyMetrics').onclick = () => { closeAllModals(); if (ENGINE.path.length > 0) { const len = getRealLength(); $('editReqLen').value = len; $('editReqInt').value = ENGINE.intersections; ENGINE.editor.workingLevel.reqLen = len; ENGINE.editor.workingLevel.reqInt = ENGINE.intersections; showMessage("Metrics Set", "text-white font-black"); } };
 
@@ -4882,6 +4978,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (started) return;
                 started = true;
 
+                APP.UI.initDom();
                 ensureThemeLeaveColors();
                 applyTheme('classic');
 
