@@ -716,10 +716,10 @@
                 header.className = "font-black text-[var(--theme-modal-accent)] uppercase tracking-widest text-sm";
                 header.innerText = themeKey.replace('_', ' ');
                 container.appendChild(header);
-                const t = THEMES[themeKey];
+                const t = THEMES[themeKey] || {};
                 const toColorSet = (arr) => new Set(arr.filter(c => c && typeof c === 'string' && c !== 'rainbow'));
                 const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border]);
-                const btnColors = toColorSet([...Object.values(t.btns || {}).flat(), t.leave?.bg, t.leave?.hover]);
+                const btnColors = toColorSet([...Object.values(t.btns || {}), t.leave?.bg, t.leave?.hover]);
                 const gridColors = toColorSet([t.colors?.gate, t.colors?.goal, t.colors?.block, t.colors?.pin, t.colors?.pinUnflipped, t.colors?.filter, t.colors?.portal, t.colors?.cross, t.path, t.grid]);
                 const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.palette?.toolBg, t.win?.bg, t.alert?.bg, t.ctrlArea?.bg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.burst, t.check]);
                 const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.leave?.text]);
