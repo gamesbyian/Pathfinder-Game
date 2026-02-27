@@ -622,6 +622,218 @@
         return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setButtonState, flashMessage, reportError };
     })();
 
+    // ======================================================
+    // I) APP.Solver
+    // ======================================================
+    APP.Solver = (() => {
+        let timerTick = null;
+        let runStart = 0;
+        let status = { running: false, mode: null, startedAt: 0 };
+        let cachedOutEl = null;
+
+        const getOutEl = () => {
+            if (!cachedOutEl) cachedOutEl = APP.UI.getEl('solutionOutput') || document.getElementById('solutionOutput');
+            return cachedOutEl;
+        };
+
+        const startRun = ({ label = 'Solve search running…', mode = 'solve' } = {}) => {
+            if (ENGINE.activeSolverController) return null;
+            ENGINE.activeSolverController = new AbortController();
+            ENGINE.solverAbortRequested = false;
+            setOverlayState(SOLVER_RUNNING);
+            runStart = Date.now();
+            status = { running: true, mode, startedAt: runStart };
+            APP.UI.setModalContent('searchLabel', label, 'text');
+            APP.UI.setModalContent('solverTimer', '0.0s', 'text');
+            timerTick = setInterval(() => {
+                APP.UI.setModalContent('solverTimer', ((Date.now() - runStart) / 1000).toFixed(1) + 's', 'text');
+            }, 100);
+            return ENGINE.activeSolverController;
+        };
+
+        const finishRun = () => {
+            if (timerTick) clearInterval(timerTick);
+            timerTick = null;
+            ENGINE.solverAbortRequested = false;
+            ENGINE.activeSolverController = null;
+            status = { running: false, mode: null, startedAt: 0 };
+        };
+
+        const applySolutionsToEngine = (paths, purpose = 'solve') => {
+            if (!Array.isArray(paths) || paths.length === 0) return;
+            if (ENGINE.mode === EDITOR) ENGINE.editor.workingLevel.hints = paths.slice(0, 4);
+            ENGINE.hinter.pathList = paths;
+            const seenHints = new Set((ENGINE.foundHintsSinceLoad || []).map(p => JSON.stringify(p)));
+            if (!ENGINE.foundHintsSinceLoad) ENGINE.foundHintsSinceLoad = [];
+            paths.forEach(path => {
+                const key = JSON.stringify(path);
+                if (!seenHints.has(key)) {
+                    ENGINE.foundHintsSinceLoad.push(path);
+                    seenHints.add(key);
+                }
+            });
+            ENGINE.hinter.source = 'dynamic';
+            ENGINE.hinter.currentPathIdx = 0;
+            const outEl = getOutEl();
+            if (outEl) outEl.value = JSON.stringify(paths).replace(/\s/g, '');
+            startHintAnimation();
+            showMessage(purpose === 'hint' ? 'Hint found.' : 'Solved.', 'text-emerald-600');
+        };
+
+        const solveLevel = async (level, opts = {}) => {
+            const purpose = opts.purpose || 'solve';
+            const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
+            const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!ENGINE.flags?.useRefereeSolver;
+            const debug = opts.debug !== undefined ? !!opts.debug : true;
+            const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
+            const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
+            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solutions: [], stagesTried: [] };
+
+            try {
+                let solverResult;
+                if (!allowReferee) {
+                    showMessage('Solving…', 'text-sky-600');
+                    const legacy = await PathfinderSolver.solve(level, {
+                        timeLimit: timeBudgetMs,
+                        debug,
+                        debugLevel,
+                        signal: controller.signal
+                    });
+                    if (legacy?.ok && Array.isArray(legacy.solution) && legacy.solution.length > 0) {
+                        solverResult = { ok: true, status: 'solved', rawStatus: 'solved', stage: 0, solution: legacy.solution, stagesTried: [] };
+                    } else {
+                        const rawStatus = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
+                        const normalizedStatus = rawStatus === 'no-solution-proven' ? 'no-solution' : rawStatus;
+                        solverResult = { ok: false, status: normalizedStatus, rawStatus, stage: 0, solution: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
+                    }
+                } else {
+                    const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
+                    const willEscalate = hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus);
+                    if (willEscalate) showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
+                    solverResult = await SolverReferee.solve(level, {
+                        purpose,
+                        timeBudgetMs,
+                        allowGemini: false,
+                        onStage: ({ name, variant, budgetMs }) => {
+                            APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
+                            if (ENGINE.flags.refereeDebug) showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
+                            if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
+                        }
+                    });
+                    solverResult.rawStatus = solverResult.status;
+                    if (solverResult.status === 'no-solution-proven') solverResult.status = 'no-solution';
+                }
+                const solutions = solverResult.ok ? (solverResult.solution || []) : [];
+                return {
+                    ok: !!solverResult.ok,
+                    status: solverResult.status || 'error',
+                    rawStatus: solverResult.rawStatus || solverResult.status || 'error',
+                    solutions,
+                    debug: solverResult.debug || null,
+                    stagesTried: solverResult.stagesTried || [],
+                    stage: solverResult.stage,
+                    message: solverResult.message || ''
+                };
+            } catch (err) {
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solutions: [], stagesTried: [] };
+                console.error('Solver error:', err);
+                return { ok: false, status: 'error', rawStatus: 'error', solutions: [], stagesTried: [], message: err?.message || 'Solver error' };
+            } finally {
+                finishRun();
+            }
+        };
+
+        const megaSolve = async (levels, opts = {}) => {
+            if (ENGINE.activeSolverController) return { cancelled: true };
+            const controller = startRun({ label: 'Mega solver running…', mode: 'mega' });
+            if (!controller) return { cancelled: true };
+            const toRun = opts.targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
+            const timeLimitMs = opts.timeLimitMs ?? 15000;
+            const allowGemini = !!opts.allowGemini;
+            const variant = opts.variant || 'default';
+            const results = opts.results || {};
+            const meta = opts.meta || {};
+
+            try {
+                for (let i = 0; i < toRun.length; i++) {
+                    if (controller.signal.aborted) break;
+                    const lvlNum = toRun[i];
+                    const idx = lvlNum - 1;
+                    const l = normalizeLevel(idx);
+                    const prevMeta = meta[lvlNum] || { attempts: 0 };
+                    const attempt = prevMeta.attempts + 1;
+                    if (typeof opts.onProgress === 'function') opts.onProgress({ index: i, total: toRun.length, lvlNum, attempt });
+                    APP.UI.setModalContent('searchLabel', `Mega solving level ${lvlNum}/${toRun.length}…`, 'text');
+                    const res = await SolverReferee.solve(l, {
+                        purpose: 'mega',
+                        timeBudgetMs: timeLimitMs,
+                        allowGemini,
+                        variant,
+                        onStage: ({ name, variant: stageVariant, budgetMs }) => {
+                            APP.UI.setModalContent('searchLabel', `${name} (${stageVariant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
+                            if (ENGINE.solverAbortRequested) APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
+                        }
+                    });
+                    meta[lvlNum] = {
+                        status: res.status,
+                        attempts: attempt,
+                        lastBudgetMs: timeLimitMs,
+                        lastStageReached: res.stage,
+                        stagesTried: res.stagesTried || []
+                    };
+                    if (res.ok) results[lvlNum] = res.solution.map(sv => sv.path);
+                    if (typeof opts.onLevelResult === 'function') opts.onLevelResult({ lvlNum, attempt, res, timeLimitMs, results, meta });
+                }
+                return { cancelled: controller.signal.aborted, results, meta };
+            } finally {
+                finishRun();
+            }
+        };
+
+        const findTrapSpots = async (level, opts = {}) => {
+            const controller = startRun({ label: 'Finding trap spots…', mode: 'trap' });
+            if (!controller) return { ok: false, status: 'error', spots: new Set() };
+            try {
+                const spots = await PathfinderSolver.findTrapSpots(level, {
+                    timeLimit: opts.timeLimit ?? 8000,
+                    signal: controller.signal,
+                    onStateUpdate: (msg) => {
+                        APP.UI.setModalContent('searchLabel', msg, 'text');
+                        showMessage(msg, 'text-white font-black');
+                    },
+                    onProgress: (elapsedMs) => {
+                        APP.UI.setModalContent('solverTimer', (elapsedMs / 1000).toFixed(1) + 's', 'text');
+                    }
+                });
+                return { ok: true, status: 'solved', spots };
+            } catch (err) {
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', spots: new Set() };
+                console.error(err);
+                return { ok: false, status: 'error', spots: new Set(), error: err };
+            } finally {
+                finishRun();
+            }
+        };
+
+        const cancel = () => {
+            if (!ENGINE.activeSolverController) return;
+            ENGINE.solverAbortRequested = true;
+            APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
+            APP.UI.setButtonState('solverCloseBtn', { enabled: false });
+            ENGINE.activeSolverController.abort();
+        };
+
+        return {
+            solveLevel,
+            megaSolve,
+            findTrapSpots,
+            applySolutionsToEngine,
+            cancel,
+            isRunning: () => !!ENGINE.activeSolverController,
+            getStatus: () => ({ ...status, active: !!ENGINE.activeSolverController })
+        };
+    })();
+
     // APP.Loader lifecycle guarantees:
     // - init() always resolves to a terminal mode ('ready' or 'fallback') within timeout/error paths.
     // - finish() is idempotent and used exactly once for successful boot completion.
@@ -1325,7 +1537,6 @@
         active: false,
         results: {},
         meta: {},
-        runToken: 0,
         getFailedLevels() {
             return Object.entries(this.meta)
                 .filter(([, m]) => !['solved', 'no-solution-proven'].includes(m.status))
@@ -1340,8 +1551,7 @@
             const errors = values.filter(v => ['error', 'cancelled', 'gemini-invalid', 'gemini-failed'].includes(v.status)).length;
             APP.UI.setModalContent('megaSummary', `Solved: ${solved} | Timeout: ${timeout} | Inconclusive: ${inconclusive} | Proven Unsat: ${proven} | Error: ${errors}`, 'text');
         },
-        appendOutput(line) { const el = $('megaOutput'); el.value += `${line}
-`; el.scrollTop = el.scrollHeight; },
+        appendOutput(line) { const el = APP.UI.getEl('megaOutput') || $('megaOutput'); el.value += `${line}\n`; el.scrollTop = el.scrollHeight; },
         setProgress(text) {
             APP.UI.openModal('megaStatus');
             APP.UI.setModalContent('megaStatus', text, 'text');
@@ -1353,73 +1563,47 @@
         },
         async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, variant: 'default', allowGemini: false }); },
         async runTargets({ targets = null, timeLimitMs = 15000, variant = 'default', allowGemini = false }) {
-            if (this.active) return;
+            if (this.active || APP.Solver.isRunning()) return;
             const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS;
-            this.active = true;
-            const myToken = ++this.runToken;
-            if (!targets) { this.results = {}; this.meta = {}; APP.UI.getEl('megaOutput').value = ''; }
+            if (!targets) { this.results = {}; this.meta = {}; APP.UI.setModalContent('megaOutput', '', 'text'); }
             const toRun = targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
             if (toRun.length === 0) {
                 showMessage('All levels have hints!', 'text-green-600');
-                this.active = false;
                 return;
             }
+            this.active = true;
             showMessage(allowGemini ? 'Mega Gemini attempt started…' : (targets ? `Mega retry started (${Math.round(timeLimitMs / 1000)}s)…` : 'Mega solver started…'), 'text-sky-600');
             const btn = APP.UI.getEl('megaSolverBtn') || $('megaSolverBtn');
             const orig = btn.innerText;
             APP.UI.setButtonState('megaSolverBtn', { enabled: false });
-            setOverlayState(SOLVER_RUNNING);
-            ENGINE.activeSolverController = new AbortController();
-            const runStart = Date.now();
-            const timerTick = setInterval(() => {
-                APP.UI.setModalContent('solverTimer', ((Date.now() - runStart) / 1000).toFixed(1) + 's', 'text');
-            }, 100);
 
             try {
-                for (let i = 0; i < toRun.length; i++) {
-                    if (myToken !== this.runToken || ENGINE.activeSolverController?.signal?.aborted) break;
-                    const lvlNum = toRun[i];
-                    const idx = lvlNum - 1;
-                    const l = normalizeLevel(idx);
-                    const prevMeta = this.meta[lvlNum] || { attempts: 0 };
-                    const attempt = prevMeta.attempts + 1;
-                    this.setProgress(`MEGA ${i + 1}/${toRun.length} • Level ${lvlNum} • Attempt ${attempt}`);
-                    APP.UI.setModalContent('searchLabel', `Mega solving level ${lvlNum}/${toRun.length}…`, 'text');
-                    const res = await SolverReferee.solve(l, {
-                        purpose: 'mega',
-                        timeBudgetMs: timeLimitMs,
-                        allowGemini,
-                        variant,
-                        onStage: ({ name, variant: stageVariant, budgetMs }) => {
-                            APP.UI.setModalContent('searchLabel', `${name} (${stageVariant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
-                            if (ENGINE.solverAbortRequested) APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
+                await APP.Solver.megaSolve(levels, {
+                    targets: toRun,
+                    timeLimitMs,
+                    variant,
+                    allowGemini,
+                    results: this.results,
+                    meta: this.meta,
+                    onProgress: ({ index, total, lvlNum, attempt }) => {
+                        this.setProgress(`MEGA ${index + 1}/${total} • Level ${lvlNum} • Attempt ${attempt}`);
+                    },
+                    onLevelResult: ({ lvlNum, attempt, res, timeLimitMs: budgetMs }) => {
+                        const stagesText = (res.stagesTried || []).map(st => `${st.name}/${st.variant}:${st.result}@${st.elapsedMs}ms`).join(' | ');
+                        this.appendOutput(`/* Level ${lvlNum} | status=${res.status} | attempts=${attempt} | lastBudgetMs=${budgetMs} | lastStage=${res.stage} */`);
+                        this.appendOutput(`/* stages: ${stagesText || 'none'} */`);
+                        if (res.ok) this.appendOutput(JSON.stringify(this.results[lvlNum]));
+                        else {
+                            this.appendOutput(`FAIL: ${res.message}${res.stats?.reason ? ` (${res.stats.reason})` : ''}`);
+                            if (res.status === 'gemini-failed' && res.stats?.details) {
+                                this.appendOutput(`FAIL_DETAIL: ${JSON.stringify(res.stats.details)}`);
+                            }
                         }
-                    });
-                    const stagesText = (res.stagesTried || []).map(st => `${st.name}/${st.variant}:${st.result}@${st.elapsedMs}ms`).join(' | ');
-                    this.meta[lvlNum] = {
-                        status: res.status,
-                        attempts: attempt,
-                        lastBudgetMs: timeLimitMs,
-                        lastStageReached: res.stage,
-                        stagesTried: res.stagesTried || []
-                    };
-                    if (res.ok) this.results[lvlNum] = res.solution.map(sv => sv.path);
-                    this.appendOutput(`/* Level ${lvlNum} | status=${res.status} | attempts=${attempt} | lastBudgetMs=${timeLimitMs} | lastStage=${res.stage} */`);
-                    this.appendOutput(`/* stages: ${stagesText || 'none'} */`);
-                    if (res.ok) this.appendOutput(JSON.stringify(this.results[lvlNum]));
-                    else {
-                        this.appendOutput(`FAIL: ${res.message}${res.stats?.reason ? ` (${res.stats.reason})` : ''}`);
-                        if (res.status === 'gemini-failed' && res.stats?.details) {
-                            this.appendOutput(`FAIL_DETAIL: ${JSON.stringify(res.stats.details)}`);
-                        }
+                        this.appendOutput('');
+                        this.updateSummary();
                     }
-                    this.appendOutput('');
-                    this.updateSummary();
-                }
+                });
             } finally {
-                clearInterval(timerTick);
-                ENGINE.solverAbortRequested = false;
-                ENGINE.activeSolverController = null;
                 setOverlayState(OVERLAY_NONE);
                 this.clearProgress();
                 this.showReport();
@@ -4444,80 +4628,29 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     async function runGameSolver(purpose = 'solve') {
-        if (ENGINE.activeSolverController) return;
+        if (APP.Solver.isRunning()) return;
         stopHintAnimation();
-        ENGINE.activeSolverController = new AbortController();
-        setOverlayState(SOLVER_RUNNING);
-        const startTime = Date.now();
-        const timerTick = setInterval(() => {
-            APP.UI.setModalContent('solverTimer', ((Date.now() - startTime) / 1000).toFixed(1) + 's', 'text');
-        }, 100);
+        const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
+        const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose });
+        const solutions = solverResult.ok ? (solverResult.solutions || []) : [];
 
-        try {
-            const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
-            const timeBudgetMs = purpose === 'hint' ? 5000 : 15000;
-            APP.UI.setModalContent('searchLabel', purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', 'text');
-
-            let solverResult;
-            if (!ENGINE.flags?.useRefereeSolver) {
-                showMessage('Solving…', 'text-sky-600');
-                const legacy = await PathfinderSolver.solve(activeLevel, { timeLimit: timeBudgetMs, debug: true, debugLevel: (typeof activeLevel.id === 'number' ? activeLevel.id + 1 : null) });
-                if (legacy?.ok && Array.isArray(legacy.solution) && legacy.solution.length > 0) {
-                    solverResult = { ok: true, status: 'solved', stage: 0, solution: legacy.solution, message: 'Solved.' };
-                } else {
-                    const status = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
-                    solverResult = { ok: false, status, stage: 0, message: 'No solution found.', stagesTried: [] };
-                }
-            } else {
-                const hist = attemptHistory[getLevelAttemptKey(activeLevel, purpose)] || { timesTried: 0, lastStatus: null };
-                const willEscalate = hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus);
-                if (willEscalate) showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
-                solverResult = await SolverReferee.solve(activeLevel, {
-                    purpose,
-                    timeBudgetMs,
-                    allowGemini: false,
-                    onStage: ({ name, variant, budgetMs }) => {
-                        APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
-                        if (ENGINE.flags.refereeDebug) showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
-                    }
-                });
-            }
-
-            const solutions = solverResult.ok ? (solverResult.solution || []) : [];
-
-            if (solutions.length > 0) {
-                const paths = solutions.map(sv => sv.path);
-                if (ENGINE.mode === EDITOR) ENGINE.editor.workingLevel.hints = paths.slice(0, 4);
-                ENGINE.hinter.pathList = paths;
-                const seenHints = new Set((ENGINE.foundHintsSinceLoad || []).map(p => JSON.stringify(p)));
-                if (!ENGINE.foundHintsSinceLoad) ENGINE.foundHintsSinceLoad = [];
-                paths.forEach(path => { const key = JSON.stringify(path); if (!seenHints.has(key)) { ENGINE.foundHintsSinceLoad.push(path); seenHints.add(key); } });
-                ENGINE.hinter.source = 'dynamic';
-                ENGINE.hinter.currentPathIdx = 0;
-                outEl.value = JSON.stringify(paths).replace(/\s/g, '');
-                startHintAnimation();
-                showMessage(purpose === 'hint' ? 'Hint found.' : 'Solved.', 'text-emerald-600');
-            } else if (solverResult.status === 'no-solution-proven') {
-                showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
-                outEl.value = solverResult.message || 'No solution proven.';
-                setOverlayState(OVERLAY_NONE);
-            } else {
-                if (purpose === 'hint') {
-                    showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (15s).', 'text-amber-600');
-                } else {
-                    showMessage('No solution found within 15s (inconclusive). Press Solve again to try a deeper strategy (60s + alt ordering).', 'text-amber-600');
-                }
-                outEl.value = solverResult.message || 'No solution found within budget.';
-                setOverlayState(OVERLAY_NONE);
-            }
-        } catch (err) {
+        if (solutions.length > 0) {
+            APP.Solver.applySolutionsToEngine(solutions.map(sv => sv.path), purpose);
+        } else if (solverResult.rawStatus === 'no-solution-proven') {
+            showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
+            outEl.value = solverResult.message || 'No solution proven.';
             setOverlayState(OVERLAY_NONE);
-            if (err.name === 'AbortError') showMessage("Solver cancelled.", "text-amber-600");
-            else console.error("Solver error:", err);
-        } finally {
-            clearInterval(timerTick);
-            ENGINE.solverAbortRequested = false;
-            ENGINE.activeSolverController = null;
+        } else if (solverResult.status === 'aborted') {
+            showMessage('Solver cancelled.', 'text-amber-600');
+            setOverlayState(OVERLAY_NONE);
+        } else {
+            if (purpose === 'hint') {
+                showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (15s).', 'text-amber-600');
+            } else {
+                showMessage('No solution found within 15s (inconclusive). Press Solve again to try a deeper strategy (60s + alt ordering).', 'text-amber-600');
+            }
+            outEl.value = solverResult.message || 'No solution found within budget.';
+            setOverlayState(OVERLAY_NONE);
         }
     }
 
@@ -4854,12 +4987,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.addEventListener('click', (e) => { if (isHintExpanded && !hintBtn.contains(e.target)) { toggleHint(); updateHintLabel(); } });
 
         $('solverCloseBtn').onclick = () => {
-            if (!ENGINE.activeSolverController) return;
-            ENGINE.solverAbortRequested = true;
-            APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
-            $('solverCloseBtn').disabled = true;
+            if (!APP.Solver.isRunning()) return;
             showMessage('Stopping solver…', 'text-amber-400 font-bold');
-            ENGINE.activeSolverController.abort();
+            APP.Solver.cancel();
         };
         document.addEventListener('keydown', (e) => {
             if (!ENGINE.isDevMode) return;
@@ -4917,29 +5047,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
             if (isVisible) { APP.UI.closeModal('editorHelpModal'); return; }
             closeAllModals();
-            if (ENGINE.activeSolverController) return;
+            if (APP.Solver.isRunning()) return;
             stopHintAnimation();
             const l = ENGINE.editor.workingLevel; l.reqLen = parseInt($('editReqLen').value); l.reqInt = parseInt($('editReqInt').value);
-            ENGINE.activeSolverController = new AbortController();
-            setOverlayState(SOLVER_RUNNING);
-            try {
-                const spots = await PathfinderSolver.findTrapSpots(l, {
-                    timeLimit: 8000,
-                    signal: ENGINE.activeSolverController.signal,
-                    onStateUpdate: (msg) => { APP.UI.setModalContent('searchLabel', msg, 'text'); showMessage(msg, "text-white font-black"); },
-                    onProgress: (elapsedMs) => { APP.UI.setModalContent('solverTimer', (elapsedMs / 1000).toFixed(1) + 's', 'text'); }
-                });
-                ENGINE.editor.validTrapSpots = spots;
-                render();
-                if (spots.size > 0) showMessage(`Found ${spots.size} spots.`, "text-white font-black");
-                else showMessage("No spots found.", "text-white font-black");
-                setOverlayState(OVERLAY_NONE);
-            } catch (err) {
-                setOverlayState(OVERLAY_NONE);
-                if (err.name !== 'AbortError') console.error(err);
-            } finally {
-                ENGINE.activeSolverController = null;
-            }
+            const res = await APP.Solver.findTrapSpots(l, { timeLimit: 8000 });
+            ENGINE.editor.validTrapSpots = res.spots || new Set();
+            render();
+            if (ENGINE.editor.validTrapSpots.size > 0) showMessage(`Found ${ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
+            else if (res.status !== 'aborted') showMessage("No spots found.", "text-white font-black");
+            setOverlayState(OVERLAY_NONE);
         };
         document.querySelectorAll('.palette-item[data-type]').forEach(el => { el.addEventListener('pointerdown', (e) => { if(ENGINE.mode === EDITOR) { if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.draggedFromGrid = false; ENGINE.editor.emptyClickCount = 0; if (ENGINE.editor.pendingPortal && el.dataset.type !== 'portal' && el.dataset.type !== 'eraser') { showMessage("Finish portal pair!", "text-white font-black"); return; } if (ENGINE.editor.selectedTool === el.dataset.type) { ENGINE.editor.selectedTool = null; el.classList.remove('selected'); } else { ENGINE.editor.selectedTool = el.dataset.type; ENGINE.editor.draggedObject = {type: el.dataset.type}; setLogicState(EDIT_DRAG); document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); el.classList.add('selected'); } ENGINE.editor.isPencilMode = false; updatePencilState(); } }); });
         $('editPencilBtn').onclick = () => { closeAllModals(); if (ENGINE.overlayState !== OVERLAY_NONE) return; ENGINE.editor.isPencilMode = !ENGINE.editor.isPencilMode; if (ENGINE.editor.isPencilMode) { ENGINE.editor.selectedTool = null; document.querySelectorAll('.palette-item.selected').forEach(x => x.classList.remove('selected')); } else { setLogicState(IDLE); } updatePencilState(); };
