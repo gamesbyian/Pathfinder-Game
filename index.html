@@ -3443,7 +3443,7 @@ Stages: ${stageInfo}` : ''}`;
     // ======================================================
     // F/G/H) Input + UI Wiring + Solver Boot
     // ======================================================
-    window.onload = () => {
+    document.addEventListener('DOMContentLoaded', () => {
         let pendingAction = null; const tryNavigate = (actionFn) => { if (ENGINE.mode === EDITOR && ENGINE.editor.isModified) { pendingAction = actionFn; $('unsavedModal').classList.remove('hidden'); } else { actionFn(); } };
         $('unsavedStayBtn').onclick = () => { closeAllModals(); pendingAction = null; $('unsavedModal').classList.add('hidden'); };
         $('unsavedLeaveBtn').onclick = () => { closeAllModals(); $('unsavedModal').classList.add('hidden'); if (pendingAction) pendingAction(); };
@@ -3845,17 +3845,29 @@ Stages: ${stageInfo}` : ''}`;
         };
 
         const startBoot = async () => {
-            try {
-                if (firebaseConfigRaw) await initAuth();
-            } catch (e) {}
-            syncProgress(auth?.currentUser);
             loader.start();
+
+            if (!firebaseConfigRaw) {
+                syncProgress(auth?.currentUser);
+                return;
+            }
+
+            try {
+                await Promise.race([
+                    initAuth(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('auth-timeout')), 4000))
+                ]);
+            } catch (e) {
+                console.warn('[Auth init skipped/delayed]', e);
+            }
+
+            syncProgress(auth?.currentUser);
         };
 
         startBoot();
         ensureThemeLeaveColors();
         applyTheme('classic');
-    };
+    });
 </script>
 </body>
 </html>
