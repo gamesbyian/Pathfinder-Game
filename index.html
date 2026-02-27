@@ -944,10 +944,11 @@
     const SolverReferee = {
         allocateStageBudgets(totalMs) {
             const total = Math.max(1000, Math.floor(totalMs || 15000));
-            const stage0 = Math.min(Math.floor(total * 0.2), Math.max(500, total - 2500));
-            const stage1 = Math.min(Math.floor(total * 0.6), Math.max(2000, total - stage0 - 500));
-            const stage2 = Math.max(500, total - stage0 - stage1);
-            return { stage0, stage1, stage2, total };
+            const stage0 = Math.min(Math.floor(total * 0.2), Math.max(500, total - 3500));
+            const stage1 = Math.min(Math.floor(total * 0.4), Math.max(1500, total - stage0 - 2000));
+            const stage2 = Math.min(Math.floor(total * 0.2), Math.max(1000, total - stage0 - stage1 - 500));
+            const stage3 = Math.max(500, total - stage0 - stage1 - stage2);
+            return { stage0, stage1, stage2, stage3, total };
         },
 
         async runBaselineStage(level, budgetMs, opts = {}) {
@@ -956,7 +957,7 @@
                 timeLimit: budgetMs,
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                dirOrderVariant: opts.dirOrderVariant === 'alt' ? 'alt' : 'default'
+                dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default'
             });
             const elapsedMs = Date.now() - started;
             if (r?.ok && Array.isArray(r.solution) && r.solution.length > 0) {
@@ -973,7 +974,7 @@
                 timeLimit: budgetMs,
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                disabledPrunes: ['mustPassBound']
+                disabledPrunes: ['mustPassBound', 'mustCrossBound']
             });
             const elapsedMs = Date.now() - started;
             if (r?.ok && Array.isArray(r.solution) && r.solution.length > 0) {
@@ -996,12 +997,12 @@
             const budgetMs = escalated
                 ? (purpose === 'hint' ? Math.max(requestedBudget, 15000) : Math.max(requestedBudget, 60000))
                 : requestedBudget;
-            const { stage0, stage1, stage2 } = this.allocateStageBudgets(budgetMs);
+            const { stage0, stage1, stage2, stage3 } = this.allocateStageBudgets(budgetMs);
 
             const stagesTried = [];
-            let stageOrder = [0, 1, 2];
-            if (opts.variant === 'beamFirst') stageOrder = [0, 2, 1];
-            if (escalated || opts.variant === 'altOrder') stageOrder = [1, 0, 2];
+            let stageOrder = [0, 1, 2, 3];
+            if (opts.variant === 'beamFirst') stageOrder = [0, 2, 3, 1];
+            if (escalated || opts.variant === 'altOrder') stageOrder = [1, 2, 0, 3];
             const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result) => {
@@ -1032,30 +1033,38 @@
                     if (r1.ok || r1.status === 'no-solution-proven') break;
                 }
                 if (stage === 2) {
-                    if (opts.onStage) opts.onStage({ stage: 2, name: 'Stage 2', variant: 'fallback', budgetMs: stage2 });
+                    if (opts.onStage) opts.onStage({ stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: stage2 });
                     const t2 = Date.now();
-                    const r2 = await this.runStage2Fallback(level, stage2);
-                    markStage(2, 'Stage 2', 'fallback', stage2, t2, r2);
-                    last = { ...r2, stage: 2, message: r2.ok ? 'Solved (fallback strategy).' : (r2.status === 'timeout' ? 'Fallback strategy timed out.' : 'Fallback strategy inconclusive.'), stagesTried };
-                    if (r2.ok) break;
+                    const r2 = await this.runBaselineStage(level, stage2, { dirOrderVariant: 'random' });
+                    markStage(2, 'Stage 2', 'shuffle', stage2, t2, r2);
+                    last = { ...r2, stage: 2, message: r2.ok ? 'Solved (randomized ordering).' : (r2.status === 'timeout' ? 'Randomized ordering timed out.' : 'Randomized ordering did not find a solution.'), stagesTried };
+                    if (r2.ok || r2.status === 'no-solution-proven') break;
+                }
+                if (stage === 3) {
+                    if (opts.onStage) opts.onStage({ stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: stage3 });
+                    const t3 = Date.now();
+                    const r3 = await this.runStage2Fallback(level, stage3);
+                    markStage(3, 'Stage 3', 'fallback', stage3, t3, r3);
+                    last = { ...r3, stage: 3, message: r3.ok ? 'Solved (fallback strategy).' : (r3.status === 'timeout' ? 'Fallback strategy timed out.' : 'Fallback strategy inconclusive.'), stagesTried };
+                    if (r3.ok) break;
                 }
             }
 
             if (!last.ok && allowGemini && last.status !== 'no-solution-proven') {
-                if (opts.onStage) opts.onStage({ stage: 3, name: 'Stage 3', variant: 'gemini', budgetMs: 15000 });
-                const t3 = Date.now();
+                if (opts.onStage) opts.onStage({ stage: 4, name: 'Stage 4', variant: 'gemini', budgetMs: 15000 });
+                const t4 = Date.now();
                 const gem = await requestGeminiSolverSuggestion(level, purpose, timesTried, 15000);
                 if (gem.ok) {
                     const validation = validateCandidatePath(level, gem.candidate);
                     if (validation.ok) {
-                        last = { ok: true, status: 'solved', stage: 3, solution: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
+                        last = { ok: true, status: 'solved', stage: 4, solution: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
                     } else {
-                        last = { ok: false, status: 'gemini-invalid', stage: 3, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried };
+                        last = { ok: false, status: 'gemini-invalid', stage: 4, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried };
                     }
                 } else {
-                    last = { ok: false, status: 'gemini-failed', stage: 3, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
+                    last = { ok: false, status: 'gemini-failed', stage: 4, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
                 }
-                stagesTried.push({ stage: 3, name: 'Stage 3', variant: 'gemini', budgetMs: 15000, elapsedMs: Date.now() - t3, result: toStageResultStatus(last.status) });
+                stagesTried.push({ stage: 4, name: 'Stage 4', variant: 'gemini', budgetMs: 15000, elapsedMs: Date.now() - t4, result: toStageResultStatus(last.status) });
             }
 
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
@@ -2361,10 +2370,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 score -= this._staticNeighborDegree(nk, l) * 3;
                 return { nk, score };
             });
-            scored.sort((a, b) => {
-                if (a.score !== b.score) return b.score - a.score;
-                return options?.dirOrderVariant === 'alt' ? (a.nk - b.nk) : (b.nk - a.nk);
-            });
+            if (options?.dirOrderVariant === 'random') {
+                scored.sort(() => Math.random() - 0.5);
+            } else {
+                scored.sort((a, b) => {
+                    if (a.score !== b.score) return b.score - a.score;
+                    return options?.dirOrderVariant === 'alt' ? (a.nk - b.nk) : (b.nk - a.nk);
+                });
+            }
             return scored.map(item => item.nk);
         },
         _pushState(s, k, isJump, l) {
