@@ -305,11 +305,11 @@
                     <div id="megaSummary" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)] mb-2">No run yet.</div>
                     <textarea id="megaOutput" readonly class="flex-grow min-h-0 p-4 bg-slate-900 text-fuchsia-300 rounded-xl border border-slate-700 text-xs font-mono leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-fuchsia-500" placeholder="Mega solver results will appear here..."></textarea>
                     <div class="mt-4 flex flex-wrap gap-2 shrink-0">
-                        <button id="megaRetry30Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Timed-Out (30s)</button>
-                        <button id="megaRetry60Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Timed-Out (60s)</button>
-                        <button id="megaRetry120Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Timed-Out (120s)</button>
-                        <button id="megaRetryAltBtn" class="bg-fuchsia-800 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Timed-Out (Alt Order)</button>
-                        <button id="megaGeminiRetryBtn" class="bg-indigo-700 text-white border border-indigo-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Ask Gemini for Timed-Out</button>
+                        <button id="megaRetry30Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Failed (30s deeper ladder)</button>
+                        <button id="megaRetry60Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Failed (60s deeper ladder)</button>
+                        <button id="megaRetry120Btn" class="bg-fuchsia-700 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Failed (120s deeper ladder)</button>
+                        <button id="megaRetryAltBtn" class="bg-fuchsia-800 text-white border border-fuchsia-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Retry Failed (60s + Alt Order)</button>
+                        <button id="megaGeminiRetryBtn" class="bg-indigo-700 text-white border border-indigo-500 px-3 py-2 rounded-lg font-black text-[0.65rem] uppercase tracking-wider">Ask Gemini for Failed</button>
                         <div class="ml-auto"><button id="copyMegaDataBtn" class="bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border border-[var(--theme-modal-border)] px-6 py-3 rounded-lg font-black hover:brightness-95 transition uppercase tracking-widest shadow-lg active:scale-95">Copy All</button></div>
                     </div>
                 </div>
@@ -770,6 +770,15 @@
         return `${levelNum}:${purpose}`;
     }
 
+
+    function isNoSolutionTrulyProven(resultDebug) {
+        if (!resultDebug || typeof resultDebug !== 'object') return false;
+        if (resultDebug.exhaustive === true || resultDebug.exhaustiveDone === true) return true;
+        const reason = String(resultDebug.reason || resultDebug.statusReason || '').toLowerCase();
+        const explicitReason = reason.includes('exhausted search space') || reason.includes('full exploration') || reason.includes('fully explored');
+        return resultDebug.done === true && explicitReason;
+    }
+
     function validateCandidatePath(level, pathCoordsOrKeys) {
         if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2) return { ok: false, reason: 'Path must contain at least 2 nodes.' };
         const toKey = (node) => {
@@ -1008,99 +1017,177 @@
                 if (path) return { ok: true, status: 'solved', stage: 1, solution: [{ path }], stats: { expanded, stageBudgetMs }, message: 'Solved (hard mode exact search).' };
                 if (timedOut) return { ok: false, status: 'timeout', stage: 1, stats: { expanded, stageBudgetMs }, message: `Hard mode timed out (${Math.round(stageBudgetMs / 1000)}s).` };
             }
-            return { ok: false, status: 'no-solution-proven', stage: 1, stats: { expanded, stageBudgetMs }, message: 'No solution exists for this level (proven by exhaustive search).' };
+            return { ok: false, status: 'no-solution-inconclusive', stage: 1, stats: { expanded, stageBudgetMs, exhaustive: false }, message: 'Hard mode finished within budget without finding a valid solution.' };
         },
 
         async solve(levelInput, opts = {}) {
             const level = levelInput.gateKeys ? levelInput : normalizeLevel(levelInput.id ?? ENGINE.levelIdx);
             const purpose = opts.purpose || 'solve';
-            const baseBudget = opts.timeBudgetMs || (purpose === 'hint' ? 5000 : 15000);
+            const defaultBudget = purpose === 'hint' ? 5000 : 15000;
+            const baseBudget = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : defaultBudget;
             const key = getLevelAttemptKey(level, purpose);
-            const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
-            const timesTried = prev.timesTried + 1;
-            const hardAuto = !!opts.hardMode || prev.lastStatus === 'timeout';
-            const startStage = opts.stageOverrides?.startStage ?? (hardAuto ? 1 : 0);
-            const maxStage = opts.stageOverrides?.maxStage ?? 3;
-            const budgetMs = (timesTried > 1 && prev.lastStatus === 'timeout') ? Math.min(baseBudget * 4, 120000) : baseBudget;
-            const stage0Budget = Math.max(600, Math.floor(budgetMs * 0.2));
-            const stage1Budget = Math.max(1000, Math.floor(budgetMs * 0.6));
-            const stage2Budget = Math.max(800, budgetMs - stage0Budget - stage1Budget);
+            const prev = attemptHistory[key] || { failCount: 0, lastStageReached: -1, lastStatus: null };
+            const failCount = prev.failCount || 0;
+            const startStage = opts.stageOverrides?.startStage ?? (failCount > 0 ? Math.min(2, failCount) : 0);
+            const maxStage = opts.stageOverrides?.maxStage ?? (opts.allowGemini ? 3 : 2);
+            const budgetMultiplier = failCount > 0 ? Math.min(4, 1 + failCount) : 1;
+            const budgetMs = Math.min(Math.max(500, Math.floor(baseBudget * budgetMultiplier)), 120000);
 
-            const resultFromSolver = async (timeLimit, stageNum, stageMsg) => {
-                const r = await PathfinderSolver.solve(level, { timeLimit, debug: true, debugLevel: (typeof level.id === 'number' ? level.id + 1 : null) });
-                if (r?.ok && Array.isArray(r.solution) && r.solution.length > 0) return { ok: true, status: 'solved', stage: stageNum, solution: r.solution, stats: { debug: r.debug }, message: stageMsg };
-                const status = r?.debug?.status === 'timeout' ? 'timeout' : (r?.debug?.status === 'no-solution' ? 'no-solution-proven' : 'timeout');
-                return { ok: false, status, stage: stageNum, stats: { debug: r?.debug }, message: status === 'timeout' ? 'Search timed out.' : 'No solution exists for this level (proven by exhaustive search).' };
+            const stageFloors = { s0: 500, s1: 2000, s2: 500 };
+            let stage0Budget = Math.floor(budgetMs * 0.2);
+            let stage1Budget = Math.floor(budgetMs * 0.6);
+            let stage2Budget = Math.floor(budgetMs * 0.2);
+            const applyFloor = (value, floor) => Math.min(budgetMs, Math.max(value, Math.min(floor, budgetMs)));
+            stage0Budget = applyFloor(stage0Budget, stageFloors.s0);
+            stage1Budget = applyFloor(stage1Budget, stageFloors.s1);
+            stage2Budget = applyFloor(stage2Budget, stageFloors.s2);
+            const total = stage0Budget + stage1Budget + stage2Budget;
+            if (total > budgetMs) {
+                const scale = budgetMs / total;
+                stage0Budget = Math.max(200, Math.floor(stage0Budget * scale));
+                stage1Budget = Math.max(200, Math.floor(stage1Budget * scale));
+                stage2Budget = Math.max(100, budgetMs - stage0Budget - stage1Budget);
+            }
+
+            const transcript = [];
+            const pushStage = (stage, name, budgetPart, startedMs, result, extra = {}) => {
+                transcript.push({ stage, name, budgetMs: budgetPart, elapsedMs: Date.now() - startedMs, result, ...extra });
             };
 
-            let last = { ok: false, status: 'timeout', stage: startStage, message: 'No solution found.' };
+            const resultFromSolver = async (timeLimit, stageNum, stageName, optsStage = {}) => {
+                const started = Date.now();
+                const r = await PathfinderSolver.solve(level, { timeLimit, debug: true, debugLevel: (typeof level.id === 'number' ? level.id + 1 : null), altOrder: !!optsStage.altOrder });
+                if (r?.ok && Array.isArray(r.solution) && r.solution.length > 0) {
+                    pushStage(stageNum, stageName, timeLimit, started, 'solved', { variant: optsStage.altOrder ? 'alt-order' : 'default' });
+                    return { ok: true, status: 'solved', stage: stageNum, solution: r.solution, stats: { debug: r.debug }, message: `Solved (${stageName}).`, stagesTried: transcript };
+                }
+                const debug = r?.debug || {};
+                let status = 'no-solution-inconclusive';
+                if (debug.status === 'timeout') status = 'timeout';
+                else if (debug.status === 'no-solution' && isNoSolutionTrulyProven(debug)) status = 'no-solution-proven';
+                pushStage(stageNum, stageName, timeLimit, started, status === 'no-solution-proven' ? 'proven' : (status === 'no-solution-inconclusive' ? 'inconclusive' : status), { variant: optsStage.altOrder ? 'alt-order' : 'default' });
+                return { ok: false, status, stage: stageNum, stats: { debug }, message: status === 'timeout' ? 'Search timed out.' : (status === 'no-solution-proven' ? 'No solution exists for this level (proven by exhaustive search).' : 'No solution found within budget.'), stagesTried: transcript };
+            };
+
+            let last = { ok: false, status: 'timeout', stage: startStage, message: 'No solution found.', stagesTried: transcript };
             for (let stage = startStage; stage <= maxStage; stage++) {
                 if (stage === 0) {
-                    showMessage('Solving… (fast pass)', 'text-sky-600');
-                    last = await resultFromSolver(stage0Budget, 0, 'Solved (fast pass).');
+                    const stage0 = await resultFromSolver(stage0Budget, 0, 'fast baseline', { altOrder: false });
+                    last = stage0;
                     if (last.ok || last.status === 'no-solution-proven') break;
-                    showMessage("Fast pass didn’t find a path. Trying hard mode…", 'text-amber-600');
                 } else if (stage === 1) {
-                    last = await this.runStage1Exact(level, stage1Budget, { altOrder: opts.altOrder });
+                    const started = Date.now();
+                    last = await this.runStage1Exact(level, stage1Budget, { altOrder: !!opts.altOrder });
+                    const mapped = last.status === 'timeout' ? 'timeout' : (last.status === 'no-solution-proven' ? 'proven' : (last.status === 'error' ? 'error' : (last.ok ? 'solved' : 'inconclusive')));
+                    pushStage(1, opts.altOrder ? 'hard mode exact (alt order)' : 'hard mode exact', stage1Budget, started, mapped, { variant: opts.altOrder ? 'alt-order' : 'default' });
+                    last.stagesTried = transcript;
                     if (last.ok || last.status === 'no-solution-proven') break;
                 } else if (stage === 2) {
-                    last = await resultFromSolver(stage2Budget, 2, 'Solved (beam fallback).');
+                    last = await resultFromSolver(stage2Budget, 2, opts.altOrder ? 'alternate ordering fallback' : 'beam/alternate fallback', { altOrder: !!opts.altOrder });
                     if (last.ok || last.status === 'no-solution-proven') break;
                 } else if (stage === 3 && opts.allowGemini) {
-                    const gem = await requestGeminiSolverSuggestion(level, purpose, timesTried, 15000);
+                    const started = Date.now();
+                    const gem = await requestGeminiSolverSuggestion(level, purpose, failCount + 1, Math.min(15000, budgetMs));
                     if (gem.ok) {
                         const validation = validateCandidatePath(level, gem.candidate);
                         if (validation.ok) {
-                            last = { ok: true, status: 'solved', stage: 3, solution: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).' };
+                            pushStage(3, 'gemini proposer + validator', Math.min(15000, budgetMs), started, 'solved');
+                            last = { ok: true, status: 'solved', stage: 3, solution: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried: transcript };
                         } else {
-                            last = { ok: false, status: 'gemini-invalid', stage: 3, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}` };
+                            pushStage(3, 'gemini proposer + validator', Math.min(15000, budgetMs), started, 'gemini-invalid');
+                            last = { ok: false, status: 'gemini-invalid', stage: 3, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried: transcript };
                         }
                     } else {
-                        last = { ok: false, status: 'gemini-failed', stage: 3, stats: { reason: gem.reason }, message: `Gemini failed: ${gem.reason}` };
+                        pushStage(3, 'gemini proposer + validator', Math.min(15000, budgetMs), started, 'gemini-failed');
+                        last = { ok: false, status: 'gemini-failed', stage: 3, stats: { reason: gem.reason }, message: `Gemini failed: ${gem.reason}`, stagesTried: transcript };
                     }
                     break;
                 }
             }
-            attemptHistory[key] = { timesTried, lastStageReached: last.stage, lastStatus: last.status };
+
+            if (last.ok) attemptHistory[key] = { failCount: 0, lastStageReached: last.stage, lastStatus: last.status };
+            else attemptHistory[key] = { failCount: failCount + 1, lastStageReached: last.stage, lastStatus: last.status };
+            last.attempts = (attemptHistory[key]?.failCount || 0) + (last.ok ? 1 : 0);
+            last.timeBudgetMs = budgetMs;
+            last.stagesTried = last.stagesTried || transcript;
             return last;
         }
     };
 
     const MEGA = {
         active: false, results: {}, meta: {},
-        getTimedOutLevels() { return Object.entries(this.meta).filter(([, m]) => m.status === 'timeout').map(([lvl]) => Number(lvl)); },
+        getFailedLevels() {
+            const retryable = new Set(['timeout', 'no-solution-inconclusive', 'error', 'gemini-failed', 'gemini-invalid']);
+            return Object.entries(this.meta).filter(([, m]) => retryable.has(m.status)).map(([lvl]) => Number(lvl));
+        },
         updateSummary() {
             const values = Object.values(this.meta || {});
             const solved = values.filter(v => v.status === 'solved').length;
             const timeout = values.filter(v => v.status === 'timeout').length;
-            const noSolution = values.filter(v => v.status === 'no-solution-proven').length;
-            const errors = values.filter(v => !['solved', 'timeout', 'no-solution-proven'].includes(v.status)).length;
-            $('megaSummary').innerText = `Solved: ${solved} | Timed out: ${timeout} | No-solution: ${noSolution} | Errors: ${errors}`;
+            const inconclusive = values.filter(v => v.status === 'no-solution-inconclusive').length;
+            const proven = values.filter(v => v.status === 'no-solution-proven').length;
+            const errors = values.filter(v => ['error', 'gemini-failed', 'gemini-invalid'].includes(v.status)).length;
+            $('megaSummary').innerText = `Solved: ${solved} | Timeout: ${timeout} | Inconclusive: ${inconclusive} | Proven no-solution: ${proven} | Errors: ${errors}`;
         },
-        appendOutput(line) { const el = $('megaOutput'); el.value += `${line}
-`; el.scrollTop = el.scrollHeight; },
-        async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, altOrder: false, allowGemini: false }); },
-        async runTargets({ targets = null, timeLimitMs = 15000, altOrder = false, allowGemini = false }) {
+        appendOutput(line) { const el = $('megaOutput'); el.value += `${line}\n`; el.scrollTop = el.scrollHeight; },
+        formatStages(stagesTried = []) {
+            if (!stagesTried.length) return 'none';
+            return stagesTried.map(s => `${s.stage}:${s.name}${s.variant === 'alt-order' ? ' [alt]' : ''}`).join(' -> ');
+        },
+        async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, altOrder: false, allowGemini: false, announce: 'Mega solver started (15s per level).' }); },
+        async runTargets({ targets = null, timeLimitMs = 15000, altOrder = false, allowGemini = false, announce = '' }) {
             if (this.active) return;
             const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS;
             this.active = true;
             if (!targets) { this.results = {}; this.meta = {}; $('megaOutput').value = ''; }
             const toRun = targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
             if (toRun.length === 0) { showMessage('All levels have hints!', 'text-green-600'); this.active = false; return; }
-            const btn = $('megaSolverBtn'); const orig = btn.innerText; btn.disabled = true;
+            if (announce) showMessage(announce, 'text-sky-600');
+            const btn = $('megaSolverBtn'); const orig = btn.innerText;
+            const searchLabel = $('searchLabel');
+            const megaStatus = $('megaStatus');
+            const uiTimer = $('solverTimer');
+            const runStart = Date.now();
+            btn.disabled = true;
             setOverlayState(SOLVER_RUNNING);
             ENGINE.activeSolverController = new AbortController();
+            megaStatus.classList.remove('hidden');
             for (let i = 0; i < toRun.length; i++) {
+                if (ENGINE.activeSolverController?.signal?.aborted) break;
                 const lvlNum = toRun[i];
                 const idx = lvlNum - 1;
                 const l = normalizeLevel(idx);
                 const prevMeta = this.meta[lvlNum] || { attempts: 0 };
                 const attempt = prevMeta.attempts + 1;
-                showMessage(`${allowGemini ? 'Mega: Gemini attempt' : 'Mega retry'}: Level ${lvlNum} (attempt ${attempt}/${toRun.length}) — hard mode ${Math.round(timeLimitMs / 1000)}s…`, 'text-sky-600');
-                const res = await SolverReferee.solve(l, { purpose: 'mega', timeBudgetMs: timeLimitMs, allowGemini, hardMode: true, altOrder, stageOverrides: { startStage: altOrder ? 1 : 0, maxStage: allowGemini ? 3 : 2 } });
-                this.meta[lvlNum] = { status: res.status, attempts: attempt, lastStage: res.stage, timeLimitMs, lastMessage: res.message };
+                searchLabel.innerText = `Mega solving level ${i + 1}/${toRun.length}`;
+                megaStatus.innerText = `MEGA RUNNING
+Level ${lvlNum} (${i + 1}/${toRun.length})
+Budget ${Math.round(timeLimitMs / 1000)}s`;
+                uiTimer.innerText = ((Date.now() - runStart) / 1000).toFixed(1) + 's';
+
+                const res = await SolverReferee.solve(l, {
+                    purpose: 'mega',
+                    timeBudgetMs: timeLimitMs,
+                    allowGemini,
+                    hardMode: true,
+                    altOrder,
+                    stageOverrides: { startStage: altOrder ? 1 : 0, maxStage: allowGemini ? 3 : 2 }
+                });
+
+                const stageNames = (res.stagesTried || []).map(s => s.name);
+                this.meta[lvlNum] = {
+                    status: res.status,
+                    attempts: attempt,
+                    lastStage: res.stage,
+                    timeLimitMs,
+                    lastMessage: res.message,
+                    stagesTried: res.stagesTried || [],
+                    stageNames,
+                    finalStageReached: res.stage
+                };
                 if (res.ok) this.results[lvlNum] = res.solution.map(s => s.path);
-                this.appendOutput(`/* Level ${lvlNum} | status=${res.status} | stage=${res.stage} | attempts=${attempt} | timeLimit=${timeLimitMs}ms */`);
+                const statusLabel = res.status === 'no-solution-proven' ? 'no-solution-proven' : res.status;
+                this.appendOutput(`/* Level ${lvlNum} | status=${statusLabel} | attempts=${attempt} | timeBudgetMs=${timeLimitMs} | stages=${this.formatStages(res.stagesTried)} | finalStage=${res.stage} */`);
                 if (res.ok) this.appendOutput(JSON.stringify(this.results[lvlNum]));
                 else this.appendOutput(`FAIL: ${res.message}${res.stats?.reason ? ` (${res.stats.reason})` : ''}`);
                 this.appendOutput('');
@@ -1108,19 +1195,24 @@
             }
             ENGINE.activeSolverController = null;
             setOverlayState(OVERLAY_NONE);
+            megaStatus.classList.add('hidden');
             this.showReport();
             this.active = false;
             btn.disabled = false; btn.innerText = orig;
+            showMessage('Mega solver finished.', 'text-emerald-600');
         },
         async retryTimedOut({ timeLimitMs = 60000, altOrder = false }) {
-            const timeouts = this.getTimedOutLevels();
-            if (!timeouts.length) { showMessage('Mega retry: no timed-out levels.', 'text-emerald-600'); return; }
-            return this.runTargets({ targets: timeouts, timeLimitMs, altOrder, allowGemini: false });
+            const failed = this.getFailedLevels();
+            if (!failed.length) { showMessage('Mega retry: no failed levels to retry.', 'text-emerald-600'); return; }
+            const strategyText = altOrder ? 'alternate direction ordering' : 'deeper staged search';
+            showMessage(`Mega retry started: ${failed.length} failed level(s), ${Math.round(timeLimitMs / 1000)}s, ${strategyText}.`, 'text-sky-600');
+            return this.runTargets({ targets: failed, timeLimitMs, altOrder, allowGemini: false });
         },
         async askGeminiTimedOut() {
-            const timeouts = this.getTimedOutLevels();
-            if (!timeouts.length) { showMessage('Mega Gemini: no timed-out levels.', 'text-emerald-600'); return; }
-            return this.runTargets({ targets: timeouts, timeLimitMs: 5000, altOrder: false, allowGemini: true });
+            const failed = this.getFailedLevels();
+            if (!failed.length) { showMessage('Mega Gemini: no failed levels to try.', 'text-emerald-600'); return; }
+            showMessage(`Mega Gemini started for ${failed.length} failed level(s).`, 'text-sky-600');
+            return this.runTargets({ targets: failed, timeLimitMs: 15000, altOrder: false, allowGemini: true });
         },
         showReport() { this.updateSummary(); $('megaModal').classList.remove('hidden'); }
     };
@@ -2582,7 +2674,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 }
                 stack.push({ k: nextKey, neighbors: getNeighbors(nextKey, state), log: transLog });
             }
-        }
     };
 
 
@@ -3226,11 +3317,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         try {
             const activeLevel = ENGINE.mode === PLAY ? ENGINE.level : ENGINE.editor.workingLevel;
-            const hardAuto = (activeLevel.reqInt > 0) || (activeLevel.mustCrossKeys?.length > 0) || activeLevel.reqLen >= 24;
+            const key = getLevelAttemptKey(activeLevel, purpose);
+            const prev = attemptHistory[key] || { failCount: 0, lastStatus: null };
+            const retrying = (prev.failCount || 0) > 0;
             const timeBudgetMs = purpose === 'hint' ? 5000 : 15000;
-            searchLabel.innerText = purpose === 'hint' ? 'Hint search running…' : 'Solve search running…';
-            showMessage('Solving… (fast pass)', 'text-sky-600');
-            const solverResult = await SolverReferee.solve(activeLevel, { purpose, timeBudgetMs, allowGemini: false, hardMode: purpose === 'solve' ? true : hardAuto });
+            if (purpose === 'hint') {
+                searchLabel.innerText = retrying ? 'Hint retry running (deeper strategy)…' : 'Hint search running…';
+                if (retrying) showMessage('Retrying hint with deeper strategy and expanded budget…', 'text-sky-600');
+            } else {
+                searchLabel.innerText = retrying ? 'Solve retry running (deeper strategy)…' : 'Solve search running…';
+                if (retrying) showMessage('Retrying with hard mode and alternate strategies…', 'text-sky-600');
+            }
+            const solverResult = await SolverReferee.solve(activeLevel, { purpose, timeBudgetMs, allowGemini: false, hardMode: purpose === 'solve' });
             uiTimer.innerText = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
             const solutions = solverResult.ok ? (solverResult.solution || []) : [];
 
@@ -3240,34 +3338,30 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ENGINE.hinter.pathList = paths;
                 const seenHints = new Set((ENGINE.foundHintsSinceLoad || []).map(p => JSON.stringify(p)));
                 if (!ENGINE.foundHintsSinceLoad) ENGINE.foundHintsSinceLoad = [];
-                paths.forEach(path => { const key = JSON.stringify(path); if (!seenHints.has(key)) { ENGINE.foundHintsSinceLoad.push(path); seenHints.add(key); } });
+                paths.forEach(path => { const k = JSON.stringify(path); if (!seenHints.has(k)) { ENGINE.foundHintsSinceLoad.push(path); seenHints.add(k); } });
                 ENGINE.hinter.source = 'dynamic';
                 ENGINE.hinter.currentPathIdx = 0;
                 outEl.value = JSON.stringify(paths).replace(/\s/g, '');
-                if (purpose === 'hint') startHintAnimation();
-                else startHintAnimation();
-                showMessage(purpose === 'hint' ? (solverResult.stage === 0 ? 'Hint found (fast).' : 'Hint found (hard mode).') : (solverResult.stage === 0 ? 'Solved (fast).' : 'Solved (hard mode).'), 'text-emerald-600');
+                startHintAnimation();
+                const stageInfo = (solverResult.stagesTried || []).map(s => s.name).join(' → ');
+                showMessage(`Solved via ${stageInfo || 'referee portfolio'}.`, 'text-emerald-600');
             } else {
-                const h = attemptHistory[getLevelAttemptKey(activeLevel, purpose)] || { timesTried: 1 };
+                const stageInfo = (solverResult.stagesTried || []).map(s => `${s.stage}:${s.name}`).join(' -> ');
+                outEl.value = `${solverResult.message || 'No solution found within budget.'}${stageInfo ? `
+Stages: ${stageInfo}` : ''}`;
                 if (solverResult.status === 'no-solution-proven') {
                     showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
-                    outEl.value = solverResult.message || 'No solution proven.';
+                } else if (purpose === 'hint') {
+                    showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (slower).', 'text-amber-600');
                 } else {
-                    if (purpose === 'hint') {
-                        showMessage(h.timesTried <= 1
-                            ? 'Hint search timed out (5s). Tap “New Hint” again to try hard mode (slower, more thorough).'
-                            : 'Hard mode timed out. Tap again to try an even deeper search, or use Mega Solver retries in dev mode.', 'text-amber-600');
-                    } else {
-                        showMessage('Solve timed out (15s). Tap “Solve” again to retry with extended time (60s) and alternate search order.', 'text-amber-600');
-                    }
-                    outEl.value = solverResult.message || 'No solution found within budget.';
+                    showMessage('No solution found within 15s. Press Solve again to try a deeper strategy and/or longer budget.', 'text-amber-600');
                 }
                 setOverlayState(OVERLAY_NONE);
             }
         } catch (err) {
             setOverlayState(OVERLAY_NONE);
-            if (err.name === 'AbortError') { showMessage("Solver cancelled.", "text-amber-600"); }
-            else { console.error("Solver error:", err); }
+            if (err.name === 'AbortError') { showMessage('Solver cancelled.', 'text-amber-600'); }
+            else { console.error('Solver error:', err); showMessage('Solver error.', 'text-amber-600'); }
         } finally {
             ENGINE.activeSolverController = null;
         }
@@ -3621,7 +3715,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         $('closeGuideX').onclick = () => $('guideModal').classList.add('hidden');
         $('megaSolverBtn').onclick = () => { closeAllModals(); MEGA.run(); };
-        $('closeMegaModalBtn').onclick = () => { $('megaModal').classList.add('hidden'); if(ENGINE.activeSolverController) ENGINE.activeSolverController.abort(); };
+        $('closeMegaModalBtn').onclick = () => { $('megaModal').classList.add('hidden'); };
         $('copyMegaDataBtn').onclick = () => { const el = $('megaOutput'); if (el.value) { el.select(); document.execCommand('copy'); } };
         $('megaRetry30Btn').onclick = () => { MEGA.retryTimedOut({ timeLimitMs: 30000, altOrder: false }); };
         $('megaRetry60Btn').onclick = () => { MEGA.retryTimedOut({ timeLimitMs: 60000, altOrder: false }); };
