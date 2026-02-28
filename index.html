@@ -989,8 +989,9 @@
                 if (!targetSwatch || !sourceColor || !sourceTheme || !sourceCategory) return false;
                 const targetColor = targetSwatch.dataset.themeColor;
                 const targetTheme = targetSwatch.dataset.themeKey;
-                if (!targetColor || targetTheme !== sourceTheme || targetColor === sourceColor) return false;
-                APP.Themes.replaceThemeColor(sourceTheme, targetColor, sourceColor, sourceCategory);
+                const targetCategory = targetSwatch.dataset.category;
+                if (!targetColor || !targetCategory || targetTheme !== sourceTheme || targetColor === sourceColor) return false;
+                APP.Themes.replaceThemeColor(sourceTheme, targetColor, sourceColor, targetCategory);
                 return true;
             };
             const setDragGhost = ({ visible = false, color = null, x = null, y = null } = {}) => {
