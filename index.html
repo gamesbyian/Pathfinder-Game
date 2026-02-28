@@ -2919,6 +2919,79 @@
                 APP.Engine.setOverlayState(OVERLAY_NONE);
             }
 
+            function createSolverDebugStats(levelIndex = null) {
+                return {
+                    levelIndex,
+                    status: "",
+                    nodesExpanded: 0,
+                    branchesTried: 0,
+                    maxDepth: 0,
+                    elapsedMs: 0,
+                    memoSize: 0,
+                    pass: "primary",
+                    disabledPrunes: [],
+                    failMemoUsed: true,
+                    invalidReasons: [],
+                    depth0: null,
+                    prune: {
+                        lenOverflow: 0,
+                        intsOverflow: 0,
+                        minRemOverflow: 0,
+                        mustPassBound: 0,
+                        mustCrossBound: 0,
+                        deadEnd: 0,
+                        failedStateHit: 0,
+                        illegalMove: 0,
+                        other: 0
+                    },
+                    notes: []
+                };
+            }
+
+            function finalizeSolverDebugStats(debugStats, status, startPerf) {
+                if (!debugStats) return;
+                debugStats.status = status;
+                debugStats.elapsedMs = Math.round(performance.now() - startPerf);
+            }
+
+            function isGoalReachableFromAnyGate(level) {
+                if (!level) return false;
+                const goalDistMap = SolverCore._buildDistMap(level);
+                return Array.isArray(level.gateKeys) && level.gateKeys.some(gk => {
+                    const d = goalDistMap.get(gk);
+                    return d !== undefined && d !== Infinity;
+                });
+            }
+
+            function appendReachabilitySanityNote(level, debugStats, solveStatus, gateReachable = null) {
+                if (!debugStats || !level || (solveStatus !== 'no-solution' && solveStatus !== 'invalid')) return;
+                const reachable = gateReachable === null ? isGoalReachableFromAnyGate(level) : gateReachable;
+                if (reachable) {
+                    debugStats.notes.push("SANITY: goal reachable from at least one gate; solver returned NO-SOLUTION — check pruning/memoization");
+                } else {
+                    debugStats.notes.push("SANITY: goal unreachable from all gates (including portals)");
+                }
+            }
+
+            function formatSolverDebugBlock(levelNumber, debug) {
+                const prune = debug?.prune || {};
+                const lines = [
+                    `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
+                    `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
+                    `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
+                ];
+                if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
+                    lines[0] = `Level ${levelNumber}: UNSOLVED (INVALID) reasons: ${debug.invalidReasons.join('; ')}`;
+                }
+                if (debug?.depth0 && (debug.nodesExpanded === 0 || debug.maxDepth === 0 || debug.status === 'no-solution')) {
+                    lines.push(`depth0Prune: ${debug.depth0.reason} ${debug.depth0.details}`);
+                }
+                if (Array.isArray(debug?.notes) && debug.notes.length > 0) {
+                    lines.push(...debug.notes);
+                }
+                return lines.join('\n');
+            }
+
         return {
             solveLevel,
             megaSolve,
@@ -5263,80 +5336,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     const SOLVER_TIMEOUT = Symbol("solver-timeout");
     const SOLVER_ABORTED = Symbol("solver-aborted");
-
-    function createSolverDebugStats(levelIndex = null) {
-        return {
-            levelIndex,
-            status: "",
-            nodesExpanded: 0,
-            branchesTried: 0,
-            maxDepth: 0,
-            elapsedMs: 0,
-            memoSize: 0,
-            pass: "primary",
-            disabledPrunes: [],
-            failMemoUsed: true,
-            invalidReasons: [],
-            depth0: null,
-            prune: {
-                lenOverflow: 0,
-                intsOverflow: 0,
-                minRemOverflow: 0,
-                mustPassBound: 0,
-                mustCrossBound: 0,
-                deadEnd: 0,
-                failedStateHit: 0,
-                illegalMove: 0,
-                other: 0
-            },
-            notes: []
-        };
-    }
-
-    function finalizeSolverDebugStats(debugStats, status, startPerf) {
-        if (!debugStats) return;
-        debugStats.status = status;
-        debugStats.elapsedMs = Math.round(performance.now() - startPerf);
-    }
-
-    function isGoalReachableFromAnyGate(level) {
-        if (!level) return false;
-        const goalDistMap = SolverCore._buildDistMap(level);
-        return Array.isArray(level.gateKeys) && level.gateKeys.some(gk => {
-            const d = goalDistMap.get(gk);
-            return d !== undefined && d !== Infinity;
-        });
-    }
-
-    function appendReachabilitySanityNote(level, debugStats, solveStatus, gateReachable = null) {
-        if (!debugStats || !level || (solveStatus !== 'no-solution' && solveStatus !== 'invalid')) return;
-        const reachable = gateReachable === null ? isGoalReachableFromAnyGate(level) : gateReachable;
-        if (reachable) {
-            debugStats.notes.push("SANITY: goal reachable from at least one gate; solver returned NO-SOLUTION — check pruning/memoization");
-        } else {
-            debugStats.notes.push("SANITY: goal unreachable from all gates (including portals)");
-        }
-    }
-
-    function formatSolverDebugBlock(levelNumber, debug) {
-        const prune = debug?.prune || {};
-        const lines = [
-            `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
-            `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
-            `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
-        ];
-        if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
-            lines[0] = `Level ${levelNumber}: UNSOLVED (INVALID) reasons: ${debug.invalidReasons.join('; ')}`;
-        }
-        if (debug?.depth0 && (debug.nodesExpanded === 0 || debug.maxDepth === 0 || debug.status === 'no-solution')) {
-            lines.push(`depth0Prune: ${debug.depth0.reason} ${debug.depth0.details}`);
-        }
-        if (Array.isArray(debug?.notes) && debug.notes.length > 0) {
-            lines.push(...debug.notes);
-        }
-        return lines.join('\n');
-    }
-
     // ======================================================
     // H) Solver
     // ======================================================
@@ -5806,18 +5805,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!isVisible) APP.UI.openModal('editorHelpModal');
         };
         document.getElementById('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
-        const editorSolveBtn = document.getElementById('editorSolveBtn') || document.getElementById('editMegaSolver');
-        if (editorSolveBtn) editorSolveBtn.onclick = async () => {
+        document.getElementById('editMegaSolver').onclick = () => {
             APP.UI.closeAllModals();
-            if (!APP.State.ENGINE.editor.workingLevel) return;
-            APP.Editor.applyMetricsFromUI();
-            try {
-                await APP.Solver.runGameSolver('solve');
-            } catch (err) {
-                console.error('Editor solve failed:', err);
-                showMessage(`Solve failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
-                APP.Engine.setOverlayState(OVERLAY_NONE);
-            }
+            APP.Solver.runGameSolver('solve');
         };
         document.getElementById('editCopyMetrics').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const len = APP.Engine.getRealLength(); APP.UI.setInputValue('editReqLen', len); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.intersections); APP.Editor.applyMetricsFromUI(); APP.UI.showMessage("Metrics Set", "text-white font-black"); } };
 
