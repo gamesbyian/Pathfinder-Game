@@ -123,6 +123,9 @@
         .palette-item svg { width: 65%; height: 65%; }
         .palette-item.selected { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
         .palette-item:active { transform: scale(0.95); }
+        .theme-swatch.swatch--selected { outline: 3px solid var(--theme-modal-accent); outline-offset: 1px; }
+        .theme-swatch.swatch--dragging { transform: scale(1.08); box-shadow: 0 0 0 2px color-mix(in srgb, var(--theme-modal-accent) 65%, transparent); }
+        .theme-swatch.swatch--over { box-shadow: inset 0 0 0 3px var(--theme-modal-accent); }
         #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--ui-gap-tight))) !important; }
         .landscape-editor-tools #editorItemPalettePanel { display: flex; }
         .landscape-editor-tools .palette-grid { width: max-content; grid-template-columns: repeat(4, var(--palette-cell-size)); }
@@ -958,8 +961,11 @@
         // - setSwatchSelected(elOrNull): maintain single selected swatch visual state.
         // - setDragGhost({ visible, color, x, y }): render theme drag ghost appearance/position.
         const ThemeEditor = (() => {
-            const selectedClasses = ['ring-4', 'ring-[var(--theme-modal-accent)]', 'theme-swatch-selected', 'z-10', 'scale-110'];
-            const teDom = { inited: false, list: null, selectView: null, editView: null, ghost: null };
+            const DRAG_THRESHOLD_PX = 10;
+            const teDom = { inited: false, list: null, selectView: null, editView: null, ghost: null, modal: null };
+            const swatchMetaByIdx = new Map();
+            const interaction = APP.State.ENGINE.themeEditor.interaction;
+
             const ensureInit = () => {
                 if (teDom.inited) return;
                 teDom.inited = true;
@@ -967,33 +973,17 @@
                 teDom.selectView = resolveEl('themeSelectView');
                 teDom.editView = resolveEl('themeEditView');
                 teDom.ghost = resolveEl('dragGhost');
+                teDom.modal = resolveEl('themeModal');
+                if (teDom.modal) {
+                    // Tap outside swatches should cancel only the armed source selection.
+                    teDom.modal.addEventListener('pointerdown', (ev) => {
+                        if (interaction.mode !== 'armed') return;
+                        if (ev.target?.closest?.('[data-swatch-idx]')) return;
+                        cancelInteraction(ev);
+                    });
+                }
             };
-            const dragState = {
-                color: null,
-                theme: null,
-                category: null,
-                tapColor: null,
-                tapTheme: null,
-                tapCategory: null,
-                tapSwatch: null,
-                pointerId: null,
-                startX: null,
-                startY: null,
-                isDragging: false
-            };
-            const setSwatchSelected = (elOrNull) => {
-                document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove(...selectedClasses));
-                if (elOrNull) elOrNull.classList.add(...selectedClasses);
-            };
-            const applySwatchReplace = ({ sourceColor, sourceTheme, sourceCategory, targetSwatch }) => {
-                if (!targetSwatch || !sourceColor || !sourceTheme || !sourceCategory) return false;
-                const targetColor = targetSwatch.dataset.themeColor;
-                const targetTheme = targetSwatch.dataset.themeKey;
-                const targetCategory = targetSwatch.dataset.category;
-                if (!targetColor || !targetCategory || targetTheme !== sourceTheme || targetColor === sourceColor) return false;
-                APP.Themes.replaceThemeColor(sourceTheme, targetColor, sourceColor, targetCategory);
-                return true;
-            };
+
             const setDragGhost = ({ visible = false, color = null, x = null, y = null } = {}) => {
                 ensureInit();
                 const ghost = teDom.ghost;
@@ -1014,6 +1004,182 @@
                 if (y !== null) ghost.style.top = `${y}px`;
             };
 
+            const getSwatchFromPoint = (x, y) => document.elementFromPoint(x, y)?.closest?.('[data-swatch-idx]') || null;
+            const getIdxFromElement = (el) => {
+                const n = Number(el?.dataset?.swatchIdx);
+                return Number.isInteger(n) ? n : null;
+            };
+            const getMetaByIdx = (idx) => (idx === null || idx === undefined) ? null : swatchMetaByIdx.get(idx) || null;
+
+            const syncLegacyMirrors = () => {
+                APP.State.ENGINE.themeEditor.selectedIdx = interaction.mode === 'armed' ? interaction.srcIdx : null;
+                APP.State.ENGINE.themeEditor.dragSrc = interaction.mode === 'dragging' ? interaction.srcIdx : null;
+            };
+
+            const clearInteractionCore = () => {
+                interaction.mode = 'idle';
+                interaction.srcIdx = null;
+                interaction.overIdx = null;
+                interaction.pointerId = null;
+                interaction.pointerType = null;
+                interaction.startX = 0;
+                interaction.startY = 0;
+                interaction.lastX = 0;
+                interaction.lastY = 0;
+                interaction.moved = false;
+                interaction.startedAtMs = 0;
+                syncLegacyMirrors();
+            };
+
+            const updateSwatchClasses = () => {
+                document.querySelectorAll('.theme-swatch').forEach((el) => {
+                    const idx = getIdxFromElement(el);
+                    const isSelected = interaction.mode === 'armed' && idx === interaction.srcIdx;
+                    const isDragging = interaction.mode === 'dragging' && idx === interaction.srcIdx;
+                    const isOver = interaction.mode === 'dragging' && idx === interaction.overIdx && idx !== interaction.srcIdx;
+                    el.classList.toggle('swatch--selected', !!isSelected);
+                    el.classList.toggle('swatch--dragging', !!isDragging);
+                    el.classList.toggle('swatch--over', !!isOver);
+                });
+            };
+
+            const replaceTargetWithSource = (srcIdx, targetIdx) => {
+                const src = getMetaByIdx(srcIdx);
+                const target = getMetaByIdx(targetIdx);
+                if (!src || !target) return false;
+                if (src.themeKey !== target.themeKey || src.color === target.color) return false;
+                APP.Themes.replaceThemeColor(src.themeKey, target.color, src.color, target.category);
+                return true;
+            };
+
+            const handleTapSource = (idx) => {
+                if (idx === null) return;
+                if (interaction.mode === 'idle') {
+                    interaction.mode = 'armed';
+                    interaction.srcIdx = idx;
+                    interaction.overIdx = null;
+                    syncLegacyMirrors();
+                    updateSwatchClasses();
+                    return;
+                }
+                if (interaction.mode === 'armed') {
+                    if (interaction.srcIdx === idx) {
+                        clearInteractionCore();
+                        updateSwatchClasses();
+                        return;
+                    }
+                    replaceTargetWithSource(interaction.srcIdx, idx);
+                    clearInteractionCore();
+                    updateSwatchClasses();
+                }
+            };
+
+            const beginPress = (idx, ev) => {
+                if (ev.pointerType === 'mouse' && ev.button !== 0) return;
+                if (interaction.mode === 'pressing' || interaction.mode === 'dragging') return;
+                interaction.mode = 'pressing';
+                interaction.srcIdx = idx;
+                interaction.overIdx = idx;
+                interaction.pointerId = ev.pointerId;
+                interaction.pointerType = ev.pointerType || null;
+                interaction.startX = ev.clientX;
+                interaction.startY = ev.clientY;
+                interaction.lastX = ev.clientX;
+                interaction.lastY = ev.clientY;
+                interaction.moved = false;
+                interaction.startedAtMs = Date.now();
+                syncLegacyMirrors();
+                updateSwatchClasses();
+                if (typeof ev.currentTarget?.setPointerCapture === 'function') {
+                    ev.currentTarget.setPointerCapture(ev.pointerId);
+                }
+            };
+
+            const updatePressOrDrag = (ev) => {
+                if (interaction.pointerId !== ev.pointerId) return;
+                interaction.lastX = ev.clientX;
+                interaction.lastY = ev.clientY;
+                if (interaction.mode === 'pressing') {
+                    const dx = ev.clientX - interaction.startX;
+                    const dy = ev.clientY - interaction.startY;
+                    if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
+                        interaction.mode = 'dragging';
+                        interaction.moved = true;
+                        interaction.overIdx = getIdxFromElement(getSwatchFromPoint(ev.clientX, ev.clientY));
+                        APP.Engine.setLogicState(THEME_DRAG);
+                        const src = getMetaByIdx(interaction.srcIdx);
+                        setDragGhost({ visible: true, color: src?.color || null, x: ev.clientX, y: ev.clientY });
+                        syncLegacyMirrors();
+                        updateSwatchClasses();
+                    }
+                    return;
+                }
+                if (interaction.mode === 'dragging') {
+                    interaction.overIdx = getIdxFromElement(getSwatchFromPoint(ev.clientX, ev.clientY));
+                    const src = getMetaByIdx(interaction.srcIdx);
+                    setDragGhost({ visible: true, color: src?.color || null, x: ev.clientX, y: ev.clientY });
+                    updateSwatchClasses();
+                    ev.preventDefault();
+                }
+            };
+
+            const endPressOrDrag = (ev) => {
+                if (interaction.pointerId !== ev.pointerId) return;
+                const wasPressing = interaction.mode === 'pressing';
+                const wasDragging = interaction.mode === 'dragging';
+                const srcIdx = interaction.srcIdx;
+                if (typeof ev.currentTarget?.releasePointerCapture === 'function') {
+                    try { ev.currentTarget.releasePointerCapture(ev.pointerId); } catch (_) {}
+                }
+                if (wasPressing && !interaction.moved) {
+                    clearInteractionCore();
+                    setDragGhost({ visible: false });
+                    handleTapSource(srcIdx);
+                    return;
+                }
+                if (wasDragging) {
+                    const targetIdx = getIdxFromElement(getSwatchFromPoint(ev.clientX, ev.clientY));
+                    if (targetIdx !== null && targetIdx !== srcIdx) replaceTargetWithSource(srcIdx, targetIdx);
+                    ev.preventDefault();
+                }
+                clearInteractionCore();
+                updateSwatchClasses();
+                setDragGhost({ visible: false });
+                if (APP.State.ENGINE.logicState === THEME_DRAG) APP.Engine.setLogicState(IDLE);
+            };
+
+            const cancelInteraction = (ev) => {
+                if (interaction.pointerId !== null && ev?.pointerId !== undefined && interaction.pointerId !== ev.pointerId) return;
+                if (interaction.pointerId !== null && typeof ev?.currentTarget?.releasePointerCapture === 'function') {
+                    try { ev.currentTarget.releasePointerCapture(interaction.pointerId); } catch (_) {}
+                }
+                clearInteractionCore();
+                updateSwatchClasses();
+                setDragGhost({ visible: false });
+                if (APP.State.ENGINE.logicState === THEME_DRAG) APP.Engine.setLogicState(IDLE);
+            };
+
+            const buildSwatch = (c, category, themeKey, idx) => {
+                const swatch = document.createElement('div');
+                const swatchClasses = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
+                swatch.className = `theme-swatch ${swatchClasses}`;
+                swatch.style.backgroundColor = c;
+                swatch.style.pointerEvents = 'auto';
+                swatch.classList.add('border-slate-300');
+                swatch.draggable = false;
+                swatch.dataset.themeColor = c;
+                swatch.dataset.themeKey = themeKey;
+                swatch.dataset.category = category;
+                swatch.dataset.swatchIdx = `${idx}`;
+
+                // Pointer Events state machine: one pipeline for desktop + touch + pen.
+                swatch.onpointerdown = (ev) => beginPress(idx, ev);
+                swatch.onpointermove = (ev) => updatePressOrDrag(ev);
+                swatch.onpointerup = (ev) => endPressOrDrag(ev);
+                swatch.onpointercancel = (ev) => cancelInteraction(ev);
+                return swatch;
+            };
+
             const renderThemeKey = (themeKey) => {
                 const container = document.createElement('div');
                 container.className = "flex flex-col gap-2";
@@ -1026,67 +1192,8 @@
                 const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border, t.loading?.panelBorder, t.loading?.track, t.search?.megaStatusBorder, t.shell?.btnBorder, t.shell?.muteBorder, t.header?.divider]);
                 const btnColors = toColorSet([...Object.values(t.btns || {}), t.leave?.bg, t.leave?.hover, t.shell?.btnBg, t.shell?.btnBgHover, t.shell?.muteBg, t.shell?.muteBgHover, t.header?.navBg, t.header?.navBgHover]);
                 const gridColors = toColorSet([t.colors?.gate, t.colors?.goal, t.colors?.block, t.colors?.pin, t.colors?.pinUnflipped, t.colors?.filter, t.colors?.portal, t.colors?.cross, t.colors?.portalPending, t.colors?.bombBlastRing, t.colors?.bombBlastRays, t.path, t.grid]);
-                const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.palette?.toolBg, t.win?.bg, t.alert?.bg, t.ctrlArea?.bg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.burst, t.check, t.loading?.overlayBg, t.loading?.panelBg, t.search?.overlayBg, t.jumpscare?.gooseBg, t.jumpscare?.bombBg]);
-                const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.text?.body, t.text?.shellBtn, t.leave?.text, t.loading?.title, t.loading?.status, t.loading?.percent, t.loading?.error, t.search?.megaStatusText, t.search?.label, t.search?.timer, t.search?.close, t.search?.closeHover, t.jumpscare?.gooseText, t.jumpscare?.bombTopText, t.jumpscare?.bombBottomText, t.shell?.btnText, t.shell?.muteText, t.header?.navText]);
-                const buildSwatch = (c, category) => {
-                    const swatch = document.createElement('div');
-                    const swatchClasses = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
-                    // Ensure the element can be found via .closest('.theme-swatch')
-                    swatch.className = `theme-swatch ${swatchClasses}`;
-                    swatch.style.backgroundColor = c;
-                    swatch.style.pointerEvents = 'auto';
-                    swatch.classList.add('border-slate-300');
-                    swatch.draggable = false;
-                    swatch.dataset.themeColor = c;
-                    swatch.dataset.themeKey = themeKey;
-                    swatch.dataset.category = category;
-                    swatch.style.touchAction = 'none';
-                    // Selection/swap is handled on pointerdown because preventDefault suppresses reliable click events on touch.
-                    swatch.onpointerdown = e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (dragState.tapColor && dragState.tapTheme === themeKey && dragState.tapSwatch !== swatch) {
-                            applySwatchReplace({
-                                sourceColor: dragState.tapColor,
-                                sourceTheme: dragState.tapTheme,
-                                sourceCategory: dragState.tapCategory,
-                                targetSwatch: swatch
-                            });
-                            dragState.tapColor = null;
-                            dragState.tapTheme = null;
-                            dragState.tapCategory = null;
-                            dragState.tapSwatch = null;
-                            setSwatchSelected(null);
-                            APP.Engine.setLogicState(IDLE);
-                            setDragGhost({ visible: false });
-                            dragState.color = null;
-                            dragState.theme = null;
-                            dragState.category = null;
-                            dragState.pointerId = null;
-                            dragState.startX = null;
-                            dragState.startY = null;
-                            dragState.isDragging = false;
-                            return;
-                        }
-
-                        dragState.tapColor = c;
-                        dragState.tapTheme = themeKey;
-                        dragState.tapCategory = category;
-                        dragState.tapSwatch = swatch;
-                        setSwatchSelected(swatch);
-
-                        dragState.color = c;
-                        dragState.theme = themeKey;
-                        dragState.category = category;
-                        dragState.pointerId = e.pointerId;
-                        dragState.startX = e.clientX;
-                        dragState.startY = e.clientY;
-                        dragState.isDragging = false;
-                        APP.Engine.setLogicState(THEME_DRAG);
-                        setDragGhost({ visible: true, color: c, x: e.clientX, y: e.clientY });
-                    };
-                    return swatch;
-                };
+                const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.ctrlArea?.bg, t.win?.bg, t.search?.megaStatusBg, t.search?.megaStatusGlow, t.loading?.bg, t.loading?.panelBg, t.loading?.trackBg, t.loading?.bar, t.alert?.bg, t.jumpscare?.gooseBg, t.jumpscare?.bombBg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.shell?.btnBg, t.shell?.btnBgHover, t.shell?.muteBg, t.shell?.muteBgHover, t.header?.navBg, t.header?.navBgHover]);
+                const textColors = toColorSet([t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.text?.body, t.text?.shellBtn, t.leave?.text, t.loading?.title, t.loading?.status, t.loading?.percent, t.loading?.error, t.search?.megaStatusText, t.search?.label, t.search?.timer, t.search?.close, t.search?.closeHover, t.jumpscare?.gooseText, t.jumpscare?.bombTopText, t.jumpscare?.bombBottomText, t.shell?.btnText, t.shell?.muteText, t.header?.navText]);
                 const buildSection = (title, colorArr) => {
                     const section = document.createElement('div');
                     section.className = "flex flex-col items-center p-1 rounded bg-black/5 min-h-[6.5rem]";
@@ -1096,7 +1203,11 @@
                     section.appendChild(ctitle);
                     const grid = document.createElement('div');
                     grid.className = "grid grid-cols-4 gap-0.5 w-full justify-items-center";
-                    colorArr.forEach(c => grid.appendChild(buildSwatch(c, title)));
+                    colorArr.forEach(c => {
+                        const idx = swatchMetaByIdx.size;
+                        swatchMetaByIdx.set(idx, { color: c, category: title, themeKey });
+                        grid.appendChild(buildSwatch(c, title, themeKey, idx));
+                    });
                     section.appendChild(grid);
                     return section;
                 };
@@ -1127,7 +1238,11 @@
                         if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
                         window.THEME_AI_COLORS[themeKey] = colors.slice(0, 6);
                         aiGrid.innerHTML = '';
-                        window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, "Misc")));
+                        window.THEME_AI_COLORS[themeKey].forEach(c => {
+                            const idx = swatchMetaByIdx.size;
+                            swatchMetaByIdx.set(idx, { color: c, category: 'Misc', themeKey });
+                            aiGrid.appendChild(buildSwatch(c, 'Misc', themeKey, idx));
+                        });
                     } else {
                         aiGrid.innerHTML = '';
                         const failWrap = document.createElement('div');
@@ -1145,8 +1260,13 @@
                     }
                 };
                 if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
-                if (window.THEME_AI_COLORS[themeKey]) window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, "Misc")));
-                else {
+                if (window.THEME_AI_COLORS[themeKey]) {
+                    window.THEME_AI_COLORS[themeKey].forEach(c => {
+                        const idx = swatchMetaByIdx.size;
+                        swatchMetaByIdx.set(idx, { color: c, category: 'Misc', themeKey });
+                        aiGrid.appendChild(buildSwatch(c, 'Misc', themeKey, idx));
+                    });
+                } else {
                     const genBtn = document.createElement('button');
                     genBtn.className = "bg-[var(--theme-modal-panel)] border border-[var(--theme-modal-border)] text-[var(--theme-modal-text)] px-4 py-2 rounded-lg font-black text-[0.6rem] uppercase tracking-widest shadow-sm hover:brightness-95 transition active:scale-95";
                     genBtn.innerText = "Generate Suggestions";
@@ -1207,6 +1327,8 @@
             const renderAll = () => {
                 ensureInit();
                 if (!teDom.list || !window.ORIGINAL_THEMES) return;
+                swatchMetaByIdx.clear();
+                clearInteractionCore();
                 teDom.list.innerHTML = '';
                 const keys = Object.keys(window.ORIGINAL_THEMES).filter(k => k !== 'classic');
                 keys.forEach((key, idx) => {
@@ -1217,6 +1339,7 @@
                         teDom.list.appendChild(hr);
                     }
                 });
+                updateSwatchClasses();
             };
 
             const openEditorView = () => {
@@ -1236,34 +1359,22 @@
                     teDom.editView.classList.remove('flex');
                 }
                 if (teDom.selectView) teDom.selectView.classList.remove('hidden');
-                setSwatchSelected(null);
-                dragState.color = null; dragState.theme = null; dragState.category = null; dragState.tapColor = null; dragState.tapTheme = null; dragState.tapCategory = null; dragState.tapSwatch = null; dragState.pointerId = null; dragState.startX = null; dragState.startY = null; dragState.isDragging = false;
-                setDragGhost({ visible: false });
+                cancelInteraction();
             };
 
             return {
                 init: ensureInit,
                 renderAll,
                 renderThemeKey,
-                setSwatchSelected,
-                setDragGhost,
                 openEditorView,
                 closeEditorView,
-                applySwatchReplace,
-                getDragState: () => ({ ...dragState }),
-                markPointerDrag: () => {
-                    dragState.isDragging = true;
-                },
-                clearDragState: () => {
-                    dragState.color = null;
-                    dragState.theme = null;
-                    dragState.category = null;
-                    dragState.pointerId = null;
-                    dragState.startX = null;
-                    dragState.startY = null;
-                    dragState.isDragging = false;
-                },
-                hasTapSelection: () => !!dragState.tapColor
+                beginPress,
+                updatePressOrDrag,
+                endPressOrDrag,
+                cancelInteraction,
+                handleTapSource,
+                replaceTargetWithSource,
+                getInteractionState: () => ({ ...interaction })
             };
         })();
 
@@ -3387,6 +3498,24 @@
         themeTapSelectedColor: null,
         themeTapSelectedTheme: null,
         themeTapCategory: null,
+        themeEditor: {
+            interaction: {
+                mode: 'idle',
+                srcIdx: null,
+                overIdx: null,
+                pointerId: null,
+                pointerType: null,
+                startX: 0,
+                startY: 0,
+                lastX: 0,
+                lastY: 0,
+                moved: false,
+                startedAtMs: 0
+            },
+            // Compatibility mirrors for legacy references. Interaction state is authoritative.
+            selectedIdx: null,
+            dragSrc: null
+        },
         progressSet: new Set(),
         foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true }
@@ -5796,40 +5925,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
 
         const handleUp = (e) => {
-            if (APP.State.ENGINE.logicState === THEME_DRAG) {
-                // Resolve from deepest hit node up to the swatch so child elements still count as valid drops.
-                const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('.theme-swatch');
-                const dragState = APP.UI.ThemeEditor.getDragState();
-                if (dropTarget && dragState.isDragging) {
-                    APP.UI.ThemeEditor.applySwatchReplace({
-                        sourceColor: dragState.color,
-                        sourceTheme: dragState.theme,
-                        sourceCategory: dragState.category,
-                        targetSwatch: dropTarget
-                    });
-                }
-                APP.Engine.setLogicState(IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
-                if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
-            }
             if (APP.State.ENGINE.logicState === EDIT_DRAG && APP.State.ENGINE.mode === EDITOR) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; APP.Engine.setLogicState(IDLE); } if (APP.State.ENGINE.logicState === DRAGGING) APP.Engine.setLogicState(IDLE);
         };
 
         APP.Renderer.getCanvas().addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (APP.State.ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); APP.State.ENGINE.runtime.activePointerId = e.pointerId; APP.Renderer.getCanvas().setPointerCapture(APP.State.ENGINE.runtime.activePointerId); handleDown(e); });
         window.addEventListener('pointermove', e => {
-            const themeDragState = APP.UI.ThemeEditor.getDragState();
-            if (themeDragState.pointerId !== null && e.pointerId === themeDragState.pointerId && !themeDragState.isDragging) {
-                const dx = Math.abs((themeDragState.startX ?? e.clientX) - e.clientX);
-                const dy = Math.abs((themeDragState.startY ?? e.clientY) - e.clientY);
-                if (dx > 6 || dy > 6) APP.UI.ThemeEditor.markPointerDrag();
-            }
-            if (APP.State.ENGINE.logicState === THEME_DRAG) {
-                const dragState = APP.UI.ThemeEditor.getDragState();
-                if (e.pointerId === dragState.pointerId || dragState.pointerId === null) {
-                    APP.UI.ThemeEditor.setDragGhost({ visible: true, color: dragState.color, x: e.clientX, y: e.clientY });
-                    e.preventDefault();
-                    return;
-                }
-            }
             if (APP.State.ENGINE.mode === EDITOR && (APP.State.ENGINE.editor.draggedObject || (APP.State.ENGINE.editor.selectedTool && APP.State.ENGINE.logicState === EDIT_DRAG))) {
                 const type = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool;
                 const isOverPalette = APP.UI.EditorDragGhost.isPointerOverPalette(e.clientX, e.clientY);
