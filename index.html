@@ -1030,7 +1030,9 @@
                 const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.text?.body, t.text?.shellBtn, t.leave?.text, t.loading?.title, t.loading?.status, t.loading?.percent, t.loading?.error, t.search?.megaStatusText, t.search?.label, t.search?.timer, t.search?.close, t.search?.closeHover, t.jumpscare?.gooseText, t.jumpscare?.bombTopText, t.jumpscare?.bombBottomText, t.shell?.btnText, t.shell?.muteText, t.header?.navText]);
                 const buildSwatch = (c, category) => {
                     const swatch = document.createElement('div');
-                    swatch.className = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
+                    const swatchClasses = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
+                    // Ensure the element can be found via .closest('.theme-swatch')
+                    swatch.className = `theme-swatch ${swatchClasses}`;
                     swatch.style.backgroundColor = c;
                     swatch.style.pointerEvents = 'auto';
                     swatch.classList.add('border-slate-300');
@@ -5801,9 +5803,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const handleUp = (e) => {
             if (APP.State.ENGINE.logicState === THEME_DRAG) {
                 // Resolve from deepest hit node up to the swatch so child elements still count as valid drops.
-                const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-theme-color]');
+                const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('.theme-swatch');
                 const dragState = APP.UI.ThemeEditor.getDragState();
-                if (dropTarget) {
+                if (dropTarget && dragState.isDragging) {
                     if (dropTarget.dataset.category === dragState.category) {
                         APP.UI.ThemeEditor.applySwatchReplace({
                             sourceColor: dragState.color,
