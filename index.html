@@ -2226,12 +2226,19 @@
             };
 
         const normalizeSolutionEntries = (solutionLike) => {
+            const isPathEntry = (v) => !!v && typeof v === 'object' && Array.isArray(v.path);
+            if (isPathEntry(solutionLike)) return [{ path: solutionLike.path }];
             if (!Array.isArray(solutionLike)) return [];
+
+            const treatAsSingleRawPath = solutionLike.length > 0
+                && !isPathEntry(solutionLike[0])
+                && !Array.isArray(solutionLike[0]);
+            const entries = treatAsSingleRawPath ? [solutionLike] : solutionLike;
+
             const normalized = [];
-            for (const entry of solutionLike) {
-                if (entry && Array.isArray(entry.path)) normalized.push({ path: entry.path });
+            for (const entry of entries) {
+                if (isPathEntry(entry)) normalized.push({ path: entry.path });
                 else if (Array.isArray(entry)) normalized.push({ path: entry });
-                else if (entry !== undefined && entry !== null) normalized.push({ path: [entry] });
             }
             return normalized.filter(sol => Array.isArray(sol.path) && sol.path.length > 0);
         };
