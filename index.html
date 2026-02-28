@@ -3447,6 +3447,44 @@
                 clear(state) { state.path = []; state.isPortalJump.clear(); state.activeGateKey = null; if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(state.logicState)) { APP.Engine.setLogicState(IDLE); } if (state.mode === EDITOR) state.editor.isModified = true; rebuildDerivedPathState(state); assertStateConsistency(state); }
             };
 
+            const VALID_LOGIC_TRANSITIONS = {
+                [IDLE]: [DRAGGING, EDIT_DRAG, THEME_DRAG, RESOLVED],
+                [DRAGGING]: [IDLE, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED],
+                [PORTAL_PAUSE]: [DRAGGING, IDLE],
+                [RESOLVED]: [IDLE],
+                [HAZARD_TRIGGERED]: [IDLE],
+                [EDIT_DRAG]: [IDLE],
+                [THEME_DRAG]: [IDLE]
+            };
+
+            function setLogicState(newState) {
+                if (!VALID_LOGIC_TRANSITIONS[APP.State.ENGINE.logicState].includes(newState) && newState !== IDLE) {
+                    console.warn(`Blocked Logic Transition: ${APP.State.ENGINE.logicState} -> ${newState}`);
+                    return false;
+                }
+
+                if (APP.State.ENGINE.logicState === EDIT_DRAG && newState !== EDIT_DRAG) {
+                    APP.UI.EditorDragGhost.update({ visible: false });
+                }
+
+                APP.State.ENGINE.logicState = newState;
+                return true;
+            }
+
+            // setOverlayState updates state only; APP.UI.applyOverlayState renders it.
+            function setOverlayState(newState) {
+                if (APP.State.ENGINE.overlayState === newState) return true;
+                if (APP.State.ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
+                    APP.State.ENGINE.hinter.alpha = 0;
+                }
+
+                APP.State.ENGINE.overlayState = newState;
+                APP.UI.setSolverAbortRequested(APP.State.ENGINE.solverAbortRequested);
+                APP.UI.applyOverlayState(newState);
+
+                return true;
+            }
+
         return {
             init,
             bind,
@@ -3612,43 +3650,7 @@
 
             async function generateLevelString() { const l = APP.State.ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0; const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0; let exportedHints = l.hints || []; if (APP.State.ENGINE.path.length > 1 && APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = APP.State.ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => APP.State.ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (APP.State.ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(APP.State.ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [APP.State.ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: APP.LevelUtils.expCoords(l.gateKeys), goal: {x:APP.LevelUtils.UNPACK(l.goalKey).x+1, y:APP.LevelUtils.UNPACK(l.goalKey).y+1}, falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: APP.LevelUtils.expCoords(l.blockSet), mustPass: APP.LevelUtils.expCoords(l.mustPassKeys), mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x+1, y1: APP.LevelUtils.UNPACK(pv.k1).y+1, x2: APP.LevelUtils.UNPACK(pv.k2).x+1, y2: APP.LevelUtils.UNPACK(pv.k2).y+1, color: pv.color })), geese: APP.LevelUtils.expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); APP.UI.setSolutionOutput(json); await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' }); APP.State.ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
 
-            const VALID_LOGIC_TRANSITIONS = {
-                [IDLE]: [DRAGGING, EDIT_DRAG, THEME_DRAG, RESOLVED],
-                [DRAGGING]: [IDLE, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED],
-                [PORTAL_PAUSE]: [DRAGGING, IDLE],
-                [RESOLVED]: [IDLE],
-                [HAZARD_TRIGGERED]: [IDLE],
-                [EDIT_DRAG]: [IDLE],
-                [THEME_DRAG]: [IDLE]
-            };
 
-            function setLogicState(newState) {
-                if (!VALID_LOGIC_TRANSITIONS[APP.State.ENGINE.logicState].includes(newState) && newState !== IDLE) {
-                    console.warn(`Blocked Logic Transition: ${APP.State.ENGINE.logicState} -> ${newState}`);
-                    return false;
-                }
-
-                if (APP.State.ENGINE.logicState === EDIT_DRAG && newState !== EDIT_DRAG) {
-                    APP.UI.EditorDragGhost.update({ visible: false });
-                }
-
-                APP.State.ENGINE.logicState = newState;
-                return true;
-            }
-
-            // setOverlayState updates state only; APP.UI.applyOverlayState renders it.
-            function setOverlayState(newState) {
-                if (APP.State.ENGINE.overlayState === newState) return true;
-                if (APP.State.ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
-                    APP.State.ENGINE.hinter.alpha = 0;
-                }
-
-                APP.State.ENGINE.overlayState = newState;
-                APP.UI.setSolverAbortRequested(APP.State.ENGINE.solverAbortRequested);
-                APP.UI.applyOverlayState(newState);
-
-                return true;
-            }
 
         return {
             init,
