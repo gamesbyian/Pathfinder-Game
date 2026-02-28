@@ -2226,12 +2226,19 @@
             };
 
         const normalizeSolutionEntries = (solutionLike) => {
+            const isPathEntry = (v) => !!v && typeof v === 'object' && Array.isArray(v.path);
+            if (isPathEntry(solutionLike)) return [{ path: solutionLike.path }];
             if (!Array.isArray(solutionLike)) return [];
+
+            const treatAsSingleRawPath = solutionLike.length > 0
+                && !isPathEntry(solutionLike[0])
+                && !Array.isArray(solutionLike[0]);
+            const entries = treatAsSingleRawPath ? [solutionLike] : solutionLike;
+
             const normalized = [];
-            for (const entry of solutionLike) {
-                if (entry && Array.isArray(entry.path)) normalized.push({ path: entry.path });
+            for (const entry of entries) {
+                if (isPathEntry(entry)) normalized.push({ path: entry.path });
                 else if (Array.isArray(entry)) normalized.push({ path: entry });
-                else if (entry !== undefined && entry !== null) normalized.push({ path: [entry] });
             }
             return normalized.filter(sol => Array.isArray(sol.path) && sol.path.length > 0);
         };
@@ -2506,8 +2513,9 @@
             APP.UI.setButtonState('solverCloseBtn', { enabled: true });
         };
 
-        const applySolutionsToEngine = (solution, purpose = 'solve') => {
-            const paths = normalizeSolutionEntries(solution).map(sol => sol.path);
+        const applySolutionsToEngine = (solutionEntries, purpose = 'solve') => {
+            const normalizedEntries = normalizeSolutionEntries(solutionEntries);
+            const paths = normalizedEntries.map(sol => sol.path);
             if (!Array.isArray(paths) || paths.length === 0) return;
             if (APP.State.ENGINE.mode === EDITOR) APP.Editor.setWorkingLevelHintsFromSolutions(paths.slice(0, 4));
             APP.State.ENGINE.hinter.pathList = paths;
@@ -2866,16 +2874,18 @@
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose });
-                const canonical = solverResult.solution ?? solverResult.solutions ?? [];
+                const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 solverResult.solution = canonical;
-                const solution = solverResult.ok ? solverResult.solution : [];
-                const normalizedPaths = normalizeSolutionEntries(solution).map(sol => sol.path);
-                if (solution.length > 0 && normalizedPaths.length === 0) {
-                    console.warn('Solver returned malformed solution entries.', { purpose, solution });
+                solverResult.solutions = canonical;
+                const normalizedEntries = solverResult.ok ? canonical : [];
+                const normalizedPaths = normalizedEntries.map(sol => sol.path).filter(path => Array.isArray(path) && path.length > 0);
+                if (solverResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
+                    console.warn('Solver returned malformed solution entries.', { purpose, solution: canonical });
+                    showMessage('Solver returned malformed solution data.', 'text-amber-600');
                 }
 
                 if (normalizedPaths.length > 0) {
-                    APP.Solver.applySolutionsToEngine(solution, purpose);
+                    APP.Solver.applySolutionsToEngine(normalizedEntries, purpose);
                 } else if (solverResult.rawStatus === 'no-solution-proven') {
                     showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution proven.');
