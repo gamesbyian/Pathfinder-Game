@@ -1039,21 +1039,10 @@
                     swatch.dataset.themeKey = themeKey;
                     swatch.dataset.category = category;
                     swatch.style.touchAction = 'none';
+                    // Selection/swap is handled on pointerdown because preventDefault suppresses reliable click events on touch.
                     swatch.onpointerdown = e => {
                         e.preventDefault();
                         e.stopPropagation();
-                        dragState.color = c;
-                        dragState.theme = themeKey;
-                        dragState.category = category;
-                        dragState.pointerId = e.pointerId;
-                        dragState.startX = e.clientX;
-                        dragState.startY = e.clientY;
-                        dragState.isDragging = false;
-                    };
-                    swatch.onclick = e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (dragState.isDragging) return;
                         if (dragState.tapColor && dragState.tapTheme === themeKey && dragState.tapSwatch !== swatch) {
                             if (dragState.tapCategory === category) {
                                 applySwatchReplace({
@@ -1073,13 +1062,31 @@
                             setSwatchSelected(null);
                             APP.Engine.setLogicState(IDLE);
                             setDragGhost({ visible: false });
+                            dragState.color = null;
+                            dragState.theme = null;
+                            dragState.category = null;
+                            dragState.pointerId = null;
+                            dragState.startX = null;
+                            dragState.startY = null;
+                            dragState.isDragging = false;
                             return;
                         }
+
                         dragState.tapColor = c;
                         dragState.tapTheme = themeKey;
                         dragState.tapCategory = category;
                         dragState.tapSwatch = swatch;
                         setSwatchSelected(swatch);
+
+                        dragState.color = c;
+                        dragState.theme = themeKey;
+                        dragState.category = category;
+                        dragState.pointerId = e.pointerId;
+                        dragState.startX = e.clientX;
+                        dragState.startY = e.clientY;
+                        dragState.isDragging = false;
+                        APP.Engine.setLogicState(THEME_DRAG);
+                        setDragGhost({ visible: true, color: c, x: e.clientX, y: e.clientY });
                     };
                     return swatch;
                 };
@@ -1249,7 +1256,6 @@
                 getDragState: () => ({ ...dragState }),
                 markPointerDrag: () => {
                     dragState.isDragging = true;
-                    APP.Engine.setLogicState(THEME_DRAG);
                 },
                 clearDragState: () => {
                     dragState.color = null;
