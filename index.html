@@ -2800,9 +2800,19 @@
                 const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose });
                 const solutions = solverResult.ok ? (solverResult.solutions || []) : [];
+                const normalizedPaths = solutions
+                    .map(sol => {
+                        if (Array.isArray(sol)) return sol;
+                        if (sol && Array.isArray(sol.path)) return sol.path;
+                        return null;
+                    })
+                    .filter(path => Array.isArray(path) && path.length > 0);
+                if (solutions.length > 0 && normalizedPaths.length === 0) {
+                    console.warn('Solver returned malformed solution entries.', { purpose, solutions });
+                }
 
-                if (solutions.length > 0) {
-                    APP.Solver.applySolutionsToEngine(solutions.map(sv => sv.path), purpose);
+                if (normalizedPaths.length > 0) {
+                    APP.Solver.applySolutionsToEngine(normalizedPaths, purpose);
                 } else if (solverResult.rawStatus === 'no-solution-proven') {
                     showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution proven.');
@@ -5609,12 +5619,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.State.ENGINE.runtime.isHintExpanded = !APP.State.ENGINE.runtime.isHintExpanded;
         };
         const updateHintLabel = () => { const hasSaved = APP.State.ENGINE.level && APP.State.ENGINE.level.hints && APP.State.ENGINE.level.hints.length > 0; const mainLabel = document.getElementById('hintMainLabel'); if (APP.State.ENGINE.runtime.isHintExpanded) { APP.UI.setTextContent(mainLabel, 'Saved Hint'); APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1'); } else { APP.UI.setTextContent(mainLabel, 'Hint'); APP.UI.setInlineStyle(mainLabel, 'color', 'white'); } };
-        hintBtn.onclick = (e) => {
+        hintBtn.onclick = async (e) => {
             APP.UI.closeAllModals();
             if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
             if (!APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); } else {
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
-                if (isTopHalf) APP.Solver.runGameSolver('hint'); else { if (APP.State.ENGINE.level?.hints?.length > 0) { APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints; APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0); APP.State.ENGINE.hinter.source = 'saved'; APP.Solver.startHintAnimation(); } else showMessage("No saved hint.", "text-white font-black"); }
+                if (isTopHalf) {
+                    try {
+                        await APP.Solver.runGameSolver('hint');
+                    } catch (err) {
+                        console.error('Hint solve failed:', err);
+                        showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
+                        APP.Engine.setOverlayState(OVERLAY_NONE);
+                    }
+                } else { if (APP.State.ENGINE.level?.hints?.length > 0) { APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints; APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0); APP.State.ENGINE.hinter.source = 'saved'; APP.Solver.startHintAnimation(); } else showMessage("No saved hint.", "text-white font-black"); }
                 toggleHint(); updateHintLabel();
             }
         };
@@ -5715,7 +5733,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!isVisible) APP.UI.openModal('editorHelpModal');
         };
         document.getElementById('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
-        document.getElementById('editMegaSolver').onclick = () => { APP.UI.closeAllModals(); if (!APP.State.ENGINE.editor.workingLevel) return; APP.Editor.applyMetricsFromUI(); APP.Solver.runGameSolver('solve'); };
+        document.getElementById('editMegaSolver').onclick = async () => {
+            APP.UI.closeAllModals();
+            if (!APP.State.ENGINE.editor.workingLevel) return;
+            APP.Editor.applyMetricsFromUI();
+            try {
+                await APP.Solver.runGameSolver('solve');
+            } catch (err) {
+                console.error('Editor solve failed:', err);
+                showMessage(`Solve failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
+                APP.Engine.setOverlayState(OVERLAY_NONE);
+            }
+        };
         document.getElementById('editCopyMetrics').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const len = APP.Engine.getRealLength(); APP.UI.setInputValue('editReqLen', len); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.intersections); APP.Editor.applyMetricsFromUI(); APP.UI.showMessage("Metrics Set", "text-white font-black"); } };
 
         };
