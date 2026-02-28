@@ -3347,21 +3347,19 @@
 
                 function getScreenPos(cx, cy) { const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const { tx, ty } = APP.LevelUtils.transformPoint(cx, cy, APP.State.ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * APP.State.ENGINE.viewport.cellW, sy: (ty + 0.5) * APP.State.ENGINE.viewport.cellH }; }
 
-                function drawBombAsset(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const scale = s / 100; ctx.scale(scale, scale); ctx.beginPath(); ctx.arc(0, 10, 25, 0, Math.PI * 2); ctx.fillStyle = '#334155'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, -15); ctx.quadraticCurveTo(15, -30, 30, -25); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 4; ctx.stroke(); ctx.beginPath(); ctx.arc(30, -25, 5, 0, Math.PI * 2); ctx.fillStyle = '#ef4444'; ctx.fill(); ctx.beginPath(); ctx.arc(30, -25, 2.5, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill(); ctx.beginPath(); ctx.moveTo(-5, -15); ctx.lineTo(5, -15); ctx.lineTo(5, -5); ctx.lineTo(-5, -5); ctx.closePath(); ctx.fillStyle = '#64748b'; ctx.fill(); ctx.restore(); }
+                const DRAW_REGISTRY = {
+                    bomb(drawCtx, size) { const scale = size / 100; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = '#94a3b8'; drawCtx.lineWidth = 4; drawCtx.stroke(); drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = '#ef4444'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill(); },
+                    goose(drawCtx, size, color, options = {}) { if (options.isCheatReveal) drawCtx.globalAlpha = 0.5; const mapX = (v) => -size / 2 + (v / 100 * size), mapY = (v) => -size / 2 + (v / 100 * size); drawCtx.fillStyle = '#000000'; drawCtx.beginPath(); drawCtx.moveTo(mapX(30), mapY(0)); drawCtx.lineTo(mapX(70), mapY(0)); drawCtx.lineTo(mapX(100), mapY(30)); drawCtx.lineTo(mapX(100), mapY(70)); drawCtx.lineTo(mapX(70), mapY(100)); drawCtx.lineTo(mapX(30), mapY(100)); drawCtx.lineTo(mapX(0), mapY(70)); drawCtx.lineTo(mapX(0), mapY(30)); drawCtx.closePath(); drawCtx.fill(); drawCtx.fillStyle = '#FFFFFF'; drawCtx.beginPath(); drawCtx.moveTo(mapX(25), mapY(60)); drawCtx.quadraticCurveTo(mapX(25), mapY(45), mapX(45), mapY(45)); drawCtx.lineTo(mapX(65), mapY(45)); drawCtx.quadraticCurveTo(mapX(75), mapY(45), mapX(75), mapY(55)); drawCtx.quadraticCurveTo(mapX(75), mapY(65), mapX(65), mapY(65)); drawCtx.lineTo(mapX(40), mapY(65)); drawCtx.quadraticCurveTo(mapX(25), mapY(65), mapX(25), mapY(60)); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(25), mapY(55)); drawCtx.lineTo(mapX(15), mapY(45)); drawCtx.lineTo(mapX(30), mapY(55)); drawCtx.closePath(); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(60), mapY(45)); drawCtx.lineTo(mapX(60), mapY(25)); drawCtx.quadraticCurveTo(mapX(60), mapY(18), mapX(68), mapY(18)); drawCtx.quadraticCurveTo(mapX(75), mapY(18), mapX(75), mapY(25)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.lineTo(mapX(68), mapY(35)); drawCtx.lineTo(mapX(68), mapY(45)); drawCtx.closePath(); drawCtx.fill(); drawCtx.fillStyle = '#000000'; drawCtx.beginPath(); drawCtx.arc(mapX(70), mapY(23), size * 0.02, 0, Math.PI * 2); drawCtx.fill(); drawCtx.fillStyle = '#f97316'; drawCtx.beginPath(); drawCtx.moveTo(mapX(75), mapY(29)); drawCtx.lineTo(mapX(88), mapY(32)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.closePath(); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(45), mapY(65)); drawCtx.lineTo(mapX(40), mapY(78)); drawCtx.lineTo(mapX(52), mapY(78)); drawCtx.closePath(); drawCtx.moveTo(mapX(58), mapY(65)); drawCtx.lineTo(mapX(53), mapY(78)); drawCtx.lineTo(mapX(65), mapY(78)); drawCtx.closePath(); drawCtx.fill(); },
+                    prohibited(drawCtx, size) { drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke(); drawCtx.beginPath(); const lineLen = size * 0.25; drawCtx.moveTo(-lineLen, -lineLen); drawCtx.lineTo(lineLen, lineLen); drawCtx.stroke(); },
+                    required(drawCtx, size, color, options = {}) { const tilt = options.isSatisfied ? 15 : -15; drawCtx.rotate(tilt * Math.PI / 180); const scale = size / 35; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.moveTo(-1, 0); drawCtx.lineTo(1, 0); drawCtx.lineTo(1.5, -12); drawCtx.lineTo(-1.5, -12); drawCtx.closePath(); drawCtx.fillStyle = '#94a3b8'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(0, -18, 7, 0, Math.PI * 2); drawCtx.fillStyle = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped; drawCtx.fill(); },
+                    mustCross(drawCtx, size, color) { drawCtx.strokeStyle = color; drawCtx.globalAlpha = 0.25; drawCtx.lineWidth = size * 0.08; const outer = size * 0.4, inner = size * 0.18; drawCtx.beginPath(); drawCtx.moveTo(-outer, -inner); drawCtx.lineTo(-inner, -inner); drawCtx.lineTo(-inner, -outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(outer, -inner); drawCtx.lineTo(inner, -inner); drawCtx.lineTo(inner, -outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(-outer, inner); drawCtx.lineTo(-inner, inner); drawCtx.lineTo(-inner, outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(outer, inner); drawCtx.lineTo(inner, inner); drawCtx.lineTo(inner, outer); drawCtx.stroke(); },
+                    filter(drawCtx, size, color, options = {}) { if (options.axis === V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); },
+                    flippingFilter(drawCtx, size, color, options = {}) { drawCtx.rotate(options.rotation || 0); if (options.axis === V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); if (APP.State.ENGINE.mode === EDITOR) { drawCtx.globalAlpha = options.crossed ? 0.4 : 1.0; drawCtx.fillStyle = color; drawCtx.font = `900 ${size * 0.45}px sans-serif`; drawCtx.textAlign = 'center'; drawCtx.textBaseline = 'middle'; drawCtx.fillText('↺', 0, 0); } }
+                };
+
+                function drawAsset(type, x, y, options = {}) { const drawer = DRAW_REGISTRY[type]; if (!drawer) return; const { sx, sy } = getScreenPos(x, y); const size = options.size ?? APP.State.ENGINE.viewport.cellW; ctx.save(); ctx.translate(sx, sy); ctx.beginPath(); drawer(ctx, size, options.color, options); ctx.restore(); }
 
                 function drawPath(pathArr, isJumpSet, strokeStyle, width, isCaution = false) { if (!pathArr.length) return; ctx.save(); ctx.lineWidth = width; ctx.lineCap = isCaution ? 'butt' : 'round'; ctx.lineJoin = 'round'; const drawDot = (sx, sy, color) => { ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(sx, sy, width / 2, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }; if (pathArr.length === 1 && !isCaution) { const start = APP.LevelUtils.UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); drawDot(sStart.sx, sStart.sy, (strokeStyle === 'rainbow') ? '#ff0000' : strokeStyle); ctx.restore(); return; } if (isCaution) { const trace = () => { const start = APP.LevelUtils.UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); ctx.beginPath(); ctx.moveTo(sStart.sx, sStart.sy); ctx.lineTo(sStart.sx, sStart.sy); for (let i = 1; i < pathArr.length; i++) { const p = APP.LevelUtils.UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); if (isJumpSet.has(i)) { ctx.moveTo(s.sx, s.sy); ctx.lineTo(s.sx, s.sy); } else { ctx.lineTo(s.sx, s.sy); } } }; ctx.strokeStyle = '#fbbf24'; trace(); ctx.stroke(); ctx.strokeStyle = '#000000'; ctx.setLineDash([width, width]); trace(); ctx.stroke(); ctx.setLineDash([]); } else if (APP.State.ENGINE.rainbowActive) { const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']; let totalLength = 0; const segments = []; for (let i = 1; i < pathArr.length; i++) { if (isJumpSet.has(i)) continue; const p1 = APP.LevelUtils.UNPACK(pathArr[i - 1]); const p2 = APP.LevelUtils.UNPACK(pathArr[i]); const s1 = getScreenPos(p1.x, p1.y); const s2 = getScreenPos(p2.x, p2.y); const dx = s2.sx - s1.sx; const dy = s2.sy - s1.sy; const len = Math.hypot(dx, dy); segments.push({ s1, s2, len }); totalLength += len; } const start = APP.LevelUtils.UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); drawDot(sStart.sx, sStart.sy, colors[0]); let curTravel = 0; segments.forEach(seg => { const mid = curTravel + seg.len / 2; const t = mid / Math.max(totalLength, 1); const colorIndex = Math.floor(t * colors.length) % colors.length; ctx.strokeStyle = colors[colorIndex]; ctx.beginPath(); ctx.moveTo(seg.s1.sx, seg.s1.sy); ctx.lineTo(seg.s2.sx, seg.s2.sy); ctx.stroke(); curTravel += seg.len; }); let jumpTravel = 0; for (let i = 1; i < pathArr.length; i++) { if (isJumpSet.has(i)) { const p = APP.LevelUtils.UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); const t = jumpTravel / Math.max(totalLength, 1); const colorIndex = Math.floor(t * colors.length) % colors.length; drawDot(s.sx, s.sy, colorIndex >= 0 ? colors[colorIndex] : colors[0]); } else { const p1 = APP.LevelUtils.UNPACK(pathArr[i - 1]); const p2 = APP.LevelUtils.UNPACK(pathArr[i]); jumpTravel += Math.hypot(p2.x - p1.x, p2.y - p1.y) * APP.State.ENGINE.viewport.cellW; } } } else { ctx.strokeStyle = strokeStyle; const trace = () => { const start = APP.LevelUtils.UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); ctx.beginPath(); ctx.moveTo(sStart.sx, sStart.sy); ctx.lineTo(sStart.sx, sStart.sy); for (let i = 1; i < pathArr.length; i++) { const p = APP.LevelUtils.UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); if (isJumpSet.has(i)) { ctx.moveTo(s.sx, s.sy); ctx.lineTo(s.sx, s.sy); } else { ctx.lineTo(s.sx, s.sy); } } }; trace(); ctx.stroke(); } ctx.restore(); }
-
-                function drawProhibitedAsset(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); ctx.beginPath(); ctx.arc(0, 0, s * 0.35, 0, Math.PI * 2); ctx.strokeStyle = "#ef4444"; ctx.lineWidth = s * 0.1; ctx.stroke(); ctx.beginPath(); const lineLen = s * 0.25; ctx.moveTo(-lineLen, -lineLen); ctx.lineTo(lineLen, lineLen); ctx.stroke(); ctx.restore(); }
-
-                function drawRequiredAsset(ctx, cx, cy, s, hit, colors) { ctx.save(); ctx.translate(cx, cy); const tilt = hit ? 15 : -15; ctx.rotate(tilt * Math.PI / 180); const scale = s / 35; ctx.scale(scale, scale); ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(1, 0); ctx.lineTo(1.5, -12); ctx.lineTo(-1.5, -12); ctx.closePath(); ctx.fillStyle = '#94a3b8'; ctx.fill(); ctx.beginPath(); ctx.arc(0, -18, 7, 0, Math.PI * 2); ctx.fillStyle = hit ? colors.pin : colors.pinUnflipped; ctx.fill(); ctx.restore(); }
-
-                function drawMustCrossAsset(ctx, cx, cy, s, color) { ctx.save(); ctx.strokeStyle = color; ctx.globalAlpha = 0.25; ctx.lineWidth = s * 0.08; const outer = s * 0.4, inner = s * 0.18; ctx.beginPath(); ctx.moveTo(cx - outer, cy - inner); ctx.lineTo(cx - inner, cy - inner); ctx.lineTo(cx - inner, cy - outer); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx + outer, cy - inner); ctx.lineTo(cx + inner, cy - inner); ctx.lineTo(cx + inner, cy - outer); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx - outer, cy + inner); ctx.lineTo(cx - inner, cy + inner); ctx.lineTo(cx - inner, cy + outer); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx + outer, cy + inner); ctx.lineTo(cx + inner, cy + inner); ctx.lineTo(cx + inner, cy + outer); ctx.stroke(); ctx.restore(); }
-
-                function drawGooseAsset(ctx, cx, cy, s, isCheatReveal = false) { ctx.save(); if (isCheatReveal) ctx.globalAlpha = 0.5; const mapX = (v) => cx - s/2 + (v / 100 * s), mapY = (v) => cy - s/2 + (v / 100 * s); ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.moveTo(mapX(30), mapY(0)); ctx.lineTo(mapX(70), mapY(0)); ctx.lineTo(mapX(100), mapY(30)); ctx.lineTo(mapX(100), mapY(70)); ctx.lineTo(mapX(70), mapY(100)); ctx.lineTo(mapX(30), mapY(100)); ctx.lineTo(mapX(0), mapY(70)); ctx.lineTo(mapX(0), mapY(30)); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.moveTo(mapX(25), mapY(60)); ctx.quadraticCurveTo(mapX(25), mapY(45), mapX(45), mapY(45)); ctx.lineTo(mapX(65), mapY(45)); ctx.quadraticCurveTo(mapX(75), mapY(45), mapX(75), mapY(55)); ctx.quadraticCurveTo(mapX(75), mapY(65), mapX(65), mapY(65)); ctx.lineTo(mapX(40), mapY(65)); ctx.quadraticCurveTo(mapX(25), mapY(65), mapX(25), mapY(60)); ctx.fill(); ctx.beginPath(); ctx.moveTo(mapX(25), mapY(55)); ctx.lineTo(mapX(15), mapY(45)); ctx.lineTo(mapX(30), mapY(55)); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(mapX(60), mapY(45)); ctx.lineTo(mapX(60), mapY(25)); ctx.quadraticCurveTo(mapX(60), mapY(18), mapX(68), mapY(18)); ctx.quadraticCurveTo(mapX(75), mapY(18), mapX(75), mapY(25)); ctx.lineTo(mapX(75), mapY(35)); ctx.lineTo(mapX(68), mapY(35)); ctx.lineTo(mapX(68), mapY(45)); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#000000'; ctx.beginPath(); ctx.arc(mapX(70), mapY(23), s * 0.02, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.moveTo(mapX(75), mapY(29)); ctx.lineTo(mapX(88), mapY(32)); ctx.lineTo(mapX(75), mapY(35)); ctx.closePath(); ctx.fill(); ctx.beginPath(); ctx.moveTo(mapX(45), mapY(65)); ctx.lineTo(mapX(40), mapY(78)); ctx.lineTo(mapX(52), mapY(78)); ctx.closePath(); ctx.moveTo(mapX(58), mapY(65)); ctx.lineTo(mapX(53), mapY(78)); ctx.lineTo(mapX(65), mapY(78)); ctx.closePath(); ctx.fill(); ctx.restore(); }
-
-                function drawFilterAsset(ctx, cx, cy, s, axis, color) { ctx.save(); ctx.translate(cx, cy); if (axis === V) ctx.rotate(Math.PI / 2); ctx.fillStyle = color; ctx.globalAlpha = 0.25; const w = s * 0.45, t = s * 0.08; ctx.fillRect(-s/2 + s*0.1, -w/2, s*0.8, t); ctx.fillRect(-s/2 + s*0.1, w/2 - t, s*0.8, t); ctx.restore(); }
-
-                function drawFlippingFilter(ctx, cx, cy, s, axis, color, rotation, crossed) { ctx.save(); ctx.translate(cx, cy); ctx.rotate(rotation); if (axis === V) ctx.rotate(Math.PI / 2); ctx.fillStyle = color; ctx.globalAlpha = 0.25; const w = s * 0.45, t = s * 0.08; ctx.fillRect(-s/2 + s*0.1, -w/2, s*0.8, t); ctx.fillRect(-s/2 + s*0.1, w/2 - t, s*0.8, t); if (APP.State.ENGINE.mode === EDITOR) { ctx.globalAlpha = crossed ? 0.4 : 1.0; ctx.fillStyle = color; ctx.font = `900 ${s * 0.45}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('↺', 0, 0); } ctx.restore(); }
 
                 function drawScorchMark(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 0.4); grad.addColorStop(0, 'rgba(0,0,0,0.5)'); grad.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = grad; ctx.beginPath(); const radii = [0.35, 0.15, 0.4, 0.2, 0.3, 0.15, 0.35, 0.2, 0.4, 0.15, 0.3, 0.25, 0.35, 0.15, 0.4, 0.2]; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; const r = s * radii[i]; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.restore(); }
 
@@ -3393,13 +3391,13 @@
 
 
 
-                l.filterMap.forEach((axis, k) => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawFilterAsset(ctx, sx, sy, vp.cellW, APP.LevelUtils.transformAxis(axis, APP.State.ENGINE.variant), th.colors.filter); });
+                l.filterMap.forEach((axis, k) => { const p = APP.LevelUtils.UNPACK(k); drawAsset('filter', p.x, p.y, { axis: APP.LevelUtils.transformAxis(axis, APP.State.ENGINE.variant), color: th.colors.filter }); });
 
 
 
                 l.flippingFilterMap.forEach((baseAxis, k) => {
 
-                    const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y);
+                    const p = APP.LevelUtils.UNPACK(k);
 
                     const crossed = APP.State.ENGINE.crossedFlippingFilters.has(k);
 
@@ -3411,25 +3409,25 @@
 
                     const rotation = currentVisualFlips * (Math.PI / 2);
 
-                    drawFlippingFilter(ctx, sx, sy, vp.cellW, APP.LevelUtils.transformAxis(baseAxis, APP.State.ENGINE.variant), th.colors.filter, rotation, crossed);
+                    drawAsset('flippingFilter', p.x, p.y, { axis: APP.LevelUtils.transformAxis(baseAxis, APP.State.ENGINE.variant), color: th.colors.filter, rotation, crossed });
 
                 });
 
 
 
-                l.mustCrossKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawMustCrossAsset(ctx, sx, sy, vp.cellW, th.colors.cross); });
+                l.mustCrossKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); drawAsset('mustCross', p.x, p.y, { color: th.colors.cross }); });
 
                 l.blockSet.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2, cr = vp.cellW * 0.2; ctx.fillStyle = th.colors.block; ctx.beginPath(); ctx.roundRect(cx + 1, cy + 1, vp.cellW - 2, vp.cellH - 2, cr); ctx.fill(); ctx.fillStyle = th.grid; for(let r=1;r<=3;r++) for(let c=1;c<=3;c++) { ctx.beginPath(); ctx.arc(cx+(c*0.25*vp.cellW),cy+(r*0.25*vp.cellH),vp.cellW*0.045,0,Math.PI*2); ctx.fill(); } });
 
 
 
-                l.portalVisuals.forEach(pv => { const color = APP.State.ENGINE.mode === EDITOR ? pv.color : th.colors.portal; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [APP.LevelUtils.UNPACK(pv.k1), APP.LevelUtils.UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } }); }); ctx.setLineDash([]);
+                l.portalVisuals.forEach(pv => { const color = APP.State.ENGINE.mode === EDITOR ? pv.color : th.colors.portal; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [APP.LevelUtils.UNPACK(pv.k1), APP.LevelUtils.UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawAsset('prohibited', p.x, p.y); } }); }); ctx.setLineDash([]);
 
 
 
                 if (APP.State.ENGINE.editor.pendingPortal) { const pp = APP.LevelUtils.UNPACK(APP.State.ENGINE.editor.pendingPortal), { sx, sy } = getScreenPos(pp.x, pp.y); ctx.strokeStyle = th.colors.portal; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = th.colors.portal + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); }
 
-                l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; drawRequiredAsset(ctx, sx, sy, vp.cellW, isHit, th.colors); });
+                l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; drawAsset('required', p.x, p.y, { isSatisfied: isHit, themeColors: th.colors }); });
 
 
 
@@ -3437,7 +3435,7 @@
 
 
 
-                l.gateKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); ctx.save(); ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4); const color = (APP.State.ENGINE.activeGateKey === k || !APP.State.ENGINE.activeGateKey) ? th.colors.gate : '#94a3b8'; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for(let i=0; i<2; i++) { const offset = (i - 0.5) * vp.cellW * 0.32; ctx.beginPath(); ctx.moveTo(offset - vp.cellW * 0.1, -vp.cellW * 0.2); ctx.lineTo(offset + vp.cellW * 0.1, 0); ctx.lineTo(offset - vp.cellW * 0.1, vp.cellW * 0.2); ctx.stroke(); } ctx.restore(); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } });
+                l.gateKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); ctx.save(); ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4); const color = (APP.State.ENGINE.activeGateKey === k || !APP.State.ENGINE.activeGateKey) ? th.colors.gate : '#94a3b8'; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for(let i=0; i<2; i++) { const offset = (i - 0.5) * vp.cellW * 0.32; ctx.beginPath(); ctx.moveTo(offset - vp.cellW * 0.1, -vp.cellW * 0.2); ctx.lineTo(offset + vp.cellW * 0.1, 0); ctx.lineTo(offset - vp.cellW * 0.1, vp.cellW * 0.2); ctx.stroke(); } ctx.restore(); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawAsset('prohibited', p.x, p.y); } });
 
 
 
@@ -3465,11 +3463,11 @@
 
 
 
-                l.falseGoalKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (APP.State.ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (APP.State.ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (APP.State.ENGINE.mode === EDITOR) { drawBombAsset(ctx, sx, sy, vp.cellW); } });
+                l.falseGoalKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (APP.State.ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (APP.State.ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (APP.State.ENGINE.mode === EDITOR) { drawAsset('bomb', p.x, p.y); } });
 
 
 
-                l.gooseSet.forEach(k => { if (APP.State.ENGINE.revealedGeese.has(k) || APP.State.ENGINE.cheatActive || APP.State.ENGINE.mode === EDITOR) { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawGooseAsset(ctx, sx, sy, vp.cellW, APP.State.ENGINE.cheatActive && !APP.State.ENGINE.revealedGeese.has(k)); } });
+                l.gooseSet.forEach(k => { if (APP.State.ENGINE.revealedGeese.has(k) || APP.State.ENGINE.cheatActive || APP.State.ENGINE.mode === EDITOR) { const p = APP.LevelUtils.UNPACK(k); drawAsset('goose', p.x, p.y, { isCheatReveal: APP.State.ENGINE.cheatActive && !APP.State.ENGINE.revealedGeese.has(k) }); } });
 
 
 
@@ -3487,21 +3485,7 @@
 
                     getScreenPos,
 
-                    drawBombAsset,
-
                     drawPath,
-
-                    drawProhibitedAsset,
-
-                    drawRequiredAsset,
-
-                    drawMustCrossAsset,
-
-                    drawGooseAsset,
-
-                    drawFilterAsset,
-
-                    drawFlippingFilter,
 
                     drawScorchMark,
 
