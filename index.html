@@ -17,16 +17,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <style>
-        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; --theme-mega-output-bg: #0f172a; --theme-mega-output-text: #f0abfc; --theme-mega-output-border: #334155; --theme-mega-primary-bg: #a21caf; --theme-mega-primary-text: #ffffff; --theme-mega-primary-border: #d946ef; --theme-mega-secondary-bg: #86198f; --theme-mega-secondary-text: #ffffff; --theme-mega-secondary-border: #d946ef; --theme-mega-gemini-bg: #4338ca; --theme-mega-gemini-text: #ffffff; --theme-mega-gemini-border: #6366f1; --theme-mega-copy-bg: #ffffff; --theme-mega-copy-text: #334155; --theme-mega-copy-border: #cbd5e1; --theme-mega-desc-text: #64748b; }
-        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; }
-        canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: white; }
+        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; --theme-mega-output-bg: #0f172a; --theme-mega-output-text: #f0abfc; --theme-mega-output-border: #334155; --theme-mega-primary-bg: #a21caf; --theme-mega-primary-text: #ffffff; --theme-mega-primary-border: #d946ef; --theme-mega-secondary-bg: #86198f; --theme-mega-secondary-text: #ffffff; --theme-mega-secondary-border: #d946ef; --theme-mega-gemini-bg: #4338ca; --theme-mega-gemini-text: #ffffff; --theme-mega-gemini-border: #6366f1; --theme-mega-copy-bg: #ffffff; --theme-mega-copy-text: #334155; --theme-mega-copy-border: #cbd5e1; --theme-mega-desc-text: #64748b; --theme-body-text: #111827; --theme-disabled-btn-bg: #94a3b8; --theme-canvas-bg: #ffffff; --theme-loading-overlay-bg: rgba(15,23,42,0.6); --theme-loading-panel-bg: #0f172a; --theme-loading-panel-border: #334155; --theme-loading-title: #ffffff; --theme-loading-status: #38bdf8; --theme-loading-percent: #ffffff; --theme-loading-track: #1e293b; --theme-loading-bar: #0ea5e9; --theme-loading-error: #7dd3fc; --theme-search-overlay-bg: rgba(15,23,42,0.9); --theme-search-mega-status-text: #f0abfc; --theme-search-mega-status-border: rgba(217,70,239,0.3); --theme-search-label: #7dd3fc; --theme-search-dot: #38bdf8; --theme-search-timer: #ffffff; --theme-search-close: rgba(255,255,255,0.4); --theme-search-close-hover: #ffffff; --theme-jumpscare-goose-bg: rgba(0,0,0,0.4); --theme-jumpscare-goose-text: #ffffff; --theme-jumpscare-bomb-bg: rgba(0,0,0,0.6); --theme-jumpscare-bomb-top-text: #facc15; --theme-jumpscare-bomb-bottom-text: #f97316; --theme-shell-btn-bg: rgba(203,213,225,0.6); --theme-shell-btn-bg-hover: rgba(148,163,184,0.6); --theme-shell-btn-text: #475569; --theme-shell-btn-border: rgba(255,255,255,0.2); --theme-shell-mute-bg: rgba(255,255,255,0.5); --theme-shell-mute-bg-hover: rgba(255,255,255,0.8); --theme-shell-mute-text: #64748b; --theme-shell-mute-border: rgba(255,255,255,0.2); --theme-header-nav-bg: rgba(255,255,255,0.2); --theme-header-nav-bg-hover: rgba(255,255,255,0.3); --theme-header-nav-text: #ffffff; --theme-header-divider: rgba(226,232,240,0.2); --theme-portal-pending: #999999; --theme-bomb-blast-ring: #ef4444; --theme-bomb-blast-rays: #f97316; }
+        body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; color: var(--theme-body-text); }
+        canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: var(--theme-canvas-bg, #ffffff); }
         canvas:focus { outline: none; }
         .modal { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
         .modal-content { transition: all 0.3s ease; }
         #winSubMessage { font-family: 'Caveat', cursive; }
         button:active:not(:disabled) { transform: translateY(1px); }
         button:focus-visible { outline: none; box-shadow: none; }
-        button:disabled { cursor: not-allowed; opacity: 0.5; filter: grayscale(1); background-color: #94a3b8 !important; }
+        button:disabled { cursor: not-allowed; opacity: 0.5; filter: grayscale(1); background-color: var(--theme-disabled-btn-bg) !important; }
         .searching-dot { animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
         textarea { font-family: monospace; font-size: 0.7rem; line-height: 1.2; resize: none; transition: all 0.2s ease; }
@@ -136,7 +136,7 @@
         #alertOverlay { pointer-events: none; transition: opacity 0.2s ease; }
     </style>
 </head>
-<body class="bg-slate-100 text-gray-900 flex flex-col items-center justify-start min-h-[100dvh] w-full overflow-y-auto overflow-x-hidden p-[var(--ui-pad)]">
+<body class="flex flex-col items-center justify-start min-h-[100dvh] w-full overflow-y-auto overflow-x-hidden p-[var(--ui-pad)]">
 <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <g id="def-gate"><g transform="rotate(-45 50 50)" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M25 30 L50 55 L25 80" /><path d="M55 30 L80 55 L55 80" /></g></g>
@@ -161,17 +161,17 @@
 
 <div id="dragGhost" class="flex items-center justify-center bg-white rounded-lg border-2 border-sky-500 border-dashed"></div>
 
-<div id="loadingOverlay" class="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-8 transition-opacity duration-500">
-    <div class="w-full max-w-xs bg-slate-900 p-6 rounded-2xl border border-slate-700 shadow-2xl">
+<div id="loadingOverlay" class="fixed inset-0 z-[100] bg-[var(--theme-loading-overlay-bg)] backdrop-blur-sm flex items-center justify-center p-8 transition-opacity duration-500">
+    <div class="w-full max-w-xs bg-[var(--theme-loading-panel-bg)] p-6 rounded-2xl border border-[var(--theme-loading-panel-border)] shadow-2xl">
         <div class="flex justify-between items-end mb-4">
             <div>
-                <h1 class="text-white font-black text-xl tracking-tighter uppercase leading-none">Pathfinder</h1>
-                <p id="loadStatusLabel" class="text-sky-400 text-[0.6rem] font-bold uppercase tracking-widest mt-1">Initing Systems...</p>
+                <h1 class="text-[var(--theme-loading-title)] font-black text-xl tracking-tighter uppercase leading-none">Pathfinder</h1>
+                <p id="loadStatusLabel" class="text-[var(--theme-loading-status)] text-[0.6rem] font-bold uppercase tracking-widest mt-1">Initing Systems...</p>
             </div>
-            <p id="loadPercent" class="text-white font-mono text-sm">0%</p>
+            <p id="loadPercent" class="text-[var(--theme-loading-percent)] font-mono text-sm">0%</p>
         </div>
-        <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden"><div id="loadProgressBar" class="h-full bg-sky-500 w-0 transition-all duration-200"></div></div>
-        <p id="loadErrorMessage" class="mt-4 text-sky-300 text-[0.6rem] font-medium hidden text-center italic leading-relaxed">Remote resource unavailable. Engaging local fallback array.</p>
+        <div class="w-full h-1.5 bg-[var(--theme-loading-track)] rounded-full overflow-hidden"><div id="loadProgressBar" class="h-full bg-[var(--theme-loading-bar)] w-0 transition-all duration-200"></div></div>
+        <p id="loadErrorMessage" class="mt-4 text-[var(--theme-loading-error)] text-[0.6rem] font-medium hidden text-center italic leading-relaxed">Remote resource unavailable. Engaging local fallback array.</p>
     </div>
 </div>
 
@@ -191,21 +191,21 @@
                     <circle cx="3.5" cy="7" r="0.525" fill="var(--theme-logo-goal)"/>
                 </svg>
             </div>
-            <div id="headerMiddle" class="flex-shrink-0 bg-red-700 flex items-center transition-colors duration-300 relative border-r border-slate-200/20">
+            <div id="headerMiddle" class="flex-shrink-0 flex items-center transition-colors duration-300 relative border-r border-[var(--theme-header-divider)]">
                 <div id="headerMiddleContent">
                     <div id="headerMiddleColLeft" class="header-middle-col">
                         <svg id="completionBurst" viewBox="0 0 100 100" class="w-8 h-8 hidden shrink-0"><use href="#def-completion"/></svg>
                     </div>
                     <div id="headerMiddleColCenter" class="header-middle-col">
                         <div id="levelInfoWrap" class="min-w-0">
-                            <span id="levelLabelText" class="text-[0.6rem] font-black text-red-100/60 uppercase tracking-widest leading-none mb-1">Level</span>
+                            <span id="levelLabelText" class="text-[0.6rem] font-black uppercase tracking-widest leading-none mb-1">Level</span>
                             <p id="levelTitle" class="text-white font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
                         </div>
                     </div>
                     <div id="headerMiddleColRight" class="header-middle-col">
                         <div id="levelNavigator">
-                            <button id="prevLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">◄</button>
-                            <button id="nextLevelBtn" class="bg-white/20 text-white w-6 h-6 rounded flex items-center justify-center hover:bg-white/30 transition shadow-sm text-[0.6rem]">►</button>
+                            <button id="prevLevelBtn" class="w-6 h-6 rounded flex items-center justify-center transition shadow-sm text-[0.6rem] bg-[var(--theme-header-nav-bg)] text-[var(--theme-header-nav-text)] hover:bg-[var(--theme-header-nav-bg-hover)]">◄</button>
+                            <button id="nextLevelBtn" class="w-6 h-6 rounded flex items-center justify-center transition shadow-sm text-[0.6rem] bg-[var(--theme-header-nav-bg)] text-[var(--theme-header-nav-text)] hover:bg-[var(--theme-header-nav-bg-hover)]">►</button>
                         </div>
                     </div>
                 </div>
@@ -222,31 +222,31 @@
             </div>
         </div>
 
-        <div id="canvasContainer" class="relative overflow-hidden bg-white">
+        <div id="canvasContainer" class="relative overflow-hidden">
             <canvas id="gameCanvas" width="800" height="800"></canvas>
-            <div id="gooseJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-black/40 backdrop-blur-sm overflow-hidden pointer-events-none">
+            <div id="gooseJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-[var(--theme-jumpscare-goose-bg)] backdrop-blur-sm overflow-hidden pointer-events-none">
                 <div class="relative w-full h-full flex flex-col items-center justify-center">
-                    <div class="absolute top-[15%] z-50 transform rotate-[-25deg] -translate-x-4"><p class="hand-drawn text-white text-4xl mb-2">YOU RAN INTO</p></div>
+                    <div class="absolute top-[15%] z-50 transform rotate-[-25deg] -translate-x-4"><p class="hand-drawn text-[var(--theme-jumpscare-goose-text)] text-4xl mb-2">YOU RAN INTO</p></div>
                     <div id="scaryGoose" class="w-[75%] aspect-square shake z-40 drop-shadow-2xl"><svg viewBox="0 0 100 100" class="w-full h-full"><use href="#def-goose"/></svg></div>
-                    <div class="absolute bottom-[15%] z-50 transform -rotate-[-25deg] translate-x-4"><p class="hand-drawn text-white text-5xl font-bold italic">A GOOSE</p></div>
+                    <div class="absolute bottom-[15%] z-50 transform -rotate-[-25deg] translate-x-4"><p class="hand-drawn text-[var(--theme-jumpscare-goose-text)] text-5xl font-bold italic">A GOOSE</p></div>
                 </div>
             </div>
-            <div id="bombJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-black/60 backdrop-blur-md overflow-hidden pointer-events-none">
+            <div id="bombJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-[var(--theme-jumpscare-bomb-bg)] backdrop-blur-md overflow-hidden pointer-events-none">
                 <div class="relative w-full h-full flex flex-col items-center justify-center">
-                    <div class="absolute top-[15%] z-50 transform rotate-[15deg] -translate-x-2"><p class="hand-drawn text-yellow-400 text-5xl mb-2 drop-shadow-lg">Bamboozled!</p></div>
+                    <div class="absolute top-[15%] z-50 transform rotate-[15deg] -translate-x-2"><p class="hand-drawn text-[var(--theme-jumpscare-bomb-top-text)] text-5xl mb-2 drop-shadow-lg">Bamboozled!</p></div>
                     <div id="scaryBomb" class="w-[65%] aspect-square shake z-40 drop-shadow-2xl"><svg viewBox="0 0 100 100" class="w-full h-full"><use href="#def-falsegoal"/></svg></div>
-                    <div class="absolute bottom-[15%] z-50 transform -rotate-[10deg] translate-x-2"><p class="hand-drawn text-orange-500 text-6xl font-bold drop-shadow-xl">BOOBY TRAP</p></div>
+                    <div class="absolute bottom-[15%] z-50 transform -rotate-[10deg] translate-x-2"><p class="hand-drawn text-[var(--theme-jumpscare-bomb-bottom-text)] text-6xl font-bold drop-shadow-xl">BOOBY TRAP</p></div>
                 </div>
             </div>
-            <div id="searchIndicator" class="absolute inset-0 flex items-center justify-center bg-slate-900/90 backdrop-blur-sm hidden z-20">
+            <div id="searchIndicator" class="absolute inset-0 flex items-center justify-center bg-[var(--theme-search-overlay-bg)] backdrop-blur-sm hidden z-20">
                 <div class="flex flex-col items-center gap-4 w-full px-8">
-                    <div id="megaStatus" class="hidden text-fuchsia-300 font-bold text-sm text-center animate-pulse whitespace-pre-line mb-2 tracking-widest border-b border-fuchsia-500/30 pb-2 w-full"></div>
+                    <div id="megaStatus" class="hidden text-[var(--theme-search-mega-status-text)] font-bold text-sm text-center animate-pulse whitespace-pre-line mb-2 tracking-widest border-b border-[var(--theme-search-mega-status-border)] pb-2 w-full"></div>
                     <div class="flex flex-col items-center gap-3">
-                        <span id="searchLabel" class="text-sm font-black uppercase tracking-widest text-center text-sky-300">Finding Solutions...</span>
-                        <div class="flex gap-1"><div class="w-2 h-2 bg-sky-400 rounded-full searching-dot" style="animation-delay: 0s"></div><div class="w-2 h-2 bg-sky-400 rounded-full searching-dot" style="animation-delay: 0.2s"></div><div class="w-2 h-2 bg-sky-400 rounded-full searching-dot" style="animation-delay: 0.4s"></div></div>
+                        <span id="searchLabel" class="text-sm font-black uppercase tracking-widest text-center text-[var(--theme-search-label)]">Finding Solutions...</span>
+                        <div class="flex gap-1"><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0s"></div><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0.2s"></div><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0.4s"></div></div>
                     </div>
-                    <div id="solverTimer" class="text-5xl font-mono text-white font-bold tracking-tighter tabular-nums">0.0s</div>
-                    <button id="solverCloseBtn" class="absolute top-4 right-4 text-white/40 hover:text-white hover:scale-110 transition p-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    <div id="solverTimer" class="text-5xl font-mono text-[var(--theme-search-timer)] font-bold tracking-tighter tabular-nums">0.0s</div>
+                    <button id="solverCloseBtn" class="absolute top-4 right-4 text-[var(--theme-search-close)] hover:text-[var(--theme-search-close-hover)] hover:scale-110 transition p-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
             </div>
             <div id="guideModal" class="screen-modal hidden flex flex-col modal-content">
@@ -433,7 +433,7 @@
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 text-white font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
                 <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 text-white font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
             </div>
-            <div id="alertOverlay" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-white/20 rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
+            <div id="alertOverlay" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
                 <p id="message" class="font-black text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
             </div>
         </div>
@@ -452,9 +452,9 @@
     </div>
 
     <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2 landscape-editor-tools">
-        <button id="orientationToggleBtn" class="px-3 bg-slate-300/60 backdrop-blur-md rounded-lg h-10 border border-white/20 shadow-md text-slate-700 font-black uppercase tracking-wider hover:bg-slate-400/60 transition text-[0.65rem] flex items-center justify-center min-w-[5.25rem]">Landscape</button>
-        <button id="openThemeModalBtn" class="px-3 bg-slate-300/60 backdrop-blur-md rounded-lg h-10 border border-white/20 shadow-md text-slate-700 font-black uppercase tracking-wider hover:bg-slate-400/60 transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem]">Themes</button>
-        <button id="muteBtn" class="bg-white/50 backdrop-blur-md text-slate-500 w-10 h-10 rounded-lg flex items-center justify-center hover:bg-white/80 transition shrink-0 shadow-md border border-white/20">
+        <button id="orientationToggleBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[5.25rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Landscape</button>
+        <button id="openThemeModalBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Themes</button>
+        <button id="muteBtn" class="backdrop-blur-md w-10 h-10 rounded-lg flex items-center justify-center transition shrink-0 shadow-md border bg-[var(--theme-shell-mute-bg)] text-[var(--theme-shell-mute-text)] border-[var(--theme-shell-mute-border)] hover:bg-[var(--theme-shell-mute-bg-hover)]">
             <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="22"></line><line id="muteSlash" x1="2" y1="2" x2="22" y2="22"></line></svg>
         </button>
     </div>
@@ -868,10 +868,50 @@
             root.style.setProperty('--theme-mega-gemini-bg', t.mega.geminiBg); root.style.setProperty('--theme-mega-gemini-text', t.text.megaGemini); root.style.setProperty('--theme-mega-gemini-border', t.mega.geminiBorder);
             root.style.setProperty('--theme-mega-copy-bg', t.mega.copyBg); root.style.setProperty('--theme-mega-copy-text', t.text.megaCopy); root.style.setProperty('--theme-mega-copy-border', t.mega.copyBorder);
             root.style.setProperty('--theme-mega-desc-text', t.text.megaDesc);
+            root.style.setProperty('--theme-body-text', t.text.body || '#111827');
+            root.style.setProperty('--theme-disabled-btn-bg', t.btns.disabled || '#94a3b8');
+            root.style.setProperty('--theme-canvas-bg', t.canvasBg);
+            root.style.setProperty('--theme-loading-overlay-bg', t.loading.overlayBg);
+            root.style.setProperty('--theme-loading-panel-bg', t.loading.panelBg);
+            root.style.setProperty('--theme-loading-panel-border', t.loading.panelBorder);
+            root.style.setProperty('--theme-loading-title', t.loading.title);
+            root.style.setProperty('--theme-loading-status', t.loading.status);
+            root.style.setProperty('--theme-loading-percent', t.loading.percent);
+            root.style.setProperty('--theme-loading-track', t.loading.track);
+            root.style.setProperty('--theme-loading-bar', t.loading.bar);
+            root.style.setProperty('--theme-loading-error', t.loading.error);
+            root.style.setProperty('--theme-search-overlay-bg', t.search.overlayBg);
+            root.style.setProperty('--theme-search-mega-status-text', t.search.megaStatusText);
+            root.style.setProperty('--theme-search-mega-status-border', t.search.megaStatusBorder);
+            root.style.setProperty('--theme-search-label', t.search.label);
+            root.style.setProperty('--theme-search-dot', t.search.dot);
+            root.style.setProperty('--theme-search-timer', t.search.timer);
+            root.style.setProperty('--theme-search-close', t.search.close);
+            root.style.setProperty('--theme-search-close-hover', t.search.closeHover);
+            root.style.setProperty('--theme-jumpscare-goose-bg', t.jumpscare.gooseBg);
+            root.style.setProperty('--theme-jumpscare-goose-text', t.jumpscare.gooseText);
+            root.style.setProperty('--theme-jumpscare-bomb-bg', t.jumpscare.bombBg);
+            root.style.setProperty('--theme-jumpscare-bomb-top-text', t.jumpscare.bombTopText);
+            root.style.setProperty('--theme-jumpscare-bomb-bottom-text', t.jumpscare.bombBottomText);
+            root.style.setProperty('--theme-shell-btn-bg', t.shell.btnBg);
+            root.style.setProperty('--theme-shell-btn-bg-hover', t.shell.btnBgHover);
+            root.style.setProperty('--theme-shell-btn-text', t.shell.btnText);
+            root.style.setProperty('--theme-shell-btn-border', t.shell.btnBorder);
+            root.style.setProperty('--theme-shell-mute-bg', t.shell.muteBg);
+            root.style.setProperty('--theme-shell-mute-bg-hover', t.shell.muteBgHover);
+            root.style.setProperty('--theme-shell-mute-text', t.shell.muteText);
+            root.style.setProperty('--theme-shell-mute-border', t.shell.muteBorder);
+            root.style.setProperty('--theme-header-nav-bg', t.header.navBg);
+            root.style.setProperty('--theme-header-nav-bg-hover', t.header.navBgHover);
+            root.style.setProperty('--theme-header-nav-text', t.header.navText);
+            root.style.setProperty('--theme-header-divider', t.header.divider);
+            root.style.setProperty('--theme-portal-pending', t.colors.portalPending);
+            root.style.setProperty('--theme-bomb-blast-ring', t.colors.bombBlastRing);
+            root.style.setProperty('--theme-bomb-blast-rays', t.colors.bombBlastRays);
             const leave = APP.Themes.getLeaveThemeColors(t, themeName === 'classic');
             root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
 
-            document.body.style.backgroundColor = t.bodyBg; APP.Renderer.getCanvas().style.backgroundColor = t.canvasBg;
+            document.body.style.backgroundColor = t.bodyBg; APP.Renderer.getCanvas().style.backgroundColor = t.canvasBg; getEl('canvasContainer').style.backgroundColor = t.canvasBg;
             getEl('headerLeft').style.backgroundColor = t.canvasBg;
             getEl('headerMiddle').style.backgroundColor = t.headerLeft;
             getEl('headerRight').style.backgroundColor = t.headerRight;
@@ -880,18 +920,14 @@
             getEl('levelLabelText').style.color = t.text.headerSub;
             const ghost = getEl('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; const pal = getEl('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; queryAll('.palette-item').forEach(item => { item.style.backgroundColor = t.palette.itemBg; item.style.borderColor = t.palette.itemBorder; }); getEl('editCopyMetrics').style.backgroundColor = t.headerLeft; getEl('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = getEl('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; getEl('undoBtn').style.backgroundColor = t.btns.undo; getEl('resetBtn').style.backgroundColor = t.btns.reset; getEl('guideBtn').style.backgroundColor = t.btns.guide; getEl('whoaBtn').style.backgroundColor = t.btns.whoa;
 
-            const isDark = (t.bodyBg === '#020617' || t.bodyBg === '#000000');
-            const neutralBtn = isDark ? '#334155' : '#e2e8f0';
-            const neutralText = isDark ? '#f8fafc' : '#475569';
-
-            getEl('openThemeModalBtn').style.backgroundColor = neutralBtn;
-            getEl('openThemeModalBtn').style.color = neutralText;
-            getEl('openThemeModalBtn').style.borderColor = t.modal.border;
+            getEl('openThemeModalBtn').style.backgroundColor = t.shell.btnBg;
+            getEl('openThemeModalBtn').style.color = t.shell.btnText;
+            getEl('openThemeModalBtn').style.borderColor = t.shell.btnBorder;
             getEl('orientationToggleBtn').style.backgroundColor = t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b';
-            getEl('orientationToggleBtn').style.color = '#ffffff';
+            getEl('orientationToggleBtn').style.color = t.text.shellBtn || t.text.megaPrimary || '#ffffff';
             getEl('orientationToggleBtn').style.borderColor = t.grid;
 
-            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = neutralBtn; muteBtn.style.color = neutralText; muteBtn.style.borderColor = t.modal.border; getEl('muteIcon').style.color = neutralText; getEl('muteSlash').style.color = neutralText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.btns.muteIcon; getEl('editCopyBtn').style.color = t.btns.muteIcon; getEl('devGenBtn').style.color = t.btns.muteIcon; getEl('editGenBtn').style.color = t.btns.muteIcon; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
+            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.btns.muteIcon; getEl('editCopyBtn').style.color = t.btns.muteIcon; getEl('devGenBtn').style.color = t.btns.muteIcon; getEl('editGenBtn').style.color = t.btns.muteIcon; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
             const gArea = getEl('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
             const winModalContent = getEl('winModalContent'); getEl('winCircle').style.backgroundColor = t.win.bg; getEl('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.text.winAccent; winModalContent.querySelector('p').style.color = t.text.win; getEl('nextLevelModalBtn').style.color = t.text.winAccent; getEl('dismissWinModalBtn').style.color = t.text.winAccent;
         };
@@ -966,11 +1002,11 @@
                 container.appendChild(header);
                 const t = APP.Themes.THEMES[themeKey] || {};
                 const toColorSet = (arr) => new Set(arr.filter(c => c && typeof c === 'string' && c !== 'rainbow'));
-                const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border]);
-                const btnColors = toColorSet([...Object.values(t.btns || {}), t.leave?.bg, t.leave?.hover]);
-                const gridColors = toColorSet([t.colors?.gate, t.colors?.goal, t.colors?.block, t.colors?.pin, t.colors?.pinUnflipped, t.colors?.filter, t.colors?.portal, t.colors?.cross, t.path, t.grid]);
-                const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.palette?.toolBg, t.win?.bg, t.alert?.bg, t.ctrlArea?.bg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.burst, t.check]);
-                const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.leave?.text]);
+                const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border, t.loading?.panelBorder, t.loading?.track, t.search?.megaStatusBorder, t.shell?.btnBorder, t.shell?.muteBorder, t.header?.divider]);
+                const btnColors = toColorSet([...Object.values(t.btns || {}), t.leave?.bg, t.leave?.hover, t.shell?.btnBg, t.shell?.btnBgHover, t.shell?.muteBg, t.shell?.muteBgHover, t.header?.navBg, t.header?.navBgHover]);
+                const gridColors = toColorSet([t.colors?.gate, t.colors?.goal, t.colors?.block, t.colors?.pin, t.colors?.pinUnflipped, t.colors?.filter, t.colors?.portal, t.colors?.cross, t.colors?.portalPending, t.colors?.bombBlastRing, t.colors?.bombBlastRays, t.path, t.grid]);
+                const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.palette?.toolBg, t.win?.bg, t.alert?.bg, t.ctrlArea?.bg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.burst, t.check, t.loading?.overlayBg, t.loading?.panelBg, t.search?.overlayBg, t.jumpscare?.gooseBg, t.jumpscare?.bombBg]);
+                const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.text?.body, t.text?.shellBtn, t.leave?.text, t.loading?.title, t.loading?.status, t.loading?.percent, t.loading?.error, t.search?.megaStatusText, t.search?.label, t.search?.timer, t.search?.close, t.search?.closeHover, t.jumpscare?.gooseText, t.jumpscare?.bombTopText, t.jumpscare?.bombBottomText, t.shell?.btnText, t.shell?.muteText, t.header?.navText]);
                 const buildSwatch = (c, category) => {
                     const swatch = document.createElement('div');
                     swatch.className = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
@@ -3370,7 +3406,7 @@
                 APP.UI.showBombDetonation();
                 SOUND_BUS.play("C2", "8n");
                 setTimeout(() => {
-                    APP.UI.showBombDetonation({ explodedMarkup: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="#ef4444" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="#f97316" stroke-width="8"/></svg>` });
+                    APP.UI.showBombDetonation({ explodedMarkup: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="var(--theme-bomb-blast-ring)" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="var(--theme-bomb-blast-rays)" stroke-width="8"/></svg>` });
                     SOUND_BUS.play("F1", "4n");
                     setTimeout(() => {
                         APP.UI.hideBombDetonation({ resetMarkup: `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>` });
@@ -3789,9 +3825,9 @@
         const bind = ({ ENGINE: engineRef, UI: uiRef, Engine: engineApi }) => { refs = { ENGINE: engineRef, UI: uiRef, Engine: engineApi }; };
         const init = bind;
 
-            function pickUpObject(k) { if(APP.State.ENGINE.editor.isPencilMode) return null; saveEditorState(); APP.State.ENGINE.editor.draggedFromGrid = true; APP.State.ENGINE.editor.validTrapSpots.clear(); const l = APP.State.ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); APP.State.ENGINE.isDirty = true; return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; APP.State.ENGINE.isDirty = true; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); APP.State.ENGINE.isDirty = true; return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (APP.State.ENGINE.editor.pendingPortal === k) { APP.State.ENGINE.editor.pendingPortal = null; showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = '#999'; APP.State.ENGINE.editor.pendingPortal = otherK; showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } APP.State.ENGINE.isDirty = true; return {type: 'portal'}; } APP.State.ENGINE.editor.undoStack.pop(); APP.State.ENGINE.editor.draggedFromGrid = false; return null; }
+            function pickUpObject(k) { if(APP.State.ENGINE.editor.isPencilMode) return null; saveEditorState(); APP.State.ENGINE.editor.draggedFromGrid = true; APP.State.ENGINE.editor.validTrapSpots.clear(); const l = APP.State.ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); APP.State.ENGINE.isDirty = true; return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; APP.State.ENGINE.isDirty = true; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); APP.State.ENGINE.isDirty = true; return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (APP.State.ENGINE.editor.pendingPortal === k) { APP.State.ENGINE.editor.pendingPortal = null; showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = (getComputedStyle(document.documentElement).getPropertyValue('--theme-portal-pending').trim() || '#999999'); APP.State.ENGINE.editor.pendingPortal = otherK; showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } APP.State.ENGINE.isDirty = true; return {type: 'portal'}; } APP.State.ENGINE.editor.undoStack.pop(); APP.State.ENGINE.editor.draggedFromGrid = false; return null; }
 
-            function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, H); break; case 'filterV': l.filterMap.set(k, V); break; case 'flipH': l.flippingFilterMap.set(k, H); break; case 'flipV': l.flippingFilterMap.set(k, V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: '#999' }); showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; const color = APP.State.ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); APP.State.ENGINE.editor.pendingPortal = null; showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
+            function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, H); break; case 'filterV': l.filterMap.set(k, V); break; case 'flipH': l.flippingFilterMap.set(k, H); break; case 'flipV': l.flippingFilterMap.set(k, V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: (getComputedStyle(document.documentElement).getPropertyValue('--theme-portal-pending').trim() || '#999999') }); showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; const color = APP.State.ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); APP.State.ENGINE.editor.pendingPortal = null; showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
 
 
             function validateLevelDetailed(l) {
@@ -4343,7 +4379,8 @@
             "solve": "#ba29c9",
             "editClear": "#d12929",
             "editBombs": "#ef4444",
-            "editNew": "#0a8a65"
+            "editNew": "#0a8a65",
+            "disabled": "#94a3b8"
         },
         "modal": {
             "bg": "rgba(248, 250, 252, 0.95)",
@@ -4365,7 +4402,10 @@
             "pinUnflipped": "#000000",
             "filter": "#000000",
             "portal": "#d946ef",
-            "cross": "#000000"
+            "cross": "#000000",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ef4444",
+            "bombBlastRays": "#f97316"
         },
         "palette": {
             "bg": "#f8fafc",
@@ -4407,7 +4447,53 @@
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#334155"
+            "megaCopy": "#334155",
+            "body": "#111827",
+            "shellBtn": "#475569"
+        },
+        "loading": {
+            "overlayBg": "rgba(15, 23, 42, 0.6)",
+            "panelBg": "#0f172a",
+            "panelBorder": "#334155",
+            "title": "#ffffff",
+            "status": "#38bdf8",
+            "percent": "#ffffff",
+            "track": "#1e293b",
+            "bar": "#0ea5e9",
+            "error": "#7dd3fc"
+        },
+        "search": {
+            "overlayBg": "rgba(15, 23, 42, 0.9)",
+            "megaStatusText": "#f0abfc",
+            "megaStatusBorder": "rgba(217, 70, 239, 0.3)",
+            "label": "#7dd3fc",
+            "dot": "#38bdf8",
+            "timer": "#ffffff",
+            "close": "rgba(255, 255, 255, 0.4)",
+            "closeHover": "#ffffff"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0, 0, 0, 0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0, 0, 0, 0.6)",
+            "bombTopText": "#facc15",
+            "bombBottomText": "#f97316"
+        },
+        "shell": {
+            "btnBg": "rgba(203, 213, 225, 0.6)",
+            "btnBgHover": "rgba(148, 163, 184, 0.6)",
+            "btnText": "#475569",
+            "btnBorder": "rgba(255, 255, 255, 0.2)",
+            "muteBg": "rgba(255, 255, 255, 0.5)",
+            "muteBgHover": "rgba(255, 255, 255, 0.8)",
+            "muteText": "#64748b",
+            "muteBorder": "rgba(255, 255, 255, 0.2)"
+        },
+        "header": {
+            "navBg": "rgba(255, 255, 255, 0.2)",
+            "navBgHover": "rgba(255, 255, 255, 0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226, 232, 240, 0.2)"
         },
         "mega": {
             "outputBg": "#0f172a",
@@ -5246,6 +5332,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.ctrlArea = t.ctrlArea || {};
         t.text = t.text || {};
         t.mega = t.mega || {};
+        t.loading = t.loading || {};
+        t.search = t.search || {};
+        t.jumpscare = t.jumpscare || {};
+        t.shell = t.shell || {};
 
         t.bodyBg = t.bodyBg || '#e0f2fe';
         t.canvasBg = t.canvasBg || '#ffffff';
@@ -5314,6 +5404,54 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.text.megaSecondary = t.text.megaSecondary || '#ffffff';
         t.text.megaGemini = t.text.megaGemini || '#ffffff';
         t.text.megaCopy = t.text.megaCopy || t.modal.text;
+        t.text.body = t.text.body || t.modal.text;
+        t.text.shellBtn = t.text.shellBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#475569');
+
+        t.btns.disabled = t.btns.disabled || '#94a3b8';
+
+        t.loading.overlayBg = t.loading.overlayBg || (t.modal.bg || 'rgba(15, 23, 42, 0.6)');
+        t.loading.panelBg = t.loading.panelBg || t.output.bg;
+        t.loading.panelBorder = t.loading.panelBorder || t.modal.border;
+        t.loading.title = t.loading.title || t.text.headerMain || '#ffffff';
+        t.loading.status = t.loading.status || t.text.output;
+        t.loading.percent = t.loading.percent || t.text.headerMain || '#ffffff';
+        t.loading.track = t.loading.track || t.palette.toolBg || t.modal.panelBg;
+        t.loading.bar = t.loading.bar || t.path || t.headerRight;
+        t.loading.error = t.loading.error || t.text.output;
+
+        t.search.overlayBg = t.search.overlayBg || t.modal.bg;
+        t.search.megaStatusText = t.search.megaStatusText || t.text.megaOutput;
+        t.search.megaStatusBorder = t.search.megaStatusBorder || t.mega.outputBorder;
+        t.search.label = t.search.label || t.text.output;
+        t.search.dot = t.search.dot || t.path || t.headerRight;
+        t.search.timer = t.search.timer || t.text.modal;
+        t.search.close = t.search.close || t.text.modalMuted;
+        t.search.closeHover = t.search.closeHover || t.text.modal;
+
+        t.jumpscare.gooseBg = t.jumpscare.gooseBg || 'rgba(0,0,0,0.4)';
+        t.jumpscare.gooseText = t.jumpscare.gooseText || '#ffffff';
+        t.jumpscare.bombBg = t.jumpscare.bombBg || 'rgba(0,0,0,0.6)';
+        t.jumpscare.bombTopText = t.jumpscare.bombTopText || t.burst || '#fde047';
+        t.jumpscare.bombBottomText = t.jumpscare.bombBottomText || t.colors.goal || '#f97316';
+
+        t.shell.btnBg = t.shell.btnBg || t.btns.mute;
+        t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.92);
+        t.shell.btnText = t.shell.btnText || t.text.shellBtn;
+        t.shell.btnBorder = t.shell.btnBorder || t.modal.border;
+        t.shell.muteBg = t.shell.muteBg || t.btns.mute;
+        t.shell.muteBgHover = t.shell.muteBgHover || darkenHex(t.shell.muteBg, 0.92);
+        t.shell.muteText = t.shell.muteText || t.btns.muteIcon;
+        t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
+
+        t.header = t.header || {};
+        t.header.navBg = t.header.navBg || 'rgba(255,255,255,0.2)';
+        t.header.navBgHover = t.header.navBgHover || 'rgba(255,255,255,0.3)';
+        t.header.navText = t.header.navText || t.text.headerMain;
+        t.header.divider = t.header.divider || 'rgba(226,232,240,0.2)';
+
+        t.colors.portalPending = t.colors.portalPending || '#999999';
+        t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
+        t.colors.bombBlastRays = t.colors.bombBlastRays || t.headerLeft;
 
         t.mega.outputBg = t.mega.outputBg || t.output.bg;
         t.mega.outputBorder = t.mega.outputBorder || t.modal.border;
@@ -5343,7 +5481,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function applyTheme(name) {
         const themes = getThemeRegistry();
-        if (name === 'chaos') { themes.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
+        if (name === 'chaos') { themes.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc(), body: rc(), shellBtn: rc() }, loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc() }, search: { overlayBg: rc(), megaStatusText: rc(), megaStatusBorder: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() }, jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() }, shell: { btnBg: rc(), btnBgHover: rc(), btnText: rc(), btnBorder: rc(), muteBg: rc(), muteBgHover: rc(), muteText: rc(), muteBorder: rc() }, header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
         APP.State.ENGINE.runtime.currentTheme = name;
         APP.Themes.currentTheme = APP.State.ENGINE.runtime.currentTheme;
         const t = themes[name];
@@ -5359,7 +5497,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
         const themes = getThemeRegistry();
         const grid = document.getElementById('themeGrid'); APP.UI.clearElement('themeGrid'); const themeKeys = Object.keys(themes); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
-        themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl hover:bg-slate-100"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black text-slate-600 uppercase tracking-widest"; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
+        themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; btn.style.backgroundColor = t.shell.btnBg; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black uppercase tracking-widest"; label.style.color = t.text.modal; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
 
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
@@ -5400,14 +5538,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             replaceInKeys(t.win, ['bg']);
             replaceInKeys(t.alert, ['bg']);
             replaceInKeys(t.ctrlArea, ['bg']);
-            replaceInKeys(t.mega, ['outputBg', 'primaryBg', 'secondaryBg', 'geminiBg', 'copyBg']);
+            replaceInKeys(t.mega, ['outputBg', 'primaryBg', 'secondaryBg', 'geminiBg', 'copyBg']); replaceInKeys(t.loading, ['overlayBg','panelBg']); replaceInKeys(t.search, ['overlayBg']); replaceInKeys(t.jumpscare, ['gooseBg','bombBg']); replaceInKeys(t.shell, ['btnBg','btnBgHover','muteBg','muteBgHover']); replaceInKeys(t.header, ['navBg','navBgHover']);
         } else if (category === "Lines") {
             replaceInKeys(t.modal, LINE_KEY_GROUPS.modal);
             replaceInKeys(t.palette, LINE_KEY_GROUPS.palette);
             replaceInKeys(t.win, LINE_KEY_GROUPS.win);
             replaceInKeys(t.alert, LINE_KEY_GROUPS.alert);
             replaceInKeys(t.ctrlArea, LINE_KEY_GROUPS.ctrlArea);
-            replaceInKeys(t.mega, ['outputBorder', 'primaryBorder', 'secondaryBorder', 'geminiBorder', 'copyBorder']);
+            replaceInKeys(t.mega, ['outputBorder', 'primaryBorder', 'secondaryBorder', 'geminiBorder', 'copyBorder']); replaceInKeys(t.loading, ['panelBorder','track']); replaceInKeys(t.search, ['megaStatusBorder']); replaceInKeys(t.shell, ['btnBorder','muteBorder']); replaceInKeys(t.header, ['divider']);
             if (t.ghostBorder === oldColor) t.ghostBorder = newColor;
             replaceInKeys(t.leave, ['border']);
         } else if (category === "Text") {
@@ -5419,6 +5557,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             replaceInKeys(t.win, ['text', 'accent']);
             replaceInKeys(t.text, Object.keys(t.text || {}));
             replaceInKeys(t.leave, ['text']);
+            replaceInKeys(t.loading, ['title','status','percent','error']);
+            replaceInKeys(t.search, ['megaStatusText','label','timer','close','closeHover']);
+            replaceInKeys(t.jumpscare, ['gooseText','bombTopText','bombBottomText']);
+            replaceInKeys(t.shell, ['btnText','muteText']);
+            replaceInKeys(t.header, ['navText']);
                 } else {
             const replaceDeep = (obj) => {
                 if (!obj || typeof obj !== 'object') return;
