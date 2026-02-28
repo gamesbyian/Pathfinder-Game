@@ -967,32 +967,87 @@
                 teDom.selectView = resolveEl('themeSelectView');
                 teDom.editView = resolveEl('themeEditView');
                 teDom.ghost = resolveEl('dragGhost');
+                const themeModal = resolveEl('themeModal');
+                if (themeModal) {
+                    themeModal.addEventListener('pointerdown', ev => {
+                        if (interaction.mode === 'armed' && !ev.target.closest('.theme-swatch')) clearArmedSelection();
+                    });
+                }
             };
-            const dragState = {
-                color: null,
-                theme: null,
-                category: null,
-                tapColor: null,
-                tapTheme: null,
-                tapCategory: null,
-                tapSwatch: null,
+            const DRAG_THRESHOLD_PX = 10;
+            const swatchMetaByIdx = new Map();
+            let nextSwatchIdx = 0;
+            const interaction = {
+                mode: 'idle',
                 pointerId: null,
+                srcIdx: null,
+                overIdx: null,
                 startX: null,
                 startY: null,
-                isDragging: false
+                moved: false,
+                armedIdx: null
+            };
+            const resetPointerState = () => {
+                interaction.pointerId = null;
+                interaction.srcIdx = null;
+                interaction.overIdx = null;
+                interaction.startX = null;
+                interaction.startY = null;
+                interaction.moved = false;
+                interaction.mode = interaction.armedIdx !== null ? 'armed' : 'idle';
+            };
+            const clearArmedSelection = () => {
+                interaction.armedIdx = null;
+                setSwatchSelected(null);
+                if (interaction.mode === 'armed') interaction.mode = 'idle';
+            };
+            const getSwatchIdxFromNode = (node) => {
+                const swatch = node?.closest?.('.theme-swatch');
+                if (!swatch) return null;
+                const idx = Number.parseInt(swatch.dataset.swatchIdx, 10);
+                if (!Number.isInteger(idx) || !swatchMetaByIdx.has(idx)) return null;
+                return idx;
+            };
+            const getSwatchMeta = (idx) => {
+                if (!Number.isInteger(idx)) return null;
+                return swatchMetaByIdx.get(idx) || null;
+            };
+            const updateOverIdxFromPoint = (x, y) => {
+                const idx = getSwatchIdxFromNode(document.elementFromPoint(x, y));
+                interaction.overIdx = idx;
+                return idx;
+            };
+            const setThemeDragIdle = () => {
+                if (APP.State.ENGINE.logicState === THEME_DRAG) APP.Engine.setLogicState(IDLE);
             };
             const setSwatchSelected = (elOrNull) => {
                 document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove(...selectedClasses));
                 if (elOrNull) elOrNull.classList.add(...selectedClasses);
             };
+            const replaceTargetWithSource = (srcIdx, targetIdx) => {
+                const srcMeta = getSwatchMeta(srcIdx);
+                const targetMeta = getSwatchMeta(targetIdx);
+                if (!srcMeta || !targetMeta || !srcMeta.color || !targetMeta.color || !targetMeta.category) return false;
+                if (srcIdx === targetIdx || srcMeta.color === targetMeta.color) return false;
+                APP.Themes.replaceThemeColor(targetMeta.themeKey, targetMeta.color, srcMeta.color, targetMeta.category);
+                if (APP.Themes.getCurrentTheme && APP.Themes.getCurrentTheme() === targetMeta.themeKey) APP.Themes.applyTheme(targetMeta.themeKey);
+                return true;
+            };
             const applySwatchReplace = ({ sourceColor, sourceTheme, sourceCategory, targetSwatch }) => {
                 if (!targetSwatch || !sourceColor || !sourceTheme || !sourceCategory) return false;
-                const targetColor = targetSwatch.dataset.themeColor;
-                const targetTheme = targetSwatch.dataset.themeKey;
-                const targetCategory = targetSwatch.dataset.category;
-                if (!targetColor || !targetCategory || targetTheme !== sourceTheme || targetColor === sourceColor) return false;
-                APP.Themes.replaceThemeColor(sourceTheme, targetColor, sourceColor, targetCategory);
-                return true;
+                const targetIdx = getSwatchIdxFromNode(targetSwatch);
+                if (targetIdx === null) return false;
+                const sourceMeta = {
+                    themeKey: sourceTheme,
+                    category: sourceCategory,
+                    color: sourceColor,
+                    el: null
+                };
+                const tempSourceIdx = -1;
+                swatchMetaByIdx.set(tempSourceIdx, sourceMeta);
+                const didReplace = replaceTargetWithSource(tempSourceIdx, targetIdx);
+                swatchMetaByIdx.delete(tempSourceIdx);
+                return didReplace;
             };
             const setDragGhost = ({ visible = false, color = null, x = null, y = null } = {}) => {
                 ensureInit();
@@ -1013,6 +1068,98 @@
                 if (x !== null) ghost.style.left = `${x}px`;
                 if (y !== null) ghost.style.top = `${y}px`;
             };
+            const handleSwatchPointerDown = (ev, swatchIdx) => {
+                try {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    const srcMeta = getSwatchMeta(swatchIdx);
+                    if (!srcMeta) return;
+                    if (typeof srcMeta.el?.setPointerCapture === 'function') srcMeta.el.setPointerCapture(ev.pointerId);
+                    interaction.mode = 'pressing';
+                    interaction.pointerId = ev.pointerId;
+                    interaction.srcIdx = swatchIdx;
+                    interaction.overIdx = swatchIdx;
+                    interaction.startX = ev.clientX;
+                    interaction.startY = ev.clientY;
+                    interaction.moved = false;
+                    setDragGhost({ visible: true, color: srcMeta.color, x: ev.clientX, y: ev.clientY });
+                    if (APP.State.ENGINE.logicState !== THEME_DRAG) APP.Engine.setLogicState(THEME_DRAG);
+                } catch (err) {
+                    console.error('Theme swatch pointerdown failed:', err);
+                    setDragGhost({ visible: false });
+                    setThemeDragIdle();
+                    resetPointerState();
+                }
+            };
+            const handleSwatchPointerMove = (ev) => {
+                try {
+                    if (interaction.pointerId !== ev.pointerId) return;
+                    if (interaction.mode !== 'pressing' && interaction.mode !== 'dragging') return;
+                    const dx = Math.abs((interaction.startX ?? ev.clientX) - ev.clientX);
+                    const dy = Math.abs((interaction.startY ?? ev.clientY) - ev.clientY);
+                    if (!interaction.moved && (dx >= DRAG_THRESHOLD_PX || dy >= DRAG_THRESHOLD_PX)) {
+                        interaction.moved = true;
+                        interaction.mode = 'dragging';
+                    }
+                    if (interaction.mode === 'dragging') {
+                        setDragGhost({ visible: true, color: getSwatchMeta(interaction.srcIdx)?.color, x: ev.clientX, y: ev.clientY });
+                        updateOverIdxFromPoint(ev.clientX, ev.clientY);
+                    }
+                } catch (err) {
+                    console.error('Theme swatch pointermove failed:', err);
+                    setDragGhost({ visible: false });
+                    setThemeDragIdle();
+                    resetPointerState();
+                }
+            };
+            const handleSwatchPointerUp = (ev, swatchIdx, swatchEl) => {
+                try {
+                    if (interaction.pointerId !== ev.pointerId) return;
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (typeof swatchEl?.releasePointerCapture === 'function' && swatchEl.hasPointerCapture(ev.pointerId)) swatchEl.releasePointerCapture(ev.pointerId);
+                    const modeAtRelease = interaction.mode;
+                    const srcIdx = interaction.srcIdx;
+                    if (modeAtRelease === 'pressing' && !interaction.moved && Number.isInteger(srcIdx)) {
+                        if (Number.isInteger(interaction.armedIdx) && interaction.armedIdx !== srcIdx) {
+                            replaceTargetWithSource(interaction.armedIdx, srcIdx);
+                            clearArmedSelection();
+                        } else {
+                            interaction.armedIdx = srcIdx;
+                            interaction.mode = 'armed';
+                            setSwatchSelected(getSwatchMeta(srcIdx)?.el || null);
+                        }
+                    } else if (modeAtRelease === 'dragging' && Number.isInteger(srcIdx)) {
+                        const targetIdx = updateOverIdxFromPoint(ev.clientX, ev.clientY);
+                        if (Number.isInteger(targetIdx) && targetIdx !== srcIdx) replaceTargetWithSource(srcIdx, targetIdx);
+                        clearArmedSelection();
+                    }
+                    setDragGhost({ visible: false });
+                    setThemeDragIdle();
+                    resetPointerState();
+                } catch (err) {
+                    console.error('Theme swatch pointerup failed:', err);
+                    setDragGhost({ visible: false });
+                    setThemeDragIdle();
+                    resetPointerState();
+                }
+            };
+            const handleSwatchPointerCancel = (ev, swatchEl) => {
+                try {
+                    if (interaction.pointerId !== ev.pointerId) return;
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    if (typeof swatchEl?.releasePointerCapture === 'function' && swatchEl.hasPointerCapture(ev.pointerId)) swatchEl.releasePointerCapture(ev.pointerId);
+                    setDragGhost({ visible: false });
+                    setThemeDragIdle();
+                    resetPointerState();
+                } catch (err) {
+                    console.error('Theme swatch pointercancel failed:', err);
+                    setDragGhost({ visible: false });
+                    setThemeDragIdle();
+                    resetPointerState();
+                }
+            };
 
             const renderThemeKey = (themeKey) => {
                 const container = document.createElement('div');
@@ -1030,6 +1177,7 @@
                 const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.text?.body, t.text?.shellBtn, t.leave?.text, t.loading?.title, t.loading?.status, t.loading?.percent, t.loading?.error, t.search?.megaStatusText, t.search?.label, t.search?.timer, t.search?.close, t.search?.closeHover, t.jumpscare?.gooseText, t.jumpscare?.bombTopText, t.jumpscare?.bombBottomText, t.shell?.btnText, t.shell?.muteText, t.header?.navText]);
                 const buildSwatch = (c, category) => {
                     const swatch = document.createElement('div');
+                    const swatchIdx = nextSwatchIdx++;
                     const swatchClasses = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
                     // Ensure the element can be found via .closest('.theme-swatch')
                     swatch.className = `theme-swatch ${swatchClasses}`;
@@ -1040,51 +1188,13 @@
                     swatch.dataset.themeColor = c;
                     swatch.dataset.themeKey = themeKey;
                     swatch.dataset.category = category;
+                    swatch.dataset.swatchIdx = `${swatchIdx}`;
                     swatch.style.touchAction = 'none';
-                    // Selection/swap is handled on pointerdown because preventDefault suppresses reliable click events on touch.
-                    swatch.onpointerdown = e => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        if (dragState.tapColor && dragState.tapTheme === themeKey && dragState.tapSwatch !== swatch) {
-                            applySwatchReplace({
-                                sourceColor: dragState.tapColor,
-                                sourceTheme: dragState.tapTheme,
-                                sourceCategory: dragState.tapCategory,
-                                targetSwatch: swatch
-                            });
-                            dragState.tapColor = null;
-                            dragState.tapTheme = null;
-                            dragState.tapCategory = null;
-                            dragState.tapSwatch = null;
-                            setSwatchSelected(null);
-                            APP.Engine.setLogicState(IDLE);
-                            setDragGhost({ visible: false });
-                            dragState.color = null;
-                            dragState.theme = null;
-                            dragState.category = null;
-                            dragState.pointerId = null;
-                            dragState.startX = null;
-                            dragState.startY = null;
-                            dragState.isDragging = false;
-                            return;
-                        }
-
-                        dragState.tapColor = c;
-                        dragState.tapTheme = themeKey;
-                        dragState.tapCategory = category;
-                        dragState.tapSwatch = swatch;
-                        setSwatchSelected(swatch);
-
-                        dragState.color = c;
-                        dragState.theme = themeKey;
-                        dragState.category = category;
-                        dragState.pointerId = e.pointerId;
-                        dragState.startX = e.clientX;
-                        dragState.startY = e.clientY;
-                        dragState.isDragging = false;
-                        APP.Engine.setLogicState(THEME_DRAG);
-                        setDragGhost({ visible: true, color: c, x: e.clientX, y: e.clientY });
-                    };
+                    swatchMetaByIdx.set(swatchIdx, { themeKey, category, color: c, el: swatch });
+                    swatch.addEventListener('pointerdown', ev => handleSwatchPointerDown(ev, swatchIdx));
+                    swatch.addEventListener('pointermove', handleSwatchPointerMove);
+                    swatch.addEventListener('pointerup', ev => handleSwatchPointerUp(ev, swatchIdx, swatch));
+                    swatch.addEventListener('pointercancel', ev => handleSwatchPointerCancel(ev, swatch));
                     return swatch;
                 };
                 const buildSection = (title, colorArr) => {
@@ -1207,7 +1317,11 @@
             const renderAll = () => {
                 ensureInit();
                 if (!teDom.list || !window.ORIGINAL_THEMES) return;
+                clearArmedSelection();
+                resetPointerState();
                 teDom.list.innerHTML = '';
+                swatchMetaByIdx.clear();
+                nextSwatchIdx = 0;
                 const keys = Object.keys(window.ORIGINAL_THEMES).filter(k => k !== 'classic');
                 keys.forEach((key, idx) => {
                     teDom.list.appendChild(renderThemeKey(key));
@@ -1236,9 +1350,10 @@
                     teDom.editView.classList.remove('flex');
                 }
                 if (teDom.selectView) teDom.selectView.classList.remove('hidden');
-                setSwatchSelected(null);
-                dragState.color = null; dragState.theme = null; dragState.category = null; dragState.tapColor = null; dragState.tapTheme = null; dragState.tapCategory = null; dragState.tapSwatch = null; dragState.pointerId = null; dragState.startX = null; dragState.startY = null; dragState.isDragging = false;
+                clearArmedSelection();
+                resetPointerState();
                 setDragGhost({ visible: false });
+                setThemeDragIdle();
             };
 
             return {
@@ -1250,20 +1365,30 @@
                 openEditorView,
                 closeEditorView,
                 applySwatchReplace,
-                getDragState: () => ({ ...dragState }),
+                getDragState: () => {
+                    const srcMeta = getSwatchMeta(interaction.srcIdx);
+                    return {
+                        pointerId: interaction.pointerId,
+                        isDragging: interaction.mode === 'dragging' || interaction.moved,
+                        startX: interaction.startX,
+                        startY: interaction.startY,
+                        color: srcMeta?.color || null,
+                        theme: srcMeta?.themeKey || null,
+                        category: srcMeta?.category || null
+                    };
+                },
                 markPointerDrag: () => {
-                    dragState.isDragging = true;
+                    if (interaction.mode === 'pressing') {
+                        interaction.moved = true;
+                        interaction.mode = 'dragging';
+                    }
                 },
                 clearDragState: () => {
-                    dragState.color = null;
-                    dragState.theme = null;
-                    dragState.category = null;
-                    dragState.pointerId = null;
-                    dragState.startX = null;
-                    dragState.startY = null;
-                    dragState.isDragging = false;
+                    resetPointerState();
+                    setDragGhost({ visible: false });
+                    setThemeDragIdle();
                 },
-                hasTapSelection: () => !!dragState.tapColor
+                hasTapSelection: () => Number.isInteger(interaction.armedIdx)
             };
         })();
 
