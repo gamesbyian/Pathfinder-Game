@@ -501,10 +501,19 @@
         };
         const { NONE: OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = OverlayStatus;
 
-        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING };
+
+        const SOUND_BUS = {
+            play(freq, dur = "16n") {
+                if (!APP.State?.ENGINE?.muted && window.Tone && Tone.context.state === 'running') {
+                    new Tone.Synth().toDestination().triggerAttackRelease(freq, dur);
+                }
+            }
+        };
+
+        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS };
     })();
 
-    const { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = APP.Core;
+    const { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS } = APP.Core;
     if (DEV) window.AXIS = AXIS;
 
     // Purpose: sole DOM mutation boundary for non-canvas UI.
@@ -1213,7 +1222,7 @@
 
         const SolverCore = {
                 _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet, options = {}) {
-                    return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, {
+                    return APP.Engine.isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, {
                         mode: PLAY,
                         flipCount,
                         crossedSet,
@@ -1245,7 +1254,7 @@
                         if (k === null) break;
                         const d = map.get(k);
                         const p = APP.LevelUtils.UNPACK(k);
-                        const portal = resolvePortal(l, k);
+                        const portal = APP.LevelUtils.resolvePortal(l, k);
                         if (portal && portal.dest !== -1 && !l.blockSet.has(portal.dest)) {
                             const pd = map.get(portal.dest);
                             if (pd === undefined || d < pd) {
@@ -1486,7 +1495,7 @@
                     const { w, h } = l.grid;
                     const p = APP.LevelUtils.UNPACK(k);
                     const candidates = [];
-                    const portal = resolvePortal(l, k);
+                    const portal = APP.LevelUtils.resolvePortal(l, k);
                     const portalForced = portal && !state.isJump.has(state.path.length - 1);
                     const portalDest = portal ? portal.dest : -1;
                     if (portalForced && portalDest !== -1) {
@@ -1779,7 +1788,7 @@
                         }
                         const nextKey = top.neighbors.pop();
                         if (debugStats) debugStats.nodesExpanded++;
-                        const topPortal = resolvePortal(l, top.k);
+                        const topPortal = APP.LevelUtils.resolvePortal(l, top.k);
                         const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
                         const transLog = this._pushState(state, nextKey, isP, l);
                         const lastK = state.path[state.path.length - 1];
@@ -1879,7 +1888,7 @@
                     const getNeighbors = (k, s) => {
                         const p = APP.LevelUtils.UNPACK(k);
                         let candidates = [];
-                        const portal = resolvePortal(l, k);
+                        const portal = APP.LevelUtils.resolvePortal(l, k);
                         if (portal && !s.isJump.has(s.path.length - 1)) candidates.push(portal.dest);
                         else [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
                             const nx = p.x + dx, ny = p.y + dy;
@@ -1903,7 +1912,7 @@
                             continue;
                         }
                         const nextKey = top.neighbors.pop();
-                        const topPortal = resolvePortal(l, top.k);
+                        const topPortal = APP.LevelUtils.resolvePortal(l, top.k);
                         const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
                         const transLog = this._pushState(state, nextKey, isP, l);
                         const hazard = this._hazardDecisionForKey(nextKey, state, l, options);
@@ -2421,7 +2430,7 @@
         async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, variant: 'default', allowGemini: false }); },
         async runTargets({ targets = null, timeLimitMs = 15000, variant = 'default', allowGemini = false }) {
             if (this.active || APP.Solver.isRunning()) return;
-            const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS;
+            const levels = APP.LevelUtils.getRawLevels();
             if (!targets) { this.results = {}; this.meta = {}; APP.UI.setMegaOutput(''); }
             const toRun = targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
             if (toRun.length === 0) {
@@ -2783,7 +2792,7 @@
                 for (let i = 1; i < path.length; i++) {
                     const prev = path[i - 1];
                     const cur = path[i];
-                    if (!isValidMoveCommon(cur, path.slice(0, i), counts, usage, intersections, jumpSet, level, { mode: PLAY, flipCount, crossedSet, hazardPolicy: 'forbid' })) {
+                    if (!APP.Engine.isValidMoveCommon(cur, path.slice(0, i), counts, usage, intersections, jumpSet, level, { mode: PLAY, flipCount, crossedSet, hazardPolicy: 'forbid' })) {
                         return { ok: false, reason: `Invalid move at step ${i + 1}.` };
                     }
                     const prevP = APP.LevelUtils.UNPACK(prev);
@@ -2802,12 +2811,12 @@
                         crossedSet.set(cur, flipCount);
                         flipCount++;
                     }
-                    const portal = resolvePortal(level, prev);
+                    const portal = APP.LevelUtils.resolvePortal(level, prev);
                     if (portal && portal.dest === cur) jumpSet.add(i);
                 }
                 const finalState = { mode: PLAY, level, editor: { workingLevel: level }, path, isPortalJump: jumpSet, visitedCounts: counts, intersections };
                 if (path[path.length - 1] !== level.goalKey) return { ok: false, reason: 'Path does not end at goal.' };
-                if (!areWinMetricsSatisfied(finalState, level)) return { ok: false, reason: 'Path fails reqLen/reqInt/must rules.' };
+                if (!APP.Engine.areWinMetricsSatisfied(finalState, level)) return { ok: false, reason: 'Path fails reqLen/reqInt/must rules.' };
                 return { ok: true, path };
             }
 
@@ -3049,7 +3058,7 @@
             state.mode = 'fallback';
             setProgress(100, 'Using Local Fallback...');
             console.warn(`[Using fallback levels] ${reason}`);
-            window.RAW_LEVELS = FALLBACK_RAW_LEVELS;
+            window.RAW_LEVELS = APP.LevelUtils.getFallbackRawLevels();
             return 'fallback';
         };
 
@@ -3238,15 +3247,72 @@
         const bind = ({ ENGINE: engineRef, UI: uiRef }) => { refs = { ENGINE: engineRef, UI: uiRef }; };
         const init = bind;
 
+            function isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) {
+                const { x, y } = APP.LevelUtils.UNPACK(key);
+                const { w, h } = l.grid;
+                if (!APP.LevelUtils.inBounds(x, y, w, h) || l.blockSet.has(key)) return false;
+                if (ctx.mode === EDITOR && l.gooseSet.has(key)) return false;
+                const lastK = path[path.length - 1];
+                if (lastK === undefined) return true;
+                if (ctx.mode !== EDITOR) {
+                    if (lastK === l.goalKey) return false;
+                    if (ctx.armedFalseGoals?.has(lastK)) return false;
+                    if (l.gateKeys.includes(key)) return false;
+                } else if (path.length > 1 && l.gateKeys.includes(lastK)) return false;
+                if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
+                const lastP = APP.LevelUtils.UNPACK(lastK);
+                const isPortalJumpCandidate = l.portalMap.has(lastK) && APP.LevelUtils.resolvePortal(l, lastK).dest === key;
+                if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
+                const axis = (y === lastP.y) ? H : V;
+                const u = usage.get(key);
+                if (u && ((axis === H && u.h) || (axis === V && u.v))) return false;
+                const uLast = usage.get(lastK);
+                if (uLast) {
+                    let entryAxis = NONE;
+                    if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+                        const prevP = APP.LevelUtils.UNPACK(path[path.length - 2]);
+                        const lastP_check = APP.LevelUtils.UNPACK(lastK);
+                        entryAxis = (prevP.y === lastP_check.y) ? H : V;
+                    }
+                    if (axis !== entryAxis) {
+                        if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false;
+                    }
+                }
+                const flipCount = ctx.flipCount || 0;
+                const crossedSet = ctx.crossedSet || ctx.crossedFlippingFilters || new Map();
+                let filterLast = l.filterMap.get(lastK);
+                if (filterLast === undefined && l.flippingFilterMap.has(lastK)) {
+                    const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+                    filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK);
+                }
+                if (filterLast && filterLast !== axis) return false;
+                let filterTarget = l.filterMap.get(key);
+                if (filterTarget === undefined && l.flippingFilterMap.has(key)) {
+                    const relevantFlipCount = crossedSet.has(key) ? crossedSet.get(key) : flipCount;
+                    const baseAxis = l.flippingFilterMap.get(key);
+                    filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
+                }
+                if (filterTarget && filterTarget !== axis) return false;
+                return true;
+            }
 
-            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (isValidMoveEngine(key, APP.State.ENGINE.path, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.cellUsage, APP.State.ENGINE.intersections, APP.State.ENGINE.isPortalJump, activeLevel)) { if (APP.State.ENGINE.mode === EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } APP.Engine.setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); APP.Engine.setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
+            function areWinMetricsSatisfied(state = APP.State.ENGINE, level = (state.mode === PLAY ? state.level : state.editor.workingLevel)) {
+                if (!level || !state.path.length) return false;
+                const curLen = APP.Engine.getRealLength(state);
+                if (curLen !== level.reqLen || state.intersections !== level.reqInt) return false;
+                const allMustPass = level.mustPassKeys.every(k => state.visitedCounts.get(k) > 0);
+                const allMustCross = level.mustCrossKeys.every(k => (state.visitedCounts.get(k) || 0) >= 2);
+                return allMustPass && allMustCross;
+            }
+
+            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (isValidMoveEngine(key, APP.State.ENGINE.path, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.cellUsage, APP.State.ENGINE.intersections, APP.State.ENGINE.isPortalJump, activeLevel)) { if (APP.State.ENGINE.mode === EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } APP.Engine.setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = APP.LevelUtils.resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); APP.Engine.setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
 
 
             function attemptMoveTo(target) { if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } }
 
             function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(RESOLVED); winOutEl.value = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); document.getElementById('winExportArea').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (APP.State.ENGINE.mode === PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
 
-            function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [HAZARD_TRIGGERED].includes(logicState) || mode === EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return areWinMetricsSatisfied(stubState, level); }
+            function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [HAZARD_TRIGGERED].includes(logicState) || mode === EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return APP.Engine.areWinMetricsSatisfied(stubState, level); }
 
             function checkFalseGoalCondition() {
                 const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
@@ -3477,7 +3543,7 @@
 
                 if (APP.State.ENGINE.activeSolverController) return;
 
-                const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : (typeof FALLBACK_RAW_LEVELS !== 'undefined' ? FALLBACK_RAW_LEVELS : null);
+                const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : (APP.LevelUtils.getFallbackRawLevels() || null);
 
                 if (!levels) return;
 
@@ -3672,6 +3738,7 @@
             checkFalseGoalCondition() { return checkFalseGoalCondition(); },
             triggerJumpScare() { return triggerJumpScare(); },
             triggerBombDetonation(key) { return triggerBombDetonation(key); },
+            isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx); },
             isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l); },
             createSnapshot() { return createSnapshot(); },
             applySnapshot(snap) { return applySnapshot(snap); },
@@ -3771,7 +3838,7 @@
                         const k = q[head++];
                         const p = APP.LevelUtils.UNPACK(k);
                         const nks = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
-                        const portal = resolvePortal(l, k);
+                        const portal = APP.LevelUtils.resolvePortal(l, k);
                         if (portal && portal.dest !== -1) nks.push(portal.dest);
                         for (const nk of nks) {
                             const np = APP.LevelUtils.UNPACK(nk);
@@ -4052,12 +4119,11 @@
             APP.UI.setClassState(pal, 'landscape-editor-tools', false);
         }
     }
-    // Shared globals consumed across modules.
-    // NOTE: keep this block single-defined in global scope; duplicating it
-    // with `const` declarations will throw and prevent input handlers from binding.
-    const FALLBACK_RAW_LEVELS = [ { grid: {w:10, h:10}, gates: [{x:2,y:2}, {x:2,y:4}], goal: {x:9,y:9}, reqLen: 14, reqInt: 0, blocks: [{x:4,y:4}, {x:5,y:4}, {x:4,y:5}, {x:5,y:5}], mustPass: [{x:6,y:6}], geese: [{x:6,y:7}], flippingFilters: [{x:8, y:2, axis: 2}, {x:3, y:8, axis: 1}, {x:5, y:2, axis: 1}, {x:7, y:2, axis: 1}], falseGoals: [{x:2, y:8}], hints: [] } ];
-
     APP.LevelUtils = (() => {
+            const FALLBACK_RAW_LEVELS = [ { grid: {w:10, h:10}, gates: [{x:2,y:2}, {x:2,y:4}], goal: {x:9,y:9}, reqLen: 14, reqInt: 0, blocks: [{x:4,y:4}, {x:5,y:4}, {x:4,y:5}, {x:5,y:5}], mustPass: [{x:6,y:6}], geese: [{x:6,y:7}], flippingFilters: [{x:8, y:2, axis: 2}, {x:3, y:8, axis: 1}, {x:5, y:2, axis: 1}, {x:7, y:2, axis: 1}], falseGoals: [{x:2, y:8}], hints: [] } ];
+            const getFallbackRawLevels = () => FALLBACK_RAW_LEVELS;
+            const getRawLevels = () => (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : APP.LevelUtils.getFallbackRawLevels();
+            const resolvePortal = (level, key) => (level?.portalMap?.has(key) ? level.portalMap.get(key) : null);
             const PACK = (x, y) => (y << 16) | x;
             const UNPACK = (k) => ({ x: k & 0xFFFF, y: k >> 16 });
             const inBounds = (x, y, w, h) => x >= 0 && x < w && y >= 0 && y < h;
@@ -4076,7 +4142,7 @@
             // C) Level / NormalizeAndCaches
             // ======================================================
 
-            function normalizeLevel(idx) { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [] }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); }); return l; }
+            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [] }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); }); return l; }
 
             function denormalizeLevel(level) {
                 if (!level || !level.grid) return null;
@@ -4134,21 +4200,13 @@
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
             transformAxis, getGridCoord, deepCloneLevel, normalizeLevel, denormalizeLevel,
-            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape
+            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, getFallbackRawLevels, getRawLevels, resolvePortal
         };
     })();
 
     const setSolversActive = (active) => {
         APP.UI.setSolverControlsEnabled(active);
     };
-
-    function resolvePortal(level, key) { return level.portalMap.has(key) ? level.portalMap.get(key) : null; }
-
-    const SOUND_BUS = { play(freq, dur = "16n") { if (!APP.State.ENGINE.muted && window.Tone && Tone.context.state === 'running') { new Tone.Synth().toDestination().triggerAttackRelease(freq, dur); } } };
-
-
-
-
 
 
 
@@ -5282,55 +5340,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
 
 
-    function isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) {
-        const { x, y } = APP.LevelUtils.UNPACK(key);
-        const { w, h } = l.grid;
-        if (!APP.LevelUtils.inBounds(x, y, w, h) || l.blockSet.has(key)) return false;
-        if (ctx.mode === EDITOR && l.gooseSet.has(key)) return false;
-        const lastK = path[path.length - 1];
-        if (lastK === undefined) return true;
-        if (ctx.mode !== EDITOR) {
-            if (lastK === l.goalKey) return false;
-            if (ctx.armedFalseGoals?.has(lastK)) return false;
-            if (l.gateKeys.includes(key)) return false;
-        } else if (path.length > 1 && l.gateKeys.includes(lastK)) return false;
-        if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
-        const lastP = APP.LevelUtils.UNPACK(lastK);
-        const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key;
-        if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
-        const axis = (y === lastP.y) ? H : V;
-        const u = usage.get(key);
-        if (u && ((axis === H && u.h) || (axis === V && u.v))) return false;
-        const uLast = usage.get(lastK);
-        if (uLast) {
-            let entryAxis = NONE;
-            if (path.length > 1 && !jumpSet.has(path.length - 1)) {
-                const prevP = APP.LevelUtils.UNPACK(path[path.length - 2]);
-                const lastP_check = APP.LevelUtils.UNPACK(lastK);
-                entryAxis = (prevP.y === lastP_check.y) ? H : V;
-            }
-            if (axis !== entryAxis) {
-                if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false;
-            }
-        }
-        const flipCount = ctx.flipCount || 0;
-        const crossedSet = ctx.crossedSet || ctx.crossedFlippingFilters || new Map();
-        let filterLast = l.filterMap.get(lastK);
-        if (filterLast === undefined && l.flippingFilterMap.has(lastK)) {
-            const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
-            filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK);
-        }
-        if (filterLast && filterLast !== axis) return false;
-        let filterTarget = l.filterMap.get(key);
-        if (filterTarget === undefined && l.flippingFilterMap.has(key)) {
-            const relevantFlipCount = crossedSet.has(key) ? crossedSet.get(key) : flipCount;
-            const baseAxis = l.flippingFilterMap.get(key);
-            filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
-        }
-        if (filterTarget && filterTarget !== axis) return false;
-        return true;
-    }
-
 
 
 
@@ -5345,8 +5354,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // ======================================================
     // D) Rules / ValidationAndWin
     // ======================================================
-    function areWinMetricsSatisfied(state = APP.State.ENGINE, level = (state.mode === PLAY ? state.level : state.editor.workingLevel)) { if (!level || !state.path.length) return false; const curLen = APP.Engine.getRealLength(state); if (curLen !== level.reqLen || state.intersections !== level.reqInt) return false; const allMustPass = level.mustPassKeys.every(k => state.visitedCounts.get(k) > 0); const allMustCross = level.mustCrossKeys.every(k => (state.visitedCounts.get(k) || 0) >= 2); return allMustPass && allMustCross; }
-
     function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal'); }
 
     APP.State.ENGINE.ui.gamepadGridPrimaryAction = () => {};
@@ -5727,9 +5734,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         });
         const handleWinClose = (callback) => { const circle = document.getElementById('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
         document.getElementById('copyWinDataBtn').onclick = async () => { if (winOutEl.value) await APP.UI.copyText(winOutEl.value, { fallbackElId: 'winSolutionOutput' }); };
-        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
-        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
-        document.getElementById('nextLevelModalBtn').onclick = () => { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; handleWinClose(() => { if (APP.State.ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(APP.State.ENGINE.levelIdx + 1); }); };
+        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
+        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
+        document.getElementById('nextLevelModalBtn').onclick = () => { const levels = APP.LevelUtils.getRawLevels(); handleWinClose(() => { if (APP.State.ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(APP.State.ENGINE.levelIdx + 1); }); };
         document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => { APP.Engine.setLogicState(IDLE); });
 
         document.getElementById('guideBtn').onclick = () => {
