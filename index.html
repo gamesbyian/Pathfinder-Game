@@ -3483,7 +3483,17 @@
             applySnapshot(snap) { return applySnapshot(snap); },
             checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { return checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections); },
             getPackedPath() { return [...(refs.ENGINE?.path || [])]; },
-            getIntersections() { return refs.ENGINE?.intersections ?? 0; }
+            getIntersections() { return refs.ENGINE?.intersections ?? 0; },
+            updatePlayModeLayout,
+            loop,
+            switchMode,
+            setLogicState,
+            setOverlayState,
+            getRealLength,
+            rebuildDerivedPathState,
+            assertStateConsistency,
+            updatePencilState,
+            PathNavigator
         };
     })();
 
@@ -3643,8 +3653,8 @@
         return {
             init,
             bind,
-            enterEditorMode() { switchMode(EDITOR); },
-            exitEditorMode() { switchMode(PLAY); },
+            enterEditorMode() { APP.Engine.switchMode(EDITOR); },
+            exitEditorMode() { APP.Engine.switchMode(PLAY); },
             loadWorkingLevel(fromLevelObjOrBlank) { refs.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(fromLevelObjOrBlank); refs.ENGINE.editor.isModified = false; },
             commitWorkingLevel() { refs.ENGINE.level = APP.LevelUtils.deepCloneLevel(refs.ENGINE.editor.workingLevel); refs.ENGINE.editor.isModified = false; },
             applyMetricsFromUI() {
@@ -3735,12 +3745,12 @@
             restoreEditorState() { return restoreEditorState(); },
             validateLevel(level) { return validateLevel(level); },
             generateLevelString() { return generateLevelString(); },
-            setLogicState(newState) { return setLogicState(newState); },
-            setOverlayState(newState) { return setOverlayState(newState); },
-            getRealLength(state = APP.State.ENGINE) { return getRealLength(state); },
-            rebuildDerivedPathState(state = APP.State.ENGINE) { return rebuildDerivedPathState(state); },
-            assertStateConsistency(state = APP.State.ENGINE) { return assertStateConsistency(state); },
-            updatePencilState() { return updatePencilState(); }
+            setLogicState(newState) { return APP.Engine.setLogicState(newState); },
+            setOverlayState(newState) { return APP.Engine.setOverlayState(newState); },
+            getRealLength(state = APP.State.ENGINE) { return APP.Engine.getRealLength(state); },
+            rebuildDerivedPathState(state = APP.State.ENGINE) { return APP.Engine.rebuildDerivedPathState(state); },
+            assertStateConsistency(state = APP.State.ENGINE) { return APP.Engine.assertStateConsistency(state); },
+            updatePencilState() { return APP.Engine.updatePencilState(); }
         };
     })();
 
