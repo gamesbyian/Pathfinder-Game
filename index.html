@@ -513,7 +513,7 @@
         return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS };
     })();
 
-    const { AXIS, H, V, NONE, DEV, PLAY, EDITOR, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS } = APP.Core;
+    const { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS } = APP.Core;
     if (DEV) window.AXIS = AXIS;
 
     // Purpose: sole DOM mutation boundary for non-canvas UI.
@@ -541,7 +541,7 @@
     // - setModalContent(id, value, mode): safe modal region text/html updates.
     // - setButtonState(id, opts): shared button disabled/active/label state updates.
     // - flashMessage(text, className): shared transient message banner helper.
-    // - APP.UI.showMessage(text, className), closeAllModals(): compatibility wrappers for legacy UI helper calls.
+    // - showMessage(text, className), closeAllModals(): compatibility wrappers for legacy UI helper calls.
     // - reportError(kind, payload): centralized startup/runtime user-visible error handling.
     // Owns shared UI concerns: overlays, modal visibility, status/progress text, and common button state updates.
     APP.UI = (() => {
@@ -899,7 +899,7 @@
         const closeAllModals = () => {
             ['guideModal', 'editorHelpModal', 'winModal', 'megaModal', 'themeModal', 'unsavedModal'].forEach(id => closeModal(id));
         };
-        const showMessageCompat = (text = '', className = '') => APP.UI.showMessage(text, className);
+        const showMessageCompat = (text = '', className = '') => showMessage(text, className);
 
         const reportError = (kind, payload) => {
             const details = payload?.message || payload?.reason || 'Unknown initialization failure.';
@@ -1216,8 +1216,6 @@
     // Public API: isRunning, stop, runGameSolver, runMegaSolver, findTrapSpots.
     // ======================================================
     APP.Solver = (() => {
-        const SOLVER_TIMEOUT = Symbol("solver-timeout");
-        const SOLVER_ABORTED = Symbol("solver-aborted");
         let timerTick = null;
         let runStart = 0;
         let status = { running: false, mode: null, startedAt: 0 };
@@ -2443,11 +2441,11 @@
             if (!targets) { this.results = {}; this.meta = {}; APP.UI.setMegaOutput(''); }
             const toRun = targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
             if (toRun.length === 0) {
-                APP.UI.showMessage('All levels have hints!', 'text-green-600');
+                showMessage('All levels have hints!', 'text-green-600');
                 return;
             }
             this.active = true;
-            APP.UI.showMessage(allowGemini ? 'Mega Gemini attempt started…' : (targets ? `Mega retry started (${Math.round(timeLimitMs / 1000)}s)…` : 'Mega solver started…'), 'text-sky-600');
+            showMessage(allowGemini ? 'Mega Gemini attempt started…' : (targets ? `Mega retry started (${Math.round(timeLimitMs / 1000)}s)…` : 'Mega solver started…'), 'text-sky-600');
             const orig = document.getElementById('megaSolverBtn')?.innerText || 'Mega Solver';
             APP.UI.setButtonState('megaSolverBtn', { enabled: false });
 
@@ -2484,13 +2482,13 @@
                 this.active = false;
                 APP.UI.setButtonLabel('megaSolverBtn', orig);
                 APP.UI.setButtonState('megaSolverBtn', { enabled: true });
-                APP.UI.showMessage('Mega solver finished…', 'text-emerald-600');
+                showMessage('Mega solver finished…', 'text-emerald-600');
             }
         },
         async retryFailed({ timeLimitMs = 60000, variant = 'default' }) {
             const failed = this.getFailedLevels();
             if (!failed.length) {
-                APP.UI.showMessage('Mega retry: no failed levels.', 'text-emerald-600');
+                showMessage('Mega retry: no failed levels.', 'text-emerald-600');
                 return;
             }
             return this.runTargets({ targets: failed, timeLimitMs, variant, allowGemini: false });
@@ -2498,7 +2496,7 @@
         async askGeminiForFailed() {
             const failed = this.getFailedLevels();
             if (!failed.length) {
-                APP.UI.showMessage('No failed levels eligible for Gemini (only proven-unsat remain).', 'text-emerald-600');
+                showMessage('No failed levels eligible for Gemini (only proven-unsat remain).', 'text-emerald-600');
                 return;
             }
             return this.runTargets({ targets: failed, timeLimitMs: 15000, variant: 'default', allowGemini: true });
@@ -2550,7 +2548,7 @@
             APP.State.ENGINE.hinter.currentPathIdx = 0;
             APP.UI.setSolutionOutput(JSON.stringify(paths).replace(/\s/g, ''));
             APP.Solver.startHintAnimation();
-            APP.UI.showMessage(purpose === 'hint' ? 'Hint found.' : 'Solved.', 'text-emerald-600');
+            showMessage(purpose === 'hint' ? 'Hint found.' : 'Solved.', 'text-emerald-600');
         };
 
         const solveLevel = async (level, opts = {}) => {
@@ -2565,7 +2563,7 @@
             try {
                 let solverResult;
                 if (!allowReferee) {
-                    APP.UI.showMessage('Solving…', 'text-sky-600');
+                    showMessage('Solving…', 'text-sky-600');
                     const legacy = await PathfinderSolver.solve(level, {
                         timeLimit: timeBudgetMs,
                         debug,
@@ -2583,14 +2581,14 @@
                 } else {
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
                     const willEscalate = hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus);
-                    if (willEscalate) APP.UI.showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
+                    if (willEscalate) showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
                     solverResult = await Referee.solve(level, {
                         purpose,
                         timeBudgetMs,
                         allowGemini: false,
                         onStage: ({ name, variant, budgetMs }) => {
                             APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
-                            if (APP.State.ENGINE.flags.refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
+                            if (APP.State.ENGINE.flags.refereeDebug) showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
                             if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
                         }
                     });
@@ -2604,7 +2602,7 @@
                     const shouldTryLegacyFallback = !solverResult.ok && ['timeout', 'no-solution-inconclusive', 'error'].includes(rawStatus);
                     if (shouldTryLegacyFallback) {
                         const fallbackBudgetMs = Number.isFinite(solverResult.budgetMs) ? solverResult.budgetMs : timeBudgetMs;
-                        APP.UI.showMessage('Referee was inconclusive. Trying legacy solver…', 'text-amber-600');
+                        showMessage('Referee was inconclusive. Trying legacy solver…', 'text-amber-600');
                         const legacy = await PathfinderSolver.solve(level, {
                             timeLimit: fallbackBudgetMs,
                             debug,
@@ -2716,7 +2714,7 @@
                     signal: controller.signal,
                     onStateUpdate: (msg) => {
                         APP.UI.setModalContent('searchLabel', msg, 'text');
-                        APP.UI.showMessage(msg, 'text-white font-black');
+                        showMessage(msg, 'text-white font-black');
                     },
                     onProgress: (elapsedMs) => {
                         APP.UI.setSolverTimerText((elapsedMs / 1000).toFixed(1) + 's');
@@ -2908,23 +2906,23 @@
                 const normalizedPaths = normalizedEntries.map(sol => sol.path).filter(path => Array.isArray(path) && path.length > 0);
                 if (solverResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
                     console.warn('Solver returned malformed solution entries.', { purpose, solution: canonical });
-                    APP.UI.showMessage('Solver returned malformed solution data.', 'text-amber-600');
+                    showMessage('Solver returned malformed solution data.', 'text-amber-600');
                 }
 
                 if (normalizedPaths.length > 0) {
                     APP.Solver.applySolutionsToEngine(normalizedEntries, purpose);
                 } else if (solverResult.rawStatus === 'no-solution-proven') {
-                    APP.UI.showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
+                    showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution proven.');
                     APP.Engine.setOverlayState(OVERLAY_NONE);
                 } else if (solverResult.status === 'aborted') {
-                    APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
+                    showMessage('Solver cancelled.', 'text-amber-600');
                     APP.Engine.setOverlayState(OVERLAY_NONE);
                 } else {
                     if (purpose === 'hint') {
-                        APP.UI.showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (15s).', 'text-amber-600');
+                        showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (15s).', 'text-amber-600');
                     } else {
-                        APP.UI.showMessage('No solution found within 15s (inconclusive). Press Solve again to try a deeper strategy (60s + alt ordering).', 'text-amber-600');
+                        showMessage('No solution found within 15s (inconclusive). Press Solve again to try a deeper strategy (60s + alt ordering).', 'text-amber-600');
                     }
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution found within budget.');
                     APP.Engine.setOverlayState(OVERLAY_NONE);
@@ -2935,7 +2933,7 @@
                 if (!APP.State.ENGINE.hinter.pathList.length) return;
                 APP.Engine.setOverlayState(HINT_ANIMATING);
                 APP.State.ENGINE.hinter.alpha = 1; APP.State.ENGINE.hinter.index = 0;
-                APP.UI.showMessage(`Solution ${APP.State.ENGINE.hinter.currentPathIdx + 1}/${APP.State.ENGINE.hinter.pathList.length}`, "text-emerald-600");
+                showMessage(`Solution ${APP.State.ENGINE.hinter.currentPathIdx + 1}/${APP.State.ENGINE.hinter.pathList.length}`, "text-emerald-600");
             }
 
             function stopHintAnimation() {
@@ -3344,7 +3342,7 @@
 
             function attemptMoveTo(target) { if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
 
-            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(RESOLVED); APP.UI.setFieldValue('winSolutionOutput', JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, '')); document.getElementById('winExportArea').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (APP.State.ENGINE.mode === PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
+            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(RESOLVED); winOutEl.value = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); document.getElementById('winExportArea').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (APP.State.ENGINE.mode === PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
 
             function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [HAZARD_TRIGGERED].includes(logicState) || mode === EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return APP.Engine.areWinMetricsSatisfied(stubState, level); }
 
@@ -3385,11 +3383,11 @@
 
             function createSnapshot() { return { path: [...APP.State.ENGINE.path], isPortalJump: new Set(APP.State.ENGINE.isPortalJump), activeGateKey: APP.State.ENGINE.activeGateKey, logicState: APP.State.ENGINE.logicState, detonatedFalseGoals: new Set(APP.State.ENGINE.detonatedFalseGoals) }; }
 
-            function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; APP.Engine.setLogicState(snap.logicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
+            function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; APP.Engine.setLogicState(snap.logicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; showMessage("", ""); }
 
             function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
-            function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(IDLE); APP.Engine.setOverlayState(OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.Layout.updateAppScale(); APP.Layout.updateViewport(); APP.Layout.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
+            function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(IDLE); APP.Engine.setOverlayState(OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
             function updatePencilState() { const btn = document.getElementById('editPencilBtn'); const svg = btn.querySelector('svg'); if (APP.State.ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
 
@@ -3627,11 +3625,11 @@
 
                 APP.UI.closeModal('winModal');
 
-                APP.UI.showMessage("", "");
+                showMessage("", "");
 
-                APP.Layout.updateAppScale();
+                updateAppScale();
 
-                APP.Layout.updateViewport();
+                updateViewport();
 
                 APP.Persistence.updateCompletionUI();
                 APP.State.ENGINE.isDirty = true;
@@ -3645,7 +3643,7 @@
                         APP.State.ENGINE.hinter.alpha -= 0.05;
                         if (APP.State.ENGINE.hinter.alpha <= 0) {
                             APP.Engine.setOverlayState(OVERLAY_NONE);
-                            APP.UI.showMessage("", "");
+                            showMessage("", "");
                         }
                     }
                 }
@@ -3791,9 +3789,9 @@
         const bind = ({ ENGINE: engineRef, UI: uiRef, Engine: engineApi }) => { refs = { ENGINE: engineRef, UI: uiRef, Engine: engineApi }; };
         const init = bind;
 
-            function pickUpObject(k) { if(APP.State.ENGINE.editor.isPencilMode) return null; saveEditorState(); APP.State.ENGINE.editor.draggedFromGrid = true; APP.State.ENGINE.editor.validTrapSpots.clear(); const l = APP.State.ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); APP.State.ENGINE.isDirty = true; return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; APP.State.ENGINE.isDirty = true; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); APP.State.ENGINE.isDirty = true; return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (APP.State.ENGINE.editor.pendingPortal === k) { APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = '#999'; APP.State.ENGINE.editor.pendingPortal = otherK; APP.UI.showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } APP.State.ENGINE.isDirty = true; return {type: 'portal'}; } APP.State.ENGINE.editor.undoStack.pop(); APP.State.ENGINE.editor.draggedFromGrid = false; return null; }
+            function pickUpObject(k) { if(APP.State.ENGINE.editor.isPencilMode) return null; saveEditorState(); APP.State.ENGINE.editor.draggedFromGrid = true; APP.State.ENGINE.editor.validTrapSpots.clear(); const l = APP.State.ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); APP.State.ENGINE.isDirty = true; return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; APP.State.ENGINE.isDirty = true; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); APP.State.ENGINE.isDirty = true; return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (APP.State.ENGINE.editor.pendingPortal === k) { APP.State.ENGINE.editor.pendingPortal = null; showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = '#999'; APP.State.ENGINE.editor.pendingPortal = otherK; showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } APP.State.ENGINE.isDirty = true; return {type: 'portal'}; } APP.State.ENGINE.editor.undoStack.pop(); APP.State.ENGINE.editor.draggedFromGrid = false; return null; }
 
-            function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { APP.UI.showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return APP.UI.showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, H); break; case 'filterV': l.filterMap.set(k, V); break; case 'flipH': l.flippingFilterMap.set(k, H); break; case 'flipV': l.flippingFilterMap.set(k, V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: '#999' }); APP.UI.showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; const color = APP.State.ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
+            function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, H); break; case 'filterV': l.filterMap.set(k, V); break; case 'flipH': l.flippingFilterMap.set(k, H); break; case 'flipV': l.flippingFilterMap.set(k, V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: '#999' }); showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; const color = APP.State.ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); APP.State.ENGINE.editor.pendingPortal = null; showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
 
 
             function validateLevelDetailed(l) {
@@ -3884,16 +3882,16 @@
 
             function validateLevel(l) {
                 const res = validateLevelDetailed(l);
-                if (!res.ok) APP.UI.showMessage(res.reasons[0], "text-red-500 font-bold");
+                if (!res.ok) showMessage(res.reasons[0], "text-red-500 font-bold");
                 return res.ok;
             }
 
             function saveEditorState() { APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.undoStack.push(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.editor.workingLevel)); if (APP.State.ENGINE.editor.undoStack.length > 50) APP.State.ENGINE.editor.undoStack.shift(); APP.State.ENGINE.hinter.pathList = []; }
 
-            function restoreEditorState() { if (APP.State.ENGINE.editor.undoStack.length === 0) return; APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.workingLevel = APP.State.ENGINE.editor.undoStack.pop(); let newPending = null; APP.State.ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); APP.State.ENGINE.editor.pendingPortal = newPending; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("Undo Grid Action", "text-slate-500"); }
+            function restoreEditorState() { if (APP.State.ENGINE.editor.undoStack.length === 0) return; APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.workingLevel = APP.State.ENGINE.editor.undoStack.pop(); let newPending = null; APP.State.ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); APP.State.ENGINE.editor.pendingPortal = newPending; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.isDirty = true; showMessage("Undo Grid Action", "text-slate-500"); }
 
 
-            async function generateLevelString() { const l = APP.State.ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0; const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0; let exportedHints = l.hints || []; if (APP.State.ENGINE.path.length > 1 && APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = APP.State.ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => APP.State.ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (APP.State.ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(APP.State.ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [APP.State.ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: APP.LevelUtils.expCoords(l.gateKeys), goal: {x:APP.LevelUtils.UNPACK(l.goalKey).x+1, y:APP.LevelUtils.UNPACK(l.goalKey).y+1}, falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: APP.LevelUtils.expCoords(l.blockSet), mustPass: APP.LevelUtils.expCoords(l.mustPassKeys), mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x+1, y1: APP.LevelUtils.UNPACK(pv.k1).y+1, x2: APP.LevelUtils.UNPACK(pv.k2).x+1, y2: APP.LevelUtils.UNPACK(pv.k2).y+1, color: pv.color })), geese: APP.LevelUtils.expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); APP.UI.setSolutionOutput(json); await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' }); APP.State.ENGINE.editor.isModified = false; if (isValid) { APP.UI.showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => APP.UI.showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
+            async function generateLevelString() { const l = APP.State.ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0; const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0; let exportedHints = l.hints || []; if (APP.State.ENGINE.path.length > 1 && APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = APP.State.ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => APP.State.ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (APP.State.ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(APP.State.ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [APP.State.ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: APP.LevelUtils.expCoords(l.gateKeys), goal: {x:APP.LevelUtils.UNPACK(l.goalKey).x+1, y:APP.LevelUtils.UNPACK(l.goalKey).y+1}, falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: APP.LevelUtils.expCoords(l.blockSet), mustPass: APP.LevelUtils.expCoords(l.mustPassKeys), mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x+1, y1: APP.LevelUtils.UNPACK(pv.k1).y+1, x2: APP.LevelUtils.UNPACK(pv.k2).x+1, y2: APP.LevelUtils.UNPACK(pv.k2).y+1, color: pv.color })), geese: APP.LevelUtils.expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); APP.UI.setSolutionOutput(json); await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' }); APP.State.ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
 
 
 
@@ -3945,7 +3943,7 @@
                 refs.ENGINE.editor.isPencilMode = false;
                 updatePencilState();
                 refs.ENGINE.editor.isModified = true;
-                APP.Layout.updateViewport();
+                updateViewport();
             },
             markEditorInputsDirty() {
                 refs.ENGINE.hinter.pathList = [];
@@ -4083,86 +4081,66 @@
         };
     })();
 
-    APP.Layout = (() => {
-        function getViewportDimensions() {
-            const vv = window.visualViewport;
-            if (vv) return { width: vv.width, height: vv.height };
-            return { width: window.innerWidth, height: window.innerHeight };
+    function getViewportDimensions() {
+        const vv = window.visualViewport;
+        if (vv) return { width: vv.width, height: vv.height };
+        return { width: window.innerWidth, height: window.innerHeight };
+    }
+
+    function measureGridModalRect() {
+        const appLayout = document.getElementById('appLayout');
+        const canvasContainer = document.getElementById('canvasContainer');
+        const modalRectSource = canvasContainer || appLayout;
+        if (!modalRectSource) return;
+        const modalRect = modalRectSource.getBoundingClientRect();
+        APP.UI.setRootCssVar('--grid-modal-left', `${modalRect.left}px`);
+        APP.UI.setRootCssVar('--grid-modal-top', `${modalRect.top}px`);
+        APP.UI.setRootCssVar('--grid-modal-width', `${modalRect.width}px`);
+        APP.UI.setRootCssVar('--grid-modal-height', `${modalRect.height}px`);
+    }
+
+    function updateAppScale() {
+        const VIEWPORT_EPSILON = 2;
+        const viewport = getViewportDimensions();
+        const widthChanged = Math.abs(viewport.width - APP.State.ENGINE.viewport.lastWidth) > VIEWPORT_EPSILON;
+        const heightChanged = Math.abs(viewport.height - APP.State.ENGINE.viewport.lastHeight) > VIEWPORT_EPSILON;
+        updateLayoutMode();
+        if (!widthChanged && !heightChanged) return;
+        APP.State.ENGINE.viewport.lastWidth = viewport.width;
+        APP.State.ENGINE.viewport.lastHeight = viewport.height;
+        const scale = Math.min(viewport.height * 0.02, viewport.width * 0.035);
+        APP.UI.setRootCssVar('--app-scale', `${scale}px`);
+        updateViewport();
+        APP.State.ENGINE.isDirty = true;
+    }
+
+    function updateLayoutMode() {
+        const viewport = getViewportDimensions();
+        const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && viewport.width >= 900;
+        APP.State.ENGINE.ui.isLandscapeLayout = naturalLandscape || APP.State.ENGINE.ui.forceLandscapeLayout;
+        const appLayout = document.getElementById('appLayout');
+        APP.UI.setClassState(appLayout, 'forced-landscape', APP.State.ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
+        syncEditorPalettePlacement();
+        measureGridModalRect();
+        requestAnimationFrame(() => measureGridModalRect());
+        const orientationBtn = document.getElementById('orientationToggleBtn');
+        APP.UI.setTextContent(orientationBtn, APP.State.ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape');
+    }
+
+    function syncEditorPalettePlacement() {
+        const pal = document.getElementById('editorPalette');
+        const gamePane = document.getElementById('gamePane');
+        const controlsPane = document.getElementById('controlsPane');
+        if (!pal || !gamePane || !controlsPane) return;
+        const inLandscape = APP.State.ENGINE.ui.isLandscapeLayout;
+        if (inLandscape && APP.State.ENGINE.mode === EDITOR) {
+            if (pal.parentElement !== controlsPane) controlsPane.insertBefore(pal, controlsPane.firstChild);
+            APP.UI.setClassState(pal, 'landscape-editor-tools', true);
+        } else {
+            if (pal.parentElement !== gamePane.parentElement) gamePane.parentElement.insertBefore(pal, controlsPane);
+            APP.UI.setClassState(pal, 'landscape-editor-tools', false);
         }
-
-        function measureGridModalRect() {
-            const appLayout = document.getElementById('appLayout');
-            const canvasContainer = document.getElementById('canvasContainer');
-            const modalRectSource = canvasContainer || appLayout;
-            if (!modalRectSource) return;
-            const modalRect = modalRectSource.getBoundingClientRect();
-            APP.UI.setRootCssVar('--grid-modal-left', `${modalRect.left}px`);
-            APP.UI.setRootCssVar('--grid-modal-top', `${modalRect.top}px`);
-            APP.UI.setRootCssVar('--grid-modal-width', `${modalRect.width}px`);
-            APP.UI.setRootCssVar('--grid-modal-height', `${modalRect.height}px`);
-        }
-
-        function syncEditorPalettePlacement() {
-            const pal = document.getElementById('editorPalette');
-            const gamePane = document.getElementById('gamePane');
-            const controlsPane = document.getElementById('controlsPane');
-            if (!pal || !gamePane || !controlsPane) return;
-            const inLandscape = APP.State.ENGINE.ui.isLandscapeLayout;
-            if (inLandscape && APP.State.ENGINE.mode === EDITOR) {
-                if (pal.parentElement !== controlsPane) controlsPane.insertBefore(pal, controlsPane.firstChild);
-                APP.UI.setClassState(pal, 'landscape-editor-tools', true);
-            } else {
-                if (pal.parentElement !== gamePane.parentElement) gamePane.parentElement.insertBefore(pal, controlsPane);
-                APP.UI.setClassState(pal, 'landscape-editor-tools', false);
-            }
-        }
-
-        function updateLayoutMode() {
-            const viewport = getViewportDimensions();
-            const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && viewport.width >= 900;
-            APP.State.ENGINE.ui.isLandscapeLayout = naturalLandscape || APP.State.ENGINE.ui.forceLandscapeLayout;
-            const appLayout = document.getElementById('appLayout');
-            APP.UI.setClassState(appLayout, 'forced-landscape', APP.State.ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
-            syncEditorPalettePlacement();
-            measureGridModalRect();
-            requestAnimationFrame(() => measureGridModalRect());
-            const orientationBtn = document.getElementById('orientationToggleBtn');
-            APP.UI.setTextContent(orientationBtn, APP.State.ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape');
-        }
-
-        function updateViewport() {
-            const canvas = APP.Renderer.getCanvas();
-            const rect = canvas.getBoundingClientRect();
-            if (rect.width === 0) return;
-            const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-            if (!l) return;
-            const swaps = [1, 3, 6, 7];
-            APP.State.ENGINE.viewport.swapped = swaps.includes(APP.State.ENGINE.variant);
-            const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w;
-            const gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h;
-            APP.State.ENGINE.viewport.cellW = canvas.width / gridW;
-            APP.State.ENGINE.viewport.cellH = canvas.height / gridH;
-            APP.State.ENGINE.isDirty = true;
-        }
-
-        function updateAppScale() {
-            const VIEWPORT_EPSILON = 2;
-            const viewport = getViewportDimensions();
-            const widthChanged = Math.abs(viewport.width - APP.State.ENGINE.viewport.lastWidth) > VIEWPORT_EPSILON;
-            const heightChanged = Math.abs(viewport.height - APP.State.ENGINE.viewport.lastHeight) > VIEWPORT_EPSILON;
-            updateLayoutMode();
-            if (!widthChanged && !heightChanged) return;
-            APP.State.ENGINE.viewport.lastWidth = viewport.width;
-            APP.State.ENGINE.viewport.lastHeight = viewport.height;
-            const scale = Math.min(viewport.height * 0.02, viewport.width * 0.035);
-            APP.UI.setRootCssVar('--app-scale', `${scale}px`);
-            updateViewport();
-            APP.State.ENGINE.isDirty = true;
-        }
-
-        return { updateViewport, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, measureGridModalRect };
-    })();
-
+    }
     APP.LevelUtils = (() => {
             const getFallbackRawLevels = () => APP.Data.getFallbackLevels();
             const getRawLevels = () => APP.Data.getLevels();
@@ -4314,9 +4292,9 @@
 
             function shiftLevel(l, dx, dy) { if (dx === 0 && dy === 0) return; const shift = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); return APP.LevelUtils.PACK(p.x + dx, p.y + dy); }; l.goalKey = shift(l.goalKey); l.gateKeys = l.gateKeys.map(shift); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(shift)); l.blockSet = new Set(Array.from(l.blockSet).map(shift)); l.gooseSet = new Set(Array.from(l.gooseSet).map(shift)); l.mustPassKeys = l.mustPassKeys.map(shift); l.mustCrossKeys = l.mustCrossKeys.map(shift); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v)); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v)); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = shift(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(shift); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.hints = []; APP.State.ENGINE.hinter.pathList = []; }
 
-            function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { APP.UI.showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = APP.LevelUtils.getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { APP.UI.showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { APP.LevelUtils.shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = APP.LevelUtils.UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; APP.Layout.updateViewport(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
+            function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = APP.LevelUtils.getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { APP.LevelUtils.shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = APP.LevelUtils.UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; updateViewport(); APP.State.ENGINE.isDirty = true; showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
 
-            function transformLevel(l, coordMap, newW, newH, axisMap) { APP.Editor.saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); const tp = coordMap(p.x, p.y); return APP.LevelUtils.PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = mapKey(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(mapKey); if(APP.State.ENGINE.activeGateKey) APP.State.ENGINE.activeGateKey = mapKey(APP.State.ENGINE.activeGateKey); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.isModified = true; APP.Layout.updateViewport(); }
+            function transformLevel(l, coordMap, newW, newH, axisMap) { APP.Editor.saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); const tp = coordMap(p.x, p.y); return APP.LevelUtils.PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = mapKey(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(mapKey); if(APP.State.ENGINE.activeGateKey) APP.State.ENGINE.activeGateKey = mapKey(APP.State.ENGINE.activeGateKey); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.isModified = true; updateViewport(); }
 
             function getLevelBounds(l) { let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity; const update = (k) => { if (k === -1) return; const p = APP.LevelUtils.UNPACK(k); if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; }; if (l.goalKey !== -1) update(l.goalKey); l.gateKeys.forEach(update); l.falseGoalKeys.forEach(update); l.blockSet.forEach(update); l.gooseSet.forEach(update); l.mustPassKeys.forEach(update); l.mustCrossKeys.forEach(update); l.filterMap.forEach((v, k) => update(k)); l.flippingFilterMap.forEach((v, k) => update(k)); l.portalMap.forEach((v, k) => update(k)); if (minX === Infinity) return null; return { minX, minY, maxX, maxY }; }
 
@@ -4328,6 +4306,12 @@
             shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, getFallbackRawLevels, getRawLevels, resolvePortal, isValidMove
         };
     })();
+
+    const setSolversActive = (active) => {
+        APP.UI.setSolverControlsEnabled(active);
+    };
+
+
 
     APP.Themes = (() => {
     function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
@@ -5455,6 +5439,23 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         return api;
     })();
 
+    function closeAllModals() { return APP.UI.closeAllModals(); }
+
+
+    const msgEl = document.getElementById('message'); const winOutEl = document.getElementById('winSolutionOutput'); const ghostEl = document.getElementById('dragGhost');
+
+
+
+
+
+
+
+
+
+
+
+    const SOLVER_TIMEOUT = Symbol("solver-timeout");
+    const SOLVER_ABORTED = Symbol("solver-aborted");
     // ======================================================
     // H) Solver
     // ======================================================
@@ -5464,7 +5465,79 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // ======================================================
     // D) Rules / ValidationAndWin
     // ======================================================
+    function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal'); }
 
+    APP.State.ENGINE.ui.gamepadGridPrimaryAction = () => {};
+
+    function getFocusableGroups() {
+        const groups = [
+            { name: 'GRID', elements: [document.getElementById('gameCanvas')] },
+            { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
+            { name: 'LEVEL', elements: [document.getElementById('prevLevelBtn'), document.getElementById('nextLevelBtn')].filter(Boolean) }
+        ];
+        if (APP.State.ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [document.getElementById('editReqLen'), document.getElementById('editReqInt')].filter(Boolean) });
+        return groups.filter(g => g.elements.length > 0);
+    }
+
+    function applyFocusVisual(el) {
+        document.querySelectorAll('.gamepad-focus').forEach(node => APP.UI.removeClasses(node, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']));
+        if (!APP.State.ENGINE.ui.gamepadFocusEnabled || !el) return;
+        APP.UI.addClasses(el, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']);
+        if (typeof el.focus === 'function') el.focus({ preventScroll: true });
+    }
+
+    function setFocusGroup(groupName, index = 0, forceVisual = false) {
+        const groups = getFocusableGroups();
+        const gIdx = Math.max(0, groups.findIndex(g => g.name === groupName));
+        const group = groups[gIdx] || groups[0];
+        if (!group) return;
+        APP.State.ENGINE.ui.focusGroup = group.name;
+        APP.State.ENGINE.ui.focusIndex = Math.max(0, Math.min(index, group.elements.length - 1));
+        if (forceVisual) APP.State.ENGINE.ui.gamepadFocusEnabled = true;
+        applyFocusVisual(group.elements[APP.State.ENGINE.ui.focusIndex]);
+    }
+
+    function cycleFocusGroup() {
+        const groups = getFocusableGroups();
+        if (!groups.length) return;
+        const idx = groups.findIndex(g => g.name === APP.State.ENGINE.ui.focusGroup);
+        const next = groups[(idx + 1 + groups.length) % groups.length];
+        setFocusGroup(next.name, 0, true);
+    }
+
+    function moveFocusWithinGroup(delta) {
+        const groups = getFocusableGroups();
+        const group = groups.find(g => g.name === APP.State.ENGINE.ui.focusGroup);
+        if (!group || !group.elements.length) return;
+        APP.State.ENGINE.ui.focusIndex = (APP.State.ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length;
+        applyFocusVisual(group.elements[APP.State.ENGINE.ui.focusIndex]);
+    }
+
+    function activateFocusedControl() {
+        const groups = getFocusableGroups();
+        const group = groups.find(g => g.name === APP.State.ENGINE.ui.focusGroup);
+        const el = group?.elements?.[APP.State.ENGINE.ui.focusIndex];
+        if (!el) return;
+        if (el.id === 'gameCanvas') {
+            APP.State.ENGINE.ui.gamepadGridPrimaryAction();
+            return;
+        }
+        el.click();
+    }
+
+    function dismissGuideOrHelpModal() {
+        if (APP.UI.isModalOpen('guideModal')) { APP.UI.closeModal('guideModal'); return true; }
+        if (APP.UI.isModalOpen('editorHelpModal')) { APP.UI.closeModal('editorHelpModal'); return true; }
+        return false;
+    }
+
+
+
+
+    function updateViewport() { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); if (rect.width === 0) return; const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return; const swaps = [1, 3, 6, 7]; APP.State.ENGINE.viewport.swapped = swaps.includes(APP.State.ENGINE.variant); const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; APP.State.ENGINE.viewport.cellW = canvas.width / gridW; APP.State.ENGINE.viewport.cellH = canvas.height / gridH; APP.State.ENGINE.isDirty = true; }
+
+
+    function showMessage(t, c) { return APP.UI.showMessage(t, c); }
 
     // ======================================================
     // F/G/H) Input + UI Wiring + Solver Boot
@@ -5474,74 +5547,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const init = () => {
             if (initialized) return;
             initialized = true;
-    APP.State.ENGINE.ui.gamepadGridPrimaryAction = () => {};
-            const isModalActive = () => APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal');
-            
-                function getFocusableGroups() {
-                    const groups = [
-                        { name: 'GRID', elements: [document.getElementById('gameCanvas')] },
-                        { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
-                        { name: 'LEVEL', elements: [document.getElementById('prevLevelBtn'), document.getElementById('nextLevelBtn')].filter(Boolean) }
-                    ];
-                    if (APP.State.ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [document.getElementById('editReqLen'), document.getElementById('editReqInt')].filter(Boolean) });
-                    return groups.filter(g => g.elements.length > 0);
-                }
-            
-                function applyFocusVisual(el) {
-                    document.querySelectorAll('.gamepad-focus').forEach(node => APP.UI.removeClasses(node, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']));
-                    if (!APP.State.ENGINE.ui.gamepadFocusEnabled || !el) return;
-                    APP.UI.addClasses(el, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']);
-                    if (typeof el.focus === 'function') el.focus({ preventScroll: true });
-                }
-            
-                function setFocusGroup(groupName, index = 0, forceVisual = false) {
-                    const groups = getFocusableGroups();
-                    const gIdx = Math.max(0, groups.findIndex(g => g.name === groupName));
-                    const group = groups[gIdx] || groups[0];
-                    if (!group) return;
-                    APP.State.ENGINE.ui.focusGroup = group.name;
-                    APP.State.ENGINE.ui.focusIndex = Math.max(0, Math.min(index, group.elements.length - 1));
-                    if (forceVisual) APP.State.ENGINE.ui.gamepadFocusEnabled = true;
-                    applyFocusVisual(group.elements[APP.State.ENGINE.ui.focusIndex]);
-                }
-            
-                function cycleFocusGroup() {
-                    const groups = getFocusableGroups();
-                    if (!groups.length) return;
-                    const idx = groups.findIndex(g => g.name === APP.State.ENGINE.ui.focusGroup);
-                    const next = groups[(idx + 1 + groups.length) % groups.length];
-                    setFocusGroup(next.name, 0, true);
-                }
-            
-                function moveFocusWithinGroup(delta) {
-                    const groups = getFocusableGroups();
-                    const group = groups.find(g => g.name === APP.State.ENGINE.ui.focusGroup);
-                    if (!group || !group.elements.length) return;
-                    APP.State.ENGINE.ui.focusIndex = (APP.State.ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length;
-                    applyFocusVisual(group.elements[APP.State.ENGINE.ui.focusIndex]);
-                }
-            
-                function activateFocusedControl() {
-                    const groups = getFocusableGroups();
-                    const group = groups.find(g => g.name === APP.State.ENGINE.ui.focusGroup);
-                    const el = group?.elements?.[APP.State.ENGINE.ui.focusIndex];
-                    if (!el) return;
-                    if (el.id === 'gameCanvas') {
-                        APP.State.ENGINE.ui.gamepadGridPrimaryAction();
-                        return;
-                    }
-                    el.click();
-                }
-            
-                function dismissGuideOrHelpModal() {
-                    if (APP.UI.isModalOpen('guideModal')) { APP.UI.closeModal('guideModal'); return true; }
-                    if (APP.UI.isModalOpen('editorHelpModal')) { APP.UI.closeModal('editorHelpModal'); return true; }
-                    return false;
-                }
-            
-            
-            
-                    const tryNavigate = (actionFn) => { if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.isModified) { APP.State.ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
+        const tryNavigate = (actionFn) => { if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.isModified) { APP.State.ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
         document.getElementById('unsavedStayBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.runtime.pendingAction = null; APP.UI.closeModal('unsavedModal'); };
         document.getElementById('unsavedLeaveBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.closeModal('unsavedModal'); if (APP.State.ENGINE.runtime.pendingAction) APP.State.ENGINE.runtime.pendingAction(); };
 
@@ -5557,7 +5563,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.State.ENGINE.resetStreak = 0;
             if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) {
                 const occupied = activeLevel.gateKeys.includes(k) || activeLevel.goalKey === k || activeLevel.falseGoalKeys.has(k) || activeLevel.blockSet.has(k) || activeLevel.gooseSet.has(k) || activeLevel.filterMap.has(k) || activeLevel.flippingFilterMap.has(k) || activeLevel.portalMap.has(k) || activeLevel.mustPassKeys.includes(k) || activeLevel.mustCrossKeys.includes(k);
-                if (occupied) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.State.ENGINE.editor.draggedObject = APP.Editor.pickUpObject(k); if (APP.State.ENGINE.editor.draggedObject) { APP.Engine.setLogicState(EDIT_DRAG); APP.UI.EditorDragGhost.update({ visible: true, cellSize: APP.State.ENGINE.viewport.cellW, type: APP.State.ENGINE.editor.draggedObject.type }); } } else if (APP.State.ENGINE.editor.selectedTool) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.Editor.placeEditorObject(k); } else { APP.State.ENGINE.editor.emptyClickCount++; if (APP.State.ENGINE.editor.emptyClickCount >= 2) { APP.UI.showMessage("Click pencil to draw.", "text-white font-bold"); } } return;
+                if (occupied) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.State.ENGINE.editor.draggedObject = APP.Editor.pickUpObject(k); if (APP.State.ENGINE.editor.draggedObject) { APP.Engine.setLogicState(EDIT_DRAG); APP.UI.EditorDragGhost.update({ visible: true, cellSize: APP.State.ENGINE.viewport.cellW, type: APP.State.ENGINE.editor.draggedObject.type }); } } else if (APP.State.ENGINE.editor.selectedTool) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.Editor.placeEditorObject(k); } else { APP.State.ENGINE.editor.emptyClickCount++; if (APP.State.ENGINE.editor.emptyClickCount >= 2) { showMessage("Click pencil to draw.", "text-white font-bold"); } } return;
             }
             if (APP.State.ENGINE.path.length > 0) {
                 if (APP.State.ENGINE.path.length === 1 && activeLevel.gateKeys.includes(k) && k !== APP.State.ENGINE.activeGateKey) {
@@ -5594,7 +5600,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.Engine.setLogicState(IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
                 if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
             }
-            if (APP.State.ENGINE.logicState === EDIT_DRAG && APP.State.ENGINE.mode === EDITOR) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); APP.UI.showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; APP.Engine.setLogicState(IDLE); } if (APP.State.ENGINE.logicState === DRAGGING) APP.Engine.setLogicState(IDLE);
+            if (APP.State.ENGINE.logicState === EDIT_DRAG && APP.State.ENGINE.mode === EDITOR) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; APP.Engine.setLogicState(IDLE); } if (APP.State.ENGINE.logicState === DRAGGING) APP.Engine.setLogicState(IDLE);
         };
 
         APP.Renderer.getCanvas().addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (APP.State.ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); APP.State.ENGINE.runtime.activePointerId = e.pointerId; APP.Renderer.getCanvas().setPointerCapture(APP.State.ENGINE.runtime.activePointerId); handleDown(e); });
@@ -5739,7 +5745,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         setFocusGroup('CONTROLS', 0);
 
         const viewportUpdateHandler = () => {
-            APP.Layout.updateAppScale();
+            updateAppScale();
             setFocusGroup(APP.State.ENGINE.ui.focusGroup || 'GRID', APP.State.ENGINE.ui.focusIndex || 0);
         };
         window.addEventListener('resize', viewportUpdateHandler);
@@ -5748,16 +5754,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             window.visualViewport.addEventListener('resize', viewportUpdateHandler);
             window.visualViewport.addEventListener('scroll', viewportUpdateHandler);
         }
-        APP.Layout.updateAppScale();
+        updateAppScale();
 
-        document.getElementById('gridRotateBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); APP.UI.showMessage("Rotated", "text-white font-black"); };
-        document.getElementById('gridMirrorBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.State.ENGINE.editor.mirrorHorizontal = !APP.State.ENGINE.editor.mirrorHorizontal; APP.UI.setInlineStyle('mirrorIconSvg', 'transform', APP.State.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'); if (APP.State.ENGINE.editor.mirrorHorizontal) { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } APP.UI.showMessage("Mirrored", "text-white font-black"); };
+        document.getElementById('gridRotateBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); showMessage("Rotated", "text-white font-black"); };
+        document.getElementById('gridMirrorBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.State.ENGINE.editor.mirrorHorizontal = !APP.State.ENGINE.editor.mirrorHorizontal; APP.UI.setInlineStyle('mirrorIconSvg', 'transform', APP.State.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'); if (APP.State.ENGINE.editor.mirrorHorizontal) { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } showMessage("Mirrored", "text-white font-black"); };
         document.getElementById('gridSizeMinusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(-1); };
         document.getElementById('gridSizePlusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(1); };
         document.getElementById('muteBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.muted = !APP.State.ENGINE.muted; APP.UI.setInlineStyle('muteSlash', 'display', APP.State.ENGINE.muted ? 'block' : 'none'); };
-        document.getElementById('orientationToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.ui.forceLandscapeLayout = !APP.State.ENGINE.ui.forceLandscapeLayout; APP.Layout.updateLayoutMode(); APP.Layout.updateAppScale(); APP.Layout.updateViewport(); APP.UI.showMessage(APP.State.ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
+        document.getElementById('orientationToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.ui.forceLandscapeLayout = !APP.State.ENGINE.ui.forceLandscapeLayout; updateLayoutMode(); updateAppScale(); updateViewport(); showMessage(APP.State.ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
 
-        const perspectiveAction = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.activeSolverController) return; APP.State.ENGINE.variant = (APP.State.ENGINE.variant + 1) % 8; APP.Layout.updateViewport(); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); SOUND_BUS.play("D5", "32n"); };
+        const perspectiveAction = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.activeSolverController) return; APP.State.ENGINE.variant = (APP.State.ENGINE.variant + 1) % 8; updateViewport(); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); SOUND_BUS.play("D5", "32n"); };
         document.getElementById('whoaBtn').onclick = perspectiveAction;
 
         document.getElementById('resetBtn').onclick = () => {
@@ -5782,10 +5788,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
 
         document.getElementById('undoBtn').onclick = () => { APP.UI.closeAllModals(); if(APP.State.ENGINE.undoStack.length) APP.Engine.applySnapshot(APP.State.ENGINE.undoStack.pop()); };
-        document.getElementById('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = APP.State.ENGINE.foundHintsSinceLoad || []; if (!hints.length) { APP.UI.showMessage("No hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); APP.UI.setSolutionOutput(hintText); await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
+        document.getElementById('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = APP.State.ENGINE.foundHintsSinceLoad || []; if (!hints.length) { showMessage("No hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); APP.UI.setSolutionOutput(hintText); await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
         document.getElementById('editGenBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.generateLevelString(); };
-        document.getElementById('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); const outValue = APP.UI.getValue('solutionOutput'); if (outValue) { if (await APP.UI.copyText(outValue, { fallbackElId: 'solutionOutput' })) APP.UI.showMessage("Copied", "text-white font-black"); } };
-        document.getElementById('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
+        document.getElementById('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); const outValue = APP.UI.getValue('solutionOutput'); if (outValue) { if (await APP.UI.copyText(outValue, { fallbackElId: 'solutionOutput' })) showMessage("Copied", "text-white font-black"); } };
+        document.getElementById('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); showMessage("Path Copied", "text-white font-black"); } };
 
         const hintBtn = document.getElementById('hintBtn'); const hintTopHalf = document.getElementById('hintTopHalf');
         const toggleHint = () => {
@@ -5813,10 +5819,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         await APP.Solver.runGameSolver('hint');
                     } catch (err) {
                         console.error('Hint solve failed:', err);
-                        APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
+                        showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
                         APP.Engine.setOverlayState(OVERLAY_NONE);
                     }
-                } else { if (APP.State.ENGINE.level?.hints?.length > 0) { APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints; APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0); APP.State.ENGINE.hinter.source = 'saved'; APP.Solver.startHintAnimation(); } else APP.UI.showMessage("No saved hint.", "text-white font-black"); }
+                } else { if (APP.State.ENGINE.level?.hints?.length > 0) { APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints; APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0); APP.State.ENGINE.hinter.source = 'saved'; APP.Solver.startHintAnimation(); } else showMessage("No saved hint.", "text-white font-black"); }
                 toggleHint(); updateHintLabel();
             }
         };
@@ -5827,18 +5833,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.Engine.setOverlayState(OVERLAY_NONE);
                 return;
             }
-            APP.UI.showMessage('Stopping solver…', 'text-amber-400 font-bold');
+            showMessage('Stopping solver…', 'text-amber-400 font-bold');
             APP.Solver.cancel();
         };
         document.addEventListener('keydown', (e) => {
             if (!APP.State.ENGINE.isDevMode) return;
             if (e.shiftKey && e.key.toLowerCase() === 'r') {
                 APP.State.ENGINE.flags.useRefereeSolver = !APP.State.ENGINE.flags.useRefereeSolver;
-                APP.UI.showMessage(`Referee solver ${APP.State.ENGINE.flags.useRefereeSolver ? 'ON' : 'OFF'}`, 'text-white font-black');
+                showMessage(`Referee solver ${APP.State.ENGINE.flags.useRefereeSolver ? 'ON' : 'OFF'}`, 'text-white font-black');
             }
         });
         const handleWinClose = (callback) => { const circle = document.getElementById('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
-        document.getElementById('copyWinDataBtn').onclick = async () => { const winValue = APP.UI.getValue('winSolutionOutput'); if (winValue) await APP.UI.copyText(winValue, { fallbackElId: 'winSolutionOutput' }); };
+        document.getElementById('copyWinDataBtn').onclick = async () => { if (winOutEl.value) await APP.UI.copyText(winOutEl.value, { fallbackElId: 'winSolutionOutput' }); };
         document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
         document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
         document.getElementById('nextLevelModalBtn').onclick = () => { const levels = APP.LevelUtils.getRawLevels(); handleWinClose(() => { if (APP.State.ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(APP.State.ENGINE.levelIdx + 1); }); };
@@ -5860,7 +5866,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('megaGeminiRetryBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.askGeminiForFailed(); };
 
         const tModal = document.getElementById('themeModal');
-        document.getElementById('openThemeModalBtn').onclick = () => { APP.UI.closeAllModals(); APP.Layout.updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
+        document.getElementById('openThemeModalBtn').onclick = () => { APP.UI.closeAllModals(); updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
         document.getElementById('closeThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
         document.getElementById('dismissThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
         document.getElementById('openThemeEditorBtn').onclick = () => { APP.UI.ThemeEditor.openEditorView(); };
@@ -5900,7 +5906,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('editPencilBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.togglePencilMode(); };
 
         const eraserBtn = document.getElementById('editEraserBtn'); let eraserTimer = null, eraserFired = false;
-        eraserBtn.addEventListener('pointerdown', (e) => { if (APP.State.ENGINE.mode !== EDITOR) return; eraserTimer = setTimeout(() => { APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.UI.showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
+        eraserBtn.addEventListener('pointerdown', (e) => { if (APP.State.ENGINE.mode !== EDITOR) return; eraserTimer = setTimeout(() => { APP.Engine.PathNavigator.clear(APP.State.ENGINE); showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
         const handleEraserRelease = () => { if (eraserTimer) { clearTimeout(eraserTimer); if (!eraserFired) { if (APP.State.ENGINE.path.length > 1) APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); else APP.Engine.PathNavigator.clear(APP.State.ENGINE); } eraserTimer = null; eraserFired = false; } };
         eraserBtn.addEventListener('pointerup', handleEraserRelease); eraserBtn.addEventListener('pointerleave', handleEraserRelease);
 
