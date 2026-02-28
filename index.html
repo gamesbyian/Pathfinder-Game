@@ -2244,8 +2244,17 @@
                 dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default'
             });
             const elapsedMs = Date.now() - started;
-            if (r?.ok && Array.isArray(r.solution) && r.solution.length > 0) {
-                return { ok: true, status: 'solved', solution: r.solution, elapsedMs, stats: { debug: r.debug } };
+            if (r?.ok) {
+                if (!r.solutions && r.solution) {
+                    const legacySolution = r.solution;
+                    r.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
+                        ? legacySolution
+                        : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
+                }
+                delete r.solution;
+            }
+            if (r?.ok && Array.isArray(r.solutions) && r.solutions.length > 0) {
+                return { ok: true, status: 'solved', solutions: r.solutions, elapsedMs, stats: { debug: r.debug } };
             }
             const debug = r?.debug || {};
             const rawStatus = debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error');
@@ -2261,8 +2270,17 @@
                 disabledPrunes: ['mustPassBound', 'mustCrossBound']
             });
             const elapsedMs = Date.now() - started;
-            if (r?.ok && Array.isArray(r.solution) && r.solution.length > 0) {
-                return { ok: true, status: 'solved', solution: r.solution, elapsedMs, stats: { debug: r.debug } };
+            if (r?.ok) {
+                if (!r.solutions && r.solution) {
+                    const legacySolution = r.solution;
+                    r.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
+                        ? legacySolution
+                        : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
+                }
+                delete r.solution;
+            }
+            if (r?.ok && Array.isArray(r.solutions) && r.solutions.length > 0) {
+                return { ok: true, status: 'solved', solutions: r.solutions, elapsedMs, stats: { debug: r.debug } };
             }
             const debug = r?.debug || {};
             if (debug.status === 'timeout') return { ok: false, status: 'timeout', elapsedMs, stats: { debug } };
@@ -2341,7 +2359,7 @@
                 if (gem.ok) {
                     const validation = validateCandidatePath(level, gem.candidate);
                     if (validation.ok) {
-                        last = { ok: true, status: 'solved', stage: 4, solution: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
+                        last = { ok: true, status: 'solved', stage: 4, solutions: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
                     } else {
                         last = { ok: false, status: 'gemini-invalid', stage: 4, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried };
                     }
@@ -2523,12 +2541,21 @@
                         debugLevel,
                         signal: controller.signal
                     });
-                    if (legacy?.ok && Array.isArray(legacy.solution) && legacy.solution.length > 0) {
-                        solverResult = { ok: true, status: 'solved', rawStatus: 'solved', stage: 0, solution: legacy.solution, stagesTried: [] };
+                    if (legacy?.ok) {
+                        if (!legacy.solutions && legacy.solution) {
+                            const legacySolution = legacy.solution;
+                            legacy.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
+                                ? legacySolution
+                                : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
+                        }
+                        delete legacy.solution;
+                    }
+                    if (legacy?.ok && Array.isArray(legacy.solutions) && legacy.solutions.length > 0) {
+                        solverResult = { ok: true, status: 'solved', rawStatus: 'solved', stage: 0, solutions: legacy.solutions, stagesTried: [] };
                     } else {
                         const rawStatus = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
                         const normalizedStatus = rawStatus === 'no-solution-proven' ? 'no-solution' : rawStatus;
-                        solverResult = { ok: false, status: normalizedStatus, rawStatus, stage: 0, solution: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
+                        solverResult = { ok: false, status: normalizedStatus, rawStatus, stage: 0, solutions: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
                     }
                 } else {
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
@@ -2558,25 +2585,53 @@
                             debugLevel,
                             signal: controller.signal
                         });
-                        if (legacy?.ok && Array.isArray(legacy.solution) && legacy.solution.length > 0) {
+                        if (legacy?.ok) {
+                            if (!legacy.solutions && legacy.solution) {
+                                const legacySolution = legacy.solution;
+                                legacy.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
+                                    ? legacySolution
+                                    : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
+                            }
+                            delete legacy.solution;
+                        }
+                        if (legacy?.ok && Array.isArray(legacy.solutions) && legacy.solutions.length > 0) {
                             solverResult = {
                                 ok: true,
                                 status: 'solved',
                                 rawStatus: 'solved',
                                 stage: solverResult.stage,
-                                solution: legacy.solution,
+                                solutions: legacy.solutions,
                                 stagesTried: solverResult.stagesTried || []
                             };
                         }
                     }
                 }
-                const solutions = solverResult.ok ? (solverResult.solution || []) : [];
+                if (solverResult?.ok) {
+                    if (!solverResult.solutions && solverResult.solution) {
+                        const legacySolution = solverResult.solution;
+                        solverResult.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
+                            ? legacySolution
+                            : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
+                    }
+                    delete solverResult.solution;
+                }
+                const solutions = solverResult.ok ? (solverResult.solutions || []) : [];
+                const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
                 return {
                     ok: !!solverResult.ok,
                     status: solverResult.status || 'error',
                     rawStatus: solverResult.rawStatus || solverResult.status || 'error',
+                    timedOut: (solverResult.rawStatus || solverResult.status) === 'timeout',
+                    duration: Number.isFinite(solverResult.duration)
+                        ? solverResult.duration
+                        : (Number.isFinite(solverResult.elapsedMs) ? solverResult.elapsedMs : (debugInfo?.elapsedMs || 0)),
+                    nodesVisited: Number.isFinite(solverResult.nodesVisited)
+                        ? solverResult.nodesVisited
+                        : (Number.isFinite(debugInfo?.nodesVisited)
+                            ? debugInfo.nodesVisited
+                            : (Number.isFinite(debugInfo?.nodesExpanded) ? debugInfo.nodesExpanded : 0)),
                     solutions,
-                    debug: solverResult.debug || null,
+                    debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
                     stage: solverResult.stage,
                     message: solverResult.message || ''
@@ -2628,7 +2683,7 @@
                         lastStageReached: res.stage,
                         stagesTried: res.stagesTried || []
                     };
-                    if (res.ok) results[lvlNum] = res.solution.map(sv => sv.path);
+                    if (res.ok) results[lvlNum] = (res.solutions || []).map(sv => sv.path);
                     if (typeof opts.onLevelResult === 'function') opts.onLevelResult({ lvlNum, attempt, res, timeLimitMs, results, meta });
                 }
                 return { cancelled: controller.signal.aborted, results, meta };
