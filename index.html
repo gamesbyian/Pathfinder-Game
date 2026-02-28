@@ -991,7 +991,7 @@
                 const targetTheme = targetSwatch.dataset.themeKey;
                 const targetCategory = targetSwatch.dataset.category;
                 if (!targetColor || !targetCategory || targetTheme !== sourceTheme || targetColor === sourceColor) return false;
-                replaceThemeColor(sourceTheme, targetColor, sourceColor, targetCategory);
+                APP.Themes.replaceThemeColor(sourceTheme, targetColor, sourceColor, targetCategory);
                 return true;
             };
             const setDragGhost = ({ visible = false, color = null, x = null, y = null } = {}) => {
