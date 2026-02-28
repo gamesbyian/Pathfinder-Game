@@ -1054,26 +1054,26 @@
                         e.preventDefault();
                         e.stopPropagation();
                         if (dragState.isDragging) return;
-                        if (dragState.tapColor && dragState.tapTheme === themeKey) {
-                            const replaced = applySwatchReplace({
-                                sourceColor: dragState.tapColor,
-                                sourceTheme: dragState.tapTheme,
-                                sourceCategory: dragState.tapCategory,
-                                targetSwatch: swatch
-                            });
-                            if (replaced && dragState.tapSwatch === swatch) {
-                                dragState.tapSwatch = null;
+                        if (dragState.tapColor && dragState.tapTheme === themeKey && dragState.tapSwatch !== swatch) {
+                            if (dragState.tapCategory === category) {
+                                applySwatchReplace({
+                                    sourceColor: dragState.tapColor,
+                                    sourceTheme: dragState.tapTheme,
+                                    sourceCategory: dragState.tapCategory,
+                                    targetSwatch: swatch
+                                });
+                            } else {
+                                // Keep legacy behavior: cross-category taps are rejected with explicit feedback.
+                                showMessage("Mismatched Categories", "You can only swap colors within the same category.");
                             }
-                            if (replaced) {
-                                dragState.tapColor = null;
-                                dragState.tapTheme = null;
-                                dragState.tapCategory = null;
-                                dragState.tapSwatch = null;
-                                setSwatchSelected(null);
-                                APP.Engine.setLogicState(IDLE);
-                                setDragGhost({ visible: false });
-                                return;
-                            }
+                            dragState.tapColor = null;
+                            dragState.tapTheme = null;
+                            dragState.tapCategory = null;
+                            dragState.tapSwatch = null;
+                            setSwatchSelected(null);
+                            APP.Engine.setLogicState(IDLE);
+                            setDragGhost({ visible: false });
+                            return;
                         }
                         dragState.tapColor = c;
                         dragState.tapTheme = themeKey;
@@ -5794,14 +5794,22 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const handleUp = (e) => {
             if (APP.State.ENGINE.logicState === THEME_DRAG) {
+                // Resolve from deepest hit node up to the swatch so child elements still count as valid drops.
                 const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-theme-color]');
                 const dragState = APP.UI.ThemeEditor.getDragState();
-                APP.UI.ThemeEditor.applySwatchReplace({
-                    sourceColor: dragState.color,
-                    sourceTheme: dragState.theme,
-                    sourceCategory: dragState.category,
-                    targetSwatch: dropTarget
-                });
+                if (dropTarget) {
+                    if (dropTarget.dataset.category === dragState.category) {
+                        APP.UI.ThemeEditor.applySwatchReplace({
+                            sourceColor: dragState.color,
+                            sourceTheme: dragState.theme,
+                            sourceCategory: dragState.category,
+                            targetSwatch: dropTarget
+                        });
+                    } else {
+                        // Keep legacy behavior: cross-category drags are rejected with explicit feedback.
+                        showMessage("Mismatched Categories", "You can only swap colors within the same category.");
+                    }
+                }
                 APP.Engine.setLogicState(IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
                 if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
             }
