@@ -2546,6 +2546,29 @@
                     });
                     solverResult.rawStatus = solverResult.status;
                     if (solverResult.status === 'no-solution-proven') solverResult.status = 'no-solution';
+
+                    const rawStatus = solverResult.rawStatus || solverResult.status;
+                    const shouldTryLegacyFallback = !solverResult.ok && ['timeout', 'no-solution-inconclusive', 'error'].includes(rawStatus);
+                    if (shouldTryLegacyFallback) {
+                        const fallbackBudgetMs = Number.isFinite(solverResult.budgetMs) ? solverResult.budgetMs : timeBudgetMs;
+                        showMessage('Referee was inconclusive. Trying legacy solver…', 'text-amber-600');
+                        const legacy = await PathfinderSolver.solve(level, {
+                            timeLimit: fallbackBudgetMs,
+                            debug,
+                            debugLevel,
+                            signal: controller.signal
+                        });
+                        if (legacy?.ok && Array.isArray(legacy.solution) && legacy.solution.length > 0) {
+                            solverResult = {
+                                ok: true,
+                                status: 'solved',
+                                rawStatus: 'solved',
+                                stage: solverResult.stage,
+                                solution: legacy.solution,
+                                stagesTried: solverResult.stagesTried || []
+                            };
+                        }
+                    }
                 }
                 const solutions = solverResult.ok ? (solverResult.solution || []) : [];
                 return {
