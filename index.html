@@ -2611,7 +2611,7 @@
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
-                const solution = solverResult.ok ? solverResult.solution : [];
+                const solution = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
                 return {
                     ok: !!solverResult.ok,
@@ -2877,6 +2877,7 @@
                 const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 solverResult.solution = canonical;
                 solverResult.solutions = canonical;
+                const normalizedEntries = canonical;
                 const normalizedEntries = solverResult.ok ? canonical : [];
                 const normalizedPaths = normalizedEntries.map(sol => sol.path).filter(path => Array.isArray(path) && path.length > 0);
                 if (solverResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
