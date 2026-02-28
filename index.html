@@ -3075,7 +3075,7 @@
                 if (doc.exists) {
                     const data = doc.data();
                     const cloudSet = new Set(data.completedLevels || []);
-                    APP.State.ENGINE.progressSet = new Set([...ENGINE.progressSet, ...cloudSet]);
+                    APP.State.ENGINE.progressSet = new Set([...APP.State.ENGINE.progressSet, ...cloudSet]);
                     updateCompletionUI();
                     localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
                 }
@@ -5479,51 +5479,51 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('editMegaSolver').onclick = () => { APP.UI.closeAllModals(); if (!APP.State.ENGINE.editor.workingLevel) return; APP.Editor.applyMetricsFromUI(); runGameSolver('solve'); };
         document.getElementById('editCopyMetrics').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const len = getRealLength(); APP.UI.setInputValue('editReqLen', len); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.intersections); APP.Editor.applyMetricsFromUI(); APP.UI.showMessage("Metrics Set", "text-white font-black"); } };
 
-        // APP.Boot lifecycle guarantees:
-        // - start() is the single authoritative init entrypoint.
-        // - loader/init errors route through APP.Loader.fail(...) and stop further boot progression.
-        // - successful path reaches APP.Loader.finish() exactly once.
-        // APP.Boot Public API: start().
-        // Owns the single initialization entrypoint and orchestrates auth/progress sync, loader completion, and post-load system startup.
-        APP.Boot = (() => {
-            let started = false;
-
-            const start = async () => {
-                if (started) return;
-                started = true;
-
-                APP.UI.initDom();
-                APP.UI.ThemeEditor.init();
-                ensureThemeLeaveColors();
-                applyTheme('classic');
-
-                try {
-                    try {
-                        if (firebaseConfigRaw) await initAuth();
-                    } catch (e) {}
-                    syncProgress(auth?.currentUser);
-
-                    const mode = await APP.Loader.init();
-                    if (mode !== 'ready' && mode !== 'fallback') {
-                        APP.Loader.fail('boot', { message: `Unexpected loader mode: ${mode}` });
-                        return;
-                    }
-                    if (APP.Loader.getStatus().phase === 'failed') return;
-
-                    APP.Engine.loadLevel(0);
-                    updatePlayModeLayout();
-                    loop();
-                    APP.Loader.finish();
-                } catch (error) {
-                    APP.Loader.fail('boot', error);
-                }
-            };
-
-            return { start };
-        })();
-
         };
         return { init };
+    })();
+
+    // APP.Boot lifecycle guarantees:
+    // - start() is the single authoritative init entrypoint.
+    // - loader/init errors route through APP.Loader.fail(...) and stop further boot progression.
+    // - successful path reaches APP.Loader.finish() exactly once.
+    // APP.Boot Public API: start().
+    // Owns the single initialization entrypoint and orchestrates auth/progress sync, loader completion, and post-load system startup.
+    APP.Boot = (() => {
+        let started = false;
+
+        const start = async () => {
+            if (started) return;
+            started = true;
+
+            APP.UI.initDom();
+            APP.UI.ThemeEditor.init();
+            ensureThemeLeaveColors();
+            applyTheme('classic');
+
+            try {
+                try {
+                    if (firebaseConfigRaw) await initAuth();
+                } catch (e) {}
+                syncProgress(auth?.currentUser);
+
+                const mode = await APP.Loader.init();
+                if (mode !== 'ready' && mode !== 'fallback') {
+                    APP.Loader.fail('boot', { message: `Unexpected loader mode: ${mode}` });
+                    return;
+                }
+                if (APP.Loader.getStatus().phase === 'failed') return;
+
+                APP.Engine.loadLevel(0);
+                updatePlayModeLayout();
+                loop();
+                APP.Loader.finish();
+            } catch (error) {
+                APP.Loader.fail('boot', error);
+            }
+        };
+
+        return { start };
     })();
 
     window.onload = () => {
