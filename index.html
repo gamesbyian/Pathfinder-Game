@@ -968,7 +968,19 @@
                 teDom.editView = resolveEl('themeEditView');
                 teDom.ghost = resolveEl('dragGhost');
             };
-            const dragState = { color: null, theme: null, category: null, tapColor: null, tapTheme: null, tapCategory: null };
+            const dragState = {
+                color: null,
+                theme: null,
+                category: null,
+                tapColor: null,
+                tapTheme: null,
+                tapCategory: null,
+                tapSwatch: null,
+                pointerId: null,
+                startX: null,
+                startY: null,
+                isDragging: false
+            };
             const setSwatchSelected = (elOrNull) => {
                 document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove(...selectedClasses));
                 if (elOrNull) elOrNull.classList.add(...selectedClasses);
@@ -1030,30 +1042,44 @@
                     swatch.onpointerdown = e => {
                         e.preventDefault();
                         e.stopPropagation();
+                        dragState.color = c;
+                        dragState.theme = themeKey;
+                        dragState.category = category;
+                        dragState.pointerId = e.pointerId;
+                        dragState.startX = e.clientX;
+                        dragState.startY = e.clientY;
+                        dragState.isDragging = false;
+                    };
+                    swatch.onclick = e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (dragState.isDragging) return;
                         if (dragState.tapColor && dragState.tapTheme === themeKey) {
-                            applySwatchReplace({
+                            const replaced = applySwatchReplace({
                                 sourceColor: dragState.tapColor,
                                 sourceTheme: dragState.tapTheme,
                                 sourceCategory: dragState.tapCategory,
                                 targetSwatch: swatch
                             });
-                            dragState.tapColor = null;
-                            dragState.tapTheme = null;
-                            dragState.tapCategory = null;
-                            setSwatchSelected(null);
-                            APP.Engine.setLogicState(IDLE);
-                            setDragGhost({ visible: false });
-                            return;
+                            if (replaced && dragState.tapSwatch === swatch) {
+                                dragState.tapSwatch = null;
+                            }
+                            if (replaced) {
+                                dragState.tapColor = null;
+                                dragState.tapTheme = null;
+                                dragState.tapCategory = null;
+                                dragState.tapSwatch = null;
+                                setSwatchSelected(null);
+                                APP.Engine.setLogicState(IDLE);
+                                setDragGhost({ visible: false });
+                                return;
+                            }
                         }
                         dragState.tapColor = c;
                         dragState.tapTheme = themeKey;
                         dragState.tapCategory = category;
+                        dragState.tapSwatch = swatch;
                         setSwatchSelected(swatch);
-                        dragState.color = c;
-                        dragState.theme = themeKey;
-                        dragState.category = category;
-                        APP.Engine.setLogicState(THEME_DRAG);
-                        setDragGhost({ visible: true, color: c, x: e.clientX, y: e.clientY });
                     };
                     return swatch;
                 };
@@ -1207,11 +1233,35 @@
                 }
                 if (teDom.selectView) teDom.selectView.classList.remove('hidden');
                 setSwatchSelected(null);
-                dragState.color = null; dragState.theme = null; dragState.category = null; dragState.tapColor = null; dragState.tapTheme = null; dragState.tapCategory = null;
+                dragState.color = null; dragState.theme = null; dragState.category = null; dragState.tapColor = null; dragState.tapTheme = null; dragState.tapCategory = null; dragState.tapSwatch = null; dragState.pointerId = null; dragState.startX = null; dragState.startY = null; dragState.isDragging = false;
                 setDragGhost({ visible: false });
             };
 
-            return { init: ensureInit, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView, applySwatchReplace, getDragState: () => ({ ...dragState }), clearDragState: () => { dragState.color = null; dragState.theme = null; dragState.category = null; }, hasTapSelection: () => !!dragState.tapColor };
+            return {
+                init: ensureInit,
+                renderAll,
+                renderThemeKey,
+                setSwatchSelected,
+                setDragGhost,
+                openEditorView,
+                closeEditorView,
+                applySwatchReplace,
+                getDragState: () => ({ ...dragState }),
+                markPointerDrag: () => {
+                    dragState.isDragging = true;
+                    APP.Engine.setLogicState(THEME_DRAG);
+                },
+                clearDragState: () => {
+                    dragState.color = null;
+                    dragState.theme = null;
+                    dragState.category = null;
+                    dragState.pointerId = null;
+                    dragState.startX = null;
+                    dragState.startY = null;
+                    dragState.isDragging = false;
+                },
+                hasTapSelection: () => !!dragState.tapColor
+            };
         })();
 
         const EditorDragGhost = (() => {
@@ -3937,7 +3987,7 @@
             function restoreEditorState() { if (APP.State.ENGINE.editor.undoStack.length === 0) return; APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.workingLevel = APP.State.ENGINE.editor.undoStack.pop(); let newPending = null; APP.State.ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); APP.State.ENGINE.editor.pendingPortal = newPending; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.isDirty = true; showMessage("Undo Grid Action", "text-slate-500"); }
 
 
-            async function generateLevelString() { const l = APP.State.ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0; const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0; let exportedHints = l.hints || []; if (APP.State.ENGINE.path.length > 1 && APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = APP.State.ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => APP.State.ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (APP.State.ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(APP.State.ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [APP.State.ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: APP.LevelUtils.expCoords(l.gateKeys), goal: {x:APP.LevelUtils.UNPACK(l.goalKey).x+1, y:APP.LevelUtils.UNPACK(l.goalKey).y+1}, falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: APP.LevelUtils.expCoords(l.blockSet), mustPass: APP.LevelUtils.expCoords(l.mustPassKeys), mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x+1, y1: APP.LevelUtils.UNPACK(pv.k1).y+1, x2: APP.LevelUtils.UNPACK(pv.k2).x+1, y2: APP.LevelUtils.UNPACK(pv.k2).y+1, color: pv.color })), geese: APP.LevelUtils.expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); APP.UI.setSolutionOutput(json); await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' }); APP.State.ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
+            async function generateLevelString() { const l = APP.State.ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0; const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0; let exportedHints = l.hints || []; if (APP.State.ENGINE.path.length > 1 && APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = APP.State.ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => APP.State.ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (APP.State.ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(APP.State.ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [APP.State.ENGINE.path, ...exportedHints].slice(0, 5); } } } const themesSnapshot = JSON.parse(JSON.stringify(APP.Themes.THEMES)); const out = { grid: l.grid, gates: APP.LevelUtils.expCoords(l.gateKeys), goal: {x:APP.LevelUtils.UNPACK(l.goalKey).x+1, y:APP.LevelUtils.UNPACK(l.goalKey).y+1}, falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: APP.LevelUtils.expCoords(l.blockSet), mustPass: APP.LevelUtils.expCoords(l.mustPassKeys), mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x+1, y1: APP.LevelUtils.UNPACK(pv.k1).y+1, x2: APP.LevelUtils.UNPACK(pv.k2).x+1, y2: APP.LevelUtils.UNPACK(pv.k2).y+1, color: pv.color })), geese: APP.LevelUtils.expCoords(l.gooseSet), hints: exportedHints, themes: themesSnapshot }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); APP.UI.setSolutionOutput(json); await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' }); APP.State.ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
 
 
 
@@ -5760,7 +5810,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         APP.Renderer.getCanvas().addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (APP.State.ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); APP.State.ENGINE.runtime.activePointerId = e.pointerId; APP.Renderer.getCanvas().setPointerCapture(APP.State.ENGINE.runtime.activePointerId); handleDown(e); });
         window.addEventListener('pointermove', e => {
-            if (APP.State.ENGINE.logicState === THEME_DRAG) { const dragState = APP.UI.ThemeEditor.getDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: true, color: dragState.color, x: e.clientX, y: e.clientY }); e.preventDefault(); return; }
+            const themeDragState = APP.UI.ThemeEditor.getDragState();
+            if (themeDragState.pointerId !== null && e.pointerId === themeDragState.pointerId && !themeDragState.isDragging) {
+                const dx = Math.abs((themeDragState.startX ?? e.clientX) - e.clientX);
+                const dy = Math.abs((themeDragState.startY ?? e.clientY) - e.clientY);
+                if (dx > 6 || dy > 6) APP.UI.ThemeEditor.markPointerDrag();
+            }
+            if (APP.State.ENGINE.logicState === THEME_DRAG) {
+                const dragState = APP.UI.ThemeEditor.getDragState();
+                if (e.pointerId === dragState.pointerId || dragState.pointerId === null) {
+                    APP.UI.ThemeEditor.setDragGhost({ visible: true, color: dragState.color, x: e.clientX, y: e.clientY });
+                    e.preventDefault();
+                    return;
+                }
+            }
             if (APP.State.ENGINE.mode === EDITOR && (APP.State.ENGINE.editor.draggedObject || (APP.State.ENGINE.editor.selectedTool && APP.State.ENGINE.logicState === EDIT_DRAG))) {
                 const type = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool;
                 const isOverPalette = APP.UI.EditorDragGhost.isPointerOverPalette(e.clientX, e.clientY);
