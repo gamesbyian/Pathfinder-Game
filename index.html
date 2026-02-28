@@ -978,8 +978,8 @@
                 const targetColor = targetSwatch.dataset.themeColor;
                 const targetTheme = targetSwatch.dataset.themeKey;
                 const targetCategory = targetSwatch.dataset.category;
-                if (!targetColor || targetTheme !== sourceTheme || targetCategory !== sourceCategory || targetColor === sourceColor) return false;
-                replaceThemeColor(sourceTheme, targetColor, sourceColor, sourceCategory);
+                if (!targetColor || !targetCategory || targetTheme !== sourceTheme || targetColor === sourceColor) return false;
+                replaceThemeColor(sourceTheme, targetColor, sourceColor, targetCategory);
                 return true;
             };
             const setDragGhost = ({ visible = false, color = null, x = null, y = null } = {}) => {
