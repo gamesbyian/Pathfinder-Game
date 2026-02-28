@@ -1222,10 +1222,17 @@
 
         const SolverCore = {
                 _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet, options = {}) {
-                    return APP.Engine.isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, {
+                    return APP.LevelUtils.isValidMove(key, {
                         mode: PLAY,
+                        path,
+                        visitedCounts: counts,
+                        cellUsage: usage,
+                        intersections: ints,
+                        isPortalJump: jumpSet,
                         flipCount,
-                        crossedSet,
+                        crossedFlippingFilters: crossedSet
+                    }, l, {
+                        isStrict: false,
                         hazardPolicy: options.hazardPolicy || 'forbid'
                     });
                 },
@@ -2792,7 +2799,16 @@
                 for (let i = 1; i < path.length; i++) {
                     const prev = path[i - 1];
                     const cur = path[i];
-                    if (!APP.Engine.isValidMoveCommon(cur, path.slice(0, i), counts, usage, intersections, jumpSet, level, { mode: PLAY, flipCount, crossedSet, hazardPolicy: 'forbid' })) {
+                    if (!APP.LevelUtils.isValidMove(cur, {
+                        mode: PLAY,
+                        path: path.slice(0, i),
+                        visitedCounts: counts,
+                        cellUsage: usage,
+                        intersections,
+                        isPortalJump: jumpSet,
+                        flipCount,
+                        crossedFlippingFilters: crossedSet
+                    }, level, { isStrict: false, hazardPolicy: 'forbid' })) {
                         return { ok: false, reason: `Invalid move at step ${i + 1}.` };
                     }
                     const prevP = APP.LevelUtils.UNPACK(prev);
@@ -3247,55 +3263,6 @@
         const bind = ({ ENGINE: engineRef, UI: uiRef }) => { refs = { ENGINE: engineRef, UI: uiRef }; };
         const init = bind;
 
-            function isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) {
-                const { x, y } = APP.LevelUtils.UNPACK(key);
-                const { w, h } = l.grid;
-                if (!APP.LevelUtils.inBounds(x, y, w, h) || l.blockSet.has(key)) return false;
-                if (ctx.mode === EDITOR && l.gooseSet.has(key)) return false;
-                const lastK = path[path.length - 1];
-                if (lastK === undefined) return true;
-                if (ctx.mode !== EDITOR) {
-                    if (lastK === l.goalKey) return false;
-                    if (ctx.armedFalseGoals?.has(lastK)) return false;
-                    if (l.gateKeys.includes(key)) return false;
-                } else if (path.length > 1 && l.gateKeys.includes(lastK)) return false;
-                if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
-                const lastP = APP.LevelUtils.UNPACK(lastK);
-                const isPortalJumpCandidate = l.portalMap.has(lastK) && APP.LevelUtils.resolvePortal(l, lastK).dest === key;
-                if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
-                const axis = (y === lastP.y) ? H : V;
-                const u = usage.get(key);
-                if (u && ((axis === H && u.h) || (axis === V && u.v))) return false;
-                const uLast = usage.get(lastK);
-                if (uLast) {
-                    let entryAxis = NONE;
-                    if (path.length > 1 && !jumpSet.has(path.length - 1)) {
-                        const prevP = APP.LevelUtils.UNPACK(path[path.length - 2]);
-                        const lastP_check = APP.LevelUtils.UNPACK(lastK);
-                        entryAxis = (prevP.y === lastP_check.y) ? H : V;
-                    }
-                    if (axis !== entryAxis) {
-                        if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false;
-                    }
-                }
-                const flipCount = ctx.flipCount || 0;
-                const crossedSet = ctx.crossedSet || ctx.crossedFlippingFilters || new Map();
-                let filterLast = l.filterMap.get(lastK);
-                if (filterLast === undefined && l.flippingFilterMap.has(lastK)) {
-                    const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
-                    filterLast = (relevantFlipCount % 2 !== 0) ? (l.flippingFilterMap.get(lastK) === H ? V : H) : l.flippingFilterMap.get(lastK);
-                }
-                if (filterLast && filterLast !== axis) return false;
-                let filterTarget = l.filterMap.get(key);
-                if (filterTarget === undefined && l.flippingFilterMap.has(key)) {
-                    const relevantFlipCount = crossedSet.has(key) ? crossedSet.get(key) : flipCount;
-                    const baseAxis = l.flippingFilterMap.get(key);
-                    filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
-                }
-                if (filterTarget && filterTarget !== axis) return false;
-                return true;
-            }
-
             function areWinMetricsSatisfied(state = APP.State.ENGINE, level = (state.mode === PLAY ? state.level : state.editor.workingLevel)) {
                 if (!level || !state.path.length) return false;
                 const curLen = APP.Engine.getRealLength(state);
@@ -3305,7 +3272,15 @@
                 return allMustPass && allMustCross;
             }
 
-            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (isValidMoveEngine(key, APP.State.ENGINE.path, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.cellUsage, APP.State.ENGINE.intersections, APP.State.ENGINE.isPortalJump, activeLevel)) { if (APP.State.ENGINE.mode === EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } APP.Engine.setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = APP.LevelUtils.resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); APP.Engine.setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
+            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
+                    isStrict: true,
+                    mode: APP.State.ENGINE.mode,
+                    allowJump: true,
+                    checkWinMetrics: false,
+                    checkHazards: false,
+                    checkFalseGoals: false,
+                    armedFalseGoals: APP.State.ENGINE.armedFalseGoals
+                })) { if (APP.State.ENGINE.mode === EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } APP.Engine.setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = APP.LevelUtils.resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); APP.Engine.setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
 
 
             function attemptMoveTo(target) { if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } }
@@ -3347,8 +3322,6 @@
                 }, 1000);
             }
 
-
-            function isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, { mode: APP.State.ENGINE.mode, armedFalseGoals: APP.State.ENGINE.armedFalseGoals, flipCount: APP.State.ENGINE.flipCount, crossedSet: APP.State.ENGINE.crossedFlippingFilters }); }
 
 
             function createSnapshot() { return { path: [...APP.State.ENGINE.path], isPortalJump: new Set(APP.State.ENGINE.isPortalJump), activeGateKey: APP.State.ENGINE.activeGateKey, logicState: APP.State.ENGINE.logicState, detonatedFalseGoals: new Set(APP.State.ENGINE.detonatedFalseGoals) }; }
@@ -3738,8 +3711,6 @@
             checkFalseGoalCondition() { return checkFalseGoalCondition(); },
             triggerJumpScare() { return triggerJumpScare(); },
             triggerBombDetonation(key) { return triggerBombDetonation(key); },
-            isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) { return isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx); },
-            isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l) { return isValidMoveEngine(key, path, counts, usage, ints, jumpSet, l); },
             createSnapshot() { return createSnapshot(); },
             applySnapshot(snap) { return applySnapshot(snap); },
             checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { return checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections); },
@@ -4128,6 +4099,88 @@
             const UNPACK = (k) => ({ x: k & 0xFFFF, y: k >> 16 });
             const inBounds = (x, y, w, h) => x >= 0 && x < w && y >= 0 && y < h;
             const expCoords = (items) => (Array.isArray(items) ? items : Array.from(items)).map(k => { const p = UNPACK(k); return {x: p.x + 1, y: p.y + 1}; });
+            const isValidMove = (targetKey, state, level, options = {}) => {
+                const {
+                    isStrict = false,
+                    allowJump = true,
+                    mode = state?.mode,
+                    armedFalseGoals = state?.armedFalseGoals,
+                    flipCount = state?.flipCount || 0,
+                    crossedSet = state?.crossedSet || state?.crossedFlippingFilters || new Map(),
+                    checkHazards = isStrict,
+                    checkFalseGoals = isStrict,
+                    checkWinMetrics = isStrict
+                } = options;
+                if (!level) return false;
+                const path = state?.path || [];
+                const counts = state?.visitedCounts || state?.counts || new Map();
+                const usage = state?.cellUsage || state?.usage || new Map();
+                const jumpSet = state?.isPortalJump || state?.jumpSet || new Set();
+
+                const { x, y } = UNPACK(targetKey);
+                const { w, h } = level.grid;
+                if (!inBounds(x, y, w, h) || level.blockSet.has(targetKey)) return false;
+
+                if (mode === EDITOR && checkHazards && level.gooseSet.has(targetKey)) return false;
+
+                const lastK = path[path.length - 1];
+                if (lastK === undefined) return true;
+
+                if (mode !== EDITOR) {
+                    if (lastK === level.goalKey) return false;
+                    if (checkFalseGoals && armedFalseGoals?.has(lastK)) return false;
+                    if (level.gateKeys.includes(targetKey)) return false;
+                } else if (path.length > 1 && level.gateKeys.includes(lastK)) {
+                    return false;
+                }
+
+                if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
+                const lastP = UNPACK(lastK);
+                const isPortalJumpCandidate = allowJump && level.portalMap.has(lastK) && resolvePortal(level, lastK).dest === targetKey;
+                if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
+
+                const axis = (y === lastP.y) ? H : V;
+                const u = usage.get(targetKey);
+                if (u && ((axis === H && u.h) || (axis === V && u.v))) return false;
+
+                const uLast = usage.get(lastK);
+                if (uLast) {
+                    let entryAxis = NONE;
+                    if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+                        const prevP = UNPACK(path[path.length - 2]);
+                        const lastPC = UNPACK(lastK);
+                        entryAxis = (prevP.y === lastPC.y) ? H : V;
+                    }
+                    if (axis !== entryAxis) {
+                        if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false;
+                    }
+                }
+
+                let filterLast = level.filterMap.get(lastK);
+                if (filterLast === undefined && level.flippingFilterMap.has(lastK)) {
+                    const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+                    filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === H ? V : H) : level.flippingFilterMap.get(lastK);
+                }
+                if (filterLast && filterLast !== axis) return false;
+
+                let filterTarget = level.filterMap.get(targetKey);
+                if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
+                    const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
+                    const baseAxis = level.flippingFilterMap.get(targetKey);
+                    filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
+                }
+                if (filterTarget && filterTarget !== axis) return false;
+
+                if (checkHazards && mode !== EDITOR && level.gooseSet.has(targetKey)) return false;
+                if (checkWinMetrics && mode !== EDITOR && targetKey === level.goalKey) {
+                    const nextCounts = counts;
+                    const mustPassOk = level.mustPassKeys.every(k => (nextCounts.get(k) || 0) > 0 || k === targetKey);
+                    const mustCrossOk = level.mustCrossKeys.every(k => ((nextCounts.get(k) || 0) + (k === targetKey ? 1 : 0)) >= 2);
+                    if (!mustPassOk || !mustCrossOk) return false;
+                }
+
+                return true;
+            };
 
             function transformPoint(x, y, variant, W, H) { switch (variant) { case 0: return { tx: x, ty: y }; case 1: return { tx: H - 1 - y, ty: x }; case 2: return { tx: W - 1 - x, ty: H - 1 - y }; case 3: return { tx: y, ty: W - 1 - x }; case 4: return { tx: W - 1 - x, ty: y }; case 5: return { tx: x, ty: H - 1 - y }; case 6: return { tx: y, ty: x }; case 7: return { tx: H - 1 - y, ty: W - 1 - x }; default: return { tx: x, ty: y }; } }
 
@@ -4200,7 +4253,7 @@
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
             transformAxis, getGridCoord, deepCloneLevel, normalizeLevel, denormalizeLevel,
-            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, getFallbackRawLevels, getRawLevels, resolvePortal
+            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, getFallbackRawLevels, getRawLevels, resolvePortal, isValidMove
         };
     })();
 
