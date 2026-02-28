@@ -2878,6 +2878,7 @@
                 solverResult.solution = canonical;
                 solverResult.solutions = canonical;
                 const normalizedEntries = canonical;
+                const normalizedEntries = solverResult.ok ? canonical : [];
                 const normalizedPaths = normalizedEntries.map(sol => sol.path).filter(path => Array.isArray(path) && path.length > 0);
                 if (solverResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
                     console.warn('Solver returned malformed solution entries.', { purpose, solution: canonical });
