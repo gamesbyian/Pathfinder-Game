@@ -4618,7 +4618,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
     }
 
-    function createSnapshot() { return { path: [...ENGINE.path], isPortalJump: new Set(APP.State.ENGINE.isPortalJump), activeGateKey: APP.State.ENGINE.activeGateKey, logicState: APP.State.ENGINE.logicState, detonatedFalseGoals: new Set(APP.State.ENGINE.detonatedFalseGoals) }; }
+    function createSnapshot() { return { path: [...APP.State.ENGINE.path], isPortalJump: new Set(APP.State.ENGINE.isPortalJump), activeGateKey: APP.State.ENGINE.activeGateKey, logicState: APP.State.ENGINE.logicState, detonatedFalseGoals: new Set(APP.State.ENGINE.detonatedFalseGoals) }; }
     function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; setLogicState(snap.logicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; rebuildDerivedPathState(APP.State.ENGINE); showMessage("", ""); }
 
     function isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) {
