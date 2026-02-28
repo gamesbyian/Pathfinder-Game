@@ -2225,6 +2225,25 @@
                 }
             };
 
+        const normalizeSolutionEntries = (solutionLike) => {
+            if (!Array.isArray(solutionLike)) return [];
+            const normalized = [];
+            for (const entry of solutionLike) {
+                if (entry && Array.isArray(entry.path)) normalized.push({ path: entry.path });
+                else if (Array.isArray(entry)) normalized.push({ path: entry });
+                else if (entry !== undefined && entry !== null) normalized.push({ path: [entry] });
+            }
+            return normalized.filter(sol => Array.isArray(sol.path) && sol.path.length > 0);
+        };
+
+        const applyCanonicalSolutionShape = (result) => {
+            if (!result || typeof result !== 'object') return result;
+            const canonical = normalizeSolutionEntries(result.solution ?? result.solutions ?? []);
+            result.solution = canonical;
+            result.solutions = canonical;
+            return result;
+        };
+
         const Referee = {
         allocateStageBudgets(totalMs) {
             const total = Math.max(1000, Math.floor(totalMs || 15000));
@@ -2244,17 +2263,9 @@
                 dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default'
             });
             const elapsedMs = Date.now() - started;
-            if (r?.ok) {
-                if (!r.solutions && r.solution) {
-                    const legacySolution = r.solution;
-                    r.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
-                        ? legacySolution
-                        : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
-                }
-                delete r.solution;
-            }
-            if (r?.ok && Array.isArray(r.solutions) && r.solutions.length > 0) {
-                return { ok: true, status: 'solved', solutions: r.solutions, elapsedMs, stats: { debug: r.debug } };
+            const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
+            if (r?.ok && solution.length > 0) {
+                return { ok: true, status: 'solved', solution, solutions: solution, elapsedMs, stats: { debug: r.debug } };
             }
             const debug = r?.debug || {};
             const rawStatus = debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error');
@@ -2270,17 +2281,9 @@
                 disabledPrunes: ['mustPassBound', 'mustCrossBound']
             });
             const elapsedMs = Date.now() - started;
-            if (r?.ok) {
-                if (!r.solutions && r.solution) {
-                    const legacySolution = r.solution;
-                    r.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
-                        ? legacySolution
-                        : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
-                }
-                delete r.solution;
-            }
-            if (r?.ok && Array.isArray(r.solutions) && r.solutions.length > 0) {
-                return { ok: true, status: 'solved', solutions: r.solutions, elapsedMs, stats: { debug: r.debug } };
+            const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
+            if (r?.ok && solution.length > 0) {
+                return { ok: true, status: 'solved', solution, solutions: solution, elapsedMs, stats: { debug: r.debug } };
             }
             const debug = r?.debug || {};
             if (debug.status === 'timeout') return { ok: false, status: 'timeout', elapsedMs, stats: { debug } };
@@ -2359,7 +2362,7 @@
                 if (gem.ok) {
                     const validation = validateCandidatePath(level, gem.candidate);
                     if (validation.ok) {
-                        last = { ok: true, status: 'solved', stage: 4, solutions: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
+                        last = { ok: true, status: 'solved', stage: 4, solution: [{ path: validation.path }], solutions: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
                     } else {
                         last = { ok: false, status: 'gemini-invalid', stage: 4, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried };
                     }
@@ -2372,6 +2375,7 @@
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
             else attemptHistory[key] = { timesTried, lastStageReached: last.stage, lastStatus: last.status };
 
+            applyCanonicalSolutionShape(last);
             last.retrySuggested = !last.ok && ['timeout', 'no-solution-inconclusive'].includes(last.status);
             last.usedEscalation = escalated;
             last.budgetMs = budgetMs;
@@ -2502,7 +2506,8 @@
             APP.UI.setButtonState('solverCloseBtn', { enabled: true });
         };
 
-        const applySolutionsToEngine = (paths, purpose = 'solve') => {
+        const applySolutionsToEngine = (solution, purpose = 'solve') => {
+            const paths = normalizeSolutionEntries(solution).map(sol => sol.path);
             if (!Array.isArray(paths) || paths.length === 0) return;
             if (APP.State.ENGINE.mode === EDITOR) APP.Editor.setWorkingLevelHintsFromSolutions(paths.slice(0, 4));
             APP.State.ENGINE.hinter.pathList = paths;
@@ -2529,7 +2534,7 @@
             const debug = opts.debug !== undefined ? !!opts.debug : true;
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
             const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
-            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solutions: [], stagesTried: [] };
+            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solution: [], solutions: [], stagesTried: [] };
 
             try {
                 let solverResult;
@@ -2541,21 +2546,13 @@
                         debugLevel,
                         signal: controller.signal
                     });
-                    if (legacy?.ok) {
-                        if (!legacy.solutions && legacy.solution) {
-                            const legacySolution = legacy.solution;
-                            legacy.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
-                                ? legacySolution
-                                : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
-                        }
-                        delete legacy.solution;
-                    }
-                    if (legacy?.ok && Array.isArray(legacy.solutions) && legacy.solutions.length > 0) {
-                        solverResult = { ok: true, status: 'solved', rawStatus: 'solved', stage: 0, solutions: legacy.solutions, stagesTried: [] };
+                    const legacySolution = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
+                    if (legacy?.ok && legacySolution.length > 0) {
+                        solverResult = { ok: true, status: 'solved', rawStatus: 'solved', stage: 0, solution: legacySolution, solutions: legacySolution, stagesTried: [] };
                     } else {
                         const rawStatus = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
                         const normalizedStatus = rawStatus === 'no-solution-proven' ? 'no-solution' : rawStatus;
-                        solverResult = { ok: false, status: normalizedStatus, rawStatus, stage: 0, solutions: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
+                        solverResult = { ok: false, status: normalizedStatus, rawStatus, stage: 0, solution: [], solutions: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
                     }
                 } else {
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
@@ -2571,6 +2568,9 @@
                             if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
                         }
                     });
+                    const canonical = solverResult.solution ?? solverResult.solutions ?? [];
+                    solverResult.solution = canonical;
+                    solverResult.solutions = canonical;
                     solverResult.rawStatus = solverResult.status;
                     if (solverResult.status === 'no-solution-proven') solverResult.status = 'no-solution';
 
@@ -2585,37 +2585,25 @@
                             debugLevel,
                             signal: controller.signal
                         });
-                        if (legacy?.ok) {
-                            if (!legacy.solutions && legacy.solution) {
-                                const legacySolution = legacy.solution;
-                                legacy.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
-                                    ? legacySolution
-                                    : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
-                            }
-                            delete legacy.solution;
-                        }
-                        if (legacy?.ok && Array.isArray(legacy.solutions) && legacy.solutions.length > 0) {
+                        const legacySolution = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
+                        if (legacy?.ok && legacySolution.length > 0) {
                             solverResult = {
                                 ok: true,
                                 status: 'solved',
                                 rawStatus: 'solved',
                                 stage: solverResult.stage,
-                                solutions: legacy.solutions,
+                                solution: legacySolution,
+                                solutions: legacySolution,
                                 stagesTried: solverResult.stagesTried || []
                             };
                         }
                     }
                 }
-                if (solverResult?.ok) {
-                    if (!solverResult.solutions && solverResult.solution) {
-                        const legacySolution = solverResult.solution;
-                        solverResult.solutions = Array.isArray(legacySolution) && legacySolution.every(sol => sol && Array.isArray(sol.path))
-                            ? legacySolution
-                            : [{ path: Array.isArray(legacySolution) ? legacySolution : [legacySolution] }];
-                    }
-                    delete solverResult.solution;
+                applyCanonicalSolutionShape(solverResult);
+                if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
+                    console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
-                const solutions = solverResult.ok ? (solverResult.solutions || []) : [];
+                const solution = solverResult.ok ? solverResult.solution : [];
                 const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
                 return {
                     ok: !!solverResult.ok,
@@ -2630,16 +2618,17 @@
                         : (Number.isFinite(debugInfo?.nodesVisited)
                             ? debugInfo.nodesVisited
                             : (Number.isFinite(debugInfo?.nodesExpanded) ? debugInfo.nodesExpanded : 0)),
-                    solutions,
+                    solution,
+                    solutions: solution,
                     debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
                     stage: solverResult.stage,
                     message: solverResult.message || ''
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solutions: [], stagesTried: [] };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [] };
                 console.error('Solver error:', err);
-                return { ok: false, status: 'error', rawStatus: 'error', solutions: [], stagesTried: [], message: err?.message || 'Solver error' };
+                return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], stagesTried: [], message: err?.message || 'Solver error' };
             } finally {
                 finishRun();
             }
@@ -2683,7 +2672,7 @@
                         lastStageReached: res.stage,
                         stagesTried: res.stagesTried || []
                     };
-                    if (res.ok) results[lvlNum] = (res.solutions || []).map(sv => sv.path);
+                    if (res.ok) results[lvlNum] = (res.solution || []).map(sv => sv.path);
                     if (typeof opts.onLevelResult === 'function') opts.onLevelResult({ lvlNum, attempt, res, timeLimitMs, results, meta });
                 }
                 return { cancelled: controller.signal.aborted, results, meta };
@@ -2877,20 +2866,16 @@
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose });
-                const solutions = solverResult.ok ? (solverResult.solutions || []) : [];
-                const normalizedPaths = solutions
-                    .map(sol => {
-                        if (Array.isArray(sol)) return sol;
-                        if (sol && Array.isArray(sol.path)) return sol.path;
-                        return null;
-                    })
-                    .filter(path => Array.isArray(path) && path.length > 0);
-                if (solutions.length > 0 && normalizedPaths.length === 0) {
-                    console.warn('Solver returned malformed solution entries.', { purpose, solutions });
+                const canonical = solverResult.solution ?? solverResult.solutions ?? [];
+                solverResult.solution = canonical;
+                const solution = solverResult.ok ? solverResult.solution : [];
+                const normalizedPaths = normalizeSolutionEntries(solution).map(sol => sol.path);
+                if (solution.length > 0 && normalizedPaths.length === 0) {
+                    console.warn('Solver returned malformed solution entries.', { purpose, solution });
                 }
 
                 if (normalizedPaths.length > 0) {
-                    APP.Solver.applySolutionsToEngine(normalizedPaths, purpose);
+                    APP.Solver.applySolutionsToEngine(solution, purpose);
                 } else if (solverResult.rawStatus === 'no-solution-proven') {
                     showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution proven.');
