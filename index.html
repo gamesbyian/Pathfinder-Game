@@ -969,9 +969,18 @@
                 teDom.ghost = resolveEl('dragGhost');
             };
             const dragState = { color: null, theme: null, category: null, tapColor: null, tapTheme: null, tapCategory: null };
-                        const setSwatchSelected = (elOrNull) => {
+            const setSwatchSelected = (elOrNull) => {
                 document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove(...selectedClasses));
                 if (elOrNull) elOrNull.classList.add(...selectedClasses);
+            };
+            const applySwatchReplace = ({ sourceColor, sourceTheme, sourceCategory, targetSwatch }) => {
+                if (!targetSwatch || !sourceColor || !sourceTheme || !sourceCategory) return false;
+                const targetColor = targetSwatch.dataset.themeColor;
+                const targetTheme = targetSwatch.dataset.themeKey;
+                const targetCategory = targetSwatch.dataset.category;
+                if (!targetColor || targetTheme !== sourceTheme || targetCategory !== sourceCategory || targetColor === sourceColor) return false;
+                replaceThemeColor(sourceTheme, targetColor, sourceColor, sourceCategory);
+                return true;
             };
             const setDragGhost = ({ visible = false, color = null, x = null, y = null } = {}) => {
                 ensureInit();
@@ -1022,11 +1031,12 @@
                         e.preventDefault();
                         e.stopPropagation();
                         if (dragState.tapColor && dragState.tapTheme === themeKey) {
-                            const sourceColor = dragState.tapColor;
-                            const targetColor = c;
-                            const sourceCategory = dragState.tapCategory;
-                            const targetCategory = swatch.dataset.category;
-                            if (sourceColor !== targetColor && sourceCategory === targetCategory) replaceThemeColor(themeKey, targetColor, sourceColor, targetCategory);
+                            applySwatchReplace({
+                                sourceColor: dragState.tapColor,
+                                sourceTheme: dragState.tapTheme,
+                                sourceCategory: dragState.tapCategory,
+                                targetSwatch: swatch
+                            });
                             dragState.tapColor = null;
                             dragState.tapTheme = null;
                             dragState.tapCategory = null;
@@ -1201,7 +1211,7 @@
                 setDragGhost({ visible: false });
             };
 
-            return { init: ensureInit, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView, getDragState: () => ({ ...dragState }), clearDragState: () => { dragState.color = null; dragState.theme = null; dragState.category = null; }, hasTapSelection: () => !!dragState.tapColor };
+            return { init: ensureInit, renderAll, renderThemeKey, setSwatchSelected, setDragGhost, openEditorView, closeEditorView, applySwatchReplace, getDragState: () => ({ ...dragState }), clearDragState: () => { dragState.color = null; dragState.theme = null; dragState.category = null; }, hasTapSelection: () => !!dragState.tapColor };
         })();
 
         const EditorDragGhost = (() => {
@@ -3425,7 +3435,7 @@
 
             function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(IDLE); APP.Engine.setOverlayState(OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
-            function updatePencilState() { const btn = document.getElementById('editPencilBtn'); const svg = btn.querySelector('svg'); if (APP.State.ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
+            function updatePencilState() { const btn = document.getElementById('editPencilBtn'); const svg = btn.querySelector('svg'); if (APP.State.ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); svg.setAttribute('stroke', 'none'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); } }
 
 
 
@@ -5734,12 +5744,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const handleUp = (e) => {
             if (APP.State.ENGINE.logicState === THEME_DRAG) {
-                const dropTarget = document.elementFromPoint(e.clientX, e.clientY);
+                const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('[data-theme-color]');
                 const dragState = APP.UI.ThemeEditor.getDragState();
-                let isSameElement = (dropTarget && dropTarget.dataset.themeColor === dragState.color);
-                if (dropTarget && dropTarget.dataset.themeColor && !isSameElement && dropTarget.dataset.category === dragState.category) {
-                    replaceThemeColor(dragState.theme, dropTarget.dataset.themeColor, dragState.color, dropTarget.dataset.category);
-                }
+                APP.UI.ThemeEditor.applySwatchReplace({
+                    sourceColor: dragState.color,
+                    sourceTheme: dragState.theme,
+                    sourceCategory: dragState.category,
+                    targetSwatch: dropTarget
+                });
                 APP.Engine.setLogicState(IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
                 if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
             }
