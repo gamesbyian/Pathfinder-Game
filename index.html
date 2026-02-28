@@ -3896,9 +3896,9 @@
             APP.UI.setClassState(pal, 'landscape-editor-tools', false);
         }
     }
-
-
-
+    // Shared globals consumed across modules.
+    // NOTE: keep this block single-defined in global scope; duplicating it
+    // with `const` declarations will throw and prevent input handlers from binding.
     const FALLBACK_RAW_LEVELS = [ { grid: {w:10, h:10}, gates: [{x:2,y:2}, {x:2,y:4}], goal: {x:9,y:9}, reqLen: 14, reqInt: 0, blocks: [{x:4,y:4}, {x:5,y:4}, {x:4,y:5}, {x:5,y:5}], mustPass: [{x:6,y:6}], geese: [{x:6,y:7}], flippingFilters: [{x:8, y:2, axis: 2}, {x:3, y:8, axis: 1}, {x:5, y:2, axis: 1}, {x:7, y:2, axis: 1}], falseGoals: [{x:2, y:8}], hints: [] } ];
 
     APP.LevelUtils = (() => {
