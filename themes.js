@@ -2864,6 +2864,10 @@ window.THEMES_MORE = {
         t.ctrlArea = t.ctrlArea || {};
         t.text = t.text || {};
         t.mega = t.mega || {};
+        t.loading = t.loading || {};
+        t.search = t.search || {};
+        t.jumpscare = t.jumpscare || {};
+        t.shell = t.shell || {};
 
         t.bodyBg = t.bodyBg || '#e0f2fe';
         t.canvasBg = t.canvasBg || '#ffffff';
@@ -2932,6 +2936,54 @@ window.THEMES_MORE = {
         t.text.megaSecondary = t.text.megaSecondary || '#ffffff';
         t.text.megaGemini = t.text.megaGemini || '#ffffff';
         t.text.megaCopy = t.text.megaCopy || t.modal.text;
+        t.text.body = t.text.body || t.modal.text;
+        t.text.shellBtn = t.text.shellBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#475569');
+
+        t.btns.disabled = t.btns.disabled || '#94a3b8';
+
+        t.loading.overlayBg = t.loading.overlayBg || t.modal.bg;
+        t.loading.panelBg = t.loading.panelBg || t.output.bg;
+        t.loading.panelBorder = t.loading.panelBorder || t.modal.border;
+        t.loading.title = t.loading.title || t.text.headerMain || '#ffffff';
+        t.loading.status = t.loading.status || t.text.output;
+        t.loading.percent = t.loading.percent || t.text.headerMain || '#ffffff';
+        t.loading.track = t.loading.track || t.palette.toolBg || t.modal.panelBg;
+        t.loading.bar = t.loading.bar || t.path || t.headerRight;
+        t.loading.error = t.loading.error || t.text.output;
+
+        t.search.overlayBg = t.search.overlayBg || t.modal.bg;
+        t.search.megaStatusText = t.search.megaStatusText || t.text.megaOutput;
+        t.search.megaStatusBorder = t.search.megaStatusBorder || t.mega.outputBorder || t.modal.border;
+        t.search.label = t.search.label || t.text.output;
+        t.search.dot = t.search.dot || t.path || t.headerRight;
+        t.search.timer = t.search.timer || t.text.modal;
+        t.search.close = t.search.close || t.text.modalMuted;
+        t.search.closeHover = t.search.closeHover || t.text.modal;
+
+        t.jumpscare.gooseBg = t.jumpscare.gooseBg || 'rgba(0,0,0,0.4)';
+        t.jumpscare.gooseText = t.jumpscare.gooseText || '#ffffff';
+        t.jumpscare.bombBg = t.jumpscare.bombBg || 'rgba(0,0,0,0.6)';
+        t.jumpscare.bombTopText = t.jumpscare.bombTopText || t.burst || '#fde047';
+        t.jumpscare.bombBottomText = t.jumpscare.bombBottomText || t.colors.goal || '#f97316';
+
+        t.shell.btnBg = t.shell.btnBg || t.btns.mute;
+        t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.92);
+        t.shell.btnText = t.shell.btnText || t.text.shellBtn;
+        t.shell.btnBorder = t.shell.btnBorder || t.modal.border;
+        t.shell.muteBg = t.shell.muteBg || t.btns.mute;
+        t.shell.muteBgHover = t.shell.muteBgHover || darkenHex(t.shell.muteBg, 0.92);
+        t.shell.muteText = t.shell.muteText || t.btns.muteIcon;
+        t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
+
+        t.header = t.header || {};
+        t.header.navBg = t.header.navBg || 'rgba(255,255,255,0.2)';
+        t.header.navBgHover = t.header.navBgHover || 'rgba(255,255,255,0.3)';
+        t.header.navText = t.header.navText || t.text.headerMain;
+        t.header.divider = t.header.divider || 'rgba(226,232,240,0.2)';
+
+        t.colors.portalPending = t.colors.portalPending || '#999999';
+        t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
+        t.colors.bombBlastRays = t.colors.bombBlastRays || t.headerLeft;
 
         t.mega.outputBg = t.mega.outputBg || t.output.bg;
         t.mega.outputBorder = t.mega.outputBorder || t.modal.border;
