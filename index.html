@@ -3206,6 +3206,23 @@
     const inBounds = (x, y, w, h) => x >= 0 && x < w && y >= 0 && y < h;
     const expCoords = (items) => (Array.isArray(items) ? items : Array.from(items)).map(k => { const p = UNPACK(k); return {x: p.x + 1, y: p.y + 1}; });
 
+    APP.LevelUtils = APP.LevelUtils || {
+        PACK,
+        UNPACK,
+        inBounds,
+        normalizeLevel,
+        denormalizeLevel,
+        deepCloneLevel,
+        transformLevel,
+        shiftLevel,
+        changeGridSize,
+        getLevelBounds,
+        transformPoint,
+        inverseTransformPoint,
+        transformAxis,
+        getGridCoord
+    };
+
     const setSolversActive = (active) => {
         APP.UI.setSolverControlsEnabled(active);
     };
@@ -3229,7 +3246,7 @@
             if (APP.State.ENGINE.visualFlipCount < APP.State.ENGINE.flipCount) { APP.State.ENGINE.visualFlipCount = Math.min(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount + 0.15); }
             else if (APP.State.ENGINE.visualFlipCount > APP.State.ENGINE.flipCount) { APP.State.ENGINE.visualFlipCount = Math.max(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount - 0.15); }
         }
-        render(); requestAnimationFrame(loop);
+        APP.Renderer.render(); requestAnimationFrame(loop);
     }
 
     const attemptHistory = {};
@@ -4497,6 +4514,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         populateThemes();
     }
 
+    APP.Themes.toRgb = toRgb;
+    APP.Themes.darkenHex = darkenHex;
+    APP.Themes.getLeaveThemeColors = getLeaveThemeColors;
+    APP.Themes.normalizeTheme = normalizeTheme;
+    APP.Themes.ensureThemeLeaveColors = ensureThemeLeaveColors;
+    APP.Themes.applyTheme = applyTheme;
+    APP.Themes.populateThemes = populateThemes;
+    APP.Themes.replaceThemeColor = replaceThemeColor;
+
     function closeAllModals() { return APP.UI.closeAllModals(); }
 
     function getRealLength(state = APP.State.ENGINE) { return state.path.length > 0 ? state.path.length - 1 - state.isPortalJump.size : 0; }
@@ -5010,6 +5036,22 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (APP.State.ENGINE.mode === PLAY) { const curLen = getRealLength(APP.State.ENGINE); document.getElementById('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = document.getElementById('intersectionInfo'); intEl.innerText = `${APP.State.ENGINE.intersections}/${l.reqInt}`; if (APP.State.ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } }
         else if (APP.State.ENGINE.mode === EDITOR) { const curLen = getRealLength(APP.State.ENGINE); const lMet = document.getElementById('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${APP.State.ENGINE.intersections})`; }
     }
+
+    APP.Renderer = APP.Renderer || {
+        cvs,
+        ctx,
+        render,
+        getScreenPos,
+        drawBombAsset,
+        drawPath,
+        drawProhibitedAsset,
+        drawRequiredAsset,
+        drawMustCrossAsset,
+        drawGooseAsset,
+        drawFilterAsset,
+        drawFlippingFilter,
+        drawScorchMark
+    };
 
     async function runGameSolver(purpose = 'solve') {
         if (APP.Solver.isRunning()) return;
