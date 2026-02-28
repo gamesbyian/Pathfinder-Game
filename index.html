@@ -3033,6 +3033,58 @@
         };
     })();
 
+
+    // Purpose: centralized data ingestion and access for levels/themes.
+    APP.Data = (() => {
+        const FALLBACK_RAW_LEVELS = [ { grid: {w:10, h:10}, gates: [{x:2,y:2}, {x:2,y:4}], goal: {x:9,y:9}, reqLen: 14, reqInt: 0, blocks: [{x:4,y:4}, {x:5,y:4}, {x:4,y:5}, {x:5,y:5}], mustPass: [{x:6,y:6}], geese: [{x:6,y:7}], flippingFilters: [{x:8, y:2, axis: 2}, {x:3, y:8, axis: 1}, {x:5, y:2, axis: 1}, {x:7, y:2, axis: 1}], falseGoals: [{x:2, y:8}], hints: [] } ];
+        let _levels = [];
+        let _themes = {};
+        let _loaded = false;
+
+        const clone = (value) => JSON.parse(JSON.stringify(value));
+
+        const normalizeRawLevel = (raw) => {
+            if (!raw || typeof raw !== 'object') return raw;
+            const level = raw;
+            if (!level.grid || typeof level.grid !== 'object') level.grid = { w: 10, h: 10 };
+            if (typeof level.grid.w !== 'number') level.grid.w = 10;
+            if (typeof level.grid.h !== 'number') level.grid.h = 10;
+            return level;
+        };
+
+        const ingest = (opts = {}) => {
+            const levelSource = opts.forceFallback
+                ? FALLBACK_RAW_LEVELS
+                : (Array.isArray(window.LEVELS) ? window.LEVELS : (Array.isArray(window.RAW_LEVELS) ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS));
+            const baseThemes = (typeof APP !== 'undefined' && APP.Themes && APP.Themes.THEMES && typeof APP.Themes.THEMES === 'object') ? APP.Themes.THEMES : {};
+            const sourceThemes = (window.THEMES && typeof window.THEMES === 'object') ? window.THEMES : {};
+
+            _levels = clone(levelSource).map(normalizeRawLevel);
+            _themes = Object.assign({}, clone(baseThemes), clone(sourceThemes));
+
+            _loaded = true;
+
+            if (opts.secureGlobals !== false) {
+                try {
+                    window.LEVELS = null;
+                    window.RAW_LEVELS = null;
+                    window.THEMES = null;
+                } catch (_) {}
+            }
+            return true;
+        };
+
+        return {
+            ingest,
+            getLevels: () => _levels,
+            getLevel: (index) => _levels[index],
+            getThemes: () => _themes,
+            getTheme: (id) => (_themes ? _themes[id] : undefined),
+            getFallbackLevels: () => FALLBACK_RAW_LEVELS,
+            isLoaded: () => _loaded
+        };
+    })();
+
     // Purpose: startup loading flow and fallback/error orchestration.
     // Owns:
     // - loader progress state
@@ -3067,14 +3119,14 @@
             state.mode = mode;
         };
 
-        const triggerFallback = (reason = 'missing window.RAW_LEVELS') => {
+        const triggerFallback = (reason = 'missing level data') => {
             if (state.mode === 'ready' || (state.hasLoaded && state.status === 'ready')) return 'ready';
             state.hasLoaded = true;
             state.status = 'fallback';
             state.mode = 'fallback';
             setProgress(100, 'Using Local Fallback...');
             console.warn(`[Using fallback levels] ${reason}`);
-            window.RAW_LEVELS = APP.LevelUtils.getFallbackRawLevels();
+            APP.Data.ingest({ forceFallback: true });
             return 'fallback';
         };
 
@@ -3114,8 +3166,10 @@
                     const s = document.createElement('script');
                     s.src = './themes.js';
                     s.onload = () => {
-                        if (window.THEMES_MORE) Object.assign(APP.Themes.THEMES, window.THEMES_MORE);
-                        APP.Themes.ensureThemeLeaveColors();
+                        if (window.THEMES_MORE) {
+                            if (!window.THEMES || typeof window.THEMES !== 'object') window.THEMES = {};
+                            Object.assign(window.THEMES, window.THEMES_MORE);
+                        }
                         setProgress(55, 'Themes Ready');
                         innerResolve();
                     };
@@ -3142,14 +3196,16 @@
                             done(state.mode === 'unknown' ? 'fallback' : state.mode);
                             return;
                         }
-                        if (!Array.isArray(window.RAW_LEVELS)) {
-                            done(triggerFallback('missing window.RAW_LEVELS after external script load'));
+                        APP.Data.ingest();
+                        APP.Themes.ensureThemeLeaveColors();
+                        if (!Array.isArray(APP.Data.getLevels()) || APP.Data.getLevels().length === 0) {
+                            done(triggerFallback('missing levels after external script load'));
                             return;
                         }
                         state.hasLoaded = true;
                         state.status = 'ready';
                         setProgress(95, 'Levels Ready');
-                        console.log('RAW_LEVELS loaded:', Array.isArray(window.RAW_LEVELS), window.RAW_LEVELS?.length);
+                        console.log('Levels loaded:', APP.Data.getLevels().length);
                         done('ready');
                     })
                     .catch(err => {
@@ -3501,9 +3557,9 @@
 
                 if (APP.State.ENGINE.activeSolverController) return;
 
-                const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : (APP.LevelUtils.getFallbackRawLevels() || null);
+                const levels = APP.Data.getLevels();
 
-                if (!levels) return;
+                if (!levels || !APP.Data.getLevel(idx)) return;
 
 
 
@@ -4086,9 +4142,8 @@
         }
     }
     APP.LevelUtils = (() => {
-            const FALLBACK_RAW_LEVELS = [ { grid: {w:10, h:10}, gates: [{x:2,y:2}, {x:2,y:4}], goal: {x:9,y:9}, reqLen: 14, reqInt: 0, blocks: [{x:4,y:4}, {x:5,y:4}, {x:4,y:5}, {x:5,y:5}], mustPass: [{x:6,y:6}], geese: [{x:6,y:7}], flippingFilters: [{x:8, y:2, axis: 2}, {x:3, y:8, axis: 1}, {x:5, y:2, axis: 1}, {x:7, y:2, axis: 1}], falseGoals: [{x:2, y:8}], hints: [] } ];
-            const getFallbackRawLevels = () => FALLBACK_RAW_LEVELS;
-            const getRawLevels = () => (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : APP.LevelUtils.getFallbackRawLevels();
+            const getFallbackRawLevels = () => APP.Data.getFallbackLevels();
+            const getRawLevels = () => APP.Data.getLevels();
             const resolvePortal = (level, key) => (level?.portalMap?.has(key) ? level.portalMap.get(key) : null);
             const PACK = (x, y) => (y << 16) | x;
             const UNPACK = (k) => ({ x: k & 0xFFFF, y: k >> 16 });
@@ -5277,17 +5332,21 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         return t;
     }
 
+    const getThemeRegistry = () => (APP.Data && APP.Data.isLoaded() ? APP.Data.getThemes() : THEMES);
+
     function ensureThemeLeaveColors() {
-        Object.keys(APP.Themes.THEMES).forEach(key => {
-            APP.Themes.THEMES[key] = normalizeTheme(APP.Themes.THEMES[key], key);
+        const themes = getThemeRegistry();
+        Object.keys(themes).forEach(key => {
+            themes[key] = normalizeTheme(themes[key], key);
         });
     }
 
     function applyTheme(name) {
-        if (name === 'chaos') { APP.Themes.THEMES.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
+        const themes = getThemeRegistry();
+        if (name === 'chaos') { themes.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
         APP.State.ENGINE.runtime.currentTheme = name;
         APP.Themes.currentTheme = APP.State.ENGINE.runtime.currentTheme;
-        const t = APP.Themes.THEMES[name];
+        const t = themes[name];
         APP.UI.applyTheme(t, { themeName: name });
         APP.State.ENGINE.rainbowActive = (name === 'classic');
         APP.State.ENGINE.isDirty = true;
@@ -5298,8 +5357,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             window.ORIGINAL_THEMES = JSON.parse(JSON.stringify(THEMES));
             delete window.ORIGINAL_THEMES['chaos'];
         }
-        const grid = document.getElementById('themeGrid'); APP.UI.clearElement('themeGrid'); const themeKeys = Object.keys(APP.Themes.THEMES); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
-        themeKeys.forEach(key => { const t = APP.Themes.THEMES[key] || APP.Themes.THEMES.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl hover:bg-slate-100"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black text-slate-600 uppercase tracking-widest"; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
+        const themes = getThemeRegistry();
+        const grid = document.getElementById('themeGrid'); APP.UI.clearElement('themeGrid'); const themeKeys = Object.keys(themes); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
+        themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl hover:bg-slate-100"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black text-slate-600 uppercase tracking-widest"; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
 
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
@@ -5374,7 +5434,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.Themes.populateThemes();
     }
 
-        return { THEMES, rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor };
+        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor };
+        Object.defineProperty(api, 'THEMES', { get: () => getThemeRegistry() });
+        return api;
     })();
 
     function closeAllModals() { return APP.UI.closeAllModals(); }
