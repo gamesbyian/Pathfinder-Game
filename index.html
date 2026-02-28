@@ -1244,7 +1244,7 @@
                         const k = popFront();
                         if (k === null) break;
                         const d = map.get(k);
-                        const p = APP.LevelUtils.UNPACK(k);
+                        const p = UNPACK(k);
                         const portal = resolvePortal(l, k);
                         if (portal && portal.dest !== -1 && !l.blockSet.has(portal.dest)) {
                             const pd = map.get(portal.dest);
@@ -1255,8 +1255,8 @@
                         }
                         [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
                             const nx = p.x + dx, ny = p.y + dy;
-                            if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
-                            const nk = APP.LevelUtils.PACK(nx, ny);
+                            if (!inBounds(nx, ny, w, h)) return;
+                            const nk = PACK(nx, ny);
                             if (l.blockSet.has(nk)) return;
                             const nd = d + 1;
                             const prev = map.get(nk);
@@ -1471,12 +1471,12 @@
                 },
                 _staticNeighborDegree(key, l) {
                     const { w, h } = l.grid;
-                    const p = APP.LevelUtils.UNPACK(key);
+                    const p = UNPACK(key);
                     let degree = 0;
                     [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
                         const nx = p.x + dx, ny = p.y + dy;
-                        if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
-                        const nk = APP.LevelUtils.PACK(nx, ny);
+                        if (!inBounds(nx, ny, w, h)) return;
+                        const nk = PACK(nx, ny);
                         if (!l.blockSet.has(nk)) degree++;
                     });
                     if (l.portalMap.has(key)) degree++;
@@ -1484,7 +1484,7 @@
                 },
                 _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats = null) {
                     const { w, h } = l.grid;
-                    const p = APP.LevelUtils.UNPACK(k);
+                    const p = UNPACK(k);
                     const candidates = [];
                     const portal = resolvePortal(l, k);
                     const portalForced = portal && !state.isJump.has(state.path.length - 1);
@@ -1494,7 +1494,7 @@
                     } else {
                         [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
                             const nx = p.x + dx, ny = p.y + dy;
-                            if (APP.LevelUtils.inBounds(nx, ny, w, h)) candidates.push(APP.LevelUtils.PACK(nx, ny));
+                            if (inBounds(nx, ny, w, h)) candidates.push(PACK(nx, ny));
                         });
                     }
                     const curLen = state.path.length - 1 - state.isJump.size;
@@ -1600,7 +1600,7 @@
                     const log = [];
                     const lastK = s.path[s.path.length - 1];
                     if (!isJump) {
-                        const lP = APP.LevelUtils.UNPACK(lastK), cP = APP.LevelUtils.UNPACK(k);
+                        const lP = UNPACK(lastK), cP = UNPACK(k);
                         const axis = (cP.y === lP.y) ? H : V;
                         const prop = axis === H ? 'h' : 'v';
                         let uL = s.usage.get(lastK);
@@ -1877,13 +1877,13 @@
                         state.flipCount++;
                     }
                     const getNeighbors = (k, s) => {
-                        const p = APP.LevelUtils.UNPACK(k);
+                        const p = UNPACK(k);
                         let candidates = [];
                         const portal = resolvePortal(l, k);
                         if (portal && !s.isJump.has(s.path.length - 1)) candidates.push(portal.dest);
                         else [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
                             const nx = p.x + dx, ny = p.y + dy;
-                            if (APP.LevelUtils.inBounds(nx, ny, w, h)) candidates.push(APP.LevelUtils.PACK(nx, ny));
+                            if (inBounds(nx, ny, w, h)) candidates.push(PACK(nx, ny));
                         });
                         return candidates.filter(nk => this._isMoveValid(nk, s.path, s.counts, s.usage, s.ints, s.isJump, l, s.flipCount, s.crossedFlippers, options) && this._hazardDecisionForKey(nk, s, l, options).allowed);
                     };
@@ -2070,7 +2070,7 @@
 
                     const flipperSet = new Set();
                     level.portalMap.forEach((v, k) => {
-                        const p1 = APP.LevelUtils.UNPACK(k), p2 = APP.LevelUtils.UNPACK(v.dest);
+                        const p1 = UNPACK(k), p2 = UNPACK(v.dest);
                         if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) flipperSet.add(k);
                     });
                     const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
@@ -2270,7 +2270,7 @@
         },
 
         async solve(levelInput, opts = {}) {
-            const level = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
+            const level = levelInput.gateKeys ? levelInput : normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const purpose = opts.purpose || 'solve';
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
@@ -2583,7 +2583,7 @@
                     if (controller.signal.aborted) break;
                     const lvlNum = toRun[i];
                     const idx = lvlNum - 1;
-                    const l = APP.LevelUtils.normalizeLevel(idx);
+                    const l = normalizeLevel(idx);
                     const prevMeta = meta[lvlNum] || { attempts: 0 };
                     const attempt = prevMeta.attempts + 1;
                     if (typeof opts.onProgress === 'function') opts.onProgress({ index: i, total: toRun.length, lvlNum, attempt });
@@ -2891,12 +2891,12 @@
         const init = bind;
 
 
-            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (isValidMoveEngine(key, APP.State.ENGINE.path, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.cellUsage, APP.State.ENGINE.intersections, APP.State.ENGINE.isPortalJump, activeLevel)) { if (APP.State.ENGINE.mode === EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
+            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (isValidMoveEngine(key, APP.State.ENGINE.path, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.cellUsage, APP.State.ENGINE.intersections, APP.State.ENGINE.isPortalJump, activeLevel)) { if (APP.State.ENGINE.mode === EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: UNPACK(key).x, y: UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: UNPACK(portal.dest).x, y: UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
 
 
-            function attemptMoveTo(target) { if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } }
+            function attemptMoveTo(target) { if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } }
 
-            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); document.getElementById('winExportArea').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (APP.State.ENGINE.mode === PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
+            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { setLogicState(RESOLVED); winOutEl.value = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); document.getElementById('winExportArea').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (APP.State.ENGINE.mode === PLAY) markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
 
             function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [HAZARD_TRIGGERED].includes(logicState) || mode === EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return areWinMetricsSatisfied(stubState, level); }
 
@@ -3001,11 +3001,11 @@
                 if (!l) return { ok: false, reasons: ["Level missing"] };
                 const { w, h } = l.grid;
                 const inGrid = (k) => {
-                    const p = APP.LevelUtils.UNPACK(k);
-                    return APP.LevelUtils.inBounds(p.x, p.y, w, h);
+                    const p = UNPACK(k);
+                    return inBounds(p.x, p.y, w, h);
                 };
                 const addOutOfBounds = (label, key) => {
-                    const p = APP.LevelUtils.UNPACK(key);
+                    const p = UNPACK(key);
                     reasons.push(`Out of bounds item: ${label} (${p.x + 1},${p.y + 1})`);
                 };
 
@@ -3029,21 +3029,21 @@
                 if (unpaired) reasons.push("Portal terminals incomplete");
 
                 for (const k of l.mustCrossKeys) {
-                    const p = APP.LevelUtils.UNPACK(k);
+                    const p = UNPACK(k);
                     if (l.blockSet.has(k)) reasons.push(`MustCross overlaps block at (${p.x + 1},${p.y + 1})`);
-                    const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
-                    const diags = [[1,1],[1,-1],[-1,1],[-1,-1]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
+                    const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy));
+                    const diags = [[1,1],[1,-1],[-1,1],[-1,-1]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy));
                     if (neighbors.some(nk => l.blockSet.has(nk))) reasons.push(`Block touches MustCross at (${p.x + 1},${p.y + 1})`);
                     if (neighbors.some(nk => l.gooseSet.has(nk))) reasons.push(`Goose touches MustCross at (${p.x + 1},${p.y + 1})`);
-                    const left = APP.LevelUtils.PACK(p.x-1,p.y), right = APP.LevelUtils.PACK(p.x+1,p.y), up = APP.LevelUtils.PACK(p.x,p.y-1), down = APP.LevelUtils.PACK(p.x,p.y+1);
+                    const left = PACK(p.x-1,p.y), right = PACK(p.x+1,p.y), up = PACK(p.x,p.y-1), down = PACK(p.x,p.y+1);
                     if ([left, right].some(nk => l.filterMap.get(nk) === V || l.flippingFilterMap.get(nk) === V)) reasons.push(`Vertical Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
                     if ([up, down].some(nk => l.filterMap.get(nk) === H || l.flippingFilterMap.get(nk) === H)) reasons.push(`Horizontal Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
                     if (diags.some(nk => l.filterMap.has(nk) || l.flippingFilterMap.has(nk))) reasons.push(`Filter diag to MustCross at (${p.x + 1},${p.y + 1})`);
                 }
 
                 l.filterMap.forEach((f, k) => {
-                    const p = APP.LevelUtils.UNPACK(k);
-                    const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
+                    const p = UNPACK(k);
+                    const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy));
                     for (const nk of neighbors) {
                         const nf = l.filterMap.get(nk);
                         if (nf && nf !== f) reasons.push(`Opposing filters adjacent at (${p.x + 1},${p.y + 1})`);
@@ -3058,13 +3058,13 @@
                     let head = 0;
                     while (head < q.length) {
                         const k = q[head++];
-                        const p = APP.LevelUtils.UNPACK(k);
-                        const nks = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
+                        const p = UNPACK(k);
+                        const nks = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => PACK(p.x+dx, p.y+dy));
                         const portal = resolvePortal(l, k);
                         if (portal && portal.dest !== -1) nks.push(portal.dest);
                         for (const nk of nks) {
-                            const np = APP.LevelUtils.UNPACK(nk);
-                            if (APP.LevelUtils.inBounds(np.x, np.y, w, h) && !visited.has(nk) && !barrier(nk)) {
+                            const np = UNPACK(nk);
+                            if (inBounds(np.x, np.y, w, h) && !visited.has(nk) && !barrier(nk)) {
                                 visited.add(nk);
                                 q.push(nk);
                             }
@@ -3088,19 +3088,19 @@
                 return res.ok;
             }
 
-            function saveEditorState() { APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.undoStack.push(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.editor.workingLevel)); if (APP.State.ENGINE.editor.undoStack.length > 50) APP.State.ENGINE.editor.undoStack.shift(); APP.State.ENGINE.hinter.pathList = []; }
+            function saveEditorState() { APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.undoStack.push(deepCloneLevel(APP.State.ENGINE.editor.workingLevel)); if (APP.State.ENGINE.editor.undoStack.length > 50) APP.State.ENGINE.editor.undoStack.shift(); APP.State.ENGINE.hinter.pathList = []; }
 
             function restoreEditorState() { if (APP.State.ENGINE.editor.undoStack.length === 0) return; APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.workingLevel = APP.State.ENGINE.editor.undoStack.pop(); let newPending = null; APP.State.ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); APP.State.ENGINE.editor.pendingPortal = newPending; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); showMessage("Undo Grid Action", "text-slate-500"); }
 
 
-            async function generateLevelString() { const l = APP.State.ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0; const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0; let exportedHints = l.hints || []; if (APP.State.ENGINE.path.length > 1 && APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = APP.State.ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => APP.State.ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (APP.State.ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(APP.State.ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [APP.State.ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: APP.LevelUtils.expCoords(l.gateKeys), goal: {x:APP.LevelUtils.UNPACK(l.goalKey).x+1, y:APP.LevelUtils.UNPACK(l.goalKey).y+1}, falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: APP.LevelUtils.expCoords(l.blockSet), mustPass: APP.LevelUtils.expCoords(l.mustPassKeys), mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:APP.LevelUtils.UNPACK(k).x+1, y:APP.LevelUtils.UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x+1, y1: APP.LevelUtils.UNPACK(pv.k1).y+1, x2: APP.LevelUtils.UNPACK(pv.k2).x+1, y2: APP.LevelUtils.UNPACK(pv.k2).y+1, color: pv.color })), geese: APP.LevelUtils.expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); APP.UI.setSolutionOutput(json); await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' }); APP.State.ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
+            async function generateLevelString() { const l = APP.State.ENGINE.editor.workingLevel; const isValid = validateLevel(l); const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0; const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0; let exportedHints = l.hints || []; if (APP.State.ENGINE.path.length > 1 && APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1] === l.goalKey) { const curLen = getRealLength(); const validLen = curLen === reqLen; const validInt = APP.State.ENGINE.intersections === reqInt; const validPass = l.mustPassKeys.every(k => APP.State.ENGINE.visitedCounts.get(k) > 0); const validCross = l.mustCrossKeys.every(k => (APP.State.ENGINE.visitedCounts.get(k) || 0) >= 2); if (validLen && validInt && validPass && validCross) { const currentPathStr = JSON.stringify(APP.State.ENGINE.path); const alreadyExists = exportedHints.some(h => JSON.stringify(h) === currentPathStr); if (!alreadyExists) { exportedHints = [APP.State.ENGINE.path, ...exportedHints].slice(0, 5); } } } const out = { grid: l.grid, gates: expCoords(l.gateKeys), goal: {x:UNPACK(l.goalKey).x+1, y:UNPACK(l.goalKey).y+1}, falseGoals: expCoords(l.falseGoalKeys), reqLen: reqLen, reqInt: reqInt, blocks: expCoords(l.blockSet), mustPass: expCoords(l.mustPassKeys), mustCross: expCoords(l.mustCrossKeys), filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({x:UNPACK(k).x+1, y:UNPACK(k).y+1, axis})), portals: l.portalVisuals.map(pv => ({ x1: UNPACK(pv.k1).x+1, y1: UNPACK(pv.k1).y+1, x2: UNPACK(pv.k2).x+1, y2: UNPACK(pv.k2).y+1, color: pv.color })), geese: expCoords(l.gooseSet), hints: exportedHints }; const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1); APP.UI.setSolutionOutput(json); await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' }); APP.State.ENGINE.editor.isModified = false; if (isValid) { showMessage("Data Generated & Copied!", "text-white font-black"); } else { setTimeout(() => showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500); } }
         return {
             init,
             bind,
             enterEditorMode() { switchMode(EDITOR); },
             exitEditorMode() { switchMode(PLAY); },
-            loadWorkingLevel(fromLevelObjOrBlank) { refs.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(fromLevelObjOrBlank); refs.ENGINE.editor.isModified = false; },
-            commitWorkingLevel() { refs.ENGINE.level = APP.LevelUtils.deepCloneLevel(refs.ENGINE.editor.workingLevel); refs.ENGINE.editor.isModified = false; },
+            loadWorkingLevel(fromLevelObjOrBlank) { refs.ENGINE.editor.workingLevel = deepCloneLevel(fromLevelObjOrBlank); refs.ENGINE.editor.isModified = false; },
+            commitWorkingLevel() { refs.ENGINE.level = deepCloneLevel(refs.ENGINE.editor.workingLevel); refs.ENGINE.editor.isModified = false; },
             applyMetricsFromUI() {
                 if (!refs.ENGINE?.editor?.workingLevel) return;
                 refs.ENGINE.editor.workingLevel.reqLen = parseInt(refs.UI.getValue('editReqLen'));
@@ -3198,73 +3198,69 @@
     // ======================================================
     // J) Persistence
     // ======================================================
-    APP.Persistence = (() => {
-        const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-        let auth = null;
-        let db = null;
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
+    const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+    let auth = null;
+    let db = null;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
 
-        if (firebaseConfigRaw) {
-            try {
-                const config = JSON.parse(firebaseConfigRaw);
-                firebase.initializeApp(config);
-                auth = firebase.auth();
-                db = firebase.firestore();
-            } catch (e) {}
+    if (firebaseConfigRaw) {
+        try {
+            const config = JSON.parse(firebaseConfigRaw);
+            firebase.initializeApp(config);
+            auth = firebase.auth();
+            db = firebase.firestore();
+        } catch (e) {}
+    }
+
+    async function initAuth() {
+        if (!auth) return;
+        try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await auth.signInWithCustomToken(__initial_auth_token);
+            } else {
+                await auth.signInAnonymously();
+            }
+        } catch (e) {}
+    }
+
+    function syncProgress(user) {
+        const localData = localStorage.getItem(`pathfinder_progress_${appId}`);
+        if (localData) {
+            APP.State.ENGINE.progressSet = new Set(JSON.parse(localData));
+            updateCompletionUI();
         }
 
-        function updateCompletionUI() {
-            const isComplete = APP.State.ENGINE.progressSet.has(APP.State.ENGINE.levelIdx);
-            const isPlayMode = APP.State.ENGINE.mode === PLAY;
-            APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode);
-        }
-
-        async function initAuth() {
-            if (!auth) return;
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await auth.signInWithCustomToken(__initial_auth_token);
-                } else {
-                    await auth.signInAnonymously();
+        if (user && db) {
+            const progressDoc = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('data').doc('levelProgress');
+            progressDoc.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const cloudSet = new Set(data.completedLevels || []);
+                    APP.State.ENGINE.progressSet = new Set([...APP.State.ENGINE.progressSet, ...cloudSet]);
+                    updateCompletionUI();
+                    localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
                 }
-            } catch (e) {}
+            }, (err) => {});
         }
+    }
 
-        function syncProgress(user = auth?.currentUser) {
-            const localData = localStorage.getItem(`pathfinder_progress_${appId}`);
-            if (localData) {
-                APP.State.ENGINE.progressSet = new Set(JSON.parse(localData));
-                APP.Persistence.updateCompletionUI();
-            }
+    async function markLevelComplete(idx) {
+        APP.State.ENGINE.progressSet.add(idx);
+        updateCompletionUI();
+        localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
 
-            if (user && db) {
-                const progressDoc = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('data').doc('levelProgress');
-                progressDoc.onSnapshot((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        const cloudSet = new Set(data.completedLevels || []);
-                        APP.State.ENGINE.progressSet = new Set([...APP.State.ENGINE.progressSet, ...cloudSet]);
-                        APP.Persistence.updateCompletionUI();
-                        localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
-                    }
-                }, () => {});
-            }
+        const user = auth?.currentUser;
+        if (user && db) {
+            const progressDoc = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('data').doc('levelProgress');
+            await progressDoc.set({ completedLevels: Array.from(APP.State.ENGINE.progressSet) }, { merge: true });
         }
+    }
 
-        async function markLevelComplete(idx) {
-            APP.State.ENGINE.progressSet.add(idx);
-            APP.Persistence.updateCompletionUI();
-            localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
-
-            const user = auth?.currentUser;
-            if (user && db) {
-                const progressDoc = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('data').doc('levelProgress');
-                await progressDoc.set({ completedLevels: Array.from(APP.State.ENGINE.progressSet) }, { merge: true });
-            }
-        }
-
-        return { initAuth, syncProgress, markLevelComplete, updateCompletionUI, hasConfig: !!firebaseConfigRaw, getCurrentUser: () => auth?.currentUser };
-    })();
+    function updateCompletionUI() {
+        const isComplete = APP.State.ENGINE.progressSet.has(APP.State.ENGINE.levelIdx);
+        const isPlayMode = APP.State.ENGINE.mode === PLAY;
+        APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode);
+    }
 
     function getViewportDimensions() {
         const vv = window.visualViewport;
@@ -3451,12 +3447,12 @@
         if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2) return { ok: false, reason: 'Path must contain at least 2 nodes.' };
         const toKey = (node) => {
             if (typeof node === 'number') return node;
-            if (Array.isArray(node) && node.length >= 2) return APP.LevelUtils.PACK(Number(node[0]) - 1, Number(node[1]) - 1);
+            if (Array.isArray(node) && node.length >= 2) return PACK(Number(node[0]) - 1, Number(node[1]) - 1);
             if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y)) {
                 const x = Number(node.x);
                 const y = Number(node.y);
-                if (x >= 1 && y >= 1 && (x > level.grid.w || y > level.grid.h)) return APP.LevelUtils.PACK(x - 1, y - 1);
-                return APP.LevelUtils.PACK(x, y);
+                if (x >= 1 && y >= 1 && (x > level.grid.w || y > level.grid.h)) return PACK(x - 1, y - 1);
+                return PACK(x, y);
             }
             return NaN;
         };
@@ -3476,8 +3472,8 @@
             if (!isValidMoveCommon(cur, path.slice(0, i), counts, usage, intersections, jumpSet, level, { mode: PLAY, flipCount, crossedSet, hazardPolicy: 'forbid' })) {
                 return { ok: false, reason: `Invalid move at step ${i + 1}.` };
             }
-            const prevP = APP.LevelUtils.UNPACK(prev);
-            const curP = APP.LevelUtils.UNPACK(cur);
+            const prevP = UNPACK(prev);
+            const curP = UNPACK(cur);
             const axis = (prevP.y === curP.y) ? H : V;
             const updateUsage = (from, ax) => {
                 if (!usage.has(from)) usage.set(from, { h: false, v: false });
@@ -4697,7 +4693,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         state.visitedCounts.clear(); state.cellUsage.clear(); state.intersections = 0; state.flipCount = 0; state.crossedFlippingFilters.clear(); const l = state.mode === PLAY ? state.level : state.editor.workingLevel; if (state.path.length === 0) { if (oldFlipCount !== 0) state.lastFlipTime = Date.now(); return; }
         for (let i = 0; i < state.path.length; i++) {
             const k = state.path[i]; const c = state.visitedCounts.get(k) || 0; if (c > 0 && k !== state.activeGateKey && (l && k !== l.goalKey)) { state.intersections++; } state.visitedCounts.set(k, c + 1);
-            if (i > 0 && !state.isPortalJump.has(i)) { const prevK = state.path[i-1]; const p1 = APP.LevelUtils.UNPACK(prevK), p2 = APP.LevelUtils.UNPACK(k); const axis = (p2.y === p1.y) ? H : V; let uPrev = state.cellUsage.get(prevK) || { h: false, v: false }; if (axis === H) uPrev.h = true; else uPrev.v = true; state.cellUsage.set(prevK, uPrev); let uCur = state.cellUsage.get(k) || { h: false, v: false }; if (axis === H) uCur.h = true; else uCur.v = true; state.cellUsage.set(k, uCur); }
+            if (i > 0 && !state.isPortalJump.has(i)) { const prevK = state.path[i-1]; const p1 = UNPACK(prevK), p2 = UNPACK(k); const axis = (p2.y === p1.y) ? H : V; let uPrev = state.cellUsage.get(prevK) || { h: false, v: false }; if (axis === H) uPrev.h = true; else uPrev.v = true; state.cellUsage.set(prevK, uPrev); let uCur = state.cellUsage.get(k) || { h: false, v: false }; if (axis === H) uCur.h = true; else uCur.v = true; state.cellUsage.set(k, uCur); }
             if (l && l.flippingFilterMap.has(k) && !state.crossedFlippingFilters.has(k)) { state.crossedFlippingFilters.set(k, state.flipCount); state.flipCount++; }
         }
         if (state.flipCount !== oldFlipCount) state.lastFlipTime = Date.now();
@@ -4705,18 +4701,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function assertStateConsistency(state = APP.State.ENGINE) { if (!state.isDevMode) return; const l = state.mode === PLAY ? state.level : state.editor.workingLevel; if (!l) return; const originalIntersections = state.intersections; const originalCounts = new Map(state.visitedCounts); rebuildDerivedPathState(state); if (originalIntersections !== state.intersections) { console.error("Invariant broken: Intersections mismatch."); } originalCounts.forEach((v, k) => { if (state.visitedCounts.get(k) !== v) console.error("Invariant broken: Visited count mismatch."); }); }
     function assertLevelShape(level) { if (!level) throw new Error("Level object is null"); if (level.goalKey === undefined || level.goalKey === -1) throw new Error("Level missing goal"); if (!Array.isArray(level.gateKeys) || level.gateKeys.length === 0) throw new Error("Level missing gates"); if (!level.grid || !level.grid.w || !level.grid.h) throw new Error("Grid dimensions missing"); }
-    function getLevelBounds(l) { let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity; const update = (k) => { if (k === -1) return; const p = APP.LevelUtils.UNPACK(k); if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; }; if (l.goalKey !== -1) update(l.goalKey); l.gateKeys.forEach(update); l.falseGoalKeys.forEach(update); l.blockSet.forEach(update); l.gooseSet.forEach(update); l.mustPassKeys.forEach(update); l.mustCrossKeys.forEach(update); l.filterMap.forEach((v, k) => update(k)); l.flippingFilterMap.forEach((v, k) => update(k)); l.portalMap.forEach((v, k) => update(k)); if (minX === Infinity) return null; return { minX, minY, maxX, maxY }; }
+    function getLevelBounds(l) { let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity; const update = (k) => { if (k === -1) return; const p = UNPACK(k); if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; }; if (l.goalKey !== -1) update(l.goalKey); l.gateKeys.forEach(update); l.falseGoalKeys.forEach(update); l.blockSet.forEach(update); l.gooseSet.forEach(update); l.mustPassKeys.forEach(update); l.mustCrossKeys.forEach(update); l.filterMap.forEach((v, k) => update(k)); l.flippingFilterMap.forEach((v, k) => update(k)); l.portalMap.forEach((v, k) => update(k)); if (minX === Infinity) return null; return { minX, minY, maxX, maxY }; }
 
-    function shiftLevel(l, dx, dy) { if (dx === 0 && dy === 0) return; const shift = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); return APP.LevelUtils.PACK(p.x + dx, p.y + dy); }; l.goalKey = shift(l.goalKey); l.gateKeys = l.gateKeys.map(shift); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(shift)); l.blockSet = new Set(Array.from(l.blockSet).map(shift)); l.gooseSet = new Set(Array.from(l.gooseSet).map(shift)); l.mustPassKeys = l.mustPassKeys.map(shift); l.mustCrossKeys = l.mustCrossKeys.map(shift); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v)); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v)); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = shift(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(shift); rebuildDerivedPathState(APP.State.ENGINE); l.hints = []; APP.State.ENGINE.hinter.pathList = []; }
+    function shiftLevel(l, dx, dy) { if (dx === 0 && dy === 0) return; const shift = (k) => { if (k === -1) return -1; const p = UNPACK(k); return PACK(p.x + dx, p.y + dy); }; l.goalKey = shift(l.goalKey); l.gateKeys = l.gateKeys.map(shift); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(shift)); l.blockSet = new Set(Array.from(l.blockSet).map(shift)); l.gooseSet = new Set(Array.from(l.gooseSet).map(shift)); l.mustPassKeys = l.mustPassKeys.map(shift); l.mustCrossKeys = l.mustCrossKeys.map(shift); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v)); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v)); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = shift(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(shift); rebuildDerivedPathState(APP.State.ENGINE); l.hints = []; APP.State.ENGINE.hinter.pathList = []; }
 
-    function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = APP.LevelUtils.getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { APP.LevelUtils.shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = APP.LevelUtils.UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; updateViewport(); showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
+    function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; updateViewport(); showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
 
-    function transformLevel(l, coordMap, newW, newH, axisMap) { APP.Editor.saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); const tp = coordMap(p.x, p.y); return APP.LevelUtils.PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = mapKey(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(mapKey); if(APP.State.ENGINE.activeGateKey) APP.State.ENGINE.activeGateKey = mapKey(APP.State.ENGINE.activeGateKey); rebuildDerivedPathState(APP.State.ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.isModified = true; updateViewport(); }
+    function transformLevel(l, coordMap, newW, newH, axisMap) { APP.Editor.saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = UNPACK(k); const tp = coordMap(p.x, p.y); return PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = mapKey(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(mapKey); if(APP.State.ENGINE.activeGateKey) APP.State.ENGINE.activeGateKey = mapKey(APP.State.ENGINE.activeGateKey); rebuildDerivedPathState(APP.State.ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.isModified = true; updateViewport(); }
 
     const PathNavigator = {
         pushStep(state, key, isJump) {
             const l = state.mode === PLAY ? state.level : state.editor.workingLevel; const lastK = state.path[state.path.length - 1];
-            if (lastK !== undefined && !isJump) { const p1 = APP.LevelUtils.UNPACK(lastK), p2 = APP.LevelUtils.UNPACK(key); const axis = (p2.y === p1.y) ? H : V; const mark = (k, ax) => { let u = state.cellUsage.get(k) || { h: false, v: false }; if (ax === H) u.h = true; else u.v = true; state.cellUsage.set(k, u); }; mark(lastK, axis); mark(key, axis); }
+            if (lastK !== undefined && !isJump) { const p1 = UNPACK(lastK), p2 = UNPACK(key); const axis = (p2.y === p1.y) ? H : V; const mark = (k, ax) => { let u = state.cellUsage.get(k) || { h: false, v: false }; if (ax === H) u.h = true; else u.v = true; state.cellUsage.set(k, u); }; mark(lastK, axis); mark(key, axis); }
             const count = state.visitedCounts.get(key) || 0; if (count > 0 && key !== state.activeGateKey && (l && key !== l.goalKey)) { state.intersections++; } state.visitedCounts.set(key, count + 1); state.path.push(key); if (isJump) state.isPortalJump.add(state.path.length - 1);
             if (l && l.flippingFilterMap.has(key) && !state.crossedFlippingFilters.has(key)) { state.crossedFlippingFilters.set(key, state.flipCount); state.flipCount++; state.lastFlipTime = Date.now(); }
             assertStateConsistency(state);
@@ -4733,17 +4729,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     function transformPoint(x, y, variant, W, H) { switch (variant) { case 0: return { tx: x, ty: y }; case 1: return { tx: H - 1 - y, ty: x }; case 2: return { tx: W - 1 - x, ty: H - 1 - y }; case 3: return { tx: y, ty: W - 1 - x }; case 4: return { tx: W - 1 - x, ty: y }; case 5: return { tx: x, ty: H - 1 - y }; case 6: return { tx: y, ty: x }; case 7: return { tx: H - 1 - y, ty: W - 1 - x }; default: return { tx: x, ty: y }; } }
     function inverseTransformPoint(tx, ty, variant, W, H) { switch (variant) { case 0: return { x: tx, y: ty }; case 1: return { x: ty, y: H - 1 - tx }; case 2: return { x: W - 1 - tx, y: H - 1 - ty }; case 3: return { x: W - 1 - ty, y: tx }; case 4: return { x: W - 1 - tx, y: ty }; case 5: return { x: tx, y: H - 1 - ty }; case 6: return { x: ty, y:tx }; case 7: return { x: W - 1 - ty, y: H - 1 - tx }; default: return { x: tx, y: ty }; } }
     function transformAxis(axis, variant) { const swaps = [1, 3, 6, 7]; if (swaps.includes(variant)) { if (axis === H) return V; if (axis === V) return H; } return axis; }
-    function getGridCoord(e) { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / APP.State.ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / APP.State.ENGINE.viewport.cellH))); return APP.LevelUtils.inverseTransformPoint(tx, ty, APP.State.ENGINE.variant, l.grid.w, l.grid.h); }
+    function getGridCoord(e) { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / APP.State.ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / APP.State.ENGINE.viewport.cellH))); return inverseTransformPoint(tx, ty, APP.State.ENGINE.variant, l.grid.w, l.grid.h); }
 
     function deepCloneLevel(src) { const l = JSON.parse(JSON.stringify(src)); l.blockSet = new Set(src.blockSet); l.gooseSet = new Set(src.gooseSet); l.falseGoalKeys = new Set(src.falseGoalKeys); l.portalMap = new Map(); if(src.portalMap) src.portalMap.forEach((v, k) => l.portalMap.set(k, v)); l.filterMap = new Map(); if(src.filterMap) src.filterMap.forEach((v, k) => l.filterMap.set(k, v)); l.flippingFilterMap = new Map(); if(src.flippingFilterMap) src.flippingFilterMap.forEach((v, k) => l.flippingFilterMap.set(k, v)); return l; }
     // ======================================================
     // C) Level / NormalizeAndCaches
     // ======================================================
-    function normalizeLevel(idx) { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [] }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); }); return l; }
+    function normalizeLevel(idx) { const levels = (typeof window.RAW_LEVELS !== 'undefined') ? window.RAW_LEVELS : FALLBACK_RAW_LEVELS; if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [] }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = PACK(adj(p.x1), adj(p.y1)), k2 = PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); }); return l; }
 
     function denormalizeLevel(level) {
         if (!level || !level.grid) return null;
-        const toCoord = (k) => { const p = APP.LevelUtils.UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
+        const toCoord = (k) => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
         const sortCoords = (arr) => arr.sort((a, b) => (a.y - b.y) || (a.x - b.x));
         const blocks = sortCoords(Array.from(level.blockSet || []).map(toCoord));
         const geese = sortCoords(Array.from(level.gooseSet || []).map(toCoord));
@@ -4785,9 +4781,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function isValidMoveCommon(key, path, counts, usage, ints, jumpSet, l, ctx = {}) {
-        const { x, y } = APP.LevelUtils.UNPACK(key);
+        const { x, y } = UNPACK(key);
         const { w, h } = l.grid;
-        if (!APP.LevelUtils.inBounds(x, y, w, h) || l.blockSet.has(key)) return false;
+        if (!inBounds(x, y, w, h) || l.blockSet.has(key)) return false;
         if (ctx.mode === EDITOR && l.gooseSet.has(key)) return false;
         const lastK = path[path.length - 1];
         if (lastK === undefined) return true;
@@ -4797,7 +4793,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (l.gateKeys.includes(key)) return false;
         } else if (path.length > 1 && l.gateKeys.includes(lastK)) return false;
         if (l.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
-        const lastP = APP.LevelUtils.UNPACK(lastK);
+        const lastP = UNPACK(lastK);
         const isPortalJumpCandidate = l.portalMap.has(lastK) && resolvePortal(l, lastK).dest === key;
         if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
         const axis = (y === lastP.y) ? H : V;
@@ -4807,8 +4803,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (uLast) {
             let entryAxis = NONE;
             if (path.length > 1 && !jumpSet.has(path.length - 1)) {
-                const prevP = APP.LevelUtils.UNPACK(path[path.length - 2]);
-                const lastP_check = APP.LevelUtils.UNPACK(lastK);
+                const prevP = UNPACK(path[path.length - 2]);
+                const lastP_check = UNPACK(lastK);
                 entryAxis = (prevP.y === lastP_check.y) ? H : V;
             }
             if (axis !== entryAxis) {
@@ -4989,16 +4985,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         if (APP.UI.isModalOpen('editorHelpModal')) { APP.UI.closeModal('editorHelpModal'); return true; }
         return false;
     }
-    function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); showMessage("", ""); }
+    function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; setLogicState(IDLE); setOverlayState(OVERLAY_NONE); PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); updateCompletionUI(); showMessage("", ""); }
     function updatePencilState() { const btn = document.getElementById('editPencilBtn'); const svg = btn.querySelector('svg'); if (APP.State.ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); } }
 
     APP.Renderer = (() => {
         const cvs = document.getElementById('gameCanvas');
         const ctx = cvs.getContext('2d');
 
-        function getScreenPos(cx, cy) { const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const { tx, ty } = APP.LevelUtils.transformPoint(cx, cy, APP.State.ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * APP.State.ENGINE.viewport.cellW, sy: (ty + 0.5) * APP.State.ENGINE.viewport.cellH }; }
+        function getScreenPos(cx, cy) { const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const { tx, ty } = transformPoint(cx, cy, APP.State.ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * APP.State.ENGINE.viewport.cellW, sy: (ty + 0.5) * APP.State.ENGINE.viewport.cellH }; }
         function drawBombAsset(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const scale = s / 100; ctx.scale(scale, scale); ctx.beginPath(); ctx.arc(0, 10, 25, 0, Math.PI * 2); ctx.fillStyle = '#334155'; ctx.fill(); ctx.beginPath(); ctx.moveTo(0, -15); ctx.quadraticCurveTo(15, -30, 30, -25); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 4; ctx.stroke(); ctx.beginPath(); ctx.arc(30, -25, 5, 0, Math.PI * 2); ctx.fillStyle = '#ef4444'; ctx.fill(); ctx.beginPath(); ctx.arc(30, -25, 2.5, 0, Math.PI * 2); ctx.fillStyle = '#fde047'; ctx.fill(); ctx.beginPath(); ctx.moveTo(-5, -15); ctx.lineTo(5, -15); ctx.lineTo(5, -5); ctx.lineTo(-5, -5); ctx.closePath(); ctx.fillStyle = '#64748b'; ctx.fill(); ctx.restore(); }
-        function drawPath(pathArr, isJumpSet, strokeStyle, width, isCaution = false) { if (!pathArr.length) return; ctx.save(); ctx.lineWidth = width; ctx.lineCap = isCaution ? 'butt' : 'round'; ctx.lineJoin = 'round'; const drawDot = (sx, sy, color) => { ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(sx, sy, width / 2, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }; if (pathArr.length === 1 && !isCaution) { const start = APP.LevelUtils.UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); drawDot(sStart.sx, sStart.sy, (strokeStyle === 'rainbow') ? '#ff0000' : strokeStyle); ctx.restore(); return; } if (isCaution) { const trace = () => { const start = APP.LevelUtils.UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); ctx.beginPath(); ctx.moveTo(sStart.sx, sStart.sy); ctx.lineTo(sStart.sx, sStart.sy); for (let i = 1; i < pathArr.length; i++) { const p = APP.LevelUtils.UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); if (isJumpSet.has(i)) { ctx.moveTo(s.sx, s.sy); ctx.lineTo(s.sx, s.sy); } else { ctx.lineTo(s.sx, s.sy); } } }; ctx.strokeStyle = '#fbbf24'; trace(); ctx.stroke(); ctx.strokeStyle = '#000000'; ctx.setLineDash([width, width]); trace(); ctx.stroke(); ctx.setLineDash([]); } else if (APP.State.ENGINE.rainbowActive) { const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']; let totalLength = 0; const segments = []; for (let i = 1; i < pathArr.length; i++) { if (isJumpSet.has(i)) continue; const p1 = APP.LevelUtils.UNPACK(pathArr[i - 1]); const p2 = APP.LevelUtils.UNPACK(pathArr[i]); const s1 = getScreenPos(p1.x, p1.y); const s2 = getScreenPos(p2.x, p2.y); const dx = s2.sx - s1.sx; const dy = s2.sy - s1.sy; const len = Math.hypot(dx, dy); segments.push({ s1, s2, len }); totalLength += len; } const start = APP.LevelUtils.UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); drawDot(sStart.sx, sStart.sy, colors[0]); let curTravel = 0; segments.forEach(seg => { const mid = curTravel + seg.len / 2; const t = mid / Math.max(totalLength, 1); const colorIndex = Math.floor(t * colors.length) % colors.length; ctx.strokeStyle = colors[colorIndex]; ctx.beginPath(); ctx.moveTo(seg.s1.sx, seg.s1.sy); ctx.lineTo(seg.s2.sx, seg.s2.sy); ctx.stroke(); curTravel += seg.len; }); let jumpTravel = 0; for (let i = 1; i < pathArr.length; i++) { if (isJumpSet.has(i)) { const p = APP.LevelUtils.UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); const t = jumpTravel / Math.max(totalLength, 1); const colorIndex = Math.floor(t * colors.length) % colors.length; drawDot(s.sx, s.sy, colorIndex >= 0 ? colors[colorIndex] : colors[0]); } else { const p1 = APP.LevelUtils.UNPACK(pathArr[i - 1]); const p2 = APP.LevelUtils.UNPACK(pathArr[i]); jumpTravel += Math.hypot(p2.x - p1.x, p2.y - p1.y) * APP.State.ENGINE.viewport.cellW; } } } else { ctx.strokeStyle = strokeStyle; const trace = () => { const start = APP.LevelUtils.UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); ctx.beginPath(); ctx.moveTo(sStart.sx, sStart.sy); ctx.lineTo(sStart.sx, sStart.sy); for (let i = 1; i < pathArr.length; i++) { const p = APP.LevelUtils.UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); if (isJumpSet.has(i)) { ctx.moveTo(s.sx, s.sy); ctx.lineTo(s.sx, s.sy); } else { ctx.lineTo(s.sx, s.sy); } } }; trace(); ctx.stroke(); } ctx.restore(); }
+        function drawPath(pathArr, isJumpSet, strokeStyle, width, isCaution = false) { if (!pathArr.length) return; ctx.save(); ctx.lineWidth = width; ctx.lineCap = isCaution ? 'butt' : 'round'; ctx.lineJoin = 'round'; const drawDot = (sx, sy, color) => { ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(sx, sy, width / 2, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }; if (pathArr.length === 1 && !isCaution) { const start = UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); drawDot(sStart.sx, sStart.sy, (strokeStyle === 'rainbow') ? '#ff0000' : strokeStyle); ctx.restore(); return; } if (isCaution) { const trace = () => { const start = UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); ctx.beginPath(); ctx.moveTo(sStart.sx, sStart.sy); ctx.lineTo(sStart.sx, sStart.sy); for (let i = 1; i < pathArr.length; i++) { const p = UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); if (isJumpSet.has(i)) { ctx.moveTo(s.sx, s.sy); ctx.lineTo(s.sx, s.sy); } else { ctx.lineTo(s.sx, s.sy); } } }; ctx.strokeStyle = '#fbbf24'; trace(); ctx.stroke(); ctx.strokeStyle = '#000000'; ctx.setLineDash([width, width]); trace(); ctx.stroke(); ctx.setLineDash([]); } else if (APP.State.ENGINE.rainbowActive) { const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3']; let totalLength = 0; const segments = []; for (let i = 1; i < pathArr.length; i++) { if (isJumpSet.has(i)) continue; const p1 = UNPACK(pathArr[i - 1]); const p2 = UNPACK(pathArr[i]); const s1 = getScreenPos(p1.x, p1.y); const s2 = getScreenPos(p2.x, p2.y); const dx = s2.sx - s1.sx; const dy = s2.sy - s1.sy; const len = Math.hypot(dx, dy); segments.push({ s1, s2, len }); totalLength += len; } const start = UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); drawDot(sStart.sx, sStart.sy, colors[0]); let curTravel = 0; segments.forEach(seg => { const mid = curTravel + seg.len / 2; const t = mid / Math.max(totalLength, 1); const colorIndex = Math.floor(t * colors.length) % colors.length; ctx.strokeStyle = colors[colorIndex]; ctx.beginPath(); ctx.moveTo(seg.s1.sx, seg.s1.sy); ctx.lineTo(seg.s2.sx, seg.s2.sy); ctx.stroke(); curTravel += seg.len; }); let jumpTravel = 0; for (let i = 1; i < pathArr.length; i++) { if (isJumpSet.has(i)) { const p = UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); const t = jumpTravel / Math.max(totalLength, 1); const colorIndex = Math.floor(t * colors.length) % colors.length; drawDot(s.sx, s.sy, colorIndex >= 0 ? colors[colorIndex] : colors[0]); } else { const p1 = UNPACK(pathArr[i - 1]); const p2 = UNPACK(pathArr[i]); jumpTravel += Math.hypot(p2.x - p1.x, p2.y - p1.y) * APP.State.ENGINE.viewport.cellW; } } } else { ctx.strokeStyle = strokeStyle; const trace = () => { const start = UNPACK(pathArr[0]); const sStart = getScreenPos(start.x, start.y); ctx.beginPath(); ctx.moveTo(sStart.sx, sStart.sy); ctx.lineTo(sStart.sx, sStart.sy); for (let i = 1; i < pathArr.length; i++) { const p = UNPACK(pathArr[i]); const s = getScreenPos(p.x, p.y); if (isJumpSet.has(i)) { ctx.moveTo(s.sx, s.sy); ctx.lineTo(s.sx, s.sy); } else { ctx.lineTo(s.sx, s.sy); } } }; trace(); ctx.stroke(); } ctx.restore(); }
         function drawProhibitedAsset(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); ctx.beginPath(); ctx.arc(0, 0, s * 0.35, 0, Math.PI * 2); ctx.strokeStyle = "#ef4444"; ctx.lineWidth = s * 0.1; ctx.stroke(); ctx.beginPath(); const lineLen = s * 0.25; ctx.moveTo(-lineLen, -lineLen); ctx.lineTo(lineLen, lineLen); ctx.stroke(); ctx.restore(); }
         function drawRequiredAsset(ctx, cx, cy, s, hit, colors) { ctx.save(); ctx.translate(cx, cy); const tilt = hit ? 15 : -15; ctx.rotate(tilt * Math.PI / 180); const scale = s / 35; ctx.scale(scale, scale); ctx.beginPath(); ctx.moveTo(-1, 0); ctx.lineTo(1, 0); ctx.lineTo(1.5, -12); ctx.lineTo(-1.5, -12); ctx.closePath(); ctx.fillStyle = '#94a3b8'; ctx.fill(); ctx.beginPath(); ctx.arc(0, -18, 7, 0, Math.PI * 2); ctx.fillStyle = hit ? colors.pin : colors.pinUnflipped; ctx.fill(); ctx.restore(); }
         function drawMustCrossAsset(ctx, cx, cy, s, color) { ctx.save(); ctx.strokeStyle = color; ctx.globalAlpha = 0.25; ctx.lineWidth = s * 0.08; const outer = s * 0.4, inner = s * 0.18; ctx.beginPath(); ctx.moveTo(cx - outer, cy - inner); ctx.lineTo(cx - inner, cy - inner); ctx.lineTo(cx - inner, cy - outer); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx + outer, cy - inner); ctx.lineTo(cx + inner, cy - inner); ctx.lineTo(cx + inner, cy - outer); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx - outer, cy + inner); ctx.lineTo(cx - inner, cy + inner); ctx.lineTo(cx - inner, cy + outer); ctx.stroke(); ctx.beginPath(); ctx.moveTo(cx + outer, cy + inner); ctx.lineTo(cx + inner, cy + inner); ctx.lineTo(cx + inner, cy + outer); ctx.stroke(); ctx.restore(); }
@@ -5009,56 +5005,56 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         function render() {
         const vp = APP.State.ENGINE.viewport, l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!vp.cellW || !l) return; const th = THEMES[getCurrentTheme()]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = APP.State.ENGINE.viewport.swapped ? H : W, dispH = APP.State.ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke();
 
-        if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.validTrapSpots && APP.State.ENGINE.editor.validTrapSpots.size > 0) { APP.State.ENGINE.editor.validTrapSpots.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2; ctx.save(); ctx.fillStyle = th.colors.goal + '40'; ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = 3; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]); ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.restore(); }); }
+        if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.validTrapSpots && APP.State.ENGINE.editor.validTrapSpots.size > 0) { APP.State.ENGINE.editor.validTrapSpots.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2; ctx.save(); ctx.fillStyle = th.colors.goal + '40'; ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = 3; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]); ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.restore(); }); }
 
         let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
         if ((APP.State.ENGINE.mode === EDITOR || APP.State.ENGINE.cheatActive) && l.goalKey !== -1) {
             reqLen = APP.State.ENGINE.mode === EDITOR ? (parseInt(APP.UI.getValue('editReqLen')) || 0) : l.reqLen;
             if (reqLen > 0 || APP.State.ENGINE.path.length > 0 || APP.State.ENGINE.cheatActive) {
-                showParityWarnings = true; const gp = APP.LevelUtils.UNPACK(l.goalKey); targetParity = (gp.x + gp.y + reqLen) % 2;
-                l.portalVisuals.forEach(pv => { const p1 = APP.LevelUtils.UNPACK(pv.k1), p2 = APP.LevelUtils.UNPACK(pv.k2); if ((p1.x + p1.y) % 2 === (p2.x + p2.y) % 2) hasFlippingPortal = true; });
+                showParityWarnings = true; const gp = UNPACK(l.goalKey); targetParity = (gp.x + gp.y + reqLen) % 2;
+                l.portalVisuals.forEach(pv => { const p1 = UNPACK(pv.k1), p2 = UNPACK(pv.k2); if ((p1.x + p1.y) % 2 === (p2.x + p2.y) % 2) hasFlippingPortal = true; });
             }
         }
 
-        l.filterMap.forEach((axis, k) => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawFilterAsset(ctx, sx, sy, vp.cellW, APP.LevelUtils.transformAxis(axis, APP.State.ENGINE.variant), th.colors.filter); });
+        l.filterMap.forEach((axis, k) => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawFilterAsset(ctx, sx, sy, vp.cellW, transformAxis(axis, APP.State.ENGINE.variant), th.colors.filter); });
 
         l.flippingFilterMap.forEach((baseAxis, k) => {
-            const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y);
+            const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y);
             const crossed = APP.State.ENGINE.crossedFlippingFilters.has(k);
             const targetFlips = crossed ? APP.State.ENGINE.crossedFlippingFilters.get(k) : APP.State.ENGINE.flipCount;
             let currentVisualFlips = targetFlips;
             if (!crossed && APP.State.ENGINE.visualFlipCount !== undefined) { currentVisualFlips = APP.State.ENGINE.visualFlipCount; }
             const rotation = currentVisualFlips * (Math.PI / 2);
-            drawFlippingFilter(ctx, sx, sy, vp.cellW, APP.LevelUtils.transformAxis(baseAxis, APP.State.ENGINE.variant), th.colors.filter, rotation, crossed);
+            drawFlippingFilter(ctx, sx, sy, vp.cellW, transformAxis(baseAxis, APP.State.ENGINE.variant), th.colors.filter, rotation, crossed);
         });
 
-        l.mustCrossKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawMustCrossAsset(ctx, sx, sy, vp.cellW, th.colors.cross); });
-        l.blockSet.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2, cr = vp.cellW * 0.2; ctx.fillStyle = th.colors.block; ctx.beginPath(); ctx.roundRect(cx + 1, cy + 1, vp.cellW - 2, vp.cellH - 2, cr); ctx.fill(); ctx.fillStyle = th.grid; for(let r=1;r<=3;r++) for(let c=1;c<=3;c++) { ctx.beginPath(); ctx.arc(cx+(c*0.25*vp.cellW),cy+(r*0.25*vp.cellH),vp.cellW*0.045,0,Math.PI*2); ctx.fill(); } });
+        l.mustCrossKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawMustCrossAsset(ctx, sx, sy, vp.cellW, th.colors.cross); });
+        l.blockSet.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2, cr = vp.cellW * 0.2; ctx.fillStyle = th.colors.block; ctx.beginPath(); ctx.roundRect(cx + 1, cy + 1, vp.cellW - 2, vp.cellH - 2, cr); ctx.fill(); ctx.fillStyle = th.grid; for(let r=1;r<=3;r++) for(let c=1;c<=3;c++) { ctx.beginPath(); ctx.arc(cx+(c*0.25*vp.cellW),cy+(r*0.25*vp.cellH),vp.cellW*0.045,0,Math.PI*2); ctx.fill(); } });
 
-        l.portalVisuals.forEach(pv => { const color = APP.State.ENGINE.mode === EDITOR ? pv.color : th.colors.portal; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [APP.LevelUtils.UNPACK(pv.k1), APP.LevelUtils.UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } }); }); ctx.setLineDash([]);
+        l.portalVisuals.forEach(pv => { const color = APP.State.ENGINE.mode === EDITOR ? pv.color : th.colors.portal; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [UNPACK(pv.k1), UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } }); }); ctx.setLineDash([]);
 
-        if (APP.State.ENGINE.editor.pendingPortal) { const pp = APP.LevelUtils.UNPACK(APP.State.ENGINE.editor.pendingPortal), { sx, sy } = getScreenPos(pp.x, pp.y); ctx.strokeStyle = th.colors.portal; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = th.colors.portal + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); }
-        l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; drawRequiredAsset(ctx, sx, sy, vp.cellW, isHit, th.colors); });
+        if (APP.State.ENGINE.editor.pendingPortal) { const pp = UNPACK(APP.State.ENGINE.editor.pendingPortal), { sx, sy } = getScreenPos(pp.x, pp.y); ctx.strokeStyle = th.colors.portal; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = th.colors.portal + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); }
+        l.mustPassKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; drawRequiredAsset(ctx, sx, sy, vp.cellW, isHit, th.colors); });
 
         const now = Date.now(); APP.State.ENGINE.ripples = APP.State.ENGINE.ripples.filter(r => now - r.startTime < 600); APP.State.ENGINE.ripples.forEach(r => { const pct = (now - r.startTime) / 600, { sx, sy } = getScreenPos(r.x, r.y); ctx.save(); ctx.globalAlpha = 1 - pct; ctx.strokeStyle = r.color; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * (0.3 + pct * 1.2), 0, Math.PI * 2); ctx.stroke(); ctx.restore(); });
 
-        l.gateKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); ctx.save(); ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4); const color = (APP.State.ENGINE.activeGateKey === k || !APP.State.ENGINE.activeGateKey) ? th.colors.gate : '#94a3b8'; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for(let i=0; i<2; i++) { const offset = (i - 0.5) * vp.cellW * 0.32; ctx.beginPath(); ctx.moveTo(offset - vp.cellW * 0.1, -vp.cellW * 0.2); ctx.lineTo(offset + vp.cellW * 0.1, 0); ctx.lineTo(offset - vp.cellW * 0.1, vp.cellW * 0.2); ctx.stroke(); } ctx.restore(); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } });
+        l.gateKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); ctx.save(); ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4); const color = (APP.State.ENGINE.activeGateKey === k || !APP.State.ENGINE.activeGateKey) ? th.colors.gate : '#94a3b8'; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for(let i=0; i<2; i++) { const offset = (i - 0.5) * vp.cellW * 0.32; ctx.beginPath(); ctx.moveTo(offset - vp.cellW * 0.1, -vp.cellW * 0.2); ctx.lineTo(offset + vp.cellW * 0.1, 0); ctx.lineTo(offset - vp.cellW * 0.1, vp.cellW * 0.2); ctx.stroke(); } ctx.restore(); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawProhibitedAsset(ctx, sx, sy, vp.cellW); } });
 
         if (APP.State.ENGINE.path.length) { const stroke = APP.State.ENGINE.rainbowActive ? 'rainbow' : th.path; drawPath(APP.State.ENGINE.path, APP.State.ENGINE.isPortalJump, stroke, vp.cellW * 0.25); }
 
         if (APP.State.ENGINE.overlayState === HINT_ANIMATING && APP.State.ENGINE.hinter.pathList.length) {
             ctx.save(); ctx.globalAlpha = APP.State.ENGINE.hinter.alpha;
             const hPath = APP.State.ENGINE.hinter.pathList[APP.State.ENGINE.hinter.currentPathIdx], displayPath = hPath.slice(0, Math.floor(APP.State.ENGINE.hinter.index)), hintsJumps = new Set();
-            for(let i=1; i<displayPath.length; i++){ const p1 = APP.LevelUtils.UNPACK(displayPath[i-1]), p2 = APP.LevelUtils.UNPACK(displayPath[i]); if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) hintsJumps.add(i); }
+            for(let i=1; i<displayPath.length; i++){ const p1 = UNPACK(displayPath[i-1]), p2 = UNPACK(displayPath[i]); if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) hintsJumps.add(i); }
             drawPath(displayPath, hintsJumps, '#22c55e', vp.cellW * 0.3, true);
             ctx.restore();
         }
 
-        if (l.goalKey !== -1) { const goalP = APP.LevelUtils.UNPACK(l.goalKey), sGoal = getScreenPos(goalP.x, goalP.y); ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
+        if (l.goalKey !== -1) { const goalP = UNPACK(l.goalKey), sGoal = getScreenPos(goalP.x, goalP.y); ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 
-        l.falseGoalKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (APP.State.ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (APP.State.ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (APP.State.ENGINE.mode === EDITOR) { drawBombAsset(ctx, sx, sy, vp.cellW); } });
+        l.falseGoalKeys.forEach(k => { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (APP.State.ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (APP.State.ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (APP.State.ENGINE.mode === EDITOR) { drawBombAsset(ctx, sx, sy, vp.cellW); } });
 
-        l.gooseSet.forEach(k => { if (APP.State.ENGINE.revealedGeese.has(k) || APP.State.ENGINE.cheatActive || APP.State.ENGINE.mode === EDITOR) { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawGooseAsset(ctx, sx, sy, vp.cellW, APP.State.ENGINE.cheatActive && !APP.State.ENGINE.revealedGeese.has(k)); } });
+        l.gooseSet.forEach(k => { if (APP.State.ENGINE.revealedGeese.has(k) || APP.State.ENGINE.cheatActive || APP.State.ENGINE.mode === EDITOR) { const p = UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); drawGooseAsset(ctx, sx, sy, vp.cellW, APP.State.ENGINE.cheatActive && !APP.State.ENGINE.revealedGeese.has(k)); } });
 
         if (APP.State.ENGINE.mode === PLAY) { const curLen = getRealLength(APP.State.ENGINE); document.getElementById('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = document.getElementById('intersectionInfo'); intEl.innerText = `${APP.State.ENGINE.intersections}/${l.reqInt}`; if (APP.State.ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } }
         else if (APP.State.ENGINE.mode === EDITOR) { const curLen = getRealLength(APP.State.ENGINE); const lMet = document.getElementById('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${APP.State.ENGINE.intersections})`; }
@@ -5136,8 +5132,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         setLogicState(IDLE);
         setOverlayState(OVERLAY_NONE);
 
-        APP.State.ENGINE.level = APP.LevelUtils.normalizeLevel(idx);
-        APP.LevelUtils.assertLevelShape(APP.State.ENGINE.level);
+        APP.State.ENGINE.level = normalizeLevel(idx);
+        assertLevelShape(APP.State.ENGINE.level);
         PathNavigator.clear(APP.State.ENGINE);
         APP.State.ENGINE.undoStack = [];
         APP.State.ENGINE.revealedGeese.clear();
@@ -5147,7 +5143,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.State.ENGINE.detonatedFalseGoals = new Set();
         APP.State.ENGINE.foundHintsSinceLoad = [];
         if (isEditor) {
-            APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level);
+            APP.State.ENGINE.editor.workingLevel = deepCloneLevel(APP.State.ENGINE.level);
             APP.State.ENGINE.editor.isPencilMode = false;
             APP.State.ENGINE.editor.undoStack = [];
             APP.State.ENGINE.editor.validTrapSpots.clear();
@@ -5162,7 +5158,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         showMessage("", "");
         updateAppScale();
         updateViewport();
-        APP.Persistence.updateCompletionUI();
+        updateCompletionUI();
     }
 
     function updateViewport() { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); if (rect.width === 0) return; const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return; const swaps = [1, 3, 6, 7]; APP.State.ENGINE.viewport.swapped = swaps.includes(APP.State.ENGINE.variant); const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; APP.State.ENGINE.viewport.cellW = canvas.width / gridW; APP.State.ENGINE.viewport.cellH = canvas.height / gridH; }
@@ -5190,7 +5186,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const handleDown = (e) => {
             if (APP.State.ENGINE.activeSolverController || [RESOLVED, HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) || [HINT_ANIMATING, FALSE_GOAL_ANIMATING, SOLVER_RUNNING].includes(APP.State.ENGINE.overlayState)) return;
-            const p = APP.LevelUtils.getGridCoord(e); const k = APP.LevelUtils.PACK(p.x, p.y); const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+            const p = getGridCoord(e); const k = PACK(p.x, p.y); const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
             APP.State.ENGINE.resetStreak = 0;
             if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) {
                 const occupied = activeLevel.gateKeys.includes(k) || activeLevel.goalKey === k || activeLevel.falseGoalKeys.has(k) || activeLevel.blockSet.has(k) || activeLevel.gooseSet.has(k) || activeLevel.filterMap.has(k) || activeLevel.flippingFilterMap.has(k) || activeLevel.portalMap.has(k) || activeLevel.mustPassKeys.includes(k) || activeLevel.mustCrossKeys.includes(k);
@@ -5206,7 +5202,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 }
                 if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.isPencilMode) {
                     const idx = APP.State.ENGINE.path.indexOf(k); let shouldReverse = false;
-                    if (idx !== -1) { if (idx < APP.State.ENGINE.path.length / 2) shouldReverse = true; } else { const headP = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); const tailP = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[0]); const distHead = Math.abs(p.x - headP.x) + Math.abs(p.y - headP.y); const distTail = Math.abs(p.x - tailP.x) + Math.abs(p.y - tailP.y); if (distTail < distHead) shouldReverse = true; }
+                    if (idx !== -1) { if (idx < APP.State.ENGINE.path.length / 2) shouldReverse = true; } else { const headP = UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); const tailP = UNPACK(APP.State.ENGINE.path[0]); const distHead = Math.abs(p.x - headP.x) + Math.abs(p.y - headP.y); const distTail = Math.abs(p.x - tailP.x) + Math.abs(p.y - tailP.y); if (distTail < distHead) shouldReverse = true; }
                     if (shouldReverse) { APP.State.ENGINE.path.reverse(); const newJumps = new Set(); APP.State.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(APP.State.ENGINE.path.length - jIdx)); APP.State.ENGINE.isPortalJump = newJumps; rebuildDerivedPathState(APP.State.ENGINE); }
                 }
                 const lastIdx = APP.State.ENGINE.path.lastIndexOf(k); if (lastIdx !== -1 && lastIdx < APP.State.ENGINE.path.length - 1) { PathNavigator.truncateTo(APP.State.ENGINE, lastIdx); setLogicState(DRAGGING); return; }
@@ -5214,7 +5210,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             } else {
                 if (!activeLevel) return;
                 if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.isPencilMode) { APP.State.ENGINE.activeGateKey = null; PathNavigator.pushStep(APP.State.ENGINE, k, false); setLogicState(DRAGGING); APP.Engine.handlePrimaryGridInput(p); } else {
-                    let bestGate = null; if (activeLevel.gateKeys.includes(k)) { bestGate = k; } else { let minDist = Infinity; for (let i = 0; i < activeLevel.gateKeys.length; i++) { const gk = activeLevel.gateKeys[i]; const gp = APP.LevelUtils.UNPACK(gk); if (p.x === gp.x || p.y === gp.y) { const dist = Math.abs(p.x - gp.x) + Math.abs(p.y - gp.y); if (dist > 0 && dist < minDist) { minDist = dist; bestGate = gk; } } } }
+                    let bestGate = null; if (activeLevel.gateKeys.includes(k)) { bestGate = k; } else { let minDist = Infinity; for (let i = 0; i < activeLevel.gateKeys.length; i++) { const gk = activeLevel.gateKeys[i]; const gp = UNPACK(gk); if (p.x === gp.x || p.y === gp.y) { const dist = Math.abs(p.x - gp.x) + Math.abs(p.y - gp.y); if (dist > 0 && dist < minDist) { minDist = dist; bestGate = gk; } } } }
                     if (bestGate !== null) { APP.State.ENGINE.activeGateKey = bestGate; PathNavigator.pushStep(APP.State.ENGINE, bestGate, false); setLogicState(DRAGGING); if (bestGate !== k) { APP.Engine.handlePrimaryGridInput(p); } }
                 }
             }
@@ -5231,7 +5227,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 setLogicState(IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
                 if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
             }
-            if (APP.State.ENGINE.logicState === EDIT_DRAG && APP.State.ENGINE.mode === EDITOR) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; setLogicState(IDLE); } if (APP.State.ENGINE.logicState === DRAGGING) setLogicState(IDLE);
+            if (APP.State.ENGINE.logicState === EDIT_DRAG && APP.State.ENGINE.mode === EDITOR) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(PACK(getGridCoord(e).x, getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; setLogicState(IDLE); } if (APP.State.ENGINE.logicState === DRAGGING) setLogicState(IDLE);
         };
 
         APP.Renderer.getCanvas().addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (APP.State.ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); APP.State.ENGINE.runtime.activePointerId = e.pointerId; APP.Renderer.getCanvas().setPointerCapture(APP.State.ENGINE.runtime.activePointerId); handleDown(e); });
@@ -5253,7 +5249,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             if (e.pointerId !== APP.State.ENGINE.runtime.activePointerId && APP.State.ENGINE.logicState !== EDIT_DRAG) return;
             e.preventDefault();
-            if (APP.State.ENGINE.logicState === DRAGGING) APP.Engine.handlePrimaryGridInput(APP.LevelUtils.getGridCoord(e));
+            if (APP.State.ENGINE.logicState === DRAGGING) APP.Engine.handlePrimaryGridInput(getGridCoord(e));
         });
         window.addEventListener('pointerup', e => { handleUp(e); if (APP.State.ENGINE.runtime.activePointerId !== null && APP.Renderer.getCanvas().hasPointerCapture(APP.State.ENGINE.runtime.activePointerId)) APP.Renderer.getCanvas().releasePointerCapture(APP.State.ENGINE.runtime.activePointerId); APP.State.ENGINE.runtime.activePointerId = null; });
 
@@ -5268,13 +5264,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
             if (!l) return;
             if (!APP.State.ENGINE.path.length) {
-                const firstGate = l.gateKeys && l.gateKeys.length ? APP.LevelUtils.UNPACK(l.gateKeys[0]) : null;
+                const firstGate = l.gateKeys && l.gateKeys.length ? UNPACK(l.gateKeys[0]) : null;
                 if (!firstGate) return;
                 APP.State.ENGINE.activeGateKey = l.gateKeys[0];
                 PathNavigator.pushStep(APP.State.ENGINE, l.gateKeys[0], false);
                 setLogicState(DRAGGING);
             }
-            const head = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]);
+            const head = UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]);
             APP.Engine.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
         }
 
@@ -5387,10 +5383,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
         updateAppScale();
 
-        document.getElementById('gridRotateBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); showMessage("Rotated", "text-white font-black"); };
-        document.getElementById('gridMirrorBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.State.ENGINE.editor.mirrorHorizontal = !APP.State.ENGINE.editor.mirrorHorizontal; APP.UI.setInlineStyle('mirrorIconSvg', 'transform', APP.State.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'); if (APP.State.ENGINE.editor.mirrorHorizontal) { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } showMessage("Mirrored", "text-white font-black"); };
-        document.getElementById('gridSizeMinusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(-1); };
-        document.getElementById('gridSizePlusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(1); };
+        document.getElementById('gridRotateBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); showMessage("Rotated", "text-white font-black"); };
+        document.getElementById('gridMirrorBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.State.ENGINE.editor.mirrorHorizontal = !APP.State.ENGINE.editor.mirrorHorizontal; APP.UI.setInlineStyle('mirrorIconSvg', 'transform', APP.State.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'); if (APP.State.ENGINE.editor.mirrorHorizontal) { transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } showMessage("Mirrored", "text-white font-black"); };
+        document.getElementById('gridSizeMinusBtn').onclick = () => { APP.UI.closeAllModals(); changeGridSize(-1); };
+        document.getElementById('gridSizePlusBtn').onclick = () => { APP.UI.closeAllModals(); changeGridSize(1); };
         document.getElementById('muteBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.muted = !APP.State.ENGINE.muted; APP.UI.setInlineStyle('muteSlash', 'display', APP.State.ENGINE.muted ? 'block' : 'none'); };
         document.getElementById('orientationToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.ui.forceLandscapeLayout = !APP.State.ENGINE.ui.forceLandscapeLayout; updateLayoutMode(); updateAppScale(); updateViewport(); showMessage(APP.State.ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
 
@@ -5573,9 +5569,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
             try {
                 try {
-                    if (APP.Persistence.hasConfig) await APP.Persistence.initAuth();
+                    if (firebaseConfigRaw) await initAuth();
                 } catch (e) {}
-                APP.Persistence.syncProgress(APP.Persistence.getCurrentUser());
+                syncProgress(auth?.currentUser);
 
                 const mode = await APP.Loader.init();
                 if (mode !== 'ready' && mode !== 'fallback') {
