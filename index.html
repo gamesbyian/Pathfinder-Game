@@ -2929,7 +2929,7 @@
             getStatus: () => ({ ...status, active: !!APP.State.ENGINE.activeSolverController }),
             Referee,
             Mega,
-            runGameSolver,
+            runGameSolver: (...args) => runGameSolver(...args),
             startHintAnimation,
             stopHintAnimation
         };
@@ -5806,7 +5806,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!isVisible) APP.UI.openModal('editorHelpModal');
         };
         document.getElementById('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
-        document.getElementById('editMegaSolver').onclick = async () => {
+        const editorSolveBtn = document.getElementById('editorSolveBtn') || document.getElementById('editMegaSolver');
+        if (editorSolveBtn) editorSolveBtn.onclick = async () => {
             APP.UI.closeAllModals();
             if (!APP.State.ENGINE.editor.workingLevel) return;
             APP.Editor.applyMetricsFromUI();
