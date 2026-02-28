@@ -859,7 +859,7 @@
             root.style.setProperty('--theme-mega-gemini-bg', t.mega.geminiBg); root.style.setProperty('--theme-mega-gemini-text', t.text.megaGemini); root.style.setProperty('--theme-mega-gemini-border', t.mega.geminiBorder);
             root.style.setProperty('--theme-mega-copy-bg', t.mega.copyBg); root.style.setProperty('--theme-mega-copy-text', t.text.megaCopy); root.style.setProperty('--theme-mega-copy-border', t.mega.copyBorder);
             root.style.setProperty('--theme-mega-desc-text', t.text.megaDesc);
-            const leave = getLeaveThemeColors(t, themeName === 'classic');
+            const leave = APP.Themes.getLeaveThemeColors(t, themeName === 'classic');
             root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
 
             document.body.style.backgroundColor = t.bodyBg; APP.Renderer.getCanvas().style.backgroundColor = t.canvasBg;
@@ -1096,7 +1096,7 @@
                         const prev = window.THEME_UNDO_STACKS[themeKey].pop();
                         APP.Themes.THEMES[themeKey] = JSON.parse(JSON.stringify(prev));
                         renderAll();
-                        populateThemes();
+                        APP.Themes.populateThemes();
                     }
                 };
                 const resetBtn = document.createElement('button');
@@ -1108,7 +1108,7 @@
                         if (!window.THEME_UNDO_STACKS) window.THEME_UNDO_STACKS = {};
                         window.THEME_UNDO_STACKS[themeKey] = [];
                         renderAll();
-                        populateThemes();
+                        APP.Themes.populateThemes();
                     }
                 };
                 controlsRow.appendChild(textarea);
@@ -2905,7 +2905,7 @@
                 APP.UI.setOverlayOpacity('loadingOverlay', '0');
                 setTimeout(() => APP.UI.hideOverlay('loadingOverlay'), 500);
             }
-            populateThemes();
+            APP.Themes.populateThemes();
         };
 
         const fail = (kind, payload) => {
@@ -2934,7 +2934,7 @@
                     s.src = './themes.js';
                     s.onload = () => {
                         if (window.THEMES_MORE) Object.assign(APP.Themes.THEMES, window.THEMES_MORE);
-                        ensureThemeLeaveColors();
+                        APP.Themes.ensureThemeLeaveColors();
                         setProgress(55, 'Themes Ready');
                         innerResolve();
                     };
@@ -3740,12 +3740,7 @@
             getRealLength(state = APP.State.ENGINE) { return getRealLength(state); },
             rebuildDerivedPathState(state = APP.State.ENGINE) { return rebuildDerivedPathState(state); },
             assertStateConsistency(state = APP.State.ENGINE) { return assertStateConsistency(state); },
-            PathNavigator,
-            switchMode(newMode) { return switchMode(newMode); },
-            updatePencilState() { return updatePencilState(); },
-            updatePlayModeLayout() { return updatePlayModeLayout(); },
-            loadLevel(idx, options = {}) { return loadLevel(idx, !!options.keepVariant); },
-            loop() { return loop(); }
+            updatePencilState() { return updatePencilState(); }
         };
     })();
 
@@ -5101,7 +5096,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
 
         APP.UI.ThemeEditor.renderAll();
-        populateThemes();
+        APP.Themes.populateThemes();
     }
 
         return { THEMES, rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor };
@@ -5641,14 +5636,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!isVisible) APP.UI.openModal('guideModal');
         };
         document.getElementById('closeGuideX').onclick = () => APP.UI.closeModal('guideModal');
-        document.getElementById('megaSolverBtn').onclick = () => { APP.UI.closeAllModals(); Mega.run(); };
+        document.getElementById('megaSolverBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.run(); };
         document.getElementById('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
         document.getElementById('copyMegaDataBtn').onclick = async () => { const out = APP.UI.getMegaOutputText(); if (out) await APP.UI.copyText(out, { fallbackElId: 'megaOutput' }); };
-        document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); Mega.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
-        document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); Mega.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
-        document.getElementById('megaRetry120Btn').onclick = () => { APP.UI.closeAllModals(); Mega.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
-        document.getElementById('megaRetryAltBtn').onclick = () => { APP.UI.closeAllModals(); Mega.retryFailed({ timeLimitMs: 60000, variant: 'altOrder' }); };
-        document.getElementById('megaGeminiRetryBtn').onclick = () => { APP.UI.closeAllModals(); Mega.askGeminiForFailed(); };
+        document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
+        document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
+        document.getElementById('megaRetry120Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
+        document.getElementById('megaRetryAltBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'altOrder' }); };
+        document.getElementById('megaGeminiRetryBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.askGeminiForFailed(); };
 
         const tModal = document.getElementById('themeModal');
         document.getElementById('openThemeModalBtn').onclick = () => { APP.UI.closeAllModals(); updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
@@ -5682,7 +5677,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const l = APP.State.ENGINE.editor.workingLevel; APP.Editor.applyMetricsFromUI();
             const res = await APP.Solver.findTrapSpots(l, { timeLimit: 8000 });
             APP.Editor.setTrapSpots(res.spots || new Set());
-            render();
+            APP.Renderer.render();
             if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
             else if (res.status !== 'aborted') APP.UI.showMessage("No spots found.", "text-white font-black");
             APP.Engine.setOverlayState(OVERLAY_NONE);
@@ -5730,8 +5725,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
             APP.UI.initDom();
             APP.UI.ThemeEditor.init();
-            ensureThemeLeaveColors();
-            applyTheme('classic');
+            APP.Themes.ensureThemeLeaveColors();
+            APP.Themes.applyTheme('classic');
 
             try {
                 try {
@@ -5748,7 +5743,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
                 APP.Engine.loadLevel(0);
                 APP.Engine.updatePlayModeLayout();
-                loop();
+                APP.Engine.loop();
                 APP.Loader.finish();
             } catch (error) {
                 APP.Loader.fail('boot', error);
