@@ -2840,6 +2840,17 @@ window.THEMES_MORE = {
         return `#${Math.max(0, Math.floor(r * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * factor)).toString(16).padStart(2, '0')}`;
     };
 
+    const collectThemePaths = (obj, prefix = '', out = new Set()) => {
+        if (!obj || typeof obj !== 'object') return out;
+        Object.keys(obj).forEach((key) => {
+            const path = prefix ? `${prefix}.${key}` : key;
+            out.add(path);
+            const value = obj[key];
+            if (value && typeof value === 'object' && !Array.isArray(value)) collectThemePaths(value, path, out);
+        });
+        return out;
+    };
+
     const leaveFor = (theme) => {
         const fallbackBase = theme.headerRight || theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#7f1d1d';
         const leave = theme.leave || {};
@@ -2868,6 +2879,7 @@ window.THEMES_MORE = {
         t.search = t.search || {};
         t.jumpscare = t.jumpscare || {};
         t.shell = t.shell || {};
+        t.header = t.header || {};
         t.editor = t.editor || {};
         t.layout = t.layout || {};
         t.themeEditor = t.themeEditor || {};
@@ -2946,8 +2958,11 @@ window.THEMES_MORE = {
         t.text.handDrawnShadow = t.text.handDrawnShadow || '#000000';
 
         t.btns.disabled = t.btns.disabled || '#94a3b8';
-        t.btns.hintHover = t.btns.hintHover || 'rgba(0,0,0,0.1)';
-        t.btns.hintDivider = t.btns.hintDivider || 'rgba(255,255,255,0.2)';
+        const hintBase = t.btns.hint || t.btns.guide || t.headerRight;
+        const hintRgb = toRgb(hintBase, { r: 207, g: 107, b: 23 });
+        const hintLuminance = (0.2126 * hintRgb.r + 0.7152 * hintRgb.g + 0.0722 * hintRgb.b) / 255;
+        t.btns.hintHover = t.btns.hintHover || darkenHex(hintBase, 0.88);
+        t.btns.hintDivider = t.btns.hintDivider || (hintLuminance > 0.55 ? 'rgba(15,23,42,0.35)' : 'rgba(255,255,255,0.35)');
 
         t.loading.overlayBg = t.loading.overlayBg || t.modal.bg;
         t.loading.panelBg = t.loading.panelBg || t.output.bg;
@@ -2983,7 +2998,6 @@ window.THEMES_MORE = {
         t.shell.muteText = t.shell.muteText || t.btns.muteIcon;
         t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
 
-        t.header = t.header || {};
         t.header.navBg = t.header.navBg || 'rgba(255,255,255,0.2)';
         t.header.navBgHover = t.header.navBgHover || 'rgba(255,255,255,0.3)';
         t.header.navText = t.header.navText || t.text.headerMain;
@@ -3027,7 +3041,11 @@ window.THEMES_MORE = {
         return t;
     };
 
+    const requiredThemePaths = collectThemePaths(normalize({}, '__schema__'));
     Object.keys(window.THEMES_MORE).forEach((key) => {
         window.THEMES_MORE[key] = normalize(window.THEMES_MORE[key]);
+        const paths = collectThemePaths(window.THEMES_MORE[key]);
+        const missing = Array.from(requiredThemePaths).filter((path) => !paths.has(path));
+        if (missing.length) throw new Error(`Theme "${key}" missing schema keys: ${missing.join(', ')}`);
     });
 })();
