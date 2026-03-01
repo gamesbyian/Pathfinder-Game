@@ -593,10 +593,16 @@
         };
         const getEl = (key) => resolveEl(key);
 
+        const stripAlertTextColorClasses = (className = '') => `${className}`
+            .split(/\s+/)
+            .filter(token => token && !/^!?text-/.test(token))
+            .join(' ');
+
         const setStatus = (text = '', severity = 'info', className = '') => {
             const el = getEl('message');
             if (!el) return;
-            el.className = `font-black text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg ${className}`.trim();
+            const safeClassName = stripAlertTextColorClasses(className);
+            el.className = `font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg ${safeClassName}`.trim();
             el.dataset.severity = severity;
             setText(el, text);
         };
@@ -927,13 +933,7 @@
             const { themeName = '' } = opts;
             const root = document.documentElement;
             root.style.setProperty('--theme-gate', t.colors.gate); root.style.setProperty('--theme-goal', t.colors.goal); root.style.setProperty('--theme-block', t.colors.block); root.style.setProperty('--theme-block-dot', t.grid); root.style.setProperty('--theme-pin', t.colors.pin); root.style.setProperty('--theme-portal', t.colors.portal); root.style.setProperty('--theme-filter', t.colors.filter); root.style.setProperty('--theme-cross', t.colors.cross); root.style.setProperty('--theme-modal-bg', t.modal.bg); root.style.setProperty('--theme-modal-panel', t.modal.panelBg); root.style.setProperty('--theme-modal-border', t.modal.border); root.style.setProperty('--theme-modal-text', t.modal.text); root.style.setProperty('--theme-modal-muted', t.modal.textMuted); root.style.setProperty('--theme-modal-accent', t.modal.accent); root.style.setProperty('--theme-win-bg', t.win.bg); root.style.setProperty('--theme-win-border', t.win.border); root.style.setProperty('--theme-win-text', t.win.text); root.style.setProperty('--theme-win-accent', t.win.accent); root.style.setProperty('--theme-alert-bg', t.alert?.bg || '#1e40af'); root.style.setProperty('--theme-alert-stroke', t.alert?.stroke || '#93c5fd');
-            const alertBg = (t.alert?.bg || '#1e40af');
-            const hex = alertBg.replace('#','');
-            let r = 30, g = 64, b = 175;
-            if (/^[0-9a-fA-F]{6}$/.test(hex)) { r = parseInt(hex.slice(0,2),16); g = parseInt(hex.slice(2,4),16); b = parseInt(hex.slice(4,6),16); }
-            const luminance = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
-            const alertText = themeName === 'classic' ? '#ffffff' : (luminance > 0.55 ? '#0f172a' : '#ffffff');
-            root.style.setProperty('--theme-alert-text', alertText);
+            root.style.setProperty('--theme-alert-text', t.alert?.text || '#ffffff');
             root.style.setProperty('--theme-logo-bg', t.canvasBg); root.style.setProperty('--theme-logo-grid', t.grid); root.style.setProperty('--theme-logo-path', t.path === 'rainbow' ? '#3b82f6' : t.path); root.style.setProperty('--theme-logo-gate', t.colors.gate); root.style.setProperty('--theme-logo-goal', t.colors.goal);
             root.style.setProperty('--theme-burst', t.burst || '#fef9c3'); root.style.setProperty('--theme-check', t.check || '#1e293b');
             root.style.setProperty('--theme-mega-output-bg', t.mega.outputBg); root.style.setProperty('--theme-mega-output-text', t.text.megaOutput); root.style.setProperty('--theme-mega-output-border', t.mega.outputBorder);
@@ -5712,6 +5712,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.alert.bg = t.alert.bg || t.headerLeft;
         t.alert.stroke = t.alert.stroke || t.grid;
 
+        const pickContrastText = (bg, light = '#f8fafc', dark = '#0f172a') => {
+            const rgb = toRgb(bg, { r: 30, g: 41, b: 59 });
+            const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+            return luminance > 0.55 ? dark : light;
+        };
+
         t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
         t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
 
@@ -5770,10 +5776,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         t.shell.btnBg = t.shell.btnBg || t.btns.orient || t.btns.modeToggle || t.btns.mute;
         t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.92);
-        t.shell.btnText = t.shell.btnText || t.text.shellBtn;
+        t.shell.btnText = pickContrastText(t.shell.btnBg);
         t.shell.btnBorder = t.shell.btnBorder || t.modal.border;
         t.shell.muteBg = t.shell.muteBg || t.btns.orient || t.btns.modeToggle || t.btns.mute;
         t.shell.muteBgHover = t.shell.muteBgHover || darkenHex(t.shell.muteBg, 0.92);
+        t.text.shellBtn = pickContrastText(t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b');
+        t.alert.text = pickContrastText(t.alert.bg, '#ffffff', '#0f172a');
         t.shell.muteText = t.shell.muteText || t.btns.muteIcon;
         t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
 
@@ -5812,6 +5820,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.mega.geminiBorder = t.mega.geminiBorder || t.modal.border;
         t.mega.copyBg = t.mega.copyBg || t.btns.copy || t.modal.panelBg;
         t.mega.copyBorder = t.mega.copyBorder || t.modal.border;
+
+        if (['candy_apple','hello_kitty','roygbiv','vegas','sherbet'].includes(key)) {
+            const vibrantModeToggle = {
+                candy_apple: { bg: '#ff0800', text: '#ffffff' },
+                hello_kitty: { bg: '#ff1493', text: '#3b0a26' },
+                roygbiv: { bg: '#ff7a00', text: '#0f172a' },
+                vegas: { bg: '#ff00cc', text: '#0f172a' },
+                sherbet: { bg: '#ff8a3d', text: '#0f172a' }
+            };
+            const mode = vibrantModeToggle[key];
+            t.btns.modeToggle = mode.bg;
+            t.text.actionBtn = mode.text;
+        }
 
         t.burst = t.burst || t.palette.itemBg;
         t.check = t.check || t.colors.filter;
