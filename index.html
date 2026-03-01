@@ -2194,8 +2194,9 @@
                         }
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
-                        score += (mustBound === Infinity ? 100000 : mustBound * 6);
-                        score += (crossBound === Infinity ? 100000 : crossBound * 6);
+                        // BUGFIX: Subtract bounds so the solver is ATTRACTED to mandatory targets
+                        score -= (mustBound === Infinity ? 100000 : mustBound * 6);
+                        score -= (crossBound === Infinity ? 100000 : crossBound * 6);
                         if (crossNeed > 0) score += crossNeed * 2;
 
                     const isP = (portalDest === nk && portalForced);
@@ -2237,9 +2238,10 @@
                 } else {
                     const slack = rSteps - activeDist;
                     if (slack > 0) {
-                        // SLACK MODE: Blindly trace walls to burn steps.
-                        // Ignoring distance gradients stops the engine from being tricked by portal wormholes.
-                        score -= this._staticNeighborDegree(nk, l) * 20;
+                        // SLACK MODE: Decaying Orbit + Wall Hugging
+                        const targetSlack = Math.floor(rSteps / 2);
+                        score -= Math.abs(slack - targetSlack) * 5;
+                        score -= this._staticNeighborDegree(nk, l) * 15;
                     } else {
                         // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
                         score -= activeDist * 10;
@@ -2541,7 +2543,16 @@
                     }
                     const failMemo = useFailMemo ? new Map() : null;
                     const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
-                    const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: this._stateSignature(state, l, 0) }];
+                    const startMaskNum = state.mustMask ? Number(state.mustMask) : 0;
+                    const startNx = startKey & 0xFFFF;
+                    const startNy = startKey >> 16;
+                    const startCurrentParity = (startNx + startNy) % 2;
+                    const startGx = l.goalKey & 0xFFFF;
+                    const startGy = l.goalKey >> 16;
+                    const startGoalParity = (startGx + startGy) % 2;
+                    const startInParityDeficit = (startCurrentParity === startGoalParity) !== (l.reqLen % 2 === 0);
+                    const startParityBit = startInParityDeficit ? 1 : 0;
+                    const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startKey + (l.reqLen * 16777216) + (state.ints * 2147483648) + (startMaskNum * 34359738368) + (startParityBit * 1125899906842624) }];
                     let steps = 0;
                     while (stack.length > 0) {
                         if (options.signal?.aborted) return SOLVER_ABORTED;
@@ -2646,9 +2657,9 @@
                             this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
-                        const currentParity = ((lastK & 0xFFFF) + (lastK >> 16)) % 2;
-                        const goalParity = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
-                        const parityMatch = (currentParity === goalParity);
+                        const parityCurrent = ((lastK & 0xFFFF) + (lastK >> 16)) % 2;
+                        const parityGoal = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
+                        const parityMatch = (parityCurrent === parityGoal);
                         const stepsEven = (rSteps % 2 === 0);
                         if (parityMatch !== stepsEven) {
                             let canBreak = false;
@@ -2666,8 +2677,27 @@
                                 continue;
                             }
                         }
-                        const sig = this._stateSignature(state, l, realLen);
-                        if (useFailMemo && failMemo.has(sig)) {
+                        const currentKey = lastK;
+                        const nx = currentKey & 0xFFFF;
+                        const ny = currentKey >> 16;
+                        const currentParity = (nx + ny) % 2;
+                        const gx = l.goalKey & 0xFFFF;
+                        const gy = l.goalKey >> 16;
+                        const goalParity = (gx + gy) % 2;
+                        const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
+
+                        // Defensive conversion to prevent BigInt/Number crashes
+                        const maskNum = state.mustMask ? Number(state.mustMask) : 0;
+                        const parityBit = inParityDeficit ? 1 : 0;
+
+                        // 53-bit safe integer hash to prevent state-collision cache poisoning
+                        const memoKey = currentKey
+                            + (rSteps * 16777216)
+                            + (state.ints * 2147483648)
+                            + (maskNum * 34359738368)
+                            + (parityBit * 1125899906842624);
+
+                        if (useFailMemo && failMemo.has(memoKey)) {
                             if (debugStats) debugStats.prune.failedStateHit++;
                             this._popStateZeroAlloc(state, transLog);
                             continue;
@@ -2690,7 +2720,7 @@
                             continue;
                         }
                         const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
-                        stack.push({ k: nextKey, neighbors, log: transLog, sig });
+                        stack.push({ k: nextKey, neighbors, log: transLog, sig: memoKey });
                     }
                     if (debugStats) debugStats.memoSize = useFailMemo ? failMemo.size : 0;
                     return null;
