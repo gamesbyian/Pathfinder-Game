@@ -2138,7 +2138,6 @@
                     const nLen = curLen + (isP ? 0 : 1);
                     const rSteps = l.reqLen - nLen;
 
-                    let targetDist = distMap.get(nk) ?? 999;
                     const nx = nk & 0xFFFF;
                     const ny = nk >> 16;
                     const currentParity = (nx + ny) % 2;
@@ -2146,6 +2145,9 @@
                     const gy = l.goalKey >> 16;
                     const goalParity = (gx + gy) % 2;
                     const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
+
+                    let isTargetingWaypoint = false;
+                    let activeDist = distMap.get(nk) ?? 999;
 
                     if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
                         let waypointDist = Infinity;
@@ -2155,9 +2157,20 @@
                                 if (d !== undefined && d < waypointDist) waypointDist = d;
                             }
                         }
-                        if (waypointDist !== Infinity) targetDist = waypointDist;
+                        if (waypointDist !== Infinity) {
+                            activeDist = waypointDist;
+                            isTargetingWaypoint = true;
+                        }
                     }
-                    score += targetDist * 2;
+
+                    if (isTargetingWaypoint) {
+                        // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
+                        score -= activeDist * 10;
+                    } else {
+                        // SLACK MODE: Systematically burn extra steps for exact-length finish.
+                        const slack = rSteps - activeDist;
+                        score -= Math.abs(slack) * 5;
+                    }
 
                     score += (usageFreq.get(nk) || 0);
                     score -= this._staticNeighborDegree(nk, l) * 3;
