@@ -2868,6 +2868,9 @@ window.THEMES_MORE = {
         t.search = t.search || {};
         t.jumpscare = t.jumpscare || {};
         t.shell = t.shell || {};
+        t.editor = t.editor || {};
+        t.layout = t.layout || {};
+        t.themeEditor = t.themeEditor || {};
 
         t.bodyBg = t.bodyBg || '#e0f2fe';
         t.canvasBg = t.canvasBg || '#ffffff';
@@ -2938,8 +2941,13 @@ window.THEMES_MORE = {
         t.text.megaCopy = t.text.megaCopy || t.modal.text;
         t.text.body = t.text.body || t.modal.text;
         t.text.shellBtn = t.text.shellBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#475569');
+        t.text.actionBtn = t.text.actionBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#ffffff');
+        t.text.error = t.text.error || t.loading.error || '#ef4444';
+        t.text.handDrawnShadow = t.text.handDrawnShadow || '#000000';
 
         t.btns.disabled = t.btns.disabled || '#94a3b8';
+        t.btns.hintHover = t.btns.hintHover || 'rgba(0,0,0,0.1)';
+        t.btns.hintDivider = t.btns.hintDivider || 'rgba(255,255,255,0.2)';
 
         t.loading.overlayBg = t.loading.overlayBg || t.modal.bg;
         t.loading.panelBg = t.loading.panelBg || t.output.bg;
@@ -2980,6 +2988,23 @@ window.THEMES_MORE = {
         t.header.navBgHover = t.header.navBgHover || 'rgba(255,255,255,0.3)';
         t.header.navText = t.header.navText || t.text.headerMain;
         t.header.divider = t.header.divider || 'rgba(226,232,240,0.2)';
+
+        t.editor.inputBg = t.editor.inputBg || 'rgba(0,0,0,0.15)';
+        t.editor.inputText = t.editor.inputText || '#ffffff';
+        t.editor.inputBorder = t.editor.inputBorder || 'rgba(255,255,255,0.3)';
+        t.editor.inputFocus = t.editor.inputFocus || '#ffffff';
+        t.editor.toolIcon = t.editor.toolIcon || t.btns.muteIcon;
+        t.editor.paletteShadow = t.editor.paletteShadow || '0 0 0 2px rgba(59,130,246,0.3)';
+
+        t.layout.mainBorder = t.layout.mainBorder || t.modal.border;
+        t.layout.headerLeftBorder = t.layout.headerLeftBorder || t.grid;
+        t.layout.exportBorder = t.layout.exportBorder || t.palette.border;
+        t.layout.editorPanelBorder = t.layout.editorPanelBorder || t.palette.border;
+
+        t.themeEditor.panelBg = t.themeEditor.panelBg || 'rgba(0,0,0,0.05)';
+        t.themeEditor.swatchBorder = t.themeEditor.swatchBorder || t.modal.border;
+
+        t.modal.closeHover = t.modal.closeHover || 'rgba(0,0,0,0.05)';
 
         t.colors.portalPending = t.colors.portalPending || '#999999';
         t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
