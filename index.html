@@ -2133,7 +2133,21 @@
                         score += (mustBound === Infinity ? 100000 : mustBound * 6);
                         score += (crossBound === Infinity ? 100000 : crossBound * 6);
                         if (crossNeed > 0) score += crossNeed * 2;
-                        score += (distMap.get(nk) ?? 999) * 2;
+                        const currentParity = ((nk & 0xFFFF) + (nk >> 16)) % 2;
+                        const goalParity = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
+                        const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
+                        let targetDist = distMap.get(nk) ?? 999;
+                        if (inParityDeficit && l.hasParityBreaker && l.parityBreakers) {
+                            let waypointDist = Infinity;
+                            for (let i = 0; i < l.parityBreakers.length; i++) {
+                                if (state.countsArr[state.keyToIdx(l.parityBreakers[i])] === 0) {
+                                    const d = l.parityDistMaps[i].get(nk);
+                                    if (d !== undefined && d < waypointDist) waypointDist = d;
+                                }
+                            }
+                            if (waypointDist !== Infinity) targetDist = waypointDist;
+                        }
+                        score += targetDist * 2;
                         score += (usageFreq.get(nk) || 0);
                         score -= this._staticNeighborDegree(nk, l) * 3;
                         return { nk, score };
@@ -2783,11 +2797,13 @@
                     const flipperSet = new Set();
                     level.hasParityBreaker = false;
                     level.parityBreakers = [];
+                    level.parityDistMaps = [];
                     level.portalMap.forEach((v, k) => {
                         const p1 = APP.LevelUtils.UNPACK(k), p2 = APP.LevelUtils.UNPACK(v.dest);
                         if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) {
                             level.hasParityBreaker = true;
                             level.parityBreakers.push(k);
+                            level.parityDistMaps.push(SolverCore._buildOptimisticDistMap(level, [k]));
                         }
                         else flipperSet.add(k);
                     });
