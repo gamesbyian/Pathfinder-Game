@@ -2116,9 +2116,6 @@
                         }
                         return true;
                     });
-                    const gx = l.goalKey & 0xFFFF;
-                    const gy = l.goalKey >> 16;
-                    const goalParity = (gx + gy) % 2;
                     const scored = valid.map(nk => {
                         let score = 0;
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
@@ -2136,26 +2133,7 @@
                         score += (mustBound === Infinity ? 100000 : mustBound * 6);
                         score += (crossBound === Infinity ? 100000 : crossBound * 6);
                         if (crossNeed > 0) score += crossNeed * 2;
-                        const nx = nk & 0xFFFF;
-                        const ny = nk >> 16;
-                        const currentParity = (nx + ny) % 2;
-                        const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
-                        let targetDist = distMap.get(nk) ?? 999;
-                        if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps && state.countsArr && state.keyToIdx) {
-                            let waypointDist = Infinity;
-                            for (let i = 0; i < l.parityBreakers.length; i++) {
-                                const breakerKey = l.parityBreakers[i];
-                                if (breakerKey === undefined) continue;
-                                const breakerIdx = state.keyToIdx(breakerKey);
-                                if (breakerIdx === undefined || breakerIdx < 0 || breakerIdx >= state.countsArr.length) continue;
-                                const breakerDistMap = l.parityDistMaps[i];
-                                if (!breakerDistMap || state.countsArr[breakerIdx] !== 0) continue;
-                                const d = breakerDistMap.get(nk);
-                                if (d !== undefined && d < waypointDist) waypointDist = d;
-                            }
-                            if (waypointDist !== Infinity) targetDist = waypointDist;
-                        }
-                        score += targetDist * 2;
+                        score += (distMap.get(nk) ?? 999) * 2;
                         score += (usageFreq.get(nk) || 0);
                         score -= this._staticNeighborDegree(nk, l) * 3;
                         return { nk, score };
@@ -2805,17 +2783,11 @@
                     const flipperSet = new Set();
                     level.hasParityBreaker = false;
                     level.parityBreakers = [];
-                    level.parityDistMaps = [];
                     level.portalMap.forEach((v, k) => {
-                        if (!v || v.dest === undefined || v.dest === -1) {
-                            flipperSet.add(k);
-                            return;
-                        }
                         const p1 = APP.LevelUtils.UNPACK(k), p2 = APP.LevelUtils.UNPACK(v.dest);
                         if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) {
                             level.hasParityBreaker = true;
                             level.parityBreakers.push(k);
-                            level.parityDistMaps.push(SolverCore._buildOptimisticDistMap(level, [k]));
                         }
                         else flipperSet.add(k);
                     });
