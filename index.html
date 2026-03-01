@@ -2194,9 +2194,8 @@
                         }
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
-                        // BUGFIX: Subtract bounds so the solver is ATTRACTED to mandatory targets
-                        score -= (mustBound === Infinity ? 100000 : mustBound * 6);
-                        score -= (crossBound === Infinity ? 100000 : crossBound * 6);
+                        score += (mustBound === Infinity ? 100000 : mustBound * 6);
+                        score += (crossBound === Infinity ? 100000 : crossBound * 6);
                         if (crossNeed > 0) score += crossNeed * 2;
 
                     const isP = (portalDest === nk && portalForced);
@@ -2238,10 +2237,9 @@
                 } else {
                     const slack = rSteps - activeDist;
                     if (slack > 0) {
-                        // SLACK MODE: Decaying Orbit + Wall Hugging
-                        const targetSlack = Math.floor(rSteps / 2);
-                        score -= Math.abs(slack - targetSlack) * 5;
-                        score -= this._staticNeighborDegree(nk, l) * 15;
+                        // SLACK MODE: Blindly trace walls to burn steps.
+                        // Ignoring distance gradients stops the engine from being tricked by portal wormholes.
+                        score -= this._staticNeighborDegree(nk, l) * 20;
                     } else {
                         // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
                         score -= activeDist * 10;
@@ -2668,27 +2666,12 @@
                                 continue;
                             }
                         }
-                        const nx = lastK & 0xFFFF;
-                        const ny = lastK >> 16;
-                        const currentParity = (nx + ny) % 2;
-                        const gx = l.goalKey & 0xFFFF;
-                        const gy = l.goalKey >> 16;
-                        const goalParity = (gx + gy) % 2;
-                        const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
-
-                        // 53-bit safe integer hash to completely prevent state-collision cache poisoning
-                        const memoKey = lastK
-                            + (rSteps * 16777216)
-                            + (state.ints * 2147483648)
-                            + (Number(state.mustMask || 0n) * 34359738368)
-                            + ((inParityDeficit ? 1 : 0) * 1125899906842624);
-
-                        if (useFailMemo && failMemo.has(memoKey)) {
+                        const sig = this._stateSignature(state, l, realLen);
+                        if (useFailMemo && failMemo.has(sig)) {
                             if (debugStats) debugStats.prune.failedStateHit++;
                             this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
-                        const sig = memoKey;
                         if (hazard.terminal) {
                             if (debugStats) debugStats.prune.deadEnd++;
                             this._popStateZeroAlloc(state, transLog);
