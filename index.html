@@ -2540,9 +2540,7 @@
                         const goalParity = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
                         const parityMatch = (currentParity === goalParity);
                         const stepsEven = (rSteps % 2 === 0);
-                        const parityBreakerAvailable = l.parityBreakerIndex >= 0 && state.usageBits && state.usageBits[l.parityBreakerIndex] === 0;
-                        const canBypassParityPrune = !l.hasParityBreaker || parityBreakerAvailable;
-                        if ((parityMatch !== stepsEven) && !canBypassParityPrune) {
+                        if (parityMatch !== stepsEven && !l.hasParityBreaker) {
                             if (debugStats) debugStats.prune.parity++;
                             this._popStateZeroAlloc(state, transLog);
                             continue;
@@ -3024,14 +3022,17 @@
             const fallbackDisabledPrunes = escalationTier >= 2
                 ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'minRemOverflow', 'parity']
                 : ['mustPassBound', 'mustCrossBound', 'connectivity'];
-            let phases = [
+            let phaseOrder = [
                 { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: stage0, run: () => this.runBaselineStage(level, stage0, { dirOrderVariant: 'default' }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
                 { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: stage1, run: () => this.runBaselineStage(level, stage1, { dirOrderVariant: 'alt' }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
                 { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: stage2, run: () => this.runBaselineStage(level, stage2, { dirOrderVariant: 'random' }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
                 { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: stage3, run: () => this.runStage2Fallback(level, stage3, fallbackDisabledPrunes), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
             ];
-            if (opts.variant === 'beamFirst') phases = [phases[0], phases[2], phases[3], phases[1]];
-            if (escalationTier >= 1 || opts.variant === 'altOrder') phases = [phases[1], phases[2], phases[0], phases[3]];
+            if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
+            if (escalationTier >= 1 || opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
+            const phases = [phaseOrder];
+            const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
+            const activePhases = phases[Math.min(tier || 0, phases.length - 1)];
             const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result) => {
@@ -3040,7 +3041,7 @@
 
             let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
 
-            for (const phase of phases) {
+            for (const phase of activePhases) {
                 const { stage, name, variant, budgetMs: phaseBudgetMs, run, successMessage, timeoutMessage, failMessage } = phase;
                 if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
                     last = { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
