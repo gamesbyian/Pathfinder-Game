@@ -2291,10 +2291,11 @@
                             if (state.mustCrossCounts[i] < 2) needCross++;
                         }
                     }
-                    if (!needGoal && needMust === 0 && needCross === 0) return true;
+                    if (!needGoal && needMust === 0 && needCross === 0 && state.remainingSteps <= 0) return true;
 
                     let qHead = 0;
                     let qTail = 0;
+                    let volumeCount = 0;
                     const startIdx = state.keyToIdx(startKey);
                     visited[startIdx] = 1;
                     queue[qTail++] = startKey;
@@ -2302,6 +2303,7 @@
                     while (qHead < qTail) {
                         const key = queue[qHead++];
                         const idx = state.keyToIdx(key);
+                        volumeCount++;
 
                         if (needGoal && key === l.goalKey) needGoal = false;
 
@@ -2313,7 +2315,7 @@
                             const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(key) : undefined;
                             if (crossIdx !== undefined && state.mustCrossCounts[crossIdx] < 2) needCross--;
                         }
-                        if (!needGoal && needMust === 0 && needCross === 0) return true;
+                        if (!needGoal && needMust === 0 && needCross === 0 && volumeCount >= state.remainingSteps) return true;
 
                         const x = key & 0xFFFF;
                         const y = key >> 16;
@@ -2360,7 +2362,7 @@
                             }
                         }
                     }
-                    return false;
+                    return volumeCount >= state.remainingSteps ? (!needGoal && needMust === 0 && needCross === 0) : false;
                 },
                 async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options, debugStats = null) {
                     const mustCount = l.mustPassKeys.length;
@@ -2405,7 +2407,8 @@
                         mustCrossMask: mustCrossCount > 0 ? ((1n << BigInt(mustCrossCount)) - 1n) : 0n,
                         mustCrossCounts: mustCrossCount > 0 ? new Uint8Array(mustCrossCount) : null,
                         floodVisited: new Uint8Array(keyCount),
-                        floodQueue: new Int32Array(keyCount)
+                        floodQueue: new Int32Array(keyCount),
+                        remainingSteps: 0
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -2483,6 +2486,7 @@
                             }
                         }
                         const rSteps = l.reqLen - realLen;
+                        state.remainingSteps = rSteps;
                         const maxFutureInts = l.portalMap.size > 0 ? rSteps * 2 : rSteps;
                         if ((l.reqInt - state.ints) > maxFutureInts) {
                             if (debugStats) debugStats.prune.intsOverflow++;
@@ -2526,9 +2530,18 @@
                             continue;
                         }
                         const minRem = distMap.get(lastK) || Infinity;
-                        if (realLen + minRem > l.reqLen) {
+                        if (!disabledPruneSet.has('distance') && !disabledPruneSet.has('minRemOverflow') && realLen + minRem > l.reqLen) {
                             if (debugStats) debugStats.prune.minRemOverflow++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'minRemOverflow', `minRem=${minRem} realLen=${realLen} reqLen=${l.reqLen}`);
+                            this._popStateZeroAlloc(state, transLog);
+                            continue;
+                        }
+                        const currentParity = ((lastK & 0xFFFF) + (lastK >> 16)) % 2;
+                        const goalParity = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
+                        const parityMatch = (currentParity === goalParity);
+                        const stepsEven = (rSteps % 2 === 0);
+                        if ((parityMatch !== stepsEven) && !l.hasParityBreaker) {
+                            if (debugStats) debugStats.prune.parity++;
                             this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
@@ -2757,9 +2770,11 @@
                     level.flippingFilterMap.forEach((_, k) => level.flipperIndex.set(k, fIdx++));
 
                     const flipperSet = new Set();
+                    level.hasParityBreaker = false;
                     level.portalMap.forEach((v, k) => {
                         const p1 = APP.LevelUtils.UNPACK(k), p2 = APP.LevelUtils.UNPACK(v.dest);
-                        if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) flipperSet.add(k);
+                        if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) level.hasParityBreaker = true;
+                        else flipperSet.add(k);
                     });
                     const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
 
@@ -2967,13 +2982,13 @@
             return { ok: false, status: rawStatus, elapsedMs, stats: { debug } };
         },
 
-        async runStage2Fallback(level, budgetMs) {
+        async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity']) {
             const started = Date.now();
             const r = await PathfinderSolver.solve(level, {
                 timeLimit: budgetMs,
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                disabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity']
+                disabledPrunes
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -2992,17 +3007,23 @@
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
             const timesTried = prev.timesTried + 1;
-            const escalated = timesTried > 1 && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus);
+            const isBoolTier = typeof opts.escalationTier === 'boolean';
+            const requestedTierRaw = isBoolTier ? (opts.escalationTier ? 1 : 0) : Number(opts.escalationTier);
+            const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
+            const autoEscalate = timesTried > 1 && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus);
+            const escalationTier = Math.max(requestedTier, autoEscalate ? 1 : 0);
             const requestedBudget = opts.timeBudgetMs || defaultBudget;
-            const budgetMs = escalated
-                ? (purpose === 'hint' ? Math.max(requestedBudget, 15000) : Math.max(requestedBudget, 60000))
-                : requestedBudget;
+            const tierMinBudget = escalationTier >= 2
+                ? (purpose === 'hint' ? 60000 : 180000)
+                : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
+            const budgetMs = Math.max(requestedBudget, tierMinBudget);
+            const isDeepSearch = escalationTier >= 2;
             const { stage0, stage1, stage2, stage3 } = this.allocateStageBudgets(budgetMs);
 
             const stagesTried = [];
             let stageOrder = [0, 1, 2, 3];
             if (opts.variant === 'beamFirst') stageOrder = [0, 2, 3, 1];
-            if (escalated || opts.variant === 'altOrder') stageOrder = [1, 2, 0, 3];
+            if (escalationTier >= 1 || opts.variant === 'altOrder') stageOrder = [1, 2, 0, 3];
             const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result) => {
@@ -3043,7 +3064,7 @@
                 if (stage === 3) {
                     if (opts.onStage) opts.onStage({ stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: stage3 });
                     const t3 = Date.now();
-                    const r3 = await this.runStage2Fallback(level, stage3);
+                    const r3 = await this.runStage2Fallback(level, stage3, isDeepSearch ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'minRemOverflow'] : ['mustPassBound', 'mustCrossBound', 'connectivity']);
                     markStage(3, 'Stage 3', 'fallback', stage3, t3, r3);
                     last = { ...r3, stage: 3, message: r3.ok ? 'Solved (fallback strategy).' : (r3.status === 'timeout' ? 'Fallback strategy timed out.' : 'Fallback strategy inconclusive.'), stagesTried };
                     if (r3.ok) break;
@@ -3072,7 +3093,8 @@
 
             applyCanonicalSolutionShape(last);
             last.retrySuggested = !last.ok && ['timeout', 'no-solution-inconclusive'].includes(last.status);
-            last.usedEscalation = escalated;
+            last.escalationTier = escalationTier;
+            last.usedEscalation = escalationTier > 0;
             last.budgetMs = budgetMs;
             return last;
         }
@@ -3252,11 +3274,16 @@
                     }
                 } else {
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
-                    const willEscalate = hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus);
-                    if (willEscalate) APP.UI.showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
+                    const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
+                    const requestedTierRaw = typeof opts.escalationTier === 'boolean' ? (opts.escalationTier ? 1 : 0) : Number(opts.escalationTier);
+                    const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
+                    const escalationTier = Math.max(requestedTier, autoTier);
+                    if (escalationTier === 1) APP.UI.showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
+                    if (escalationTier >= 2) APP.UI.showMessage('Deep search enabled: brute-force fallback and extended budgets…', 'text-amber-700');
                     solverResult = await Referee.solve(level, {
                         purpose,
                         timeBudgetMs,
+                        escalationTier,
                         allowGemini: false,
                         onStage: ({ name, variant, budgetMs }) => {
                             APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
@@ -3639,6 +3666,7 @@
                         deadEnd: 0,
                         failedStateHit: 0,
                         illegalMove: 0,
+                        parity: 0,
                         other: 0
                     },
                     notes: []
@@ -3675,7 +3703,7 @@
                 const lines = [
                     `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
                     `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
-                    `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
+                    `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
                 ];
                 if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
                     lines[0] = `Level ${levelNumber}: UNSOLVED (INVALID) reasons: ${debug.invalidReasons.join('; ')}`;
@@ -4917,7 +4945,7 @@
             // C) Level / NormalizeAndCaches
             // ======================================================
 
-            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [] }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); }); return l; }
+            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [], hasParityBreaker: false }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; }); return l; }
 
             function denormalizeLevel(level) {
                 if (!level || !level.grid) return null;
