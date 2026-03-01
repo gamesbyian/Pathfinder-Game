@@ -4700,3 +4700,68 @@ window.THEMES_MORE = {
         }
     }
 };
+
+(function enforceThemeTextContrastAndAlertConsistency() {
+    const parseHexColor = (value) => {
+        if (typeof value !== 'string') return null;
+        const raw = value.trim();
+        const hexMatch = raw.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+        if (hexMatch) {
+            const hex = hexMatch[1];
+            if (hex.length === 3) {
+                return [
+                    parseInt(hex[0] + hex[0], 16),
+                    parseInt(hex[1] + hex[1], 16),
+                    parseInt(hex[2] + hex[2], 16)
+                ];
+            }
+            return [
+                parseInt(hex.slice(0, 2), 16),
+                parseInt(hex.slice(2, 4), 16),
+                parseInt(hex.slice(4, 6), 16)
+            ];
+        }
+        const rgbMatch = raw.match(/^rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+        if (!rgbMatch) return null;
+        return [Number(rgbMatch[1]), Number(rgbMatch[2]), Number(rgbMatch[3])];
+    };
+
+    const getLuminance = (rgb) => {
+        const [r, g, b] = rgb.map((channel) => {
+            const normalized = channel / 255;
+            return normalized <= 0.03928
+                ? normalized / 12.92
+                : Math.pow((normalized + 0.055) / 1.055, 2.4);
+        });
+        return (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+    };
+
+    const chooseReadableTextColor = (bgColor, fallback = '#ffffff') => {
+        const rgb = parseHexColor(bgColor);
+        if (!rgb) return fallback;
+        const luminance = getLuminance(rgb);
+        const contrastWithWhite = (1.05) / (luminance + 0.05);
+        const contrastWithBlack = (luminance + 0.05) / 0.05;
+        return contrastWithWhite >= contrastWithBlack ? '#ffffff' : '#000000';
+    };
+
+    Object.values(window.THEMES_MORE || {}).forEach((theme) => {
+        if (!theme || typeof theme !== 'object') return;
+        theme.alert = theme.alert || {};
+        theme.text = theme.text || {};
+        theme.shell = theme.shell || {};
+        theme.btns = theme.btns || {};
+
+        theme.alert.text = chooseReadableTextColor(theme.alert.bg, '#ffffff');
+
+        const orientBg = theme.btns.orient || theme.btns.modeToggle || theme.headerRight || theme.alert.bg;
+        theme.text.shellBtn = chooseReadableTextColor(orientBg, '#ffffff');
+
+        const shellBg = theme.shell.btnBg || theme.headerRight || theme.alert.bg;
+        theme.shell.btnText = chooseReadableTextColor(shellBg, '#ffffff');
+
+        const actionBg = theme.btns.modeToggle || theme.btns.solve || theme.btns.hint || theme.headerRight || theme.alert.bg;
+        theme.text.actionBtn = chooseReadableTextColor(actionBg, '#ffffff');
+    });
+})();
+
