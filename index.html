@@ -734,6 +734,69 @@
             return el ? el.querySelector(selector) : null;
         };
 
+        const getViewportDimensions = () => {
+            const vv = window.visualViewport;
+            if (vv) return { width: vv.width, height: vv.height };
+            return { width: window.innerWidth, height: window.innerHeight };
+        };
+
+        const measureGridModalRect = () => {
+            const appLayout = document.getElementById('appLayout');
+            const canvasContainer = document.getElementById('canvasContainer');
+            const modalRectSource = canvasContainer || appLayout;
+            if (!modalRectSource) return;
+            const modalRect = modalRectSource.getBoundingClientRect();
+            setRootCssVar('--grid-modal-left', `${modalRect.left}px`);
+            setRootCssVar('--grid-modal-top', `${modalRect.top}px`);
+            setRootCssVar('--grid-modal-width', `${modalRect.width}px`);
+            setRootCssVar('--grid-modal-height', `${modalRect.height}px`);
+        };
+
+        const updateViewport = () => { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); if (rect.width === 0) return; const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return; const swaps = [1, 3, 6, 7]; APP.State.ENGINE.viewport.swapped = swaps.includes(APP.State.ENGINE.variant); const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; APP.State.ENGINE.viewport.cellW = canvas.width / gridW; APP.State.ENGINE.viewport.cellH = canvas.height / gridH; APP.State.ENGINE.isDirty = true; };
+
+        const syncEditorPalettePlacement = () => {
+            const pal = document.getElementById('editorPalette');
+            const gamePane = document.getElementById('gamePane');
+            const controlsPane = document.getElementById('controlsPane');
+            if (!pal || !gamePane || !controlsPane) return;
+            const inLandscape = APP.State.ENGINE.ui.isLandscapeLayout;
+            if (inLandscape && APP.State.ENGINE.mode === EDITOR) {
+                if (pal.parentElement !== controlsPane) controlsPane.insertBefore(pal, controlsPane.firstChild);
+                setClassState(pal, 'landscape-editor-tools', true);
+            } else {
+                if (pal.parentElement !== gamePane.parentElement) gamePane.parentElement.insertBefore(pal, controlsPane);
+                setClassState(pal, 'landscape-editor-tools', false);
+            }
+        };
+
+        const updateLayoutMode = () => {
+            const viewport = getViewportDimensions();
+            const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && viewport.width >= 900;
+            APP.State.ENGINE.ui.isLandscapeLayout = naturalLandscape || APP.State.ENGINE.ui.forceLandscapeLayout;
+            const appLayout = document.getElementById('appLayout');
+            setClassState(appLayout, 'forced-landscape', APP.State.ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
+            APP.UI.syncEditorPalettePlacement();
+            measureGridModalRect();
+            requestAnimationFrame(() => measureGridModalRect());
+            const orientationBtn = document.getElementById('orientationToggleBtn');
+            setTextContent(orientationBtn, APP.State.ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape');
+        };
+
+        const updateAppScale = () => {
+            const VIEWPORT_EPSILON = 2;
+            const viewport = getViewportDimensions();
+            const widthChanged = Math.abs(viewport.width - APP.State.ENGINE.viewport.lastWidth) > VIEWPORT_EPSILON;
+            const heightChanged = Math.abs(viewport.height - APP.State.ENGINE.viewport.lastHeight) > VIEWPORT_EPSILON;
+            APP.UI.updateLayoutMode();
+            if (!widthChanged && !heightChanged) return;
+            APP.State.ENGINE.viewport.lastWidth = viewport.width;
+            APP.State.ENGINE.viewport.lastHeight = viewport.height;
+            const scale = Math.min(viewport.height * 0.02, viewport.width * 0.035);
+            setRootCssVar('--app-scale', `${scale}px`);
+            APP.UI.updateViewport();
+            APP.State.ENGINE.isDirty = true;
+        };
+
         const showGooseJumpScare = () => {
             const overlay = getEl('gooseJumpScare');
             show(overlay);
@@ -1426,7 +1489,7 @@
             return { update, getPaletteIconSVG, isPointerOverPalette };
         })();
 
-        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
+        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
     })();
 
     // ======================================================
@@ -3613,7 +3676,7 @@
 
             function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
-            function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(IDLE); APP.Engine.setOverlayState(OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
+            function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(IDLE); APP.Engine.setOverlayState(OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
             function updatePencilState() {
                 const btn = document.getElementById('editPencilBtn');
@@ -3865,9 +3928,9 @@
 
                 APP.UI.showMessage("", "");
 
-                updateAppScale();
+                APP.UI.updateAppScale();
 
-                updateViewport();
+                APP.UI.updateViewport();
 
                 APP.Persistence.updateCompletionUI();
                 APP.State.ENGINE.isDirty = true;
@@ -4229,7 +4292,7 @@
                 refs.ENGINE.editor.isPencilMode = false;
                 APP.Engine.updatePencilState(); // Cross-module call: state updater is owned by APP.Engine.
                 refs.ENGINE.editor.isModified = true;
-                updateViewport();
+                APP.UI.updateViewport();
             },
             markEditorInputsDirty() {
                 refs.ENGINE.hinter.pathList = [];
@@ -4366,67 +4429,6 @@
             getCurrentUser: () => auth?.currentUser
         };
     })();
-
-    function getViewportDimensions() {
-        const vv = window.visualViewport;
-        if (vv) return { width: vv.width, height: vv.height };
-        return { width: window.innerWidth, height: window.innerHeight };
-    }
-
-    function measureGridModalRect() {
-        const appLayout = document.getElementById('appLayout');
-        const canvasContainer = document.getElementById('canvasContainer');
-        const modalRectSource = canvasContainer || appLayout;
-        if (!modalRectSource) return;
-        const modalRect = modalRectSource.getBoundingClientRect();
-        APP.UI.setRootCssVar('--grid-modal-left', `${modalRect.left}px`);
-        APP.UI.setRootCssVar('--grid-modal-top', `${modalRect.top}px`);
-        APP.UI.setRootCssVar('--grid-modal-width', `${modalRect.width}px`);
-        APP.UI.setRootCssVar('--grid-modal-height', `${modalRect.height}px`);
-    }
-
-    function updateAppScale() {
-        const VIEWPORT_EPSILON = 2;
-        const viewport = getViewportDimensions();
-        const widthChanged = Math.abs(viewport.width - APP.State.ENGINE.viewport.lastWidth) > VIEWPORT_EPSILON;
-        const heightChanged = Math.abs(viewport.height - APP.State.ENGINE.viewport.lastHeight) > VIEWPORT_EPSILON;
-        updateLayoutMode();
-        if (!widthChanged && !heightChanged) return;
-        APP.State.ENGINE.viewport.lastWidth = viewport.width;
-        APP.State.ENGINE.viewport.lastHeight = viewport.height;
-        const scale = Math.min(viewport.height * 0.02, viewport.width * 0.035);
-        APP.UI.setRootCssVar('--app-scale', `${scale}px`);
-        updateViewport();
-        APP.State.ENGINE.isDirty = true;
-    }
-
-    function updateLayoutMode() {
-        const viewport = getViewportDimensions();
-        const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && viewport.width >= 900;
-        APP.State.ENGINE.ui.isLandscapeLayout = naturalLandscape || APP.State.ENGINE.ui.forceLandscapeLayout;
-        const appLayout = document.getElementById('appLayout');
-        APP.UI.setClassState(appLayout, 'forced-landscape', APP.State.ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
-        syncEditorPalettePlacement();
-        measureGridModalRect();
-        requestAnimationFrame(() => measureGridModalRect());
-        const orientationBtn = document.getElementById('orientationToggleBtn');
-        APP.UI.setTextContent(orientationBtn, APP.State.ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape');
-    }
-
-    function syncEditorPalettePlacement() {
-        const pal = document.getElementById('editorPalette');
-        const gamePane = document.getElementById('gamePane');
-        const controlsPane = document.getElementById('controlsPane');
-        if (!pal || !gamePane || !controlsPane) return;
-        const inLandscape = APP.State.ENGINE.ui.isLandscapeLayout;
-        if (inLandscape && APP.State.ENGINE.mode === EDITOR) {
-            if (pal.parentElement !== controlsPane) controlsPane.insertBefore(pal, controlsPane.firstChild);
-            APP.UI.setClassState(pal, 'landscape-editor-tools', true);
-        } else {
-            if (pal.parentElement !== gamePane.parentElement) gamePane.parentElement.insertBefore(pal, controlsPane);
-            APP.UI.setClassState(pal, 'landscape-editor-tools', false);
-        }
-    }
     APP.LevelUtils = (() => {
             const getFallbackRawLevels = () => APP.Data.getFallbackLevels();
             const getRawLevels = () => APP.Data.getLevels();
@@ -4578,9 +4580,9 @@
 
             function shiftLevel(l, dx, dy) { if (dx === 0 && dy === 0) return; const shift = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); return APP.LevelUtils.PACK(p.x + dx, p.y + dy); }; l.goalKey = shift(l.goalKey); l.gateKeys = l.gateKeys.map(shift); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(shift)); l.blockSet = new Set(Array.from(l.blockSet).map(shift)); l.gooseSet = new Set(Array.from(l.gooseSet).map(shift)); l.mustPassKeys = l.mustPassKeys.map(shift); l.mustCrossKeys = l.mustCrossKeys.map(shift); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v)); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v)); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = shift(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(shift); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.hints = []; APP.State.ENGINE.hinter.pathList = []; }
 
-            function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { APP.UI.showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = APP.LevelUtils.getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { APP.UI.showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { APP.LevelUtils.shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = APP.LevelUtils.UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; updateViewport(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
+            function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { APP.UI.showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = APP.LevelUtils.getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { APP.UI.showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { APP.LevelUtils.shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = APP.LevelUtils.UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; APP.UI.updateViewport(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
 
-            function transformLevel(l, coordMap, newW, newH, axisMap) { APP.Editor.saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); const tp = coordMap(p.x, p.y); return APP.LevelUtils.PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = mapKey(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(mapKey); if(APP.State.ENGINE.activeGateKey) APP.State.ENGINE.activeGateKey = mapKey(APP.State.ENGINE.activeGateKey); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.isModified = true; updateViewport(); }
+            function transformLevel(l, coordMap, newW, newH, axisMap) { APP.Editor.saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); const tp = coordMap(p.x, p.y); return APP.LevelUtils.PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = mapKey(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(mapKey); if(APP.State.ENGINE.activeGateKey) APP.State.ENGINE.activeGateKey = mapKey(APP.State.ENGINE.activeGateKey); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.isModified = true; APP.UI.updateViewport(); }
 
             function getLevelBounds(l) { let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity; const update = (k) => { if (k === -1) return; const p = APP.LevelUtils.UNPACK(k); if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y; if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y; }; if (l.goalKey !== -1) update(l.goalKey); l.gateKeys.forEach(update); l.falseGoalKeys.forEach(update); l.blockSet.forEach(update); l.gooseSet.forEach(update); l.mustPassKeys.forEach(update); l.mustCrossKeys.forEach(update); l.filterMap.forEach((v, k) => update(k)); l.flippingFilterMap.forEach((v, k) => update(k)); l.portalMap.forEach((v, k) => update(k)); if (minX === Infinity) return null; return { minX, minY, maxX, maxY }; }
 
@@ -5841,77 +5843,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // ======================================================
     // D) Rules / ValidationAndWin
     // ======================================================
-    function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal'); }
-
     APP.State.ENGINE.ui.gamepadGridPrimaryAction = () => {};
-
-    function getFocusableGroups() {
-        const groups = [
-            { name: 'GRID', elements: [document.getElementById('gameCanvas')] },
-            { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
-            { name: 'LEVEL', elements: [document.getElementById('prevLevelBtn'), document.getElementById('nextLevelBtn')].filter(Boolean) }
-        ];
-        if (APP.State.ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [document.getElementById('editReqLen'), document.getElementById('editReqInt')].filter(Boolean) });
-        return groups.filter(g => g.elements.length > 0);
-    }
-
-    function applyFocusVisual(el) {
-        document.querySelectorAll('.gamepad-focus').forEach(node => APP.UI.removeClasses(node, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']));
-        if (!APP.State.ENGINE.ui.gamepadFocusEnabled || !el) return;
-        APP.UI.addClasses(el, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']);
-        if (typeof el.focus === 'function') el.focus({ preventScroll: true });
-    }
-
-    function setFocusGroup(groupName, index = 0, forceVisual = false) {
-        const groups = getFocusableGroups();
-        const gIdx = Math.max(0, groups.findIndex(g => g.name === groupName));
-        const group = groups[gIdx] || groups[0];
-        if (!group) return;
-        APP.State.ENGINE.ui.focusGroup = group.name;
-        APP.State.ENGINE.ui.focusIndex = Math.max(0, Math.min(index, group.elements.length - 1));
-        if (forceVisual) APP.State.ENGINE.ui.gamepadFocusEnabled = true;
-        applyFocusVisual(group.elements[APP.State.ENGINE.ui.focusIndex]);
-    }
-
-    function cycleFocusGroup() {
-        const groups = getFocusableGroups();
-        if (!groups.length) return;
-        const idx = groups.findIndex(g => g.name === APP.State.ENGINE.ui.focusGroup);
-        const next = groups[(idx + 1 + groups.length) % groups.length];
-        setFocusGroup(next.name, 0, true);
-    }
-
-    function moveFocusWithinGroup(delta) {
-        const groups = getFocusableGroups();
-        const group = groups.find(g => g.name === APP.State.ENGINE.ui.focusGroup);
-        if (!group || !group.elements.length) return;
-        APP.State.ENGINE.ui.focusIndex = (APP.State.ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length;
-        applyFocusVisual(group.elements[APP.State.ENGINE.ui.focusIndex]);
-    }
-
-    function activateFocusedControl() {
-        const groups = getFocusableGroups();
-        const group = groups.find(g => g.name === APP.State.ENGINE.ui.focusGroup);
-        const el = group?.elements?.[APP.State.ENGINE.ui.focusIndex];
-        if (!el) return;
-        if (el.id === 'gameCanvas') {
-            APP.State.ENGINE.ui.gamepadGridPrimaryAction();
-            return;
-        }
-        el.click();
-    }
-
-    function dismissGuideOrHelpModal() {
-        if (APP.UI.isModalOpen('guideModal')) { APP.UI.closeModal('guideModal'); return true; }
-        if (APP.UI.isModalOpen('editorHelpModal')) { APP.UI.closeModal('editorHelpModal'); return true; }
-        return false;
-    }
-
-
-
-
-    function updateViewport() { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); if (rect.width === 0) return; const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return; const swaps = [1, 3, 6, 7]; APP.State.ENGINE.viewport.swapped = swaps.includes(APP.State.ENGINE.variant); const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; APP.State.ENGINE.viewport.cellW = canvas.width / gridW; APP.State.ENGINE.viewport.cellH = canvas.height / gridH; APP.State.ENGINE.isDirty = true; }
-
 
     // ======================================================
     // F/G/H) Input + UI Wiring + Solver Boot
@@ -6023,6 +5955,70 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const GAMEPAD_MAP = { A: 0, B: 1, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
         const GAMEPAD_REPEAT_INITIAL = 220;
         const GAMEPAD_REPEAT_RATE = 100;
+
+        function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal'); }
+
+        function getFocusableGroups() {
+            const groups = [
+                { name: 'GRID', elements: [document.getElementById('gameCanvas')] },
+                { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
+                { name: 'LEVEL', elements: [document.getElementById('prevLevelBtn'), document.getElementById('nextLevelBtn')].filter(Boolean) }
+            ];
+            if (APP.State.ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [document.getElementById('editReqLen'), document.getElementById('editReqInt')].filter(Boolean) });
+            return groups.filter(g => g.elements.length > 0);
+        }
+
+        function applyFocusVisual(el) {
+            document.querySelectorAll('.gamepad-focus').forEach(node => APP.UI.removeClasses(node, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']));
+            if (!APP.State.ENGINE.ui.gamepadFocusEnabled || !el) return;
+            APP.UI.addClasses(el, ['gamepad-focus', 'ring-4', 'ring-sky-400', 'ring-offset-2']);
+            if (typeof el.focus === 'function') el.focus({ preventScroll: true });
+        }
+
+        function setFocusGroup(groupName, index = 0, forceVisual = false) {
+            const groups = getFocusableGroups();
+            const gIdx = Math.max(0, groups.findIndex(g => g.name === groupName));
+            const group = groups[gIdx] || groups[0];
+            if (!group) return;
+            APP.State.ENGINE.ui.focusGroup = group.name;
+            APP.State.ENGINE.ui.focusIndex = Math.max(0, Math.min(index, group.elements.length - 1));
+            if (forceVisual) APP.State.ENGINE.ui.gamepadFocusEnabled = true;
+            applyFocusVisual(group.elements[APP.State.ENGINE.ui.focusIndex]);
+        }
+
+        function cycleFocusGroup() {
+            const groups = getFocusableGroups();
+            if (!groups.length) return;
+            const idx = groups.findIndex(g => g.name === APP.State.ENGINE.ui.focusGroup);
+            const next = groups[(idx + 1 + groups.length) % groups.length];
+            setFocusGroup(next.name, 0, true);
+        }
+
+        function moveFocusWithinGroup(delta) {
+            const groups = getFocusableGroups();
+            const group = groups.find(g => g.name === APP.State.ENGINE.ui.focusGroup);
+            if (!group || !group.elements.length) return;
+            APP.State.ENGINE.ui.focusIndex = (APP.State.ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length;
+            applyFocusVisual(group.elements[APP.State.ENGINE.ui.focusIndex]);
+        }
+
+        function activateFocusedControl() {
+            const groups = getFocusableGroups();
+            const group = groups.find(g => g.name === APP.State.ENGINE.ui.focusGroup);
+            const el = group?.elements?.[APP.State.ENGINE.ui.focusIndex];
+            if (!el) return;
+            if (el.id === 'gameCanvas') {
+                APP.State.ENGINE.ui.gamepadGridPrimaryAction();
+                return;
+            }
+            el.click();
+        }
+
+        function dismissGuideOrHelpModal() {
+            if (APP.UI.isModalOpen('guideModal')) { APP.UI.closeModal('guideModal'); return true; }
+            if (APP.UI.isModalOpen('editorHelpModal')) { APP.UI.closeModal('editorHelpModal'); return true; }
+            return false;
+        }
 
         function gamepadMoveGrid(dx, dy) {
             if (isModalActive()) return;
@@ -6137,7 +6133,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         setFocusGroup('CONTROLS', 0);
 
         const viewportUpdateHandler = () => {
-            updateAppScale();
+            APP.UI.updateAppScale();
             setFocusGroup(APP.State.ENGINE.ui.focusGroup || 'GRID', APP.State.ENGINE.ui.focusIndex || 0);
         };
         window.addEventListener('resize', viewportUpdateHandler);
@@ -6146,16 +6142,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             window.visualViewport.addEventListener('resize', viewportUpdateHandler);
             window.visualViewport.addEventListener('scroll', viewportUpdateHandler);
         }
-        updateAppScale();
+        APP.UI.updateAppScale();
 
         document.getElementById('gridRotateBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); APP.UI.showMessage("Rotated", "text-white font-black"); };
         document.getElementById('gridMirrorBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.State.ENGINE.editor.mirrorHorizontal = !APP.State.ENGINE.editor.mirrorHorizontal; APP.UI.setInlineStyle('mirrorIconSvg', 'transform', APP.State.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'); if (APP.State.ENGINE.editor.mirrorHorizontal) { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } APP.UI.showMessage("Mirrored", "text-white font-black"); };
         document.getElementById('gridSizeMinusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(-1); };
         document.getElementById('gridSizePlusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(1); };
         document.getElementById('muteBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.muted = !APP.State.ENGINE.muted; APP.UI.setInlineStyle('muteSlash', 'display', APP.State.ENGINE.muted ? 'block' : 'none'); };
-        document.getElementById('orientationToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.ui.forceLandscapeLayout = !APP.State.ENGINE.ui.forceLandscapeLayout; updateLayoutMode(); updateAppScale(); updateViewport(); APP.UI.showMessage(APP.State.ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
+        document.getElementById('orientationToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.ui.forceLandscapeLayout = !APP.State.ENGINE.ui.forceLandscapeLayout; APP.UI.updateLayoutMode(); APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.showMessage(APP.State.ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
 
-        const perspectiveAction = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.activeSolverController) return; APP.State.ENGINE.variant = (APP.State.ENGINE.variant + 1) % 8; updateViewport(); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); SOUND_BUS.play("D5", "32n"); };
+        const perspectiveAction = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.activeSolverController) return; APP.State.ENGINE.variant = (APP.State.ENGINE.variant + 1) % 8; APP.UI.updateViewport(); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); SOUND_BUS.play("D5", "32n"); };
         document.getElementById('whoaBtn').onclick = perspectiveAction;
 
         document.getElementById('resetBtn').onclick = () => {
@@ -6258,7 +6254,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('megaGeminiRetryBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.askGeminiForFailed(); };
 
         const tModal = document.getElementById('themeModal');
-        document.getElementById('openThemeModalBtn').onclick = () => { APP.UI.closeAllModals(); updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
+        document.getElementById('openThemeModalBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.updateLayoutMode(); refreshThemeFooter(); APP.UI.openModal('themeModal'); };
         document.getElementById('closeThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
         document.getElementById('dismissThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
         document.getElementById('openThemeEditorBtn').onclick = () => { APP.UI.ThemeEditor.openEditorView(); };
