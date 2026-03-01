@@ -2213,39 +2213,38 @@
                     let isTargetingWaypoint = false;
                     let activeDist = distMap.get(nk) ?? 999;
 
-                    if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
-                        let waypointDist = Infinity;
-                        for (let i = 0; i < l.parityBreakers.length; i++) {
-                            const pKey = l.parityBreakers[i];
-                            // Unified check for Array vs Map states
-                            const visited = state.countsArr ? state.countsArr[state.keyToIdx(pKey)] : (state.counts?.get(pKey) || 0);
-                            if (l.parityDistMaps[i] && visited === 0) {
-                                const d = l.parityDistMaps[i].get(nk);
-                                if (d !== undefined && d < waypointDist) waypointDist = d;
-                            }
-                        }
-                        if (waypointDist !== Infinity) {
-                            activeDist = waypointDist;
-                            isTargetingWaypoint = true;
+                if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
+                    let waypointDist = Infinity;
+                    for (let i = 0; i < l.parityBreakers.length; i++) {
+                        const pKey = l.parityBreakers[i];
+                        // Unified check for Array vs Map states
+                        const visited = state.countsArr ? state.countsArr[state.keyToIdx(pKey)] : (state.counts?.get(pKey) || 0);
+                        if (l.parityDistMaps[i] && visited === 0) {
+                            const d = l.parityDistMaps[i].get(nk);
+                            if (d !== undefined && d < waypointDist) waypointDist = d;
                         }
                     }
+                    if (waypointDist !== Infinity) {
+                        activeDist = waypointDist;
+                        isTargetingWaypoint = true;
+                    }
+                }
 
-                    if (isTargetingWaypoint) {
-                        // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
-                        score -= activeDist * 10;
-                        score -= this._staticNeighborDegree(nk, l) * 2;
+                if (isTargetingWaypoint) {
+                    // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
+                    score -= activeDist * 10;
+                    score -= this._staticNeighborDegree(nk, l) * 2;
+                } else {
+                    const slack = rSteps - activeDist;
+                    if (slack > 0) {
+                        // SLACK MODE: Blindly trace walls to burn steps.
+                        // Ignoring distance gradients stops the engine from being tricked by portal wormholes.
+                        score -= this._staticNeighborDegree(nk, l) * 20;
                     } else {
-                        const slack = rSteps - activeDist;
-                        if (slack > 0) {
-                            // SLACK BAND MODE: Maintain a decaying orbit to prevent wiggling at the finish line.
-                            const targetSlack = Math.floor(rSteps / 2);
-                            score -= Math.abs(slack - targetSlack) * 5;
-                            score -= this._staticNeighborDegree(nk, l) * 2;
-                        } else {
-                            // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
-                            score -= activeDist * 10;
-                        }
+                        // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
+                        score -= activeDist * 10;
                     }
+                }
                     score += (usageFreq.get(nk) || 0);
                     return { nk, score };
                 });
