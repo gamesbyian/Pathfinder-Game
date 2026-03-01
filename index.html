@@ -3616,25 +3616,19 @@
             function updatePencilState() {
     const btn = document.getElementById('editPencilBtn');
     if (!btn) return;
-    
     const svg = btn.querySelector('svg');
-    const path = svg?.querySelector('path');
-    
-    if (!svg || !path) return;
-
-    const outlinePath = svg.getAttribute('data-outline-path');
-    const solidPath = svg.getAttribute('data-solid-path');
+    if (!svg) return;
 
     if (APP.State.ENGINE.editor.isPencilMode) {
         btn.classList.add('selected');
         svg.setAttribute('fill', 'currentColor');
         svg.setAttribute('stroke', 'none');
-        if (solidPath) path.setAttribute('d', solidPath);
+        svg.innerHTML = '<path d="M20.707 7.707 7.746 20.668a1 1 0 0 1-.424.253l-4.5 1.227a1 1 0 0 1-1.227-1.227l1.227-4.5a1 1 0 0 1 .253-.424L16.036 3.036a3.828 3.828 0 1 1 5.414 5.414zM5.383 17.689l-.631 2.313 2.313-.631 10.75-10.75-1.682-1.682-10.75 10.75z"/>';
     } else {
         btn.classList.remove('selected');
         svg.setAttribute('fill', 'none');
         svg.setAttribute('stroke', 'currentColor');
-        if (outlinePath) path.setAttribute('d', outlinePath);
+        svg.innerHTML = '<path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>';
     }
 }
 
