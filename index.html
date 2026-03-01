@@ -2086,9 +2086,8 @@
                             const nk = pDest.dest;
                             const nIdx = state.keyToIdx(nk);
                             if (this.topoVisited[nIdx] === 0) {
-                                // BUGFIX: Check if the DESTINATION is visited, not the source.
-                                // If we are currently standing on the source, its count is >0, which was causing the solver to falsely prune the branch.
-                                const isVisitedDest = state.countsArr && state.countsArr[nIdx] > 0;
+                                // BUGFIX: Support both array-based and Map-based legacy states
+                                const isVisitedDest = state.countsArr ? state.countsArr[nIdx] > 0 : (state.counts && state.counts.get(nk) > 0);
                                 if (!isVisitedDest) {
                                     this.topoVisited[nIdx] = 1;
                                     this.topoQueue[tail++] = nk;
@@ -2217,7 +2216,10 @@
                     if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
                         let waypointDist = Infinity;
                         for (let i = 0; i < l.parityBreakers.length; i++) {
-                            if (l.parityDistMaps[i] && state.countsArr && state.countsArr[state.keyToIdx(l.parityBreakers[i])] === 0) {
+                            const pKey = l.parityBreakers[i];
+                            // Unified check for Array vs Map states
+                            const visited = state.countsArr ? state.countsArr[state.keyToIdx(pKey)] : (state.counts?.get(pKey) || 0);
+                            if (l.parityDistMaps[i] && visited === 0) {
                                 const d = l.parityDistMaps[i].get(nk);
                                 if (d !== undefined && d < waypointDist) waypointDist = d;
                             }
@@ -2235,8 +2237,10 @@
                     } else {
                         const slack = rSteps - activeDist;
                         if (slack > 0) {
-                            // SLACK MODE: Blindly trace walls to burn steps, completely ignoring warped portal distance gradients.
-                            score -= this._staticNeighborDegree(nk, l) * 20;
+                            // SLACK BAND MODE: Maintain a decaying orbit to prevent wiggling at the finish line.
+                            const targetSlack = Math.floor(rSteps / 2);
+                            score -= Math.abs(slack - targetSlack) * 5;
+                            score -= this._staticNeighborDegree(nk, l) * 2;
                         } else {
                             // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
                             score -= activeDist * 10;
