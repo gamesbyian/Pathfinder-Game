@@ -4225,7 +4225,7 @@
                 refs.UI.setInputValue('editReqLen', 0);
                 refs.UI.setInputValue('editReqInt', 0);
                 refs.ENGINE.editor.isPencilMode = false;
-                APP.Engine.updatePencilState();
+                APP.Engine.updatePencilState(); // Cross-module call: state updater is owned by APP.Engine.
                 refs.ENGINE.editor.isModified = true;
                 updateViewport();
             },
@@ -4254,7 +4254,7 @@
                     refs.UI.setPaletteSelectedByType(toolType, true);
                 }
                 refs.ENGINE.editor.isPencilMode = false;
-                APP.Engine.updatePencilState();
+                APP.Engine.updatePencilState(); // Cross-module call: state updater is owned by APP.Engine.
             },
             togglePencilMode() {
                 if (refs.ENGINE.overlayState !== OVERLAY_NONE) return;
@@ -4265,7 +4265,7 @@
                 } else {
                     APP.Engine.setLogicState(IDLE);
                 }
-                APP.Engine.updatePencilState();
+                APP.Engine.updatePencilState(); // Cross-module call: state updater is owned by APP.Engine.
             },
             setWorkingHints(hints = []) { if (refs.ENGINE?.editor?.workingLevel) refs.ENGINE.editor.workingLevel.hints = hints; },
             pickUpObject(k) { return pickUpObject(k); },
