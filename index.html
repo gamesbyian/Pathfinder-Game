@@ -2217,15 +2217,18 @@
                     if (isTargetingWaypoint) {
                         // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
                         score -= activeDist * 10;
+                        score -= this._staticNeighborDegree(nk, l) * 2;
                     } else {
-                        // SLACK MODE: Absolute slack penalty to keep distance maximized until steps decay.
                         const slack = rSteps - activeDist;
-                        score -= Math.abs(slack) * 5;
+                        if (slack > 0) {
+                            // SLACK MODE: Blindly trace walls to burn steps, completely ignoring warped portal distance gradients.
+                            score -= this._staticNeighborDegree(nk, l) * 20;
+                        } else {
+                            // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
+                            score -= activeDist * 10;
+                        }
                     }
-
                     score += (usageFreq.get(nk) || 0);
-                    // EXTREME PERIMETER TRACING: Force the engine to burn slack by hugging walls.
-                    score -= this._staticNeighborDegree(nk, l) * 20;
                     return { nk, score };
                 });
                     if (options?.dirOrderVariant === 'random') {
