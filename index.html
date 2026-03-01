@@ -2540,10 +2540,21 @@
                         const goalParity = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
                         const parityMatch = (currentParity === goalParity);
                         const stepsEven = (rSteps % 2 === 0);
-                        if (parityMatch !== stepsEven && !l.hasParityBreaker) {
-                            if (debugStats) debugStats.prune.parity++;
-                            this._popStateZeroAlloc(state, transLog);
-                            continue;
+                        if (parityMatch !== stepsEven) {
+                            let canBreak = false;
+                            if (l.hasParityBreaker && l.parityBreakers) {
+                                for (let i = 0; i < l.parityBreakers.length; i++) {
+                                    if (state.countsArr[state.keyToIdx(l.parityBreakers[i])] === 0) {
+                                        canBreak = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (!canBreak) {
+                                if (debugStats) debugStats.prune.parity++;
+                                this._popStateZeroAlloc(state, transLog);
+                                continue;
+                            }
                         }
                         const sig = this._stateSignature(state, l, realLen);
                         if (useFailMemo && failMemo.has(sig)) {
@@ -2771,9 +2782,13 @@
 
                     const flipperSet = new Set();
                     level.hasParityBreaker = false;
+                    level.parityBreakers = [];
                     level.portalMap.forEach((v, k) => {
                         const p1 = APP.LevelUtils.UNPACK(k), p2 = APP.LevelUtils.UNPACK(v.dest);
-                        if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) level.hasParityBreaker = true;
+                        if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) {
+                            level.hasParityBreaker = true;
+                            level.parityBreakers.push(k);
+                        }
                         else flipperSet.add(k);
                     });
                     const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
@@ -3995,7 +4010,7 @@
         ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
         ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, isHintExpanded: false }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
-        ,flags: { useRefereeSolver: false, refereeDebug: false }
+        ,flags: { useRefereeSolver: true, refereeDebug: false }
     };
         return { ENGINE };
     })();
@@ -6726,7 +6741,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.UI.setClassState(hintTopHalf, 'flex', false);
                     APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem');
                     APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
-                    APP.UI.render();
                     updateHintLabel();
                     try {
                         const hintResult = await APP.Solver.getHint(consecutiveHintFails);
