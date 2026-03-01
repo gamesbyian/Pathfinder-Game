@@ -3001,13 +3001,15 @@
         },
 
         async solve(levelInput, opts = {}) {
+            const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
+            const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
+            console.log('Referee starting tier:', tier);
             const level = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const purpose = opts.purpose || 'solve';
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
             const timesTried = prev.timesTried + 1;
-            const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             const autoEscalate = timesTried > 1 && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus);
             const escalationTier = Math.max(requestedTier, autoEscalate ? 1 : 0);
@@ -3016,22 +3018,27 @@
                 ? (purpose === 'hint' ? 60000 : 180000)
                 : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
-            const { stage0, stage1, stage2, stage3 } = this.allocateStageBudgets(budgetMs);
-
             const stagesTried = [];
-            const fallbackDisabledPrunes = escalationTier >= 2
-                ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'minRemOverflow', 'parity']
-                : ['mustPassBound', 'mustCrossBound', 'connectivity'];
-            let phaseOrder = [
-                { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: stage0, run: () => this.runBaselineStage(level, stage0, { dirOrderVariant: 'default' }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: stage1, run: () => this.runBaselineStage(level, stage1, { dirOrderVariant: 'alt' }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: stage2, run: () => this.runBaselineStage(level, stage2, { dirOrderVariant: 'random' }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
-                { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: stage3, run: () => this.runStage2Fallback(level, stage3, fallbackDisabledPrunes), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+            const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
+                const budgets = this.allocateStageBudgets(totalBudgetMs);
+                let phaseOrder = [
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default' }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt' }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random' }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+                ];
+                if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
+                if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
+                return phaseOrder;
+            };
+            const tierBudgets = purpose === 'hint'
+                ? [5000, 15000, 60000]
+                : [15000, 60000, 180000];
+            const phases = [
+                makePhaseOrder(tierBudgets[0], ['mustPassBound', 'mustCrossBound', 'connectivity']),
+                makePhaseOrder(tierBudgets[1], ['mustPassBound', 'mustCrossBound', 'connectivity']),
+                makePhaseOrder(tierBudgets[2], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'])
             ];
-            if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
-            if (escalationTier >= 1 || opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
-            const phases = [phaseOrder];
-            const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             const activePhases = phases[Math.min(tier || 0, phases.length - 1)];
             const allowGemini = !!opts.allowGemini;
 
@@ -3084,6 +3091,9 @@
         },
 
         async getHint(levelInput, opts = {}) {
+            const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
+            const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
+            console.log('Referee starting tier:', tier);
             return this.solve(levelInput, { ...opts, purpose: 'hint', escalationTier: Number(opts.escalationTier ?? opts.tier) });
         }
     };
@@ -6344,14 +6354,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // ======================================================
     APP.Input = (() => {
         let initialized = false;
+        let consecutiveHintFails = 0;
+        let consecutiveSolveFails = 0;
+        const resetSearchEscalation = () => {
+            consecutiveHintFails = 0;
+            consecutiveSolveFails = 0;
+        };
         const init = () => {
             if (initialized) return;
             initialized = true;
-            let consecutiveHintFails = 0;
-            let consecutiveSolveFails = 0;
-            const resetSearchEscalation = () => {
-                consecutiveHintFails = 0;
-                consecutiveSolveFails = 0;
+            const originalLoadLevel = APP.Engine.loadLevel.bind(APP.Engine);
+            APP.Engine.loadLevel = (...args) => {
+                const result = originalLoadLevel(...args);
+                resetSearchEscalation();
+                return result;
             };
         const tryNavigate = (actionFn) => { if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isModified) { APP.State.ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
         document.getElementById('unsavedStayBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.runtime.pendingAction = null; APP.UI.closeModal('unsavedModal'); };
@@ -6705,13 +6721,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); } else {
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
                 if (isTopHalf) {
-                    APP.State.ENGINE.runtime.isHintExpanded = true;
-                    toggleHint();
+                    APP.State.ENGINE.runtime.isHintExpanded = false;
+                    APP.UI.setClassState(hintTopHalf, 'hidden', true);
+                    APP.UI.setClassState(hintTopHalf, 'flex', false);
+                    APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem');
+                    APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
+                    APP.UI.render();
                     updateHintLabel();
                     try {
                         const hintResult = await APP.Solver.getHint(consecutiveHintFails);
-                        if (hintResult?.ok) consecutiveHintFails = 0;
-                        else consecutiveHintFails++;
+                        if (!hintResult?.ok) consecutiveHintFails++;
                     } catch (err) {
                         consecutiveHintFails++;
                         console.error('Hint solve failed:', err);
@@ -6822,8 +6841,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('editMegaSolver').onclick = () => {
             APP.UI.closeAllModals();
             APP.Solver.runGameSolver('solve', consecutiveSolveFails).then((solveResult) => {
-                if (solveResult?.ok) consecutiveSolveFails = 0;
-                else consecutiveSolveFails++;
+                if (!solveResult?.ok) consecutiveSolveFails++;
             }).catch((err) => {
                 consecutiveSolveFails++;
                 console.error('Solve failed:', err);
