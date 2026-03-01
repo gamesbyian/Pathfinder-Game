@@ -2167,13 +2167,14 @@
                         // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
                         score -= activeDist * 10;
                     } else {
-                        // SLACK MODE: Systematically burn extra steps for exact-length finish.
+                        // SLACK MODE: Absolute slack penalty to keep distance maximized until steps decay.
                         const slack = rSteps - activeDist;
                         score -= Math.abs(slack) * 5;
                     }
 
                     score += (usageFreq.get(nk) || 0);
-                    score -= this._staticNeighborDegree(nk, l) * 3;
+                    // EXTREME PERIMETER TRACING: Force the engine to burn slack by hugging walls.
+                    score -= this._staticNeighborDegree(nk, l) * 20;
                     return { nk, score };
                 });
                     if (options?.dirOrderVariant === 'random') {
