@@ -10,7 +10,7 @@ window.THEMES_MORE = {
         "metricText": "#000000",
         "btns": {
             "undo": "#cc99cc",
-            "reset": "#ff0000",
+            "reset": "#ff8a66",
             "guide": "#9999ff",
             "whoa": "#ffcc99",
             "hint": "#9999ff",
@@ -23,9 +23,12 @@ window.THEMES_MORE = {
             "modeToggle": "#9999ff",
             "orient": "#9999ff",
             "solve": "#cc99cc",
-            "editClear": "#ff0000",
+            "editClear": "#ff8a66",
             "editBombs": "#ff4400",
-            "editNew": "#cc99cc"
+            "editNew": "#cc99cc",
+            "disabled": "#94a3b8",
+            "hintHover": "#8686e0",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(0, 0, 0, 0.95)",
@@ -33,7 +36,8 @@ window.THEMES_MORE = {
             "border": "#ff9900",
             "text": "#cc99cc",
             "textMuted": "#ffcc99",
-            "accent": "#9999ff"
+            "accent": "#9999ff",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#111111",
@@ -47,7 +51,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#cc99cc",
             "filter": "#9999ff",
             "portal": "#cc99cc",
-            "cross": "#ff9900"
+            "cross": "#ff9900",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ff0000",
+            "bombBlastRays": "#ff9900"
         },
         "palette": {
             "bg": "#000000",
@@ -91,7 +98,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#cc99cc"
+            "megaCopy": "#cc99cc",
+            "body": "#cc99cc",
+            "shellBtn": "#f8fafc",
+            "actionBtn": "#f8fafc",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#111111",
@@ -110,6 +122,68 @@ window.THEMES_MORE = {
             "hover": "#ad82ad",
             "text": "#0f172a",
             "border": "#ad82ad"
+        },
+        "loading": {
+            "overlayBg": "rgba(0, 0, 0, 0.95)",
+            "panelBg": "#111111",
+            "panelBorder": "#ff9900",
+            "title": "#000000",
+            "status": "#ffcc99",
+            "percent": "#000000",
+            "track": "#000000",
+            "bar": "#ff9900",
+            "error": "#ffcc99"
+        },
+        "search": {
+            "overlayBg": "rgba(0, 0, 0, 0.95)",
+            "megaStatusText": "#ffcc99",
+            "megaStatusBorder": "#ff9900",
+            "label": "#ffcc99",
+            "dot": "#ff9900",
+            "timer": "#cc99cc",
+            "close": "#ffcc99",
+            "closeHover": "#cc99cc"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#ffcc99",
+            "bombBottomText": "#ff0000"
+        },
+        "shell": {
+            "btnBg": "#333333",
+            "btnBgHover": "#2e2e2e",
+            "btnText": "#f8fafc",
+            "btnBorder": "#ff9900",
+            "muteBg": "#333333",
+            "muteBgHover": "#2e2e2e",
+            "muteText": "#ff9900",
+            "muteBorder": "#ff9900"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#000000",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#ff9900",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#ff9900",
+            "headerLeftBorder": "#333333",
+            "exportBorder": "#ff9900",
+            "editorPanelBorder": "#ff9900"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#ff9900"
         }
     },
     "candy_apple": {
@@ -129,16 +203,19 @@ window.THEMES_MORE = {
             "hint": "#ff0800",
             "saved": "#ff4d4d",
             "mega": "#800000",
-            "mute": "#ffcccc",
-            "muteIcon": "#cc0000",
-            "copy": "#ffcccc",
-            "gen": "#ffcccc",
+            "mute": "#c62f3f",
+            "muteIcon": "#ffffff",
+            "copy": "#c62f3f",
+            "gen": "#c62f3f",
             "modeToggle": "#cc0000",
             "orient": "#cc0000",
             "solve": "#ff0800",
             "editClear": "#cc0000",
             "editBombs": "#800000",
-            "editNew": "#ff4d4d"
+            "editNew": "#ff4d4d",
+            "disabled": "#94a3b8",
+            "hintHover": "#e00700",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -146,7 +223,8 @@ window.THEMES_MORE = {
             "border": "#ff0800",
             "text": "#cc0000",
             "textMuted": "#ff4d4d",
-            "accent": "#800000"
+            "accent": "#800000",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#ffe5e5",
@@ -160,7 +238,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#ff4d4d",
             "filter": "#800000",
             "portal": "#ff0800",
-            "cross": "#cc0000"
+            "cross": "#cc0000",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ff0800",
+            "bombBlastRays": "#cc0000"
         },
         "palette": {
             "bg": "#ffe5e5",
@@ -204,7 +285,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#cc0000"
+            "megaCopy": "#cc0000",
+            "body": "#cc0000",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#ffe5e5",
@@ -223,6 +309,68 @@ window.THEMES_MORE = {
             "hover": "#d80600",
             "text": "#ffffff",
             "border": "#d80600"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#ffe5e5",
+            "panelBorder": "#ff0800",
+            "title": "#ffffff",
+            "status": "#cc0000",
+            "percent": "#ffffff",
+            "track": "#ffe5e5",
+            "bar": "#ff0800",
+            "error": "#cc0000"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#cc0000",
+            "megaStatusBorder": "#ff0800",
+            "label": "#cc0000",
+            "dot": "#ff0800",
+            "timer": "#cc0000",
+            "close": "#ff4d4d",
+            "closeHover": "#cc0000"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#ffcccc",
+            "bombBottomText": "#ff0800"
+        },
+        "shell": {
+            "btnBg": "#ffcccc",
+            "btnBgHover": "#eabbbb",
+            "btnText": "#475569",
+            "btnBorder": "#ff0800",
+            "muteBg": "#ffcccc",
+            "muteBgHover": "#eabbbb",
+            "muteText": "#cc0000",
+            "muteBorder": "#ff0800"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#cc0000",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#ff0800",
+            "headerLeftBorder": "#ff9999",
+            "exportBorder": "#ff0800",
+            "editorPanelBorder": "#ff0800"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#ff0800"
         }
     },
     "blonde": {
@@ -236,22 +384,25 @@ window.THEMES_MORE = {
         "metricText": "#ffffff",
         "btns": {
             "undo": "#e6dfc8",
-            "reset": "#b5a452",
+            "reset": "#c9ae58",
             "guide": "#d4c271",
             "whoa": "#e5d68e",
             "hint": "#d4c271",
             "saved": "#e6dfc8",
-            "mega": "#b5a452",
-            "mute": "#f4f0e6",
+            "mega": "#c9ae58",
+            "mute": "#c9ae58",
             "muteIcon": "#b5a452",
-            "copy": "#f4f0e6",
-            "gen": "#f4f0e6",
+            "copy": "#c9ae58",
+            "gen": "#c9ae58",
             "modeToggle": "#d4c271",
             "orient": "#d4c271",
             "solve": "#e5d68e",
             "editClear": "#d4c271",
             "editBombs": "#b5a452",
-            "editNew": "#e6dfc8"
+            "editNew": "#e6dfc8",
+            "disabled": "#94a3b8",
+            "hintHover": "#baaa63",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -259,7 +410,8 @@ window.THEMES_MORE = {
             "border": "#d4c271",
             "text": "#b5a452",
             "textMuted": "#e6dfc8",
-            "accent": "#d4c271"
+            "accent": "#d4c271",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#fdfbf7",
@@ -273,7 +425,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#e6dfc8",
             "filter": "#b5a452",
             "portal": "#e5d68e",
-            "cross": "#d4c271"
+            "cross": "#d4c271",
+            "portalPending": "#999999",
+            "bombBlastRing": "#b5a452",
+            "bombBlastRays": "#e5d68e"
         },
         "palette": {
             "bg": "#fdfbf7",
@@ -308,8 +463,8 @@ window.THEMES_MORE = {
             "modalAccent": "#d4c271",
             "output": "#b5a452",
             "metric": "#ffffff",
-            "headerMain": "#ffffff",
-            "headerSub": "rgba(255,255,255,0.8)",
+            "headerMain": "#3f3720",
+            "headerSub": "rgba(63,55,32,0.78)",
             "win": "#b5a452",
             "winAccent": "#e5d68e",
             "megaDesc": "#e6dfc8",
@@ -317,7 +472,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#b5a452"
+            "megaCopy": "#b5a452",
+            "body": "#b5a452",
+            "shellBtn": "#475569",
+            "actionBtn": "#3f3720",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#fdfbf7",
@@ -336,6 +496,68 @@ window.THEMES_MORE = {
             "hover": "#b4a460",
             "text": "#0f172a",
             "border": "#b4a460"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#fdfbf7",
+            "panelBorder": "#d4c271",
+            "title": "#ffffff",
+            "status": "#b5a452",
+            "percent": "#ffffff",
+            "track": "#fdfbf7",
+            "bar": "#d4c271",
+            "error": "#b5a452"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#b5a452",
+            "megaStatusBorder": "#d4c271",
+            "label": "#b5a452",
+            "dot": "#d4c271",
+            "timer": "#b5a452",
+            "close": "#e6dfc8",
+            "closeHover": "#b5a452"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#f4f0e6",
+            "bombBottomText": "#b5a452"
+        },
+        "shell": {
+            "btnBg": "#f4f0e6",
+            "btnBgHover": "#e0dcd3",
+            "btnText": "#475569",
+            "btnBorder": "#d4c271",
+            "muteBg": "#f4f0e6",
+            "muteBgHover": "#e0dcd3",
+            "muteText": "#b5a452",
+            "muteBorder": "#d4c271"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#b5a452",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#d4c271",
+            "headerLeftBorder": "#e6dfc8",
+            "exportBorder": "#d4c271",
+            "editorPanelBorder": "#d4c271"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#d4c271"
         }
     },
     "fincher": {
@@ -364,7 +586,10 @@ window.THEMES_MORE = {
             "solve": "#a34233",
             "editClear": "#a34233",
             "editBombs": "#a34233",
-            "editNew": "#354536"
+            "editNew": "#354536",
+            "disabled": "#94a3b8",
+            "hintHover": "#6a7653",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(18, 26, 21, 0.95)",
@@ -372,7 +597,8 @@ window.THEMES_MORE = {
             "border": "#79875f",
             "text": "#8c9d6f",
             "textMuted": "#5e6a4b",
-            "accent": "#a34233"
+            "accent": "#a34233",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#0d110e",
@@ -386,7 +612,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#354536",
             "filter": "#475740",
             "portal": "#6b7a54",
-            "cross": "#5e6a4b"
+            "cross": "#5e6a4b",
+            "portalPending": "#999999",
+            "bombBlastRing": "#a34233",
+            "bombBlastRays": "#5e6a4b"
         },
         "palette": {
             "bg": "#0d110e",
@@ -430,7 +659,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#8c9d6f"
+            "megaCopy": "#8c9d6f",
+            "body": "#8c9d6f",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#0d110e",
@@ -449,6 +683,68 @@ window.THEMES_MORE = {
             "hover": "#667250",
             "text": "#ffffff",
             "border": "#667250"
+        },
+        "loading": {
+            "overlayBg": "rgba(18, 26, 21, 0.95)",
+            "panelBg": "#0d110e",
+            "panelBorder": "#79875f",
+            "title": "#0d110e",
+            "status": "#8c9d6f",
+            "percent": "#0d110e",
+            "track": "#0d110e",
+            "bar": "#8c9d6f",
+            "error": "#8c9d6f"
+        },
+        "search": {
+            "overlayBg": "rgba(18, 26, 21, 0.95)",
+            "megaStatusText": "#8c9d6f",
+            "megaStatusBorder": "#79875f",
+            "label": "#8c9d6f",
+            "dot": "#8c9d6f",
+            "timer": "#8c9d6f",
+            "close": "#5e6a4b",
+            "closeHover": "#8c9d6f"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#5e6a4b",
+            "bombBottomText": "#a34233"
+        },
+        "shell": {
+            "btnBg": "#1f2b23",
+            "btnBgHover": "#1c2720",
+            "btnText": "#475569",
+            "btnBorder": "#79875f",
+            "muteBg": "#1f2b23",
+            "muteBgHover": "#1c2720",
+            "muteText": "#79875f",
+            "muteBorder": "#79875f"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#0d110e",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#79875f",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#79875f",
+            "headerLeftBorder": "#354536",
+            "exportBorder": "#354536",
+            "editorPanelBorder": "#354536"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#79875f"
         }
     },
     "roygbiv": {
@@ -468,16 +764,19 @@ window.THEMES_MORE = {
             "hint": "#00ff00",
             "saved": "#ffff00",
             "mega": "#ff7f00",
-            "mute": "#f1f5f9",
-            "muteIcon": "#4b0082",
-            "copy": "#f1f5f9",
-            "gen": "#f1f5f9",
+            "mute": "#2563eb",
+            "muteIcon": "#ffffff",
+            "copy": "#2563eb",
+            "gen": "#2563eb",
             "modeToggle": "#0000ff",
             "orient": "#0000ff",
             "solve": "#9400d3",
             "editClear": "#ff0000",
             "editBombs": "#ff0000",
-            "editNew": "#ffff00"
+            "editNew": "#ffff00",
+            "disabled": "#94a3b8",
+            "hintHover": "#00e000",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -485,7 +784,8 @@ window.THEMES_MORE = {
             "border": "#9400d3",
             "text": "#4b0082",
             "textMuted": "#0000ff",
-            "accent": "#ff0000"
+            "accent": "#ff0000",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#f8f9fa",
@@ -499,7 +799,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#00ff00",
             "filter": "#4b0082",
             "portal": "#9400d3",
-            "cross": "#0000ff"
+            "cross": "#0000ff",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ff0000",
+            "bombBlastRays": "#ff0000"
         },
         "palette": {
             "bg": "#ffffff",
@@ -543,7 +846,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#4b0082"
+            "megaCopy": "#4b0082",
+            "body": "#4b0082",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#f8f9fa",
@@ -562,6 +870,68 @@ window.THEMES_MORE = {
             "hover": "#d86b00",
             "text": "#0f172a",
             "border": "#d86b00"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#f8f9fa",
+            "panelBorder": "#9400d3",
+            "title": "#ffffff",
+            "status": "#00ff00",
+            "percent": "#ffffff",
+            "track": "#ffffff",
+            "bar": "rainbow",
+            "error": "#00ff00"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#00ff00",
+            "megaStatusBorder": "#9400d3",
+            "label": "#00ff00",
+            "dot": "rainbow",
+            "timer": "#4b0082",
+            "close": "#0000ff",
+            "closeHover": "#4b0082"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#ffff00",
+            "bombBottomText": "#ff0000"
+        },
+        "shell": {
+            "btnBg": "#f1f5f9",
+            "btnBgHover": "#dde1e5",
+            "btnText": "#475569",
+            "btnBorder": "#9400d3",
+            "muteBg": "#f1f5f9",
+            "muteBgHover": "#dde1e5",
+            "muteText": "#4b0082",
+            "muteBorder": "#9400d3"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#4b0082",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#9400d3",
+            "headerLeftBorder": "#e2e8f0",
+            "exportBorder": "#e2e8f0",
+            "editorPanelBorder": "#e2e8f0"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#9400d3"
         }
     },
     "so_purple": {
@@ -590,7 +960,10 @@ window.THEMES_MORE = {
             "solve": "#d8b4fe",
             "editClear": "#6b21a8",
             "editBombs": "#d8b4fe",
-            "editNew": "#6b21a8"
+            "editNew": "#6b21a8",
+            "disabled": "#94a3b8",
+            "hintHover": "#a874dd",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(59, 7, 100, 0.95)",
@@ -598,7 +971,8 @@ window.THEMES_MORE = {
             "border": "#a855f7",
             "text": "#e9d5ff",
             "textMuted": "#c084fc",
-            "accent": "#7e22ce"
+            "accent": "#7e22ce",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#2e1065",
@@ -612,7 +986,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#6b21a8",
             "filter": "#7e22ce",
             "portal": "#a855f7",
-            "cross": "#9333ea"
+            "cross": "#9333ea",
+            "portalPending": "#999999",
+            "bombBlastRing": "#d8b4fe",
+            "bombBlastRays": "#7e22ce"
         },
         "palette": {
             "bg": "#2e1065",
@@ -656,7 +1033,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#e9d5ff"
+            "megaCopy": "#e9d5ff",
+            "body": "#e9d5ff",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#2e1065",
@@ -675,6 +1057,68 @@ window.THEMES_MORE = {
             "hover": "#7c2bc6",
             "text": "#ffffff",
             "border": "#7c2bc6"
+        },
+        "loading": {
+            "overlayBg": "rgba(59, 7, 100, 0.95)",
+            "panelBg": "#2e1065",
+            "panelBorder": "#a855f7",
+            "title": "#e9d5ff",
+            "status": "#c084fc",
+            "percent": "#e9d5ff",
+            "track": "#2e1065",
+            "bar": "#c084fc",
+            "error": "#c084fc"
+        },
+        "search": {
+            "overlayBg": "rgba(59, 7, 100, 0.95)",
+            "megaStatusText": "#c084fc",
+            "megaStatusBorder": "#a855f7",
+            "label": "#c084fc",
+            "dot": "#c084fc",
+            "timer": "#e9d5ff",
+            "close": "#c084fc",
+            "closeHover": "#e9d5ff"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#d8b4fe",
+            "bombBottomText": "#d8b4fe"
+        },
+        "shell": {
+            "btnBg": "#4c1d95",
+            "btnBgHover": "#451a89",
+            "btnText": "#475569",
+            "btnBorder": "#a855f7",
+            "muteBg": "#4c1d95",
+            "muteBgHover": "#451a89",
+            "muteText": "#c084fc",
+            "muteBorder": "#a855f7"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#e9d5ff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#c084fc",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#a855f7",
+            "headerLeftBorder": "#581c87",
+            "exportBorder": "#581c87",
+            "editorPanelBorder": "#581c87"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#a855f7"
         }
     },
     "denim": {
@@ -703,7 +1147,10 @@ window.THEMES_MORE = {
             "solve": "#1d4ed8",
             "editClear": "#3b82f6",
             "editBombs": "#1e40af",
-            "editNew": "#475569"
+            "editNew": "#475569",
+            "disabled": "#94a3b8",
+            "hintHover": "#5491dc",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(30, 41, 59, 0.95)",
@@ -711,7 +1158,8 @@ window.THEMES_MORE = {
             "border": "#3b82f6",
             "text": "#93c5fd",
             "textMuted": "#60a5fa",
-            "accent": "#1d4ed8"
+            "accent": "#1d4ed8",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#0f172a",
@@ -725,7 +1173,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#475569",
             "filter": "#1d4ed8",
             "portal": "#3b82f6",
-            "cross": "#2563eb"
+            "cross": "#2563eb",
+            "portalPending": "#999999",
+            "bombBlastRing": "#93c5fd",
+            "bombBlastRays": "#1d4ed8"
         },
         "palette": {
             "bg": "#0f172a",
@@ -769,7 +1220,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#93c5fd"
+            "megaCopy": "#93c5fd",
+            "body": "#93c5fd",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#0f172a",
@@ -788,6 +1244,68 @@ window.THEMES_MORE = {
             "hover": "#1f54c7",
             "text": "#ffffff",
             "border": "#1f54c7"
+        },
+        "loading": {
+            "overlayBg": "rgba(30, 41, 59, 0.95)",
+            "panelBg": "#0f172a",
+            "panelBorder": "#3b82f6",
+            "title": "#ffffff",
+            "status": "#60a5fa",
+            "percent": "#ffffff",
+            "track": "#0f172a",
+            "bar": "#60a5fa",
+            "error": "#60a5fa"
+        },
+        "search": {
+            "overlayBg": "rgba(30, 41, 59, 0.95)",
+            "megaStatusText": "#60a5fa",
+            "megaStatusBorder": "#3b82f6",
+            "label": "#60a5fa",
+            "dot": "#60a5fa",
+            "timer": "#93c5fd",
+            "close": "#60a5fa",
+            "closeHover": "#93c5fd"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#93c5fd",
+            "bombBottomText": "#93c5fd"
+        },
+        "shell": {
+            "btnBg": "#334155",
+            "btnBgHover": "#2e3b4e",
+            "btnText": "#475569",
+            "btnBorder": "#3b82f6",
+            "muteBg": "#334155",
+            "muteBgHover": "#2e3b4e",
+            "muteText": "#93c5fd",
+            "muteBorder": "#3b82f6"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#93c5fd",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#3b82f6",
+            "headerLeftBorder": "#334155",
+            "exportBorder": "#334155",
+            "editorPanelBorder": "#334155"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#3b82f6"
         }
     },
     "hello_kitty": {
@@ -807,16 +1325,19 @@ window.THEMES_MORE = {
             "hint": "#ff69b4",
             "saved": "#ffb6c1",
             "mega": "#ff1493",
-            "mute": "#fff0f5",
-            "muteIcon": "#ff69b4",
-            "copy": "#fff0f5",
-            "gen": "#fff0f5",
+            "mute": "#ff5fa2",
+            "muteIcon": "#ffffff",
+            "copy": "#ff5fa2",
+            "gen": "#ff5fa2",
             "modeToggle": "#ff1493",
             "orient": "#ff1493",
             "solve": "#ff1493",
             "editClear": "#ff1493",
             "editBombs": "#ff1493",
-            "editNew": "#ffb6c1"
+            "editNew": "#ffb6c1",
+            "disabled": "#94a3b8",
+            "hintHover": "#e05c9e",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -824,7 +1345,8 @@ window.THEMES_MORE = {
             "border": "#ff69b4",
             "text": "#db7093",
             "textMuted": "#ffb6c1",
-            "accent": "#ff1493"
+            "accent": "#ff1493",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#fff0f5",
@@ -838,7 +1360,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#ffb6c1",
             "filter": "#ff69b4",
             "portal": "#dda0dd",
-            "cross": "#ff69b4"
+            "cross": "#ff69b4",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ff1493",
+            "bombBlastRays": "#ff69b4"
         },
         "palette": {
             "bg": "#ffffff",
@@ -882,7 +1407,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#db7093"
+            "megaCopy": "#db7093",
+            "body": "#db7093",
+            "shellBtn": "#475569",
+            "actionBtn": "#6f1d3e",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#fff0f5",
@@ -901,6 +1431,68 @@ window.THEMES_MORE = {
             "hover": "#d8117c",
             "text": "#ffffff",
             "border": "#d8117c"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#fff0f5",
+            "panelBorder": "#ff69b4",
+            "title": "#ffffff",
+            "status": "#ff1493",
+            "percent": "#ffffff",
+            "track": "#ffffff",
+            "bar": "#ff1493",
+            "error": "#ff1493"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#ff1493",
+            "megaStatusBorder": "#ff69b4",
+            "label": "#ff1493",
+            "dot": "#ff1493",
+            "timer": "#db7093",
+            "close": "#ffb6c1",
+            "closeHover": "#db7093"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#ffc0cb",
+            "bombBottomText": "#ff1493"
+        },
+        "shell": {
+            "btnBg": "#fff0f5",
+            "btnBgHover": "#eadce1",
+            "btnText": "#475569",
+            "btnBorder": "#ff69b4",
+            "muteBg": "#fff0f5",
+            "muteBgHover": "#eadce1",
+            "muteText": "#ff69b4",
+            "muteBorder": "#ff69b4"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#ff69b4",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#ff69b4",
+            "headerLeftBorder": "#ffb6c1",
+            "exportBorder": "#ffb6c1",
+            "editorPanelBorder": "#ffb6c1"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#ff69b4"
         }
     },
     "black_tie": {
@@ -929,7 +1521,10 @@ window.THEMES_MORE = {
             "solve": "#444444",
             "editClear": "#000000",
             "editBombs": "#000000",
-            "editNew": "#666666"
+            "editNew": "#666666",
+            "disabled": "#94a3b8",
+            "hintHover": "#2c2c2c",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -937,7 +1532,8 @@ window.THEMES_MORE = {
             "border": "#000000",
             "text": "#333333",
             "textMuted": "#999999",
-            "accent": "#000000"
+            "accent": "#000000",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#f0f0f0",
@@ -951,7 +1547,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#999999",
             "filter": "#000000",
             "portal": "#666666",
-            "cross": "#000000"
+            "cross": "#000000",
+            "portalPending": "#999999",
+            "bombBlastRing": "#000000",
+            "bombBlastRays": "#000000"
         },
         "palette": {
             "bg": "#ffffff",
@@ -995,7 +1594,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#333333"
+            "megaCopy": "#333333",
+            "body": "#333333",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#f0f0f0",
@@ -1014,6 +1618,68 @@ window.THEMES_MORE = {
             "hover": "#2b2b2b",
             "text": "#ffffff",
             "border": "#2b2b2b"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#f0f0f0",
+            "panelBorder": "#000000",
+            "title": "#ffffff",
+            "status": "#000000",
+            "percent": "#ffffff",
+            "track": "#ffffff",
+            "bar": "#000000",
+            "error": "#000000"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#000000",
+            "megaStatusBorder": "#000000",
+            "label": "#000000",
+            "dot": "#000000",
+            "timer": "#333333",
+            "close": "#999999",
+            "closeHover": "#333333"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#e0e0e0",
+            "bombBottomText": "#000000"
+        },
+        "shell": {
+            "btnBg": "#e0e0e0",
+            "btnBgHover": "#cecece",
+            "btnText": "#475569",
+            "btnBorder": "#000000",
+            "muteBg": "#e0e0e0",
+            "muteBgHover": "#cecece",
+            "muteText": "#000000",
+            "muteBorder": "#000000"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#000000",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#000000",
+            "headerLeftBorder": "#cccccc",
+            "exportBorder": "#cccccc",
+            "editorPanelBorder": "#cccccc"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#000000"
         }
     },
     "vegas": {
@@ -1042,7 +1708,10 @@ window.THEMES_MORE = {
             "solve": "#00f3ff",
             "editClear": "#ff007f",
             "editBombs": "#ff007f",
-            "editNew": "#5e00ff"
+            "editNew": "#5e00ff",
+            "disabled": "#94a3b8",
+            "hintHover": "#32e011",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(26, 11, 46, 0.95)",
@@ -1050,7 +1719,8 @@ window.THEMES_MORE = {
             "border": "#ff007f",
             "text": "#00f3ff",
             "textMuted": "#39ff14",
-            "accent": "#ffea00"
+            "accent": "#ffea00",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#0b001a",
@@ -1064,7 +1734,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#5e00ff",
             "filter": "#00f3ff",
             "portal": "#ffea00",
-            "cross": "#ff007f"
+            "cross": "#ff007f",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ff007f",
+            "bombBlastRays": "#ff007f"
         },
         "palette": {
             "bg": "#0b001a",
@@ -1108,7 +1781,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#00f3ff"
+            "megaCopy": "#00f3ff",
+            "body": "#00f3ff",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#0b001a",
@@ -1127,6 +1805,68 @@ window.THEMES_MORE = {
             "hover": "#00ced8",
             "text": "#0f172a",
             "border": "#00ced8"
+        },
+        "loading": {
+            "overlayBg": "rgba(26, 11, 46, 0.95)",
+            "panelBg": "#0b001a",
+            "panelBorder": "#ff007f",
+            "title": "#ffffff",
+            "status": "#39ff14",
+            "percent": "#ffffff",
+            "track": "#0b001a",
+            "bar": "#39ff14",
+            "error": "#39ff14"
+        },
+        "search": {
+            "overlayBg": "rgba(26, 11, 46, 0.95)",
+            "megaStatusText": "#39ff14",
+            "megaStatusBorder": "#ff007f",
+            "label": "#39ff14",
+            "dot": "#39ff14",
+            "timer": "#00f3ff",
+            "close": "#39ff14",
+            "closeHover": "#00f3ff"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#ffea00",
+            "bombBottomText": "#ff007f"
+        },
+        "shell": {
+            "btnBg": "#2d164d",
+            "btnBgHover": "#291446",
+            "btnText": "#475569",
+            "btnBorder": "#ff007f",
+            "muteBg": "#2d164d",
+            "muteBgHover": "#291446",
+            "muteText": "#00f3ff",
+            "muteBorder": "#ff007f"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#00f3ff",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#ff007f",
+            "headerLeftBorder": "#3d1c5e",
+            "exportBorder": "#3d1c5e",
+            "editorPanelBorder": "#3d1c5e"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#ff007f"
         }
     },
     "sherbet": {
@@ -1155,7 +1895,10 @@ window.THEMES_MORE = {
             "solve": "#ff4d6d",
             "editClear": "#ff7b00",
             "editBombs": "#d92550",
-            "editNew": "#ff8fa3"
+            "editNew": "#ff8fa3",
+            "disabled": "#94a3b8",
+            "hintHover": "#e0435f",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -1163,7 +1906,8 @@ window.THEMES_MORE = {
             "border": "#ff4d6d",
             "text": "#d92550",
             "textMuted": "#ffb3c6",
-            "accent": "#ff7b00"
+            "accent": "#ff7b00",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#fff5ec",
@@ -1177,7 +1921,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#ffb3c6",
             "filter": "#ff4d6d",
             "portal": "#c9184a",
-            "cross": "#ff4d6d"
+            "cross": "#ff4d6d",
+            "portalPending": "#999999",
+            "bombBlastRing": "#d92550",
+            "bombBlastRays": "#d92550"
         },
         "palette": {
             "bg": "#fff0f5",
@@ -1221,7 +1968,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#d92550"
+            "megaCopy": "#d92550",
+            "body": "#d92550",
+            "shellBtn": "#475569",
+            "actionBtn": "#7a1f33",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#fff5ec",
@@ -1240,14 +1992,76 @@ window.THEMES_MORE = {
             "hover": "#d8415c",
             "text": "#ffffff",
             "border": "#d8415c"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#fff5ec",
+            "panelBorder": "#ff4d6d",
+            "title": "#ffffff",
+            "status": "#ff7b00",
+            "percent": "#ffffff",
+            "track": "#fff0f5",
+            "bar": "#ff7b00",
+            "error": "#ff7b00"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#ff7b00",
+            "megaStatusBorder": "#ff4d6d",
+            "label": "#ff7b00",
+            "dot": "#ff7b00",
+            "timer": "#d92550",
+            "close": "#ffb3c6",
+            "closeHover": "#d92550"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#ffe0e9",
+            "bombBottomText": "#d92550"
+        },
+        "shell": {
+            "btnBg": "#ffe0e9",
+            "btnBgHover": "#eaced6",
+            "btnText": "#475569",
+            "btnBorder": "#ff4d6d",
+            "muteBg": "#ffe0e9",
+            "muteBgHover": "#eaced6",
+            "muteText": "#d92550",
+            "muteBorder": "#ff4d6d"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#d92550",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#ff4d6d",
+            "headerLeftBorder": "#ffb3c6",
+            "exportBorder": "#ffb3c6",
+            "editorPanelBorder": "#ffb3c6"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#ff4d6d"
         }
     },
     "chrome": {
         "bodyBg": "#8c92ac",
         "canvasBg": "#e6e8fa",
         "grid": "#b0b7c6",
-        "headerLeft": "#555d50",
-        "headerRight": "#7f8796",
+        "headerLeft": "#5f6b7d",
+        "headerRight": "#7b889b",
         "path": "#2c3539",
         "controls": "rgba(230, 232, 250, 0.9)",
         "metricText": "#b0b7c6",
@@ -1268,7 +2082,10 @@ window.THEMES_MORE = {
             "solve": "#7f8796",
             "editClear": "#2c3539",
             "editBombs": "#555d50",
-            "editNew": "#a0a5b0"
+            "editNew": "#a0a5b0",
+            "disabled": "#94a3b8",
+            "hintHover": "#6f7684",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(230, 232, 250, 0.95)",
@@ -1276,7 +2093,8 @@ window.THEMES_MORE = {
             "border": "#555d50",
             "text": "#2c3539",
             "textMuted": "#7f8796",
-            "accent": "#555d50"
+            "accent": "#555d50",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#cfd4df",
@@ -1290,7 +2108,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#a0a5b0",
             "filter": "#7f8796",
             "portal": "#555550",
-            "cross": "#555d50"
+            "cross": "#555d50",
+            "portalPending": "#999999",
+            "bombBlastRing": "#2c3539",
+            "bombBlastRays": "#555d50"
         },
         "palette": {
             "bg": "#d9dce5",
@@ -1334,7 +2155,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#2c3539"
+            "megaCopy": "#2c3539",
+            "body": "#2c3539",
+            "shellBtn": "#475569",
+            "actionBtn": "#1f2933",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#cfd4df",
@@ -1353,6 +2179,68 @@ window.THEMES_MORE = {
             "hover": "#6b727f",
             "text": "#ffffff",
             "border": "#6b727f"
+        },
+        "loading": {
+            "overlayBg": "rgba(230, 232, 250, 0.95)",
+            "panelBg": "#cfd4df",
+            "panelBorder": "#555d50",
+            "title": "#ffffff",
+            "status": "#2c3539",
+            "percent": "#ffffff",
+            "track": "#d9dce5",
+            "bar": "#2c3539",
+            "error": "#2c3539"
+        },
+        "search": {
+            "overlayBg": "rgba(230, 232, 250, 0.95)",
+            "megaStatusText": "#2c3539",
+            "megaStatusBorder": "#555d50",
+            "label": "#2c3539",
+            "dot": "#2c3539",
+            "timer": "#2c3539",
+            "close": "#7f8796",
+            "closeHover": "#2c3539"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#cfd4df",
+            "bombBottomText": "#2c3539"
+        },
+        "shell": {
+            "btnBg": "#cfd4df",
+            "btnBgHover": "#bec3cd",
+            "btnText": "#475569",
+            "btnBorder": "#555d50",
+            "muteBg": "#cfd4df",
+            "muteBgHover": "#bec3cd",
+            "muteText": "#2c3539",
+            "muteBorder": "#555d50"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#2c3539",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#555d50",
+            "headerLeftBorder": "#b0b7c6",
+            "exportBorder": "#b0b7c6",
+            "editorPanelBorder": "#b0b7c6"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#555d50"
         }
     },
     "yankees": {
@@ -1360,7 +2248,7 @@ window.THEMES_MORE = {
         "canvasBg": "#ffffff",
         "grid": "#b0b7bc",
         "headerLeft": "#0c2340",
-        "headerRight": "#c4ced4",
+        "headerRight": "#8ea1b3",
         "path": "#0c2340",
         "controls": "rgba(255, 255, 255, 0.95)",
         "metricText": "#b0b7bc",
@@ -1381,7 +2269,10 @@ window.THEMES_MORE = {
             "solve": "#c4ced4",
             "editClear": "#e31837",
             "editBombs": "#e31837",
-            "editNew": "#8b969e"
+            "editNew": "#8b969e",
+            "disabled": "#94a3b8",
+            "hintHover": "#0a1e38",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -1389,7 +2280,8 @@ window.THEMES_MORE = {
             "border": "#0c2340",
             "text": "#0c2340",
             "textMuted": "#8b969e",
-            "accent": "#e31837"
+            "accent": "#e31837",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#e4e5e8",
@@ -1403,7 +2295,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#8b969e",
             "filter": "#0c2340",
             "portal": "#0c2340",
-            "cross": "#0c2340"
+            "cross": "#0c2340",
+            "portalPending": "#999999",
+            "bombBlastRing": "#e31837",
+            "bombBlastRays": "#0c2340"
         },
         "palette": {
             "bg": "#f0f2f5",
@@ -1447,7 +2342,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#0c2340"
+            "megaCopy": "#0c2340",
+            "body": "#0c2340",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#e4e5e8",
@@ -1466,6 +2366,68 @@ window.THEMES_MORE = {
             "hover": "#a6afb4",
             "text": "#0f172a",
             "border": "#a6afb4"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#e4e5e8",
+            "panelBorder": "#0c2340",
+            "title": "#ffffff",
+            "status": "#0c2340",
+            "percent": "#ffffff",
+            "track": "#f0f2f5",
+            "bar": "#0c2340",
+            "error": "#0c2340"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#0c2340",
+            "megaStatusBorder": "#0c2340",
+            "label": "#0c2340",
+            "dot": "#0c2340",
+            "timer": "#0c2340",
+            "close": "#8b969e",
+            "closeHover": "#0c2340"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#e4e5e8",
+            "bombBottomText": "#e31837"
+        },
+        "shell": {
+            "btnBg": "#f0f2f5",
+            "btnBgHover": "#dcdee1",
+            "btnText": "#475569",
+            "btnBorder": "#0c2340",
+            "muteBg": "#f0f2f5",
+            "muteBgHover": "#dcdee1",
+            "muteText": "#0c2340",
+            "muteBorder": "#0c2340"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(142,161,179,0.55)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#0c2340",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#0c2340",
+            "headerLeftBorder": "#b0b7bc",
+            "exportBorder": "#b0b7bc",
+            "editorPanelBorder": "#b0b7bc"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#0c2340"
         }
     },
     "ketchup_mustard": {
@@ -1494,7 +2456,10 @@ window.THEMES_MORE = {
             "solve": "#d22b2b",
             "editClear": "#a01e1e",
             "editBombs": "#a01e1e",
-            "editNew": "#ffdd57"
+            "editNew": "#ffdd57",
+            "disabled": "#94a3b8",
+            "hintHover": "#b82525",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -1502,7 +2467,8 @@ window.THEMES_MORE = {
             "border": "#d22b2b",
             "text": "#a01e1e",
             "textMuted": "#ffc107",
-            "accent": "#d22b2b"
+            "accent": "#d22b2b",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#fff3cd",
@@ -1516,7 +2482,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#ffdd57",
             "filter": "#ffc107",
             "portal": "#d22b2b",
-            "cross": "#d22b2b"
+            "cross": "#d22b2b",
+            "portalPending": "#999999",
+            "bombBlastRing": "#d22b2b",
+            "bombBlastRays": "#d22b2b"
         },
         "palette": {
             "bg": "#fff8e1",
@@ -1560,7 +2529,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#a01e1e"
+            "megaCopy": "#a01e1e",
+            "body": "#a01e1e",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#fff3cd",
@@ -1579,6 +2553,68 @@ window.THEMES_MORE = {
             "hover": "#d8a405",
             "text": "#0f172a",
             "border": "#d8a405"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#fff3cd",
+            "panelBorder": "#d22b2b",
+            "title": "#ffffff",
+            "status": "#d22b2b",
+            "percent": "#ffffff",
+            "track": "#fff8e1",
+            "bar": "#d22b2b",
+            "error": "#d22b2b"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#d22b2b",
+            "megaStatusBorder": "#d22b2b",
+            "label": "#d22b2b",
+            "dot": "#d22b2b",
+            "timer": "#a01e1e",
+            "close": "#ffc107",
+            "closeHover": "#a01e1e"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#fff3cd",
+            "bombBottomText": "#d22b2b"
+        },
+        "shell": {
+            "btnBg": "#fff8e1",
+            "btnBgHover": "#eae4cf",
+            "btnText": "#475569",
+            "btnBorder": "#d22b2b",
+            "muteBg": "#fff8e1",
+            "muteBgHover": "#eae4cf",
+            "muteText": "#d22b2b",
+            "muteBorder": "#d22b2b"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#d22b2b",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#d22b2b",
+            "headerLeftBorder": "#ffe8a1",
+            "exportBorder": "#ffe8a1",
+            "editorPanelBorder": "#ffe8a1"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#d22b2b"
         }
     },
     "forest": {
@@ -1607,7 +2643,10 @@ window.THEMES_MORE = {
             "solve": "#8b5a2b",
             "editClear": "#2e5a2c",
             "editBombs": "#2e5a2c",
-            "editNew": "#6b9e6a"
+            "editNew": "#6b9e6a",
+            "disabled": "#94a3b8",
+            "hintHover": "#416d40",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(242, 252, 242, 0.95)",
@@ -1615,7 +2654,8 @@ window.THEMES_MORE = {
             "border": "#4a7c49",
             "text": "#2e5a2c",
             "textMuted": "#6b9e6a",
-            "accent": "#8b5a2b"
+            "accent": "#8b5a2b",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#e9f5e9",
@@ -1629,7 +2669,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#6b9e6a",
             "filter": "#4a7c49",
             "portal": "#2e5a2c",
-            "cross": "#4a7c49"
+            "cross": "#4a7c49",
+            "portalPending": "#999999",
+            "bombBlastRing": "#8b5a2b",
+            "bombBlastRays": "#2e5a2c"
         },
         "palette": {
             "bg": "#e9f5e9",
@@ -1673,7 +2716,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#2e5a2c"
+            "megaCopy": "#2e5a2c",
+            "body": "#2e5a2c",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#e9f5e9",
@@ -1692,6 +2740,68 @@ window.THEMES_MORE = {
             "hover": "#3e693e",
             "text": "#ffffff",
             "border": "#3e693e"
+        },
+        "loading": {
+            "overlayBg": "rgba(242, 252, 242, 0.95)",
+            "panelBg": "#e9f5e9",
+            "panelBorder": "#4a7c49",
+            "title": "#ffffff",
+            "status": "#8b5a2b",
+            "percent": "#ffffff",
+            "track": "#e9f5e9",
+            "bar": "#8b5a2b",
+            "error": "#8b5a2b"
+        },
+        "search": {
+            "overlayBg": "rgba(242, 252, 242, 0.95)",
+            "megaStatusText": "#8b5a2b",
+            "megaStatusBorder": "#4a7c49",
+            "label": "#8b5a2b",
+            "dot": "#8b5a2b",
+            "timer": "#2e5a2c",
+            "close": "#6b9e6a",
+            "closeHover": "#2e5a2c"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#dff0df",
+            "bombBottomText": "#8b5a2b"
+        },
+        "shell": {
+            "btnBg": "#dff0df",
+            "btnBgHover": "#cddccd",
+            "btnText": "#475569",
+            "btnBorder": "#4a7c49",
+            "muteBg": "#dff0df",
+            "muteBgHover": "#cddccd",
+            "muteText": "#2e5a2c",
+            "muteBorder": "#4a7c49"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#2e5a2c",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#4a7c49",
+            "headerLeftBorder": "#c2e0c2",
+            "exportBorder": "#c2e0c2",
+            "editorPanelBorder": "#c2e0c2"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#4a7c49"
         }
     },
     "gold": {
@@ -1720,7 +2830,10 @@ window.THEMES_MORE = {
             "solve": "#d4af37",
             "editClear": "#b8860b",
             "editBombs": "#b8860b",
-            "editNew": "#8b6508"
+            "editNew": "#8b6508",
+            "disabled": "#94a3b8",
+            "hintHover": "#e0bd00",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(28, 25, 13, 0.95)",
@@ -1728,7 +2841,8 @@ window.THEMES_MORE = {
             "border": "#ffd700",
             "text": "#ffdf00",
             "textMuted": "#b8860b",
-            "accent": "#d4af37"
+            "accent": "#d4af37",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#2a2515",
@@ -1742,7 +2856,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#8b6508",
             "filter": "#daa520",
             "portal": "#b8860b",
-            "cross": "#ffd700"
+            "cross": "#ffd700",
+            "portalPending": "#999999",
+            "bombBlastRing": "#d4af37",
+            "bombBlastRays": "#b8860b"
         },
         "palette": {
             "bg": "#2a2515",
@@ -1786,7 +2903,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#ffdf00"
+            "megaCopy": "#ffdf00",
+            "body": "#ffdf00",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#2a2515",
@@ -1805,6 +2927,68 @@ window.THEMES_MORE = {
             "hover": "#d8b600",
             "text": "#0f172a",
             "border": "#d8b600"
+        },
+        "loading": {
+            "overlayBg": "rgba(28, 25, 13, 0.95)",
+            "panelBg": "#2a2515",
+            "panelBorder": "#ffd700",
+            "title": "#ffffff",
+            "status": "#ffdf00",
+            "percent": "#ffffff",
+            "track": "#2a2515",
+            "bar": "#ffdf00",
+            "error": "#ffdf00"
+        },
+        "search": {
+            "overlayBg": "rgba(28, 25, 13, 0.95)",
+            "megaStatusText": "#ffdf00",
+            "megaStatusBorder": "#ffd700",
+            "label": "#ffdf00",
+            "dot": "#ffdf00",
+            "timer": "#ffdf00",
+            "close": "#b8860b",
+            "closeHover": "#ffdf00"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#daa520",
+            "bombBottomText": "#d4af37"
+        },
+        "shell": {
+            "btnBg": "#3a331c",
+            "btnBgHover": "#352e19",
+            "btnText": "#475569",
+            "btnBorder": "#ffd700",
+            "muteBg": "#3a331c",
+            "muteBgHover": "#352e19",
+            "muteText": "#ffd700",
+            "muteBorder": "#ffd700"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#ffd700",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#ffd700",
+            "headerLeftBorder": "#5c4a10",
+            "exportBorder": "#5c4a10",
+            "editorPanelBorder": "#5c4a10"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#ffd700"
         }
     },
     "tupperware": {
@@ -1833,7 +3017,10 @@ window.THEMES_MORE = {
             "solve": "#cc5500",
             "editClear": "#cc5500",
             "editBombs": "#cc5500",
-            "editNew": "#9c8e63"
+            "editNew": "#9c8e63",
+            "disabled": "#94a3b8",
+            "hintHover": "#c8880d",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(223, 211, 174, 0.95)",
@@ -1841,7 +3028,8 @@ window.THEMES_MORE = {
             "border": "#5b7c2f",
             "text": "#4d3826",
             "textMuted": "#cc5500",
-            "accent": "#e49b0f"
+            "accent": "#e49b0f",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#f4ebd0",
@@ -1855,7 +3043,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#9c8e63",
             "filter": "#4d3826",
             "portal": "#e49b0f",
-            "cross": "#5b7c2f"
+            "cross": "#5b7c2f",
+            "portalPending": "#999999",
+            "bombBlastRing": "#cc5500",
+            "bombBlastRays": "#cc5500"
         },
         "palette": {
             "bg": "#e8ddbc",
@@ -1899,7 +3090,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#4d3826"
+            "megaCopy": "#4d3826",
+            "body": "#4d3826",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#f4ebd0",
@@ -1918,6 +3114,68 @@ window.THEMES_MORE = {
             "hover": "#4d6927",
             "text": "#ffffff",
             "border": "#4d6927"
+        },
+        "loading": {
+            "overlayBg": "rgba(223, 211, 174, 0.95)",
+            "panelBg": "#f4ebd0",
+            "panelBorder": "#5b7c2f",
+            "title": "#ffffff",
+            "status": "#cc5500",
+            "percent": "#ffffff",
+            "track": "#e8ddbc",
+            "bar": "#e49b0f",
+            "error": "#cc5500"
+        },
+        "search": {
+            "overlayBg": "rgba(223, 211, 174, 0.95)",
+            "megaStatusText": "#cc5500",
+            "megaStatusBorder": "#5b7c2f",
+            "label": "#cc5500",
+            "dot": "#e49b0f",
+            "timer": "#4d3826",
+            "close": "#cc5500",
+            "closeHover": "#4d3826"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#f4ebd0",
+            "bombBottomText": "#cc5500"
+        },
+        "shell": {
+            "btnBg": "#f4ebd0",
+            "btnBgHover": "#e0d8bf",
+            "btnText": "#475569",
+            "btnBorder": "#5b7c2f",
+            "muteBg": "#f4ebd0",
+            "muteBgHover": "#e0d8bf",
+            "muteText": "#4d3826",
+            "muteBorder": "#5b7c2f"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#4d3826",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#5b7c2f",
+            "headerLeftBorder": "#c9bb8e",
+            "exportBorder": "#c9bb8e",
+            "editorPanelBorder": "#c9bb8e"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#5b7c2f"
         }
     },
     "paddys_day": {
@@ -1946,7 +3204,10 @@ window.THEMES_MORE = {
             "solve": "#388e3c",
             "editClear": "#e65100",
             "editBombs": "#e65100",
-            "editNew": "#81c784"
+            "editNew": "#81c784",
+            "disabled": "#94a3b8",
+            "hintHover": "#317c34",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -1954,7 +3215,8 @@ window.THEMES_MORE = {
             "border": "#006400",
             "text": "#1b5e20",
             "textMuted": "#e65100",
-            "accent": "#388e3c"
+            "accent": "#388e3c",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#e8f5e9",
@@ -1968,7 +3230,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#a5d6a7",
             "filter": "#006400",
             "portal": "#388e3c",
-            "cross": "#006400"
+            "cross": "#006400",
+            "portalPending": "#999999",
+            "bombBlastRing": "#e65100",
+            "bombBlastRays": "#e65100"
         },
         "palette": {
             "bg": "#e8f5e9",
@@ -2012,7 +3277,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#1b5e20"
+            "megaCopy": "#1b5e20",
+            "body": "#1b5e20",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#e8f5e9",
@@ -2031,6 +3301,68 @@ window.THEMES_MORE = {
             "hover": "#005500",
             "text": "#ffffff",
             "border": "#005500"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#e8f5e9",
+            "panelBorder": "#006400",
+            "title": "#ffffff",
+            "status": "#006400",
+            "percent": "#ffffff",
+            "track": "#e8f5e9",
+            "bar": "#FFD700",
+            "error": "#006400"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#006400",
+            "megaStatusBorder": "#006400",
+            "label": "#006400",
+            "dot": "#FFD700",
+            "timer": "#1b5e20",
+            "close": "#e65100",
+            "closeHover": "#1b5e20"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#c8e6c9",
+            "bombBottomText": "#e65100"
+        },
+        "shell": {
+            "btnBg": "#c8e6c9",
+            "btnBgHover": "#b8d3b8",
+            "btnText": "#475569",
+            "btnBorder": "#006400",
+            "muteBg": "#c8e6c9",
+            "muteBgHover": "#b8d3b8",
+            "muteText": "#006400",
+            "muteBorder": "#006400"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#006400",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#006400",
+            "headerLeftBorder": "#a5d6a7",
+            "exportBorder": "#a5d6a7",
+            "editorPanelBorder": "#a5d6a7"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#006400"
         }
     },
     "usa": {
@@ -2059,7 +3391,10 @@ window.THEMES_MORE = {
             "solve": "#bf0a30",
             "editClear": "#bf0a30",
             "editBombs": "#bf0a30",
-            "editNew": "#8da4b8"
+            "editNew": "#8da4b8",
+            "disabled": "#94a3b8",
+            "hintHover": "#00235b",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -2067,7 +3402,8 @@ window.THEMES_MORE = {
             "border": "#002868",
             "text": "#002868",
             "textMuted": "#bf0a30",
-            "accent": "#bf0a30"
+            "accent": "#bf0a30",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#f0f4f8",
@@ -2081,7 +3417,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#8da4b8",
             "filter": "#002868",
             "portal": "#bf0a30",
-            "cross": "#002868"
+            "cross": "#002868",
+            "portalPending": "#999999",
+            "bombBlastRing": "#bf0a30",
+            "bombBlastRays": "#bf0a30"
         },
         "palette": {
             "bg": "#f0f4f8",
@@ -2125,7 +3464,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#002868"
+            "megaCopy": "#002868",
+            "body": "#002868",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#f0f4f8",
@@ -2144,6 +3488,68 @@ window.THEMES_MORE = {
             "hover": "#002258",
             "text": "#ffffff",
             "border": "#002258"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#f0f4f8",
+            "panelBorder": "#002868",
+            "title": "#ffffff",
+            "status": "#002868",
+            "percent": "#ffffff",
+            "track": "#f0f4f8",
+            "bar": "#bf0a30",
+            "error": "#002868"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#002868",
+            "megaStatusBorder": "#002868",
+            "label": "#002868",
+            "dot": "#bf0a30",
+            "timer": "#002868",
+            "close": "#bf0a30",
+            "closeHover": "#002868"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#dbe4ec",
+            "bombBottomText": "#bf0a30"
+        },
+        "shell": {
+            "btnBg": "#dbe4ec",
+            "btnBgHover": "#c9d1d9",
+            "btnText": "#475569",
+            "btnBorder": "#002868",
+            "muteBg": "#dbe4ec",
+            "muteBgHover": "#c9d1d9",
+            "muteText": "#002868",
+            "muteBorder": "#002868"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#002868",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#002868",
+            "headerLeftBorder": "#b3c6d6",
+            "exportBorder": "#b3c6d6",
+            "editorPanelBorder": "#b3c6d6"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#002868"
         }
     },
     "kwanzaa": {
@@ -2172,7 +3578,10 @@ window.THEMES_MORE = {
             "solve": "#4CAF50",
             "editClear": "#D32F2F",
             "editBombs": "#D32F2F",
-            "editNew": "#a1887f"
+            "editNew": "#a1887f",
+            "disabled": "#94a3b8",
+            "hintHover": "#429a46",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -2180,7 +3589,8 @@ window.THEMES_MORE = {
             "border": "#000000",
             "text": "#000000",
             "textMuted": "#4CAF50",
-            "accent": "#D32F2F"
+            "accent": "#D32F2F",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#fff8e7",
@@ -2194,7 +3604,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#a1887f",
             "filter": "#000000",
             "portal": "#b08d00",
-            "cross": "#000000"
+            "cross": "#000000",
+            "portalPending": "#999999",
+            "bombBlastRing": "#D32F2F",
+            "bombBlastRays": "#D32F2F"
         },
         "palette": {
             "bg": "#fff8e7",
@@ -2238,7 +3651,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#000000"
+            "megaCopy": "#000000",
+            "body": "#000000",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#fff8e7",
@@ -2257,6 +3675,68 @@ window.THEMES_MORE = {
             "hover": "#000000",
             "text": "#ffffff",
             "border": "#000000"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#fff8e7",
+            "panelBorder": "#000000",
+            "title": "#ffffff",
+            "status": "#000000",
+            "percent": "#ffffff",
+            "track": "#fff8e7",
+            "bar": "#4CAF50",
+            "error": "#000000"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#000000",
+            "megaStatusBorder": "#000000",
+            "label": "#000000",
+            "dot": "#4CAF50",
+            "timer": "#000000",
+            "close": "#4CAF50",
+            "closeHover": "#000000"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#efebe9",
+            "bombBottomText": "#D32F2F"
+        },
+        "shell": {
+            "btnBg": "#efebe9",
+            "btnBgHover": "#dbd8d6",
+            "btnText": "#475569",
+            "btnBorder": "#000000",
+            "muteBg": "#efebe9",
+            "muteBgHover": "#dbd8d6",
+            "muteText": "#000000",
+            "muteBorder": "#000000"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#000000",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#000000",
+            "headerLeftBorder": "#d7ccc8",
+            "exportBorder": "#d7ccc8",
+            "editorPanelBorder": "#d7ccc8"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#000000"
         }
     },
     "cozy_cottage": {
@@ -2285,7 +3765,10 @@ window.THEMES_MORE = {
             "solve": "#8d6e63",
             "editClear": "#ad6c93",
             "editBombs": "#ad6c93",
-            "editNew": "#bcaaa4"
+            "editNew": "#bcaaa4",
+            "disabled": "#94a3b8",
+            "hintHover": "#608960",
+            "hintDivider": "rgba(15,23,42,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -2293,7 +3776,8 @@ window.THEMES_MORE = {
             "border": "#8fbc8f",
             "text": "#5d4037",
             "textMuted": "#8d6e63",
-            "accent": "#d291bc"
+            "accent": "#d291bc",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#fdf6e3",
@@ -2307,7 +3791,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#bcaaa4",
             "filter": "#5d4037",
             "portal": "#d291bc",
-            "cross": "#8fbc8f"
+            "cross": "#8fbc8f",
+            "portalPending": "#999999",
+            "bombBlastRing": "#d291bc",
+            "bombBlastRays": "#d291bc"
         },
         "palette": {
             "bg": "#fdf6e3",
@@ -2351,7 +3838,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#5d4037"
+            "megaCopy": "#5d4037",
+            "body": "#5d4037",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#fdf6e3",
@@ -2370,6 +3862,68 @@ window.THEMES_MORE = {
             "hover": "#799f79",
             "text": "#0f172a",
             "border": "#799f79"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#fdf6e3",
+            "panelBorder": "#8fbc8f",
+            "title": "#ffffff",
+            "status": "#5d4037",
+            "percent": "#ffffff",
+            "track": "#fdf6e3",
+            "bar": "#8d6e63",
+            "error": "#5d4037"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#5d4037",
+            "megaStatusBorder": "#8fbc8f",
+            "label": "#5d4037",
+            "dot": "#8d6e63",
+            "timer": "#5d4037",
+            "close": "#8d6e63",
+            "closeHover": "#5d4037"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#efebe9",
+            "bombBottomText": "#d291bc"
+        },
+        "shell": {
+            "btnBg": "#efebe9",
+            "btnBgHover": "#dbd8d6",
+            "btnText": "#475569",
+            "btnBorder": "#8fbc8f",
+            "muteBg": "#efebe9",
+            "muteBgHover": "#dbd8d6",
+            "muteText": "#5d4037",
+            "muteBorder": "#8fbc8f"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#5d4037",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#8fbc8f",
+            "headerLeftBorder": "#d7ccc8",
+            "exportBorder": "#d7ccc8",
+            "editorPanelBorder": "#d7ccc8"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#8fbc8f"
         }
     },
     "patchwork": {
@@ -2398,7 +3952,10 @@ window.THEMES_MORE = {
             "solve": "#b57a30",
             "editClear": "#ab5a50",
             "editBombs": "#ab5a50",
-            "editNew": "#8a7b88"
+            "editNew": "#8a7b88",
+            "disabled": "#94a3b8",
+            "hintHover": "#507384",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(250, 248, 245, 0.95)",
@@ -2406,7 +3963,8 @@ window.THEMES_MORE = {
             "border": "#5c8397",
             "text": "#4a3e49",
             "textMuted": "#d99b48",
-            "accent": "#ab5a50"
+            "accent": "#ab5a50",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#f4eedd",
@@ -2420,7 +3978,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#9c8f9b",
             "filter": "#4a3e49",
             "portal": "#d99b48",
-            "cross": "#5c8397"
+            "cross": "#5c8397",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ab5a50",
+            "bombBlastRays": "#ab5a50"
         },
         "palette": {
             "bg": "#f4eedd",
@@ -2464,7 +4025,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#4a3e49"
+            "megaCopy": "#4a3e49",
+            "body": "#4a3e49",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#f4eedd",
@@ -2483,6 +4049,68 @@ window.THEMES_MORE = {
             "hover": "#4e6f80",
             "text": "#ffffff",
             "border": "#4e6f80"
+        },
+        "loading": {
+            "overlayBg": "rgba(250, 248, 245, 0.95)",
+            "panelBg": "#f4eedd",
+            "panelBorder": "#5c8397",
+            "title": "#ffffff",
+            "status": "#4a3e49",
+            "percent": "#ffffff",
+            "track": "#f4eedd",
+            "bar": "#d99b48",
+            "error": "#4a3e49"
+        },
+        "search": {
+            "overlayBg": "rgba(250, 248, 245, 0.95)",
+            "megaStatusText": "#4a3e49",
+            "megaStatusBorder": "#5c8397",
+            "label": "#4a3e49",
+            "dot": "#d99b48",
+            "timer": "#4a3e49",
+            "close": "#d99b48",
+            "closeHover": "#4a3e49"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#e6e0e5",
+            "bombBottomText": "#ab5a50"
+        },
+        "shell": {
+            "btnBg": "#e6e0e5",
+            "btnBgHover": "#d3ced2",
+            "btnText": "#475569",
+            "btnBorder": "#5c8397",
+            "muteBg": "#e6e0e5",
+            "muteBgHover": "#d3ced2",
+            "muteText": "#4a3e49",
+            "muteBorder": "#5c8397"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#4a3e49",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#5c8397",
+            "headerLeftBorder": "#b5a8b3",
+            "exportBorder": "#b5a8b3",
+            "editorPanelBorder": "#b5a8b3"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#5c8397"
         }
     },
     "canada": {
@@ -2511,7 +4139,10 @@ window.THEMES_MORE = {
             "solve": "#c8102e",
             "editClear": "#c8102e",
             "editBombs": "#222222",
-            "editNew": "#64748b"
+            "editNew": "#64748b",
+            "disabled": "#94a3b8",
+            "hintHover": "#b00e28",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -2519,7 +4150,8 @@ window.THEMES_MORE = {
             "border": "#c8102e",
             "text": "#222222",
             "textMuted": "#64748b",
-            "accent": "#c8102e"
+            "accent": "#c8102e",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#f8f9fa",
@@ -2533,7 +4165,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#64748b",
             "filter": "#222222",
             "portal": "#c8102e",
-            "cross": "#222222"
+            "cross": "#222222",
+            "portalPending": "#999999",
+            "bombBlastRing": "#c8102e",
+            "bombBlastRays": "#222222"
         },
         "palette": {
             "bg": "#f8f9fa",
@@ -2577,7 +4212,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#222222"
+            "megaCopy": "#222222",
+            "body": "#222222",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#f8f9fa",
@@ -2596,6 +4236,68 @@ window.THEMES_MORE = {
             "hover": "#aa0d27",
             "text": "#ffffff",
             "border": "#aa0d27"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#f8f9fa",
+            "panelBorder": "#c8102e",
+            "title": "#ffffff",
+            "status": "#c8102e",
+            "percent": "#ffffff",
+            "track": "#f8f9fa",
+            "bar": "#c8102e",
+            "error": "#c8102e"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#c8102e",
+            "megaStatusBorder": "#c8102e",
+            "label": "#c8102e",
+            "dot": "#c8102e",
+            "timer": "#222222",
+            "close": "#64748b",
+            "closeHover": "#222222"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#e2e8f0",
+            "bombBottomText": "#c8102e"
+        },
+        "shell": {
+            "btnBg": "#e2e8f0",
+            "btnBgHover": "#cfd5dc",
+            "btnText": "#475569",
+            "btnBorder": "#c8102e",
+            "muteBg": "#e2e8f0",
+            "muteBgHover": "#cfd5dc",
+            "muteText": "#c8102e",
+            "muteBorder": "#c8102e"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#c8102e",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#c8102e",
+            "headerLeftBorder": "#cbd5e1",
+            "exportBorder": "#cbd5e1",
+            "editorPanelBorder": "#cbd5e1"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#c8102e"
         }
     },
     "sock_hop": {
@@ -2624,7 +4326,10 @@ window.THEMES_MORE = {
             "solve": "#c71585",
             "editClear": "#dc143c",
             "editBombs": "#ff1493",
-            "editNew": "#999999"
+            "editNew": "#999999",
+            "disabled": "#94a3b8",
+            "hintHover": "#007a7a",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(255, 255, 255, 0.95)",
@@ -2632,7 +4337,8 @@ window.THEMES_MORE = {
             "border": "#008b8b",
             "text": "#ff1493",
             "textMuted": "#ff69b4",
-            "accent": "#00ced1"
+            "accent": "#00ced1",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#e0ffff",
@@ -2646,7 +4352,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#cccccc",
             "filter": "#000000",
             "portal": "#ff69b4",
-            "cross": "#00ced1"
+            "cross": "#00ced1",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ff1493",
+            "bombBlastRays": "#ff69b4"
         },
         "palette": {
             "bg": "#e0ffff",
@@ -2690,7 +4399,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#ff1493"
+            "megaCopy": "#ff1493",
+            "body": "#ff1493",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#e0ffff",
@@ -2709,6 +4423,68 @@ window.THEMES_MORE = {
             "hover": "#007676",
             "text": "#ffffff",
             "border": "#007676"
+        },
+        "loading": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "panelBg": "#e0ffff",
+            "panelBorder": "#008b8b",
+            "title": "#ffffff",
+            "status": "#ff1493",
+            "percent": "#ffffff",
+            "track": "#e0ffff",
+            "bar": "#ff1493",
+            "error": "#ff1493"
+        },
+        "search": {
+            "overlayBg": "rgba(255, 255, 255, 0.95)",
+            "megaStatusText": "#ff1493",
+            "megaStatusBorder": "#008b8b",
+            "label": "#ff1493",
+            "dot": "#ff1493",
+            "timer": "#ff1493",
+            "close": "#ff69b4",
+            "closeHover": "#ff1493"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#fef9c3",
+            "bombBottomText": "#ff1493"
+        },
+        "shell": {
+            "btnBg": "#f0f8ff",
+            "btnBgHover": "#dce4ea",
+            "btnText": "#475569",
+            "btnBorder": "#008b8b",
+            "muteBg": "#f0f8ff",
+            "muteBgHover": "#dce4ea",
+            "muteText": "#008b8b",
+            "muteBorder": "#008b8b"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#ffffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#008b8b",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#008b8b",
+            "headerLeftBorder": "#aaaaaa",
+            "exportBorder": "#aaaaaa",
+            "editorPanelBorder": "#aaaaaa"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#008b8b"
         }
     },
     "ultra_modern": {
@@ -2737,7 +4513,10 @@ window.THEMES_MORE = {
             "solve": "#bf00ff",
             "editClear": "#ff0055",
             "editBombs": "#cc0044",
-            "editNew": "#444444"
+            "editNew": "#444444",
+            "disabled": "#94a3b8",
+            "hintHover": "#a800e0",
+            "hintDivider": "rgba(255,255,255,0.35)"
         },
         "modal": {
             "bg": "rgba(26, 26, 26, 0.95)",
@@ -2745,7 +4524,8 @@ window.THEMES_MORE = {
             "border": "#ffffff",
             "text": "#00ffff",
             "textMuted": "#666666",
-            "accent": "#bf00ff"
+            "accent": "#bf00ff",
+            "closeHover": "rgba(0,0,0,0.05)"
         },
         "output": {
             "bg": "#111111",
@@ -2759,7 +4539,10 @@ window.THEMES_MORE = {
             "pinUnflipped": "#666666",
             "filter": "#ffffff",
             "portal": "#bf00ff",
-            "cross": "#ffffff"
+            "cross": "#ffffff",
+            "portalPending": "#999999",
+            "bombBlastRing": "#ff0055",
+            "bombBlastRays": "#000000"
         },
         "palette": {
             "bg": "#111111",
@@ -2803,7 +4586,12 @@ window.THEMES_MORE = {
             "megaPrimary": "#ffffff",
             "megaSecondary": "#ffffff",
             "megaGemini": "#ffffff",
-            "megaCopy": "#00ffff"
+            "megaCopy": "#00ffff",
+            "body": "#00ffff",
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#ef4444",
+            "handDrawnShadow": "#000000"
         },
         "mega": {
             "outputBg": "#111111",
@@ -2822,230 +4610,68 @@ window.THEMES_MORE = {
             "hover": "#1c1c1c",
             "text": "#ffffff",
             "border": "#1c1c1c"
+        },
+        "loading": {
+            "overlayBg": "rgba(26, 26, 26, 0.95)",
+            "panelBg": "#111111",
+            "panelBorder": "#ffffff",
+            "title": "#00ffff",
+            "status": "#bf00ff",
+            "percent": "#00ffff",
+            "track": "#111111",
+            "bar": "#bf00ff",
+            "error": "#bf00ff"
+        },
+        "search": {
+            "overlayBg": "rgba(26, 26, 26, 0.95)",
+            "megaStatusText": "#bf00ff",
+            "megaStatusBorder": "#ffffff",
+            "label": "#bf00ff",
+            "dot": "#bf00ff",
+            "timer": "#00ffff",
+            "close": "#666666",
+            "closeHover": "#00ffff"
+        },
+        "jumpscare": {
+            "gooseBg": "rgba(0,0,0,0.4)",
+            "gooseText": "#ffffff",
+            "bombBg": "rgba(0,0,0,0.6)",
+            "bombTopText": "#333333",
+            "bombBottomText": "#ff0055"
+        },
+        "shell": {
+            "btnBg": "#333333",
+            "btnBgHover": "#2e2e2e",
+            "btnText": "#475569",
+            "btnBorder": "#ffffff",
+            "muteBg": "#333333",
+            "muteBgHover": "#2e2e2e",
+            "muteText": "#bf00ff",
+            "muteBorder": "#ffffff"
+        },
+        "header": {
+            "navBg": "rgba(255,255,255,0.2)",
+            "navBgHover": "rgba(255,255,255,0.3)",
+            "navText": "#00ffff",
+            "divider": "rgba(226,232,240,0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0,0,0,0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255,255,255,0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#bf00ff",
+            "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
+        },
+        "layout": {
+            "mainBorder": "#ffffff",
+            "headerLeftBorder": "#444444",
+            "exportBorder": "#444444",
+            "editorPanelBorder": "#444444"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0,0,0,0.05)",
+            "swatchBorder": "#ffffff"
         }
     }
 };
-
-(function normalizeThemeColors() {
-    const CLASSIC_LEAVE = { bg: '#dc2626', hover: '#b91c1c', text: '#ffffff', border: '#b91c1c' };
-
-    const toRgb = (hex, fallback = { r: 220, g: 38, b: 38 }) => {
-        const normalized = (hex || '').replace('#', '');
-        if (!/^[0-9a-fA-F]{6}$/.test(normalized)) return fallback;
-        return { r: parseInt(normalized.slice(0, 2), 16), g: parseInt(normalized.slice(2, 4), 16), b: parseInt(normalized.slice(4, 6), 16) };
-    };
-
-    const darkenHex = (hex, factor = 0.85) => {
-        const { r, g, b } = toRgb(hex);
-        return `#${Math.max(0, Math.floor(r * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(g * factor)).toString(16).padStart(2, '0')}${Math.max(0, Math.floor(b * factor)).toString(16).padStart(2, '0')}`;
-    };
-
-    const collectThemePaths = (obj, prefix = '', out = new Set()) => {
-        if (!obj || typeof obj !== 'object') return out;
-        Object.keys(obj).forEach((key) => {
-            const path = prefix ? `${prefix}.${key}` : key;
-            out.add(path);
-            const value = obj[key];
-            if (value && typeof value === 'object' && !Array.isArray(value)) collectThemePaths(value, path, out);
-        });
-        return out;
-    };
-
-    const leaveFor = (theme) => {
-        const fallbackBase = theme.headerRight || theme.btns?.editClear || theme.btns?.reset || theme.colors?.goal || '#7f1d1d';
-        const leave = theme.leave || {};
-        let bg = leave.bg || fallbackBase;
-        if (bg.toLowerCase() === CLASSIC_LEAVE.bg) bg = theme.headerLeft || theme.colors?.goal || '#7f1d1d';
-        let hover = leave.hover || darkenHex(bg, 0.85);
-        if (hover.toLowerCase() === CLASSIC_LEAVE.hover) hover = darkenHex(bg, 0.78);
-        const { r, g, b } = toRgb(bg);
-        const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
-        return { bg, hover, text: leave.text || (luminance > 0.55 ? '#0f172a' : '#ffffff'), border: leave.border || hover };
-    };
-
-    const normalize = (theme) => {
-        const t = theme || {};
-        t.btns = t.btns || {};
-        t.modal = t.modal || {};
-        t.output = t.output || {};
-        t.colors = t.colors || {};
-        t.palette = t.palette || {};
-        t.win = t.win || {};
-        t.alert = t.alert || {};
-        t.ctrlArea = t.ctrlArea || {};
-        t.text = t.text || {};
-        t.mega = t.mega || {};
-        t.loading = t.loading || {};
-        t.search = t.search || {};
-        t.jumpscare = t.jumpscare || {};
-        t.shell = t.shell || {};
-        t.header = t.header || {};
-        t.editor = t.editor || {};
-        t.layout = t.layout || {};
-        t.themeEditor = t.themeEditor || {};
-
-        t.bodyBg = t.bodyBg || '#e0f2fe';
-        t.canvasBg = t.canvasBg || '#ffffff';
-        t.grid = t.grid || '#94a3b8';
-        t.headerLeft = t.headerLeft || '#dc2626';
-        t.headerRight = t.headerRight || '#2563eb';
-        t.path = t.path || '#2563eb';
-        t.controls = t.controls || 'rgba(255, 255, 255, 0.7)';
-        t.metricText = t.metricText || '#ffffff';
-        t.headerLeftText = t.headerLeftText || '#ffffff';
-        t.headerLeftLabel = t.headerLeftLabel || 'rgba(255, 255, 255, 0.7)';
-        t.ghostBg = t.ghostBg || t.canvasBg;
-        t.ghostBorder = t.ghostBorder || t.headerRight;
-
-        const btnFallbacks = { undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight, hint: t.headerRight, saved: t.headerRight, mega: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight, copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, orient: t.headerRight, solve: t.headerRight, editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight };
-        Object.keys(btnFallbacks).forEach((btnKey) => { t.btns[btnKey] = t.btns[btnKey] || btnFallbacks[btnKey]; });
-
-        t.modal.bg = t.modal.bg || 'rgba(248, 250, 252, 0.95)';
-        t.modal.panelBg = t.modal.panelBg || t.canvasBg;
-        t.modal.border = t.modal.border || t.grid;
-        t.modal.text = t.modal.text || t.headerRight;
-        t.modal.textMuted = t.modal.textMuted || t.grid;
-        t.modal.accent = t.modal.accent || t.headerLeft;
-
-        t.output.bg = t.output.bg || t.bodyBg;
-        t.output.text = t.output.text || t.modal.text;
-
-        t.colors.gate = t.colors.gate || t.headerRight;
-        t.colors.goal = t.colors.goal || t.headerLeft;
-        t.colors.block = t.colors.block || t.canvasBg;
-        t.colors.pin = t.colors.pin || t.colors.goal;
-        t.colors.pinUnflipped = t.colors.pinUnflipped || t.grid;
-        t.colors.filter = t.colors.filter || t.modal.text;
-        t.colors.portal = t.colors.portal || t.headerRight;
-        t.colors.cross = t.colors.cross || t.colors.filter;
-
-        t.palette.bg = t.palette.bg || t.bodyBg;
-        t.palette.border = t.palette.border || t.grid;
-        t.palette.itemBg = t.palette.itemBg || t.canvasBg;
-        t.palette.itemBorder = t.palette.itemBorder || t.grid;
-        t.palette.toolBg = t.palette.toolBg || t.palette.bg;
-
-        t.win.bg = t.win.bg || t.canvasBg;
-        t.win.border = t.win.border || t.headerRight;
-        t.win.text = t.win.text || t.modal.textMuted;
-        t.win.accent = t.win.accent || t.modal.accent;
-
-        t.alert.bg = t.alert.bg || t.headerLeft;
-        t.alert.stroke = t.alert.stroke || t.grid;
-
-        t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
-        t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
-
-        t.text.modal = t.text.modal || t.modal.text;
-        t.text.modalMuted = t.text.modalMuted || t.modal.textMuted;
-        t.text.modalAccent = t.text.modalAccent || t.modal.accent;
-        t.text.output = t.text.output || t.output.text;
-        t.text.metric = t.text.metric || t.metricText;
-        t.text.headerMain = t.text.headerMain || t.headerLeftText;
-        t.text.headerSub = t.text.headerSub || t.headerLeftLabel;
-        t.text.win = t.text.win || t.win.text;
-        t.text.winAccent = t.text.winAccent || t.win.accent;
-        t.text.megaDesc = t.text.megaDesc || t.modal.textMuted;
-        t.text.megaOutput = t.text.megaOutput || t.output.text;
-        t.text.megaPrimary = t.text.megaPrimary || '#ffffff';
-        t.text.megaSecondary = t.text.megaSecondary || '#ffffff';
-        t.text.megaGemini = t.text.megaGemini || '#ffffff';
-        t.text.megaCopy = t.text.megaCopy || t.modal.text;
-        t.text.body = t.text.body || t.modal.text;
-        t.text.shellBtn = t.text.shellBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#475569');
-        t.text.actionBtn = t.text.actionBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#ffffff');
-        t.text.error = t.text.error || t.loading.error || '#ef4444';
-        t.text.handDrawnShadow = t.text.handDrawnShadow || '#000000';
-
-        t.btns.disabled = t.btns.disabled || '#94a3b8';
-        const hintBase = t.btns.hint || t.btns.guide || t.headerRight;
-        const hintRgb = toRgb(hintBase, { r: 207, g: 107, b: 23 });
-        const hintLuminance = (0.2126 * hintRgb.r + 0.7152 * hintRgb.g + 0.0722 * hintRgb.b) / 255;
-        t.btns.hintHover = t.btns.hintHover || darkenHex(hintBase, 0.88);
-        t.btns.hintDivider = t.btns.hintDivider || (hintLuminance > 0.55 ? 'rgba(15,23,42,0.35)' : 'rgba(255,255,255,0.35)');
-
-        t.loading.overlayBg = t.loading.overlayBg || t.modal.bg;
-        t.loading.panelBg = t.loading.panelBg || t.output.bg;
-        t.loading.panelBorder = t.loading.panelBorder || t.modal.border;
-        t.loading.title = t.loading.title || t.text.headerMain || '#ffffff';
-        t.loading.status = t.loading.status || t.text.output;
-        t.loading.percent = t.loading.percent || t.text.headerMain || '#ffffff';
-        t.loading.track = t.loading.track || t.palette.toolBg || t.modal.panelBg;
-        t.loading.bar = t.loading.bar || t.path || t.headerRight;
-        t.loading.error = t.loading.error || t.text.output;
-
-        t.search.overlayBg = t.search.overlayBg || t.modal.bg;
-        t.search.megaStatusText = t.search.megaStatusText || t.text.megaOutput;
-        t.search.megaStatusBorder = t.search.megaStatusBorder || t.mega.outputBorder || t.modal.border;
-        t.search.label = t.search.label || t.text.output;
-        t.search.dot = t.search.dot || t.path || t.headerRight;
-        t.search.timer = t.search.timer || t.text.modal;
-        t.search.close = t.search.close || t.text.modalMuted;
-        t.search.closeHover = t.search.closeHover || t.text.modal;
-
-        t.jumpscare.gooseBg = t.jumpscare.gooseBg || 'rgba(0,0,0,0.4)';
-        t.jumpscare.gooseText = t.jumpscare.gooseText || '#ffffff';
-        t.jumpscare.bombBg = t.jumpscare.bombBg || 'rgba(0,0,0,0.6)';
-        t.jumpscare.bombTopText = t.jumpscare.bombTopText || t.burst || '#fde047';
-        t.jumpscare.bombBottomText = t.jumpscare.bombBottomText || t.colors.goal || '#f97316';
-
-        t.shell.btnBg = t.shell.btnBg || t.btns.mute;
-        t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.92);
-        t.shell.btnText = t.shell.btnText || t.text.shellBtn;
-        t.shell.btnBorder = t.shell.btnBorder || t.modal.border;
-        t.shell.muteBg = t.shell.muteBg || t.btns.mute;
-        t.shell.muteBgHover = t.shell.muteBgHover || darkenHex(t.shell.muteBg, 0.92);
-        t.shell.muteText = t.shell.muteText || t.btns.muteIcon;
-        t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
-
-        t.header.navBg = t.header.navBg || 'rgba(255,255,255,0.2)';
-        t.header.navBgHover = t.header.navBgHover || 'rgba(255,255,255,0.3)';
-        t.header.navText = t.header.navText || t.text.headerMain;
-        t.header.divider = t.header.divider || 'rgba(226,232,240,0.2)';
-
-        t.editor.inputBg = t.editor.inputBg || 'rgba(0,0,0,0.15)';
-        t.editor.inputText = t.editor.inputText || '#ffffff';
-        t.editor.inputBorder = t.editor.inputBorder || 'rgba(255,255,255,0.3)';
-        t.editor.inputFocus = t.editor.inputFocus || '#ffffff';
-        t.editor.toolIcon = t.editor.toolIcon || t.btns.muteIcon;
-        t.editor.paletteShadow = t.editor.paletteShadow || '0 0 0 2px rgba(59,130,246,0.3)';
-
-        t.layout.mainBorder = t.layout.mainBorder || t.modal.border;
-        t.layout.headerLeftBorder = t.layout.headerLeftBorder || t.grid;
-        t.layout.exportBorder = t.layout.exportBorder || t.palette.border;
-        t.layout.editorPanelBorder = t.layout.editorPanelBorder || t.palette.border;
-
-        t.themeEditor.panelBg = t.themeEditor.panelBg || 'rgba(0,0,0,0.05)';
-        t.themeEditor.swatchBorder = t.themeEditor.swatchBorder || t.modal.border;
-
-        t.modal.closeHover = t.modal.closeHover || 'rgba(0,0,0,0.05)';
-
-        t.colors.portalPending = t.colors.portalPending || '#999999';
-        t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
-        t.colors.bombBlastRays = t.colors.bombBlastRays || t.headerLeft;
-
-        t.mega.outputBg = t.mega.outputBg || t.output.bg;
-        t.mega.outputBorder = t.mega.outputBorder || t.modal.border;
-        t.mega.primaryBg = t.mega.primaryBg || t.btns.mega || t.headerRight;
-        t.mega.primaryBorder = t.mega.primaryBorder || t.modal.border;
-        t.mega.secondaryBg = t.mega.secondaryBg || darkenHex(t.mega.primaryBg, 0.88);
-        t.mega.secondaryBorder = t.mega.secondaryBorder || t.modal.border;
-        t.mega.geminiBg = t.mega.geminiBg || t.btns.guide || t.headerRight;
-        t.mega.geminiBorder = t.mega.geminiBorder || t.modal.border;
-        t.mega.copyBg = t.mega.copyBg || t.btns.copy || t.modal.panelBg;
-        t.mega.copyBorder = t.mega.copyBorder || t.modal.border;
-
-        t.burst = t.burst || t.palette.itemBg;
-        t.check = t.check || t.colors.filter;
-        t.leave = leaveFor(t);
-        return t;
-    };
-
-    const requiredThemePaths = collectThemePaths(normalize({}, '__schema__'));
-    Object.keys(window.THEMES_MORE).forEach((key) => {
-        window.THEMES_MORE[key] = normalize(window.THEMES_MORE[key]);
-        const paths = collectThemePaths(window.THEMES_MORE[key]);
-        const missing = Array.from(requiredThemePaths).filter((path) => !paths.has(path));
-        if (missing.length) throw new Error(`Theme "${key}" missing schema keys: ${missing.join(', ')}`);
-    });
-})();
