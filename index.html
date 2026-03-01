@@ -3613,7 +3613,27 @@
 
             function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(IDLE); APP.Engine.setOverlayState(OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } updateAppScale(); updateViewport(); syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
-            function updatePencilState() { const btn = document.getElementById('editPencilBtn'); const svg = btn.querySelector('svg'); const path = svg.querySelector('path'); const outlinePath = svg.dataset.outlinePath; const solidPath = svg.dataset.solidPath; if (APP.State.ENGINE.editor.isPencilMode) { btn.classList.add('selected'); svg.setAttribute('fill', 'currentColor'); svg.setAttribute('stroke', 'none'); if (path && solidPath) path.setAttribute('d', solidPath); } else { btn.classList.remove('selected'); svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); if (path && outlinePath) path.setAttribute('d', outlinePath); } }
+            function updatePencilState() {
+                const button = document.getElementById('editPencilBtn');
+                const svg = button.querySelector('svg');
+                const path = svg.querySelector('path');
+                const outlinePath = svg.dataset.outlinePath;
+                const solidPath = svg.dataset.solidPath;
+                const isPencilMode = APP.State.ENGINE.editor.isPencilMode === true;
+
+                if (isPencilMode) {
+                    button.classList.add('selected');
+                    svg.setAttribute('fill', 'currentColor');
+                    svg.setAttribute('stroke', 'none');
+                    path.setAttribute('d', solidPath);
+                    return;
+                }
+
+                button.classList.remove('selected');
+                svg.setAttribute('fill', 'none');
+                svg.setAttribute('stroke', 'currentColor');
+                path.setAttribute('d', outlinePath);
+            }
 
 
 
