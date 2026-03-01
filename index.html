@@ -2036,7 +2036,7 @@
                     if (l.portalMap.has(key)) degree++;
                     return degree;
                 },
-                _getRawNeighborsWithPortals(k, l) {
+                _getRawNeighbors(k, l) {
                     const { w, h } = l.grid;
                     const neighbors = [];
                     const x = k & 0xFFFF;
@@ -2045,8 +2045,6 @@
                     if (x > 0) neighbors.push(k - 1);
                     if (y + 1 < h) neighbors.push(k + (1 << 16));
                     if (y > 0) neighbors.push(k - (1 << 16));
-                    const portal = APP.LevelUtils.resolvePortal(l, k);
-                    if (portal && portal.dest !== -1) neighbors.push(portal.dest);
                     return neighbors;
                 },
                 _checkTopology(state, currentK, rSteps, l) {
@@ -2067,18 +2065,34 @@
 
                         if (foundGoal && volume >= rSteps) return true;
 
-                        const neighbors = this._getRawNeighborsWithPortals(k, l);
+                        // 1. Get standard grid neighbors
+                        const neighbors = this._getRawNeighbors(k, l); 
                         for (let i = 0; i < neighbors.length; i++) {
                             const nk = neighbors[i];
-                            if (l.blockSet.has(nk)) continue;
                             const nIdx = state.keyToIdx(nk);
-                            if (this.topoVisited[nIdx] === 1) continue;
-                            const isVisited = state.countsArr && state.countsArr[nIdx] > 0;
-                            const isGate = l.gateSet && l.gateSet.has(nk);
-
-                            if (!isVisited || isGate) {
-                                this.topoVisited[nIdx] = 1;
-                                this.topoQueue[tail++] = nk;
+                            if (!l.blockSet.has(nk) && this.topoVisited[nIdx] === 0) {
+                                const isVisited = state.countsArr && state.countsArr[state.keyToIdx(nk)] > 0;
+                                const isGate = l.gateSet && l.gateSet.has(nk);
+                                if (!isVisited || isGate) {
+                                    this.topoVisited[nIdx] = 1;
+                                    this.topoQueue[tail++] = nk;
+                                }
+                            }
+                        }
+                        
+                        // 2. NEW: Check for Portal Connectivity
+                        const pDest = l.portalMap ? l.portalMap.get(k) : null;
+                        if (pDest) {
+                            const nk = pDest.dest;
+                            const nIdx = state.keyToIdx(nk);
+                            // Portals are forced jumps; destinations are always 'reachable' 
+                            // if the portal hasn't been used yet in this branch.
+                            if (this.topoVisited[nIdx] === 0) {
+                                const isVisited = state.countsArr && state.countsArr[state.keyToIdx(k)] > 0;
+                                if (!isVisited) {
+                                    this.topoVisited[nIdx] = 1;
+                                    this.topoQueue[tail++] = nk;
+                                }
                             }
                         }
                     }
