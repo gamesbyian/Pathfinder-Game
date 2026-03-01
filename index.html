@@ -2773,7 +2773,7 @@
                     level.hasParityBreaker = false;
                     level.portalMap.forEach((v, k) => {
                         const p1 = APP.LevelUtils.UNPACK(k), p2 = APP.LevelUtils.UNPACK(v.dest);
-                        if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) level.hasParityBreaker = true;
+                        if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) level.hasParityBreaker = true;
                         else flipperSet.add(k);
                     });
                     const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
@@ -3593,11 +3593,11 @@
                 } finally { clearTimeout(timer); }
             }
 
-            async function runGameSolver(purpose = 'solve') {
+            async function runGameSolver(purpose = 'solve', escalationTier = 0) {
                 if (APP.Solver.isRunning()) return;
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-                const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose });
+                const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose, escalationTier });
                 const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 solverResult.solution = canonical;
                 solverResult.solutions = canonical;
@@ -3626,6 +3626,7 @@
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution found within budget.');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }
+                return solverResult;
             }
 
             function startHintAnimation() {
@@ -4945,7 +4946,7 @@
             // C) Level / NormalizeAndCaches
             // ======================================================
 
-            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [], hasParityBreaker: false }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) === ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; }); return l; }
+            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [], hasParityBreaker: false }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; }); return l; }
 
             function denormalizeLevel(level) {
                 if (!level || !level.grid) return null;
@@ -6357,6 +6358,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const init = () => {
             if (initialized) return;
             initialized = true;
+            let consecutiveHintFails = 0;
+            let consecutiveSolveFails = 0;
+            const resetSearchEscalation = () => {
+                consecutiveHintFails = 0;
+                consecutiveSolveFails = 0;
+            };
         const tryNavigate = (actionFn) => { if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isModified) { APP.State.ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
         document.getElementById('unsavedStayBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.runtime.pendingAction = null; APP.UI.closeModal('unsavedModal'); };
         document.getElementById('unsavedLeaveBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.closeModal('unsavedModal'); if (APP.State.ENGINE.runtime.pendingAction) APP.State.ENGINE.runtime.pendingAction(); };
@@ -6369,6 +6376,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const handleDown = (e) => {
             if (APP.State.ENGINE.activeSolverController || [APP.Core.RESOLVED, APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) || [APP.Core.HINT_ANIMATING, APP.Core.FALSE_GOAL_ANIMATING, APP.Core.SOLVER_RUNNING].includes(APP.State.ENGINE.overlayState)) return;
+            const pathBeforeMove = APP.State.ENGINE.path.join(',');
             const p = APP.LevelUtils.getGridCoord(e); const k = APP.LevelUtils.PACK(p.x, p.y); const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
             APP.State.ENGINE.resetStreak = 0;
             if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) {
@@ -6397,6 +6405,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     if (bestGate !== null) { APP.State.ENGINE.activeGateKey = bestGate; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, bestGate, false); APP.Engine.setLogicState(APP.Core.DRAGGING); if (bestGate !== k) { APP.Engine.handlePrimaryGridInput(p); } }
                 }
             }
+            if (APP.State.ENGINE.path.join(',') !== pathBeforeMove) resetSearchEscalation();
         };
 
         const handleUp = (e) => {
@@ -6708,8 +6717,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
                 if (isTopHalf) {
                     try {
-                        await APP.Solver.runGameSolver('hint');
+                        const hintResult = await APP.Solver.runGameSolver('hint', consecutiveHintFails);
+                        if (hintResult?.ok) consecutiveHintFails = 0;
+                        else consecutiveHintFails++;
                     } catch (err) {
+                        consecutiveHintFails++;
                         console.error('Hint solve failed:', err);
                         APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
                         APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
@@ -6817,7 +6829,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
         document.getElementById('editMegaSolver').onclick = () => {
             APP.UI.closeAllModals();
-            APP.Solver.runGameSolver('solve');
+            APP.Solver.runGameSolver('solve', consecutiveSolveFails).then((solveResult) => {
+                if (solveResult?.ok) consecutiveSolveFails = 0;
+                else consecutiveSolveFails++;
+            }).catch((err) => {
+                consecutiveSolveFails++;
+                console.error('Solve failed:', err);
+                APP.UI.showMessage(`Solve failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+            });
         };
         document.getElementById('editCopyMetrics').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const len = APP.Engine.getRealLength(); APP.UI.setInputValue('editReqLen', len); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.intersections); APP.Editor.applyMetricsFromUI(); APP.UI.showMessage("Metrics Set", "text-white font-black"); } };
 
