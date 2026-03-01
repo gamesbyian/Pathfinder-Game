@@ -593,10 +593,16 @@
         };
         const getEl = (key) => resolveEl(key);
 
+        const stripAlertTextColorClasses = (className = '') => `${className}`
+            .split(/\s+/)
+            .filter(token => token && !/^!?text-/.test(token))
+            .join(' ');
+
         const setStatus = (text = '', severity = 'info', className = '') => {
             const el = getEl('message');
             if (!el) return;
-            el.className = `font-black text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg ${className}`.trim();
+            const safeClassName = stripAlertTextColorClasses(className);
+            el.className = `font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg ${safeClassName}`.trim();
             el.dataset.severity = severity;
             setText(el, text);
         };
@@ -5706,6 +5712,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.alert.bg = t.alert.bg || t.headerLeft;
         t.alert.stroke = t.alert.stroke || t.grid;
 
+        const pickContrastText = (bg, light = '#f8fafc', dark = '#0f172a') => {
+            const rgb = toRgb(bg, { r: 30, g: 41, b: 59 });
+            const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+            return luminance > 0.55 ? dark : light;
+        };
+
         t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
         t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
 
@@ -5764,10 +5776,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         t.shell.btnBg = t.shell.btnBg || t.btns.orient || t.btns.modeToggle || t.btns.mute;
         t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.92);
-        t.shell.btnText = t.shell.btnText || t.text.shellBtn;
+        t.shell.btnText = pickContrastText(t.shell.btnBg);
         t.shell.btnBorder = t.shell.btnBorder || t.modal.border;
         t.shell.muteBg = t.shell.muteBg || t.btns.orient || t.btns.modeToggle || t.btns.mute;
         t.shell.muteBgHover = t.shell.muteBgHover || darkenHex(t.shell.muteBg, 0.92);
+        t.text.shellBtn = pickContrastText(t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b');
+        t.alert.text = pickContrastText(t.alert.bg, '#ffffff', '#0f172a');
         t.shell.muteText = t.shell.muteText || t.btns.muteIcon;
         t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
 
@@ -5806,6 +5820,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.mega.geminiBorder = t.mega.geminiBorder || t.modal.border;
         t.mega.copyBg = t.mega.copyBg || t.btns.copy || t.modal.panelBg;
         t.mega.copyBorder = t.mega.copyBorder || t.modal.border;
+
+        if (['candy_apple','hello_kitty','roygbiv','vegas','sherbet'].includes(key)) {
+            const vibrantModeToggle = {
+                candy_apple: { bg: '#ff0800', text: '#ffffff' },
+                hello_kitty: { bg: '#ff1493', text: '#3b0a26' },
+                roygbiv: { bg: '#ff7a00', text: '#0f172a' },
+                vegas: { bg: '#ff00cc', text: '#0f172a' },
+                sherbet: { bg: '#ff8a3d', text: '#0f172a' }
+            };
+            const mode = vibrantModeToggle[key];
+            t.btns.modeToggle = mode.bg;
+            t.text.actionBtn = mode.text;
+        }
 
         t.burst = t.burst || t.palette.itemBg;
         t.check = t.check || t.colors.filter;
