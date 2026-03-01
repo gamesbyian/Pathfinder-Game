@@ -2085,11 +2085,11 @@
                         if (pDest) {
                             const nk = pDest.dest;
                             const nIdx = state.keyToIdx(nk);
-                            // Portals are forced jumps; destinations are always 'reachable' 
-                            // if the portal hasn't been used yet in this branch.
                             if (this.topoVisited[nIdx] === 0) {
-                                const isVisited = state.countsArr && state.countsArr[state.keyToIdx(k)] > 0;
-                                if (!isVisited) {
+                                // BUGFIX: Check if the DESTINATION is visited, not the source.
+                                // If we are currently standing on the source, its count is >0, which was causing the solver to falsely prune the branch.
+                                const isVisitedDest = state.countsArr && state.countsArr[nIdx] > 0;
+                                if (!isVisitedDest) {
                                     this.topoVisited[nIdx] = 1;
                                     this.topoQueue[tail++] = nk;
                                 }
