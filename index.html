@@ -513,8 +513,7 @@
         return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS };
     })();
 
-    const { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS } = APP.Core;
-    if (DEV) window.AXIS = AXIS;
+    if (APP.Core.DEV) window.AXIS = APP.Core.AXIS;
 
     // Purpose: sole DOM mutation boundary for non-canvas UI.
     // Owns:
@@ -752,7 +751,7 @@
             setRootCssVar('--grid-modal-height', `${modalRect.height}px`);
         };
 
-        const updateViewport = () => { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); if (rect.width === 0) return; const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return; const swaps = [1, 3, 6, 7]; APP.State.ENGINE.viewport.swapped = swaps.includes(APP.State.ENGINE.variant); const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; APP.State.ENGINE.viewport.cellW = canvas.width / gridW; APP.State.ENGINE.viewport.cellH = canvas.height / gridH; APP.State.ENGINE.isDirty = true; };
+        const updateViewport = () => { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); if (rect.width === 0) return; const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return; const swaps = [1, 3, 6, 7]; APP.State.ENGINE.viewport.swapped = swaps.includes(APP.State.ENGINE.variant); const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; APP.State.ENGINE.viewport.cellW = canvas.width / gridW; APP.State.ENGINE.viewport.cellH = canvas.height / gridH; APP.State.ENGINE.isDirty = true; };
 
         const syncEditorPalettePlacement = () => {
             const pal = document.getElementById('editorPalette');
@@ -760,7 +759,7 @@
             const controlsPane = document.getElementById('controlsPane');
             if (!pal || !gamePane || !controlsPane) return;
             const inLandscape = APP.State.ENGINE.ui.isLandscapeLayout;
-            if (inLandscape && APP.State.ENGINE.mode === EDITOR) {
+            if (inLandscape && APP.State.ENGINE.mode === APP.Core.EDITOR) {
                 if (pal.parentElement !== controlsPane) controlsPane.insertBefore(pal, controlsPane.firstChild);
                 setClassState(pal, 'landscape-editor-tools', true);
             } else {
@@ -844,7 +843,7 @@
 
         // setOverlayState updates state only; APP.UI.applyOverlayState renders it.
         const applyOverlayState = (state) => {
-            if (state === SOLVER_RUNNING) {
+            if (state === APP.Core.SOLVER_RUNNING) {
                 setSearchIndicatorVisible(true);
                 setButtonState('solverCloseBtn', { enabled: true });
                 if (!solverAbortRequested) setModalContent('searchLabel', 'Finding Solutions...', 'text');
@@ -1081,7 +1080,7 @@
                 return idx;
             };
             const setThemeDragIdle = () => {
-                if (APP.State.ENGINE.logicState === THEME_DRAG) APP.Engine.setLogicState(IDLE);
+                if (APP.State.ENGINE.logicState === APP.Core.THEME_DRAG) APP.Engine.setLogicState(APP.Core.IDLE);
             };
             const setSwatchSelected = (elOrNull) => {
                 document.querySelectorAll('.theme-swatch-selected').forEach(el => el.classList.remove(...selectedClasses));
@@ -1146,7 +1145,7 @@
                     interaction.startY = ev.clientY;
                     interaction.moved = false;
                     setDragGhost({ visible: true, color: srcMeta.color, x: ev.clientX, y: ev.clientY });
-                    if (APP.State.ENGINE.logicState !== THEME_DRAG) APP.Engine.setLogicState(THEME_DRAG);
+                    if (APP.State.ENGINE.logicState !== APP.Core.THEME_DRAG) APP.Engine.setLogicState(APP.Core.THEME_DRAG);
                 } catch (err) {
                     console.error('Theme swatch pointerdown failed:', err);
                     setDragGhost({ visible: false });
@@ -1297,10 +1296,10 @@
                     aiGrid.innerHTML = '<span class="text-[0.55rem] font-bold text-[var(--theme-modal-muted)] animate-pulse uppercase tracking-widest">Calling Specialist...</span>';
                     const { colors, error } = await APP.Themes.fetchGeminiThemeColors(themeKey, t);
                     if (colors && colors.length >= 6) {
-                        if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
-                        window.THEME_AI_COLORS[themeKey] = colors.slice(0, 6);
+                        const aiColors = APP.Themes.getThemeAiColorsStore();
+                        aiColors[themeKey] = colors.slice(0, 6);
                         aiGrid.innerHTML = '';
-                        window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, "Misc")));
+                        aiColors[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, "Misc")));
                     } else {
                         aiGrid.innerHTML = '';
                         const failWrap = document.createElement('div');
@@ -1317,8 +1316,8 @@
                         aiGrid.appendChild(failWrap);
                     }
                 };
-                if (!window.THEME_AI_COLORS) window.THEME_AI_COLORS = {};
-                if (window.THEME_AI_COLORS[themeKey]) window.THEME_AI_COLORS[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, "Misc")));
+                const aiColors = APP.Themes.getThemeAiColorsStore();
+                if (aiColors[themeKey]) aiColors[themeKey].forEach(c => aiGrid.appendChild(buildSwatch(c, "Misc")));
                 else {
                     const genBtn = document.createElement('button');
                     genBtn.className = "bg-[var(--theme-modal-panel)] border border-[var(--theme-modal-border)] text-[var(--theme-modal-text)] px-4 py-2 rounded-lg font-black text-[0.6rem] uppercase tracking-widest shadow-sm hover:brightness-95 transition active:scale-95";
@@ -1347,11 +1346,12 @@
                 const undoBtn = document.createElement('button');
                 undoBtn.className = "bg-slate-500 text-white px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:bg-slate-600 transition shadow-sm shrink-0";
                 undoBtn.innerText = "Undo";
-                const canUndo = window.THEME_UNDO_STACKS && window.THEME_UNDO_STACKS[themeKey] && window.THEME_UNDO_STACKS[themeKey].length > 0;
+                const undoStacks = APP.Themes.getThemeUndoStacksStore();
+                const canUndo = undoStacks[themeKey] && undoStacks[themeKey].length > 0;
                 if (!canUndo) { undoBtn.disabled = true; undoBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
                 undoBtn.onclick = () => {
                     if (canUndo) {
-                        const prev = window.THEME_UNDO_STACKS[themeKey].pop();
+                        const prev = undoStacks[themeKey].pop();
                         APP.Themes.THEMES[themeKey] = JSON.parse(JSON.stringify(prev));
                         renderAll();
                         APP.Themes.populateThemes();
@@ -1361,10 +1361,10 @@
                 resetBtn.className = "bg-red-600 text-white px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:bg-red-700 transition shadow-sm shrink-0";
                 resetBtn.innerText = "Reset";
                 resetBtn.onclick = () => {
-                    if (window.ORIGINAL_THEMES && window.ORIGINAL_THEMES[themeKey]) {
-                        APP.Themes.THEMES[themeKey] = JSON.parse(JSON.stringify(window.ORIGINAL_THEMES[themeKey]));
-                        if (!window.THEME_UNDO_STACKS) window.THEME_UNDO_STACKS = {};
-                        window.THEME_UNDO_STACKS[themeKey] = [];
+                    const originalThemes = APP.Themes.getOriginalThemesStore();
+                    if (originalThemes && originalThemes[themeKey]) {
+                        APP.Themes.THEMES[themeKey] = JSON.parse(JSON.stringify(originalThemes[themeKey]));
+                        undoStacks[themeKey] = [];
                         renderAll();
                         APP.Themes.populateThemes();
                     }
@@ -1379,13 +1379,14 @@
 
             const renderAll = () => {
                 ensureInit();
-                if (!teDom.list || !window.ORIGINAL_THEMES) return;
+                const originalThemes = APP.Themes.getOriginalThemesStore();
+                if (!teDom.list || !originalThemes) return;
                 clearArmedSelection();
                 resetPointerState();
                 teDom.list.innerHTML = '';
                 swatchMetaByIdx.clear();
                 nextSwatchIdx = 0;
-                const keys = Object.keys(window.ORIGINAL_THEMES).filter(k => k !== 'classic');
+                const keys = Object.keys(originalThemes).filter(k => k !== 'classic');
                 keys.forEach((key, idx) => {
                     teDom.list.appendChild(renderThemeKey(key));
                     if (idx < keys.length - 1) {
@@ -1512,7 +1513,7 @@
         const SolverCore = {
                 _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet, options = {}) {
                     return APP.LevelUtils.isValidMove(key, {
-                        mode: PLAY,
+                        mode: APP.Core.PLAY,
                         path,
                         visitedCounts: counts,
                         cellUsage: usage,
@@ -1906,8 +1907,8 @@
                     const lastK = s.path[s.path.length - 1];
                     if (!isJump) {
                         const lP = APP.LevelUtils.UNPACK(lastK), cP = APP.LevelUtils.UNPACK(k);
-                        const axis = (cP.y === lP.y) ? H : V;
-                        const prop = axis === H ? 'h' : 'v';
+                        const axis = (cP.y === lP.y) ? APP.Core.H : APP.Core.V;
+                        const prop = axis === APP.Core.H ? 'h' : 'v';
                         let uL = s.usage.get(lastK);
                         if (!uL) {
                             uL = { h: false, v: false };
@@ -2765,7 +2766,7 @@
                     }
                 });
             } finally {
-                APP.Engine.setOverlayState(OVERLAY_NONE);
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 this.clearProgress();
                 this.showReport();
                 this.active = false;
@@ -2797,7 +2798,7 @@
             if (APP.State.ENGINE.activeSolverController) return null;
             APP.State.ENGINE.activeSolverController = new AbortController();
             APP.State.ENGINE.solverAbortRequested = false;
-            APP.Engine.setOverlayState(SOLVER_RUNNING);
+            APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
             runStart = Date.now();
             status = { running: true, mode, startedAt: runStart };
             APP.UI.setModalContent('searchLabel', label, 'text');
@@ -2814,7 +2815,7 @@
             APP.State.ENGINE.activeSolverController = null;
             status = { running: false, mode: null, startedAt: 0 };
             APP.State.ENGINE.solverAbortRequested = false;
-            APP.Engine.setOverlayState(OVERLAY_NONE);
+            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
             APP.UI.setButtonState('solverCloseBtn', { enabled: true });
         };
 
@@ -2822,7 +2823,7 @@
             const normalizedEntries = normalizeSolutionEntries(solutionEntries);
             const paths = normalizedEntries.map(sol => sol.path);
             if (!Array.isArray(paths) || paths.length === 0) return;
-            if (APP.State.ENGINE.mode === EDITOR) APP.Editor.setWorkingLevelHintsFromSolutions(paths.slice(0, 4));
+            if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.Editor.setWorkingLevelHintsFromSolutions(paths.slice(0, 4));
             APP.State.ENGINE.hinter.pathList = paths;
             const seenHints = new Set((APP.State.ENGINE.foundHintsSinceLoad || []).map(p => JSON.stringify(p)));
             if (!APP.State.ENGINE.foundHintsSinceLoad) APP.State.ENGINE.foundHintsSinceLoad = [];
@@ -3089,7 +3090,7 @@
                     const prev = path[i - 1];
                     const cur = path[i];
                     if (!APP.LevelUtils.isValidMove(cur, {
-                        mode: PLAY,
+                        mode: APP.Core.PLAY,
                         path: path.slice(0, i),
                         visitedCounts: counts,
                         cellUsage: usage,
@@ -3102,10 +3103,10 @@
                     }
                     const prevP = APP.LevelUtils.UNPACK(prev);
                     const curP = APP.LevelUtils.UNPACK(cur);
-                    const axis = (prevP.y === curP.y) ? H : V;
+                    const axis = (prevP.y === curP.y) ? APP.Core.H : APP.Core.V;
                     const updateUsage = (from, ax) => {
                         if (!usage.has(from)) usage.set(from, { h: false, v: false });
-                        usage.get(from)[ax === H ? 'h' : 'v'] = true;
+                        usage.get(from)[ax === APP.Core.H ? 'h' : 'v'] = true;
                     };
                     updateUsage(prev, axis);
                     updateUsage(cur, axis);
@@ -3119,7 +3120,7 @@
                     const portal = APP.LevelUtils.resolvePortal(level, prev);
                     if (portal && portal.dest === cur) jumpSet.add(i);
                 }
-                const finalState = { mode: PLAY, level, editor: { workingLevel: level }, path, isPortalJump: jumpSet, visitedCounts: counts, intersections };
+                const finalState = { mode: APP.Core.PLAY, level, editor: { workingLevel: level }, path, isPortalJump: jumpSet, visitedCounts: counts, intersections };
                 if (path[path.length - 1] !== level.goalKey) return { ok: false, reason: 'Path does not end at goal.' };
                 if (!APP.Engine.areWinMetricsSatisfied(finalState, level)) return { ok: false, reason: 'Path fails reqLen/reqInt/must rules.' };
                 return { ok: true, path };
@@ -3186,7 +3187,7 @@
             async function runGameSolver(purpose = 'solve') {
                 if (APP.Solver.isRunning()) return;
                 APP.Solver.stopHintAnimation();
-                const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose });
                 const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 solverResult.solution = canonical;
@@ -3203,10 +3204,10 @@
                 } else if (solverResult.rawStatus === 'no-solution-proven') {
                     APP.UI.showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution proven.');
-                    APP.Engine.setOverlayState(OVERLAY_NONE);
+                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else if (solverResult.status === 'aborted') {
                     APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
-                    APP.Engine.setOverlayState(OVERLAY_NONE);
+                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else {
                     if (purpose === 'hint') {
                         APP.UI.showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (15s).', 'text-amber-600');
@@ -3214,13 +3215,13 @@
                         APP.UI.showMessage('No solution found within 15s (inconclusive). Press Solve again to try a deeper strategy (60s + alt ordering).', 'text-amber-600');
                     }
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution found within budget.');
-                    APP.Engine.setOverlayState(OVERLAY_NONE);
+                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }
             }
 
             function startHintAnimation() {
                 if (!APP.State.ENGINE.hinter.pathList.length) return;
-                APP.Engine.setOverlayState(HINT_ANIMATING);
+                APP.Engine.setOverlayState(APP.Core.HINT_ANIMATING);
                 APP.State.ENGINE.hinter.alpha = 1; APP.State.ENGINE.hinter.index = 0;
                 APP.UI.showMessage(`Solution ${APP.State.ENGINE.hinter.currentPathIdx + 1}/${APP.State.ENGINE.hinter.pathList.length}`, "text-emerald-600");
             }
@@ -3230,7 +3231,7 @@
                 APP.State.ENGINE.hinter.currentPathIdx = 0;
                 APP.State.ENGINE.hinter.index = 0;
                 APP.State.ENGINE.hinter.alpha = 0;
-                APP.Engine.setOverlayState(OVERLAY_NONE);
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
             }
 
             function createSolverDebugStats(levelIndex = null) {
@@ -3537,9 +3538,9 @@
     // ======================================================
     APP.State = (() => {
         const ENGINE = {
-        mode: PLAY,
-        logicState: IDLE,
-        overlayState: OVERLAY_NONE,
+        mode: APP.Core.PLAY,
+        logicState: APP.Core.IDLE,
+        overlayState: APP.Core.OVERLAY_NONE,
         isDevMode: false,
         levelIdx: 0,
         variant: 0,
@@ -3609,7 +3610,7 @@
         const bind = ({ ENGINE: engineRef, UI: uiRef }) => { refs = { ENGINE: engineRef, UI: uiRef }; };
         const init = bind;
 
-            function areWinMetricsSatisfied(state = APP.State.ENGINE, level = (state.mode === PLAY ? state.level : state.editor.workingLevel)) {
+            function areWinMetricsSatisfied(state = APP.State.ENGINE, level = (state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel)) {
                 if (!level || !state.path.length) return false;
                 const curLen = APP.Engine.getRealLength(state);
                 if (curLen !== level.reqLen || state.intersections !== level.reqInt) return false;
@@ -3618,7 +3619,7 @@
                 return allMustPass && allMustCross;
             }
 
-            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); SOUND_BUS.play("E4", "32n"); return "valid"; } if (APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
+            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); APP.Core.SOUND_BUS.play("E4", "32n"); return "valid"; } if (APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
                     isStrict: true,
                     mode: APP.State.ENGINE.mode,
                     allowJump: true,
@@ -3626,17 +3627,17 @@
                     checkHazards: false,
                     checkFalseGoals: false,
                     armedFalseGoals: APP.State.ENGINE.armedFalseGoals
-                })) { APP.State.ENGINE.isDirty = true; if (APP.State.ENGINE.mode === EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } APP.Engine.setLogicState(HAZARD_TRIGGERED); SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = APP.LevelUtils.resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); SOUND_BUS.play("A5", "16n"); APP.Engine.setLogicState(PORTAL_PAUSE); checkWinCondition(); return "portal"; } SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
+                })) { APP.State.ENGINE.isDirty = true; if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== APP.Core.EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } APP.Engine.setLogicState(APP.Core.HAZARD_TRIGGERED); APP.Core.SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = APP.LevelUtils.resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); APP.Core.SOUND_BUS.play("A5", "16n"); APP.Engine.setLogicState(APP.Core.PORTAL_PAUSE); checkWinCondition(); return "portal"; } APP.Core.SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
 
 
-            function attemptMoveTo(target) { if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
+            function attemptMoveTo(target) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
 
-            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(RESOLVED); document.getElementById('winSolutionOutput').value = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); document.getElementById('winExportArea').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (APP.State.ENGINE.mode === PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); SOUND_BUS.play("C5", "8n"); } }
+            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(APP.Core.RESOLVED); document.getElementById('winSolutionOutput').value = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); document.getElementById('winExportArea').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); APP.Core.SOUND_BUS.play("C5", "8n"); } }
 
-            function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [HAZARD_TRIGGERED].includes(logicState) || mode === EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return APP.Engine.areWinMetricsSatisfied(stubState, level); }
+            function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [APP.Core.HAZARD_TRIGGERED].includes(logicState) || mode === APP.Core.EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return APP.Engine.areWinMetricsSatisfied(stubState, level); }
 
             function checkFalseGoalCondition() {
-                const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 if (!l) return false;
                 return getRealLength() === l.reqLen && APP.State.ENGINE.intersections === l.reqInt;
             }
@@ -3644,10 +3645,10 @@
 
             function triggerJumpScare() {
                 APP.UI.showGooseJumpScare();
-                APP.Engine.setOverlayState(GOOSE_OVERLAY);
+                APP.Engine.setOverlayState(APP.Core.GOOSE_OVERLAY);
                 setTimeout(() => {
                     APP.UI.hideGooseJumpScare();
-                    APP.Engine.setOverlayState(OVERLAY_NONE);
+                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }, 2500);
             }
 
@@ -3655,15 +3656,15 @@
             function triggerBombDetonation(key) {
                 APP.State.ENGINE.armedFalseGoals.delete(key);
                 APP.State.ENGINE.detonatedFalseGoals.add(key);
-                APP.Engine.setOverlayState(FALSE_GOAL_ANIMATING);
+                APP.Engine.setOverlayState(APP.Core.FALSE_GOAL_ANIMATING);
                 APP.UI.showBombDetonation();
-                SOUND_BUS.play("C2", "8n");
+                APP.Core.SOUND_BUS.play("C2", "8n");
                 setTimeout(() => {
                     APP.UI.showBombDetonation({ explodedMarkup: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="var(--theme-bomb-blast-ring)" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="var(--theme-bomb-blast-rays)" stroke-width="8"/></svg>` });
-                    SOUND_BUS.play("F1", "4n");
+                    APP.Core.SOUND_BUS.play("F1", "4n");
                     setTimeout(() => {
                         APP.UI.hideBombDetonation({ resetMarkup: `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>` });
-                        APP.Engine.setOverlayState(OVERLAY_NONE);
+                        APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                     }, 1000);
                 }, 1000);
             }
@@ -3672,11 +3673,11 @@
 
             function createSnapshot() { return { path: [...APP.State.ENGINE.path], isPortalJump: new Set(APP.State.ENGINE.isPortalJump), activeGateKey: APP.State.ENGINE.activeGateKey, logicState: APP.State.ENGINE.logicState, detonatedFalseGoals: new Set(APP.State.ENGINE.detonatedFalseGoals) }; }
 
-            function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; APP.Engine.setLogicState(snap.logicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
+            function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; APP.Engine.setLogicState(snap.logicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
 
-            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
+            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
-            function switchMode(newMode) { const isEd = newMode === EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(IDLE); APP.Engine.setOverlayState(OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
+            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
             function updatePencilState() {
                 const btn = document.getElementById('editPencilBtn');
@@ -3702,7 +3703,7 @@
 
 
 
-                function getScreenPos(cx, cy) { const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const { tx, ty } = APP.LevelUtils.transformPoint(cx, cy, APP.State.ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * APP.State.ENGINE.viewport.cellW, sy: (ty + 0.5) * APP.State.ENGINE.viewport.cellH }; }
+                function getScreenPos(cx, cy) { const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const { tx, ty } = APP.LevelUtils.transformPoint(cx, cy, APP.State.ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * APP.State.ENGINE.viewport.cellW, sy: (ty + 0.5) * APP.State.ENGINE.viewport.cellH }; }
 
                 const DRAW_REGISTRY = {
                     bomb(drawCtx, size) { const scale = size / 100; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = '#94a3b8'; drawCtx.lineWidth = 4; drawCtx.stroke(); drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = '#ef4444'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill(); },
@@ -3710,8 +3711,8 @@
                     prohibited(drawCtx, size) { drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke(); drawCtx.beginPath(); const lineLen = size * 0.25; drawCtx.moveTo(-lineLen, -lineLen); drawCtx.lineTo(lineLen, lineLen); drawCtx.stroke(); },
                     required(drawCtx, size, color, options = {}) { const tilt = options.isSatisfied ? 15 : -15; drawCtx.rotate(tilt * Math.PI / 180); const scale = size / 35; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.moveTo(-1, 0); drawCtx.lineTo(1, 0); drawCtx.lineTo(1.5, -12); drawCtx.lineTo(-1.5, -12); drawCtx.closePath(); drawCtx.fillStyle = '#94a3b8'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(0, -18, 7, 0, Math.PI * 2); drawCtx.fillStyle = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped; drawCtx.fill(); },
                     mustCross(drawCtx, size, color) { drawCtx.strokeStyle = color; drawCtx.globalAlpha = 0.25; drawCtx.lineWidth = size * 0.08; const outer = size * 0.4, inner = size * 0.18; drawCtx.beginPath(); drawCtx.moveTo(-outer, -inner); drawCtx.lineTo(-inner, -inner); drawCtx.lineTo(-inner, -outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(outer, -inner); drawCtx.lineTo(inner, -inner); drawCtx.lineTo(inner, -outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(-outer, inner); drawCtx.lineTo(-inner, inner); drawCtx.lineTo(-inner, outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(outer, inner); drawCtx.lineTo(inner, inner); drawCtx.lineTo(inner, outer); drawCtx.stroke(); },
-                    filter(drawCtx, size, color, options = {}) { if (options.axis === V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); },
-                    flippingFilter(drawCtx, size, color, options = {}) { drawCtx.rotate(options.rotation || 0); if (options.axis === V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); if (APP.State.ENGINE.mode === EDITOR) { drawCtx.globalAlpha = options.crossed ? 0.4 : 1.0; drawCtx.fillStyle = color; drawCtx.font = `900 ${size * 0.45}px sans-serif`; drawCtx.textAlign = 'center'; drawCtx.textBaseline = 'middle'; drawCtx.fillText('↺', 0, 0); } }
+                    filter(drawCtx, size, color, options = {}) { if (options.axis === APP.Core.V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); },
+                    flippingFilter(drawCtx, size, color, options = {}) { drawCtx.rotate(options.rotation || 0); if (options.axis === APP.Core.V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); if (APP.State.ENGINE.mode === APP.Core.EDITOR) { drawCtx.globalAlpha = options.crossed ? 0.4 : 1.0; drawCtx.fillStyle = color; drawCtx.font = `900 ${size * 0.45}px sans-serif`; drawCtx.textAlign = 'center'; drawCtx.textBaseline = 'middle'; drawCtx.fillText('↺', 0, 0); } }
                 };
 
                 function drawAsset(type, x, y, options = {}) { const drawer = DRAW_REGISTRY[type]; if (!drawer) return; const { sx, sy } = getScreenPos(x, y); const size = options.size ?? APP.State.ENGINE.viewport.cellW; ctx.save(); ctx.translate(sx, sy); ctx.beginPath(); drawer(ctx, size, options.color, options); ctx.restore(); }
@@ -3722,19 +3723,19 @@
 
                 function render() {
 
-                const vp = APP.State.ENGINE.viewport, l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!vp.cellW || !l) return; const th = APP.Themes.THEMES[APP.Themes.getCurrentTheme()]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = APP.State.ENGINE.viewport.swapped ? H : W, dispH = APP.State.ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke();
+                const vp = APP.State.ENGINE.viewport, l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!vp.cellW || !l) return; const th = APP.Themes.THEMES[APP.Themes.getCurrentTheme()]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = APP.State.ENGINE.viewport.swapped ? H : W, dispH = APP.State.ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke();
 
 
 
-                if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.validTrapSpots && APP.State.ENGINE.editor.validTrapSpots.size > 0) { APP.State.ENGINE.editor.validTrapSpots.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2; ctx.save(); ctx.fillStyle = th.colors.goal + '40'; ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = 3; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]); ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.restore(); }); }
+                if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.validTrapSpots && APP.State.ENGINE.editor.validTrapSpots.size > 0) { APP.State.ENGINE.editor.validTrapSpots.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2; ctx.save(); ctx.fillStyle = th.colors.goal + '40'; ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = 3; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]); ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4); ctx.restore(); }); }
 
 
 
                 let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
 
-                if ((APP.State.ENGINE.mode === EDITOR || APP.State.ENGINE.cheatActive) && l.goalKey !== -1) {
+                if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.cheatActive) && l.goalKey !== -1) {
 
-                    reqLen = APP.State.ENGINE.mode === EDITOR ? (parseInt(APP.UI.getValue('editReqLen')) || 0) : l.reqLen;
+                    reqLen = APP.State.ENGINE.mode === APP.Core.EDITOR ? (parseInt(APP.UI.getValue('editReqLen')) || 0) : l.reqLen;
 
                     if (reqLen > 0 || APP.State.ENGINE.path.length > 0 || APP.State.ENGINE.cheatActive) {
 
@@ -3778,7 +3779,7 @@
 
 
 
-                l.portalVisuals.forEach(pv => { const color = APP.State.ENGINE.mode === EDITOR ? pv.color : th.colors.portal; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [APP.LevelUtils.UNPACK(pv.k1), APP.LevelUtils.UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawAsset('prohibited', p.x, p.y); } }); }); ctx.setLineDash([]);
+                l.portalVisuals.forEach(pv => { const color = APP.State.ENGINE.mode === APP.Core.EDITOR ? pv.color : th.colors.portal; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [APP.LevelUtils.UNPACK(pv.k1), APP.LevelUtils.UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawAsset('prohibited', p.x, p.y); } }); }); ctx.setLineDash([]);
 
 
 
@@ -3800,7 +3801,7 @@
 
 
 
-                if (APP.State.ENGINE.overlayState === HINT_ANIMATING && APP.State.ENGINE.hinter.pathList.length) {
+                if (APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING && APP.State.ENGINE.hinter.pathList.length) {
 
                     ctx.save(); ctx.globalAlpha = APP.State.ENGINE.hinter.alpha;
 
@@ -3820,17 +3821,17 @@
 
 
 
-                l.falseGoalKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (APP.State.ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (APP.State.ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (APP.State.ENGINE.mode === EDITOR) { drawAsset('bomb', p.x, p.y); } });
+                l.falseGoalKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (APP.State.ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (APP.State.ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (APP.State.ENGINE.mode === APP.Core.EDITOR) { drawAsset('bomb', p.x, p.y); } });
 
 
 
-                l.gooseSet.forEach(k => { if (APP.State.ENGINE.revealedGeese.has(k) || APP.State.ENGINE.cheatActive || APP.State.ENGINE.mode === EDITOR) { const p = APP.LevelUtils.UNPACK(k); drawAsset('goose', p.x, p.y, { isCheatReveal: APP.State.ENGINE.cheatActive && !APP.State.ENGINE.revealedGeese.has(k) }); } });
+                l.gooseSet.forEach(k => { if (APP.State.ENGINE.revealedGeese.has(k) || APP.State.ENGINE.cheatActive || APP.State.ENGINE.mode === APP.Core.EDITOR) { const p = APP.LevelUtils.UNPACK(k); drawAsset('goose', p.x, p.y, { isCheatReveal: APP.State.ENGINE.cheatActive && !APP.State.ENGINE.revealedGeese.has(k) }); } });
 
 
 
-                if (APP.State.ENGINE.mode === PLAY) { const curLen = APP.Engine.getRealLength(APP.State.ENGINE); document.getElementById('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = document.getElementById('intersectionInfo'); intEl.innerText = `${APP.State.ENGINE.intersections}/${l.reqInt}`; if (APP.State.ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } }
+                if (APP.State.ENGINE.mode === APP.Core.PLAY) { const curLen = APP.Engine.getRealLength(APP.State.ENGINE); document.getElementById('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = document.getElementById('intersectionInfo'); intEl.innerText = `${APP.State.ENGINE.intersections}/${l.reqInt}`; if (APP.State.ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } }
 
-                else if (APP.State.ENGINE.mode === EDITOR) { const curLen = APP.Engine.getRealLength(APP.State.ENGINE); const lMet = document.getElementById('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${APP.State.ENGINE.intersections})`; }
+                else if (APP.State.ENGINE.mode === APP.Core.EDITOR) { const curLen = APP.Engine.getRealLength(APP.State.ENGINE); const lMet = document.getElementById('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${APP.State.ENGINE.intersections})`; }
 
             }
 
@@ -3866,7 +3867,7 @@
 
                 APP.State.ENGINE.levelIdx = idx;
 
-                const isEditor = APP.State.ENGINE.mode === EDITOR;
+                const isEditor = APP.State.ENGINE.mode === APP.Core.EDITOR;
 
                 if (isEditor) { APP.State.ENGINE.variant = 0; }
 
@@ -3874,9 +3875,9 @@
 
 
 
-                APP.Engine.setLogicState(IDLE);
+                APP.Engine.setLogicState(APP.Core.IDLE);
 
-                APP.Engine.setOverlayState(OVERLAY_NONE);
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
 
 
 
@@ -3938,12 +3939,12 @@
             }
 
             function loop() {
-                if (APP.State.ENGINE.overlayState === HINT_ANIMATING && APP.State.ENGINE.hinter.pathList.length) {
+                if (APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING && APP.State.ENGINE.hinter.pathList.length) {
                     APP.State.ENGINE.hinter.index += 0.5; const hPath = APP.State.ENGINE.hinter.pathList[APP.State.ENGINE.hinter.currentPathIdx];
                     if (APP.State.ENGINE.hinter.index >= hPath.length + 40) {
                         APP.State.ENGINE.hinter.alpha -= 0.05;
                         if (APP.State.ENGINE.hinter.alpha <= 0) {
-                            APP.Engine.setOverlayState(OVERLAY_NONE);
+                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                             APP.UI.showMessage("", "");
                         }
                     }
@@ -3952,7 +3953,7 @@
                     if (APP.State.ENGINE.visualFlipCount < APP.State.ENGINE.flipCount) { APP.State.ENGINE.visualFlipCount = Math.min(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount + 0.15); APP.State.ENGINE.isDirty = true; }
                     else if (APP.State.ENGINE.visualFlipCount > APP.State.ENGINE.flipCount) { APP.State.ENGINE.visualFlipCount = Math.max(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount - 0.15); APP.State.ENGINE.isDirty = true; }
                 }
-                const hasContinuousAnimation = APP.State.ENGINE.ripples.length > 0 || APP.State.ENGINE.overlayState === HINT_ANIMATING;
+                const hasContinuousAnimation = APP.State.ENGINE.ripples.length > 0 || APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING;
                 if (hasContinuousAnimation) APP.State.ENGINE.isDirty = true;
                 if (APP.State.ENGINE.isDirty || hasContinuousAnimation) {
                     APP.Renderer.render();
@@ -3965,49 +3966,49 @@
 
             function rebuildDerivedPathState(state = APP.State.ENGINE) {
                 const oldFlipCount = state.flipCount;
-                state.visitedCounts.clear(); state.cellUsage.clear(); state.intersections = 0; state.flipCount = 0; state.crossedFlippingFilters.clear(); const l = state.mode === PLAY ? state.level : state.editor.workingLevel; if (state.path.length === 0) { if (oldFlipCount !== 0) state.lastFlipTime = Date.now(); return; }
+                state.visitedCounts.clear(); state.cellUsage.clear(); state.intersections = 0; state.flipCount = 0; state.crossedFlippingFilters.clear(); const l = state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel; if (state.path.length === 0) { if (oldFlipCount !== 0) state.lastFlipTime = Date.now(); return; }
                 for (let i = 0; i < state.path.length; i++) {
                     const k = state.path[i]; const c = state.visitedCounts.get(k) || 0; if (c > 0 && k !== state.activeGateKey && (l && k !== l.goalKey)) { state.intersections++; } state.visitedCounts.set(k, c + 1);
-                    if (i > 0 && !state.isPortalJump.has(i)) { const prevK = state.path[i-1]; const p1 = APP.LevelUtils.UNPACK(prevK), p2 = APP.LevelUtils.UNPACK(k); const axis = (p2.y === p1.y) ? H : V; let uPrev = state.cellUsage.get(prevK) || { h: false, v: false }; if (axis === H) uPrev.h = true; else uPrev.v = true; state.cellUsage.set(prevK, uPrev); let uCur = state.cellUsage.get(k) || { h: false, v: false }; if (axis === H) uCur.h = true; else uCur.v = true; state.cellUsage.set(k, uCur); }
+                    if (i > 0 && !state.isPortalJump.has(i)) { const prevK = state.path[i-1]; const p1 = APP.LevelUtils.UNPACK(prevK), p2 = APP.LevelUtils.UNPACK(k); const axis = (p2.y === p1.y) ? APP.Core.H : APP.Core.V; let uPrev = state.cellUsage.get(prevK) || { h: false, v: false }; if (axis === APP.Core.H) uPrev.h = true; else uPrev.v = true; state.cellUsage.set(prevK, uPrev); let uCur = state.cellUsage.get(k) || { h: false, v: false }; if (axis === APP.Core.H) uCur.h = true; else uCur.v = true; state.cellUsage.set(k, uCur); }
                     if (l && l.flippingFilterMap.has(k) && !state.crossedFlippingFilters.has(k)) { state.crossedFlippingFilters.set(k, state.flipCount); state.flipCount++; }
                 }
                 if (state.flipCount !== oldFlipCount) state.lastFlipTime = Date.now();
             }
 
-            function assertStateConsistency(state = APP.State.ENGINE) { if (!state.isDevMode) return; const l = state.mode === PLAY ? state.level : state.editor.workingLevel; if (!l) return; const originalIntersections = state.intersections; const originalCounts = new Map(state.visitedCounts); rebuildDerivedPathState(state); if (originalIntersections !== state.intersections) { console.error("Invariant broken: Intersections mismatch."); } originalCounts.forEach((v, k) => { if (state.visitedCounts.get(k) !== v) console.error("Invariant broken: Visited count mismatch."); }); }
+            function assertStateConsistency(state = APP.State.ENGINE) { if (!state.isDevMode) return; const l = state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel; if (!l) return; const originalIntersections = state.intersections; const originalCounts = new Map(state.visitedCounts); rebuildDerivedPathState(state); if (originalIntersections !== state.intersections) { console.error("Invariant broken: Intersections mismatch."); } originalCounts.forEach((v, k) => { if (state.visitedCounts.get(k) !== v) console.error("Invariant broken: Visited count mismatch."); }); }
 
             const PathNavigator = {
                 pushStep(state, key, isJump) {
-                    const l = state.mode === PLAY ? state.level : state.editor.workingLevel; const lastK = state.path[state.path.length - 1];
-                    if (lastK !== undefined && !isJump) { const p1 = APP.LevelUtils.UNPACK(lastK), p2 = APP.LevelUtils.UNPACK(key); const axis = (p2.y === p1.y) ? H : V; const mark = (k, ax) => { let u = state.cellUsage.get(k) || { h: false, v: false }; if (ax === H) u.h = true; else u.v = true; state.cellUsage.set(k, u); }; mark(lastK, axis); mark(key, axis); }
+                    const l = state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel; const lastK = state.path[state.path.length - 1];
+                    if (lastK !== undefined && !isJump) { const p1 = APP.LevelUtils.UNPACK(lastK), p2 = APP.LevelUtils.UNPACK(key); const axis = (p2.y === p1.y) ? APP.Core.H : APP.Core.V; const mark = (k, ax) => { let u = state.cellUsage.get(k) || { h: false, v: false }; if (ax === APP.Core.H) u.h = true; else u.v = true; state.cellUsage.set(k, u); }; mark(lastK, axis); mark(key, axis); }
                     const count = state.visitedCounts.get(key) || 0; if (count > 0 && key !== state.activeGateKey && (l && key !== l.goalKey)) { state.intersections++; } state.visitedCounts.set(key, count + 1); state.path.push(key); if (isJump) state.isPortalJump.add(state.path.length - 1); state.isDirty = true;
                     if (l && l.flippingFilterMap.has(key) && !state.crossedFlippingFilters.has(key)) { state.crossedFlippingFilters.set(key, state.flipCount); state.flipCount++; state.lastFlipTime = Date.now(); }
                     assertStateConsistency(state);
                 },
                 truncateTo(state, targetIdx) {
                     if (targetIdx < -1 || targetIdx >= state.path.length - 1) return; state.path.splice(targetIdx + 1); const newJumps = new Set(); for (const j of state.isPortalJump) if (j <= targetIdx) newJumps.add(j); state.isPortalJump = newJumps;
-                    if (state.path.length === 0) { state.activeGateKey = null; if ([DRAGGING, PORTAL_PAUSE].includes(state.logicState)) { APP.Engine.setLogicState(IDLE); } } if (state.mode === EDITOR) state.editor.isModified = true; state.isDirty = true; rebuildDerivedPathState(state); assertStateConsistency(state);
+                    if (state.path.length === 0) { state.activeGateKey = null; if ([APP.Core.DRAGGING, APP.Core.PORTAL_PAUSE].includes(state.logicState)) { APP.Engine.setLogicState(APP.Core.IDLE); } } if (state.mode === APP.Core.EDITOR) state.editor.isModified = true; state.isDirty = true; rebuildDerivedPathState(state); assertStateConsistency(state);
                 },
-                clear(state) { state.path = []; state.isPortalJump.clear(); state.activeGateKey = null; if ([DRAGGING, PORTAL_PAUSE, HAZARD_TRIGGERED].includes(state.logicState)) { APP.Engine.setLogicState(IDLE); } if (state.mode === EDITOR) state.editor.isModified = true; state.isDirty = true; rebuildDerivedPathState(state); assertStateConsistency(state); }
+                clear(state) { state.path = []; state.isPortalJump.clear(); state.activeGateKey = null; if ([APP.Core.DRAGGING, APP.Core.PORTAL_PAUSE, APP.Core.HAZARD_TRIGGERED].includes(state.logicState)) { APP.Engine.setLogicState(APP.Core.IDLE); } if (state.mode === APP.Core.EDITOR) state.editor.isModified = true; state.isDirty = true; rebuildDerivedPathState(state); assertStateConsistency(state); }
             };
 
             const VALID_LOGIC_TRANSITIONS = {
-                [IDLE]: [DRAGGING, EDIT_DRAG, THEME_DRAG, RESOLVED],
-                [DRAGGING]: [IDLE, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED],
-                [PORTAL_PAUSE]: [DRAGGING, IDLE],
-                [RESOLVED]: [IDLE],
-                [HAZARD_TRIGGERED]: [IDLE],
-                [EDIT_DRAG]: [IDLE],
-                [THEME_DRAG]: [IDLE]
+                [APP.Core.IDLE]: [APP.Core.DRAGGING, APP.Core.EDIT_DRAG, APP.Core.THEME_DRAG, APP.Core.RESOLVED],
+                [APP.Core.DRAGGING]: [APP.Core.IDLE, APP.Core.PORTAL_PAUSE, APP.Core.RESOLVED, APP.Core.HAZARD_TRIGGERED],
+                [APP.Core.PORTAL_PAUSE]: [APP.Core.DRAGGING, APP.Core.IDLE],
+                [APP.Core.RESOLVED]: [APP.Core.IDLE],
+                [APP.Core.HAZARD_TRIGGERED]: [APP.Core.IDLE],
+                [APP.Core.EDIT_DRAG]: [APP.Core.IDLE],
+                [APP.Core.THEME_DRAG]: [APP.Core.IDLE]
             };
 
             function setLogicState(newState) {
-                if (!VALID_LOGIC_TRANSITIONS[APP.State.ENGINE.logicState].includes(newState) && newState !== IDLE) {
+                if (!VALID_LOGIC_TRANSITIONS[APP.State.ENGINE.logicState].includes(newState) && newState !== APP.Core.IDLE) {
                     console.warn(`Blocked Logic Transition: ${APP.State.ENGINE.logicState} -> ${newState}`);
                     return false;
                 }
 
-                if (APP.State.ENGINE.logicState === EDIT_DRAG && newState !== EDIT_DRAG) {
+                if (APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG && newState !== APP.Core.EDIT_DRAG) {
                     APP.UI.EditorDragGhost.update({ visible: false });
                 }
 
@@ -4018,7 +4019,7 @@
             // setOverlayState updates state only; APP.UI.applyOverlayState renders it.
             function setOverlayState(newState) {
                 if (APP.State.ENGINE.overlayState === newState) return true;
-                if (APP.State.ENGINE.overlayState === HINT_ANIMATING && newState !== HINT_ANIMATING) {
+                if (APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING && newState !== APP.Core.HINT_ANIMATING) {
                     APP.State.ENGINE.hinter.alpha = 0;
                 }
 
@@ -4037,7 +4038,7 @@
                 if (typeof levelObjOrIdx === 'number') return loadLevel(levelObjOrIdx, !!options.keepVariant);
                 if (!refs.ENGINE) return;
                 const mode = options.mode || refs.ENGINE.mode;
-                if (mode === PLAY) refs.ENGINE.level = levelObjOrIdx;
+                if (mode === APP.Core.PLAY) refs.ENGINE.level = levelObjOrIdx;
                 else refs.ENGINE.editor.workingLevel = levelObjOrIdx;
                 this.resetRunState({ keepLevel: true });
             },
@@ -4090,9 +4091,9 @@
         const bind = ({ ENGINE: engineRef, UI: uiRef, Engine: engineApi }) => { refs = { ENGINE: engineRef, UI: uiRef, Engine: engineApi }; };
         const init = bind;
 
-            function pickUpObject(k) { if(APP.State.ENGINE.editor.isPencilMode) return null; saveEditorState(); APP.State.ENGINE.editor.draggedFromGrid = true; APP.State.ENGINE.editor.validTrapSpots.clear(); const l = APP.State.ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); APP.State.ENGINE.isDirty = true; return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; APP.State.ENGINE.isDirty = true; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); APP.State.ENGINE.isDirty = true; return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (APP.State.ENGINE.editor.pendingPortal === k) { APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = (getComputedStyle(document.documentElement).getPropertyValue('--theme-portal-pending').trim() || '#999999'); APP.State.ENGINE.editor.pendingPortal = otherK; APP.UI.showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } APP.State.ENGINE.isDirty = true; return {type: 'portal'}; } APP.State.ENGINE.editor.undoStack.pop(); APP.State.ENGINE.editor.draggedFromGrid = false; return null; }
+            function pickUpObject(k) { if(APP.State.ENGINE.editor.isPencilMode) return null; saveEditorState(); APP.State.ENGINE.editor.draggedFromGrid = true; APP.State.ENGINE.editor.validTrapSpots.clear(); const l = APP.State.ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); APP.State.ENGINE.isDirty = true; return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; APP.State.ENGINE.isDirty = true; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); APP.State.ENGINE.isDirty = true; return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === APP.Core.H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === APP.Core.H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (APP.State.ENGINE.editor.pendingPortal === k) { APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; l.portalMap.get(otherK).color = (getComputedStyle(document.documentElement).getPropertyValue('--theme-portal-pending').trim() || '#999999'); APP.State.ENGINE.editor.pendingPortal = otherK; APP.UI.showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } APP.State.ENGINE.isDirty = true; return {type: 'portal'}; } APP.State.ENGINE.editor.undoStack.pop(); APP.State.ENGINE.editor.draggedFromGrid = false; return null; }
 
-            function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { APP.UI.showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return APP.UI.showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, H); break; case 'filterV': l.filterMap.set(k, V); break; case 'flipH': l.flippingFilterMap.set(k, H); break; case 'flipV': l.flippingFilterMap.set(k, V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: (getComputedStyle(document.documentElement).getPropertyValue('--theme-portal-pending').trim() || '#999999') }); APP.UI.showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; const color = APP.State.ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
+            function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { APP.UI.showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return APP.UI.showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, APP.Core.H); break; case 'filterV': l.filterMap.set(k, APP.Core.V); break; case 'flipH': l.flippingFilterMap.set(k, APP.Core.H); break; case 'flipV': l.flippingFilterMap.set(k, APP.Core.V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: (getComputedStyle(document.documentElement).getPropertyValue('--theme-portal-pending').trim() || '#999999') }); APP.UI.showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; const color = APP.State.ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
 
 
             function validateLevelDetailed(l) {
@@ -4135,8 +4136,8 @@
                     if (neighbors.some(nk => l.blockSet.has(nk))) reasons.push(`Block touches MustCross at (${p.x + 1},${p.y + 1})`);
                     if (neighbors.some(nk => l.gooseSet.has(nk))) reasons.push(`Goose touches MustCross at (${p.x + 1},${p.y + 1})`);
                     const left = APP.LevelUtils.PACK(p.x-1,p.y), right = APP.LevelUtils.PACK(p.x+1,p.y), up = APP.LevelUtils.PACK(p.x,p.y-1), down = APP.LevelUtils.PACK(p.x,p.y+1);
-                    if ([left, right].some(nk => l.filterMap.get(nk) === V || l.flippingFilterMap.get(nk) === V)) reasons.push(`Vertical Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
-                    if ([up, down].some(nk => l.filterMap.get(nk) === H || l.flippingFilterMap.get(nk) === H)) reasons.push(`Horizontal Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([left, right].some(nk => l.filterMap.get(nk) === APP.Core.V || l.flippingFilterMap.get(nk) === APP.Core.V)) reasons.push(`Vertical Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([up, down].some(nk => l.filterMap.get(nk) === APP.Core.H || l.flippingFilterMap.get(nk) === APP.Core.H)) reasons.push(`Horizontal Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
                     if (diags.some(nk => l.filterMap.has(nk) || l.flippingFilterMap.has(nk))) reasons.push(`Filter diag to MustCross at (${p.x + 1},${p.y + 1})`);
                 }
 
@@ -4247,8 +4248,8 @@
         return {
             init,
             bind,
-            enterEditorMode() { APP.Engine.switchMode(EDITOR); },
-            exitEditorMode() { APP.Engine.switchMode(PLAY); },
+            enterEditorMode() { APP.Engine.switchMode(APP.Core.EDITOR); },
+            exitEditorMode() { APP.Engine.switchMode(APP.Core.PLAY); },
             loadWorkingLevel(fromLevelObjOrBlank) { refs.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(fromLevelObjOrBlank); refs.ENGINE.editor.isModified = false; },
             commitWorkingLevel() { refs.ENGINE.level = APP.LevelUtils.deepCloneLevel(refs.ENGINE.editor.workingLevel); refs.ENGINE.editor.isModified = false; },
             applyMetricsFromUI() {
@@ -4300,8 +4301,8 @@
                 refs.ENGINE.editor.isModified = true;
             },
             handlePaletteToolPointerDown(toolType) {
-                if (refs.ENGINE.mode !== EDITOR) return;
-                if (refs.ENGINE.overlayState !== OVERLAY_NONE) return;
+                if (refs.ENGINE.mode !== APP.Core.EDITOR) return;
+                if (refs.ENGINE.overlayState !== APP.Core.OVERLAY_NONE) return;
                 refs.ENGINE.editor.draggedFromGrid = false;
                 refs.ENGINE.editor.emptyClickCount = 0;
                 if (refs.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
@@ -4314,7 +4315,7 @@
                 } else {
                     refs.ENGINE.editor.selectedTool = toolType;
                     refs.ENGINE.editor.draggedObject = { type: toolType };
-                    APP.Engine.setLogicState(EDIT_DRAG);
+                    APP.Engine.setLogicState(APP.Core.EDIT_DRAG);
                     refs.UI.clearPaletteSelection();
                     refs.UI.setPaletteSelectedByType(toolType, true);
                 }
@@ -4322,13 +4323,13 @@
                 APP.Engine.updatePencilState(); // Cross-module call: state updater is owned by APP.Engine.
             },
             togglePencilMode() {
-                if (refs.ENGINE.overlayState !== OVERLAY_NONE) return;
+                if (refs.ENGINE.overlayState !== APP.Core.OVERLAY_NONE) return;
                 refs.ENGINE.editor.isPencilMode = !refs.ENGINE.editor.isPencilMode;
                 if (refs.ENGINE.editor.isPencilMode) {
                     refs.ENGINE.editor.selectedTool = null;
                     refs.UI.clearPaletteSelection();
                 } else {
-                    APP.Engine.setLogicState(IDLE);
+                    APP.Engine.setLogicState(APP.Core.IDLE);
                 }
                 APP.Engine.updatePencilState(); // Cross-module call: state updater is owned by APP.Engine.
             },
@@ -4416,7 +4417,7 @@
 
         function updateCompletionUI() {
             const isComplete = APP.State.ENGINE.progressSet.has(APP.State.ENGINE.levelIdx);
-            const isPlayMode = APP.State.ENGINE.mode === PLAY;
+            const isPlayMode = APP.State.ENGINE.mode === APP.Core.PLAY;
             APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode);
         }
 
@@ -4459,12 +4460,12 @@
                 const { w, h } = level.grid;
                 if (!inBounds(x, y, w, h) || level.blockSet.has(targetKey)) return false;
 
-                if (mode === EDITOR && checkHazards && level.gooseSet.has(targetKey)) return false;
+                if (mode === APP.Core.EDITOR && checkHazards && level.gooseSet.has(targetKey)) return false;
 
                 const lastK = path[path.length - 1];
                 if (lastK === undefined) return true;
 
-                if (mode !== EDITOR) {
+                if (mode !== APP.Core.EDITOR) {
                     if (lastK === level.goalKey) return false;
                     if (checkFalseGoals && armedFalseGoals?.has(lastK)) return false;
                     if (level.gateKeys.includes(targetKey)) return false;
@@ -4477,27 +4478,27 @@
                 const isPortalJumpCandidate = allowJump && level.portalMap.has(lastK) && resolvePortal(level, lastK).dest === targetKey;
                 if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
 
-                const axis = (y === lastP.y) ? H : V;
+                const axis = (y === lastP.y) ? APP.Core.H : APP.Core.V;
                 const u = usage.get(targetKey);
-                if (u && ((axis === H && u.h) || (axis === V && u.v))) return false;
+                if (u && ((axis === APP.Core.H && u.h) || (axis === APP.Core.V && u.v))) return false;
 
                 const uLast = usage.get(lastK);
                 if (uLast) {
-                    let entryAxis = NONE;
+                    let entryAxis = APP.Core.NONE;
                     if (path.length > 1 && !jumpSet.has(path.length - 1)) {
                         const prevP = UNPACK(path[path.length - 2]);
                         const lastPC = UNPACK(lastK);
-                        entryAxis = (prevP.y === lastPC.y) ? H : V;
+                        entryAxis = (prevP.y === lastPC.y) ? APP.Core.H : APP.Core.V;
                     }
                     if (axis !== entryAxis) {
-                        if ((axis === H && uLast.h) || (axis === V && uLast.v)) return false;
+                        if ((axis === APP.Core.H && uLast.h) || (axis === APP.Core.V && uLast.v)) return false;
                     }
                 }
 
                 let filterLast = level.filterMap.get(lastK);
                 if (filterLast === undefined && level.flippingFilterMap.has(lastK)) {
                     const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
-                    filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === H ? V : H) : level.flippingFilterMap.get(lastK);
+                    filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
                 }
                 if (filterLast && filterLast !== axis) return false;
 
@@ -4505,12 +4506,12 @@
                 if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
                     const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
                     const baseAxis = level.flippingFilterMap.get(targetKey);
-                    filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
+                    filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
                 }
                 if (filterTarget && filterTarget !== axis) return false;
 
-                if (checkHazards && mode !== EDITOR && level.gooseSet.has(targetKey)) return false;
-                if (checkWinMetrics && mode !== EDITOR && targetKey === level.goalKey) {
+                if (checkHazards && mode !== APP.Core.EDITOR && level.gooseSet.has(targetKey)) return false;
+                if (checkWinMetrics && mode !== APP.Core.EDITOR && targetKey === level.goalKey) {
                     const nextCounts = counts;
                     const mustPassOk = level.mustPassKeys.every(k => (nextCounts.get(k) || 0) > 0 || k === targetKey);
                     const mustCrossOk = level.mustCrossKeys.every(k => ((nextCounts.get(k) || 0) + (k === targetKey ? 1 : 0)) >= 2);
@@ -4524,9 +4525,9 @@
 
             function inverseTransformPoint(tx, ty, variant, W, H) { switch (variant) { case 0: return { x: tx, y: ty }; case 1: return { x: ty, y: H - 1 - tx }; case 2: return { x: W - 1 - tx, y: H - 1 - ty }; case 3: return { x: W - 1 - ty, y: tx }; case 4: return { x: W - 1 - tx, y: ty }; case 5: return { x: tx, y: H - 1 - ty }; case 6: return { x: ty, y:tx }; case 7: return { x: W - 1 - ty, y: H - 1 - tx }; default: return { x: tx, y: ty }; } }
 
-            function transformAxis(axis, variant) { const swaps = [1, 3, 6, 7]; if (swaps.includes(variant)) { if (axis === H) return V; if (axis === V) return H; } return axis; }
+            function transformAxis(axis, variant) { const swaps = [1, 3, 6, 7]; if (swaps.includes(variant)) { if (axis === APP.Core.H) return APP.Core.V; if (axis === APP.Core.V) return APP.Core.H; } return axis; }
 
-            function getGridCoord(e) { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / APP.State.ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / APP.State.ENGINE.viewport.cellH))); return APP.LevelUtils.inverseTransformPoint(tx, ty, APP.State.ENGINE.variant, l.grid.w, l.grid.h); }
+            function getGridCoord(e) { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / APP.State.ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / APP.State.ENGINE.viewport.cellH))); return APP.LevelUtils.inverseTransformPoint(tx, ty, APP.State.ENGINE.variant, l.grid.w, l.grid.h); }
 
             function deepCloneLevel(src) { const l = JSON.parse(JSON.stringify(src)); l.blockSet = new Set(src.blockSet); l.gooseSet = new Set(src.gooseSet); l.falseGoalKeys = new Set(src.falseGoalKeys); l.portalMap = new Map(); if(src.portalMap) src.portalMap.forEach((v, k) => l.portalMap.set(k, v)); l.filterMap = new Map(); if(src.filterMap) src.filterMap.forEach((v, k) => l.filterMap.set(k, v)); l.flippingFilterMap = new Map(); if(src.flippingFilterMap) src.flippingFilterMap.forEach((v, k) => l.flippingFilterMap.set(k, v)); return l; }
             // ======================================================
@@ -4580,7 +4581,7 @@
 
             function shiftLevel(l, dx, dy) { if (dx === 0 && dy === 0) return; const shift = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); return APP.LevelUtils.PACK(p.x + dx, p.y + dy); }; l.goalKey = shift(l.goalKey); l.gateKeys = l.gateKeys.map(shift); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(shift)); l.blockSet = new Set(Array.from(l.blockSet).map(shift)); l.gooseSet = new Set(Array.from(l.gooseSet).map(shift)); l.mustPassKeys = l.mustPassKeys.map(shift); l.mustCrossKeys = l.mustCrossKeys.map(shift); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v)); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v)); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = shift(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(shift); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.hints = []; APP.State.ENGINE.hinter.pathList = []; }
 
-            function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { APP.UI.showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = APP.LevelUtils.getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { APP.UI.showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { APP.LevelUtils.shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = APP.LevelUtils.UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; APP.UI.updateViewport(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
+            function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { APP.UI.showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = APP.LevelUtils.getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { APP.UI.showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { APP.LevelUtils.shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = APP.LevelUtils.UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; APP.UI.updateViewport(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
 
             function transformLevel(l, coordMap, newW, newH, axisMap) { APP.Editor.saveEditorState(); const mapKey = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); const tp = coordMap(p.x, p.y); return APP.LevelUtils.PACK(tp.x, tp.y); }; l.goalKey = mapKey(l.goalKey); l.gateKeys = l.gateKeys.map(mapKey); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(mapKey)); l.blockSet = new Set(Array.from(l.blockSet).map(mapKey)); l.gooseSet = new Set(Array.from(l.gooseSet).map(mapKey)); l.mustPassKeys = l.mustPassKeys.map(mapKey); l.mustCrossKeys = l.mustCrossKeys.map(mapKey); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(mapKey(k), axisMap(v))); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(mapKey(k), axisMap(v))); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(mapKey(k), { dest: v.dest === -1 ? -1 : mapKey(v.dest), color: v.color }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: mapKey(pv.k1), k2: mapKey(pv.k2), color: pv.color })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = mapKey(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(mapKey); if(APP.State.ENGINE.activeGateKey) APP.State.ENGINE.activeGateKey = mapKey(APP.State.ENGINE.activeGateKey); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.grid.w = newW; l.grid.h = newH; l.hints = []; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.isModified = true; APP.UI.updateViewport(); }
 
@@ -4602,7 +4603,11 @@
 
 
     APP.Themes = (() => {
-    function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
+
+    const themeAiColors = {};
+    const themeUndoStacks = {};
+    let originalThemes = null;
+function rc() { return `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`; }
 
     const THEMES = {
     "classic": {
@@ -5743,9 +5748,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function populateThemes() {
-        if (!window.ORIGINAL_THEMES) {
-            window.ORIGINAL_THEMES = JSON.parse(JSON.stringify(THEMES));
-            delete window.ORIGINAL_THEMES['chaos'];
+        if (!originalThemes) {
+            originalThemes = JSON.parse(JSON.stringify(THEMES));
+            delete originalThemes['chaos'];
         }
         const themes = getThemeRegistry();
         const grid = document.getElementById('themeGrid'); APP.UI.clearElement('themeGrid'); const themeKeys = Object.keys(themes); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
@@ -5753,9 +5758,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
-        if (!window.THEME_UNDO_STACKS) window.THEME_UNDO_STACKS = {};
-        if (!window.THEME_UNDO_STACKS[themeKey]) window.THEME_UNDO_STACKS[themeKey] = [];
-        window.THEME_UNDO_STACKS[themeKey].push(JSON.parse(JSON.stringify(APP.Themes.THEMES[themeKey])));
+        if (!themeUndoStacks[themeKey]) themeUndoStacks[themeKey] = [];
+        themeUndoStacks[themeKey].push(JSON.parse(JSON.stringify(APP.Themes.THEMES[themeKey])));
 
         const t = APP.Themes.THEMES[themeKey];
         const LINE_KEY_GROUPS = {
@@ -5829,7 +5833,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.Themes.populateThemes();
     }
 
-        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor };
+        const getThemeAiColorsStore = () => themeAiColors;
+        const getThemeUndoStacksStore = () => themeUndoStacks;
+        const getOriginalThemesStore = () => originalThemes;
+
+        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore };
         Object.defineProperty(api, 'THEMES', { get: () => getThemeRegistry() });
         return api;
     })();
@@ -5853,7 +5861,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const init = () => {
             if (initialized) return;
             initialized = true;
-        const tryNavigate = (actionFn) => { if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.isModified) { APP.State.ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
+        const tryNavigate = (actionFn) => { if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isModified) { APP.State.ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
         document.getElementById('unsavedStayBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.runtime.pendingAction = null; APP.UI.closeModal('unsavedModal'); };
         document.getElementById('unsavedLeaveBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.closeModal('unsavedModal'); if (APP.State.ENGINE.runtime.pendingAction) APP.State.ENGINE.runtime.pendingAction(); };
 
@@ -5864,39 +5872,39 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
 
         const handleDown = (e) => {
-            if (APP.State.ENGINE.activeSolverController || [RESOLVED, HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) || [HINT_ANIMATING, FALSE_GOAL_ANIMATING, SOLVER_RUNNING].includes(APP.State.ENGINE.overlayState)) return;
-            const p = APP.LevelUtils.getGridCoord(e); const k = APP.LevelUtils.PACK(p.x, p.y); const activeLevel = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+            if (APP.State.ENGINE.activeSolverController || [APP.Core.RESOLVED, APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) || [APP.Core.HINT_ANIMATING, APP.Core.FALSE_GOAL_ANIMATING, APP.Core.SOLVER_RUNNING].includes(APP.State.ENGINE.overlayState)) return;
+            const p = APP.LevelUtils.getGridCoord(e); const k = APP.LevelUtils.PACK(p.x, p.y); const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
             APP.State.ENGINE.resetStreak = 0;
-            if (APP.State.ENGINE.mode === EDITOR && !APP.State.ENGINE.editor.isPencilMode) {
+            if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) {
                 const occupied = activeLevel.gateKeys.includes(k) || activeLevel.goalKey === k || activeLevel.falseGoalKeys.has(k) || activeLevel.blockSet.has(k) || activeLevel.gooseSet.has(k) || activeLevel.filterMap.has(k) || activeLevel.flippingFilterMap.has(k) || activeLevel.portalMap.has(k) || activeLevel.mustPassKeys.includes(k) || activeLevel.mustCrossKeys.includes(k);
-                if (occupied) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.State.ENGINE.editor.draggedObject = APP.Editor.pickUpObject(k); if (APP.State.ENGINE.editor.draggedObject) { APP.Engine.setLogicState(EDIT_DRAG); APP.UI.EditorDragGhost.update({ visible: true, cellSize: APP.State.ENGINE.viewport.cellW, type: APP.State.ENGINE.editor.draggedObject.type }); } } else if (APP.State.ENGINE.editor.selectedTool) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.Editor.placeEditorObject(k); } else { APP.State.ENGINE.editor.emptyClickCount++; if (APP.State.ENGINE.editor.emptyClickCount >= 2) { APP.UI.showMessage("Click pencil to draw.", "text-white font-bold"); } } return;
+                if (occupied) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.State.ENGINE.editor.draggedObject = APP.Editor.pickUpObject(k); if (APP.State.ENGINE.editor.draggedObject) { APP.Engine.setLogicState(APP.Core.EDIT_DRAG); APP.UI.EditorDragGhost.update({ visible: true, cellSize: APP.State.ENGINE.viewport.cellW, type: APP.State.ENGINE.editor.draggedObject.type }); } } else if (APP.State.ENGINE.editor.selectedTool) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.Editor.placeEditorObject(k); } else { APP.State.ENGINE.editor.emptyClickCount++; if (APP.State.ENGINE.editor.emptyClickCount >= 2) { APP.UI.showMessage("Click pencil to draw.", "text-white font-bold"); } } return;
             }
             if (APP.State.ENGINE.path.length > 0) {
                 if (APP.State.ENGINE.path.length === 1 && activeLevel.gateKeys.includes(k) && k !== APP.State.ENGINE.activeGateKey) {
                     APP.Engine.PathNavigator.clear(APP.State.ENGINE);
                     APP.State.ENGINE.activeGateKey = k;
                     APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, k, false);
-                    APP.Engine.setLogicState(DRAGGING);
+                    APP.Engine.setLogicState(APP.Core.DRAGGING);
                     return;
                 }
-                if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.isPencilMode) {
+                if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isPencilMode) {
                     const idx = APP.State.ENGINE.path.indexOf(k); let shouldReverse = false;
                     if (idx !== -1) { if (idx < APP.State.ENGINE.path.length / 2) shouldReverse = true; } else { const headP = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); const tailP = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[0]); const distHead = Math.abs(p.x - headP.x) + Math.abs(p.y - headP.y); const distTail = Math.abs(p.x - tailP.x) + Math.abs(p.y - tailP.y); if (distTail < distHead) shouldReverse = true; }
                     if (shouldReverse) { APP.State.ENGINE.path.reverse(); const newJumps = new Set(); APP.State.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(APP.State.ENGINE.path.length - jIdx)); APP.State.ENGINE.isPortalJump = newJumps; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); }
                 }
-                const lastIdx = APP.State.ENGINE.path.lastIndexOf(k); if (lastIdx !== -1 && lastIdx < APP.State.ENGINE.path.length - 1) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, lastIdx); APP.Engine.setLogicState(DRAGGING); return; }
-                APP.Engine.setLogicState(DRAGGING); APP.Engine.handlePrimaryGridInput(p);
+                const lastIdx = APP.State.ENGINE.path.lastIndexOf(k); if (lastIdx !== -1 && lastIdx < APP.State.ENGINE.path.length - 1) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, lastIdx); APP.Engine.setLogicState(APP.Core.DRAGGING); return; }
+                APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p);
             } else {
                 if (!activeLevel) return;
-                if (APP.State.ENGINE.mode === EDITOR && APP.State.ENGINE.editor.isPencilMode) { APP.State.ENGINE.activeGateKey = null; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, k, false); APP.Engine.setLogicState(DRAGGING); APP.Engine.handlePrimaryGridInput(p); } else {
+                if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isPencilMode) { APP.State.ENGINE.activeGateKey = null; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, k, false); APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p); } else {
                     let bestGate = null; if (activeLevel.gateKeys.includes(k)) { bestGate = k; } else { let minDist = Infinity; for (let i = 0; i < activeLevel.gateKeys.length; i++) { const gk = activeLevel.gateKeys[i]; const gp = APP.LevelUtils.UNPACK(gk); if (p.x === gp.x || p.y === gp.y) { const dist = Math.abs(p.x - gp.x) + Math.abs(p.y - gp.y); if (dist > 0 && dist < minDist) { minDist = dist; bestGate = gk; } } } }
-                    if (bestGate !== null) { APP.State.ENGINE.activeGateKey = bestGate; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, bestGate, false); APP.Engine.setLogicState(DRAGGING); if (bestGate !== k) { APP.Engine.handlePrimaryGridInput(p); } }
+                    if (bestGate !== null) { APP.State.ENGINE.activeGateKey = bestGate; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, bestGate, false); APP.Engine.setLogicState(APP.Core.DRAGGING); if (bestGate !== k) { APP.Engine.handlePrimaryGridInput(p); } }
                 }
             }
         };
 
         const handleUp = (e) => {
-            if (APP.State.ENGINE.logicState === THEME_DRAG) {
+            if (APP.State.ENGINE.logicState === APP.Core.THEME_DRAG) {
                 // Resolve from deepest hit node up to the swatch so child elements still count as valid drops.
                 const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('.theme-swatch');
                 const dragState = APP.UI.ThemeEditor.getDragState();
@@ -5908,10 +5916,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         targetSwatch: dropTarget
                     });
                 }
-                APP.Engine.setLogicState(IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
+                APP.Engine.setLogicState(APP.Core.IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
                 if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
             }
-            if (APP.State.ENGINE.logicState === EDIT_DRAG && APP.State.ENGINE.mode === EDITOR) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); APP.UI.showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; APP.Engine.setLogicState(IDLE); } if (APP.State.ENGINE.logicState === DRAGGING) APP.Engine.setLogicState(IDLE);
+            if (APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG && APP.State.ENGINE.mode === APP.Core.EDITOR) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); APP.UI.showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; APP.Engine.setLogicState(APP.Core.IDLE); } if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.setLogicState(APP.Core.IDLE);
         };
 
         APP.Renderer.getCanvas().addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (APP.State.ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); APP.State.ENGINE.runtime.activePointerId = e.pointerId; APP.Renderer.getCanvas().setPointerCapture(APP.State.ENGINE.runtime.activePointerId); handleDown(e); });
@@ -5922,7 +5930,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const dy = Math.abs((themeDragState.startY ?? e.clientY) - e.clientY);
                 if (dx > 6 || dy > 6) APP.UI.ThemeEditor.markPointerDrag();
             }
-            if (APP.State.ENGINE.logicState === THEME_DRAG) {
+            if (APP.State.ENGINE.logicState === APP.Core.THEME_DRAG) {
                 const dragState = APP.UI.ThemeEditor.getDragState();
                 if (e.pointerId === dragState.pointerId || dragState.pointerId === null) {
                     APP.UI.ThemeEditor.setDragGhost({ visible: true, color: dragState.color, x: e.clientX, y: e.clientY });
@@ -5930,7 +5938,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     return;
                 }
             }
-            if (APP.State.ENGINE.mode === EDITOR && (APP.State.ENGINE.editor.draggedObject || (APP.State.ENGINE.editor.selectedTool && APP.State.ENGINE.logicState === EDIT_DRAG))) {
+            if (APP.State.ENGINE.mode === APP.Core.EDITOR && (APP.State.ENGINE.editor.draggedObject || (APP.State.ENGINE.editor.selectedTool && APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG))) {
                 const type = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool;
                 const isOverPalette = APP.UI.EditorDragGhost.isPointerOverPalette(e.clientX, e.clientY);
                 APP.UI.EditorDragGhost.update({
@@ -5944,9 +5952,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             } else {
                 APP.UI.EditorDragGhost.update({ visible: false });
             }
-            if (e.pointerId !== APP.State.ENGINE.runtime.activePointerId && APP.State.ENGINE.logicState !== EDIT_DRAG) return;
+            if (e.pointerId !== APP.State.ENGINE.runtime.activePointerId && APP.State.ENGINE.logicState !== APP.Core.EDIT_DRAG) return;
             e.preventDefault();
-            if (APP.State.ENGINE.logicState === DRAGGING) APP.Engine.handlePrimaryGridInput(APP.LevelUtils.getGridCoord(e));
+            if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.handlePrimaryGridInput(APP.LevelUtils.getGridCoord(e));
         });
         window.addEventListener('pointerup', e => { handleUp(e); if (APP.State.ENGINE.runtime.activePointerId !== null && APP.Renderer.getCanvas().hasPointerCapture(APP.State.ENGINE.runtime.activePointerId)) APP.Renderer.getCanvas().releasePointerCapture(APP.State.ENGINE.runtime.activePointerId); APP.State.ENGINE.runtime.activePointerId = null; });
 
@@ -5964,7 +5972,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
                 { name: 'LEVEL', elements: [document.getElementById('prevLevelBtn'), document.getElementById('nextLevelBtn')].filter(Boolean) }
             ];
-            if (APP.State.ENGINE.mode === EDITOR) groups.push({ name: 'METRICS', elements: [document.getElementById('editReqLen'), document.getElementById('editReqInt')].filter(Boolean) });
+            if (APP.State.ENGINE.mode === APP.Core.EDITOR) groups.push({ name: 'METRICS', elements: [document.getElementById('editReqLen'), document.getElementById('editReqInt')].filter(Boolean) });
             return groups.filter(g => g.elements.length > 0);
         }
 
@@ -6022,14 +6030,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         function gamepadMoveGrid(dx, dy) {
             if (isModalActive()) return;
-            const l = APP.State.ENGINE.mode === PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+            const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
             if (!l) return;
             if (!APP.State.ENGINE.path.length) {
                 const firstGate = l.gateKeys && l.gateKeys.length ? APP.LevelUtils.UNPACK(l.gateKeys[0]) : null;
                 if (!firstGate) return;
                 APP.State.ENGINE.activeGateKey = l.gateKeys[0];
                 APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, l.gateKeys[0], false);
-                APP.Engine.setLogicState(DRAGGING);
+                APP.Engine.setLogicState(APP.Core.DRAGGING);
             }
             const head = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]);
             APP.Engine.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
@@ -6144,19 +6152,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
         APP.UI.updateAppScale();
 
-        document.getElementById('gridRotateBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === H ? V : H); APP.UI.showMessage("Rotated", "text-white font-black"); };
-        document.getElementById('gridMirrorBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.State.ENGINE.editor.mirrorHorizontal = !APP.State.ENGINE.editor.mirrorHorizontal; APP.UI.setInlineStyle('mirrorIconSvg', 'transform', APP.State.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'); if (APP.State.ENGINE.editor.mirrorHorizontal) { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } APP.UI.showMessage("Mirrored", "text-white font-black"); };
+        document.getElementById('gridRotateBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === APP.Core.H ? APP.Core.V : APP.Core.H); APP.UI.showMessage("Rotated", "text-white font-black"); };
+        document.getElementById('gridMirrorBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.State.ENGINE.editor.mirrorHorizontal = !APP.State.ENGINE.editor.mirrorHorizontal; APP.UI.setInlineStyle('mirrorIconSvg', 'transform', APP.State.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'); if (APP.State.ENGINE.editor.mirrorHorizontal) { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } APP.UI.showMessage("Mirrored", "text-white font-black"); };
         document.getElementById('gridSizeMinusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(-1); };
         document.getElementById('gridSizePlusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(1); };
         document.getElementById('muteBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.muted = !APP.State.ENGINE.muted; APP.UI.setInlineStyle('muteSlash', 'display', APP.State.ENGINE.muted ? 'block' : 'none'); };
         document.getElementById('orientationToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.ui.forceLandscapeLayout = !APP.State.ENGINE.ui.forceLandscapeLayout; APP.UI.updateLayoutMode(); APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.showMessage(APP.State.ENGINE.ui.forceLandscapeLayout ? 'Landscape layout on.' : 'Standard layout on.', 'text-sky-600'); };
 
-        const perspectiveAction = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.activeSolverController) return; APP.State.ENGINE.variant = (APP.State.ENGINE.variant + 1) % 8; APP.UI.updateViewport(); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); SOUND_BUS.play("D5", "32n"); };
+        const perspectiveAction = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.activeSolverController) return; APP.State.ENGINE.variant = (APP.State.ENGINE.variant + 1) % 8; APP.UI.updateViewport(); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.Core.SOUND_BUS.play("D5", "32n"); };
         document.getElementById('whoaBtn').onclick = perspectiveAction;
 
         document.getElementById('resetBtn').onclick = () => {
             APP.UI.closeAllModals();
-            if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+            if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
             if (APP.State.ENGINE.cheatActive) {
                 if (APP.State.ENGINE.cheatTimer) clearTimeout(APP.State.ENGINE.cheatTimer);
                 APP.State.ENGINE.cheatTimer = setTimeout(() => { APP.State.ENGINE.cheatActive = false; }, 3000);
@@ -6164,7 +6172,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.State.ENGINE.resetStreak++;
                 if (APP.State.ENGINE.resetStreak >= 5) {
                     APP.State.ENGINE.cheatActive = true;
-                    SOUND_BUS.play("F5", "8n");
+                    APP.Core.SOUND_BUS.play("F5", "8n");
                     if (APP.State.ENGINE.cheatTimer) clearTimeout(APP.State.ENGINE.cheatTimer);
                     APP.State.ENGINE.cheatTimer = setTimeout(() => {
                         APP.State.ENGINE.cheatActive = false;
@@ -6199,7 +6207,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const updateHintLabel = () => { const hasSaved = APP.State.ENGINE.level && APP.State.ENGINE.level.hints && APP.State.ENGINE.level.hints.length > 0; const mainLabel = document.getElementById('hintMainLabel'); if (APP.State.ENGINE.runtime.isHintExpanded) { APP.UI.setTextContent(mainLabel, 'Saved Hint'); APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1'); } else { APP.UI.setTextContent(mainLabel, 'Hint'); APP.UI.setInlineStyle(mainLabel, 'color', 'white'); } };
         hintBtn.onclick = async (e) => {
             APP.UI.closeAllModals();
-            if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+            if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
             if (!APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); } else {
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
                 if (isTopHalf) {
@@ -6208,7 +6216,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     } catch (err) {
                         console.error('Hint solve failed:', err);
                         APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
-                        APP.Engine.setOverlayState(OVERLAY_NONE);
+                        APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                     }
                 } else { if (APP.State.ENGINE.level?.hints?.length > 0) { APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints; APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0); APP.State.ENGINE.hinter.source = 'saved'; APP.Solver.startHintAnimation(); } else APP.UI.showMessage("No saved hint.", "text-white font-black"); }
                 toggleHint(); updateHintLabel();
@@ -6218,7 +6226,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         document.getElementById('solverCloseBtn').onclick = () => {
             if (!APP.Solver.isRunning()) {
-                APP.Engine.setOverlayState(OVERLAY_NONE);
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 return;
             }
             APP.UI.showMessage('Stopping solver…', 'text-amber-400 font-bold');
@@ -6233,10 +6241,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         });
         const handleWinClose = (callback) => { const circle = document.getElementById('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
         document.getElementById('copyWinDataBtn').onclick = async () => { if (document.getElementById('winSolutionOutput').value) await APP.UI.copyText(document.getElementById('winSolutionOutput').value, { fallbackElId: 'winSolutionOutput' }); };
-        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
-        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
+        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
+        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
         document.getElementById('nextLevelModalBtn').onclick = () => { const levels = APP.LevelUtils.getRawLevels(); handleWinClose(() => { if (APP.State.ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(APP.State.ENGINE.levelIdx + 1); }); };
-        document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => { APP.Engine.setLogicState(IDLE); });
+        document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => { APP.Engine.setLogicState(APP.Core.IDLE); });
 
         document.getElementById('guideBtn').onclick = () => {
             const isVisible = APP.UI.isModalOpen('guideModal');
@@ -6263,7 +6271,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const editBtn = document.getElementById('openThemeEditorBtn');
             const footer = document.getElementById('themeSelectFooter');
             const dismissBtn = document.getElementById('dismissThemeModalBtn');
-            const canModify = APP.State.ENGINE.isDevMode || APP.State.ENGINE.mode === EDITOR;
+            const canModify = APP.State.ENGINE.isDevMode || APP.State.ENGINE.mode === APP.Core.EDITOR;
             if (editBtn) editBtn.classList.toggle('hidden', !canModify);
             if (footer) footer.classList.toggle('justify-center', !canModify);
             if (footer) footer.classList.toggle('justify-between', canModify);
@@ -6288,13 +6296,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Renderer.render();
             if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
             else if (res.status !== 'aborted') APP.UI.showMessage("No spots found.", "text-white font-black");
-            APP.Engine.setOverlayState(OVERLAY_NONE);
+            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
         };
         APP.UI.bindAll('.palette-item[data-type]', 'pointerdown', (e, el) => { APP.Editor.handlePaletteToolPointerDown(el.dataset.type); });
         document.getElementById('editPencilBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.togglePencilMode(); };
 
         const eraserBtn = document.getElementById('editEraserBtn'); let eraserTimer = null, eraserFired = false;
-        eraserBtn.addEventListener('pointerdown', (e) => { if (APP.State.ENGINE.mode !== EDITOR) return; eraserTimer = setTimeout(() => { APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.UI.showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
+        eraserBtn.addEventListener('pointerdown', (e) => { if (APP.State.ENGINE.mode !== APP.Core.EDITOR) return; eraserTimer = setTimeout(() => { APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.UI.showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
         const handleEraserRelease = () => { if (eraserTimer) { clearTimeout(eraserTimer); if (!eraserFired) { if (APP.State.ENGINE.path.length > 1) APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); else APP.Engine.PathNavigator.clear(APP.State.ENGINE); } eraserTimer = null; eraserFired = false; } };
         eraserBtn.addEventListener('pointerup', handleEraserRelease); eraserBtn.addEventListener('pointerleave', handleEraserRelease);
 
