@@ -2868,6 +2868,9 @@ window.THEMES_MORE = {
         t.search = t.search || {};
         t.jumpscare = t.jumpscare || {};
         t.shell = t.shell || {};
+        t.editor = t.editor || {};
+        t.layout = t.layout || {};
+        t.themeEditor = t.themeEditor || {};
 
         t.bodyBg = t.bodyBg || '#e0f2fe';
         t.canvasBg = t.canvasBg || '#ffffff';
@@ -2980,6 +2983,31 @@ window.THEMES_MORE = {
         t.header.navBgHover = t.header.navBgHover || 'rgba(255,255,255,0.3)';
         t.header.navText = t.header.navText || t.text.headerMain;
         t.header.divider = t.header.divider || 'rgba(226,232,240,0.2)';
+
+        t.text.actionBtn = t.text.actionBtn || '#ffffff';
+        t.text.error = t.text.error || t.loading.error || '#ef4444';
+        t.text.handDrawnShadow = t.text.handDrawnShadow || '#000000';
+
+        t.btns.hintHover = t.btns.hintHover || 'rgba(0,0,0,0.1)';
+        t.btns.hintDivider = t.btns.hintDivider || 'rgba(255,255,255,0.2)';
+        t.btns.exportHover = t.btns.exportHover || darkenHex(t.btns.copy || t.modal.panelBg, 0.9);
+
+        t.editor.inputBg = t.editor.inputBg || 'rgba(0,0,0,0.15)';
+        t.editor.inputText = t.editor.inputText || t.text.actionBtn;
+        t.editor.inputBorder = t.editor.inputBorder || 'rgba(255,255,255,0.3)';
+        t.editor.inputFocus = t.editor.inputFocus || t.text.actionBtn;
+        t.editor.toolIcon = t.editor.toolIcon || t.modal.text;
+        t.editor.paletteShadow = t.editor.paletteShadow || '0 0 0 2px rgba(59,130,246,0.3)';
+
+        t.layout.mainBorder = t.layout.mainBorder || t.modal.border;
+        t.layout.headerLeftBorder = t.layout.headerLeftBorder || t.modal.border;
+        t.layout.exportBorder = t.layout.exportBorder || t.ctrlArea.border;
+        t.layout.editorPanelBorder = t.layout.editorPanelBorder || t.ctrlArea.border;
+
+        t.themeEditor.panelBg = t.themeEditor.panelBg || 'rgba(0,0,0,0.05)';
+        t.themeEditor.swatchBorder = t.themeEditor.swatchBorder || t.modal.border;
+
+        t.modal.closeHover = t.modal.closeHover || 'rgba(0,0,0,0.08)';
 
         t.colors.portalPending = t.colors.portalPending || '#999999';
         t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;

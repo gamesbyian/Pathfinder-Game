@@ -17,7 +17,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
     <style>
-        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; --theme-mega-output-bg: #0f172a; --theme-mega-output-text: #f0abfc; --theme-mega-output-border: #334155; --theme-mega-primary-bg: #a21caf; --theme-mega-primary-text: #ffffff; --theme-mega-primary-border: #d946ef; --theme-mega-secondary-bg: #86198f; --theme-mega-secondary-text: #ffffff; --theme-mega-secondary-border: #d946ef; --theme-mega-gemini-bg: #4338ca; --theme-mega-gemini-text: #ffffff; --theme-mega-gemini-border: #6366f1; --theme-mega-copy-bg: #ffffff; --theme-mega-copy-text: #334155; --theme-mega-copy-border: #cbd5e1; --theme-mega-desc-text: #64748b; --theme-body-text: #111827; --theme-disabled-btn-bg: #94a3b8; --theme-canvas-bg: #ffffff; --theme-loading-overlay-bg: rgba(15,23,42,0.6); --theme-loading-panel-bg: #0f172a; --theme-loading-panel-border: #334155; --theme-loading-title: #ffffff; --theme-loading-status: #38bdf8; --theme-loading-percent: #ffffff; --theme-loading-track: #1e293b; --theme-loading-bar: #0ea5e9; --theme-loading-error: #7dd3fc; --theme-search-overlay-bg: rgba(15,23,42,0.9); --theme-search-mega-status-text: #f0abfc; --theme-search-mega-status-border: rgba(217,70,239,0.3); --theme-search-label: #7dd3fc; --theme-search-dot: #38bdf8; --theme-search-timer: #ffffff; --theme-search-close: rgba(255,255,255,0.4); --theme-search-close-hover: #ffffff; --theme-jumpscare-goose-bg: rgba(0,0,0,0.4); --theme-jumpscare-goose-text: #ffffff; --theme-jumpscare-bomb-bg: rgba(0,0,0,0.6); --theme-jumpscare-bomb-top-text: #facc15; --theme-jumpscare-bomb-bottom-text: #f97316; --theme-shell-btn-bg: rgba(203,213,225,0.6); --theme-shell-btn-bg-hover: rgba(148,163,184,0.6); --theme-shell-btn-text: #475569; --theme-shell-btn-border: rgba(255,255,255,0.2); --theme-shell-mute-bg: rgba(255,255,255,0.5); --theme-shell-mute-bg-hover: rgba(255,255,255,0.8); --theme-shell-mute-text: #64748b; --theme-shell-mute-border: rgba(255,255,255,0.2); --theme-header-nav-bg: rgba(255,255,255,0.2); --theme-header-nav-bg-hover: rgba(255,255,255,0.3); --theme-header-nav-text: #ffffff; --theme-header-divider: rgba(226,232,240,0.2); --theme-portal-pending: #999999; --theme-bomb-blast-ring: #ef4444; --theme-bomb-blast-rays: #f97316; }
+        :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; --theme-mega-output-bg: #0f172a; --theme-mega-output-text: #f0abfc; --theme-mega-output-border: #334155; --theme-mega-primary-bg: #a21caf; --theme-mega-primary-text: #ffffff; --theme-mega-primary-border: #d946ef; --theme-mega-secondary-bg: #86198f; --theme-mega-secondary-text: #ffffff; --theme-mega-secondary-border: #d946ef; --theme-mega-gemini-bg: #4338ca; --theme-mega-gemini-text: #ffffff; --theme-mega-gemini-border: #6366f1; --theme-mega-copy-bg: #ffffff; --theme-mega-copy-text: #334155; --theme-mega-copy-border: #cbd5e1; --theme-mega-desc-text: #64748b; --theme-body-text: #111827; --theme-disabled-btn-bg: #94a3b8; --theme-canvas-bg: #ffffff; --theme-loading-overlay-bg: rgba(15,23,42,0.6); --theme-loading-panel-bg: #0f172a; --theme-loading-panel-border: #334155; --theme-loading-title: #ffffff; --theme-loading-status: #38bdf8; --theme-loading-percent: #ffffff; --theme-loading-track: #1e293b; --theme-loading-bar: #0ea5e9; --theme-loading-error: #7dd3fc; --theme-search-overlay-bg: rgba(15,23,42,0.9); --theme-search-mega-status-text: #f0abfc; --theme-search-mega-status-border: rgba(217,70,239,0.3); --theme-search-label: #7dd3fc; --theme-search-dot: #38bdf8; --theme-search-timer: #ffffff; --theme-search-close: rgba(255,255,255,0.4); --theme-search-close-hover: #ffffff; --theme-jumpscare-goose-bg: rgba(0,0,0,0.4); --theme-jumpscare-goose-text: #ffffff; --theme-jumpscare-bomb-bg: rgba(0,0,0,0.6); --theme-jumpscare-bomb-top-text: #facc15; --theme-jumpscare-bomb-bottom-text: #f97316; --theme-shell-btn-bg: rgba(203,213,225,0.6); --theme-shell-btn-bg-hover: rgba(148,163,184,0.6); --theme-shell-btn-text: #475569; --theme-shell-btn-border: rgba(255,255,255,0.2); --theme-shell-mute-bg: rgba(255,255,255,0.5); --theme-shell-mute-bg-hover: rgba(255,255,255,0.8); --theme-shell-mute-text: #64748b; --theme-shell-mute-border: rgba(255,255,255,0.2); --theme-header-nav-bg: rgba(255,255,255,0.2); --theme-header-nav-bg-hover: rgba(255,255,255,0.3); --theme-header-nav-text: #ffffff; --theme-header-divider: rgba(226,232,240,0.2); --theme-portal-pending: #999999; --theme-bomb-blast-ring: #ef4444; --theme-bomb-blast-rays: #f97316; --theme-action-btn-text: #ffffff; --theme-hint-hover: rgba(0,0,0,0.1); --theme-hint-divider: rgba(255,255,255,0.2); --theme-editor-input-bg: rgba(0,0,0,0.15); --theme-editor-input-text: #ffffff; --theme-editor-input-border: rgba(255,255,255,0.3); --theme-editor-input-focus: #ffffff; --theme-layout-main-border: #cbd5e1; --theme-layout-header-left-border: #e2e8f0; --theme-layout-export-border: #f1f5f9; --theme-layout-editor-panel-border: #f1f5f9; --theme-theme-editor-panel-bg: rgba(0,0,0,0.05); --theme-theme-editor-swatch-border: #cbd5e1; --theme-modal-close-hover: rgba(0,0,0,0.08); --theme-error-text: #ef4444; --theme-editor-tool-icon: #334155; --theme-editor-palette-shadow: 0 0 0 2px rgba(59,130,246,0.3); --theme-hand-drawn-shadow: #000000; --theme-export-btn-hover: rgba(148,163,184,0.5); }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; color: var(--theme-body-text); }
         canvas { cursor: crosshair; width: 100%; height: auto; aspect-ratio: 1/1; display: block; touch-action: none; background-color: var(--theme-canvas-bg, #ffffff); }
         canvas:focus { outline: none; }
@@ -32,7 +32,7 @@
         textarea { font-family: monospace; font-size: 0.7rem; line-height: 1.2; resize: none; transition: all 0.2s ease; }
         .serif-desc { font-family: 'Merriweather', serif; font-style: italic; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .hand-drawn { font-family: 'Permanent Marker', cursive; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+        .hand-drawn { font-family: 'Permanent Marker', cursive; text-shadow: 2px 2px 0 var(--theme-hand-drawn-shadow), -1px -1px 0 var(--theme-hand-drawn-shadow), 1px -1px 0 var(--theme-hand-drawn-shadow), -1px 1px 0 var(--theme-hand-drawn-shadow), 1px 1px 0 var(--theme-hand-drawn-shadow); }
         .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite; }
         @keyframes shake { 10%, 90% { transform: translate3d(-4px, 0, 0) rotate(-1deg); } 20%, 80% { transform: translate3d(6px, 0, 0) rotate(2deg); } 30%, 50%, 70% { transform: translate3d(-8px, 0, 0) rotate(-2deg); } 40%, 60% { transform: translate3d(8px, 0, 0) rotate(1deg); } }
         @keyframes spin-grow-fade { 0% { transform: scale(1) rotate(0deg); opacity: 1; } 100% { transform: scale(3) rotate(360deg); opacity: 0; } }
@@ -100,7 +100,7 @@
         .landscape-editor-tools .palette-grid .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); }
         .landscape-editor-tools #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--palette-grid-gap, var(--ui-gap-tight)))) !important; }
         .landscape-editor-tools #editorPaletteLayout { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "line palette"; gap: var(--ui-gap); align-items: stretch; }
-        .landscape-editor-tools #editorLineGridPanel { grid-area: line; border-top: 0; border-right: 1px solid #cbd5e1; padding: 0 calc(var(--ui-gap) * 0.9) 0 0; justify-content: flex-start; align-items: stretch; flex-direction: column; }
+        .landscape-editor-tools #editorLineGridPanel { grid-area: line; border-top: 0; border-right: 1px solid var(--theme-layout-editor-panel-border); padding: 0 calc(var(--ui-gap) * 0.9) 0 0; justify-content: flex-start; align-items: stretch; flex-direction: column; }
         .landscape-editor-tools #editorItemPalettePanel { grid-area: palette; }
         .landscape-editor-tools #lineGridTools { display: flex; flex-direction: column; gap: var(--ui-gap-tight); align-items: stretch; width: 7rem; }
         .landscape-editor-tools #lineToolRow, .landscape-editor-tools #lineSetRow, .landscape-editor-tools #gridRotateMirrorRow, .landscape-editor-tools #gridSizeButtonsRow { justify-content: center; }
@@ -121,15 +121,19 @@
         .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); border-radius: var(--ui-radius); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e1; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; touch-action: none; }
         .palette-grid .palette-item { width: 100%; height: auto; aspect-ratio: 1 / 1; }
         .palette-item svg { width: 65%; height: 65%; }
-        .palette-item.selected { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3); }
+        .palette-item.selected { border-color: var(--theme-gate); box-shadow: var(--theme-editor-palette-shadow); }
         .palette-item:active { transform: scale(0.95); }
         #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--ui-gap-tight))) !important; }
         .landscape-editor-tools #editorItemPalettePanel { display: flex; }
         .landscape-editor-tools .palette-grid { width: max-content; grid-template-columns: repeat(4, var(--palette-cell-size)); }
         .landscape-editor-tools .palette-grid .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); aspect-ratio: auto; }
 
-        .editor-input { background: rgba(0,0,0,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5rem; width: 4rem; text-align: center; font-weight: 800; font-size: 1.5rem; line-height: 1; padding: 0.25rem 0; outline: none; transition: border-color 0.2s; }
-        .editor-input:focus { border-color: white; }
+        .editor-input { background: var(--theme-editor-input-bg); color: var(--theme-editor-input-text); border: 1px solid var(--theme-editor-input-border); border-radius: 0.5rem; width: 4rem; text-align: center; font-weight: 800; font-size: 1.5rem; line-height: 1; padding: 0.25rem 0; outline: none; transition: border-color 0.2s; }
+        .editor-input:focus { border-color: var(--theme-editor-input-focus); }
+        .theme-editor-panel { background: var(--theme-theme-editor-panel-bg); }
+        .theme-swatch { border-color: var(--theme-theme-editor-swatch-border) !important; }
+        .export-action-btn:hover { background: var(--theme-export-btn-hover) !important; }
+        .modal-close-btn:hover { background: var(--theme-modal-close-hover) !important; }
 
         #dragGhost { position: fixed; pointer-events: none; z-index: 1000; opacity: 0.9; transform: translate(-50%, -50%); filter: drop-shadow(0 8px 12px rgba(0,0,0,0.4)); display: none; }
         #dragGhost svg { width: 100%; height: 100%; }
@@ -159,7 +163,7 @@
     </defs>
 </svg>
 
-<div id="dragGhost" class="flex items-center justify-center bg-white rounded-lg border-2 border-sky-500 border-dashed"></div>
+<div id="dragGhost" class="flex items-center justify-center rounded-lg border-2 border-dashed"></div>
 
 <div id="loadingOverlay" class="fixed inset-0 z-[100] bg-[var(--theme-loading-overlay-bg)] backdrop-blur-sm flex items-center justify-center p-8 transition-opacity duration-500">
     <div class="w-full max-w-xs bg-[var(--theme-loading-panel-bg)] p-6 rounded-2xl border border-[var(--theme-loading-panel-border)] shadow-2xl">
@@ -171,15 +175,15 @@
             <p id="loadPercent" class="text-[var(--theme-loading-percent)] font-mono text-sm">0%</p>
         </div>
         <div class="w-full h-1.5 bg-[var(--theme-loading-track)] rounded-full overflow-hidden"><div id="loadProgressBar" class="h-full bg-[var(--theme-loading-bar)] w-0 transition-all duration-200"></div></div>
-        <p id="loadErrorMessage" class="mt-4 text-[var(--theme-loading-error)] text-[0.6rem] font-medium hidden text-center italic leading-relaxed">Remote resource unavailable. Engaging local fallback array.</p>
+        <p id="loadErrorMessage" class="mt-4 text-[var(--theme-error-text)] text-[0.6rem] font-medium hidden text-center italic leading-relaxed">Remote resource unavailable. Engaging local fallback array.</p>
     </div>
 </div>
 
 <div id="appLayout" class="app-layout mx-auto stack h-full w-full justify-start relative gap-[var(--ui-gap)] pb-[var(--ui-gap)]">
     <div id="gamePane" class="layout-right-pane">
-    <div class="bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-300 flex flex-col shrink-0">
+    <div id="mainGamePane" class="bg-white rounded-2xl overflow-hidden shadow-2xl border flex flex-col shrink-0">
         <div id="headerBar" class="flex h-20 border-b border-slate-200">
-            <div id="headerLeft" class="flex-shrink-0 flex items-center justify-center border-r border-slate-200 transition-colors duration-300 bg-[var(--theme-logo-bg)] aspect-square">
+            <div id="headerLeft" class="flex-shrink-0 flex items-center justify-center border-r transition-colors duration-300 bg-[var(--theme-logo-bg)] aspect-square">
                 <svg viewBox="0 0 9 9" class="h-full w-auto p-[var(--ui-pad)]">
                     <rect width="9" height="9" fill="var(--theme-logo-bg)"/>
                     <g stroke="var(--theme-logo-grid)" stroke-width="0.05">
@@ -199,7 +203,7 @@
                     <div id="headerMiddleColCenter" class="header-middle-col">
                         <div id="levelInfoWrap" class="min-w-0">
                             <span id="levelLabelText" class="text-[0.6rem] font-black uppercase tracking-widest leading-none mb-1">Level</span>
-                            <p id="levelTitle" class="text-white font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
+                            <p id="levelTitle" class="font-black text-4xl uppercase cursor-pointer select-none tracking-tighter leading-none">1</p>
                         </div>
                     </div>
                     <div id="headerMiddleColRight" class="header-middle-col">
@@ -252,7 +256,7 @@
             <div id="guideModal" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start panel-pad shrink-0">
                     <div class="flex-grow text-center pr-2"><p class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)]">Please draw a line from a Gate to a Goal that's precisely as long and as twisty as specified.</p></div>
-                    <button id="closeGuideX" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    <button id="closeGuideX" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
                 <div class="flex-grow overflow-y-auto px-[var(--ui-panel-pad)] pb-[var(--ui-gap-tight)]">
                     <div class="flex flex-wrap justify-center gap-4 mb-6">
@@ -273,18 +277,18 @@
                     <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
                         <div class="flex justify-between items-center mb-4 shrink-0 px-2">
                             <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
-                            <button id="closeThemeModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                            <button id="closeThemeModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] p-1 rounded-full modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                         </div>
                         <div id="themeGrid" class="flex-grow overflow-y-auto grid grid-cols-3 gap-4 px-2 pb-4 content-start min-h-0"></div>
                         <div id="themeSelectFooter" class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-center gap-2 shrink-0">
-                            <button id="openThemeEditorBtn" class="hidden text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Modify Themes</button>
-                            <button id="dismissThemeModalBtn" class="text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-black/5 px-4 py-2 rounded-lg hover:bg-black/10">Dismiss</button>
+                            <button id="openThemeEditorBtn" class="hidden text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition px-4 py-2 rounded-lg theme-editor-panel modal-close-btn">Modify Themes</button>
+                            <button id="dismissThemeModalBtn" class="text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition px-4 py-2 rounded-lg theme-editor-panel modal-close-btn">Dismiss</button>
                         </div>
                     </div>
                     <div id="themeEditView" class="hidden flex-col w-full h-full min-h-0">
                         <div class="flex justify-between items-center mb-4 shrink-0 px-2">
                             <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Modify Themes</h2>
-                            <button id="backToThemeSelectBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-1 rounded-full">
+                            <button id="backToThemeSelectBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] p-1 rounded-full modal-close-btn">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                             </button>
                         </div>
@@ -300,7 +304,7 @@
                 <div id="megaModalContent" class="screen-modal-panel panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content">
                     <div class="flex justify-between items-center mb-3 shrink-0">
                         <div><h2 id="megaModalTitle" class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Mega Solver Results</h2><p id="megaModalSub" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Bulk Solution Generation</p></div>
-                        <button id="closeMegaModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5 p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                        <button id="closeMegaModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] modal-close-btn p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                     </div>
                     <div class="flex-grow min-h-0 overflow-y-auto pr-1">
                         <div id="megaSummary" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-mega-desc-text)] mb-2">No run yet.</div>
@@ -322,7 +326,7 @@
             <div id="editorHelpModal" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                      <div class="flex-grow pr-2"><h3 class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)] text-left w-full">Editor Guide</h3></div>
-                    <button id="closeEditorHelpX" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-black/5"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    <button id="closeEditorHelpX" class="transition p-1 rounded-full shrink-0 text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] modal-close-btn"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
                 <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-4 pt-2 text-left">
                     <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Building & Testing</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Pick a tool from the palette to start building! You can tap the grid to place objects or even drag them directly into position. Use the <strong>Pencil</strong> to sketch out paths and see how your level plays. Dragging items off the grid will remove them.</p></section>
@@ -380,14 +384,14 @@
                     <div class="palette-item" data-type="flipV" title="Flip-V"><svg viewBox="0 0 100 100" style="color: var(--theme-filter)"><use href="#def-flipV"/></svg></div>
                 </div>
                 <div class="w-12 flex-shrink-0 flex items-center justify-center">
-                    <div id="editUndoGridBtn" class="palette-item palette-tool" title="Undo Grid Action"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div>
+                    <div id="editUndoGridBtn" class="palette-item palette-tool" title="Undo Grid Action"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="editor-tool-icon"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div>
                 </div>
             </div>
-            <div id="editorLineGridPanel" class="flex items-center justify-center pt-3 border-t border-slate-100 gap-1.5">
+            <div id="editorLineGridPanel" class="flex items-center justify-center pt-3 border-t gap-1.5">
                 <div id="lineGridTools" class="flex gap-1">
                     <div id="lineToolRow" class="flex gap-1">
-                    <div id="editPencilBtn" class="palette-item palette-tool !w-10 !h-10" title="Pencil"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 490.667 490.667" fill="currentColor" stroke="none" class="text-slate-700"><g><g><g><path d="M459.113,31.24c-41.654-41.654-109.199-41.654-150.853,0L21.647,317.854c-3.425,3.425-5.583,7.915-6.118,12.729L0.447,466.348c-1.509,13.587,9.971,25.068,23.558,23.558l135.765-15.083c4.815-0.535,9.304-2.693,12.729-6.118L399.827,241.38c0.007-0.007,0.016-0.013,0.023-0.021l59.264-59.264c20.827-20.827,31.241-48.127,31.24-75.427C490.354,79.368,479.941,52.068,459.113,31.24z M428.943,151.923l-44.18,44.18l-90.512-90.512l44.179-44.179c24.991-24.992,65.521-24.992,90.513,0c12.495,12.495,18.743,28.875,18.744,45.255C447.687,123.048,441.439,139.428,428.943,151.923z M147.622,433.245L45.797,444.557l11.312-101.825L264.081,135.76l90.513,90.513L147.622,433.245z"/><path d="M232.839,448h-21.333c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h21.333c11.782,0,21.333-9.551,21.333-21.333C254.172,457.551,244.621,448,232.839,448z"/><path d="M467.506,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C488.839,457.551,479.288,448,467.506,448z"/><path d="M360.839,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C382.172,457.551,372.621,448,360.839,448z"/></g></g></g></svg></div>
-                    <div id="editEraserBtn" class="palette-item palette-tool !w-10 !h-10" title="Undo Step"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-slate-700"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></div>
+                    <div id="editPencilBtn" class="palette-item palette-tool !w-10 !h-10" title="Pencil"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 490.667 490.667" fill="currentColor" stroke="none" class="editor-tool-icon"><g><g><g><path d="M459.113,31.24c-41.654-41.654-109.199-41.654-150.853,0L21.647,317.854c-3.425,3.425-5.583,7.915-6.118,12.729L0.447,466.348c-1.509,13.587,9.971,25.068,23.558,23.558l135.765-15.083c4.815-0.535,9.304-2.693,12.729-6.118L399.827,241.38c0.007-0.007,0.016-0.013,0.023-0.021l59.264-59.264c20.827-20.827,31.241-48.127,31.24-75.427C490.354,79.368,479.941,52.068,459.113,31.24z M428.943,151.923l-44.18,44.18l-90.512-90.512l44.179-44.179c24.991-24.992,65.521-24.992,90.513,0c12.495,12.495,18.743,28.875,18.744,45.255C447.687,123.048,441.439,139.428,428.943,151.923z M147.622,433.245L45.797,444.557l11.312-101.825L264.081,135.76l90.513,90.513L147.622,433.245z"/><path d="M232.839,448h-21.333c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h21.333c11.782,0,21.333-9.551,21.333-21.333C254.172,457.551,244.621,448,232.839,448z"/><path d="M467.506,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C488.839,457.551,479.288,448,467.506,448z"/><path d="M360.839,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C382.172,457.551,372.621,448,360.839,448z"/></g></g></g></svg></div>
+                    <div id="editEraserBtn" class="palette-item palette-tool !w-10 !h-10" title="Undo Step"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="editor-tool-icon"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></div>
                     </div>
                     <div id="lineSetRow" class="flex">
                     <div id="editCopyMetrics" class="bg-red-700 text-white px-4 h-10 flex items-center justify-center rounded-lg text-[0.65rem] font-bold uppercase tracking-wider cursor-pointer hover:brightness-110 active:scale-95 transition-all whitespace-nowrap min-w-[6rem]">Set (0/0)</div>
@@ -414,38 +418,38 @@
     <div id="playControls" class="bg-white p-3 rounded-2xl shadow-xl border border-slate-200 relative">
         <div class="relative">
             <div id="gameButtonGrid" class="flex gap-1.5">
-                <div id="hintBtn" class="flex-1 h-10 bg-orange-500 text-white font-bold rounded-lg shadow-md transition-all duration-200 text-[0.65rem] uppercase tracking-wider flex flex-col z-20 overflow-hidden cursor-pointer relative">
-                    <div id="hintTopHalf" class="flex-1 w-full items-center justify-center border-b border-white/20 hidden hover:bg-black/10 transition-colors text-[0.65rem] text-center">New Hint</div>
-                    <div id="hintBottomHalf" class="flex-1 w-full items-center justify-center flex hover:bg-black/10 transition-colors text-center"><span id="hintMainLabel" class="w-full text-center">Hint</span></div>
+                <div id="hintBtn" class="action-btn flex-1 h-10 font-bold rounded-lg shadow-md transition-all duration-200 text-[0.65rem] uppercase tracking-wider flex flex-col z-20 overflow-hidden cursor-pointer relative">
+                    <div id="hintTopHalf" class="flex-1 w-full items-center justify-center border-b hidden transition-colors text-[0.65rem] text-center">New Hint</div>
+                    <div id="hintBottomHalf" class="flex-1 w-full items-center justify-center flex transition-colors text-center"><span id="hintMainLabel" class="w-full text-center">Hint</span></div>
                 </div>
-                <button id="resetBtn" class="flex-1 h-10 bg-red-500 text-white font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Reset</button>
-                <button id="undoBtn" class="flex-1 h-10 bg-slate-600 text-white font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Undo</button>
-                <button id="whoaBtn" class="flex-1 h-10 bg-blue-500 text-white font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Whoa</button>
-                <button id="guideBtn" class="flex-1 h-10 bg-purple-600 text-white font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Guide</button>
-                <button id="megaSolverBtn" class="hidden flex-1 h-10 bg-fuchsia-600 text-white font-black rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Mega</button>
-                <button id="modeToggleBtn" class="flex-1 h-10 bg-slate-900 text-white font-black rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Edit</button>
+                <button id="resetBtn" class="action-btn flex-1 h-10 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Reset</button>
+                <button id="undoBtn" class="action-btn flex-1 h-10 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Undo</button>
+                <button id="whoaBtn" class="action-btn flex-1 h-10 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Whoa</button>
+                <button id="guideBtn" class="action-btn flex-1 h-10 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Guide</button>
+                <button id="megaSolverBtn" class="action-btn hidden flex-1 h-10 font-black rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Mega</button>
+                <button id="modeToggleBtn" class="action-btn flex-1 h-10 font-black rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Edit</button>
             </div>
             <div id="editorButtonGrid" class="hidden flex gap-1.5">
-                <button id="editResetGrid" class="flex-1 h-10 bg-red-600 text-white font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Clear</button>
-                <button id="editNewLevel" class="flex-1 h-10 bg-emerald-600 text-white font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">New</button>
-                <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 text-white font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
-                <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 text-white font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
-                <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 text-white font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
-                <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 text-white font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
+                <button id="editResetGrid" class="action-btn flex-1 h-10 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Clear</button>
+                <button id="editNewLevel" class="action-btn flex-1 h-10 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">New</button>
+                <button id="editMegaSolver" class="action-btn flex-1 h-10 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
+                <button id="editTrapSpotsBtn" class="action-btn flex-1 h-10 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
+                <button id="editHelpBtn" class="action-btn flex-1 h-10 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
+                <button id="editModeToggleBtn" class="action-btn flex-1 h-10 font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
             </div>
             <div id="alertOverlay" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
                 <p id="message" class="font-black text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
             </div>
         </div>
-        <div class="flex flex-col gap-2 hidden mt-3 pt-3 border-t border-slate-100" id="exportArea">
+        <div class="flex flex-col gap-2 hidden mt-3 pt-3 border-t" id="exportArea">
             <div class="flex justify-between items-center px-1"><label id="exportLabel" class="text-[0.6rem] uppercase font-black text-slate-400 tracking-widest">Level Data Export</label></div>
             <div class="flex gap-2 items-stretch w-full">
                 <textarea id="solutionOutput" readonly class="flex-grow h-[5rem] p-3 bg-slate-900 text-sky-300 rounded-xl border border-slate-700 text-[0.6rem] font-mono leading-tight" placeholder="Solution data..."></textarea>
                 <div id="exportBtnStack" class="flex flex-col gap-1 w-24 shrink-0">
-                    <button id="devCopyBtn" class="flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] hover:bg-slate-300 transition uppercase px-1 leading-none">Copy Path</button>
-                    <button id="devGenBtn" class="flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] hover:bg-slate-300 transition uppercase">Copy Hints</button>
-                    <button id="editCopyBtn" class="hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
-                    <button id="editGenBtn" class="hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
+                    <button id="devCopyBtn" class="export-action-btn flex-1 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
+                    <button id="devGenBtn" class="export-action-btn flex-1 rounded-lg font-black text-[0.6rem] transition uppercase">Copy Hints</button>
+                    <button id="editCopyBtn" class="export-action-btn hidden flex-1 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
+                    <button id="editGenBtn" class="export-action-btn hidden flex-1 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
                 </div>
             </div>
         </div>
@@ -800,6 +804,7 @@
 
         const flashMessage = (text = '', className = '', duration = 1200) => {
             const overlay = getEl('alertOverlay');
+            getEl('message').style.color = 'var(--theme-alert-text)';
             setStatus(text, 'info', className);
             if (!overlay) return;
             removeClass(overlay, 'pointer-events-none');
@@ -817,6 +822,7 @@
         const showMessage = (text = '', className = '') => {
             setStatus(text, 'info', className || '');
             const overlay = getEl('alertOverlay');
+            getEl('message').style.color = 'var(--theme-alert-text)';
             if (!overlay) return;
             if (text === '') { setInlineStyle(overlay, 'opacity', '0'); return; }
             setInlineStyle(overlay, 'opacity', '1');
@@ -905,6 +911,25 @@
             root.style.setProperty('--theme-header-nav-bg-hover', t.header.navBgHover);
             root.style.setProperty('--theme-header-nav-text', t.header.navText);
             root.style.setProperty('--theme-header-divider', t.header.divider);
+            root.style.setProperty('--theme-action-btn-text', t.text.actionBtn);
+            root.style.setProperty('--theme-hint-hover', t.btns.hintHover);
+            root.style.setProperty('--theme-hint-divider', t.btns.hintDivider);
+            root.style.setProperty('--theme-editor-input-bg', t.editor.inputBg);
+            root.style.setProperty('--theme-editor-input-text', t.editor.inputText);
+            root.style.setProperty('--theme-editor-input-border', t.editor.inputBorder);
+            root.style.setProperty('--theme-editor-input-focus', t.editor.inputFocus);
+            root.style.setProperty('--theme-layout-main-border', t.layout.mainBorder);
+            root.style.setProperty('--theme-layout-header-left-border', t.layout.headerLeftBorder);
+            root.style.setProperty('--theme-layout-export-border', t.layout.exportBorder);
+            root.style.setProperty('--theme-layout-editor-panel-border', t.layout.editorPanelBorder);
+            root.style.setProperty('--theme-theme-editor-panel-bg', t.themeEditor.panelBg);
+            root.style.setProperty('--theme-theme-editor-swatch-border', t.themeEditor.swatchBorder);
+            root.style.setProperty('--theme-modal-close-hover', t.modal.closeHover);
+            root.style.setProperty('--theme-error-text', t.text.error);
+            root.style.setProperty('--theme-editor-tool-icon', t.editor.toolIcon);
+            root.style.setProperty('--theme-editor-palette-shadow', t.editor.paletteShadow);
+            root.style.setProperty('--theme-hand-drawn-shadow', t.text.handDrawnShadow);
+            root.style.setProperty('--theme-export-btn-hover', t.btns.exportHover);
             root.style.setProperty('--theme-portal-pending', t.colors.portalPending);
             root.style.setProperty('--theme-bomb-blast-ring', t.colors.bombBlastRing);
             root.style.setProperty('--theme-bomb-blast-rays', t.colors.bombBlastRays);
@@ -912,13 +937,16 @@
             root.style.setProperty('--theme-leave-bg', leave.bg); root.style.setProperty('--theme-leave-hover', leave.hover); root.style.setProperty('--theme-leave-text', leave.text); root.style.setProperty('--theme-leave-border', leave.border);
 
             document.body.style.backgroundColor = t.bodyBg; APP.Renderer.getCanvas().style.backgroundColor = t.canvasBg; getEl('canvasContainer').style.backgroundColor = t.canvasBg;
+            getEl('mainGamePane').style.borderColor = t.layout.mainBorder;
             getEl('headerLeft').style.backgroundColor = t.canvasBg;
+            getEl('headerLeft').style.borderColor = t.layout.headerLeftBorder;
             getEl('headerMiddle').style.backgroundColor = t.headerLeft;
             getEl('headerRight').style.backgroundColor = t.headerRight;
             getEl('headerBar').style.borderColor = t.grid;
-            getEl('levelTitle').style.color = t.text.headerMain;
-            getEl('levelLabelText').style.color = t.text.headerSub;
-            const ghost = getEl('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; const pal = getEl('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; queryAll('.palette-item').forEach(item => { item.style.backgroundColor = t.palette.itemBg; item.style.borderColor = t.palette.itemBorder; }); getEl('editCopyMetrics').style.backgroundColor = t.headerLeft; getEl('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = getEl('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; getEl('undoBtn').style.backgroundColor = t.btns.undo; getEl('resetBtn').style.backgroundColor = t.btns.reset; getEl('guideBtn').style.backgroundColor = t.btns.guide; getEl('whoaBtn').style.backgroundColor = t.btns.whoa;
+            getEl('levelTitle').style.color = t.header.navText;
+            getEl('levelLabelText').style.color = t.header.navText;
+            getEl('message').style.color = 'var(--theme-alert-text)';
+            const ghost = getEl('dragGhost'); ghost.style.backgroundColor = t.ghostBg; ghost.style.borderColor = t.ghostBorder; ghost.style.color = t.editor.toolIcon; const pal = getEl('editorPalette'); pal.style.backgroundColor = t.palette.bg; pal.style.borderColor = t.palette.border; queryAll('.palette-item').forEach(item => { item.style.backgroundColor = t.palette.itemBg; item.style.borderColor = t.palette.itemBorder; }); getEl('editCopyMetrics').style.backgroundColor = t.headerLeft; getEl('editCopyMetrics').style.borderColor = t.palette.itemBorder; const pc = getEl('playControls'); pc.style.backgroundColor = t.controls; pc.style.borderColor = t.grid; getEl('hintBtn').style.backgroundColor = t.btns.hint; getEl('hintBtn').style.color = t.text.actionBtn; getEl('hintTopHalf').style.borderColor = t.btns.hintDivider; getEl('hintTopHalf').style.backgroundColor = 'transparent'; getEl('hintBottomHalf').style.backgroundColor = 'transparent'; getEl('undoBtn').style.backgroundColor = t.btns.undo; getEl('resetBtn').style.backgroundColor = t.btns.reset; getEl('guideBtn').style.backgroundColor = t.btns.guide; getEl('whoaBtn').style.backgroundColor = t.btns.whoa;
 
             getEl('openThemeModalBtn').style.backgroundColor = t.shell.btnBg;
             getEl('openThemeModalBtn').style.color = t.shell.btnText;
@@ -927,7 +955,7 @@
             getEl('orientationToggleBtn').style.color = t.text.shellBtn || t.text.megaPrimary || '#ffffff';
             getEl('orientationToggleBtn').style.borderColor = t.grid;
 
-            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.btns.muteIcon; getEl('editCopyBtn').style.color = t.btns.muteIcon; getEl('devGenBtn').style.color = t.btns.muteIcon; getEl('editGenBtn').style.color = t.btns.muteIcon; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
+            ['resetBtn','undoBtn','whoaBtn','guideBtn','megaSolverBtn','modeToggleBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editModeToggleBtn'].forEach(id=>{const el=getEl(id); if(el) el.style.color=t.text.actionBtn;}); queryAll('.editor-tool-icon').forEach(el=>el.style.color=t.editor.toolIcon); getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.btns.muteIcon; getEl('editCopyBtn').style.color = t.btns.muteIcon; getEl('devGenBtn').style.color = t.btns.muteIcon; getEl('editGenBtn').style.color = t.btns.muteIcon; getEl('exportArea').style.borderColor = t.layout.exportBorder; getEl('editorLineGridPanel').style.borderColor = t.layout.editorPanelBorder; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
             const gArea = getEl('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
             const winModalContent = getEl('winModalContent'); getEl('winCircle').style.backgroundColor = t.win.bg; getEl('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.text.winAccent; winModalContent.querySelector('p').style.color = t.text.win; getEl('nextLevelModalBtn').style.color = t.text.winAccent; getEl('dismissWinModalBtn').style.color = t.text.winAccent;
         };
@@ -1170,11 +1198,11 @@
                 container.appendChild(header);
                 const t = APP.Themes.THEMES[themeKey] || {};
                 const toColorSet = (arr) => new Set(arr.filter(c => c && typeof c === 'string' && c !== 'rainbow'));
-                const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border, t.loading?.panelBorder, t.loading?.track, t.search?.megaStatusBorder, t.shell?.btnBorder, t.shell?.muteBorder, t.header?.divider]);
-                const btnColors = toColorSet([...Object.values(t.btns || {}), t.leave?.bg, t.leave?.hover, t.shell?.btnBg, t.shell?.btnBgHover, t.shell?.muteBg, t.shell?.muteBgHover, t.header?.navBg, t.header?.navBgHover]);
+                const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border, t.loading?.panelBorder, t.loading?.track, t.search?.megaStatusBorder, t.shell?.btnBorder, t.shell?.muteBorder, t.header?.divider, t.layout?.mainBorder, t.layout?.headerLeftBorder, t.layout?.exportBorder, t.layout?.editorPanelBorder, t.themeEditor?.swatchBorder, t.editor?.inputBorder]);
+                const btnColors = toColorSet([...Object.values(t.btns || {}), t.leave?.bg, t.leave?.hover, t.shell?.btnBg, t.shell?.btnBgHover, t.shell?.muteBg, t.shell?.muteBgHover, t.header?.navBg, t.header?.navBgHover, t.modal?.closeHover]);
                 const gridColors = toColorSet([t.colors?.gate, t.colors?.goal, t.colors?.block, t.colors?.pin, t.colors?.pinUnflipped, t.colors?.filter, t.colors?.portal, t.colors?.cross, t.colors?.portalPending, t.colors?.bombBlastRing, t.colors?.bombBlastRays, t.path, t.grid]);
-                const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.palette?.toolBg, t.win?.bg, t.alert?.bg, t.ctrlArea?.bg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.burst, t.check, t.loading?.overlayBg, t.loading?.panelBg, t.search?.overlayBg, t.jumpscare?.gooseBg, t.jumpscare?.bombBg]);
-                const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.text?.body, t.text?.shellBtn, t.leave?.text, t.loading?.title, t.loading?.status, t.loading?.percent, t.loading?.error, t.search?.megaStatusText, t.search?.label, t.search?.timer, t.search?.close, t.search?.closeHover, t.jumpscare?.gooseText, t.jumpscare?.bombTopText, t.jumpscare?.bombBottomText, t.shell?.btnText, t.shell?.muteText, t.header?.navText]);
+                const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.palette?.toolBg, t.win?.bg, t.alert?.bg, t.ctrlArea?.bg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.burst, t.check, t.loading?.overlayBg, t.loading?.panelBg, t.search?.overlayBg, t.jumpscare?.gooseBg, t.jumpscare?.bombBg, t.editor?.inputBg, t.themeEditor?.panelBg, t.btns?.hintHover]);
+                const textColors = toColorSet([t.metricText, t.headerLeftText, t.headerLeftLabel, t.modal?.text, t.modal?.textMuted, t.modal?.accent, t.output?.text, t.win?.text, t.win?.accent, t.text?.modal, t.text?.modalMuted, t.text?.modalAccent, t.text?.output, t.text?.metric, t.text?.headerMain, t.text?.headerSub, t.text?.win, t.text?.winAccent, t.text?.megaDesc, t.text?.megaOutput, t.text?.megaPrimary, t.text?.megaSecondary, t.text?.megaGemini, t.text?.megaCopy, t.text?.body, t.text?.shellBtn, t.leave?.text, t.loading?.title, t.loading?.status, t.loading?.percent, t.loading?.error, t.search?.megaStatusText, t.search?.label, t.search?.timer, t.search?.close, t.search?.closeHover, t.jumpscare?.gooseText, t.jumpscare?.bombTopText, t.jumpscare?.bombBottomText, t.shell?.btnText, t.shell?.muteText, t.header?.navText, t.text?.actionBtn, t.text?.error, t.text?.handDrawnShadow, t.editor?.inputText, t.editor?.inputFocus, t.editor?.toolIcon]);
                 const buildSwatch = (c, category) => {
                     const swatch = document.createElement('div');
                     const swatchIdx = nextSwatchIdx++;
@@ -1183,7 +1211,6 @@
                     swatch.className = `theme-swatch ${swatchClasses}`;
                     swatch.style.backgroundColor = c;
                     swatch.style.pointerEvents = 'auto';
-                    swatch.classList.add('border-slate-300');
                     swatch.draggable = false;
                     swatch.dataset.themeColor = c;
                     swatch.dataset.themeKey = themeKey;
@@ -1199,7 +1226,7 @@
                 };
                 const buildSection = (title, colorArr) => {
                     const section = document.createElement('div');
-                    section.className = "flex flex-col items-center p-1 rounded bg-black/5 min-h-[6.5rem]";
+                    section.className = "theme-editor-panel flex flex-col items-center p-1 rounded min-h-[6.5rem]";
                     const ctitle = document.createElement('div');
                     ctitle.className = "text-[0.6rem] font-black uppercase text-[var(--theme-modal-muted)] mb-1.5 tracking-widest text-center";
                     ctitle.innerText = title;
@@ -1222,7 +1249,7 @@
                 container.appendChild(sectionsContainer);
                 container.appendChild(textRow);
                 const aiColorsContainer = document.createElement('div');
-                aiColorsContainer.className = "flex flex-col items-center w-full mt-1 bg-black/5 rounded p-1.5";
+                aiColorsContainer.className = "theme-editor-panel flex flex-col items-center w-full mt-1 rounded p-1.5";
                 const aiTitle = document.createElement('div');
                 aiTitle.className = "text-[0.55rem] font-black uppercase text-[var(--theme-modal-accent)] mb-1 tracking-widest";
                 aiTitle.innerText = "Complementary Palette (AI)";
@@ -1243,7 +1270,7 @@
                         const failWrap = document.createElement('div');
                         failWrap.className = "flex flex-col items-center gap-1";
                         const failBtn = document.createElement('button');
-                        failBtn.className = "text-[0.55rem] text-red-500 font-bold uppercase tracking-widest hover:scale-105 transition-transform";
+                        failBtn.className = "text-[0.55rem] text-[var(--theme-error-text)] font-bold uppercase tracking-widest hover:scale-105 transition-transform";
                         failBtn.innerText = "Generation Failed - Retry?";
                         failBtn.onclick = handleAiGeneration;
                         const detail = document.createElement('div');
@@ -1282,8 +1309,9 @@
                     setTimeout(() => exportBtn.innerText = origText, 1500);
                 };
                 const undoBtn = document.createElement('button');
-                undoBtn.className = "bg-slate-500 text-white px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:bg-slate-600 transition shadow-sm shrink-0";
+                undoBtn.className = "px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider transition shadow-sm shrink-0";
                 undoBtn.innerText = "Undo";
+                undoBtn.style.backgroundColor = t.btns.undo; undoBtn.style.color = t.text.actionBtn; undoBtn.style.border = `1px solid ${t.themeEditor.swatchBorder}`;
                 const canUndo = window.THEME_UNDO_STACKS && window.THEME_UNDO_STACKS[themeKey] && window.THEME_UNDO_STACKS[themeKey].length > 0;
                 if (!canUndo) { undoBtn.disabled = true; undoBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
                 undoBtn.onclick = () => {
@@ -1295,8 +1323,9 @@
                     }
                 };
                 const resetBtn = document.createElement('button');
-                resetBtn.className = "bg-red-600 text-white px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:bg-red-700 transition shadow-sm shrink-0";
+                resetBtn.className = "px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider transition shadow-sm shrink-0";
                 resetBtn.innerText = "Reset";
+                resetBtn.style.backgroundColor = t.btns.reset; resetBtn.style.color = t.text.actionBtn; resetBtn.style.border = `1px solid ${t.themeEditor.swatchBorder}`;
                 resetBtn.onclick = () => {
                     if (window.ORIGINAL_THEMES && window.ORIGINAL_THEMES[themeKey]) {
                         APP.Themes.THEMES[themeKey] = JSON.parse(JSON.stringify(window.ORIGINAL_THEMES[themeKey]));
@@ -4628,7 +4657,10 @@
             "editClear": "#d12929",
             "editBombs": "#ef4444",
             "editNew": "#0a8a65",
-            "disabled": "#94a3b8"
+            "disabled": "#94a3b8",
+            "hintHover": "rgba(0, 0, 0, 0.1)",
+            "hintDivider": "rgba(255, 255, 255, 0.2)",
+            "exportHover": "#cbd5e1"
         },
         "modal": {
             "bg": "rgba(248, 250, 252, 0.95)",
@@ -4636,7 +4668,8 @@
             "border": "#cbd5e1",
             "text": "#334155",
             "textMuted": "#64748b",
-            "accent": "#0f172a"
+            "accent": "#0f172a",
+            "closeHover": "rgba(0, 0, 0, 0.08)"
         },
         "output": {
             "bg": "#0f172a",
@@ -4697,7 +4730,10 @@
             "megaGemini": "#ffffff",
             "megaCopy": "#334155",
             "body": "#111827",
-            "shellBtn": "#475569"
+            "shellBtn": "#475569",
+            "actionBtn": "#ffffff",
+            "error": "#7dd3fc",
+            "handDrawnShadow": "#000000"
         },
         "loading": {
             "overlayBg": "rgba(15, 23, 42, 0.6)",
@@ -4742,6 +4778,24 @@
             "navBgHover": "rgba(255, 255, 255, 0.3)",
             "navText": "#ffffff",
             "divider": "rgba(226, 232, 240, 0.2)"
+        },
+        "editor": {
+            "inputBg": "rgba(0, 0, 0, 0.15)",
+            "inputText": "#ffffff",
+            "inputBorder": "rgba(255, 255, 255, 0.3)",
+            "inputFocus": "#ffffff",
+            "toolIcon": "#334155",
+            "paletteShadow": "0 0 0 2px rgba(59, 130, 246, 0.3)"
+        },
+        "layout": {
+            "mainBorder": "#cbd5e1",
+            "headerLeftBorder": "#e2e8f0",
+            "exportBorder": "#f1f5f9",
+            "editorPanelBorder": "#f1f5f9"
+        },
+        "themeEditor": {
+            "panelBg": "rgba(0, 0, 0, 0.05)",
+            "swatchBorder": "#cbd5e1"
         },
         "mega": {
             "outputBg": "#0f172a",
@@ -5584,6 +5638,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.search = t.search || {};
         t.jumpscare = t.jumpscare || {};
         t.shell = t.shell || {};
+        t.editor = t.editor || {};
+        t.layout = t.layout || {};
+        t.themeEditor = t.themeEditor || {};
 
         t.bodyBg = t.bodyBg || '#e0f2fe';
         t.canvasBg = t.canvasBg || '#ffffff';
@@ -5697,6 +5754,30 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.header.navText = t.header.navText || t.text.headerMain;
         t.header.divider = t.header.divider || 'rgba(226,232,240,0.2)';
 
+        t.text.actionBtn = t.text.actionBtn || '#ffffff';
+        t.text.error = t.text.error || t.loading.error || '#ef4444';
+        t.text.handDrawnShadow = t.text.handDrawnShadow || '#000000';
+
+        t.btns.hintHover = t.btns.hintHover || 'rgba(0,0,0,0.1)';
+        t.btns.hintDivider = t.btns.hintDivider || 'rgba(255,255,255,0.2)';
+
+        t.editor.inputBg = t.editor.inputBg || 'rgba(0,0,0,0.15)';
+        t.editor.inputText = t.editor.inputText || t.text.actionBtn;
+        t.editor.inputBorder = t.editor.inputBorder || 'rgba(255,255,255,0.3)';
+        t.editor.inputFocus = t.editor.inputFocus || t.text.actionBtn;
+        t.editor.toolIcon = t.editor.toolIcon || t.modal.text;
+        t.editor.paletteShadow = t.editor.paletteShadow || '0 0 0 2px rgba(59,130,246,0.3)';
+
+        t.layout.mainBorder = t.layout.mainBorder || t.modal.border;
+        t.layout.headerLeftBorder = t.layout.headerLeftBorder || t.modal.border;
+        t.layout.exportBorder = t.layout.exportBorder || t.ctrlArea.border;
+        t.layout.editorPanelBorder = t.layout.editorPanelBorder || t.ctrlArea.border;
+
+        t.themeEditor.panelBg = t.themeEditor.panelBg || 'rgba(0,0,0,0.05)';
+        t.themeEditor.swatchBorder = t.themeEditor.swatchBorder || t.modal.border;
+
+        t.modal.closeHover = t.modal.closeHover || 'rgba(0,0,0,0.08)';
+        t.btns.exportHover = t.btns.exportHover || darkenHex(t.btns.copy || t.modal.panelBg, 0.9);
         t.colors.portalPending = t.colors.portalPending || '#999999';
         t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
         t.colors.bombBlastRays = t.colors.bombBlastRays || t.headerLeft;
@@ -5729,7 +5810,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function applyTheme(name) {
         const themes = getThemeRegistry();
-        if (name === 'chaos') { themes.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc(), body: rc(), shellBtn: rc() }, loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc() }, search: { overlayBg: rc(), megaStatusText: rc(), megaStatusBorder: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() }, jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() }, shell: { btnBg: rc(), btnBgHover: rc(), btnText: rc(), btnBorder: rc(), muteBg: rc(), muteBgHover: rc(), muteText: rc(), muteBorder: rc() }, header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
+        if (name === 'chaos') { themes.chaos = normalizeTheme({ bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(), controls: rc(), metricText: rc(), btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc(), hintHover: rc(), hintDivider: rc(), exportHover: rc() }, modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc(), closeHover: rc() }, output: { bg: rc(), text: rc() }, colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc() }, palette: { bg: rc(), border: rc(), itemBg: rc(), itemBorder: rc(), toolBg: rc() }, headerLeftText: rc(), headerLeftLabel: rc(), ghostBg: rc(), ghostBorder: rc(), win: { bg: rc(), border: rc(), text: rc(), accent: rc() }, alert: { bg: rc(), stroke: rc() }, ctrlArea: { bg: rc(), border: rc() }, text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc(), body: rc(), shellBtn: rc(), actionBtn: rc(), error: rc(), handDrawnShadow: rc() }, loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc() }, search: { overlayBg: rc(), megaStatusText: rc(), megaStatusBorder: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() }, jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() }, shell: { btnBg: rc(), btnBgHover: rc(), btnText: rc(), btnBorder: rc(), muteBg: rc(), muteBgHover: rc(), muteText: rc(), muteBorder: rc() }, header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() }, editor: { inputBg: rc(), inputText: rc(), inputBorder: rc(), inputFocus: rc(), toolIcon: rc(), paletteShadow: `0 0 0 2px ${rc()}` }, layout: { mainBorder: rc(), headerLeftBorder: rc(), exportBorder: rc(), editorPanelBorder: rc() }, themeEditor: { panelBg: rc(), swatchBorder: rc() }, mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() }, burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() } }, 'chaos'); }
         APP.State.ENGINE.runtime.currentTheme = name;
         APP.Themes.currentTheme = APP.State.ENGINE.runtime.currentTheme;
         const t = themes[name];
