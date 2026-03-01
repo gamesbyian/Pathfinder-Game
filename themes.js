@@ -75,7 +75,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#333333",
-            "stroke": "#ff9900"
+            "stroke": "#ff9900",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#111111",
@@ -100,7 +101,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#cc99cc",
             "body": "#cc99cc",
-            "shellBtn": "#f8fafc",
+            "shellBtn": "#0f172a",
             "actionBtn": "#f8fafc",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -207,7 +208,7 @@ window.THEMES_MORE = {
             "muteIcon": "#ffffff",
             "copy": "#c62f3f",
             "gen": "#c62f3f",
-            "modeToggle": "#cc0000",
+            "modeToggle": "#ff0800",
             "orient": "#cc0000",
             "solve": "#ff0800",
             "editClear": "#cc0000",
@@ -262,7 +263,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#cc0000",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#ffe5e5",
@@ -287,7 +289,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#cc0000",
             "body": "#cc0000",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -341,7 +343,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#ffcccc",
             "btnBgHover": "#eabbbb",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#ff0800",
             "muteBg": "#ffcccc",
             "muteBgHover": "#eabbbb",
@@ -449,7 +451,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#e5d68e",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#0f172a"
         },
         "ctrlArea": {
             "bg": "#fdfbf7",
@@ -474,7 +477,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#b5a452",
             "body": "#b5a452",
-            "shellBtn": "#475569",
+            "shellBtn": "#0f172a",
             "actionBtn": "#3f3720",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -528,7 +531,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#f4f0e6",
             "btnBgHover": "#e0dcd3",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#d4c271",
             "muteBg": "#f4f0e6",
             "muteBgHover": "#e0dcd3",
@@ -636,7 +639,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#1f2b23",
-            "stroke": "#8c9d6f"
+            "stroke": "#8c9d6f",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#0d110e",
@@ -661,7 +665,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#8c9d6f",
             "body": "#8c9d6f",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -715,7 +719,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#1f2b23",
             "btnBgHover": "#1c2720",
-            "btnText": "#475569",
+            "btnText": "#f8fafc",
             "btnBorder": "#79875f",
             "muteBg": "#1f2b23",
             "muteBgHover": "#1c2720",
@@ -768,7 +772,7 @@ window.THEMES_MORE = {
             "muteIcon": "#ffffff",
             "copy": "#2563eb",
             "gen": "#2563eb",
-            "modeToggle": "#0000ff",
+            "modeToggle": "#ff7a00",
             "orient": "#0000ff",
             "solve": "#9400d3",
             "editClear": "#ff0000",
@@ -823,7 +827,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#ff0000",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#f8f9fa",
@@ -848,8 +853,8 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#4b0082",
             "body": "#4b0082",
-            "shellBtn": "#475569",
-            "actionBtn": "#ffffff",
+            "shellBtn": "#f8fafc",
+            "actionBtn": "#0f172a",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
         },
@@ -902,7 +907,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#f1f5f9",
             "btnBgHover": "#dde1e5",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#9400d3",
             "muteBg": "#f1f5f9",
             "muteBgHover": "#dde1e5",
@@ -1010,7 +1015,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#7e22ce",
-            "stroke": "#e9d5ff"
+            "stroke": "#e9d5ff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#2e1065",
@@ -1035,7 +1041,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#e9d5ff",
             "body": "#e9d5ff",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -1089,7 +1095,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#4c1d95",
             "btnBgHover": "#451a89",
-            "btnText": "#475569",
+            "btnText": "#f8fafc",
             "btnBorder": "#a855f7",
             "muteBg": "#4c1d95",
             "muteBgHover": "#451a89",
@@ -1197,7 +1203,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#1d4ed8",
-            "stroke": "#93c5fd"
+            "stroke": "#93c5fd",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#0f172a",
@@ -1222,7 +1229,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#93c5fd",
             "body": "#93c5fd",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -1276,7 +1283,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#334155",
             "btnBgHover": "#2e3b4e",
-            "btnText": "#475569",
+            "btnText": "#f8fafc",
             "btnBorder": "#3b82f6",
             "muteBg": "#334155",
             "muteBgHover": "#2e3b4e",
@@ -1384,7 +1391,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#ff69b4",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#0f172a"
         },
         "ctrlArea": {
             "bg": "#fff0f5",
@@ -1409,8 +1417,8 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#db7093",
             "body": "#db7093",
-            "shellBtn": "#475569",
-            "actionBtn": "#6f1d3e",
+            "shellBtn": "#f8fafc",
+            "actionBtn": "#3b0a26",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
         },
@@ -1463,7 +1471,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#fff0f5",
             "btnBgHover": "#eadce1",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#ff69b4",
             "muteBg": "#fff0f5",
             "muteBgHover": "#eadce1",
@@ -1571,7 +1579,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#000000",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#ffffff",
@@ -1596,7 +1605,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#333333",
             "body": "#333333",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -1650,7 +1659,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#e0e0e0",
             "btnBgHover": "#cecece",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#000000",
             "muteBg": "#e0e0e0",
             "muteBgHover": "#cecece",
@@ -1703,7 +1712,7 @@ window.THEMES_MORE = {
             "muteIcon": "#00f3ff",
             "copy": "#2d164d",
             "gen": "#2d164d",
-            "modeToggle": "#5e00ff",
+            "modeToggle": "#ff00cc",
             "orient": "#5e00ff",
             "solve": "#00f3ff",
             "editClear": "#ff007f",
@@ -1758,7 +1767,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#5e00ff",
-            "stroke": "#00f3ff"
+            "stroke": "#00f3ff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#0b001a",
@@ -1783,8 +1793,8 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#00f3ff",
             "body": "#00f3ff",
-            "shellBtn": "#475569",
-            "actionBtn": "#ffffff",
+            "shellBtn": "#f8fafc",
+            "actionBtn": "#0f172a",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
         },
@@ -1837,7 +1847,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#2d164d",
             "btnBgHover": "#291446",
-            "btnText": "#475569",
+            "btnText": "#f8fafc",
             "btnBorder": "#ff007f",
             "muteBg": "#2d164d",
             "muteBgHover": "#291446",
@@ -1890,7 +1900,7 @@ window.THEMES_MORE = {
             "muteIcon": "#d92550",
             "copy": "#ffe0e9",
             "gen": "#ffe0e9",
-            "modeToggle": "#d92550",
+            "modeToggle": "#ff8a3d",
             "orient": "#d92550",
             "solve": "#ff4d6d",
             "editClear": "#ff7b00",
@@ -1945,7 +1955,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#ff4d6d",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#fff5ec",
@@ -1970,8 +1981,8 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#d92550",
             "body": "#d92550",
-            "shellBtn": "#475569",
-            "actionBtn": "#7a1f33",
+            "shellBtn": "#f8fafc",
+            "actionBtn": "#0f172a",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
         },
@@ -2024,7 +2035,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#ffe0e9",
             "btnBgHover": "#eaced6",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#ff4d6d",
             "muteBg": "#ffe0e9",
             "muteBgHover": "#eaced6",
@@ -2132,7 +2143,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#555d50",
-            "stroke": "#e6e8fa"
+            "stroke": "#e6e8fa",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#d9dce5",
@@ -2157,7 +2169,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#2c3539",
             "body": "#2c3539",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#1f2933",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -2211,7 +2223,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#cfd4df",
             "btnBgHover": "#bec3cd",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#555d50",
             "muteBg": "#cfd4df",
             "muteBgHover": "#bec3cd",
@@ -2319,7 +2331,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#0c2340",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#f0f2f5",
@@ -2344,7 +2357,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#0c2340",
             "body": "#0c2340",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -2398,7 +2411,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#f0f2f5",
             "btnBgHover": "#dcdee1",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#0c2340",
             "muteBg": "#f0f2f5",
             "muteBgHover": "#dcdee1",
@@ -2506,7 +2519,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#d22b2b",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#fff8e1",
@@ -2531,7 +2545,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#a01e1e",
             "body": "#a01e1e",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -2585,7 +2599,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#fff8e1",
             "btnBgHover": "#eae4cf",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#d22b2b",
             "muteBg": "#fff8e1",
             "muteBgHover": "#eae4cf",
@@ -2693,7 +2707,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#2e5a2c",
-            "stroke": "#f2fcf2"
+            "stroke": "#f2fcf2",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#e9f5e9",
@@ -2718,7 +2733,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#2e5a2c",
             "body": "#2e5a2c",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -2772,7 +2787,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#dff0df",
             "btnBgHover": "#cddccd",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#4a7c49",
             "muteBg": "#dff0df",
             "muteBgHover": "#cddccd",
@@ -2880,7 +2895,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#b8860b",
-            "stroke": "#ffd700"
+            "stroke": "#ffd700",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#2a2515",
@@ -2905,7 +2921,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#ffdf00",
             "body": "#ffdf00",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -2959,7 +2975,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#3a331c",
             "btnBgHover": "#352e19",
-            "btnText": "#475569",
+            "btnText": "#f8fafc",
             "btnBorder": "#ffd700",
             "muteBg": "#3a331c",
             "muteBgHover": "#352e19",
@@ -3067,7 +3083,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#cc5500",
-            "stroke": "#dfd3ae"
+            "stroke": "#dfd3ae",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#e8ddbc",
@@ -3092,7 +3109,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#4d3826",
             "body": "#4d3826",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -3146,7 +3163,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#f4ebd0",
             "btnBgHover": "#e0d8bf",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#5b7c2f",
             "muteBg": "#f4ebd0",
             "muteBgHover": "#e0d8bf",
@@ -3254,7 +3271,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#006400",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#e8f5e9",
@@ -3279,7 +3297,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#1b5e20",
             "body": "#1b5e20",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -3333,7 +3351,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#c8e6c9",
             "btnBgHover": "#b8d3b8",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#006400",
             "muteBg": "#c8e6c9",
             "muteBgHover": "#b8d3b8",
@@ -3441,7 +3459,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#002868",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#f0f4f8",
@@ -3466,7 +3485,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#002868",
             "body": "#002868",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -3520,7 +3539,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#dbe4ec",
             "btnBgHover": "#c9d1d9",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#002868",
             "muteBg": "#dbe4ec",
             "muteBgHover": "#c9d1d9",
@@ -3628,7 +3647,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#D32F2F",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#fff8e7",
@@ -3653,7 +3673,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#000000",
             "body": "#000000",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -3707,7 +3727,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#efebe9",
             "btnBgHover": "#dbd8d6",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#000000",
             "muteBg": "#efebe9",
             "muteBgHover": "#dbd8d6",
@@ -3815,7 +3835,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#d291bc",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#0f172a"
         },
         "ctrlArea": {
             "bg": "#fdf6e3",
@@ -3840,7 +3861,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#5d4037",
             "body": "#5d4037",
-            "shellBtn": "#475569",
+            "shellBtn": "#0f172a",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -3894,7 +3915,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#efebe9",
             "btnBgHover": "#dbd8d6",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#8fbc8f",
             "muteBg": "#efebe9",
             "muteBgHover": "#dbd8d6",
@@ -4002,7 +4023,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#ab5a50",
-            "stroke": "#faf8f5"
+            "stroke": "#faf8f5",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#f4eedd",
@@ -4027,7 +4049,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#4a3e49",
             "body": "#4a3e49",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -4081,7 +4103,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#e6e0e5",
             "btnBgHover": "#d3ced2",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#5c8397",
             "muteBg": "#e6e0e5",
             "muteBgHover": "#d3ced2",
@@ -4189,7 +4211,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#c8102e",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#f8f9fa",
@@ -4214,7 +4237,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#222222",
             "body": "#222222",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -4268,7 +4291,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#e2e8f0",
             "btnBgHover": "#cfd5dc",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#c8102e",
             "muteBg": "#e2e8f0",
             "muteBgHover": "#cfd5dc",
@@ -4376,7 +4399,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#ff69b4",
-            "stroke": "#ffffff"
+            "stroke": "#ffffff",
+            "text": "#0f172a"
         },
         "ctrlArea": {
             "bg": "#e0ffff",
@@ -4401,7 +4425,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#ff1493",
             "body": "#ff1493",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -4455,7 +4479,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#f0f8ff",
             "btnBgHover": "#dce4ea",
-            "btnText": "#475569",
+            "btnText": "#0f172a",
             "btnBorder": "#008b8b",
             "muteBg": "#f0f8ff",
             "muteBgHover": "#dce4ea",
@@ -4563,7 +4587,8 @@ window.THEMES_MORE = {
         },
         "alert": {
             "bg": "#222222",
-            "stroke": "#bf00ff"
+            "stroke": "#bf00ff",
+            "text": "#ffffff"
         },
         "ctrlArea": {
             "bg": "#111111",
@@ -4588,7 +4613,7 @@ window.THEMES_MORE = {
             "megaGemini": "#ffffff",
             "megaCopy": "#00ffff",
             "body": "#00ffff",
-            "shellBtn": "#475569",
+            "shellBtn": "#f8fafc",
             "actionBtn": "#ffffff",
             "error": "#ef4444",
             "handDrawnShadow": "#000000"
@@ -4642,7 +4667,7 @@ window.THEMES_MORE = {
         "shell": {
             "btnBg": "#333333",
             "btnBgHover": "#2e2e2e",
-            "btnText": "#475569",
+            "btnText": "#f8fafc",
             "btnBorder": "#ffffff",
             "muteBg": "#333333",
             "muteBgHover": "#2e2e2e",
