@@ -1742,6 +1742,218 @@
                     for (let i = 0; i < state.mustCrossCounts.length; i++) needs += (2 - state.mustCrossCounts[i]);
                     return needs;
                 },
+                _gridIndexFromKey(key, cols) {
+                    return ((key >> 16) * cols) + (key & 0xFFFF);
+                },
+                _makeTypedStateViews(state) {
+                    const usageViewCache = { h: false, v: false };
+                    state.counts = {
+                        get: (key) => state.countsArr[state.keyToIdx(key)],
+                        has: (key) => state.countsArr[state.keyToIdx(key)] > 0,
+                        set: (key, value) => {
+                            state.countsArr[state.keyToIdx(key)] = value;
+                        },
+                        delete: (key) => {
+                            state.countsArr[state.keyToIdx(key)] = 0;
+                        },
+                        forEach: (cb) => {
+                            for (let i = 0; i < state.keyCount; i++) {
+                                const count = state.countsArr[i];
+                                if (count > 0) cb(count, state.idxToKey[i]);
+                            }
+                        },
+                        get size() {
+                            return state.nonZeroCounts;
+                        }
+                    };
+                    state.usage = {
+                        get: (key) => {
+                            const idx = state.keyToIdx(key);
+                            const bits = state.usageBits[idx];
+                            if (bits === 0) return null;
+                            usageViewCache.h = (bits & 1) !== 0;
+                            usageViewCache.v = (bits & 2) !== 0;
+                            return usageViewCache;
+                        },
+                        forEach: (cb) => {
+                            for (let i = 0; i < state.keyCount; i++) {
+                                const bits = state.usageBits[i];
+                                if (bits === 0) continue;
+                                usageViewCache.h = (bits & 1) !== 0;
+                                usageViewCache.v = (bits & 2) !== 0;
+                                cb(usageViewCache, state.idxToKey[i]);
+                            }
+                        },
+                        get size() {
+                            return state.nonZeroUsage;
+                        }
+                    };
+                    state.isJump = {
+                        has: (idx) => state.jumpMarks[idx] === 1,
+                        add: (idx) => {
+                            state.jumpMarks[idx] = 1;
+                        },
+                        delete: (idx) => {
+                            state.jumpMarks[idx] = 0;
+                        },
+                        get size() {
+                            return state.jumpCount;
+                        }
+                    };
+                    state.crossedFlippers = {
+                        has: (key) => state.crossedFlippersAt[state.keyToIdx(key)] >= 0,
+                        get: (key) => state.crossedFlippersAt[state.keyToIdx(key)],
+                        set: (key, value) => {
+                            state.crossedFlippersAt[state.keyToIdx(key)] = value;
+                        },
+                        delete: (key) => {
+                            state.crossedFlippersAt[state.keyToIdx(key)] = -1;
+                        }
+                    };
+                },
+                _undoLogWrite(state, arrayId, idx, prev) {
+                    const c = state.logCursor;
+                    state.undoLog[c] = arrayId;
+                    state.undoLog[c + 1] = idx;
+                    state.undoLog[c + 2] = prev;
+                    state.logCursor = c + 3;
+                },
+                _pushStateZeroAlloc(s, k, isJump, l) {
+                    const LOG_COUNTS = 1;
+                    const LOG_USAGE = 2;
+                    const LOG_INTS = 3;
+                    const LOG_JUMP = 4;
+                    const LOG_CROSSED = 5;
+                    const LOG_FLIPCOUNT = 6;
+                    const LOG_FLIPPARITY = 7;
+                    const LOG_MUSTCROSS = 8;
+                    const LOG_MUSTMASK = 9;
+                    const LOG_MUSTCROSSMASK = 10;
+                    const LOG_FLIPPERCROSSMASK = 11;
+                    const LOG_FLIPPERPARITYMASK = 12;
+                    const startLogCursor = s.logCursor;
+                    const prevKey = s.path[s.path.length - 1];
+                    const prevPathLen = s.path.length;
+                    const idx = s.keyToIdx(k);
+                    if (!isJump) {
+                        const axisBit = (((k >> 16) === (prevKey >> 16)) ? 1 : 2);
+                        const prevIdx = s.keyToIdx(prevKey);
+                        const prevUsage = s.usageBits[prevIdx];
+                        if ((prevUsage & axisBit) === 0) {
+                            this._undoLogWrite(s, LOG_USAGE, prevIdx, prevUsage);
+                            if (prevUsage === 0) s.nonZeroUsage++;
+                            s.usageBits[prevIdx] = prevUsage | axisBit;
+                        }
+                        const curUsage = s.usageBits[idx];
+                        if ((curUsage & axisBit) === 0) {
+                            this._undoLogWrite(s, LOG_USAGE, idx, curUsage);
+                            if (curUsage === 0) s.nonZeroUsage++;
+                            s.usageBits[idx] = curUsage | axisBit;
+                        }
+                    }
+                    const count = s.countsArr[idx];
+                    if (count > 0 && k !== l.goalKey && s.gateMask[idx] === 0) {
+                        this._undoLogWrite(s, LOG_INTS, 0, s.ints);
+                        s.ints = s.ints + 1;
+                    }
+                    this._undoLogWrite(s, LOG_COUNTS, idx, count);
+                    if (count === 0) s.nonZeroCounts++;
+                    s.countsArr[idx] = count + 1;
+                    if (count === 0) {
+                        const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(k) : undefined;
+                        if (mustIdx !== undefined && typeof s.mustMask === "bigint") {
+                            const bit = 1n << BigInt(mustIdx);
+                            if ((s.mustMask & bit) !== 0n) {
+                                this._undoLogWrite(s, LOG_MUSTMASK, mustIdx, 1);
+                                s.mustMask &= ~bit;
+                            }
+                        }
+                    }
+                    if (s.mustCrossCounts && typeof s.mustCrossMask === "bigint") {
+                        const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(k) : undefined;
+                        if (crossIdx !== undefined) {
+                            const prev = s.mustCrossCounts[crossIdx];
+                            if (prev < 2) {
+                                this._undoLogWrite(s, LOG_MUSTCROSS, crossIdx, prev);
+                                s.mustCrossCounts[crossIdx] = prev + 1;
+                                if (prev + 1 >= 2) {
+                                    const bit = 1n << BigInt(crossIdx);
+                                    if ((s.mustCrossMask & bit) !== 0n) {
+                                        this._undoLogWrite(s, LOG_MUSTCROSSMASK, crossIdx, 1);
+                                        s.mustCrossMask &= ~bit;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    s.path.push(k);
+                    if (isJump) {
+                        this._undoLogWrite(s, LOG_JUMP, prevPathLen, s.jumpMarks[prevPathLen]);
+                        this._undoLogWrite(s, LOG_JUMP, -1, s.jumpCount);
+                        s.jumpMarks[prevPathLen] = 1;
+                        s.jumpCount++;
+                    }
+                    if (l.flippingFilterMap.has(k) && s.crossedFlippersAt[idx] < 0) {
+                        this._undoLogWrite(s, LOG_CROSSED, idx, s.crossedFlippersAt[idx]);
+                        s.crossedFlippersAt[idx] = s.flipCount;
+                        const flipIdx = l.flipperIndex ? l.flipperIndex.get(k) : undefined;
+                        if (flipIdx !== undefined && typeof s.flipperCrossMask === "bigint" && typeof s.flipParity === "number") {
+                            const bit = 1n << BigInt(flipIdx);
+                            this._undoLogWrite(s, LOG_FLIPPERCROSSMASK, 0, s.flipperCrossMask);
+                            s.flipperCrossMask |= bit;
+                            if (typeof s.flipperParityAtCrossMask === "bigint" && (s.flipParity & 1) === 1) {
+                                this._undoLogWrite(s, LOG_FLIPPERPARITYMASK, 0, s.flipperParityAtCrossMask);
+                                s.flipperParityAtCrossMask |= bit;
+                            }
+                        }
+                        this._undoLogWrite(s, LOG_FLIPCOUNT, 0, s.flipCount);
+                        this._undoLogWrite(s, LOG_FLIPPARITY, 0, s.flipParity);
+                        s.flipCount++;
+                        s.flipParity = s.flipCount % 2;
+                    }
+                    return startLogCursor;
+                },
+                _popStateZeroAlloc(s, logMark) {
+                    const LOG_COUNTS = 1;
+                    const LOG_USAGE = 2;
+                    const LOG_INTS = 3;
+                    const LOG_JUMP = 4;
+                    const LOG_CROSSED = 5;
+                    const LOG_FLIPCOUNT = 6;
+                    const LOG_FLIPPARITY = 7;
+                    const LOG_MUSTCROSS = 8;
+                    const LOG_MUSTMASK = 9;
+                    const LOG_MUSTCROSSMASK = 10;
+                    const LOG_FLIPPERCROSSMASK = 11;
+                    const LOG_FLIPPERPARITYMASK = 12;
+                    s.path.pop();
+                    while (s.logCursor > logMark) {
+                        s.logCursor -= 3;
+                        const arrayId = s.undoLog[s.logCursor];
+                        const idx = s.undoLog[s.logCursor + 1];
+                        const prev = s.undoLog[s.logCursor + 2];
+                        if (arrayId === LOG_COUNTS) {
+                            if (s.countsArr[idx] > 0 && prev === 0) s.nonZeroCounts--;
+                            s.countsArr[idx] = prev;
+                        }
+                        else if (arrayId === LOG_USAGE) {
+                            if (s.usageBits[idx] > 0 && prev === 0) s.nonZeroUsage--;
+                            s.usageBits[idx] = prev;
+                        }
+                        else if (arrayId === LOG_INTS) s.ints = prev;
+                        else if (arrayId === LOG_JUMP) {
+                            if (idx < 0) s.jumpCount = prev;
+                            else s.jumpMarks[idx] = prev;
+                        } else if (arrayId === LOG_CROSSED) s.crossedFlippersAt[idx] = prev;
+                        else if (arrayId === LOG_FLIPCOUNT) s.flipCount = prev;
+                        else if (arrayId === LOG_FLIPPARITY) s.flipParity = prev;
+                        else if (arrayId === LOG_MUSTCROSS) s.mustCrossCounts[idx] = prev;
+                        else if (arrayId === LOG_MUSTMASK) s.mustMask |= (1n << BigInt(idx));
+                        else if (arrayId === LOG_MUSTCROSSMASK) s.mustCrossMask |= (1n << BigInt(idx));
+                        else if (arrayId === LOG_FLIPPERCROSSMASK) s.flipperCrossMask = prev;
+                        else if (arrayId === LOG_FLIPPERPARITYMASK) s.flipperParityAtCrossMask = prev;
+                    }
+                },
                 _mustCrossExtraVisitsLowerBound(mask, crossNeed, l) {
                     const outstandingNodes = mask ? l._popcountMask(mask) : 0;
                     const extraVisitsLB = Math.max(0, crossNeed - outstandingNodes);
@@ -2062,29 +2274,52 @@
                 async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options, debugStats = null) {
                     const mustCount = l.mustPassKeys.length;
                     const mustCrossCount = l.mustCrossKeys.length;
+                    const cols = l.grid.w;
+                    const keyCount = l.grid.w * l.grid.h;
                     options = options || {};
                     options.hazardPolicy = options.hazardPolicy || 'forbid';
                     const disabledPruneSet = new Set(options.disabledPrunes || []);
                     const useFailMemo = options.useFailMemo !== false && disabledPruneSet.size === 0;
                     const disableMustPassBound = disabledPruneSet.has('mustPassBound');
                     const disableMustCrossBound = disabledPruneSet.has('mustCrossBound');
+                    const idxToKey = new Int32Array(keyCount);
+                    for (let y = 0; y < l.grid.h; y++) {
+                        const rowBase = y * cols;
+                        for (let x = 0; x < cols; x++) idxToKey[rowBase + x] = (y << 16) | x;
+                    }
+                    const gateMask = new Uint8Array(keyCount);
+                    for (const gateKey of l.gateKeys) gateMask[this._gridIndexFromKey(gateKey, cols)] = 1;
+                    const maxLogTriples = Math.max(3, l.reqLen * 24);
                     const state = {
                         path: [startKey],
-                        counts: new Map(),
-                        usage: new Map(),
+                        countsArr: new Uint16Array(keyCount),
+                        usageBits: new Uint8Array(keyCount),
                         ints: 0,
-                        isJump: new Set(),
+                        jumpMarks: new Uint8Array(Math.max(2, l.reqLen + 3)),
+                        jumpCount: 0,
                         flipCount: 0,
                         flipParity: 0,
-                        crossedFlippers: new Map(),
+                        crossedFlippersAt: new Int16Array(keyCount),
+                        gateMask,
+                        keyCount,
+                        idxToKey,
+                        keyToIdx: (key) => this._gridIndexFromKey(key, cols),
+                        undoLog: new Array(maxLogTriples * 3),
+                        logCursor: 0,
+                        nonZeroCounts: 0,
+                        nonZeroUsage: 0,
                         flipperCrossMask: 0n,
                         flipperParityAtCrossMask: 0n,
                         mustMask: mustCount > 0 ? ((1n << BigInt(mustCount)) - 1n) : 0n,
                         mustCrossMask: mustCrossCount > 0 ? ((1n << BigInt(mustCrossCount)) - 1n) : 0n,
                         mustCrossCounts: mustCrossCount > 0 ? new Uint8Array(mustCrossCount) : null
                     };
+                    state.crossedFlippersAt.fill(-1);
+                    this._makeTypedStateViews(state);
                     const scratch = { mustBoundCache: new Map(), crossDistCache: new Map() };
-                    state.counts.set(startKey, 1);
+                    const startIdx = state.keyToIdx(startKey);
+                    state.countsArr[startIdx] = 1;
+                    state.nonZeroCounts = 1;
                     const startMustIdx = l.mustPassIndex ? l.mustPassIndex.get(startKey) : undefined;
                     if (startMustIdx !== undefined) state.mustMask &= ~(1n << BigInt(startMustIdx));
                     const startCrossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(startKey) : undefined;
@@ -2092,7 +2327,7 @@
                         state.mustCrossCounts[startCrossIdx] = 1;
                     }
                     if (l.flippingFilterMap.has(startKey)) {
-                        state.crossedFlippers.set(startKey, state.flipCount);
+                        state.crossedFlippersAt[startIdx] = state.flipCount;
                         const flipIdx = l.flipperIndex ? l.flipperIndex.get(startKey) : undefined;
                         if (flipIdx !== undefined) state.flipperCrossMask |= (1n << BigInt(flipIdx));
                         state.flipCount++;
@@ -2113,7 +2348,7 @@
                         if (top.neighbors.length === 0) {
                             if (debugStats) debugStats.prune.deadEnd++;
                             if (useFailMemo) failMemo.set(top.sig, true);
-                            this._popState(state, top.log);
+                            this._popStateZeroAlloc(state, top.log);
                             stack.pop();
                             continue;
                         }
@@ -2121,36 +2356,36 @@
                         if (debugStats) debugStats.nodesExpanded++;
                         const topPortal = APP.LevelUtils.resolvePortal(l, top.k);
                         const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
-                        const transLog = this._pushState(state, nextKey, isP, l);
+                        const transLog = this._pushStateZeroAlloc(state, nextKey, isP, l);
                         const lastK = state.path[state.path.length - 1];
                         const hazard = this._hazardDecisionForKey(nextKey, state, l, options);
                         if (!hazard.allowed) {
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         const realLen = state.path.length - 1 - state.isJump.size;
                         if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
                         if (realLen > l.reqLen) {
                             if (debugStats) debugStats.prune.lenOverflow++;
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         if (state.ints > l.reqInt) {
                             if (debugStats) debugStats.prune.intsOverflow++;
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         const rSteps = l.reqLen - realLen;
                         if ((l.reqInt - state.ints) > rSteps) {
                             if (debugStats) debugStats.prune.intsOverflow++;
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         const crossNeeds = this._crossNeeds(state);
                         if (crossNeeds > rSteps) {
                             if (debugStats) debugStats.prune.mustCrossBound++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustCrossNeed', `crossNeeds=${crossNeeds} rSteps=${rSteps}`);
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         if (!disableMustPassBound && state.mustMask !== 0n) {
@@ -2159,7 +2394,7 @@
                             if (mustBound === Infinity || mustBound > rSteps) {
                                 if (debugStats) debugStats.prune.mustPassBound++;
                                 if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${mustBound} rSteps=${rSteps} k=${mustDetails.k} method=${mustDetails.method}`);
-                                this._popState(state, transLog);
+                                this._popStateZeroAlloc(state, transLog);
                                 continue;
                             }
                         }
@@ -2171,7 +2406,7 @@
                                     const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeeds, l);
                                     this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound === Infinity ? 'inf' : crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeeds} outstandingNodes=${outstandingNodes}`);
                                 }
-                                this._popState(state, transLog);
+                                this._popStateZeroAlloc(state, transLog);
                                 continue;
                             }
                         }
@@ -2179,25 +2414,25 @@
                             if (realLen === l.reqLen && state.ints === l.reqInt) {
                                 if (this._checkFinalConstraints(state, l)) return { path: state.path.slice(), len: realLen };
                             }
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         const minRem = distMap.get(lastK) || Infinity;
                         if (realLen + minRem > l.reqLen) {
                             if (debugStats) debugStats.prune.minRemOverflow++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'minRemOverflow', `minRem=${minRem} realLen=${realLen} reqLen=${l.reqLen}`);
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         const sig = this._stateSignature(state, l, realLen);
                         if (useFailMemo && failMemo.has(sig)) {
                             if (debugStats) debugStats.prune.failedStateHit++;
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         if (hazard.terminal) {
                             if (debugStats) debugStats.prune.deadEnd++;
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
@@ -2213,7 +2448,7 @@
                     const state = { path: [startKey], counts: new Map(), usage: new Map(), ints: 0, isJump: new Set(), flipCount: 0, crossedFlippers: new Map() };
                     state.counts.set(startKey, 1);
                     if (l.flippingFilterMap.has(startKey)) {
-                        state.crossedFlippers.set(startKey, state.flipCount);
+                        state.crossedFlippersAt[startIdx] = state.flipCount;
                         state.flipCount++;
                     }
                     const getNeighbors = (k, s) => {
