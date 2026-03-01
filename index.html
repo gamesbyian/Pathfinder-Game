@@ -2540,7 +2540,9 @@
                         const goalParity = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
                         const parityMatch = (currentParity === goalParity);
                         const stepsEven = (rSteps % 2 === 0);
-                        if ((parityMatch !== stepsEven) && !l.hasParityBreaker) {
+                        const parityBreakerAvailable = l.parityBreakerIndex >= 0 && state.usageBits && state.usageBits[l.parityBreakerIndex] === 0;
+                        const canBypassParityPrune = !l.hasParityBreaker || parityBreakerAvailable;
+                        if ((parityMatch !== stepsEven) && !canBypassParityPrune) {
                             if (debugStats) debugStats.prune.parity++;
                             this._popStateZeroAlloc(state, transLog);
                             continue;
@@ -3007,8 +3009,7 @@
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
             const timesTried = prev.timesTried + 1;
-            const isBoolTier = typeof opts.escalationTier === 'boolean';
-            const requestedTierRaw = isBoolTier ? (opts.escalationTier ? 1 : 0) : Number(opts.escalationTier);
+            const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             const autoEscalate = timesTried > 1 && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus);
             const escalationTier = Math.max(requestedTier, autoEscalate ? 1 : 0);
@@ -3017,13 +3018,20 @@
                 ? (purpose === 'hint' ? 60000 : 180000)
                 : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
-            const isDeepSearch = escalationTier >= 2;
             const { stage0, stage1, stage2, stage3 } = this.allocateStageBudgets(budgetMs);
 
             const stagesTried = [];
-            let stageOrder = [0, 1, 2, 3];
-            if (opts.variant === 'beamFirst') stageOrder = [0, 2, 3, 1];
-            if (escalationTier >= 1 || opts.variant === 'altOrder') stageOrder = [1, 2, 0, 3];
+            const fallbackDisabledPrunes = escalationTier >= 2
+                ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'minRemOverflow', 'parity']
+                : ['mustPassBound', 'mustCrossBound', 'connectivity'];
+            let phases = [
+                { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: stage0, run: () => this.runBaselineStage(level, stage0, { dirOrderVariant: 'default' }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: stage1, run: () => this.runBaselineStage(level, stage1, { dirOrderVariant: 'alt' }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: stage2, run: () => this.runBaselineStage(level, stage2, { dirOrderVariant: 'random' }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: stage3, run: () => this.runStage2Fallback(level, stage3, fallbackDisabledPrunes), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+            ];
+            if (opts.variant === 'beamFirst') phases = [phases[0], phases[2], phases[3], phases[1]];
+            if (escalationTier >= 1 || opts.variant === 'altOrder') phases = [phases[1], phases[2], phases[0], phases[3]];
             const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result) => {
@@ -3032,43 +3040,18 @@
 
             let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
 
-            for (const stage of stageOrder) {
+            for (const phase of phases) {
+                const { stage, name, variant, budgetMs: phaseBudgetMs, run, successMessage, timeoutMessage, failMessage } = phase;
                 if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
                     last = { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
                     break;
                 }
-                if (stage === 0) {
-                    if (opts.onStage) opts.onStage({ stage: 0, name: 'Stage 0', variant: 'default', budgetMs: stage0 });
-                    const t0 = Date.now();
-                    const r0 = await this.runBaselineStage(level, stage0, { dirOrderVariant: 'default' });
-                    markStage(0, 'Stage 0', 'default', stage0, t0, r0);
-                    last = { ...r0, stage: 0, message: r0.ok ? 'Solved (fast pass).' : (r0.status === 'timeout' ? 'Search timed out.' : 'No solution found in fast pass.'), stagesTried };
-                    if (r0.ok || r0.status === 'no-solution-proven') break;
-                }
-                if (stage === 1) {
-                    if (opts.onStage) opts.onStage({ stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: stage1 });
-                    const t1 = Date.now();
-                    const r1 = await this.runBaselineStage(level, stage1, { dirOrderVariant: 'alt' });
-                    markStage(1, 'Stage 1', 'altOrder', stage1, t1, r1);
-                    last = { ...r1, stage: 1, message: r1.ok ? 'Solved (alternate ordering).' : (r1.status === 'timeout' ? 'Alternate ordering timed out.' : 'Alternate ordering did not find a solution.'), stagesTried };
-                    if (r1.ok || r1.status === 'no-solution-proven') break;
-                }
-                if (stage === 2) {
-                    if (opts.onStage) opts.onStage({ stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: stage2 });
-                    const t2 = Date.now();
-                    const r2 = await this.runBaselineStage(level, stage2, { dirOrderVariant: 'random' });
-                    markStage(2, 'Stage 2', 'shuffle', stage2, t2, r2);
-                    last = { ...r2, stage: 2, message: r2.ok ? 'Solved (randomized ordering).' : (r2.status === 'timeout' ? 'Randomized ordering timed out.' : 'Randomized ordering did not find a solution.'), stagesTried };
-                    if (r2.ok || r2.status === 'no-solution-proven') break;
-                }
-                if (stage === 3) {
-                    if (opts.onStage) opts.onStage({ stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: stage3 });
-                    const t3 = Date.now();
-                    const r3 = await this.runStage2Fallback(level, stage3, isDeepSearch ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'minRemOverflow'] : ['mustPassBound', 'mustCrossBound', 'connectivity']);
-                    markStage(3, 'Stage 3', 'fallback', stage3, t3, r3);
-                    last = { ...r3, stage: 3, message: r3.ok ? 'Solved (fallback strategy).' : (r3.status === 'timeout' ? 'Fallback strategy timed out.' : 'Fallback strategy inconclusive.'), stagesTried };
-                    if (r3.ok) break;
-                }
+                if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: phaseBudgetMs });
+                const startedAt = Date.now();
+                const result = await run();
+                markStage(stage, name, variant, phaseBudgetMs, startedAt, result);
+                last = { ...result, stage, message: result.ok ? successMessage : (result.status === 'timeout' ? timeoutMessage : failMessage), stagesTried };
+                if (result.ok || result.status === 'no-solution-proven') break;
             }
 
             if (!last.ok && allowGemini && last.status !== 'no-solution-proven') {
@@ -3097,6 +3080,10 @@
             last.usedEscalation = escalationTier > 0;
             last.budgetMs = budgetMs;
             return last;
+        },
+
+        async getHint(levelInput, opts = {}) {
+            return this.solve(levelInput, { ...opts, purpose: 'hint', escalationTier: Number(opts.escalationTier ?? opts.tier) });
         }
     };
 
@@ -3275,7 +3262,7 @@
                 } else {
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
                     const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
-                    const requestedTierRaw = typeof opts.escalationTier === 'boolean' ? (opts.escalationTier ? 1 : 0) : Number(opts.escalationTier);
+                    const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
                     const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
                     const escalationTier = Math.max(requestedTier, autoTier);
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
@@ -3283,7 +3270,7 @@
                     solverResult = await Referee.solve(level, {
                         purpose,
                         timeBudgetMs,
-                        escalationTier,
+                        tier: escalationTier,
                         allowGemini: false,
                         onStage: ({ name, variant, budgetMs }) => {
                             APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
@@ -3729,6 +3716,7 @@
             Referee,
             Mega,
             runGameSolver: (...args) => runGameSolver(...args),
+            getHint: (tier = 0) => runGameSolver('hint', tier),
             startHintAnimation,
             stopHintAnimation
         };
@@ -6716,8 +6704,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); } else {
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
                 if (isTopHalf) {
+                    APP.State.ENGINE.runtime.isHintExpanded = true;
+                    toggleHint();
+                    updateHintLabel();
                     try {
-                        const hintResult = await APP.Solver.runGameSolver('hint', consecutiveHintFails);
+                        const hintResult = await APP.Solver.getHint(consecutiveHintFails);
                         if (hintResult?.ok) consecutiveHintFails = 0;
                         else consecutiveHintFails++;
                     } catch (err) {
@@ -6727,7 +6718,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                     }
                 } else { if (APP.State.ENGINE.level?.hints?.length > 0) { APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints; APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0); APP.State.ENGINE.hinter.source = 'saved'; APP.Solver.startHintAnimation(); } else APP.UI.showMessage("No saved hint.", "text-white font-black"); }
-                toggleHint(); updateHintLabel();
+                if (APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); }
             }
         };
         document.addEventListener('click', (e) => { if (APP.State.ENGINE.runtime.isHintExpanded && !hintBtn.contains(e.target)) { toggleHint(); updateHintLabel(); } });
