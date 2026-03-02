@@ -3111,15 +3111,19 @@
                     const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
                     const startTime = Date.now();
                     const validSpots = new Set();
+                    let timedOut = false;
+                    let gatesProcessed = 0;
                     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
                     onStateUpdate(`Mapping Traps (${level.gateKeys.length} gates)...`);
                     for (const gateKey of level.gateKeys) {
+                        if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
                         await new Promise(r => setTimeout(r, 0));
                         const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
                         await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts);
-                        if (Date.now() - startTime > timeLimit) break;
+                        gatesProcessed++;
+                        if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
                     }
-                    return validSpots;
+                    return { spots: validSpots, timedOut, gatesProcessed, elapsedMs: Date.now() - startTime };
                 }
             };
 
@@ -3658,12 +3662,34 @@
             }
         };
 
+        const getTrapSpotBudgetMs = (level, opts = {}) => {
+            const requestedBudget = Number(opts.timeLimit ?? opts.timeLimitMs);
+            if (Number.isFinite(requestedBudget) && requestedBudget > 0) return Math.floor(requestedBudget);
+
+            const gridArea = Math.max(1, (level?.grid?.w || 0) * (level?.grid?.h || 0));
+            const reqLen = Math.max(0, Number(level?.reqLen) || 0);
+            const specialObjects =
+                (Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0)
+                + (Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0)
+                + (Array.isArray(level?.gateKeys) ? level.gateKeys.length : 0)
+                + (level?.falseGoalKeys?.size || 0)
+                + (level?.blockSet?.size || 0)
+                + (level?.gooseSet?.size || 0)
+                + (level?.filterMap?.size || 0)
+                + (level?.flippingFilterMap?.size || 0)
+                + (level?.portalMap?.size || 0);
+
+            const budget = 2500 + (gridArea * 15) + (reqLen * 40) + (specialObjects * 120);
+            return Math.max(3000, Math.min(30000, Math.floor(budget)));
+        };
+
         const findTrapSpots = async (level, opts = {}) => {
             const controller = startRun({ label: 'Finding trap spots…', mode: 'trap' });
-            if (!controller) return { ok: false, status: 'error', spots: new Set() };
+            if (!controller) return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0 };
+            const timeLimit = getTrapSpotBudgetMs(level, opts);
             try {
-                const spots = await PathfinderSolver.findTrapSpots(level, {
-                    timeLimit: opts.timeLimit ?? 8000,
+                const trapResult = await PathfinderSolver.findTrapSpots(level, {
+                    timeLimit,
                     signal: controller.signal,
                     onStateUpdate: (msg) => {
                         APP.UI.setModalContent('searchLabel', msg, 'text');
@@ -3673,11 +3699,20 @@
                         APP.UI.setSolverTimerText((elapsedMs / 1000).toFixed(1) + 's');
                     }
                 });
-                return { ok: true, status: 'solved', spots };
+                const timedOut = !!trapResult?.timedOut;
+                return {
+                    ok: true,
+                    status: timedOut ? 'timeout' : 'solved',
+                    spots: trapResult?.spots || new Set(),
+                    timedOut,
+                    gatesProcessed: Number(trapResult?.gatesProcessed) || 0,
+                    elapsedMs: Number(trapResult?.elapsedMs) || 0,
+                    timeLimit
+                };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', spots: new Set() };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit };
                 console.error(err);
-                return { ok: false, status: 'error', spots: new Set(), error: err };
+                return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err };
             } finally {
                 finishRun();
             }
@@ -4101,6 +4136,7 @@
             solveLevel,
             megaSolve,
             findTrapSpots,
+            getTrapSpotBudgetMs,
             applySolutionsToEngine,
             cancel,
             isRunning: () => !!APP.State.ENGINE.activeSolverController,
@@ -7194,11 +7230,24 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (APP.Solver.isRunning()) return;
             APP.Solver.stopHintAnimation();
             const l = APP.State.ENGINE.editor.workingLevel; APP.Editor.applyMetricsFromUI();
-            const res = await APP.Solver.findTrapSpots(l, { timeLimit: 8000 });
+            const budgetMs = APP.Solver.getTrapSpotBudgetMs(l);
+            const res = await APP.Solver.findTrapSpots(l, { timeLimit: budgetMs });
             APP.Editor.setTrapSpots(res.spots || new Set());
             APP.Renderer.render();
             if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
-            else if (res.status !== 'aborted') APP.UI.showMessage("No spots found.", "text-white font-black");
+            else if (res.status !== 'aborted' && res.timedOut) {
+                APP.UI.showMessage('Search timed out; partial results may be incomplete.', 'text-amber-300 font-black');
+                const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
+                if (retry) {
+                    const retryBudgetMs = Math.min(120000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
+                    const retryRes = await APP.Solver.findTrapSpots(l, { timeLimit: retryBudgetMs });
+                    APP.Editor.setTrapSpots(retryRes.spots || new Set());
+                    APP.Renderer.render();
+                    if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
+                    else if (retryRes.status !== 'aborted' && retryRes.timedOut) APP.UI.showMessage('Retry timed out; partial results may be incomplete.', 'text-amber-300 font-black');
+                    else if (retryRes.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
+                }
+            } else if (res.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
         };
         APP.UI.bindAll('.palette-item[data-type]', 'pointerdown', (e, el) => { APP.Editor.handlePaletteToolPointerDown(el.dataset.type); });
