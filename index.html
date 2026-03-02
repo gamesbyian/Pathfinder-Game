@@ -2274,7 +2274,7 @@
                         scored.sort(() => Math.random() - 0.5);
                     } else {
                         scored.sort((a, b) => {
-                            if (a.score !== b.score) return b.score - a.score;
+                            if (a.score !== b.score) return a.score - b.score;
                             return options?.dirOrderVariant === 'alt' ? (a.nk - b.nk) : (b.nk - a.nk);
                         });
                     }
@@ -3742,17 +3742,23 @@
                     const firstPath = solutions[0]?.path || null;
                     const validation = firstPath ? validateCandidatePath(level, firstPath) : { ok: false, reason: 'no-solution' };
                     const portalJumps = firstPath ? countPortalTransitions(level, firstPath) : 0;
+                    const portalRequiredLevel = levelNum === 21 || levelNum === 117;
+                    const portalUsageExpected = !validation.ok ? null : (portalRequiredLevel ? portalJumps > 0 : true);
                     report.push({
                         level: levelNum,
                         status: res?.status || 'unknown',
                         solved: !!res?.ok,
                         validated: !!validation.ok,
                         portalJumps,
+                        portalUsageExpected,
                         elapsedMs: Date.now() - startedAt,
                         lastStage: res?.stage,
                         stagesTried: (res?.stagesTried || []).length,
                         pruneFailedStateHits: res?.stats?.debug?.prune?.failedStateHit || 0
                     });
+                    if (validation.ok && portalRequiredLevel && portalJumps <= 0) {
+                        throw new Error(`[Portal Regression] Level ${levelNum} expected portal transitions > 0 but got ${portalJumps}.`);
+                    }
                 }
                 console.log('[Portal Regression] solver-discovery report (hint-blind):', report);
                 if (console.table) console.table(report);
