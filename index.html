@@ -2227,29 +2227,36 @@
                             const crossCount = state.mustCrossCounts[crossIdx] || 0;
                             if (crossCount < 2) score -= 800;
                         }
+                        const isP = (portalDest === nk && portalForced);
+                        const nLen = curLen + (isP ? 0 : 1);
+                        const rSteps = l.reqLen - nLen;
+                        score += computePortalOpportunity(k, nk, rSteps);
+
+                        const nx = nk & 0xFFFF;
+                        const ny = nk >> 16;
+                        const currentParity = (nx + ny) % 2;
+                        const gx = l.goalKey & 0xFFFF;
+                        const gy = l.goalKey >> 16;
+                        const goalParity = (gx + gy) % 2;
+                        const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
+
+                        let isTargetingWaypoint = false;
+                        let activeDist = distMap.get(nk) ?? 999;
+
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
-                        // RESTORE OBJECTIVE SUPREMACY: Structural targets must overpower Extreme Perimeter Tracing.
-                        // Wall-hugging applies a relative penalty up to -30. These bounds exceed that to force center-room traversal.
-                        score -= (mustBound === Infinity ? 100000 : mustBound * 30);
-                        score -= (crossBound === Infinity ? 100000 : crossBound * 30);
+
+                        // SLACK-AWARE GRAVITY: Scale objective pull based on remaining steps.
+                        // On twisty levels (high slack), we use low pull to allow length-burning wiggles.
+                        // On portal levels (low slack), we use high pull to guarantee we hit the waypoint.
+                        const currentSlack = l.reqLen - nLen - activeDist;
+
+                        // Penalty scales from 5 (high slack) up to 40 (low slack)
+                        const gravityMult = currentSlack > 5 ? 5 : 40;
+
+                        score -= (mustBound === Infinity ? 100000 : mustBound * gravityMult);
+                        score -= (crossBound === Infinity ? 100000 : crossBound * gravityMult);
                         if (crossNeed > 0) score += crossNeed * 15;
-
-                    const isP = (portalDest === nk && portalForced);
-                    const nLen = curLen + (isP ? 0 : 1);
-                    const rSteps = l.reqLen - nLen;
-                    score += computePortalOpportunity(k, nk, rSteps);
-
-                    const nx = nk & 0xFFFF;
-                    const ny = nk >> 16;
-                    const currentParity = (nx + ny) % 2;
-                    const gx = l.goalKey & 0xFFFF;
-                    const gy = l.goalKey >> 16;
-                    const goalParity = (gx + gy) % 2;
-                    const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
-
-                    let isTargetingWaypoint = false;
-                    let activeDist = distMap.get(nk) ?? 999;
 
                 if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
                     let waypointDist = Infinity;
