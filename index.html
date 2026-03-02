@@ -1741,7 +1741,7 @@
                 _crossNeeds(state) {
                     if (!state.mustCrossCounts) return 0;
                     let needs = 0;
-                    for (let i = 0; i < state.mustCrossCounts.length; i++) needs += (2 - state.mustCrossCounts[i]);
+                    for (let i = 0; i < state.mustCrossCounts.length; i++) needs += Math.max(0, 2 - state.mustCrossCounts[i]);
                     return needs;
                 },
                 _gridIndexFromKey(key, cols) {
@@ -3864,6 +3864,23 @@
                 return runPortalSolverDiscoveryDiagnostics();
             }
             window.runPortalRegressionDiagnostics = runPortalRegressionDiagnostics;
+
+            function runSolverUnitDiagnostics() {
+                const mustCrossCounts = new Uint8Array([3, 0, 0, 0]);
+                const crossNeed = SolverCore._crossNeeds({ mustCrossCounts });
+                const expected = 6;
+                const pass = crossNeed === expected;
+                const result = {
+                    case: 'mustCrossCounts=[3,0,0,0]',
+                    crossNeed,
+                    expected,
+                    pass
+                };
+                if (!pass) throw new Error(`[Solver Unit] crossNeed regression: expected ${expected}, got ${crossNeed}.`);
+                console.log('[Solver Unit] cross-need diagnostics:', result);
+                return result;
+            }
+            window.runSolverUnitDiagnostics = runSolverUnitDiagnostics;
 
             function runPortalValidatorDiagnostics() {
                 try {
