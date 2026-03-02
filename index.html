@@ -2215,6 +2215,7 @@
                         }
                         return true;
                     });
+                    const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'modern';
                     const scored = valid.map(nk => {
                         let score = 0;
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
@@ -2230,67 +2231,75 @@
                         const isP = (portalDest === nk && portalForced);
                         const nLen = curLen + (isP ? 0 : 1);
                         const rSteps = l.reqLen - nLen;
-                        score += computePortalOpportunity(k, nk, rSteps);
-
-                        const nx = nk & 0xFFFF;
-                        const ny = nk >> 16;
-                        const currentParity = (nx + ny) % 2;
-                        const gx = l.goalKey & 0xFFFF;
-                        const gy = l.goalKey >> 16;
-                        const goalParity = (gx + gy) % 2;
-                        const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
-
-                        let isTargetingWaypoint = false;
-                        let activeDist = distMap.get(nk) ?? 999;
-
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
 
-                        // SLACK-AWARE GRAVITY: Scale objective pull based on remaining steps.
-                        // On twisty levels (high slack), we use low pull to allow length-burning wiggles.
-                        // On portal levels (low slack), we use high pull to guarantee we hit the waypoint.
-                        const currentSlack = l.reqLen - nLen - activeDist;
+                        if (scoringMode === 'legacy') {
+                            score -= (mustBound === Infinity ? 100000 : mustBound * 6);
+                            score -= (crossBound === Infinity ? 100000 : crossBound * 6);
+                            if (crossNeed > 0) score += crossNeed * 2;
+                            score += (distMap.get(nk) ?? 999);
+                        } else {
+                            score += computePortalOpportunity(k, nk, rSteps);
 
-                        // Penalty scales from 5 (high slack) up to 40 (low slack)
-                        const gravityMult = currentSlack > 5 ? 5 : 40;
+                            const nx = nk & 0xFFFF;
+                            const ny = nk >> 16;
+                            const currentParity = (nx + ny) % 2;
+                            const gx = l.goalKey & 0xFFFF;
+                            const gy = l.goalKey >> 16;
+                            const goalParity = (gx + gy) % 2;
+                            const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
 
-                        score -= (mustBound === Infinity ? 100000 : mustBound * gravityMult);
-                        score -= (crossBound === Infinity ? 100000 : crossBound * gravityMult);
-                        if (crossNeed > 0) score += crossNeed * 15;
+                            let isTargetingWaypoint = false;
+                            let activeDist = distMap.get(nk) ?? 999;
 
-                if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
-                    let waypointDist = Infinity;
-                    for (let i = 0; i < l.parityBreakers.length; i++) {
-                        const pKey = l.parityBreakers[i];
-                        // Unified check for Array vs Map states
-                        const visited = state.countsArr ? state.countsArr[state.keyToIdx(pKey)] : (state.counts?.get(pKey) || 0);
-                        if (l.parityDistMaps[i] && visited === 0) {
-                            const d = l.parityDistMaps[i].get(nk);
-                            if (d !== undefined && d < waypointDist) waypointDist = d;
+                            // SLACK-AWARE GRAVITY: Scale objective pull based on remaining steps.
+                            // On twisty levels (high slack), we use low pull to allow length-burning wiggles.
+                            // On portal levels (low slack), we use high pull to guarantee we hit the waypoint.
+                            const currentSlack = l.reqLen - nLen - activeDist;
+
+                            // Penalty scales from 5 (high slack) up to 40 (low slack)
+                            const gravityMult = currentSlack > 5 ? 5 : 40;
+
+                            score -= (mustBound === Infinity ? 100000 : mustBound * gravityMult);
+                            score -= (crossBound === Infinity ? 100000 : crossBound * gravityMult);
+                            if (crossNeed > 0) score += crossNeed * 15;
+
+                            if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
+                                let waypointDist = Infinity;
+                                for (let i = 0; i < l.parityBreakers.length; i++) {
+                                    const pKey = l.parityBreakers[i];
+                                    // Unified check for Array vs Map states
+                                    const visited = state.countsArr ? state.countsArr[state.keyToIdx(pKey)] : (state.counts?.get(pKey) || 0);
+                                    if (l.parityDistMaps[i] && visited === 0) {
+                                        const d = l.parityDistMaps[i].get(nk);
+                                        if (d !== undefined && d < waypointDist) waypointDist = d;
+                                    }
+                                }
+                                if (waypointDist !== Infinity) {
+                                    activeDist = waypointDist;
+                                    isTargetingWaypoint = true;
+                                }
+                            }
+
+                            if (isTargetingWaypoint) {
+                                // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
+                                score -= activeDist * 10;
+                                score -= this._staticNeighborDegree(nk, l) * 2;
+                            } else {
+                                const slack = rSteps - activeDist;
+                                if (slack > 0) {
+                                    // SLACK MODE: Decaying Orbit + Wall Hugging
+                                    const targetSlack = Math.floor(rSteps / 2);
+                                    score -= Math.abs(slack - targetSlack) * 5;
+                                    score -= this._staticNeighborDegree(nk, l) * 15;
+                                } else {
+                                    // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
+                                    score -= activeDist * 10;
+                                }
+                            }
                         }
-                    }
-                    if (waypointDist !== Infinity) {
-                        activeDist = waypointDist;
-                        isTargetingWaypoint = true;
-                    }
-                }
 
-                if (isTargetingWaypoint) {
-                    // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
-                    score -= activeDist * 10;
-                    score -= this._staticNeighborDegree(nk, l) * 2;
-                } else {
-                    const slack = rSteps - activeDist;
-                    if (slack > 0) {
-                        // SLACK MODE: Decaying Orbit + Wall Hugging
-                        const targetSlack = Math.floor(rSteps / 2);
-                        score -= Math.abs(slack - targetSlack) * 5;
-                        score -= this._staticNeighborDegree(nk, l) * 15;
-                    } else {
-                        // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
-                        score -= activeDist * 10;
-                    }
-                }
                     score += (usageFreq.get(nk) || 0);
                     return { nk, score };
                 });
@@ -3152,21 +3161,77 @@
 
         async runBaselineStage(level, budgetMs, opts = {}) {
             const started = Date.now();
-            const r = await PathfinderSolver.solve(level, {
-                timeLimit: budgetMs,
-                debug: true,
-                debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
-                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross'
-            });
-            const elapsedMs = Date.now() - started;
-            const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
-            if (r?.ok && solution.length > 0) {
-                return { ok: true, status: 'solved', solution, solutions: solution, elapsedMs, stats: { debug: r.debug } };
+            const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
+                const r = await PathfinderSolver.solve(level, {
+                    timeLimit: attemptBudgetMs,
+                    debug: true,
+                    debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
+                    dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
+                    portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    scoringMode: attemptOpts.scoringMode || 'modern'
+                });
+                const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
+                const debug = r?.debug || {};
+                const status = r?.ok && solution.length > 0
+                    ? 'solved'
+                    : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error'));
+                return {
+                    ok: r?.ok && solution.length > 0,
+                    status,
+                    solution,
+                    debug,
+                    scoringMode: attemptOpts.scoringMode || 'modern',
+                    portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross'
+                };
+            };
+
+            const portalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 2;
+            const attempts = portalMustCrossHeavy
+                ? [
+                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' },
+                    { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off' }
+                ]
+                : [{ budgetMs, scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' }];
+
+            let attemptsUsed = [];
+            let lastAttempt = null;
+            for (const attempt of attempts) {
+                const attemptResult = await runAttempt(attempt.budgetMs, attempt);
+                attemptsUsed.push({
+                    status: attemptResult.status,
+                    budgetMs: attempt.budgetMs,
+                    scoringMode: attempt.scoringMode,
+                    portalBiasMode: attempt.portalBiasMode
+                });
+                if (APP.State.ENGINE.flags?.refereeDebug || APP.State.ENGINE.flags?.debugSolver) {
+                    const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
+                    console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] baseline attempt status=${attemptResult.status} scoringMode=${attempt.scoringMode} portalBiasMode=${attempt.portalBiasMode} budgetMs=${attempt.budgetMs}`);
+                }
+                if (attemptResult.ok) {
+                    const elapsedMs = Date.now() - started;
+                    return {
+                        ok: true,
+                        status: 'solved',
+                        solution: attemptResult.solution,
+                        solutions: attemptResult.solution,
+                        elapsedMs,
+                        stats: { debug: attemptResult.debug },
+                        scoringMode: attempt.scoringMode,
+                        attempts: attemptsUsed
+                    };
+                }
+                lastAttempt = attemptResult;
             }
-            const debug = r?.debug || {};
-            const rawStatus = debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error');
-            return { ok: false, status: rawStatus, elapsedMs, stats: { debug } };
+
+            const elapsedMs = Date.now() - started;
+            return {
+                ok: false,
+                status: lastAttempt ? lastAttempt.status : 'error',
+                elapsedMs,
+                stats: { debug: lastAttempt ? lastAttempt.debug : {} },
+                attempts: attemptsUsed,
+                scoringMode: lastAttempt ? lastAttempt.scoringMode : 'modern'
+            };
         },
 
         async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity'], opts = {}) {
@@ -3194,10 +3259,7 @@
             console.log('Referee starting tier:', tier);
             const level = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const purpose = opts.purpose || 'solve';
-            const isPortalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 3;
-            // Portal-required levels benefited from portal bias, but portal+multi-mustCross levels
-            // (like level 130) regress if jumps are over-prioritized before cross obligations shrink.
-            const resolvedPortalBiasMode = opts.portalBiasMode || (isPortalMustCrossHeavy ? 'off' : 'adaptiveMustCross');
+            const resolvedPortalBiasMode = opts.portalBiasMode || 'adaptiveMustCross';
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
@@ -3214,9 +3276,9 @@
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
                 const budgets = this.allocateStageBudgets(totalBudgetMs);
                 let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
                     { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
