@@ -3185,6 +3185,10 @@
             console.log('Referee starting tier:', tier);
             const level = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const purpose = opts.purpose || 'solve';
+            const isPortalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 3;
+            // Portal-required levels benefited from portal bias, but portal+multi-mustCross levels
+            // (like level 130) regress if jumps are over-prioritized before cross obligations shrink.
+            const resolvedPortalBiasMode = opts.portalBiasMode || (isPortalMustCrossHeavy ? 'off' : 'adaptiveMustCross');
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
@@ -3201,10 +3205,10 @@
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
                 const budgets = this.allocateStageBudgets(totalBudgetMs);
                 let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
-                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
                 if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
@@ -3754,7 +3758,7 @@
                         allowGemini: false,
                         escalationTier: 2,
                         timeBudgetMs: 60000,
-                        portalBiasMode: 'adaptive'
+                        portalBiasMode: 'adaptiveMustCross'
                     });
                     const solutions = normalizeSolutionEntries(res?.solution ?? res?.solutions ?? []);
                     const firstPath = solutions[0]?.path || null;
