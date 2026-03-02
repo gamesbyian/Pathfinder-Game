@@ -5155,42 +5155,46 @@
                     return false;
                 }
 
-                if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
                 const lastP = UNPACK(lastK);
                 const isPortalJumpCandidate = allowJump && level.portalMap.has(lastK) && resolvePortal(level, lastK).dest === targetKey;
+                if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1) && !isPortalJumpCandidate) return false;
                 if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
 
                 const axis = (y === lastP.y) ? APP.Core.H : APP.Core.V;
-                const u = usage.get(targetKey);
-                if (u && ((axis === APP.Core.H && u.h) || (axis === APP.Core.V && u.v))) return false;
+                if (!isPortalJumpCandidate) {
+                    const u = usage.get(targetKey);
+                    if (u && ((axis === APP.Core.H && u.h) || (axis === APP.Core.V && u.v))) return false;
 
-                const uLast = usage.get(lastK);
-                if (uLast) {
-                    let entryAxis = APP.Core.NONE;
-                    if (path.length > 1 && !jumpSet.has(path.length - 1)) {
-                        const prevP = UNPACK(path[path.length - 2]);
-                        const lastPC = UNPACK(lastK);
-                        entryAxis = (prevP.y === lastPC.y) ? APP.Core.H : APP.Core.V;
+                    const uLast = usage.get(lastK);
+                    if (uLast) {
+                        let entryAxis = APP.Core.NONE;
+                        if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+                            const prevP = UNPACK(path[path.length - 2]);
+                            const lastPC = UNPACK(lastK);
+                            entryAxis = (prevP.y === lastPC.y) ? APP.Core.H : APP.Core.V;
+                        }
+                        if (axis !== entryAxis) {
+                            if ((axis === APP.Core.H && uLast.h) || (axis === APP.Core.V && uLast.v)) return false;
+                        }
                     }
-                    if (axis !== entryAxis) {
-                        if ((axis === APP.Core.H && uLast.h) || (axis === APP.Core.V && uLast.v)) return false;
+                }
+
+                if (!isPortalJumpCandidate) {
+                    let filterLast = level.filterMap.get(lastK);
+                    if (filterLast === undefined && level.flippingFilterMap.has(lastK)) {
+                        const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+                        filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
                     }
-                }
+                    if (filterLast && filterLast !== axis) return false;
 
-                let filterLast = level.filterMap.get(lastK);
-                if (filterLast === undefined && level.flippingFilterMap.has(lastK)) {
-                    const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
-                    filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
+                    let filterTarget = level.filterMap.get(targetKey);
+                    if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
+                        const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
+                        const baseAxis = level.flippingFilterMap.get(targetKey);
+                        filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
+                    }
+                    if (filterTarget && filterTarget !== axis) return false;
                 }
-                if (filterLast && filterLast !== axis) return false;
-
-                let filterTarget = level.filterMap.get(targetKey);
-                if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
-                    const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
-                    const baseAxis = level.flippingFilterMap.get(targetKey);
-                    filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
-                }
-                if (filterTarget && filterTarget !== axis) return false;
 
                 if (checkHazards && mode !== APP.Core.EDITOR && level.gooseSet.has(targetKey)) return false;
                 if (checkWinMetrics && mode !== APP.Core.EDITOR && targetKey === level.goalKey) {
