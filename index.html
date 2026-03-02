@@ -5179,20 +5179,22 @@
                     }
                 }
 
-                let filterLast = level.filterMap.get(lastK);
-                if (filterLast === undefined && level.flippingFilterMap.has(lastK)) {
-                    const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
-                    filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
-                }
-                if (filterLast && filterLast !== axis) return false;
+                if (!isPortalJumpCandidate) {
+                    let filterLast = level.filterMap.get(lastK);
+                    if (filterLast === undefined && level.flippingFilterMap.has(lastK)) {
+                        const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+                        filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
+                    }
+                    if (filterLast && filterLast !== axis) return false;
 
-                let filterTarget = level.filterMap.get(targetKey);
-                if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
-                    const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
-                    const baseAxis = level.flippingFilterMap.get(targetKey);
-                    filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
+                    let filterTarget = level.filterMap.get(targetKey);
+                    if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
+                        const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
+                        const baseAxis = level.flippingFilterMap.get(targetKey);
+                        filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
+                    }
+                    if (filterTarget && filterTarget !== axis) return false;
                 }
-                if (filterTarget && filterTarget !== axis) return false;
 
                 if (checkHazards && mode !== APP.Core.EDITOR && level.gooseSet.has(targetKey)) return false;
                 if (checkWinMetrics && mode !== APP.Core.EDITOR && targetKey === level.goalKey) {
