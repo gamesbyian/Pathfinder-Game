@@ -2466,11 +2466,12 @@
                         }
 
                         const portal = APP.LevelUtils.resolvePortal(l, key);
-                        if (portal && portal.dest !== -1 && !l.blockSet.has(portal.dest)) {
-                            const pIdx = state.keyToIdx(portal.dest);
+                        const portalDest = portal ? portal.dest : -1;
+                        if (portalDest !== -1 && !l.blockSet.has(portalDest)) {
+                            const pIdx = state.keyToIdx(portalDest);
                             if (visited[pIdx] === 0) {
                                 visited[pIdx] = 1;
-                                queue[qTail++] = portal.dest;
+                                queue[qTail++] = portalDest;
                             }
                         }
                     }
@@ -2484,6 +2485,7 @@
                     options = options || {};
                     options.hazardPolicy = options.hazardPolicy || 'forbid';
                     const disabledPruneSet = new Set(options.disabledPrunes || []);
+                    if (window.__PF_DEBUG_BYPASS_CONNECTIVITY_PRUNE__) disabledPruneSet.add('connectivity');
                     const useFailMemo = options.useFailMemo !== false && disabledPruneSet.size === 0;
                     const disableMustPassBound = disabledPruneSet.has('mustPassBound');
                     const disableMustCrossBound = disabledPruneSet.has('mustCrossBound');
@@ -3672,6 +3674,18 @@
                     }, level, { isStrict: false, hazardPolicy: 'forbid' })) {
                         return { ok: false, reason: `Invalid move at step ${i + 1}.` };
                     }
+                    const portal = APP.LevelUtils.resolvePortal(level, prev);
+                    if (portal && portal.dest === cur) {
+                        jumpSet.add(i);
+                        const c = counts.get(cur) || 0;
+                        if (c > 0 && cur !== level.goalKey && !level.gateKeys.includes(cur)) intersections++;
+                        counts.set(cur, c + 1);
+                        if (level.flippingFilterMap.has(cur) && !crossedSet.has(cur)) {
+                            crossedSet.set(cur, flipCount);
+                            flipCount++;
+                        }
+                        continue;
+                    }
                     const prevP = APP.LevelUtils.UNPACK(prev);
                     const curP = APP.LevelUtils.UNPACK(cur);
                     const axis = (prevP.y === curP.y) ? APP.Core.H : APP.Core.V;
@@ -3688,14 +3702,44 @@
                         crossedSet.set(cur, flipCount);
                         flipCount++;
                     }
-                    const portal = APP.LevelUtils.resolvePortal(level, prev);
-                    if (portal && portal.dest === cur) jumpSet.add(i);
                 }
                 const finalState = { mode: APP.Core.PLAY, level, editor: { workingLevel: level }, path, isPortalJump: jumpSet, visitedCounts: counts, intersections };
                 if (path[path.length - 1] !== level.goalKey) return { ok: false, reason: 'Path does not end at goal.' };
                 if (!APP.Engine.areWinMetricsSatisfied(finalState, level)) return { ok: false, reason: 'Path fails reqLen/reqInt/must rules.' };
                 return { ok: true, path };
             }
+
+            function runPortalValidatorDiagnostics() {
+                try {
+                    const levels = APP.LevelUtils.getRawLevels();
+                    const level21Raw = levels[20];
+                    const level21Hint = Array.isArray(level21Raw?.hints) && level21Raw.hints.length > 0 ? level21Raw.hints[0] : null;
+                    if (Array.isArray(level21Hint)) {
+                        const level21 = APP.LevelUtils.normalizeLevel(20);
+                        const level21Result = validateCandidatePath(level21, level21Hint);
+                        console.log('[Portal/Validator Diagnostic] Level 21 stored hint validation:', level21Result);
+                    } else {
+                        console.warn('[Portal/Validator Diagnostic] Level 21 has no stored hint array to validate.');
+                    }
+
+                    const level117 = APP.LevelUtils.normalizeLevel(116);
+                    if (level117) {
+                        const level117KnownValid = [6,5,4,3,2,1,0,65536,131072,196608,262144,327680,393216,393227,458763,524299,589835,655371,655370,655369,655368,655367,655366,655365,655364,655363,655362,655361,589825,589824,655360,720896,720897,720898,720899,720900,720901,720902];
+                        const level117Result = validateCandidatePath(level117, level117KnownValid);
+                        console.log('[Portal/Validator Diagnostic] Level 117 known valid path validation:', level117Result);
+                    } else {
+                        console.warn('[Portal/Validator Diagnostic] Level 117 is unavailable in loaded level data.');
+                    }
+                } catch (err) {
+                    console.error('[Portal/Validator Diagnostic] Failed to run diagnostics:', err);
+                }
+            }
+            window.runPortalValidatorDiagnostics = runPortalValidatorDiagnostics;
+            setTimeout(() => {
+                if (window.__PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__) return;
+                runPortalValidatorDiagnostics();
+            }, 0);
+
 
             async function requestGeminiSolverSuggestion(level, purpose, attempt = 1, timeoutMs = 15000) {
                 const controller = new AbortController();
