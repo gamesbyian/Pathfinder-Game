@@ -2136,7 +2136,7 @@
                         crossDistCache.set(cKey, b);
                         return b;
                     };
-                    const portalBiasMode = options?.portalBiasMode || 'adaptive';
+                    const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
                     const portalBiasEnabled = portalBiasMode !== 'off';
                     const portalBiasWeight = portalBiasMode === 'aggressive' ? 260 : 150;
                     const computePortalOpportunity = (fromKey, toKey, rStepsAfterMove) => {
@@ -2151,7 +2151,23 @@
                             if (gain > 0) bonus += gain * 22;
                         }
                         if (rStepsAfterMove <= 6) bonus += 40;
-                        if (state.mustMask !== 0n || this._crossNeeds(state) > 0) bonus += 30;
+
+                        const crossNeeds = this._crossNeeds(state);
+                        const outstandingMustCross = (typeof state.mustCrossMask === 'bigint' && state.mustCrossMask !== 0n)
+                            ? l._popcountMask(state.mustCrossMask)
+                            : 0;
+                        const hasMustObligations = state.mustMask !== 0n || crossNeeds > 0;
+
+                        if (portalBiasMode === 'adaptiveMustCross') {
+                            if (crossNeeds >= 4 || outstandingMustCross >= 3) return 0;
+                            if (crossNeeds >= 3 || outstandingMustCross >= 2) bonus = Math.floor(bonus * 0.25);
+                            else if (crossNeeds >= 2) bonus = Math.floor(bonus * 0.5);
+                            else if (crossNeeds >= 1) bonus = Math.floor(bonus * 0.7);
+                            if (hasMustObligations) bonus += 15;
+                        } else if (hasMustObligations) {
+                            bonus += 30;
+                        }
+
                         return bonus;
                     };
 
@@ -3132,7 +3148,7 @@
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                 dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
-                portalBiasMode: opts.portalBiasMode || 'adaptive'
+                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross'
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -3151,7 +3167,7 @@
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                 disabledPrunes,
-                portalBiasMode: opts.portalBiasMode || 'adaptive'
+                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross'
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -3197,9 +3213,11 @@
             const tierBudgets = purpose === 'hint'
                 ? [5000, 15000, 60000]
                 : [15000, 60000, 180000];
+            // Keep must-pass/must-cross bounds active in primary stages so multi-mustCross levels
+            // (e.g. level 130) don't blow up search breadth; reserve broad prune disabling for fallback.
             const phases = [
-                makePhaseOrder(tierBudgets[0], ['mustPassBound', 'mustCrossBound', 'connectivity']),
-                makePhaseOrder(tierBudgets[1], ['mustPassBound', 'mustCrossBound', 'connectivity']),
+                makePhaseOrder(tierBudgets[0], []),
+                makePhaseOrder(tierBudgets[1], []),
                 makePhaseOrder(tierBudgets[2], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'])
             ];
             const activePhases = phases[Math.min(tier || 0, phases.length - 1)];
