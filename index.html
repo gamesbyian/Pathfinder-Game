@@ -2136,7 +2136,7 @@
                         crossDistCache.set(cKey, b);
                         return b;
                     };
-                    const portalBiasMode = options?.portalBiasMode || 'adaptive';
+                    const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
                     const portalBiasEnabled = portalBiasMode !== 'off';
                     const portalBiasWeight = portalBiasMode === 'aggressive' ? 260 : 150;
                     const computePortalOpportunity = (fromKey, toKey, rStepsAfterMove) => {
@@ -2151,7 +2151,23 @@
                             if (gain > 0) bonus += gain * 22;
                         }
                         if (rStepsAfterMove <= 6) bonus += 40;
-                        if (state.mustMask !== 0n || this._crossNeeds(state) > 0) bonus += 30;
+
+                        const crossNeeds = this._crossNeeds(state);
+                        const outstandingMustCross = (typeof state.mustCrossMask === 'bigint' && state.mustCrossMask !== 0n)
+                            ? l._popcountMask(state.mustCrossMask)
+                            : 0;
+                        const hasMustObligations = state.mustMask !== 0n || crossNeeds > 0;
+
+                        if (portalBiasMode === 'adaptiveMustCross') {
+                            if (crossNeeds >= 4 || outstandingMustCross >= 3) return 0;
+                            if (crossNeeds >= 3 || outstandingMustCross >= 2) bonus = Math.floor(bonus * 0.25);
+                            else if (crossNeeds >= 2) bonus = Math.floor(bonus * 0.5);
+                            else if (crossNeeds >= 1) bonus = Math.floor(bonus * 0.7);
+                            if (hasMustObligations) bonus += 15;
+                        } else if (hasMustObligations) {
+                            bonus += 30;
+                        }
+
                         return bonus;
                     };
 
@@ -3132,7 +3148,7 @@
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                 dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
-                portalBiasMode: opts.portalBiasMode || 'adaptive'
+                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross'
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -3151,7 +3167,7 @@
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                 disabledPrunes,
-                portalBiasMode: opts.portalBiasMode || 'adaptive'
+                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross'
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -3169,6 +3185,10 @@
             console.log('Referee starting tier:', tier);
             const level = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const purpose = opts.purpose || 'solve';
+            const isPortalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 3;
+            // Portal-required levels benefited from portal bias, but portal+multi-mustCross levels
+            // (like level 130) regress if jumps are over-prioritized before cross obligations shrink.
+            const resolvedPortalBiasMode = opts.portalBiasMode || (isPortalMustCrossHeavy ? 'off' : 'adaptiveMustCross');
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
@@ -3185,21 +3205,23 @@
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
                 const budgets = this.allocateStageBudgets(totalBudgetMs);
                 let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
-                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
                 if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
                 return phaseOrder;
             };
             const tierBudgets = purpose === 'hint'
-                ? [5000, 15000, 60000]
-                : [15000, 60000, 180000];
+                ? (isPortalMustCrossHeavy ? [15000, 45000, 90000] : [5000, 15000, 60000])
+                : (isPortalMustCrossHeavy ? [45000, 120000, 240000] : [15000, 60000, 180000]);
+            // Keep must-pass/must-cross bounds active in primary stages so multi-mustCross levels
+            // (e.g. level 130) don't blow up search breadth; reserve broad prune disabling for fallback.
             const phases = [
-                makePhaseOrder(tierBudgets[0], ['mustPassBound', 'mustCrossBound', 'connectivity']),
-                makePhaseOrder(tierBudgets[1], ['mustPassBound', 'mustCrossBound', 'connectivity']),
+                makePhaseOrder(tierBudgets[0], []),
+                makePhaseOrder(tierBudgets[1], []),
                 makePhaseOrder(tierBudgets[2], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'])
             ];
             const activePhases = phases[Math.min(tier || 0, phases.length - 1)];
@@ -3736,7 +3758,7 @@
                         allowGemini: false,
                         escalationTier: 2,
                         timeBudgetMs: 60000,
-                        portalBiasMode: 'adaptive'
+                        portalBiasMode: 'adaptiveMustCross'
                     });
                     const solutions = normalizeSolutionEntries(res?.solution ?? res?.solutions ?? []);
                     const firstPath = solutions[0]?.path || null;
