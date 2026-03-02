@@ -331,6 +331,25 @@
                 </div>
             </div>
 
+            <div id="auditModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
+                <div id="auditModalContent" class="screen-modal-panel panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content">
+                    <div class="flex justify-between items-center mb-3 shrink-0">
+                        <div><h2 class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Audit</h2><p class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Developer validation run</p></div>
+                        <button id="closeAuditModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
+                    </div>
+                    <div class="flex-grow min-h-0 overflow-y-auto pr-1 space-y-3">
+                        <div id="auditSummary" class="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">No run yet.</div>
+                        <div id="auditProgressLabel" class="text-[0.62rem] font-mono text-[var(--theme-modal-text)]">Idle</div>
+                        <div id="auditReportRows" class="min-h-[9rem] max-h-[14rem] overflow-y-auto border rounded-xl border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[0.6rem] font-mono leading-tight p-2 whitespace-pre-wrap">Run Audit to generate report.</div>
+                    </div>
+                    <div class="pt-3 border-t border-[var(--theme-modal-border)] flex gap-2 shrink-0">
+                        <button id="startAuditBtn" class="flex-1 text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Run Audit</button>
+                        <button id="cancelAuditBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Stop</button>
+                        <button id="copyAuditBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Report</button>
+                    </div>
+                </div>
+            </div>
+
             <div id="editorHelpModal" class="screen-modal hidden flex flex-col modal-content">
                 <div class="flex justify-between items-start p-4 shrink-0">
                      <div class="flex-grow pr-2"><h3 class="serif-desc text-[1.1rem] font-bold leading-tight text-[var(--theme-modal-accent)] text-left w-full">Editor Guide</h3></div>
@@ -466,6 +485,7 @@
     <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2 landscape-editor-tools">
         <button id="orientationToggleBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[5.25rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Landscape</button>
         <button id="openThemeModalBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Themes</button>
+        <button id="openAuditModalBtn" class="hidden px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Audit</button>
         <button id="muteBtn" class="backdrop-blur-md w-10 h-10 rounded-lg flex items-center justify-center transition shrink-0 shadow-md border bg-[var(--theme-shell-mute-bg)] text-[var(--theme-shell-mute-text)] border-[var(--theme-shell-mute-border)] hover:bg-[var(--theme-shell-mute-bg-hover)]">
             <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="22"></line><line id="muteSlash" x1="2" y1="2" x2="22" y2="22"></line></svg>
         </button>
@@ -579,7 +599,7 @@
                 'megaStatus','megaSummary','megaOutput','megaModal','megaSolverBtn',
                 'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
                 'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
-                'themeEditList','themeSelectView','themeEditView','dragGhost'
+                'themeEditList','themeSelectView','themeEditView','dragGhost','auditModal','auditSummary','auditProgressLabel','auditReportRows','openAuditModalBtn','startAuditBtn','cancelAuditBtn','copyAuditBtn'
             ].forEach(id => { dom[id] = document.getElementById(id); });
         };
 
@@ -1016,6 +1036,9 @@
             getEl('openThemeModalBtn').style.backgroundColor = t.shell.btnBg;
             getEl('openThemeModalBtn').style.color = t.shell.btnText;
             getEl('openThemeModalBtn').style.borderColor = t.shell.btnBorder;
+            getEl('openAuditModalBtn').style.backgroundColor = t.shell.btnBg;
+            getEl('openAuditModalBtn').style.color = t.shell.btnText;
+            getEl('openAuditModalBtn').style.borderColor = t.shell.btnBorder;
             getEl('orientationToggleBtn').style.backgroundColor = t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b';
             getEl('orientationToggleBtn').style.color = t.text.shellBtn || t.text.megaPrimary || '#ffffff';
             getEl('orientationToggleBtn').style.borderColor = t.grid;
@@ -1029,7 +1052,7 @@
         };
 
         const closeAllModals = () => {
-            ['guideModal', 'editorHelpModal', 'winModal', 'megaModal', 'themeModal', 'unsavedModal'].forEach(id => closeModal(id));
+            ['guideModal', 'editorHelpModal', 'winModal', 'megaModal', 'themeModal', 'unsavedModal', 'auditModal'].forEach(id => closeModal(id));
         };
         const showMessageCompat = (text = '', className = '') => showMessage(text, className);
 
@@ -4146,7 +4169,8 @@
             runGameSolver: (...args) => runGameSolver(...args),
             getHint: (tier = 0) => runGameSolver('hint', tier),
             startHintAnimation,
-            stopHintAnimation
+            stopHintAnimation,
+            validateCandidatePath
         };
     })();
 
@@ -4663,9 +4687,9 @@
 
             function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; APP.Engine.setLogicState(snap.logicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
 
-            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
+            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
-            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
+            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
             function updatePencilState() {
                 const btn = document.getElementById('editPencilBtn');
@@ -6895,7 +6919,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const GAMEPAD_REPEAT_INITIAL = 220;
         const GAMEPAD_REPEAT_RATE = 100;
 
-        function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal'); }
+        function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal') || APP.UI.isModalOpen('auditModal'); }
 
         function getFocusableGroups() {
             const groups = [
@@ -7083,6 +7107,177 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         }
         APP.UI.updateAppScale();
 
+        // Audit tool: add dev-only shell button + grid-scoped modal + read-only all-level audit runner.
+        // Where to look: `openAuditModalBtn`, `auditModal`, and `runAudit()` in this section.
+        let auditModalOpen = false;
+        let auditRunning = false;
+        let auditCancelRequested = false;
+        let auditProgress = null;
+        let auditReport = [];
+
+        const trimAuditError = (err) => `${err?.message || err || ''}`.trim().slice(0, 140);
+        const copyClone = (v) => JSON.parse(JSON.stringify(v));
+        const delay0 = () => new Promise(r => setTimeout(r, 0));
+        const withTimeout = async (promise, ms) => {
+            let timer = null;
+            try {
+                return await Promise.race([
+                    promise,
+                    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), ms); })
+                ]);
+            } finally {
+                if (timer) clearTimeout(timer);
+            }
+        };
+        const formatAuditSummary = (p) => {
+            if (!p) return 'No run yet.';
+            return [
+                `levels ${p.levelsProcessed}/${p.levelsTotal}`,
+                `saved hints valid ${p.validHints}/${Math.max(1, p.validHints + p.invalidHints)} (invalid ${p.invalidHints})`,
+                `new hint success ${p.newHint.success} fail ${p.newHint.failure}`,
+                `bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`
+            ].join(' | ');
+        };
+        const renderAuditReport = () => {
+            const summaryEl = document.getElementById('auditSummary');
+            const progEl = document.getElementById('auditProgressLabel');
+            const rowsEl = document.getElementById('auditReportRows');
+            if (summaryEl) summaryEl.textContent = formatAuditSummary(auditProgress);
+            if (progEl) progEl.textContent = auditRunning ? `Running level ${Math.min((auditProgress?.levelsProcessed || 0) + 1, auditProgress?.levelsTotal || 0)}...` : (auditCancelRequested ? 'Stopped.' : 'Idle');
+            if (!rowsEl) return;
+            if (!auditReport.length) {
+                rowsEl.textContent = 'Run Audit to generate report.';
+                return;
+            }
+            rowsEl.textContent = auditReport.map(r => `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${r.error ? ` | ${r.error}` : ''}`).join('\n');
+        };
+
+        const runAudit = async () => {
+            if (auditRunning) return;
+            auditRunning = true;
+            auditCancelRequested = false;
+            auditReport = [];
+            const rawLevels = APP.LevelUtils.getRawLevels();
+            auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0 }, bombs: { success: 0, noneFound: 0, error: 0 } };
+            renderAuditReport();
+
+            const stateSnap = {
+                levelIdx: APP.State.ENGINE.levelIdx,
+                mode: APP.State.ENGINE.mode,
+                path: [...APP.State.ENGINE.path],
+                isPortalJump: new Set(APP.State.ENGINE.isPortalJump),
+                overlayState: APP.State.ENGINE.overlayState,
+                logicState: APP.State.ENGINE.logicState,
+                variant: APP.State.ENGINE.variant,
+                forceLandscapeLayout: APP.State.ENGINE.ui.forceLandscapeLayout,
+                currentTheme: APP.State.ENGINE.runtime.currentTheme
+            };
+
+            try {
+                for (let i = 0; i < rawLevels.length; i++) {
+                    if (auditCancelRequested) break;
+                    const levelNum = i + 1;
+                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', timeMs: 0, producedHintValid: false }, bombs: { status: 'error', count: 0 }, error: '' };
+
+                    try {
+                        const normalized = APP.LevelUtils.normalizeLevel(i);
+                        const rawHints = Array.isArray(rawLevels[i]?.hints) ? rawLevels[i].hints : [];
+                        levelEntry.savedHints.total = rawHints.length;
+                        for (const hint of rawHints) {
+                            try {
+                                const validation = APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(hint));
+                                if (validation?.ok) {
+                                    levelEntry.savedHints.valid++;
+                                    auditProgress.validHints++;
+                                } else {
+                                    levelEntry.savedHints.invalid++;
+                                    auditProgress.invalidHints++;
+                                    levelEntry.savedHints.invalidReasons.push(validation?.reason || 'invalid (reason unknown)');
+                                }
+                            } catch (hintErr) {
+                                levelEntry.savedHints.invalid++;
+                                auditProgress.invalidHints++;
+                                levelEntry.savedHints.invalidReasons.push(trimAuditError(hintErr) || 'invalid (reason unknown)');
+                            }
+                        }
+
+                        const t0 = performance.now();
+                        let hintRes = null;
+                        try {
+                            hintRes = await withTimeout(APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 1000 }), 1500);
+                            const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
+                            const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
+                            levelEntry.newHint.producedHintValid = !!hintValidation?.ok;
+                            if (hintRes?.ok && hintValidation?.ok) levelEntry.newHint.status = 'success';
+                            else if (hintRes?.status === 'no-solution' || hintRes?.rawStatus === 'no-solution-proven') levelEntry.newHint.status = 'no-solution';
+                            else if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') levelEntry.newHint.status = 'timeout';
+                            else levelEntry.newHint.status = 'error';
+                        } catch (newHintErr) {
+                            levelEntry.newHint.status = `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error';
+                            if (levelEntry.newHint.status === 'timeout') APP.Solver.cancel();
+                            if (levelEntry.newHint.status === 'error') levelEntry.error = trimAuditError(newHintErr);
+                        }
+                        levelEntry.newHint.timeMs = Math.round(performance.now() - t0);
+                        if (levelEntry.newHint.status === 'success') auditProgress.newHint.success++; else auditProgress.newHint.failure++;
+
+                        try {
+                            const trapBudget = Math.min(1000, APP.Solver.getTrapSpotBudgetMs(normalized));
+                            const bombRes = await withTimeout(APP.Solver.findTrapSpots(APP.LevelUtils.deepCloneLevel(normalized), { timeLimit: trapBudget }), trapBudget + 500);
+                            const bombCount = bombRes?.spots?.size || 0;
+                            levelEntry.bombs.count = bombCount;
+                            if (bombRes?.status === 'timeout' || bombRes?.timedOut) {
+                                levelEntry.bombs.status = 'timeout';
+                                auditProgress.bombs.error++;
+                            } else if (!bombRes?.ok) {
+                                levelEntry.bombs.status = 'error';
+                                auditProgress.bombs.error++;
+                            } else if (bombCount > 0) {
+                                levelEntry.bombs.status = 'success';
+                                auditProgress.bombs.success++;
+                            } else {
+                                levelEntry.bombs.status = 'none-found';
+                                auditProgress.bombs.noneFound++;
+                            }
+                        } catch (bombErr) {
+                            const timed = `${bombErr?.message || ''}`.includes('timeout');
+                            levelEntry.bombs.status = timed ? 'timeout' : 'error';
+                            if (timed) APP.Solver.cancel();
+                            auditProgress.bombs.error++;
+                            if (!levelEntry.error) levelEntry.error = trimAuditError(bombErr);
+                        }
+                    } catch (levelErr) {
+                        levelEntry.error = trimAuditError(levelErr);
+                        levelEntry.newHint.status = 'error';
+                        levelEntry.bombs.status = 'error';
+                        auditProgress.newHint.failure++;
+                        auditProgress.bombs.error++;
+                    }
+
+                    auditReport.push(levelEntry);
+                    auditProgress.levelsProcessed++;
+                    renderAuditReport();
+                    if ((i + 1) % 3 === 0) await delay0();
+                }
+            } finally {
+                APP.Solver.cancel();
+                APP.State.ENGINE.levelIdx = stateSnap.levelIdx;
+                APP.State.ENGINE.mode = stateSnap.mode;
+                APP.State.ENGINE.path = [...stateSnap.path];
+                APP.State.ENGINE.isPortalJump = new Set(stateSnap.isPortalJump);
+                APP.State.ENGINE.variant = stateSnap.variant;
+                APP.State.ENGINE.ui.forceLandscapeLayout = stateSnap.forceLandscapeLayout;
+                APP.State.ENGINE.runtime.currentTheme = stateSnap.currentTheme;
+                APP.Engine.setLogicState(stateSnap.logicState);
+                APP.Engine.setOverlayState(stateSnap.overlayState);
+                APP.Engine.rebuildDerivedPathState(APP.State.ENGINE);
+                APP.UI.updateLayoutMode();
+                APP.UI.updateViewport();
+                APP.Themes.applyTheme(stateSnap.currentTheme);
+                auditRunning = false;
+                renderAuditReport();
+            }
+        };
+
         document.getElementById('gridRotateBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, (a) => a === APP.Core.H ? APP.Core.V : APP.Core.H); APP.UI.showMessage("Rotated", "text-white font-black"); };
         document.getElementById('gridMirrorBtn').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; APP.State.ENGINE.editor.mirrorHorizontal = !APP.State.ENGINE.editor.mirrorHorizontal; APP.UI.setInlineStyle('mirrorIconSvg', 'transform', APP.State.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)'); if (APP.State.ENGINE.editor.mirrorHorizontal) { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y: y }), l.grid.w, l.grid.h, (a) => a); } else { APP.LevelUtils.transformLevel(l, (x, y) => ({ x: x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, (a) => a); } APP.UI.showMessage("Mirrored", "text-white font-black"); };
         document.getElementById('gridSizeMinusBtn').onclick = () => { APP.UI.closeAllModals(); APP.LevelUtils.changeGridSize(-1); };
@@ -7194,6 +7389,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('megaSolverBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.run(); };
         document.getElementById('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
         document.getElementById('copyMegaDataBtn').onclick = async () => { const out = APP.UI.getMegaOutputText(); if (out) await APP.UI.copyText(out, { fallbackElId: 'megaOutput' }); };
+        document.getElementById('openAuditModalBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode) return; APP.UI.closeAllModals(); auditModalOpen = true; renderAuditReport(); APP.UI.openModal('auditModal'); };
+        document.getElementById('closeAuditModalBtn').onclick = () => { auditModalOpen = false; APP.UI.closeModal('auditModal'); };
+        document.getElementById('startAuditBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(); };
+        document.getElementById('cancelAuditBtn').onclick = () => { auditCancelRequested = true; APP.Solver.cancel(); };
+        document.getElementById('copyAuditBtn').onclick = async () => {
+            const payload = { progress: auditProgress, levels: auditReport };
+            await APP.UI.copyText(JSON.stringify(payload, null, 2), { fallbackElId: 'auditReportRows' });
+            APP.UI.showMessage('Audit report copied.', 'text-white font-black');
+        };
         document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
         document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
         document.getElementById('megaRetry120Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
@@ -7218,7 +7422,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         document.getElementById('backToThemeSelectBtn').onclick = closeEditor;
         document.getElementById('doneThemeEditBtn').onclick = closeEditor;
-        document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
+        document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); if (!APP.State.ENGINE.isDevMode) { auditModalOpen = false; APP.UI.closeModal('auditModal'); } APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
         APP.UI.bindAll('.editor-input', 'input', () => { APP.Editor.markEditorInputsDirty(); });
         document.getElementById('modeToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.enterEditorMode(); };
         document.getElementById('editModeToggleBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); APP.Editor.exitEditorMode(); });
