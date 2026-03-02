@@ -3215,8 +3215,8 @@
                 return phaseOrder;
             };
             const tierBudgets = purpose === 'hint'
-                ? (isPortalMustCrossHeavy ? [15000, 45000, 90000] : [5000, 15000, 60000])
-                : (isPortalMustCrossHeavy ? [45000, 120000, 240000] : [15000, 60000, 180000]);
+                ? [5000, 15000, 60000]
+                : [15000, 60000, 180000];
             // Keep must-pass/must-cross bounds active in primary stages so multi-mustCross levels
             // (e.g. level 130) don't blow up search breadth; reserve broad prune disabling for fallback.
             const phases = [
