@@ -2447,7 +2447,7 @@
                             if (state.mustCrossCounts[i] < 2) needCross++;
                         }
                     }
-                    if (!needGoal && needMust === 0 && needCross === 0 && state.remainingSteps <= 0) return true;
+                    if (!needGoal && needMust === 0 && needCross === 0) return true;
 
                     let qHead = 0;
                     let qTail = 0;
@@ -2471,7 +2471,7 @@
                             const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(key) : undefined;
                             if (crossIdx !== undefined && state.mustCrossCounts[crossIdx] < 2) needCross--;
                         }
-                        if (!needGoal && needMust === 0 && needCross === 0 && volumeCount >= state.remainingSteps) return true;
+                        if (!needGoal && needMust === 0 && needCross === 0) return true;
 
                         const x = key & 0xFFFF;
                         const y = key >> 16;
@@ -2519,7 +2519,7 @@
                             }
                         }
                     }
-                    return volumeCount >= state.remainingSteps ? (!needGoal && needMust === 0 && needCross === 0) : false;
+                    return !needGoal && needMust === 0 && needCross === 0;
                 },
                 async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options, debugStats = null) {
                     const mustCount = l.mustPassKeys.length;
@@ -2729,7 +2729,8 @@
                             this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
-                        if (!disabledPruneSet.has('connectivity')) {
+                        const shouldRunConnectivityPrune = !disabledPruneSet.has('connectivity') && l.mustCrossKeys.length === 0;
+                        if (shouldRunConnectivityPrune) {
                             if (!this._checkTopology(state, lastK, rSteps, l)) {
                                 if (debugStats) debugStats.prune.topology = (debugStats.prune.topology || 0) + 1;
                                 this._popStateZeroAlloc(state, transLog);
