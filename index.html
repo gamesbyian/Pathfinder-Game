@@ -99,8 +99,8 @@
         .landscape-editor-tools .palette-grid { flex-grow: 0; margin-left: 0; gap: var(--palette-grid-gap, var(--ui-gap-tight)); }
         .landscape-editor-tools .palette-grid .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); }
         .landscape-editor-tools #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--palette-grid-gap, var(--ui-gap-tight)))) !important; }
-        .landscape-editor-tools #editorPaletteLayout { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "line palette"; gap: var(--ui-gap); align-items: stretch; }
-        .landscape-editor-tools #editorLineGridPanel { grid-area: line; border-top: 0; border-right: 1px solid var(--theme-editor-panel-border); padding: 0 calc(var(--ui-gap) * 0.9) 0 0; justify-content: flex-start; align-items: stretch; flex-direction: column; }
+        .landscape-editor-tools #editorPaletteLayout { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "line palette"; gap: 0; align-items: stretch; }
+        .landscape-editor-tools #editorLineGridPanel { grid-area: line; border-top: 0; border-right: 1px solid var(--theme-editor-panel-border); padding: 0; justify-content: flex-start; align-items: stretch; flex-direction: column; }
         .landscape-editor-tools #editorItemPalettePanel { grid-area: palette; }
         .landscape-editor-tools #lineGridTools { display: flex; flex-direction: column; gap: var(--ui-gap-tight); align-items: stretch; width: 7rem; }
         .landscape-editor-tools #lineToolRow, .landscape-editor-tools #lineSetRow, .landscape-editor-tools #gridRotateMirrorRow, .landscape-editor-tools #gridSizeButtonsRow { justify-content: center; }
@@ -117,7 +117,7 @@
         .screen-modal-top { z-index: 35; }
         .screen-modal-panel { width: 100%; height: 100%; border-radius: var(--ui-radius); padding: var(--ui-panel-pad); }
         #editorPalette { --palette-cell-size: clamp(2.35rem, 5vw, 2.95rem); }
-        #editorItemPalettePanel { display: grid; grid-template-columns: minmax(0, 1fr) var(--palette-cell-size); }
+        #editorItemPalettePanel { display: grid; grid-template-columns: minmax(0, 1fr) var(--palette-cell-size); gap: 0; }
         .palette-grid { display: grid; grid-template-columns: repeat(6, var(--palette-cell-size)); gap: var(--ui-gap-tight); width: max-content; max-width: 100%; margin-inline: auto; }
         .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); border-radius: var(--ui-radius); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e1; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; touch-action: none; }
         .palette-grid .palette-item { width: 100%; height: auto; aspect-ratio: 1 / 1; }
@@ -1036,10 +1036,10 @@
 
             getEl('openThemeModalBtn').style.backgroundColor = t.shell.btnBg;
             getEl('openThemeModalBtn').style.color = t.shell.btnText;
-            getEl('openThemeModalBtn').style.borderColor = t.shell.btnBorder;
+            getEl('openThemeModalBtn').style.borderColor = t.grid;
             getEl('openAuditModalBtn').style.backgroundColor = t.shell.btnBg;
             getEl('openAuditModalBtn').style.color = t.shell.btnText;
-            getEl('openAuditModalBtn').style.borderColor = t.shell.btnBorder;
+            getEl('openAuditModalBtn').style.borderColor = t.grid;
             getEl('orientationToggleBtn').style.backgroundColor = t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b';
             getEl('orientationToggleBtn').style.color = t.text.shellBtn || t.text.megaPrimary || '#ffffff';
             getEl('orientationToggleBtn').style.borderColor = t.grid;
@@ -1394,7 +1394,7 @@
                 exportBtn.className = "bg-[var(--theme-modal-panel)] border border-[var(--theme-modal-border)] text-[var(--theme-modal-text)] px-3 py-1 rounded font-black text-[0.6rem] uppercase tracking-wider hover:brightness-95 transition shrink-0";
                 exportBtn.innerText = "Export";
                 exportBtn.onclick = () => {
-                    const code = `${themeKey}: ${JSON.stringify(APP.Themes.THEMES[themeKey])},`;
+                    const code = `${themeKey}: ${JSON.stringify(APP.Themes.THEMES[themeKey], null, 2)},`;
                     textarea.value = code;
                     copyText(code, { fallbackEl: textarea, fallbackElId: 'solutionOutput' });
                     const origText = exportBtn.innerText;
@@ -1437,14 +1437,14 @@
 
             const renderAll = () => {
                 ensureInit();
-                const originalThemes = APP.Themes.getOriginalThemesStore();
-                if (!teDom.list || !originalThemes) return;
+                const themeRegistry = APP.Themes.THEMES || {};
+                if (!teDom.list || !themeRegistry) return;
                 clearArmedSelection();
                 resetPointerState();
                 teDom.list.innerHTML = '';
                 swatchMetaByIdx.clear();
                 nextSwatchIdx = 0;
-                const keys = Object.keys(originalThemes).filter(k => k !== 'classic');
+                const keys = Object.keys(themeRegistry).filter(k => k !== 'classic' && k !== 'chaos');
                 keys.forEach((key, idx) => {
                     teDom.list.appendChild(renderThemeKey(key));
                     if (idx < keys.length - 1) {
@@ -5097,7 +5097,7 @@
                     hints: exportedHints
                 };
 
-                const json = JSON.stringify(out).replace(/\s/g, '').slice(1, -1);
+                const json = JSON.stringify(out).replace(/\"([^\"]+)\":/g, '$1:').replace(/\s/g, '').slice(1, -1);
                 APP.UI.setSolutionOutput(json);
                 await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' });
                 APP.State.ENGINE.editor.isModified = false;
@@ -5165,7 +5165,7 @@
                 refs.ENGINE.editor.validTrapSpots.clear();
                 refs.ENGINE.editor.isModified = true;
             },
-            handlePaletteToolPointerDown(toolType) {
+            handlePaletteToolPointerDown(toolType, options = {}) {
                 if (refs.ENGINE.mode !== APP.Core.EDITOR) return;
                 if (refs.ENGINE.overlayState !== APP.Core.OVERLAY_NONE) return;
                 refs.ENGINE.editor.draggedFromGrid = false;
@@ -5174,9 +5174,12 @@
                     refs.UI.showMessage('Finish portal pair!', 'text-white font-black');
                     return;
                 }
-                if (refs.ENGINE.editor.selectedTool === toolType) {
+                const forceActivate = !!options.forceActivate;
+                if (refs.ENGINE.editor.selectedTool === toolType && !forceActivate) {
                     refs.ENGINE.editor.selectedTool = null;
                     refs.UI.setPaletteSelectedByType(toolType, false);
+                    refs.ENGINE.editor.draggedObject = null;
+                    APP.Engine.setLogicState(APP.Core.IDLE);
                 } else {
                     refs.ENGINE.editor.selectedTool = toolType;
                     refs.ENGINE.editor.draggedObject = { type: toolType };
@@ -5312,17 +5315,17 @@
         function applySessionState() {
             try {
                 const raw = localStorage.getItem(`pathfinder_session_${appId}`);
-                if (!raw) return { levelIdx: 0, currentTheme: 'classic' };
+                if (!raw) return { levelIdx: 0, currentTheme: APP.State.ENGINE.runtime.currentTheme || 'classic' };
                 const parsed = JSON.parse(raw);
                 const levelCount = APP.LevelUtils.getRawLevels()?.length || 0;
                 const maxIdx = Math.max(0, levelCount - 1);
                 const safeLevel = Number.isInteger(parsed?.levelIdx)
                     ? (levelCount > 0 ? Math.max(0, Math.min(parsed.levelIdx, maxIdx)) : Math.max(0, parsed.levelIdx))
                     : 0;
-                const safeTheme = (typeof parsed?.currentTheme === 'string' && APP.Themes.getTheme(parsed.currentTheme)) ? parsed.currentTheme : 'classic';
+                const safeTheme = (typeof parsed?.currentTheme === 'string' && APP.Themes.getTheme(parsed.currentTheme)) ? parsed.currentTheme : (APP.State.ENGINE.runtime.currentTheme || 'classic');
                 return { levelIdx: safeLevel, currentTheme: safeTheme };
             } catch (e) {
-                return { levelIdx: 0, currentTheme: 'classic' };
+                return { levelIdx: 0, currentTheme: APP.State.ENGINE.runtime.currentTheme || 'classic' };
             }
         }
 
@@ -6656,6 +6659,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.jumpscare.bombTopText = t.jumpscare.bombTopText || t.burst || '#fde047';
         t.jumpscare.bombBottomText = t.jumpscare.bombBottomText || t.colors.goal || '#f97316';
 
+        if (key !== 'chaos') {
+            const contrastShellBg = pickContrastText(t.bodyBg || t.canvasBg || '#ffffff', '#ffffff', '#0f172a');
+            t.shell.btnBg = contrastShellBg === '#ffffff' ? '#1f2937' : '#f8fafc';
+            t.shell.btnBgHover = darkenHex(t.shell.btnBg, t.shell.btnBg === '#f8fafc' ? 0.9 : 1.08);
+            t.shell.muteBg = t.shell.btnBg;
+            t.shell.muteBgHover = t.shell.btnBgHover;
+        }
         t.shell.btnBg = t.shell.btnBg || t.btns.orient || t.btns.modeToggle || t.btns.mute;
         t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.92);
         t.shell.btnText = pickContrastText(t.shell.btnBg);
@@ -6754,7 +6764,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             delete originalThemes['chaos'];
         }
         const themes = getThemeRegistry();
-        const grid = document.getElementById('themeGrid'); APP.UI.clearElement('themeGrid'); const themeKeys = Object.keys(themes); if(!themeKeys.includes('chaos')) themeKeys.push('chaos');
+        const grid = document.getElementById('themeGrid'); APP.UI.clearElement('themeGrid');
+        const themeKeys = Object.keys(themes).filter(key => key !== 'classic' && key !== 'chaos');
         themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; btn.style.backgroundColor = t.shell.btnBg; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black uppercase tracking-widest"; label.style.color = t.text.modal; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
 
@@ -7517,7 +7528,35 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             } else if (res.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
         };
-        APP.UI.bindAll('.palette-item[data-type]', 'pointerdown', (e, el) => { APP.Editor.handlePaletteToolPointerDown(el.dataset.type); });
+        const palettePointerStarts = new Map();
+        APP.UI.bindAll('.palette-item[data-type]', 'pointerdown', (e, el) => {
+            if (e.button !== 0 && e.pointerType === 'mouse') return;
+            palettePointerStarts.set(e.pointerId, {
+                type: el.dataset.type,
+                x: e.clientX,
+                y: e.clientY,
+                target: el,
+                moved: false
+            });
+        });
+        window.addEventListener('pointermove', (e) => {
+            const press = palettePointerStarts.get(e.pointerId);
+            if (!press) return;
+            const dx = Math.abs(e.clientX - press.x);
+            const dy = Math.abs(e.clientY - press.y);
+            if (!press.moved && (dx > 6 || dy > 6)) {
+                press.moved = true;
+                APP.Editor.handlePaletteToolPointerDown(press.type, { forceActivate: true });
+            }
+        });
+        const releasePalettePress = (e) => {
+            const press = palettePointerStarts.get(e.pointerId);
+            if (!press) return;
+            if (!press.moved) APP.Editor.handlePaletteToolPointerDown(press.type);
+            palettePointerStarts.delete(e.pointerId);
+        };
+        window.addEventListener('pointerup', releasePalettePress);
+        window.addEventListener('pointercancel', releasePalettePress);
         document.getElementById('editPencilBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.togglePencilMode(); };
 
         const eraserBtn = document.getElementById('editEraserBtn'); let eraserTimer = null, eraserFired = false;
