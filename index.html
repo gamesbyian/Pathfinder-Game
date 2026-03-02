@@ -2229,10 +2229,11 @@
                         }
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
-                        // BUGFIX: Subtract bounds so the solver is ATTRACTED to mandatory targets
+                        // RESTORE MUSTCROSS PRIORITY: crossBound represents a double-visit requirement.
+                        // We double its weight to ensure the solver doesn't bypass it for wall-hugging.
                         score -= (mustBound === Infinity ? 100000 : mustBound * 6);
-                        score -= (crossBound === Infinity ? 100000 : crossBound * 6);
-                        if (crossNeed > 0) score += crossNeed * 2;
+                        score -= (crossBound === Infinity ? 100000 : crossBound * 12);
+                        if (crossNeed > 0) score += crossNeed * 10;
 
                     const isP = (portalDest === nk && portalForced);
                     const nLen = curLen + (isP ? 0 : 1);
