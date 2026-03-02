@@ -5155,25 +5155,27 @@
                     return false;
                 }
 
-                if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1)) return false;
                 const lastP = UNPACK(lastK);
                 const isPortalJumpCandidate = allowJump && level.portalMap.has(lastK) && resolvePortal(level, lastK).dest === targetKey;
+                if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1) && !isPortalJumpCandidate) return false;
                 if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
 
                 const axis = (y === lastP.y) ? APP.Core.H : APP.Core.V;
-                const u = usage.get(targetKey);
-                if (u && ((axis === APP.Core.H && u.h) || (axis === APP.Core.V && u.v))) return false;
+                if (!isPortalJumpCandidate) {
+                    const u = usage.get(targetKey);
+                    if (u && ((axis === APP.Core.H && u.h) || (axis === APP.Core.V && u.v))) return false;
 
-                const uLast = usage.get(lastK);
-                if (uLast) {
-                    let entryAxis = APP.Core.NONE;
-                    if (path.length > 1 && !jumpSet.has(path.length - 1)) {
-                        const prevP = UNPACK(path[path.length - 2]);
-                        const lastPC = UNPACK(lastK);
-                        entryAxis = (prevP.y === lastPC.y) ? APP.Core.H : APP.Core.V;
-                    }
-                    if (axis !== entryAxis) {
-                        if ((axis === APP.Core.H && uLast.h) || (axis === APP.Core.V && uLast.v)) return false;
+                    const uLast = usage.get(lastK);
+                    if (uLast) {
+                        let entryAxis = APP.Core.NONE;
+                        if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+                            const prevP = UNPACK(path[path.length - 2]);
+                            const lastPC = UNPACK(lastK);
+                            entryAxis = (prevP.y === lastPC.y) ? APP.Core.H : APP.Core.V;
+                        }
+                        if (axis !== entryAxis) {
+                            if ((axis === APP.Core.H && uLast.h) || (axis === APP.Core.V && uLast.v)) return false;
+                        }
                     }
                 }
 
