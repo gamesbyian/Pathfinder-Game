@@ -7232,6 +7232,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (timer) clearTimeout(timer);
             }
         };
+        const waitForSolverIdle = async (maxWaitMs = 3000) => {
+            const started = performance.now();
+            while (APP.Solver.isRunning()) {
+                if ((performance.now() - started) >= maxWaitMs) return false;
+                await delay0();
+            }
+            return true;
+        };
         const formatAuditSummary = (p) => {
             if (!p) return 'No run yet.';
             return [
@@ -7307,25 +7315,44 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         const t0 = performance.now();
                         let hintRes = null;
                         try {
-                            hintRes = await withTimeout(APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 1000 }), 1500);
+                            if (!(await waitForSolverIdle(2000))) {
+                                APP.Solver.cancel();
+                                await waitForSolverIdle(2000);
+                            }
+                            hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 1000 });
                             const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                             const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
                             levelEntry.newHint.producedHintValid = !!hintValidation?.ok;
-                            if (hintRes?.ok && hintValidation?.ok) levelEntry.newHint.status = 'success';
-                            else if (hintRes?.status === 'no-solution' || hintRes?.rawStatus === 'no-solution-proven') levelEntry.newHint.status = 'no-solution';
-                            else if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') levelEntry.newHint.status = 'timeout';
-                            else levelEntry.newHint.status = 'error';
+                            if (hintRes?.ok && hintValidation?.ok) {
+                                levelEntry.newHint.status = 'success';
+                            } else if (hintRes?.status === 'no-solution' || hintRes?.rawStatus === 'no-solution-proven') {
+                                levelEntry.newHint.status = 'no-solution';
+                            } else if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') {
+                                levelEntry.newHint.status = 'timeout';
+                            } else if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') {
+                                levelEntry.newHint.status = 'aborted';
+                            } else {
+                                levelEntry.newHint.status = 'error';
+                            }
+                            if (levelEntry.newHint.status !== 'success' && !levelEntry.error) {
+                                const detail = [hintRes?.status, hintRes?.rawStatus, hintRes?.message].filter(Boolean).join(' | ');
+                                if (detail) levelEntry.error = trimAuditError(detail);
+                            }
                         } catch (newHintErr) {
                             levelEntry.newHint.status = `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error';
-                            if (levelEntry.newHint.status === 'timeout') APP.Solver.cancel();
+                            APP.Solver.cancel();
                             if (levelEntry.newHint.status === 'error') levelEntry.error = trimAuditError(newHintErr);
                         }
                         levelEntry.newHint.timeMs = Math.round(performance.now() - t0);
                         if (levelEntry.newHint.status === 'success') auditProgress.newHint.success++; else auditProgress.newHint.failure++;
 
                         try {
-                            const trapBudget = Math.min(1000, APP.Solver.getTrapSpotBudgetMs(normalized));
-                            const bombRes = await withTimeout(APP.Solver.findTrapSpots(APP.LevelUtils.deepCloneLevel(normalized), { timeLimit: trapBudget }), trapBudget + 500);
+                            if (!(await waitForSolverIdle(2000))) {
+                                APP.Solver.cancel();
+                                await waitForSolverIdle(2000);
+                            }
+                            const trapBudget = Math.min(5000, APP.Solver.getTrapSpotBudgetMs(normalized));
+                            const bombRes = await APP.Solver.findTrapSpots(APP.LevelUtils.deepCloneLevel(normalized), { timeLimit: trapBudget });
                             const bombCount = bombRes?.spots?.size || 0;
                             levelEntry.bombs.count = bombCount;
                             if (bombRes?.status === 'timeout' || bombRes?.timedOut) {
@@ -7341,10 +7368,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                 levelEntry.bombs.status = 'none-found';
                                 auditProgress.bombs.noneFound++;
                             }
+                            if (levelEntry.bombs.status !== 'success' && levelEntry.bombs.status !== 'none-found' && !levelEntry.error) {
+                                const detail = [bombRes?.status, bombRes?.error?.message].filter(Boolean).join(' | ');
+                                if (detail) levelEntry.error = trimAuditError(detail);
+                            }
                         } catch (bombErr) {
                             const timed = `${bombErr?.message || ''}`.includes('timeout');
                             levelEntry.bombs.status = timed ? 'timeout' : 'error';
-                            if (timed) APP.Solver.cancel();
+                            APP.Solver.cancel();
                             auditProgress.bombs.error++;
                             if (!levelEntry.error) levelEntry.error = trimAuditError(bombErr);
                         }
