@@ -2136,6 +2136,25 @@
                         crossDistCache.set(cKey, b);
                         return b;
                     };
+                    const portalBiasMode = options?.portalBiasMode || 'adaptive';
+                    const portalBiasEnabled = portalBiasMode !== 'off';
+                    const portalBiasWeight = portalBiasMode === 'aggressive' ? 260 : 150;
+                    const computePortalOpportunity = (fromKey, toKey, rStepsAfterMove) => {
+                        if (!portalBiasEnabled || !l.portalMap?.size) return 0;
+                        const portalFrom = APP.LevelUtils.resolvePortal(l, fromKey);
+                        if (!portalFrom || portalFrom.dest !== toKey) return 0;
+                        const curGoalDist = distMap.get(fromKey) ?? Infinity;
+                        const postGoalDist = distMap.get(toKey) ?? Infinity;
+                        let bonus = portalBiasWeight;
+                        if (Number.isFinite(curGoalDist) && Number.isFinite(postGoalDist)) {
+                            const gain = curGoalDist - postGoalDist;
+                            if (gain > 0) bonus += gain * 22;
+                        }
+                        if (rStepsAfterMove <= 6) bonus += 40;
+                        if (state.mustMask !== 0n || this._crossNeeds(state) > 0) bonus += 30;
+                        return bonus;
+                    };
+
                     const valid = candidates.filter(nk => {
                         if (debugStats) debugStats.branchesTried++;
                         if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) {
@@ -2202,6 +2221,7 @@
                     const isP = (portalDest === nk && portalForced);
                     const nLen = curLen + (isP ? 0 : 1);
                     const rSteps = l.reqLen - nLen;
+                    score += computePortalOpportunity(k, nk, rSteps);
 
                     const nx = nk & 0xFFFF;
                     const ny = nk >> 16;
@@ -2545,16 +2565,8 @@
                     }
                     const failMemo = useFailMemo ? new Map() : null;
                     const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
-                    const startMaskNum = state.mustMask ? Number(state.mustMask) : 0;
-                    const startNx = startKey & 0xFFFF;
-                    const startNy = startKey >> 16;
-                    const startCurrentParity = (startNx + startNy) % 2;
-                    const startGx = l.goalKey & 0xFFFF;
-                    const startGy = l.goalKey >> 16;
-                    const startGoalParity = (startGx + startGy) % 2;
-                    const startInParityDeficit = (startCurrentParity === startGoalParity) !== (l.reqLen % 2 === 0);
-                    const startParityBit = startInParityDeficit ? 1 : 0;
-                    const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startKey + (l.reqLen * 16777216) + (state.ints * 2147483648) + (startMaskNum * 34359738368) + (startParityBit * 1125899906842624) }];
+                    const startSig = this._stateSignature(state, l, 0);
+                    const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig }];
                     let steps = 0;
                     while (stack.length > 0) {
                         if (options.signal?.aborted) return SOLVER_ABORTED;
@@ -2679,28 +2691,12 @@
                                 continue;
                             }
                         }
-                        const currentKey = lastK;
-                        const nx = currentKey & 0xFFFF;
-                        const ny = currentKey >> 16;
-                        const currentParity = (nx + ny) % 2;
-                        const gx = l.goalKey & 0xFFFF;
-                        const gy = l.goalKey >> 16;
-                        const goalParity = (gx + gy) % 2;
-                        const inParityDeficit = (currentParity === goalParity) !== (rSteps % 2 === 0);
-
-                        // Defensive conversion to prevent BigInt/Number crashes
-                        const maskNum = state.mustMask ? Number(state.mustMask) : 0;
-                        const parityBit = inParityDeficit ? 1 : 0;
-
-                        // 53-bit safe integer hash to prevent state-collision cache poisoning
-                        const memoKey = currentKey
-                            + (rSteps * 16777216)
-                            + (state.ints * 2147483648)
-                            + (maskNum * 34359738368)
-                            + (parityBit * 1125899906842624);
-
-                        if (useFailMemo && failMemo.has(memoKey)) {
-                            if (debugStats) debugStats.prune.failedStateHit++;
+                        const stateSig = this._stateSignature(state, l, realLen);
+                        if (useFailMemo && failMemo.has(stateSig)) {
+                            if (debugStats) {
+                                debugStats.prune.failedStateHit++;
+                                debugStats.prune.failedStateHitSignature = (debugStats.prune.failedStateHitSignature || 0) + 1;
+                            }
                             this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
@@ -2722,7 +2718,7 @@
                             continue;
                         }
                         const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
-                        stack.push({ k: nextKey, neighbors, log: transLog, sig: memoKey });
+                        stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig });
                     }
                     if (debugStats) debugStats.memoSize = useFailMemo ? failMemo.size : 0;
                     return null;
@@ -2970,10 +2966,9 @@
                     const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
+                        // Solver ordering must remain independent from saved hints.
+                        // In production, users often request hints specifically when no saved hint exists.
                         let passCellUsageFreq = new Map();
-                        if (level.hints && level.hints.length > 0) {
-                            level.hints.forEach(path => path.forEach(k => passCellUsageFreq.set(k, (passCellUsageFreq.get(k) || 0) + 1)));
-                        }
                         const shuffledGates = validGates.slice();
                         if (dirOrderVariant === 'alt') shuffledGates.reverse();
                         else shuffledGates.sort(() => Math.random() - 0.5);
@@ -3136,7 +3131,8 @@
                 timeLimit: budgetMs,
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default'
+                dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
+                portalBiasMode: opts.portalBiasMode || 'adaptive'
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -3148,13 +3144,14 @@
             return { ok: false, status: rawStatus, elapsedMs, stats: { debug } };
         },
 
-        async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity']) {
+        async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity'], opts = {}) {
             const started = Date.now();
             const r = await PathfinderSolver.solve(level, {
                 timeLimit: budgetMs,
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                disabledPrunes
+                disabledPrunes,
+                portalBiasMode: opts.portalBiasMode || 'adaptive'
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -3188,10 +3185,10 @@
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
                 const budgets = this.allocateStageBudgets(totalBudgetMs);
                 let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default' }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt' }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random' }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
-                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: opts.portalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
                 if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
@@ -3708,6 +3705,66 @@
                 if (!APP.Engine.areWinMetricsSatisfied(finalState, level)) return { ok: false, reason: 'Path fails reqLen/reqInt/must rules.' };
                 return { ok: true, path };
             }
+
+            function countPortalTransitions(level, path) {
+                if (!Array.isArray(path) || path.length < 2) return 0;
+                let jumps = 0;
+                for (let i = 1; i < path.length; i++) {
+                    const prev = path[i - 1];
+                    const cur = path[i];
+                    const portal = APP.LevelUtils.resolvePortal(level, prev);
+                    const p1 = APP.LevelUtils.UNPACK(prev);
+                    const p2 = APP.LevelUtils.UNPACK(cur);
+                    const manhattan = Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y);
+                    if ((portal && portal.dest === cur) || manhattan > 1) jumps++;
+                }
+                return jumps;
+            }
+
+            async function runPortalSolverDiscoveryDiagnostics() {
+                const targets = [21, 117];
+                const report = [];
+                for (const levelNum of targets) {
+                    const idx = levelNum - 1;
+                    const level = APP.LevelUtils.normalizeLevel(idx);
+                    if (!level) {
+                        report.push({ level: levelNum, status: 'missing-level', solved: false });
+                        continue;
+                    }
+                    const startedAt = Date.now();
+                    const res = await Referee.solve(level, {
+                        allowGemini: false,
+                        escalationTier: 2,
+                        timeBudgetMs: 60000,
+                        portalBiasMode: 'adaptive'
+                    });
+                    const solutions = normalizeSolutionEntries(res?.solution ?? res?.solutions ?? []);
+                    const firstPath = solutions[0]?.path || null;
+                    const validation = firstPath ? validateCandidatePath(level, firstPath) : { ok: false, reason: 'no-solution' };
+                    const portalJumps = firstPath ? countPortalTransitions(level, firstPath) : 0;
+                    report.push({
+                        level: levelNum,
+                        status: res?.status || 'unknown',
+                        solved: !!res?.ok,
+                        validated: !!validation.ok,
+                        portalJumps,
+                        elapsedMs: Date.now() - startedAt,
+                        lastStage: res?.stage,
+                        stagesTried: (res?.stagesTried || []).length,
+                        pruneFailedStateHits: res?.stats?.debug?.prune?.failedStateHit || 0
+                    });
+                }
+                console.log('[Portal Regression] solver-discovery report (hint-blind):', report);
+                if (console.table) console.table(report);
+                return report;
+            }
+            window.runPortalSolverDiscoveryDiagnostics = runPortalSolverDiscoveryDiagnostics;
+
+            async function runPortalRegressionDiagnostics() {
+                runPortalValidatorDiagnostics();
+                return runPortalSolverDiscoveryDiagnostics();
+            }
+            window.runPortalRegressionDiagnostics = runPortalRegressionDiagnostics;
 
             function runPortalValidatorDiagnostics() {
                 try {
