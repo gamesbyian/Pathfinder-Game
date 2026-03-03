@@ -4462,37 +4462,57 @@
             async function runGameSolver(purpose = 'solve', escalationTier = 0) {
                 if (APP.Solver.isRunning()) return;
                 APP.Solver.stopHintAnimation();
-                const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-                const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose, escalationTier });
-                const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
-                solverResult.solution = canonical;
-                solverResult.solutions = canonical;
-                const normalizedEntries = solverResult.ok ? canonical : [];
-                const normalizedPaths = normalizedEntries.map(sol => sol.path).filter(path => Array.isArray(path) && path.length > 0);
-                if (solverResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
-                    console.warn('Solver returned malformed solution entries.', { purpose, solution: canonical });
-                    APP.UI.showMessage('Solver returned malformed solution data.', 'text-amber-600');
-                }
-
-                if (normalizedPaths.length > 0) {
-                    APP.Solver.applySolutionsToEngine(normalizedEntries, purpose);
-                } else if (solverResult.rawStatus === 'no-solution-proven') {
-                    APP.UI.showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
-                    APP.UI.setSolutionOutput(solverResult.message || 'No solution proven.');
-                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                } else if (solverResult.status === 'aborted') {
-                    APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
-                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                } else {
-                    if (purpose === 'hint') {
-                        APP.UI.showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (15s).', 'text-amber-600');
-                    } else {
-                        APP.UI.showMessage('No solution found within 15s (inconclusive). Press Solve again to try a deeper strategy (60s + alt ordering).', 'text-amber-600');
+                try {
+                    const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                    const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose, escalationTier });
+                    const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
+                    solverResult.solution = canonical;
+                    solverResult.solutions = canonical;
+                    const normalizedEntries = solverResult.ok ? canonical : [];
+                    const normalizedPaths = normalizedEntries.map(sol => sol.path).filter(path => Array.isArray(path) && path.length > 0);
+                    if (solverResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
+                        console.warn('Solver returned malformed solution entries.', { purpose, solution: canonical });
+                        APP.UI.showMessage('Solver returned malformed solution data.', 'text-amber-600');
                     }
-                    APP.UI.setSolutionOutput(solverResult.message || 'No solution found within budget.');
+
+                    if (normalizedPaths.length > 0) {
+                        APP.Solver.applySolutionsToEngine(normalizedEntries, purpose);
+                    } else if (solverResult.rawStatus === 'no-solution-proven') {
+                        APP.UI.showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
+                        APP.UI.setSolutionOutput(solverResult.message || 'No solution proven.');
+                        APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                    } else if (solverResult.status === 'aborted') {
+                        APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
+                        APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                    } else {
+                        if (purpose === 'hint') {
+                            APP.UI.showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (15s).', 'text-amber-600');
+                        } else {
+                            APP.UI.showMessage('No solution found within 15s (inconclusive). Press Solve again to try a deeper strategy (60s + alt ordering).', 'text-amber-600');
+                        }
+                        APP.UI.setSolutionOutput(solverResult.message || 'No solution found within budget.');
+                        APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                    }
+                    return solverResult;
+                } catch (err) {
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                    const isBudgetReferenceError = err instanceof ReferenceError && /budgets?/i.test(err?.message || '');
+                    if (APP.State.ENGINE.isDevMode) console.error('runGameSolver failure:', err);
+
+                    if (isBudgetReferenceError) {
+                        const code = 'E_SOLVER_BUDGETS_UNDEFINED';
+                        const message = `[${code}] Solver budget config is missing. Refresh the page and retry; if it persists, verify solver budget setup.`;
+                        APP.UI.showMessage(message, 'text-red-500 font-bold');
+                        APP.UI.setSolutionOutput(message);
+                        return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], message, code };
+                    }
+
+                    const code = 'E_SOLVER_RUNNER';
+                    const fallbackMessage = `[${code}] ${err?.message || 'Unexpected solver error.'}`;
+                    APP.UI.showMessage(fallbackMessage, 'text-red-500 font-bold');
+                    APP.UI.setSolutionOutput(fallbackMessage);
+                    return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], message: fallbackMessage, code };
                 }
-                return solverResult;
             }
 
             function startHintAnimation() {
