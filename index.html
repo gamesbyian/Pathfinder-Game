@@ -3020,6 +3020,32 @@
                             this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
+                        const rSteps = l.reqLen - realLen;
+                        const minToGoal = l.distMapForSolver.get(nextKey) ?? Infinity;
+                        if (minToGoal > rSteps) {
+                            this._popStateZeroAlloc(state, transLog);
+                            continue;
+                        }
+                        if (state.mustMask !== 0n) {
+                            const mustPassBound = this._estimateMustPassBoundDetailed(nextKey, state, l).bound;
+                            if (mustPassBound > rSteps) {
+                                this._popStateZeroAlloc(state, transLog);
+                                continue;
+                            }
+                        }
+                        const crossNeed = this._crossNeeds(state);
+                        if (crossNeed > 0) {
+                            const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeed, l);
+                            if (outstandingNodes + extraVisitsLB > rSteps) {
+                                this._popStateZeroAlloc(state, transLog);
+                                continue;
+                            }
+                            const mustCrossBound = this._estimateMustCrossBoundFrom(nextKey, state, l);
+                            if (mustCrossBound > rSteps) {
+                                this._popStateZeroAlloc(state, transLog);
+                                continue;
+                            }
+                        }
                         if (realLen === l.reqLen) {
                             if (state.ints === l.reqInt && this._checkFinalConstraints(state, l)) validSpotsSet.add(nextKey);
                             this._popStateZeroAlloc(state, transLog);
