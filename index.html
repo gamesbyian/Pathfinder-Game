@@ -2196,7 +2196,10 @@
                     };
                     const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
                     const portalBiasEnabled = portalBiasMode !== 'off';
-                    const portalBiasWeight = portalBiasMode === 'aggressive' ? 260 : 150;
+                    const weightedOverride = Number(options?.portalBiasWeight);
+                    const portalBiasWeight = Number.isFinite(weightedOverride)
+                        ? Math.max(0, Math.floor(weightedOverride))
+                        : (portalBiasMode === 'aggressive' ? 260 : 150);
                     const computePortalOpportunity = (fromKey, toKey, rStepsAfterMove) => {
                         if (!portalBiasEnabled || !l.portalMap?.size) return 0;
                         const portalFrom = APP.LevelUtils.resolvePortal(l, fromKey);
@@ -3330,8 +3333,28 @@
             return budgets[idx];
         },
 
-        allocateStageBudgets(totalMs) {
+        allocateStageBudgets(totalMs, splitRatios = null) {
             const total = Math.max(1000, Math.floor(totalMs || 15000));
+            if (splitRatios && typeof splitRatios === 'object') {
+                const ratioKeys = ['stage0', 'stage1', 'stage2', 'stage3'];
+                const ratioValues = ratioKeys.map(k => Number(splitRatios[k]));
+                const valid = ratioValues.every(v => Number.isFinite(v) && v >= 0);
+                const ratioSum = ratioValues.reduce((acc, v) => acc + v, 0);
+                if (valid && ratioSum > 0) {
+                    let remainder = total;
+                    const custom = { total };
+                    ratioKeys.forEach((k, idx) => {
+                        if (idx === ratioKeys.length - 1) {
+                            custom[k] = Math.max(1, remainder);
+                        } else {
+                            const budget = Math.max(1, Math.floor((total * ratioValues[idx]) / ratioSum));
+                            custom[k] = budget;
+                            remainder -= budget;
+                        }
+                    });
+                    return custom;
+                }
+            }
             const stage0 = Math.min(Math.floor(total * 0.2), Math.max(500, total - 3500));
             const stage1 = Math.min(Math.floor(total * 0.4), Math.max(1500, total - stage0 - 2000));
             const stage2 = Math.min(Math.floor(total * 0.2), Math.max(1000, total - stage0 - stage1 - 500));
@@ -3348,6 +3371,7 @@
                     debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                     dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    portalBiasWeight: Number.isFinite(attemptOpts.portalBiasWeight) ? attemptOpts.portalBiasWeight : opts.portalBiasWeight,
                     scoringMode: attemptOpts.scoringMode || 'reverse-distance',
                     randomFn: opts.randomFn
                 });
@@ -3369,10 +3393,10 @@
             const portalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 2;
             const attempts = portalMustCrossHeavy
                 ? [
-                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'reverse-distance', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' },
-                    { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off' }
-                ]
-                : [{ budgetMs, scoringMode: 'reverse-distance', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' }];
+                        { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'reverse-distance', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', portalBiasWeight: opts.portalBiasWeight },
+                        { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off', portalBiasWeight: 0 }
+                    ]
+                : [{ budgetMs, scoringMode: 'reverse-distance', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', portalBiasWeight: opts.portalBiasWeight }];
 
             let attemptsUsed = [];
             let lastAttempt = null;
@@ -3423,6 +3447,7 @@
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                 disabledPrunes,
                 portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
+                portalBiasWeight: opts.portalBiasWeight,
                 randomFn: opts.randomFn
             });
             const elapsedMs = Date.now() - started;
@@ -3454,12 +3479,12 @@
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
             const stagesTried = [];
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
-                const budgets = this.allocateStageBudgets(totalBudgetMs);
+                const budgets = this.allocateStageBudgets(totalBudgetMs, opts.stageBudgetSplit);
                 let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
-                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, randomFn: opts.randomFn }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, portalBiasWeight: opts.portalBiasWeight, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, portalBiasWeight: opts.portalBiasWeight, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode, portalBiasWeight: opts.portalBiasWeight, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, portalBiasWeight: opts.portalBiasWeight, randomFn: opts.randomFn }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
                 if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
@@ -3468,10 +3493,13 @@
             const tierBudgets = this.getPurposeTierBudgets(purpose);
             // Keep must-pass/must-cross bounds active in primary stages so multi-mustCross levels
             // (e.g. level 130) don't blow up search breadth; reserve broad prune disabling for fallback.
+            const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes)
+                ? opts.fallbackDisabledPrunes
+                : ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'];
             const phases = [
                 makePhaseOrder(tierBudgets[0], []),
                 makePhaseOrder(tierBudgets[1], []),
-                makePhaseOrder(tierBudgets[2], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'])
+                makePhaseOrder(tierBudgets[2], fallbackDisabledPrunes)
             ];
             const activePhases = phases[Math.min(tier || 0, phases.length - 1)];
             const allowGemini = !!opts.allowGemini;
@@ -4509,6 +4537,60 @@
                     { name: 'constraint-deep', selectorConfig: { thresholds: { constraintReqInt: 3 }, strategyTierBoost: { 'constraint-heavy': 2, 'portal-heavy': 1 } } },
                     { name: 'beam-first', selectorConfig: { orderVariantByStrategy: { 'constraint-heavy': 'beamFirst', 'portal-heavy': 'beamFirst' } } }
                 ],
+                hardSet: {
+                    timeout: [127, 129, 130],
+                    zeroBomb: [98, 111, 125],
+                    stackedConstraint: [123, 124, 131]
+                },
+                buildFixedHardSet() {
+                    const order = ['timeout', 'zeroBomb', 'stackedConstraint'];
+                    const out = [];
+                    order.forEach(family => {
+                        (this.hardSet[family] || []).forEach(levelNum => {
+                            out.push({ levelNum, family });
+                        });
+                    });
+                    return out;
+                },
+                normalizeOutcome(run = {}) {
+                    if (run.outcome === 'solved') return 'solved';
+                    if (run.outcome === 'timeout' || run.timedOut) return 'timeout';
+                    if (run.outcome === 'aborted') return 'aborted';
+                    return 'inconclusive';
+                },
+                buildSweepConfigs(opts = {}) {
+                    const portalBiasModes = (opts.portalBiasModes && opts.portalBiasModes.length) ? opts.portalBiasModes : ['adaptiveMustCross', 'off'];
+                    const portalBiasWeights = (opts.portalBiasWeights && opts.portalBiasWeights.length) ? opts.portalBiasWeights : [150, 240];
+                    const pruneSets = (opts.pruneSets && opts.pruneSets.length)
+                        ? opts.pruneSets
+                        : [
+                            { key: 'fallback-default', fallbackDisabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'] },
+                            { key: 'fallback-relaxed', fallbackDisabledPrunes: ['connectivity', 'distance', 'parity'] }
+                        ];
+                    const stageSplits = (opts.stageSplits && opts.stageSplits.length)
+                        ? opts.stageSplits
+                        : [
+                            { key: 'balanced', stageBudgetSplit: { stage0: 2, stage1: 4, stage2: 2, stage3: 2 } },
+                            { key: 'fallback-heavy', stageBudgetSplit: { stage0: 1, stage1: 2, stage2: 2, stage3: 5 } }
+                        ];
+                    const configs = [];
+                    portalBiasModes.forEach(mode => {
+                        portalBiasWeights.forEach(weight => {
+                            pruneSets.forEach(pruneCfg => {
+                                stageSplits.forEach(splitCfg => {
+                                    configs.push({
+                                        name: `pb-${mode}-${weight}-${pruneCfg.key}-${splitCfg.key}`,
+                                        portalBiasMode: mode,
+                                        portalBiasWeight: weight,
+                                        fallbackDisabledPrunes: pruneCfg.fallbackDisabledPrunes,
+                                        stageBudgetSplit: splitCfg.stageBudgetSplit
+                                    });
+                                });
+                            });
+                        });
+                    });
+                    return configs;
+                },
                 buildDifficultSuite(limitPerFamily = 4) {
                     const levels = APP.Data.getLevels() || [];
                     const grouped = { 'large-grid': [], 'portal-heavy': [], 'high-reqInt': [] };
@@ -4547,6 +4629,10 @@
                             selectorConfig,
                             debug: true,
                             variant: opts.variant,
+                            portalBiasMode: opts.portalBiasMode,
+                            portalBiasWeight: opts.portalBiasWeight,
+                            fallbackDisabledPrunes: opts.fallbackDisabledPrunes,
+                            stageBudgetSplit: opts.stageBudgetSplit,
                             onStage: opts.onStage,
                             allowReferee: true,
                             randomFn: createSeededRandom(seed)
@@ -4563,9 +4649,13 @@
                             seed,
                             strategy: solveRes.strategy,
                             elapsedMs: Number(solveRes.duration || solveRes.debug?.elapsedMs || 0),
+                            stageReached: Number.isFinite(solveRes.stage) ? solveRes.stage : -1,
+                            stageResult: (solveRes.stagesTried || []).map(st => `${st.stage}:${st.result}`).join(','),
                             nodesExpanded: Number(solveRes.nodesVisited || solveRes.debug?.nodesExpanded || 0),
                             pruneReasons: { ...prune },
+                            pruneTotal: Object.values(prune).reduce((acc, val) => acc + Number(val || 0), 0),
                             outcome: solveRes.status,
+                            normalizedOutcome: this.normalizeOutcome({ outcome: solveRes.status, timedOut: solveRes.timedOut }),
                             timedOut: !!solveRes.timedOut,
                             aborted: solveRes.status === 'aborted',
                             trapOutcome: trapRes?.status || 'error',
@@ -4577,26 +4667,65 @@
                     this.lastRun = { runs, summary, opts: { ...opts, suiteSize: suite.length } };
                     return this.lastRun;
                 },
+                async runHardSet(opts = {}) {
+                    return this.runSuite({ ...opts, levelSuite: this.buildFixedHardSet(), configName: opts.configName || 'hard-set' });
+                },
                 summarize(runs = []) {
                     const byFamily = {};
                     runs.forEach(run => {
                         const fam = run.family || 'baseline';
-                        const bucket = byFamily[fam] || (byFamily[fam] = { runs: 0, success: 0, timeout: 0, aborted: 0, avgElapsedMs: 0, avgNodesExpanded: 0, zeroBombRuns: 0, pruneReasons: {} });
+                        const bucket = byFamily[fam] || (byFamily[fam] = { runs: 0, solved: 0, timeout: 0, inconclusive: 0, aborted: 0, avgElapsedMs: 0, avgNodesExpanded: 0, avgStageReached: 0, zeroBombRuns: 0, pruneReasons: {} });
                         bucket.runs++;
-                        if (run.outcome === 'solved') bucket.success++;
-                        if (run.outcome === 'timeout') bucket.timeout++;
+                        if (run.normalizedOutcome === 'solved') bucket.solved++;
+                        if (run.normalizedOutcome === 'timeout') bucket.timeout++;
+                        if (run.normalizedOutcome === 'inconclusive') bucket.inconclusive++;
                         if (run.outcome === 'aborted') bucket.aborted++;
                         if (run.trapCount === 0 && !run.trapTimedOut) bucket.zeroBombRuns++;
                         bucket.avgElapsedMs += run.elapsedMs;
                         bucket.avgNodesExpanded += run.nodesExpanded;
+                        bucket.avgStageReached += Math.max(0, Number(run.stageReached || 0));
                         Object.entries(run.pruneReasons || {}).forEach(([k, v]) => { bucket.pruneReasons[k] = (bucket.pruneReasons[k] || 0) + Number(v || 0); });
                     });
                     Object.values(byFamily).forEach(bucket => {
                         const denom = Math.max(1, bucket.runs);
                         bucket.avgElapsedMs = Math.round(bucket.avgElapsedMs / denom);
                         bucket.avgNodesExpanded = Math.round(bucket.avgNodesExpanded / denom);
+                        bucket.avgStageReached = Number((bucket.avgStageReached / denom).toFixed(2));
                     });
                     return { totalRuns: runs.length, byFamily };
+                },
+                toCsv(runResult = this.lastRun) {
+                    const rows = (runResult?.runs || []);
+                    const headers = ['configName', 'levelNum', 'family', 'normalizedOutcome', 'outcome', 'elapsedMs', 'stageReached', 'stageResult', 'nodesExpanded', 'pruneTotal', 'trapOutcome', 'trapCount', 'trapTimedOut'];
+                    const csvRows = [headers.join(',')];
+                    rows.forEach(run => {
+                        const values = headers.map(key => {
+                            const value = run[key] ?? '';
+                            const raw = (typeof value === 'object') ? JSON.stringify(value) : String(value);
+                            return `"${raw.replace(/"/g, '""')}"`;
+                        });
+                        csvRows.push(values.join(','));
+                    });
+                    return csvRows.join('\n');
+                },
+                toJson(runResult = this.lastRun) {
+                    return JSON.stringify(runResult || {}, null, 2);
+                },
+                async sweepHardSet(opts = {}) {
+                    const configs = Array.isArray(opts.configs) && opts.configs.length ? opts.configs : this.buildSweepConfigs(opts);
+                    const runsByConfig = [];
+                    for (const cfg of configs) {
+                        const result = await this.runHardSet({ ...opts, ...cfg, configName: cfg.name });
+                        runsByConfig.push({ configName: cfg.name, config: cfg, summary: result.summary, runs: result.runs });
+                    }
+                    const payload = {
+                        generatedAt: new Date().toISOString(),
+                        suite: this.buildFixedHardSet(),
+                        runsByConfig
+                    };
+                    payload.csv = this.toCsv({ runs: runsByConfig.flatMap(entry => entry.runs || []) });
+                    payload.json = JSON.stringify(payload, null, 2);
+                    return payload;
                 },
                 async sweep(opts = {}) {
                     const configs = Array.isArray(opts.configs) && opts.configs.length ? opts.configs : this.defaultSweepConfigs;
@@ -4611,7 +4740,7 @@
                         for (const entry of all) {
                             const fam = entry.summary.byFamily?.[family];
                             if (!fam) continue;
-                            const score = (fam.success * 1000) - (fam.timeout * 220) - fam.avgElapsedMs - (fam.avgNodesExpanded * 0.02);
+                            const score = (fam.solved * 1000) - (fam.timeout * 220) - fam.avgElapsedMs - (fam.avgNodesExpanded * 0.02);
                             if (!best || score > best.score) best = { configName: entry.configName, selectorConfig: configs.find(c => c.name === entry.configName)?.selectorConfig || {}, family, score, metrics: fam };
                         }
                         if (best) champions[family] = best;
