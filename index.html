@@ -8574,16 +8574,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const start = async () => {
             if (started) return;
             started = true;
-
-            APP.UI.initDom();
-            APP.UI.ThemeEditor.init();
-            APP.Themes.ensureThemeLeaveColors();
-
-            const persistedSession = APP.Persistence.applySessionState();
-            APP.State.ENGINE.runtime.currentTheme = persistedSession.currentTheme;
-            APP.Themes.applyTheme(persistedSession.currentTheme);
-
             try {
+                APP.UI.initDom();
+                APP.UI.ThemeEditor.init();
+                APP.Themes.ensureThemeLeaveColors();
+
+                const persistedSession = APP.Persistence.applySessionState();
+                APP.State.ENGINE.runtime.currentTheme = persistedSession.currentTheme;
+                APP.Themes.applyTheme(persistedSession.currentTheme);
+
                 try {
                     if (APP.Persistence.hasConfig) await APP.Persistence.initAuth();
                 } catch (e) {}
@@ -8609,7 +8608,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     })();
 
     window.onload = () => {
-        APP.Input.init();
+        try {
+            APP.Input.init();
+        } catch (error) {
+            console.error('[Input init failed]', error);
+        }
         APP.Boot.start();
     };
 </script>
