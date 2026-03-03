@@ -3891,7 +3891,7 @@
             const complexityProfile = classifyLevelComplexity(level);
             const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, 'trap');
             const controller = startRun({ label: 'Finding trap spots…', mode: 'trap' });
-            if (!controller) return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
+            if (!controller) return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
             const timeLimit = getTrapSpotBudgetMs(level, { ...opts, strategy: selectedStrategy });
             try {
                 const trapResult = await PathfinderSolver.findTrapSpots(level, {
@@ -3906,10 +3906,16 @@
                     }
                 });
                 const timedOut = !!trapResult?.timedOut;
+                const spots = trapResult?.spots || new Set();
+                const count = spots.size || 0;
+                const completion = timedOut ? 'partial' : 'complete';
+                const proof = count > 0 ? 'spots-found' : (timedOut ? 'none-found-inconclusive' : 'none-found-proven');
                 return {
                     ok: true,
                     status: timedOut ? 'timeout' : 'solved',
-                    spots: trapResult?.spots || new Set(),
+                    completion,
+                    proof,
+                    spots,
                     timedOut,
                     gatesProcessed: Number(trapResult?.gatesProcessed) || 0,
                     elapsedMs: Number(trapResult?.elapsedMs) || 0,
@@ -3919,9 +3925,9 @@
                     debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile }
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
                 console.error(err);
-                return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
+                return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
             } finally {
                 finishRun();
             }
@@ -7514,6 +7520,29 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 `bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`
             ].join(' | ');
         };
+        const normalizeTrapCompletion = (res = {}) => {
+            if (res?.completion === 'partial' || res?.completion === 'complete') return res.completion;
+            return (res?.status === 'timeout' || res?.timedOut) ? 'partial' : 'complete';
+        };
+        const normalizeTrapProof = (res = {}, count = 0, completion = 'complete') => {
+            if (res?.proof === 'none-found-proven' || res?.proof === 'none-found-inconclusive' || res?.proof === 'spots-found') return res.proof;
+            if (count > 0) return 'spots-found';
+            return completion === 'partial' ? 'none-found-inconclusive' : 'none-found-proven';
+        };
+        const summarizeTrapOutcome = (res = {}, count = 0) => {
+            const completion = normalizeTrapCompletion(res);
+            const proof = normalizeTrapProof(res, count, completion);
+            let status = res?.status || 'error';
+            if (!res?.ok && !['timeout', 'aborted', 'error'].includes(status)) status = 'error';
+            if (proof === 'spots-found') status = (status === 'timeout') ? 'timeout' : 'success';
+            else if (proof === 'none-found-proven' || proof === 'none-found-inconclusive') status = (status === 'timeout') ? 'timeout' : 'none-found';
+            return { status, completion, proof };
+        };
+        const formatBombAuditOutcome = (bombs = {}) => {
+            if (bombs.proof === 'none-found-proven') return 'none-found(proven)';
+            if (bombs.proof === 'none-found-inconclusive') return 'none-found(inconclusive)';
+            return `${bombs.status || 'error'}(${bombs.completion || 'complete'}, count=${bombs.count || 0})`;
+        };
         const renderAuditReport = () => {
             const summaryEl = document.getElementById('auditSummary');
             const progEl = document.getElementById('auditProgressLabel');
@@ -7529,7 +7558,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const hardDiag = r.hardDiagnostics
                     ? ` | hard-prune preLen=${r.hardDiagnostics.preLenBound} preInt=${r.hardDiagnostics.preIntersectionBound} preMust=${r.hardDiagnostics.preMustPassUnreachable}`
                     : '';
-                return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${hardDiag}${r.error ? ` | ${r.error}` : ''}`;
+                return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${formatBombAuditOutcome(r.bombs)}${hardDiag}${r.error ? ` | ${r.error}` : ''}`;
             }).join('\n');
         };
 
@@ -7558,7 +7587,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 for (let i = 0; i < rawLevels.length; i++) {
                     if (auditCancelRequested) break;
                     const levelNum = i + 1;
-                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', timeMs: 0, producedHintValid: false }, bombs: { status: 'error', count: 0 }, hardDiagnostics: null, error: '' };
+                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', timeMs: 0, producedHintValid: false }, bombs: { status: 'error', count: 0, completion: 'complete', proof: 'none-found-proven' }, hardDiagnostics: null, error: '' };
 
                     try {
                         const normalized = APP.LevelUtils.normalizeLevel(i);
@@ -7635,19 +7664,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             const bombRes = await APP.Solver.findTrapSpots(APP.LevelUtils.deepCloneLevel(normalized), { timeLimit: trapBudget });
                             const bombCount = bombRes?.spots?.size || 0;
                             levelEntry.bombs.count = bombCount;
-                            if (bombRes?.status === 'timeout' || bombRes?.timedOut) {
-                                levelEntry.bombs.status = 'timeout';
-                                auditProgress.bombs.error++;
-                            } else if (!bombRes?.ok) {
-                                levelEntry.bombs.status = 'error';
-                                auditProgress.bombs.error++;
-                            } else if (bombCount > 0) {
-                                levelEntry.bombs.status = 'success';
-                                auditProgress.bombs.success++;
-                            } else {
-                                levelEntry.bombs.status = 'none-found';
-                                auditProgress.bombs.noneFound++;
-                            }
+                            const bombSummary = summarizeTrapOutcome(bombRes, bombCount);
+                            levelEntry.bombs.status = bombSummary.status;
+                            levelEntry.bombs.completion = bombSummary.completion;
+                            levelEntry.bombs.proof = bombSummary.proof;
+                            if (bombSummary.status === 'success') auditProgress.bombs.success++;
+                            else if (bombSummary.status === 'none-found') auditProgress.bombs.noneFound++;
+                            else auditProgress.bombs.error++;
                             if (levelEntry.bombs.status !== 'success' && levelEntry.bombs.status !== 'none-found' && !levelEntry.error) {
                                 const detail = [bombRes?.status, bombRes?.strategy, bombRes?.error?.message].filter(Boolean).join(' | ');
                                 if (detail) levelEntry.error = trimAuditError(detail);
@@ -7655,6 +7678,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         } catch (bombErr) {
                             const timed = `${bombErr?.message || ''}`.includes('timeout');
                             levelEntry.bombs.status = timed ? 'timeout' : 'error';
+                            levelEntry.bombs.completion = timed ? 'partial' : 'complete';
+                            levelEntry.bombs.proof = timed ? 'none-found-inconclusive' : 'none-found-proven';
                             APP.Solver.cancel();
                             auditProgress.bombs.error++;
                             if (!levelEntry.error) levelEntry.error = trimAuditError(bombErr);
@@ -7853,8 +7878,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const res = await APP.Solver.findTrapSpots(l, { timeLimit: budgetMs });
             APP.Editor.setTrapSpots(res.spots || new Set());
             APP.Renderer.render();
-            if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
-            else if (res.status !== 'aborted' && res.timedOut) {
+            const trapOutcome = summarizeTrapOutcome(res, APP.State.ENGINE.editor.validTrapSpots.size);
+            if (trapOutcome.proof === 'spots-found') APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
+            else if (res.status !== 'aborted' && trapOutcome.completion === 'partial' && trapOutcome.proof !== 'none-found-proven') {
                 APP.UI.showMessage('Search timed out; partial results may be incomplete.', 'text-amber-300 font-black');
                 const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
                 if (retry) {
@@ -7862,8 +7888,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const retryRes = await APP.Solver.findTrapSpots(l, { timeLimit: retryBudgetMs });
                     APP.Editor.setTrapSpots(retryRes.spots || new Set());
                     APP.Renderer.render();
-                    if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
-                    else if (retryRes.status !== 'aborted' && retryRes.timedOut) APP.UI.showMessage('Retry timed out; partial results may be incomplete.', 'text-amber-300 font-black');
+                    const retryOutcome = summarizeTrapOutcome(retryRes, APP.State.ENGINE.editor.validTrapSpots.size);
+                    if (retryOutcome.proof === 'spots-found') APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
+                    else if (retryRes.status !== 'aborted' && retryOutcome.completion === 'partial' && retryOutcome.proof !== 'none-found-proven') APP.UI.showMessage('Retry timed out; partial results may be incomplete.', 'text-amber-300 font-black');
                     else if (retryRes.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
                 }
             } else if (res.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
