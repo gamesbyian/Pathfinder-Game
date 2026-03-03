@@ -504,6 +504,11 @@
 
 <script type="module">
     const APP = {};
+    APP.Config = APP.Config || {};
+    APP.Config.solverPurposeTierBudgets = APP.Config.solverPurposeTierBudgets || {
+        hint: [5000, 15000, 60000],
+        solve: [15000, 60000, 180000]
+    };
 
     // ======================================================
     // A) Core / ConstantsAndUtils
@@ -3322,15 +3327,43 @@
             return result;
         };
 
+        const DEFAULT_SOLVER_PURPOSE_TIER_BUDGETS = Object.freeze({
+            hint: [5000, 15000, 60000],
+            solve: [15000, 60000, 180000]
+        });
+
+        const getCanonicalSolverPurposeTierBudgets = () => {
+            const configured = APP.Config?.solverPurposeTierBudgets;
+            const normalized = { ...DEFAULT_SOLVER_PURPOSE_TIER_BUDGETS };
+            ['hint', 'solve'].forEach((purpose) => {
+                const candidate = configured?.[purpose];
+                if (!Array.isArray(candidate) || candidate.length === 0) return;
+                const sanitized = candidate
+                    .map(v => Math.max(1000, Math.floor(Number(v))))
+                    .filter(v => Number.isFinite(v));
+                if (sanitized.length > 0) normalized[purpose] = sanitized;
+            });
+            return normalized;
+        };
+
+        const getCanonicalPurposeTierBudgetList = (purpose = 'solve') => {
+            const budgets = getCanonicalSolverPurposeTierBudgets();
+            return purpose === 'hint' ? budgets.hint : budgets.solve;
+        };
+
+        const getCanonicalPurposeTierBudget = (purpose = 'solve', tier = 0) => {
+            const budgets = getCanonicalPurposeTierBudgetList(purpose);
+            const idx = Math.min(Math.max(0, Math.floor(Number(tier) || 0)), budgets.length - 1);
+            return budgets[idx];
+        };
+
         const Referee = {
         getPurposeTierBudgets(purpose = 'solve') {
-            return purpose === 'hint' ? SOLVER_PURPOSE_TIER_BUDGETS.hint : SOLVER_PURPOSE_TIER_BUDGETS.solve;
+            return getCanonicalPurposeTierBudgetList(purpose);
         },
 
         getDefaultBudgetForPurpose(purpose = 'solve', tier = 0) {
-            const budgets = this.getPurposeTierBudgets(purpose);
-            const idx = Math.min(Math.max(0, Math.floor(tier || 0)), budgets.length - 1);
-            return budgets[idx];
+            return getCanonicalPurposeTierBudget(purpose, tier);
         },
 
         allocateStageBudgets(totalMs, splitRatios = null) {
@@ -7903,14 +7936,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         let auditReport = [];
         let auditRunMeta = null;
 
-        const SOLVER_PURPOSE_TIER_BUDGETS = {
-            hint: [5000, 15000, 60000],
-            solve: [15000, 60000, 180000]
-        };
         const AUDIT_MODES = {
             quick: { key: 'quick', label: 'Quick', hintTier: 0, budgetMs: 1000, description: 'Fast smoke check.' },
-            standard: { key: 'standard', label: 'Standard', hintTier: 0, budgetMs: SOLVER_PURPOSE_TIER_BUDGETS.hint[0], description: 'Production-like hint budget.' },
-            deep: { key: 'deep', label: 'Deep', hintTier: 1, budgetMs: SOLVER_PURPOSE_TIER_BUDGETS.hint[1], description: 'Longer budget for difficult levels.' }
+            standard: { key: 'standard', label: 'Standard', hintTier: 0, budgetMs: getCanonicalPurposeTierBudget('hint', 0), description: 'Production-like hint budget.' },
+            deep: { key: 'deep', label: 'Deep', hintTier: 1, budgetMs: getCanonicalPurposeTierBudget('hint', 1), description: 'Longer budget for difficult levels.' }
         };
         const getSelectedAuditMode = () => {
             const selectEl = document.getElementById('auditModeSelect');
