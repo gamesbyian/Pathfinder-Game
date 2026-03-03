@@ -2075,7 +2075,7 @@
                     if (y > 0) neighbors.push(k - (1 << 16));
                     return neighbors;
                 },
-                _checkTopology(state, currentK, rSteps, l) {
+                _analyzeReachability(state, currentK, l) {
                     this.topoVisited.fill(0);
                     let head = 0;
                     let tail = 0;
@@ -2085,13 +2085,15 @@
 
                     let volume = 0;
                     let foundGoal = false;
+                    let hasCycle = false;
+                    let remainingMustReachableMask = 0n;
+                    const parent = new Int32Array(state.keyCount);
+                    parent.fill(-1);
 
                     while (head < tail) {
                         const k = this.topoQueue[head++];
                         if (k === l.goalKey) foundGoal = true;
                         volume++;
-
-                        if (foundGoal && volume >= rSteps) return true;
 
                         // 1. Get standard grid neighbors
                         const neighbors = this._getRawNeighbors(k, l); 
@@ -2103,8 +2105,12 @@
                                 const isGate = l.gateSet && l.gateSet.has(nk);
                                 if (!isVisited || isGate) {
                                     this.topoVisited[nIdx] = 1;
+                                    parent[nIdx] = state.keyToIdx(k);
                                     this.topoQueue[tail++] = nk;
                                 }
+                            } else if (!l.blockSet.has(nk) && this.topoVisited[nIdx] === 1) {
+                                const curIdx = state.keyToIdx(k);
+                                if (parent[curIdx] !== nIdx && parent[nIdx] !== curIdx) hasCycle = true;
                             }
                         }
                         
@@ -2118,13 +2124,27 @@
                                 const isVisitedDest = state.countsArr ? state.countsArr[nIdx] > 0 : (state.counts && state.counts.get(nk) > 0);
                                 if (!isVisitedDest) {
                                     this.topoVisited[nIdx] = 1;
+                                    parent[nIdx] = state.keyToIdx(k);
                                     this.topoQueue[tail++] = nk;
                                 }
+                            } else {
+                                const curIdx = state.keyToIdx(k);
+                                if (parent[curIdx] !== nIdx && parent[nIdx] !== curIdx) hasCycle = true;
                             }
                         }
+
+                        const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(k) : undefined;
+                        if (mustIdx !== undefined) {
+                            const bit = 1n << BigInt(mustIdx);
+                            if ((state.mustMask & bit) !== 0n) remainingMustReachableMask |= bit;
+                        }
                     }
+                    return { foundGoal, volume, hasCycle, remainingMustReachableMask };
+                },
+                _checkTopology(state, currentK, rSteps, l, reachability = null) {
+                    const reach = reachability || this._analyzeReachability(state, currentK, l);
                     const allowedInts = Math.max(0, l.reqInt - state.ints);
-                    return foundGoal && ((volume + allowedInts) >= rSteps);
+                    return reach.foundGoal && ((reach.volume + allowedInts) >= rSteps);
                 },
                 _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats = null) {
                     const { w, h } = l.grid;
@@ -2146,6 +2166,7 @@
                     const crossNeed = this._crossNeeds(state);
                     const mustBoundCache = scratch.mustBoundCache;
                     const crossDistCache = scratch.crossDistCache;
+                    const reachabilityCache = scratch.reachabilityCache;
                     const mustCachePrefix = `${state.mustMask.toString()}|`;
                     const crossCachePrefix = `${state.mustCrossMask?.toString() || '0'}|${crossNeed}|`;
                     const getMustBound = (key) => {
@@ -2198,6 +2219,13 @@
 
                         return bonus;
                     };
+                    const getReachability = (key, projectedMustMask) => {
+                        const cKey = `${key}|${state.mustMask.toString()}|${projectedMustMask.toString()}|${state.nonZeroCounts}`;
+                        if (reachabilityCache.has(cKey)) return reachabilityCache.get(cKey);
+                        const reach = this._analyzeReachability(state, key, l);
+                        reachabilityCache.set(cKey, reach);
+                        return reach;
+                    };
 
                     const valid = candidates.filter(nk => {
                         if (debugStats) debugStats.branchesTried++;
@@ -2213,6 +2241,11 @@
                         const isP = (portalDest === nk && portalForced);
                         const nLen = curLen + (isP ? 0 : 1);
                         const rSteps = l.reqLen - nLen;
+                        const lowerBoundToGoal = distMap.get(nk);
+                        if (lowerBoundToGoal === undefined || (nLen + lowerBoundToGoal) > l.reqLen) {
+                            if (debugStats) debugStats.prune.preLenBound = (debugStats.prune.preLenBound || 0) + 1;
+                            return false;
+                        }
                         const d = distMap.get(nk);
                         if (d === undefined || d > rSteps) {
                             if (debugStats) debugStats.prune.minRemOverflow++;
@@ -2240,6 +2273,19 @@
                                 }
                                 return false;
                             }
+                        }
+                        const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
+                        const projectedMustMask = (mustIdx !== undefined) ? (state.mustMask & ~(1n << BigInt(mustIdx))) : state.mustMask;
+                        const reach = getReachability(nk, projectedMustMask);
+                        if ((reach.remainingMustReachableMask & projectedMustMask) !== projectedMustMask) {
+                            if (debugStats) debugStats.prune.preMustPassUnreachable = (debugStats.prune.preMustPassUnreachable || 0) + 1;
+                            return false;
+                        }
+                        const remainingReqInt = Math.max(0, l.reqInt - state.ints);
+                        const maxAchievableIntersections = reach.hasCycle ? rSteps : 0;
+                        if (remainingReqInt > maxAchievableIntersections) {
+                            if (debugStats) debugStats.prune.preIntersectionBound = (debugStats.prune.preIntersectionBound || 0) + 1;
+                            return false;
                         }
                         return true;
                     });
@@ -2607,7 +2653,7 @@
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
-                    const scratch = { mustBoundCache: new Map(), crossDistCache: new Map() };
+                    const scratch = { mustBoundCache: new Map(), crossDistCache: new Map(), reachabilityCache: new Map() };
                     const startIdx = state.keyToIdx(startKey);
                     state.countsArr[startIdx] = 1;
                     state.nonZeroCounts = 1;
@@ -2768,8 +2814,14 @@
                         }
                         const shouldRunConnectivityPrune = !disabledPruneSet.has('connectivity') && l.mustCrossKeys.length === 0;
                         if (shouldRunConnectivityPrune) {
-                            if (!this._checkTopology(state, lastK, rSteps, l)) {
+                            const reach = this._analyzeReachability(state, lastK, l);
+                            if (!this._checkTopology(state, lastK, rSteps, l, reach)) {
                                 if (debugStats) debugStats.prune.topology = (debugStats.prune.topology || 0) + 1;
+                                this._popStateZeroAlloc(state, transLog);
+                                continue;
+                            }
+                            if (state.mustMask !== 0n && (reach.remainingMustReachableMask & state.mustMask) !== state.mustMask) {
+                                if (debugStats) debugStats.prune.preMustPassUnreachable = (debugStats.prune.preMustPassUnreachable || 0) + 1;
                                 this._popStateZeroAlloc(state, transLog);
                                 continue;
                             }
@@ -4159,6 +4211,9 @@
                     prune: {
                         lenOverflow: 0,
                         intsOverflow: 0,
+                        preLenBound: 0,
+                        preIntersectionBound: 0,
+                        preMustPassUnreachable: 0,
                         minRemOverflow: 0,
                         mustPassBound: 0,
                         mustCrossBound: 0,
@@ -4203,7 +4258,7 @@
                     `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
                     `strategy=${debug?.strategy || 'unknown'} purpose=${debug?.purpose || 'solve'} profile=${debug?.profile ? JSON.stringify(debug.profile) : 'n/a'}`,
                     `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
-                    `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
+                    `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} preLenBound=${prune.preLenBound || 0} preIntersectionBound=${prune.preIntersectionBound || 0} preMustPassUnreachable=${prune.preMustPassUnreachable || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
                 ];
                 if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
                     lines[0] = `Level ${levelNumber}: UNSOLVED (INVALID) reasons: ${debug.invalidReasons.join('; ')}`;
@@ -7317,7 +7372,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 rowsEl.textContent = 'Run Audit to generate report.';
                 return;
             }
-            rowsEl.textContent = auditReport.map(r => `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${r.error ? ` | ${r.error}` : ''}`).join('\n');
+            rowsEl.textContent = auditReport.map(r => {
+                const hardDiag = r.hardDiagnostics
+                    ? ` | hard-prune preLen=${r.hardDiagnostics.preLenBound} preInt=${r.hardDiagnostics.preIntersectionBound} preMust=${r.hardDiagnostics.preMustPassUnreachable}`
+                    : '';
+                return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${hardDiag}${r.error ? ` | ${r.error}` : ''}`;
+            }).join('\n');
         };
 
         const runAudit = async () => {
@@ -7345,7 +7405,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 for (let i = 0; i < rawLevels.length; i++) {
                     if (auditCancelRequested) break;
                     const levelNum = i + 1;
-                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', timeMs: 0, producedHintValid: false }, bombs: { status: 'error', count: 0 }, error: '' };
+                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', timeMs: 0, producedHintValid: false }, bombs: { status: 'error', count: 0 }, hardDiagnostics: null, error: '' };
 
                     try {
                         const normalized = APP.LevelUtils.normalizeLevel(i);
@@ -7394,6 +7454,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             if (levelEntry.newHint.status !== 'success' && !levelEntry.error) {
                                 const detail = [hintRes?.status, hintRes?.rawStatus, hintRes?.strategy, hintRes?.message].filter(Boolean).join(' | ');
                                 if (detail) levelEntry.error = trimAuditError(detail);
+                            }
+                            const profile = hintRes?.profile || {};
+                            const isHard = (hintRes?.strategy === 'constraint-heavy') || (hintRes?.strategy === 'portal-heavy') || (profile.reqLen >= 20) || (profile.reqInt >= 4) || (profile.totalMustConstraints >= 4);
+                            if (isHard) {
+                                const prune = hintRes?.debug?.prune || {};
+                                levelEntry.hardDiagnostics = {
+                                    preLenBound: prune.preLenBound || 0,
+                                    preIntersectionBound: prune.preIntersectionBound || 0,
+                                    preMustPassUnreachable: prune.preMustPassUnreachable || 0
+                                };
                             }
                         } catch (newHintErr) {
                             levelEntry.newHint.status = `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error';
