@@ -2227,65 +2227,134 @@
                         return reach;
                     };
 
-                    const valid = candidates.filter(nk => {
-                        if (debugStats) debugStats.branchesTried++;
-                        if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) {
-                            if (debugStats) debugStats.prune.illegalMove++;
-                            return false;
-                        }
-                        if (!this._hazardDecisionForKey(nk, state, l, options).allowed) {
-                            if (debugStats) debugStats.prune.other++;
-                            if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'hazardBlocked', `gooseBlockedAt=${nk}`);
-                            return false;
-                        }
-                        const isP = (portalDest === nk && portalForced);
-                        const nLen = curLen + (isP ? 0 : 1);
-                        const rSteps = l.reqLen - nLen;
-                        const lowerBoundToGoal = distMap.get(nk);
-                        if (lowerBoundToGoal === undefined || (nLen + lowerBoundToGoal) > l.reqLen) {
-                            if (debugStats) debugStats.prune.preLenBound = (debugStats.prune.preLenBound || 0) + 1;
-                            return false;
-                        }
-                        const d = distMap.get(nk);
-                        if (d === undefined || d > rSteps) {
-                            if (debugStats) debugStats.prune.minRemOverflow++;
-                            if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'minRemOverflow', `goalDist=${d === undefined ? 'inf' : d} rSteps=${rSteps}`);
-                            return false;
-                        }
-                        if (hasMust) {
-                            const bestBound = getMustBound(nk);
-                            if (bestBound === Infinity || bestBound > rSteps) {
-                                if (debugStats) debugStats.prune.mustPassBound++;
-                                if (state.path.length === 1) {
-                                    const mustDetails = this._estimateMustPassBoundDetailed(nk, state, l);
-                                    this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${mustDetails.bound} rSteps=${rSteps} k=${mustDetails.k} method=${mustDetails.method}`);
-                                }
-                                return false;
+                    const telemetryReject = (pruneKey, rejectedBy, depth0Key = null, depth0Message = null) => {
+                        if (!debugStats) return;
+                        if (pruneKey) debugStats.prune[pruneKey] = (debugStats.prune[pruneKey] || 0) + 1;
+                        if (!debugStats.rejectedBy) debugStats.rejectedBy = {};
+                        debugStats.rejectedBy[rejectedBy] = (debugStats.rejectedBy[rejectedBy] || 0) + 1;
+                        if (state.path.length === 1 && depth0Key && depth0Message) this._recordDepth0Prune(debugStats, depth0Key, depth0Message);
+                    };
+                    const validatorState = {
+                        nk: -1,
+                        isPortalMove: false,
+                        nLen: 0,
+                        rSteps: 0,
+                        lowerBoundToGoal: undefined,
+                        projectedMustMask: state.mustMask,
+                        reach: null
+                    };
+                    const GeometryValidator = {
+                        validate: (ctx) => {
+                            if (!this._isMoveValid(ctx.nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) {
+                                return { pruneKey: 'illegalMove', rejectedBy: 'geometry-illegalMove' };
                             }
+                            if (!this._hazardDecisionForKey(ctx.nk, state, l, options).allowed) {
+                                return {
+                                    pruneKey: 'other',
+                                    rejectedBy: 'geometry-hazard-gooseSafety',
+                                    depth0Key: 'hazardBlocked',
+                                    depth0Message: `gooseBlockedAt=${ctx.nk}`
+                                };
+                            }
+                            return null;
                         }
-                        if (crossNeed > 0) {
-                            const crossBound = getCrossBound(nk);
-                            if (crossBound === Infinity || crossBound > rSteps) {
-                                if (debugStats) debugStats.prune.mustCrossBound++;
+                    };
+                    const LengthValidator = {
+                        validate: (ctx) => {
+                            ctx.lowerBoundToGoal = distMap.get(ctx.nk);
+                            if (ctx.lowerBoundToGoal === undefined || (ctx.nLen + ctx.lowerBoundToGoal) > l.reqLen) {
+                                return { pruneKey: 'preLenBound', rejectedBy: 'length-preLenBound' };
+                            }
+                            if (ctx.lowerBoundToGoal > ctx.rSteps) {
+                                return {
+                                    pruneKey: 'minRemOverflow',
+                                    rejectedBy: 'length-minRemOverflow',
+                                    depth0Key: 'minRemOverflow',
+                                    depth0Message: `goalDist=${ctx.lowerBoundToGoal} rSteps=${ctx.rSteps}`
+                                };
+                            }
+                            return null;
+                        }
+                    };
+                    const MustPassValidator = {
+                        validate: (ctx) => {
+                            if (!hasMust) return null;
+                            const bestBound = getMustBound(ctx.nk);
+                            if (bestBound === Infinity || bestBound > ctx.rSteps) {
+                                let depth0Message = null;
+                                if (state.path.length === 1) {
+                                    const mustDetails = this._estimateMustPassBoundDetailed(ctx.nk, state, l);
+                                    depth0Message = `mustPassBound=${mustDetails.bound} rSteps=${ctx.rSteps} k=${mustDetails.k} method=${mustDetails.method}`;
+                                }
+                                return {
+                                    pruneKey: 'mustPassBound',
+                                    rejectedBy: 'mustPass-bound',
+                                    depth0Key: 'mustPassBound',
+                                    depth0Message
+                                };
+                            }
+                            const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(ctx.nk) : undefined;
+                            ctx.projectedMustMask = (mustIdx !== undefined) ? (state.mustMask & ~(1n << BigInt(mustIdx))) : state.mustMask;
+                            ctx.reach = getReachability(ctx.nk, ctx.projectedMustMask);
+                            if ((ctx.reach.remainingMustReachableMask & ctx.projectedMustMask) !== ctx.projectedMustMask) {
+                                return { pruneKey: 'preMustPassUnreachable', rejectedBy: 'mustPass-reachability' };
+                            }
+                            return null;
+                        }
+                    };
+                    const MustCrossValidator = {
+                        validate: (ctx) => {
+                            if (crossNeed <= 0) return null;
+                            const crossBound = getCrossBound(ctx.nk);
+                            if (crossBound === Infinity || crossBound > ctx.rSteps) {
+                                let depth0Message = null;
                                 if (state.path.length === 1) {
                                     const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeed, l);
-                                    this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeed} outstandingNodes=${outstandingNodes}`);
+                                    depth0Message = `mustCrossBound=${crossBound} rSteps=${ctx.rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeed} outstandingNodes=${outstandingNodes}`;
                                 }
+                                return {
+                                    pruneKey: 'mustCrossBound',
+                                    rejectedBy: 'mustCross-bound',
+                                    depth0Key: 'mustCrossBound',
+                                    depth0Message
+                                };
+                            }
+                            return null;
+                        }
+                    };
+                    const IntersectionValidator = {
+                        validate: (ctx) => {
+                            if (!ctx.reach) ctx.reach = getReachability(ctx.nk, ctx.projectedMustMask);
+                            const remainingReqInt = Math.max(0, l.reqInt - state.ints);
+                            const maxAchievableIntersections = ctx.reach.hasCycle ? ctx.rSteps : 0;
+                            if (remainingReqInt > maxAchievableIntersections) {
+                                return { pruneKey: 'preIntersectionBound', rejectedBy: 'intersection-cycleBound' };
+                            }
+                            return null;
+                        }
+                    };
+                    const validators = [
+                        GeometryValidator,
+                        LengthValidator,
+                        MustPassValidator,
+                        MustCrossValidator,
+                        IntersectionValidator
+                    ];
+                    const valid = candidates.filter(nk => {
+                        if (debugStats) debugStats.branchesTried++;
+                        validatorState.nk = nk;
+                        validatorState.isPortalMove = (portalDest === nk && portalForced);
+                        validatorState.nLen = curLen + (validatorState.isPortalMove ? 0 : 1);
+                        validatorState.rSteps = l.reqLen - validatorState.nLen;
+                        validatorState.lowerBoundToGoal = undefined;
+                        validatorState.projectedMustMask = state.mustMask;
+                        validatorState.reach = null;
+                        for (let i = 0; i < validators.length; i++) {
+                            const failure = validators[i].validate(validatorState);
+                            if (failure) {
+                                telemetryReject(failure.pruneKey, failure.rejectedBy, failure.depth0Key, failure.depth0Message);
                                 return false;
                             }
-                        }
-                        const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
-                        const projectedMustMask = (mustIdx !== undefined) ? (state.mustMask & ~(1n << BigInt(mustIdx))) : state.mustMask;
-                        const reach = getReachability(nk, projectedMustMask);
-                        if ((reach.remainingMustReachableMask & projectedMustMask) !== projectedMustMask) {
-                            if (debugStats) debugStats.prune.preMustPassUnreachable = (debugStats.prune.preMustPassUnreachable || 0) + 1;
-                            return false;
-                        }
-                        const remainingReqInt = Math.max(0, l.reqInt - state.ints);
-                        const maxAchievableIntersections = reach.hasCycle ? rSteps : 0;
-                        if (remainingReqInt > maxAchievableIntersections) {
-                            if (debugStats) debugStats.prune.preIntersectionBound = (debugStats.prune.preIntersectionBound || 0) + 1;
-                            return false;
                         }
                         return true;
                     });
@@ -4213,6 +4282,7 @@
                     heuristicMode: 'reverse-distance',
                     portalBiasMode: 'adaptiveMustCross',
                     invalidReasons: [],
+                    rejectedBy: {},
                     depth0: null,
                     prune: {
                         lenOverflow: 0,
@@ -4268,6 +4338,13 @@
                 ];
                 if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
                     lines[0] = `Level ${levelNumber}: UNSOLVED (INVALID) reasons: ${debug.invalidReasons.join('; ')}`;
+                }
+                if (debug?.rejectedBy && Object.keys(debug.rejectedBy).length > 0) {
+                    const rejectSummary = Object.entries(debug.rejectedBy)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([code, count]) => `${code}:${count}`)
+                        .join(' ');
+                    lines.push(`rejectedBy: ${rejectSummary}`);
                 }
                 if (debug?.depth0 && (debug.nodesExpanded === 0 || debug.maxDepth === 0 || debug.status === 'no-solution')) {
                     lines.push(`depth0Prune: ${debug.depth0.reason} ${debug.depth0.details}`);
