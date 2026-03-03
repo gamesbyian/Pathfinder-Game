@@ -2158,6 +2158,7 @@
                     return reach.foundGoal && ((reach.volume + allowedInts) >= rSteps);
                 },
                 _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats = null) {
+                    const rng = typeof options?.randomFn === 'function' ? options.randomFn : Math.random;
                     const { w, h } = l.grid;
                     const p = APP.LevelUtils.UNPACK(k);
                     const candidates = [];
