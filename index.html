@@ -3281,28 +3281,63 @@
                     const validSpots = new Set();
                     let timedOut = false;
                     let gatesProcessed = 0;
-                    const minPerGateBudgetMs = 500;
                     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                    onStateUpdate(`Mapping Traps (${level.gateKeys.length} gates)...`);
-                    for (const gateKey of level.gateKeys) {
-                        const elapsedMs = Date.now() - startTime;
-                        if (elapsedMs > timeLimit) { timedOut = true; break; }
-                        await new Promise(r => setTimeout(r, 0));
-                        const gatesRemaining = Math.max(1, level.gateKeys.length - gatesProcessed);
-                        const remainingMs = Math.max(0, timeLimit - elapsedMs);
-                        const perGateBudgetMs = Math.max(minPerGateBudgetMs, Math.floor(remainingMs / gatesRemaining));
-                        const gateStartTime = Date.now();
-                        const internalOpts = {
-                            timeLimit: perGateBudgetMs,
-                            startTime: gateStartTime,
-                            onProgress: () => onProgress(Date.now() - startTime),
-                            signal,
-                            hazardPolicy
-                        };
-                        await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts);
-                        gatesProcessed++;
-                        if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
+
+                    const gateQueue = Array.isArray(level?.gateKeys) ? [...level.gateKeys] : [];
+                    onStateUpdate(`Mapping Traps (${gateQueue.length} gates)...`);
+                    if (gateQueue.length === 0) {
+                        return { spots: validSpots, timedOut: false, gatesProcessed: 0, elapsedMs: Date.now() - startTime, count: 0, completion: 'complete', proof: 'none-found-proven', status: 'solved' };
                     }
+
+                    const pending = new Set(gateQueue);
+                    const visited = new Set();
+                    let pass = 0;
+                    let sliceMs = Math.max(1200, Math.floor(timeLimit / Math.max(gateQueue.length * 2, 1)));
+                    const maxSliceMs = Math.max(4000, Math.floor(timeLimit * 0.5));
+
+                    while (pending.size > 0) {
+                        const elapsedMs = Date.now() - startTime;
+                        const remainingGlobalMs = timeLimit - elapsedMs;
+                        if (remainingGlobalMs <= 0) { timedOut = true; break; }
+
+                        pass++;
+                        let solvedThisPass = 0;
+                        const passQueue = Array.from(pending);
+                        for (const gateKey of passQueue) {
+                            if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                            const gateElapsed = Date.now() - startTime;
+                            const gateRemainingMs = timeLimit - gateElapsed;
+                            if (gateRemainingMs <= 0) { timedOut = true; break; }
+
+                            await new Promise(r => setTimeout(r, 0));
+                            const localBudget = Math.max(250, Math.min(gateRemainingMs, sliceMs));
+                            const gateStartTime = Date.now();
+                            const gateLabel = gateQueue.length > 1 ? ` (${visited.size + 1}/${gateQueue.length}, pass ${pass})` : '';
+                            onStateUpdate(`Mapping Traps (${gateQueue.length} gates)${gateLabel}...`);
+                            const internalOpts = {
+                                timeLimit: localBudget,
+                                startTime: gateStartTime,
+                                onProgress: () => onProgress(Date.now() - startTime),
+                                signal,
+                                hazardPolicy
+                            };
+                            const gateResult = await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts);
+                            visited.add(gateKey);
+                            if (gateResult === SOLVER_TIMEOUT) continue;
+                            pending.delete(gateKey);
+                            solvedThisPass++;
+                        }
+                        if (timedOut) break;
+                        gatesProcessed = gateQueue.length - pending.size;
+                        if (pending.size === 0) break;
+                        if (solvedThisPass === 0 && sliceMs >= maxSliceMs) {
+                            timedOut = true;
+                            break;
+                        }
+                        sliceMs = Math.min(maxSliceMs, Math.max(sliceMs + 400, Math.floor(sliceMs * 1.6)));
+                    }
+
+                    gatesProcessed = gateQueue.length - pending.size;
                     const count = validSpots.size;
                     const completion = timedOut ? 'partial' : 'complete';
                     const proof = count > 0 ? 'spots-found' : (timedOut ? 'none-found-inconclusive' : 'none-found-proven');
