@@ -7814,7 +7814,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             e.preventDefault();
             if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.handlePrimaryGridInput(APP.LevelUtils.getGridCoord(e));
         });
-        window.addEventListener('pointerup', e => { handleUp(e); if (APP.State.ENGINE.runtime.activePointerId !== null && APP.Renderer.getCanvas().hasPointerCapture(APP.State.ENGINE.runtime.activePointerId)) APP.Renderer.getCanvas().releasePointerCapture(APP.State.ENGINE.runtime.activePointerId); APP.State.ENGINE.runtime.activePointerId = null; });
+        const releaseActivePointer = (e) => {
+            handleUp(e);
+            if (APP.State.ENGINE.runtime.activePointerId !== null && APP.Renderer.getCanvas().hasPointerCapture(APP.State.ENGINE.runtime.activePointerId)) {
+                APP.Renderer.getCanvas().releasePointerCapture(APP.State.ENGINE.runtime.activePointerId);
+            }
+            APP.State.ENGINE.runtime.activePointerId = null;
+        };
+        window.addEventListener('pointerup', releaseActivePointer);
+        window.addEventListener('pointercancel', releaseActivePointer);
+        APP.Renderer.getCanvas().addEventListener('lostpointercapture', () => {
+            APP.State.ENGINE.runtime.activePointerId = null;
+            if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.setLogicState(APP.Core.IDLE);
+        });
 
         [APP.Renderer.getCanvas(), document.getElementById('hintBtn'), document.getElementById('editCopyMetrics')].forEach(el => { if (!el) return; if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); });
 
