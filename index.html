@@ -1639,7 +1639,8 @@
                     return map;
                 },
                 _buildDistMap(l) {
-                    return this._buildOptimisticDistMap(l, [l.goalKey]);
+                    if (l?.reverseGoalDistMap instanceof Map && l.reverseGoalDistMap.size > 0) return l.reverseGoalDistMap;
+                    return APP.LevelUtils.buildReverseDistanceMap(l, [l.goalKey]);
                 },
                 _buildFlipperDistMap(l, flipperSet) {
                     return this._buildOptimisticDistMap(l, flipperSet);
@@ -2194,11 +2195,10 @@
                         if (!portalFrom || portalFrom.dest !== toKey) return 0;
                         const curGoalDist = distMap.get(fromKey) ?? Infinity;
                         const postGoalDist = distMap.get(toKey) ?? Infinity;
-                        let bonus = portalBiasWeight;
-                        if (Number.isFinite(curGoalDist) && Number.isFinite(postGoalDist)) {
-                            const gain = curGoalDist - postGoalDist;
-                            if (gain > 0) bonus += gain * 22;
-                        }
+                        if (!(Number.isFinite(curGoalDist) && Number.isFinite(postGoalDist))) return 0;
+                        const gain = curGoalDist - postGoalDist;
+                        if (gain <= 0) return 0;
+                        let bonus = portalBiasWeight + gain * 22;
                         if (rStepsAfterMove <= 6) bonus += 40;
 
                         const crossNeeds = this._crossNeeds(state);
@@ -2289,7 +2289,11 @@
                         }
                         return true;
                     });
-                    const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'modern';
+                    const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'reverse-distance';
+                    if (debugStats) {
+                        debugStats.heuristicMode = scoringMode;
+                        debugStats.portalBiasMode = portalBiasMode;
+                    }
                     const scored = valid.map(nk => {
                         let score = 0;
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
@@ -3252,7 +3256,7 @@
                     debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                     dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
-                    scoringMode: attemptOpts.scoringMode || 'modern'
+                    scoringMode: attemptOpts.scoringMode || 'reverse-distance'
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -3264,7 +3268,7 @@
                     status,
                     solution,
                     debug,
-                    scoringMode: attemptOpts.scoringMode || 'modern',
+                    scoringMode: attemptOpts.scoringMode || 'reverse-distance',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross'
                 };
             };
@@ -3272,10 +3276,10 @@
             const portalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 2;
             const attempts = portalMustCrossHeavy
                 ? [
-                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' },
+                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'reverse-distance', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' },
                     { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off' }
                 ]
-                : [{ budgetMs, scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' }];
+                : [{ budgetMs, scoringMode: 'reverse-distance', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' }];
 
             let attemptsUsed = [];
             let lastAttempt = null;
@@ -3314,7 +3318,7 @@
                 elapsedMs,
                 stats: { debug: lastAttempt ? lastAttempt.debug : {} },
                 attempts: attemptsUsed,
-                scoringMode: lastAttempt ? lastAttempt.scoringMode : 'modern'
+                scoringMode: lastAttempt ? lastAttempt.scoringMode : 'reverse-distance'
             };
         },
 
@@ -4206,6 +4210,8 @@
                     pass: "primary",
                     disabledPrunes: [],
                     failMemoUsed: true,
+                    heuristicMode: 'reverse-distance',
+                    portalBiasMode: 'adaptiveMustCross',
                     invalidReasons: [],
                     depth0: null,
                     prune: {
@@ -4257,7 +4263,7 @@
                 const lines = [
                     `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
                     `strategy=${debug?.strategy || 'unknown'} purpose=${debug?.purpose || 'solve'} profile=${debug?.profile ? JSON.stringify(debug.profile) : 'n/a'}`,
-                    `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
+                    `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} heuristicMode=${debug?.heuristicMode || 'unknown'} portalBiasMode=${debug?.portalBiasMode || 'unknown'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
                     `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} preLenBound=${prune.preLenBound || 0} preIntersectionBound=${prune.preIntersectionBound || 0} preMustPassUnreachable=${prune.preMustPassUnreachable || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
                 ];
                 if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
@@ -5565,12 +5571,81 @@
 
             function getGridCoord(e) { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / APP.State.ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / APP.State.ENGINE.viewport.cellH))); return APP.LevelUtils.inverseTransformPoint(tx, ty, APP.State.ENGINE.variant, l.grid.w, l.grid.h); }
 
-            function deepCloneLevel(src) { const l = JSON.parse(JSON.stringify(src)); l.blockSet = new Set(src.blockSet); l.gooseSet = new Set(src.gooseSet); l.falseGoalKeys = new Set(src.falseGoalKeys); l.portalMap = new Map(); if(src.portalMap) src.portalMap.forEach((v, k) => l.portalMap.set(k, v)); l.filterMap = new Map(); if(src.filterMap) src.filterMap.forEach((v, k) => l.filterMap.set(k, v)); l.flippingFilterMap = new Map(); if(src.flippingFilterMap) src.flippingFilterMap.forEach((v, k) => l.flippingFilterMap.set(k, v)); return l; }
+            function buildReverseDistanceMap(level, sourceKeys = []) {
+                const l = level;
+                if (!l?.grid) return new Map();
+                const { w, h } = l.grid;
+                const map = new Map();
+                const left = [];
+                const right = [];
+                const pushFront = (item) => left.push(item);
+                const pushBack = (item) => right.push(item);
+                const popFront = () => {
+                    if (left.length > 0) return left.pop();
+                    if (right.length === 0) return null;
+                    while (right.length > 0) left.push(right.pop());
+                    return left.pop();
+                };
+
+                const reversePortalMap = new Map();
+                if (l.portalMap?.size) {
+                    l.portalMap.forEach((v, fromKey) => {
+                        if (!v || v.dest === -1 || l.blockSet.has(fromKey) || l.blockSet.has(v.dest)) return;
+                        if (!reversePortalMap.has(v.dest)) reversePortalMap.set(v.dest, []);
+                        reversePortalMap.get(v.dest).push(fromKey);
+                    });
+                }
+
+                for (const key of sourceKeys) {
+                    if (key === -1 || key === undefined || l.blockSet.has(key)) continue;
+                    if (!map.has(key) || 0 < map.get(key)) {
+                        map.set(key, 0);
+                        pushBack(key);
+                    }
+                }
+
+                while (true) {
+                    const k = popFront();
+                    if (k === null) break;
+                    const d = map.get(k);
+                    const reversePortals = reversePortalMap.get(k);
+                    if (reversePortals) {
+                        for (const srcKey of reversePortals) {
+                            const prev = map.get(srcKey);
+                            if (prev === undefined || d < prev) {
+                                map.set(srcKey, d);
+                                pushFront(srcKey);
+                            }
+                        }
+                    }
+                    const p = APP.LevelUtils.UNPACK(k);
+                    [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                        const nx = p.x + dx;
+                        const ny = p.y + dy;
+                        if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
+                        const nk = APP.LevelUtils.PACK(nx, ny);
+                        if (l.blockSet.has(nk)) return;
+                        const portalFromNeighbor = APP.LevelUtils.resolvePortal(l, nk);
+                        if (portalFromNeighbor && portalFromNeighbor.dest !== k) return;
+                        const stepCost = (portalFromNeighbor && portalFromNeighbor.dest === k) ? 0 : 1;
+                        const nd = d + stepCost;
+                        const prev = map.get(nk);
+                        if (prev === undefined || nd < prev) {
+                            map.set(nk, nd);
+                            if (stepCost === 0) pushFront(nk);
+                            else pushBack(nk);
+                        }
+                    });
+                }
+                return map;
+            }
+
+            function deepCloneLevel(src) { const l = JSON.parse(JSON.stringify(src)); l.blockSet = new Set(src.blockSet); l.gooseSet = new Set(src.gooseSet); l.falseGoalKeys = new Set(src.falseGoalKeys); l.portalMap = new Map(); if(src.portalMap) src.portalMap.forEach((v, k) => l.portalMap.set(k, v)); l.filterMap = new Map(); if(src.filterMap) src.filterMap.forEach((v, k) => l.filterMap.set(k, v)); l.flippingFilterMap = new Map(); if(src.flippingFilterMap) src.flippingFilterMap.forEach((v, k) => l.flippingFilterMap.set(k, v)); l.reverseGoalDistMap = src.reverseGoalDistMap ? new Map(src.reverseGoalDistMap) : buildReverseDistanceMap(l, [l.goalKey]); return l; }
             // ======================================================
             // C) Level / NormalizeAndCaches
             // ======================================================
 
-            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [], hasParityBreaker: false }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; }); return l; }
+            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [], hasParityBreaker: false, reverseGoalDistMap: new Map() }; (raw.blocks || raw.walls)?.forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' }); l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' }); l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; }); l.reverseGoalDistMap = buildReverseDistanceMap(l, [l.goalKey]); return l; }
 
             function denormalizeLevel(level) {
                 if (!level || !level.grid) return null;
@@ -5628,6 +5703,7 @@
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
             transformAxis, getGridCoord, deepCloneLevel, normalizeLevel, denormalizeLevel,
+            buildReverseDistanceMap,
             shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, getFallbackRawLevels, getRawLevels, resolvePortal, isValidMove
         };
     })();
