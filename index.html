@@ -3531,14 +3531,58 @@
             APP.UI.showMessage(purpose === 'hint' ? 'Hint found.' : 'Solved.', 'text-emerald-600');
         };
 
+        const classifyLevelComplexity = (level) => {
+            const countCollection = (...values) => {
+                for (const value of values) {
+                    if (Array.isArray(value)) return value.length;
+                    if (value && typeof value.size === 'number') return value.size;
+                    if (value && typeof value.length === 'number') return value.length;
+                }
+                return 0;
+            };
+            const gridW = Math.max(0, Number(level?.grid?.w) || 0);
+            const gridH = Math.max(0, Number(level?.grid?.h) || 0);
+            const profile = {
+                gridArea: Math.max(1, gridW * gridH),
+                reqLen: Math.max(0, Number(level?.reqLen) || 0),
+                reqInt: Math.max(0, Number(level?.reqInt) || 0),
+                mustPassCount: countCollection(level?.mustPassKeys, level?.mustPass),
+                mustCrossCount: countCollection(level?.mustCrossKeys, level?.mustCross),
+                portalCount: countCollection(level?.portalMap, level?.portals),
+                filterCount: countCollection(level?.filterMap, level?.filters),
+                flippingFilterCount: countCollection(level?.flippingFilterMap, level?.flippingFilters),
+                blockCount: countCollection(level?.blockSet, level?.blocks),
+                gooseCount: countCollection(level?.gooseSet, level?.geese),
+                falseGoalCount: countCollection(level?.falseGoalKeys, level?.falseGoals)
+            };
+            profile.totalMustConstraints = profile.mustPassCount + profile.mustCrossCount;
+            profile.totalFilters = profile.filterCount + profile.flippingFilterCount;
+            return profile;
+        };
+
+        const selectSolverStrategy = (profile, purpose = 'solve') => {
+            if (purpose === 'trap' || purpose === 'bomb') return 'bomb-proof';
+            if ((profile?.portalCount || 0) >= 3) return 'portal-heavy';
+            const reqLenHeavy = (profile?.reqLen || 0) >= 20;
+            const reqIntHeavy = (profile?.reqInt || 0) >= 4;
+            const mustHeavy = (profile?.totalMustConstraints || 0) >= 4;
+            const obstaclesHeavy = ((profile?.blockCount || 0) + (profile?.gooseCount || 0) + (profile?.falseGoalCount || 0) + (profile?.totalFilters || 0)) >= 10;
+            if (reqLenHeavy || reqIntHeavy || mustHeavy || obstaclesHeavy) return 'constraint-heavy';
+            return 'fast-default';
+        };
+
         const solveLevel = async (level, opts = {}) => {
             const purpose = opts.purpose || 'solve';
-            const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
+            const complexityProfile = classifyLevelComplexity(level);
+            const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, purpose);
+            const baseTimeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
+            const strategyBudgetMultiplier = selectedStrategy === 'constraint-heavy' ? 1.35 : (selectedStrategy === 'portal-heavy' ? 1.2 : 1);
+            const timeBudgetMs = Math.floor(baseTimeBudgetMs * strategyBudgetMultiplier);
             const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
             const debug = opts.debug !== undefined ? !!opts.debug : true;
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
             const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
-            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solution: [], solutions: [], stagesTried: [] };
+            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solution: [], solutions: [], stagesTried: [], strategy: selectedStrategy, profile: complexityProfile };
 
             try {
                 let solverResult;
@@ -3563,13 +3607,16 @@
                     const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
                     const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
                     const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
-                    const escalationTier = Math.max(requestedTier, autoTier);
+                    const strategyTier = selectedStrategy === 'constraint-heavy' ? 1 : 0;
+                    const escalationTier = Math.max(requestedTier, autoTier, strategyTier);
+                    const stageVariant = selectedStrategy === 'portal-heavy' ? 'altOrder' : (opts.variant || 'default');
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
                     if (escalationTier >= 2) APP.UI.showMessage('Deep search enabled: brute-force fallback and extended budgets…', 'text-amber-700');
                     solverResult = await Referee.solve(level, {
                         purpose,
                         timeBudgetMs,
                         tier: escalationTier,
+                        variant: stageVariant,
                         allowGemini: false,
                         onStage: ({ name, variant, budgetMs }) => {
                             APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
@@ -3613,7 +3660,10 @@
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
                 const solution = solverResult.ok ? solverResult.solution : [];
-                const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
+                const debugInfo = solverResult.debug || solverResult.stats?.debug || {};
+                debugInfo.strategy = selectedStrategy;
+                debugInfo.purpose = purpose;
+                debugInfo.profile = complexityProfile;
                 return {
                     ok: !!solverResult.ok,
                     status: solverResult.status || 'error',
@@ -3632,12 +3682,14 @@
                     debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
                     stage: solverResult.stage,
-                    message: solverResult.message || ''
+                    message: solverResult.message || '',
+                    strategy: selectedStrategy,
+                    profile: complexityProfile
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [] };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [], strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose, profile: complexityProfile } };
                 console.error('Solver error:', err);
-                return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], stagesTried: [], message: err?.message || 'Solver error' };
+                return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], stagesTried: [], message: err?.message || 'Solver error', strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose, profile: complexityProfile } };
             } finally {
                 finishRun();
             }
@@ -3694,27 +3746,28 @@
             const requestedBudget = Number(opts.timeLimit ?? opts.timeLimitMs);
             if (Number.isFinite(requestedBudget) && requestedBudget > 0) return Math.floor(requestedBudget);
 
-            const gridArea = Math.max(1, (level?.grid?.w || 0) * (level?.grid?.h || 0));
-            const reqLen = Math.max(0, Number(level?.reqLen) || 0);
+            const profile = classifyLevelComplexity(level);
+            const strategy = opts.strategy || selectSolverStrategy(profile, 'trap');
             const specialObjects =
-                (Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0)
-                + (Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0)
-                + (Array.isArray(level?.gateKeys) ? level.gateKeys.length : 0)
-                + (level?.falseGoalKeys?.size || 0)
-                + (level?.blockSet?.size || 0)
-                + (level?.gooseSet?.size || 0)
-                + (level?.filterMap?.size || 0)
-                + (level?.flippingFilterMap?.size || 0)
-                + (level?.portalMap?.size || 0);
+                profile.totalMustConstraints
+                + profile.falseGoalCount
+                + profile.blockCount
+                + profile.gooseCount
+                + profile.totalFilters
+                + profile.portalCount;
 
-            const budget = 2500 + (gridArea * 15) + (reqLen * 40) + (specialObjects * 120);
+            const baseBudget = 2500 + (profile.gridArea * 15) + (profile.reqLen * 40) + (specialObjects * 120);
+            const strategyMultiplier = strategy === 'bomb-proof' ? 1.35 : 1;
+            const budget = baseBudget * strategyMultiplier;
             return Math.max(3000, Math.min(30000, Math.floor(budget)));
         };
 
         const findTrapSpots = async (level, opts = {}) => {
+            const complexityProfile = classifyLevelComplexity(level);
+            const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, 'trap');
             const controller = startRun({ label: 'Finding trap spots…', mode: 'trap' });
-            if (!controller) return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0 };
-            const timeLimit = getTrapSpotBudgetMs(level, opts);
+            if (!controller) return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
+            const timeLimit = getTrapSpotBudgetMs(level, { ...opts, strategy: selectedStrategy });
             try {
                 const trapResult = await PathfinderSolver.findTrapSpots(level, {
                     timeLimit,
@@ -3735,12 +3788,15 @@
                     timedOut,
                     gatesProcessed: Number(trapResult?.gatesProcessed) || 0,
                     elapsedMs: Number(trapResult?.elapsedMs) || 0,
-                    timeLimit
+                    timeLimit,
+                    strategy: selectedStrategy,
+                    profile: complexityProfile,
+                    debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile }
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
                 console.error(err);
-                return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err };
+                return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
             } finally {
                 finishRun();
             }
@@ -4145,6 +4201,7 @@
                 const prune = debug?.prune || {};
                 const lines = [
                     `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
+                    `strategy=${debug?.strategy || 'unknown'} purpose=${debug?.purpose || 'solve'} profile=${debug?.profile ? JSON.stringify(debug.profile) : 'n/a'}`,
                     `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
                     `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`
                 ];
@@ -7335,7 +7392,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                 levelEntry.newHint.status = 'error';
                             }
                             if (levelEntry.newHint.status !== 'success' && !levelEntry.error) {
-                                const detail = [hintRes?.status, hintRes?.rawStatus, hintRes?.message].filter(Boolean).join(' | ');
+                                const detail = [hintRes?.status, hintRes?.rawStatus, hintRes?.strategy, hintRes?.message].filter(Boolean).join(' | ');
                                 if (detail) levelEntry.error = trimAuditError(detail);
                             }
                         } catch (newHintErr) {
@@ -7369,7 +7426,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                 auditProgress.bombs.noneFound++;
                             }
                             if (levelEntry.bombs.status !== 'success' && levelEntry.bombs.status !== 'none-found' && !levelEntry.error) {
-                                const detail = [bombRes?.status, bombRes?.error?.message].filter(Boolean).join(' | ');
+                                const detail = [bombRes?.status, bombRes?.strategy, bombRes?.error?.message].filter(Boolean).join(' | ');
                                 if (detail) levelEntry.error = trimAuditError(detail);
                             }
                         } catch (bombErr) {
