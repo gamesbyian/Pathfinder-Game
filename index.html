@@ -506,10 +506,6 @@
 <script type="module">
     const APP = {};
     APP.Config = APP.Config || {};
-    APP.Config.solverPurposeTierBudgets = APP.Config.solverPurposeTierBudgets || {
-        hint: [5000, 15000, 60000],
-        solve: [15000, 60000, 180000]
-    };
 
     // ======================================================
     // A) Core / ConstantsAndUtils
@@ -3328,28 +3324,64 @@
             return result;
         };
 
-        const DEFAULT_SOLVER_PURPOSE_TIER_BUDGETS = Object.freeze({
-            hint: [5000, 15000, 60000],
-            solve: [15000, 60000, 180000]
+        const SOLVER_PURPOSE_TIER_BUDGETS_DEFAULT = Object.freeze({
+            hint: Object.freeze({ tiers: Object.freeze([5000, 15000, 60000]) }),
+            solve: Object.freeze({ tiers: Object.freeze([15000, 60000, 180000]) })
+        });
+        const SOLVER_PURPOSE_TIER_BUDGETS_REQUIRED_KEYS = Object.freeze(['hint', 'solve']);
+        let hasWarnedMalformedPurposeTierBudgets = false;
+
+        const cloneDefaultPurposeTierBudgets = () => ({
+            hint: { tiers: [...SOLVER_PURPOSE_TIER_BUDGETS_DEFAULT.hint.tiers] },
+            solve: { tiers: [...SOLVER_PURPOSE_TIER_BUDGETS_DEFAULT.solve.tiers] }
         });
 
-        const getCanonicalSolverPurposeTierBudgets = () => {
+        const sanitizeTierBudgets = (tiers, fallback) => {
+            if (!Array.isArray(tiers) || tiers.length === 0) return [...fallback];
+            const sanitized = tiers
+                .map(v => Math.max(1000, Math.floor(Number(v))))
+                .filter(v => Number.isFinite(v));
+            return sanitized.length > 0 ? sanitized : [...fallback];
+        };
+
+        const getValidatedSolverPurposeTierBudgets = () => {
             const configured = APP.Config?.solverPurposeTierBudgets;
-            const normalized = { ...DEFAULT_SOLVER_PURPOSE_TIER_BUDGETS };
-            ['hint', 'solve'].forEach((purpose) => {
-                const candidate = configured?.[purpose];
-                if (!Array.isArray(candidate) || candidate.length === 0) return;
-                const sanitized = candidate
-                    .map(v => Math.max(1000, Math.floor(Number(v))))
-                    .filter(v => Number.isFinite(v));
-                if (sanitized.length > 0) normalized[purpose] = sanitized;
-            });
+            const defaults = cloneDefaultPurposeTierBudgets();
+
+            if (!configured) {
+                APP.Config.solverPurposeTierBudgets = defaults;
+                return defaults;
+            }
+
+            const hasRequiredPurposeKeys = typeof configured === 'object'
+                && SOLVER_PURPOSE_TIER_BUDGETS_REQUIRED_KEYS.every((purpose) => Object.prototype.hasOwnProperty.call(configured, purpose));
+            const hasRequiredTierKeys = hasRequiredPurposeKeys
+                && SOLVER_PURPOSE_TIER_BUDGETS_REQUIRED_KEYS.every((purpose) => {
+                    const purposeNode = configured[purpose];
+                    return !!purposeNode && typeof purposeNode === 'object' && Object.prototype.hasOwnProperty.call(purposeNode, 'tiers');
+                });
+
+            if (!hasRequiredPurposeKeys || !hasRequiredTierKeys) {
+                if (!hasWarnedMalformedPurposeTierBudgets) {
+                    hasWarnedMalformedPurposeTierBudgets = true;
+                    console.warn('[Referee] Malformed APP.Config.solverPurposeTierBudgets (required: hint, solve, tiers). Using defaults.');
+                }
+                APP.Config.solverPurposeTierBudgets = defaults;
+                return defaults;
+            }
+
+            const normalized = {
+                hint: { tiers: sanitizeTierBudgets(configured.hint.tiers, SOLVER_PURPOSE_TIER_BUDGETS_DEFAULT.hint.tiers) },
+                solve: { tiers: sanitizeTierBudgets(configured.solve.tiers, SOLVER_PURPOSE_TIER_BUDGETS_DEFAULT.solve.tiers) }
+            };
+
+            APP.Config.solverPurposeTierBudgets = normalized;
             return normalized;
         };
 
         const getCanonicalPurposeTierBudgetList = (purpose = 'solve') => {
-            const budgets = getCanonicalSolverPurposeTierBudgets();
-            return purpose === 'hint' ? budgets.hint : budgets.solve;
+            const budgets = getValidatedSolverPurposeTierBudgets();
+            return purpose === 'hint' ? budgets.hint.tiers : budgets.solve.tiers;
         };
 
         const getCanonicalPurposeTierBudget = (purpose = 'solve', tier = 0) => {
@@ -3357,6 +3389,8 @@
             const idx = Math.min(Math.max(0, Math.floor(Number(tier) || 0)), budgets.length - 1);
             return budgets[idx];
         };
+
+        getValidatedSolverPurposeTierBudgets();
 
         const Referee = {
         getPurposeTierBudgets(purpose = 'solve') {
