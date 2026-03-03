@@ -8620,12 +8620,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     })();
 
     window.onload = () => {
-        APP.Boot.start().finally(() => {
-            try {
-                APP.Input.init();
-            } catch (error) {
-                APP.Loader.fail('input-init', error);
-            }
+        try {
+            APP.Input.init();
+        } catch (error) {
+            APP.Loader.fail('input-init', error);
+            return;
+        }
+
+        APP.Boot.start().catch((error) => {
+            APP.Loader.fail('boot', error);
         });
     };
 </script>
