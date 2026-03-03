@@ -343,9 +343,10 @@
                         <label class="flex flex-col gap-1 text-[0.62rem] font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]" for="auditModeSelect">
                             Audit Mode
                             <select id="auditModeSelect" class="border rounded-lg px-2 py-1 text-[0.65rem] font-mono bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border-[var(--theme-modal-border)]">
-                                <option value="quick">Quick (1s smoke)</option>
-                                <option value="standard" selected>Standard (5s production-like)</option>
-                                <option value="deep">Deep (15s stress)</option>
+                                <option value="quick">Quick (1s hint)</option>
+                                <option value="standard" selected>Standard (5s hint)</option>
+                                <option value="deep">Deep (15s hint)</option>
+                                <option value="exhaustive">Exhaustive (35s hint)</option>
                             </select>
                         </label>
                         <div id="auditProgressLabel" class="text-[0.62rem] font-mono text-[var(--theme-modal-text)]">Idle</div>
@@ -4091,7 +4092,7 @@
             const controller = startRun({ label: 'Finding trap spots…', mode: 'trap' });
             const timeLimit = getTrapSpotBudgetMs(level, { ...opts, strategy: selectedPolicy });
             const diagnostics = { purpose: 'trap', profile: complexityProfile, strategy: selectedPolicy, timeLimit };
-            if (!controller) return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
+            if (!controller) return { ok: false, status: 'error', completion: 'inconclusive', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
             try {
                 const trapResult = await PathfinderSolver.findTrapSpots(level, {
                     timeLimit,
@@ -4126,9 +4127,9 @@
                     debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics }
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', completion: 'inconclusive', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
                 console.error(err);
-                return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
+                return { ok: false, status: 'error', completion: 'inconclusive', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
             } finally {
                 finishRun();
             }
@@ -4744,6 +4745,27 @@
                 toJson(runResult = this.lastRun) {
                     return JSON.stringify(runResult || {}, null, 2);
                 },
+                buildHardLevelHarness(opts = {}) {
+                    const suite = Array.isArray(opts.levelSuite) && opts.levelSuite.length ? opts.levelSuite : this.buildFixedHardSet();
+                    const seeds = Array.isArray(opts.seeds) && opts.seeds.length ? opts.seeds : [13, 97, 211];
+                    return { suite, seeds, timeBudgetMs: opts.timeBudgetMs ?? 20000, trapBudgetMs: opts.trapBudgetMs ?? 7000 };
+                },
+                async runHardLevelHarness(opts = {}) {
+                    const harness = this.buildHardLevelHarness(opts);
+                    const runsBySeed = [];
+                    for (const seed of harness.seeds) {
+                        const result = await this.runSuite({ ...opts, levelSuite: harness.suite, seed, timeBudgetMs: harness.timeBudgetMs, trapBudgetMs: harness.trapBudgetMs, configName: `hard-harness-seed-${seed}` });
+                        runsBySeed.push({ seed, summary: result.summary, runs: result.runs });
+                    }
+                    const aggregateRuns = runsBySeed.flatMap(entry => entry.runs || []);
+                    return {
+                        harness,
+                        runsBySeed,
+                        aggregate: this.summarize(aggregateRuns),
+                        csv: this.toCsv({ runs: aggregateRuns }),
+                        json: JSON.stringify({ harness, runsBySeed, aggregate: this.summarize(aggregateRuns) }, null, 2)
+                    };
+                },
                 async sweepHardSet(opts = {}) {
                     const configs = Array.isArray(opts.configs) && opts.configs.length ? opts.configs : this.buildSweepConfigs(opts);
                     const runsByConfig = [];
@@ -4813,6 +4835,13 @@
             startHintAnimation,
             stopHintAnimation,
             validateCandidatePath,
+            profileLevelComplexity: classifyLevelComplexity,
+            selectStrategy: (levelOrProfile, purpose = 'solve', tuningOverride = null) => {
+                const profile = (levelOrProfile && typeof levelOrProfile === 'object' && Number.isFinite(levelOrProfile.gridArea))
+                    ? levelOrProfile
+                    : classifyLevelComplexity(levelOrProfile || {});
+                return selectSolverStrategy(profile, purpose, tuningOverride);
+            },
             Benchmark,
             getStrategyTuning: () => Benchmark.getTuning(),
             setStrategyTuning: (patch = {}) => {
@@ -7936,17 +7965,48 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         let auditReport = [];
         let auditRunMeta = null;
 
-        const AUDIT_MODES = {
-            quick: { key: 'quick', label: 'Quick', hintTier: 0, budgetMs: 1000, description: 'Fast smoke check.' },
-            standard: { key: 'standard', label: 'Standard', hintTier: 0, budgetMs: getCanonicalPurposeTierBudget('hint', 0), description: 'Production-like hint budget.' },
-            deep: { key: 'deep', label: 'Deep', hintTier: 1, budgetMs: getCanonicalPurposeTierBudget('hint', 1), description: 'Longer budget for difficult levels.' }
+        const AUDIT_MODE_PRESETS = {
+            quick: { key: 'quick', label: 'Quick', hintTier: 0, hintBudgetMs: 1000, trapBudgetMode: 'smoke', trapBudgetCapMs: 2500, description: 'Fast smoke check.' },
+            standard: { key: 'standard', label: 'Standard', hintTier: 0, hintBudgetMs: getCanonicalPurposeTierBudget('hint', 0), trapBudgetMode: 'balanced', trapBudgetCapMs: 5000, description: 'Production-like hint budget.' },
+            deep: { key: 'deep', label: 'Deep', hintTier: 1, hintBudgetMs: getCanonicalPurposeTierBudget('hint', 1), trapBudgetMode: 'deep', trapBudgetCapMs: 9000, description: 'Longer budget for difficult levels.' },
+            exhaustive: { key: 'exhaustive', label: 'Exhaustive', hintTier: 2, hintBudgetMs: getCanonicalPurposeTierBudget('hint', 2), trapBudgetMode: 'proof', trapBudgetCapMs: 14000, description: 'Best effort proof mode for hard levels.' }
         };
+        const buildAuditModes = () => {
+            const external = window.APP_AUDIT_MODES;
+            if (!external || typeof external !== 'object') return AUDIT_MODE_PRESETS;
+            const normalized = { ...AUDIT_MODE_PRESETS };
+            Object.entries(external).forEach(([k, cfg]) => {
+                if (!cfg || typeof cfg !== 'object') return;
+                normalized[k] = { ...AUDIT_MODE_PRESETS[k], ...cfg, key: cfg.key || k };
+            });
+            return normalized;
+        };
+        const AUDIT_MODES = buildAuditModes();
         const getSelectedAuditMode = () => {
             const selectEl = document.getElementById('auditModeSelect');
             const key = selectEl?.value || 'standard';
-            return AUDIT_MODES[key] || AUDIT_MODES.standard;
+            return AUDIT_MODES[key] || AUDIT_MODES.standard || Object.values(AUDIT_MODES)[0];
+        };
+        const getAuditTrapBudget = (mode, level) => {
+            const base = APP.Solver.getTrapSpotBudgetMs(level);
+            const cap = Number(mode?.trapBudgetCapMs);
+            if (Number.isFinite(cap) && cap > 0) return Math.min(cap, base);
+            return base;
         };
 
+        const populateAuditModeSelect = () => {
+            const selectEl = document.getElementById('auditModeSelect');
+            if (!selectEl) return;
+            selectEl.innerHTML = '';
+            Object.values(AUDIT_MODES).forEach((mode, idx) => {
+                const opt = document.createElement('option');
+                opt.value = mode.key;
+                const budget = Number(mode.hintBudgetMs) || 0;
+                opt.textContent = `${mode.label} (${Math.round(budget / 1000)}s hint)`;
+                if (mode.key === 'standard' || (idx === 0 && !Object.values(AUDIT_MODES).some(m => m.key === 'standard'))) opt.selected = true;
+                selectEl.appendChild(opt);
+            });
+        };
         const trimAuditError = (err) => `${err?.message || err || ''}`.trim().slice(0, 140);
         const copyClone = (v) => JSON.parse(JSON.stringify(v));
         const delay0 = () => new Promise(r => setTimeout(r, 0));
@@ -7961,24 +8021,28 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const formatAuditSummary = (p) => {
             if (!p) return 'No run yet.';
             return [
-                `mode ${auditRunMeta?.mode || 'standard'} (${auditRunMeta?.timeBudgetMs || AUDIT_MODES.standard.budgetMs}ms)`,
+                `mode ${auditRunMeta?.mode || 'standard'} (${auditRunMeta?.hintBudgetMs || AUDIT_MODES.standard.hintBudgetMs}ms hint)`,
                 `levels ${p.levelsProcessed}/${p.levelsTotal}`,
                 `saved hints valid ${p.validHints}/${Math.max(1, p.validHints + p.invalidHints)} (invalid ${p.invalidHints})`,
                 `new hint success ${p.newHint.success} fail ${p.newHint.failure}`,
                 `bombs success ${p.bombs.success} none(proven) ${p.bombs.noneFoundProven} partial ${p.bombs.partial} timeout(inconclusive) ${p.bombs.timeoutInconclusive} error ${p.bombs.error}`
             ].join(' | ');
         };
-        const normalizeTrapCompletion = (res = {}) => {
-            if (res?.completion === 'partial' || res?.completion === 'complete') return res.completion;
-            return (res?.status === 'timeout' || res?.timedOut) ? 'partial' : 'complete';
+        const normalizeTrapCompletion = (res = {}, count = 0) => {
+            const allowed = ['partial', 'proven-none', 'inconclusive'];
+            if (allowed.includes(res?.completion)) return res.completion;
+            if (count > 0) return 'partial';
+            if (res?.status === 'timeout' || res?.timedOut) return 'inconclusive';
+            if (res?.ok || res?.status === 'none-found' || res?.status === 'solved') return 'proven-none';
+            return 'inconclusive';
         };
-        const normalizeTrapProof = (res = {}, count = 0, completion = 'complete') => {
+        const normalizeTrapProof = (res = {}, count = 0, completion = 'inconclusive') => {
             if (res?.proof === 'none-found-proven' || res?.proof === 'none-found-inconclusive' || res?.proof === 'spots-found') return res.proof;
             if (count > 0) return 'spots-found';
-            return completion === 'partial' ? 'none-found-inconclusive' : 'none-found-proven';
+            return completion === 'proven-none' ? 'none-found-proven' : 'none-found-inconclusive';
         };
         const summarizeTrapOutcome = (res = {}, count = 0) => {
-            const completion = normalizeTrapCompletion(res);
+            const completion = normalizeTrapCompletion(res, count);
             const proof = normalizeTrapProof(res, count, completion);
             let status = res?.status || 'error';
             if (!res?.ok && !['timeout', 'aborted', 'error'].includes(status)) status = 'error';
@@ -7987,10 +8051,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             return { status, completion, proof };
         };
         const formatBombAuditOutcome = (bombs = {}) => {
-            if (bombs.status === 'timeout' || bombs.completion === 'partial') return `timeout(partial/inconclusive, count=${bombs.count || 0})`;
-            if (bombs.proof === 'none-found-proven') return 'none-found(proven)';
-            if (bombs.proof === 'none-found-inconclusive') return 'none-found(inconclusive)';
-            return `${bombs.status || 'error'}(${bombs.completion || 'complete'}, count=${bombs.count || 0})`;
+            if (bombs.proof === 'none-found-proven' || bombs.completion === 'proven-none') return 'none-found(proven)';
+            if (bombs.proof === 'none-found-inconclusive' || bombs.completion === 'inconclusive') return `none-found(inconclusive, count=${bombs.count || 0})`;
+            if (bombs.completion === 'partial' || bombs.status === 'timeout') return `partial(spots=${bombs.count || 0}, status=${bombs.status || 'timeout'})`;
+            return `${bombs.status || 'error'}(${bombs.completion || 'inconclusive'}, count=${bombs.count || 0})`;
         };
         const renderAuditReport = () => {
             const summaryEl = document.getElementById('auditSummary');
@@ -8014,6 +8078,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }).join('\n');
         };
 
+        populateAuditModeSelect();
+
         const runAudit = async () => {
             if (auditRunning) return;
             auditRunning = true;
@@ -8027,7 +8093,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 modeLabel: auditMode.label,
                 purpose: 'hint',
                 tier: auditMode.hintTier,
-                timeBudgetMs: auditMode.budgetMs,
+                hintBudgetMs: auditMode.hintBudgetMs,
                 description: auditMode.description,
                 startedAt: new Date().toISOString()
             };
@@ -8049,7 +8115,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 for (let i = 0; i < rawLevels.length; i++) {
                     if (auditCancelRequested) break;
                     const levelNum = i + 1;
-                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', rawStatus: 'error', timeMs: 0, producedHintValid: false, stagesTried: [] }, bombs: { status: 'error', count: 0, completion: 'complete', proof: 'none-found-proven' }, hardDiagnostics: null, error: '' };
+                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', rawStatus: 'error', timeMs: 0, producedHintValid: false, stagesTried: [] }, bombs: { status: 'error', count: 0, completion: 'inconclusive', proof: 'none-found-inconclusive' }, hardDiagnostics: null, error: '' };
 
                     try {
                         const normalized = APP.LevelUtils.normalizeLevel(i);
@@ -8083,7 +8149,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), {
                                 purpose: 'hint',
                                 escalationTier: auditMode.hintTier,
-                                timeBudgetMs: auditMode.budgetMs
+                                timeBudgetMs: auditMode.hintBudgetMs
                             });
                             const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                             const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
@@ -8129,7 +8195,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                 APP.Solver.cancel();
                                 await waitForSolverIdle(2000);
                             }
-                            const trapBudget = Math.min(5000, APP.Solver.getTrapSpotBudgetMs(normalized));
+                            const trapBudget = getAuditTrapBudget(auditMode, normalized);
                             const bombRes = await APP.Solver.findTrapSpots(APP.LevelUtils.deepCloneLevel(normalized), { timeLimit: trapBudget });
                             const bombCount = bombRes?.spots?.size || 0;
                             levelEntry.bombs.count = bombCount;
@@ -8139,7 +8205,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             levelEntry.bombs.proof = bombSummary.proof;
                             if (bombSummary.status === 'success') auditProgress.bombs.success++;
                             else if (bombSummary.status === 'none-found' && bombSummary.proof === 'none-found-proven') auditProgress.bombs.noneFoundProven++;
-                            else if (bombSummary.completion === 'partial') {
+                            else if (bombSummary.completion === 'partial' || bombSummary.completion === 'inconclusive') {
                                 auditProgress.bombs.partial++;
                                 if (bombSummary.status === 'timeout' || bombSummary.proof === 'none-found-inconclusive') {
                                     auditProgress.bombs.timeoutInconclusive++;
@@ -8152,8 +8218,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         } catch (bombErr) {
                             const timed = `${bombErr?.message || ''}`.includes('timeout');
                             levelEntry.bombs.status = timed ? 'timeout' : 'error';
-                            levelEntry.bombs.completion = timed ? 'partial' : 'complete';
-                            levelEntry.bombs.proof = timed ? 'none-found-inconclusive' : 'none-found-proven';
+                            levelEntry.bombs.completion = 'inconclusive';
+                            levelEntry.bombs.proof = 'none-found-inconclusive';
                             APP.Solver.cancel();
                             if (timed) {
                                 auditProgress.bombs.partial++;
@@ -8360,8 +8426,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Renderer.render();
             const trapOutcome = summarizeTrapOutcome(res, APP.State.ENGINE.editor.validTrapSpots.size);
             if (trapOutcome.proof === 'spots-found') APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
-            else if (res.status !== 'aborted' && trapOutcome.completion === 'partial' && trapOutcome.proof !== 'none-found-proven') {
-                APP.UI.showMessage('Search timed out; partial results may be incomplete.', 'text-amber-300 font-black');
+            else if (res.status !== 'aborted' && trapOutcome.completion !== 'proven-none' && trapOutcome.proof !== 'none-found-proven') {
+                APP.UI.showMessage('Search incomplete; results may be partial/inconclusive.', 'text-amber-300 font-black');
                 const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
                 if (retry) {
                     const retryBudgetMs = Math.min(120000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
@@ -8370,7 +8436,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.Renderer.render();
                     const retryOutcome = summarizeTrapOutcome(retryRes, APP.State.ENGINE.editor.validTrapSpots.size);
                     if (retryOutcome.proof === 'spots-found') APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
-                    else if (retryRes.status !== 'aborted' && retryOutcome.completion === 'partial' && retryOutcome.proof !== 'none-found-proven') APP.UI.showMessage('Retry timed out; partial results may be incomplete.', 'text-amber-300 font-black');
+                    else if (retryRes.status !== 'aborted' && retryOutcome.completion !== 'proven-none' && retryOutcome.proof !== 'none-found-proven') APP.UI.showMessage('Retry timed out; partial/inconclusive results may be incomplete.', 'text-amber-300 font-black');
                     else if (retryRes.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
                 }
             } else if (res.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');

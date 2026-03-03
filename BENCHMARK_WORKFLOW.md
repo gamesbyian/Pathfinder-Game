@@ -80,3 +80,20 @@ console.log(sweep.csv);
 ```
 
 Use these outputs to compare configurations and track regressions over time in CI artifacts/spreadsheets.
+
+
+## 6) Hard-level multi-seed harness
+
+Use the explicit harness to replay the fixed hard set across multiple seeds:
+
+```js
+const harness = await APP.Solver.Benchmark.runHardLevelHarness({
+  seeds: [13, 97, 211],
+  timeBudgetMs: 20000,
+  trapBudgetMs: 7000
+});
+console.log(harness.aggregate);
+console.log(harness.csv);
+```
+
+This gives you per-seed results (`runsBySeed`) plus an aggregate summary/csv/json payload for tuning comparisons.
