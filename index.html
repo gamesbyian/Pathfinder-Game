@@ -340,6 +340,14 @@
                     </div>
                     <div class="flex-grow min-h-0 overflow-y-auto pr-1 space-y-3">
                         <div id="auditSummary" class="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">No run yet.</div>
+                        <label class="flex flex-col gap-1 text-[0.62rem] font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]" for="auditModeSelect">
+                            Audit Mode
+                            <select id="auditModeSelect" class="border rounded-lg px-2 py-1 text-[0.65rem] font-mono bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)] border-[var(--theme-modal-border)]">
+                                <option value="quick">Quick (1s smoke)</option>
+                                <option value="standard" selected>Standard (5s production-like)</option>
+                                <option value="deep">Deep (15s stress)</option>
+                            </select>
+                        </label>
                         <div id="auditProgressLabel" class="text-[0.62rem] font-mono text-[var(--theme-modal-text)]">Idle</div>
                         <div id="auditReportRows" class="min-h-[9rem] max-h-[14rem] overflow-y-auto border rounded-xl border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[0.6rem] font-mono leading-tight p-2 whitespace-pre-wrap">Run Audit to generate report.</div>
                     </div>
@@ -3312,6 +3320,16 @@
         };
 
         const Referee = {
+        getPurposeTierBudgets(purpose = 'solve') {
+            return purpose === 'hint' ? SOLVER_PURPOSE_TIER_BUDGETS.hint : SOLVER_PURPOSE_TIER_BUDGETS.solve;
+        },
+
+        getDefaultBudgetForPurpose(purpose = 'solve', tier = 0) {
+            const budgets = this.getPurposeTierBudgets(purpose);
+            const idx = Math.min(Math.max(0, Math.floor(tier || 0)), budgets.length - 1);
+            return budgets[idx];
+        },
+
         allocateStageBudgets(totalMs) {
             const total = Math.max(1000, Math.floor(totalMs || 15000));
             const stage0 = Math.min(Math.floor(total * 0.2), Math.max(500, total - 3500));
@@ -3424,17 +3442,15 @@
             const level = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const purpose = opts.purpose || 'solve';
             const resolvedPortalBiasMode = opts.portalBiasMode || 'adaptiveMustCross';
-            const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
             const timesTried = prev.timesTried + 1;
             const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             const autoEscalate = timesTried > 1 && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus);
             const escalationTier = Math.max(requestedTier, autoEscalate ? 1 : 0);
-            const requestedBudget = opts.timeBudgetMs || defaultBudget;
-            const tierMinBudget = escalationTier >= 2
-                ? (purpose === 'hint' ? 60000 : 180000)
-                : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
+            const defaultBudget = this.getDefaultBudgetForPurpose(purpose, escalationTier);
+            const requestedBudget = Number.isFinite(opts.timeBudgetMs) ? Math.floor(opts.timeBudgetMs) : defaultBudget;
+            const tierMinBudget = this.getDefaultBudgetForPurpose(purpose, escalationTier);
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
             const stagesTried = [];
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
@@ -3449,9 +3465,7 @@
                 if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
                 return phaseOrder;
             };
-            const tierBudgets = purpose === 'hint'
-                ? [5000, 15000, 60000]
-                : [15000, 60000, 180000];
+            const tierBudgets = this.getPurposeTierBudgets(purpose);
             // Keep must-pass/must-cross bounds active in primary stages so multi-mustCross levels
             // (e.g. level 130) don't blow up search breadth; reserve broad prune disabling for fallback.
             const phases = [
@@ -3463,22 +3477,22 @@
             const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result) => {
-                stagesTried.push({ stage, name, variant, budgetMs: budget, elapsedMs: Date.now() - startedAt, result: toStageResultStatus(result?.status) });
+                stagesTried.push({ stage, name, variant, budgetMs: budget, elapsedMs: Date.now() - startedAt, result: toStageResultStatus(result?.status), rawStatus: result?.status || 'unknown' });
             };
 
-            let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
+            let last = { ok: false, status: 'timeout', rawStatus: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
 
             for (const phase of activePhases) {
                 const { stage, name, variant, budgetMs: phaseBudgetMs, run, successMessage, timeoutMessage, failMessage } = phase;
                 if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
-                    last = { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
+                    last = { ok: false, status: 'cancelled', rawStatus: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
                     break;
                 }
                 if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: phaseBudgetMs });
                 const startedAt = Date.now();
                 const result = await run();
                 markStage(stage, name, variant, phaseBudgetMs, startedAt, result);
-                last = { ...result, stage, message: result.ok ? successMessage : (result.status === 'timeout' ? timeoutMessage : failMessage), stagesTried };
+                last = { ...result, rawStatus: result?.status || 'unknown', stage, message: result.ok ? successMessage : (result.status === 'timeout' ? timeoutMessage : failMessage), stagesTried };
                 if (result.ok || result.status === 'no-solution-proven') break;
             }
 
@@ -3496,13 +3510,14 @@
                 } else {
                     last = { ok: false, status: 'gemini-failed', stage: 4, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
                 }
-                stagesTried.push({ stage: 4, name: 'Stage 4', variant: 'gemini', budgetMs: 15000, elapsedMs: Date.now() - t4, result: toStageResultStatus(last.status) });
+                stagesTried.push({ stage: 4, name: 'Stage 4', variant: 'gemini', budgetMs: 15000, elapsedMs: Date.now() - t4, result: toStageResultStatus(last.status), rawStatus: last.rawStatus || last.status || 'unknown' });
             }
 
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
             else attemptHistory[key] = { timesTried, lastStageReached: last.stage, lastStatus: last.status };
 
             applyCanonicalSolutionShape(last);
+            last.rawStatus = last.rawStatus || last.status || 'unknown';
             last.retrySuggested = !last.ok && ['timeout', 'no-solution-inconclusive'].includes(last.status);
             last.escalationTier = escalationTier;
             last.usedEscalation = escalationTier > 0;
@@ -3782,7 +3797,7 @@
             const complexityProfile = classifyLevelComplexity(level);
             const selectorConfig = opts.selectorConfig || null;
             const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, purpose, selectorConfig);
-            const baseTimeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
+            const baseTimeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : Referee.getDefaultBudgetForPurpose(purpose, Number(opts.escalationTier ?? opts.tier) || 0);
             const strategyBudgetMultiplier = selectedStrategy === 'constraint-heavy' ? 1.35 : (selectedStrategy === 'portal-heavy' ? 1.2 : 1);
             const timeBudgetMs = Math.floor(baseTimeBudgetMs * strategyBudgetMultiplier);
             const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
@@ -7719,6 +7734,22 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         let auditCancelRequested = false;
         let auditProgress = null;
         let auditReport = [];
+        let auditRunMeta = null;
+
+        const SOLVER_PURPOSE_TIER_BUDGETS = {
+            hint: [5000, 15000, 60000],
+            solve: [15000, 60000, 180000]
+        };
+        const AUDIT_MODES = {
+            quick: { key: 'quick', label: 'Quick', hintTier: 0, budgetMs: 1000, description: 'Fast smoke check.' },
+            standard: { key: 'standard', label: 'Standard', hintTier: 0, budgetMs: SOLVER_PURPOSE_TIER_BUDGETS.hint[0], description: 'Production-like hint budget.' },
+            deep: { key: 'deep', label: 'Deep', hintTier: 1, budgetMs: SOLVER_PURPOSE_TIER_BUDGETS.hint[1], description: 'Longer budget for difficult levels.' }
+        };
+        const getSelectedAuditMode = () => {
+            const selectEl = document.getElementById('auditModeSelect');
+            const key = selectEl?.value || 'standard';
+            return AUDIT_MODES[key] || AUDIT_MODES.standard;
+        };
 
         const trimAuditError = (err) => `${err?.message || err || ''}`.trim().slice(0, 140);
         const copyClone = (v) => JSON.parse(JSON.stringify(v));
@@ -7745,6 +7776,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const formatAuditSummary = (p) => {
             if (!p) return 'No run yet.';
             return [
+                `mode ${auditRunMeta?.mode || 'standard'} (${auditRunMeta?.timeBudgetMs || AUDIT_MODES.standard.budgetMs}ms)`,
                 `levels ${p.levelsProcessed}/${p.levelsTotal}`,
                 `saved hints valid ${p.validHints}/${Math.max(1, p.validHints + p.invalidHints)} (invalid ${p.invalidHints})`,
                 `new hint success ${p.newHint.success} fail ${p.newHint.failure}`,
@@ -7790,7 +7822,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const hardDiag = r.hardDiagnostics
                     ? ` | hard-prune preLen=${r.hardDiagnostics.preLenBound} preInt=${r.hardDiagnostics.preIntersectionBound} preMust=${r.hardDiagnostics.preMustPassUnreachable}`
                     : '';
-                return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${formatBombAuditOutcome(r.bombs)}${hardDiag}${r.error ? ` | ${r.error}` : ''}`;
+                const stageAttemptText = (r.newHint.stagesTried || []).length
+                    ? ` stages=${(r.newHint.stagesTried || []).map(st => `${st.name}/${st.variant}:${st.result}${st.rawStatus ? `(${st.rawStatus})` : ''}@${st.elapsedMs}ms`).join(',')}`
+                    : '';
+                return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status}${r.newHint.rawStatus ? `/${r.newHint.rawStatus}` : ''} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''}${stageAttemptText} | bombs ${formatBombAuditOutcome(r.bombs)}${hardDiag}${r.error ? ` | ${r.error}` : ''}`;
             }).join('\n');
         };
 
@@ -7799,8 +7834,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             auditRunning = true;
             auditCancelRequested = false;
             auditReport = [];
+            const auditMode = getSelectedAuditMode();
             const rawLevels = APP.LevelUtils.getRawLevels();
             auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0 }, bombs: { success: 0, noneFoundProven: 0, partial: 0, timeoutInconclusive: 0, error: 0 } };
+            auditRunMeta = {
+                mode: auditMode.key,
+                modeLabel: auditMode.label,
+                purpose: 'hint',
+                tier: auditMode.hintTier,
+                timeBudgetMs: auditMode.budgetMs,
+                description: auditMode.description,
+                startedAt: new Date().toISOString()
+            };
             renderAuditReport();
 
             const stateSnap = {
@@ -7819,7 +7864,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 for (let i = 0; i < rawLevels.length; i++) {
                     if (auditCancelRequested) break;
                     const levelNum = i + 1;
-                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', timeMs: 0, producedHintValid: false }, bombs: { status: 'error', count: 0, completion: 'complete', proof: 'none-found-proven' }, hardDiagnostics: null, error: '' };
+                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', rawStatus: 'error', timeMs: 0, producedHintValid: false, stagesTried: [] }, bombs: { status: 'error', count: 0, completion: 'complete', proof: 'none-found-proven' }, hardDiagnostics: null, error: '' };
 
                     try {
                         const normalized = APP.LevelUtils.normalizeLevel(i);
@@ -7850,10 +7895,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                 APP.Solver.cancel();
                                 await waitForSolverIdle(2000);
                             }
-                            hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 1000 });
+                            hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), {
+                                purpose: 'hint',
+                                escalationTier: auditMode.hintTier,
+                                timeBudgetMs: auditMode.budgetMs
+                            });
                             const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                             const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
                             levelEntry.newHint.producedHintValid = !!hintValidation?.ok;
+                            levelEntry.newHint.rawStatus = hintRes?.rawStatus || hintRes?.status || 'unknown';
+                            levelEntry.newHint.stagesTried = hintRes?.stagesTried || [];
                             if (hintRes?.ok && hintValidation?.ok) {
                                 levelEntry.newHint.status = 'success';
                             } else if (hintRes?.status === 'no-solution' || hintRes?.rawStatus === 'no-solution-proven') {
@@ -7881,6 +7932,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             }
                         } catch (newHintErr) {
                             levelEntry.newHint.status = `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error';
+                            levelEntry.newHint.rawStatus = levelEntry.newHint.status;
                             APP.Solver.cancel();
                             if (levelEntry.newHint.status === 'error') levelEntry.error = trimAuditError(newHintErr);
                         }
@@ -7940,6 +7992,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     if ((i + 1) % 3 === 0) await delay0();
                 }
             } finally {
+                if (auditRunMeta) auditRunMeta.completedAt = new Date().toISOString();
                 APP.Solver.cancel();
                 APP.State.ENGINE.levelIdx = stateSnap.levelIdx;
                 APP.State.ENGINE.mode = stateSnap.mode;
@@ -8076,7 +8129,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('startAuditBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(); };
         document.getElementById('cancelAuditBtn').onclick = () => { auditCancelRequested = true; APP.Solver.cancel(); };
         document.getElementById('copyAuditBtn').onclick = async () => {
-            const payload = { progress: auditProgress, levels: auditReport };
+            const payload = { metadata: auditRunMeta, progress: auditProgress, levels: auditReport };
             await APP.UI.copyText(JSON.stringify(payload, null, 2), { fallbackElId: 'auditReportRows' });
             APP.UI.showMessage('Audit report copied.', 'text-white font-black');
         };
