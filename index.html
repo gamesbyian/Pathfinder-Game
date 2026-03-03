@@ -8608,12 +8608,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     })();
 
     window.onload = () => {
-        try {
-            APP.Input.init();
-        } catch (error) {
-            console.error('[Input init failed]', error);
-        }
-        APP.Boot.start();
+        APP.Boot.start().finally(() => {
+            try {
+                APP.Input.init();
+            } catch (error) {
+                APP.Loader.fail('input-init', error);
+            }
+        });
     };
 </script>
 </body>
