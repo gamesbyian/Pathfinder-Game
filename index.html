@@ -3704,6 +3704,9 @@
             };
             profile.totalMustConstraints = profile.mustPassCount + profile.mustCrossCount;
             profile.totalFilters = profile.filterCount + profile.flippingFilterCount;
+            profile.requirementPressure = profile.reqLen + (profile.reqInt * 6);
+            profile.constraintPressure = profile.requirementPressure + (profile.totalMustConstraints * 4) + (profile.totalFilters * 3);
+            profile.blockDensity = profile.gridArea > 0 ? ((profile.blockCount + profile.gooseCount + profile.falseGoalCount) / profile.gridArea) : 0;
             return profile;
         };
 
@@ -3770,41 +3773,66 @@
 
         const selectSolverStrategy = (profile, purpose = 'solve', tuningOverride = null) => {
             const tuning = mergeTuningConfig(tuningOverride);
-            if (purpose === 'trap' || purpose === 'bomb') return 'bomb-proof';
+            const buildPolicy = (strategy) => {
+                const orderVariant = tuning.orderVariantByStrategy?.[strategy] || (strategy === 'portal-heavy' ? 'altOrder' : 'default');
+                const baseBudgetMultiplier = strategy === 'constraint-heavy' ? 1.35 : (strategy === 'portal-heavy' ? 1.2 : 1);
+                const trapBudgetMultiplier = strategy === 'bomb-proof' ? 1.35 : (strategy === 'constraint-heavy' ? 1.15 : 1);
+                return {
+                    name: strategy,
+                    mode: (purpose === 'trap' || purpose === 'bomb') ? 'trap-scan' : 'solve-search',
+                    orderVariant,
+                    tierBoost: Number(tuning.strategyTierBoost?.[strategy]) || (strategy === 'constraint-heavy' ? 1 : 0),
+                    solveBudgetMultiplier: baseBudgetMultiplier,
+                    trapBudgetMultiplier
+                };
+            };
+            if (purpose === 'trap' || purpose === 'bomb') return buildPolicy('bomb-proof');
             const family = classifyBenchmarkFamily(profile);
             const familyOverride = tuning.familyStrategyOverrides?.[family];
-            if (familyOverride?.strategy) return familyOverride.strategy;
+            if (familyOverride?.strategy) return buildPolicy(familyOverride.strategy);
             const t = tuning.thresholds;
-            if ((profile?.portalCount || 0) >= t.portalHeavyMinPortals) return 'portal-heavy';
+            if ((profile?.portalCount || 0) >= t.portalHeavyMinPortals) return buildPolicy('portal-heavy');
             const reqLenHeavy = (profile?.reqLen || 0) >= t.constraintReqLen;
             const reqIntHeavy = (profile?.reqInt || 0) >= t.constraintReqInt;
             const mustHeavy = (profile?.totalMustConstraints || 0) >= t.constraintMust;
             const obstacles = (profile?.blockCount || 0) + (profile?.gooseCount || 0) + (profile?.falseGoalCount || 0) + (profile?.totalFilters || 0);
             const obstaclesHeavy = obstacles >= t.constraintObstacleCount;
-            if (reqLenHeavy || reqIntHeavy || mustHeavy || obstaclesHeavy) return 'constraint-heavy';
+            const denseBlocks = (profile?.blockDensity || 0) >= 0.18;
+            if (reqLenHeavy || reqIntHeavy || mustHeavy || obstaclesHeavy || denseBlocks) return buildPolicy('constraint-heavy');
 
             const w = tuning.weights;
             const fastScore = 1 + Math.max(0, 6 - ((profile?.reqLen || 0) / 4));
             const constraintScore = ((profile?.reqLen || 0) * w.reqLen) + ((profile?.reqInt || 0) * w.reqInt) + ((profile?.totalMustConstraints || 0) * w.must) + (obstacles * w.obstacles) + ((profile?.gridArea || 0) * w.gridArea);
             const portalScore = ((profile?.portalCount || 0) * w.portal) + ((profile?.reqLen || 0) * (w.reqLen * 0.6));
-            if (portalScore > constraintScore && portalScore > fastScore) return 'portal-heavy';
-            if (constraintScore > fastScore) return 'constraint-heavy';
-            return 'fast-default';
+            if (portalScore > constraintScore && portalScore > fastScore) return buildPolicy('portal-heavy');
+            if (constraintScore > fastScore) return buildPolicy('constraint-heavy');
+            return buildPolicy('fast-default');
         };
 
         const solveLevel = async (level, opts = {}) => {
             const purpose = opts.purpose || 'solve';
             const complexityProfile = classifyLevelComplexity(level);
             const selectorConfig = opts.selectorConfig || null;
-            const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, purpose, selectorConfig);
+            const selectedPolicy = typeof opts.strategy === 'string'
+                ? { ...selectSolverStrategy(complexityProfile, purpose, selectorConfig), name: opts.strategy }
+                : (opts.strategy || selectSolverStrategy(complexityProfile, purpose, selectorConfig));
+            const selectedStrategy = selectedPolicy.name || (purpose === 'trap' ? 'bomb-proof' : 'custom');
             const baseTimeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : Referee.getDefaultBudgetForPurpose(purpose, Number(opts.escalationTier ?? opts.tier) || 0);
-            const strategyBudgetMultiplier = selectedStrategy === 'constraint-heavy' ? 1.35 : (selectedStrategy === 'portal-heavy' ? 1.2 : 1);
+            const strategyBudgetMultiplier = Number(selectedPolicy.solveBudgetMultiplier) || 1;
             const timeBudgetMs = Math.floor(baseTimeBudgetMs * strategyBudgetMultiplier);
             const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
             const debug = opts.debug !== undefined ? !!opts.debug : true;
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
+            const diagnostics = {
+                purpose,
+                profile: complexityProfile,
+                strategy: selectedPolicy,
+                baseTimeBudgetMs,
+                strategyBudgetMultiplier,
+                timeBudgetMs
+            };
             const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
-            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solution: [], solutions: [], stagesTried: [], strategy: selectedStrategy, profile: complexityProfile };
+            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solution: [], solutions: [], stagesTried: [], strategy: selectedStrategy, profile: complexityProfile, diagnostics };
 
             try {
                 let solverResult;
@@ -3831,9 +3859,10 @@
                     const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
                     const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
                     const tuning = mergeTuningConfig(selectorConfig);
-                    const strategyTier = Number(tuning.strategyTierBoost?.[selectedStrategy]) || (selectedStrategy === 'constraint-heavy' ? 1 : 0);
+                    const strategyTier = Number(selectedPolicy.tierBoost) || 0;
                     const escalationTier = Math.max(requestedTier, autoTier, strategyTier);
-                    const stageVariant = opts.variant || tuning.orderVariantByStrategy?.[selectedStrategy] || (selectedStrategy === 'portal-heavy' ? 'altOrder' : 'default');
+                    const stageVariant = opts.variant || selectedPolicy.orderVariant || tuning.orderVariantByStrategy?.[selectedStrategy] || 'default';
+                    diagnostics.escalation = { requestedTier, autoTier, strategyTier, escalationTier, stageVariant };
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
                     if (escalationTier >= 2) APP.UI.showMessage('Deep search enabled: brute-force fallback and extended budgets…', 'text-amber-700');
                     solverResult = await Referee.solve(level, {
@@ -3890,6 +3919,7 @@
                 debugInfo.strategy = selectedStrategy;
                 debugInfo.purpose = purpose;
                 debugInfo.profile = complexityProfile;
+                debugInfo.diagnostics = diagnostics;
                 return {
                     ok: !!solverResult.ok,
                     status: solverResult.status || 'error',
@@ -3910,12 +3940,13 @@
                     stage: solverResult.stage,
                     message: solverResult.message || '',
                     strategy: selectedStrategy,
-                    profile: complexityProfile
+                    profile: complexityProfile,
+                    diagnostics
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [], strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose, profile: complexityProfile } };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [], strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose, profile: complexityProfile, diagnostics } };
                 console.error('Solver error:', err);
-                return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], stagesTried: [], message: err?.message || 'Solver error', strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose, profile: complexityProfile } };
+                return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], stagesTried: [], message: err?.message || 'Solver error', strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose, profile: complexityProfile, diagnostics } };
             } finally {
                 finishRun();
             }
@@ -3973,7 +4004,9 @@
             if (Number.isFinite(requestedBudget) && requestedBudget > 0) return Math.floor(requestedBudget);
 
             const profile = classifyLevelComplexity(level);
-            const strategy = opts.strategy || selectSolverStrategy(profile, 'trap', opts.selectorConfig || null);
+            const strategyPolicy = typeof opts.strategy === 'string'
+                ? { ...selectSolverStrategy(profile, 'trap', opts.selectorConfig || null), name: opts.strategy }
+                : (opts.strategy || selectSolverStrategy(profile, 'trap', opts.selectorConfig || null));
             const specialObjects =
                 profile.totalMustConstraints
                 + profile.falseGoalCount
@@ -3983,17 +4016,21 @@
                 + profile.portalCount;
 
             const baseBudget = 2500 + (profile.gridArea * 15) + (profile.reqLen * 40) + (specialObjects * 120);
-            const strategyMultiplier = strategy === 'bomb-proof' ? 1.35 : 1;
+            const strategyMultiplier = Number(strategyPolicy.trapBudgetMultiplier) || 1;
             const budget = baseBudget * strategyMultiplier;
             return Math.max(3000, Math.min(30000, Math.floor(budget)));
         };
 
         const findTrapSpots = async (level, opts = {}) => {
             const complexityProfile = classifyLevelComplexity(level);
-            const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, 'trap', opts.selectorConfig || null);
+            const selectedPolicy = typeof opts.strategy === 'string'
+                ? { ...selectSolverStrategy(complexityProfile, 'trap', opts.selectorConfig || null), name: opts.strategy }
+                : (opts.strategy || selectSolverStrategy(complexityProfile, 'trap', opts.selectorConfig || null));
+            const selectedStrategy = selectedPolicy.name || 'bomb-proof';
             const controller = startRun({ label: 'Finding trap spots…', mode: 'trap' });
-            if (!controller) return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
-            const timeLimit = getTrapSpotBudgetMs(level, { ...opts, strategy: selectedStrategy });
+            const timeLimit = getTrapSpotBudgetMs(level, { ...opts, strategy: selectedPolicy });
+            const diagnostics = { purpose: 'trap', profile: complexityProfile, strategy: selectedPolicy, timeLimit };
+            if (!controller) return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
             try {
                 const trapResult = await PathfinderSolver.findTrapSpots(level, {
                     timeLimit,
@@ -4024,12 +4061,13 @@
                     timeLimit,
                     strategy: selectedStrategy,
                     profile: complexityProfile,
-                    debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile }
+                    diagnostics,
+                    debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics }
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
                 console.error(err);
-                return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
+                return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit, error: err, strategy: selectedStrategy, profile: complexityProfile, diagnostics, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile, diagnostics } };
             } finally {
                 finishRun();
             }
