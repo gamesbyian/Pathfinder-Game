@@ -8031,11 +8031,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         let auditReport = [];
         let auditRunMeta = null;
 
+        const getHintBudgetForTier = (tier = 0) => {
+            const fallback = [5000, 15000, 60000];
+            const configured = APP.Config?.solverPurposeTierBudgets?.hint?.tiers;
+            const tiers = Array.isArray(configured) && configured.length ? configured : fallback;
+            const idx = Math.min(Math.max(0, Math.floor(Number(tier) || 0)), tiers.length - 1);
+            const budget = Math.floor(Number(tiers[idx]));
+            return Number.isFinite(budget) && budget > 0 ? budget : fallback[Math.min(idx, fallback.length - 1)];
+        };
         const AUDIT_MODE_PRESETS = {
             quick: { key: 'quick', label: 'Quick', hintTier: 0, hintBudgetMs: 1000, trapBudgetMode: 'smoke', trapBudgetCapMs: 2500, description: 'Fast smoke check.' },
-            standard: { key: 'standard', label: 'Standard', hintTier: 0, hintBudgetMs: getCanonicalPurposeTierBudget('hint', 0), trapBudgetMode: 'balanced', trapBudgetCapMs: 5000, description: 'Production-like hint budget.' },
-            deep: { key: 'deep', label: 'Deep', hintTier: 1, hintBudgetMs: getCanonicalPurposeTierBudget('hint', 1), trapBudgetMode: 'deep', trapBudgetCapMs: 9000, description: 'Longer budget for difficult levels.' },
-            exhaustive: { key: 'exhaustive', label: 'Exhaustive', hintTier: 2, hintBudgetMs: getCanonicalPurposeTierBudget('hint', 2), trapBudgetMode: 'proof', trapBudgetCapMs: 14000, description: 'Best effort proof mode for hard levels.' }
+            standard: { key: 'standard', label: 'Standard', hintTier: 0, hintBudgetMs: getHintBudgetForTier(0), trapBudgetMode: 'balanced', trapBudgetCapMs: 5000, description: 'Production-like hint budget.' },
+            deep: { key: 'deep', label: 'Deep', hintTier: 1, hintBudgetMs: getHintBudgetForTier(1), trapBudgetMode: 'deep', trapBudgetCapMs: 9000, description: 'Longer budget for difficult levels.' },
+            exhaustive: { key: 'exhaustive', label: 'Exhaustive', hintTier: 2, hintBudgetMs: getHintBudgetForTier(2), trapBudgetMode: 'proof', trapBudgetCapMs: 14000, description: 'Best effort proof mode for hard levels.' }
         };
         const buildAuditModes = () => {
             const external = window.APP_AUDIT_MODES;
