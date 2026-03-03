@@ -2451,7 +2451,7 @@
                     return { nk, score };
                 });
                     if (options?.dirOrderVariant === 'random') {
-                        scored.sort(() => Math.random() - 0.5);
+                        scored.sort(() => rng() - 0.5);
                     } else {
                         scored.sort((a, b) => {
                             if (a.score !== b.score) return a.score - b.score;
@@ -2976,7 +2976,8 @@
 
         const PathfinderSolver = {
                 async solve(level, options = {}) {
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, randomFn = null } = options;
+                    const rng = typeof randomFn === 'function' ? randomFn : Math.random;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -3158,7 +3159,7 @@
                         let passCellUsageFreq = new Map();
                         const shuffledGates = validGates.slice();
                         if (dirOrderVariant === 'alt') shuffledGates.reverse();
-                        else shuffledGates.sort(() => Math.random() - 0.5);
+                        else shuffledGates.sort(() => rng() - 0.5);
                         if (debugStats) {
                             debugStats.pass = passName;
                             debugStats.disabledPrunes = disabledPrunes.slice();
@@ -3325,7 +3326,8 @@
                     debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                     dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
-                    scoringMode: attemptOpts.scoringMode || 'reverse-distance'
+                    scoringMode: attemptOpts.scoringMode || 'reverse-distance',
+                    randomFn: opts.randomFn
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -3398,7 +3400,8 @@
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                 disabledPrunes,
-                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross'
+                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
+                randomFn: opts.randomFn
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -3433,10 +3436,10 @@
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
                 const budgets = this.allocateStageBudgets(totalBudgetMs);
                 let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
-                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode, purpose, randomFn: opts.randomFn }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, randomFn: opts.randomFn }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
                 if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
@@ -3685,21 +3688,96 @@
             return profile;
         };
 
-        const selectSolverStrategy = (profile, purpose = 'solve') => {
+        const classifyBenchmarkFamily = (profile = {}) => {
+            if ((profile.portalCount || 0) >= 3) return 'portal-heavy';
+            if ((profile.reqInt || 0) >= 4) return 'high-reqInt';
+            if ((profile.gridArea || 0) >= 121) return 'large-grid';
+            return 'baseline';
+        };
+
+        const createSeededRandom = (seed = 1) => {
+            let state = (Number(seed) >>> 0) || 1;
+            return () => {
+                state = (state + 0x6D2B79F5) >>> 0;
+                let t = Math.imul(state ^ (state >>> 15), 1 | state);
+                t ^= t + Math.imul(t ^ (t >>> 7), 61 | t);
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
+        };
+
+        const solverStrategyTuning = {
+            thresholds: {
+                portalHeavyMinPortals: 3,
+                constraintReqLen: 20,
+                constraintReqInt: 4,
+                constraintMust: 4,
+                constraintObstacleCount: 10,
+                largeGridArea: 121
+            },
+            weights: {
+                portal: 2.4,
+                reqLen: 0.08,
+                reqInt: 1.5,
+                must: 1.1,
+                obstacles: 0.22,
+                gridArea: 0.015
+            },
+            orderVariantByStrategy: {
+                'fast-default': 'default',
+                'constraint-heavy': 'default',
+                'portal-heavy': 'altOrder'
+            },
+            strategyTierBoost: {
+                'fast-default': 0,
+                'constraint-heavy': 1,
+                'portal-heavy': 1
+            },
+            familyStrategyOverrides: {},
+            championConfigsByFamily: {}
+        };
+
+        const mergeTuningConfig = (override = null) => {
+            if (!override || typeof override !== 'object') return solverStrategyTuning;
+            return {
+                ...solverStrategyTuning,
+                ...override,
+                thresholds: { ...solverStrategyTuning.thresholds, ...(override.thresholds || {}) },
+                weights: { ...solverStrategyTuning.weights, ...(override.weights || {}) },
+                orderVariantByStrategy: { ...solverStrategyTuning.orderVariantByStrategy, ...(override.orderVariantByStrategy || {}) },
+                strategyTierBoost: { ...solverStrategyTuning.strategyTierBoost, ...(override.strategyTierBoost || {}) },
+                familyStrategyOverrides: { ...solverStrategyTuning.familyStrategyOverrides, ...(override.familyStrategyOverrides || {}) }
+            };
+        };
+
+        const selectSolverStrategy = (profile, purpose = 'solve', tuningOverride = null) => {
+            const tuning = mergeTuningConfig(tuningOverride);
             if (purpose === 'trap' || purpose === 'bomb') return 'bomb-proof';
-            if ((profile?.portalCount || 0) >= 3) return 'portal-heavy';
-            const reqLenHeavy = (profile?.reqLen || 0) >= 20;
-            const reqIntHeavy = (profile?.reqInt || 0) >= 4;
-            const mustHeavy = (profile?.totalMustConstraints || 0) >= 4;
-            const obstaclesHeavy = ((profile?.blockCount || 0) + (profile?.gooseCount || 0) + (profile?.falseGoalCount || 0) + (profile?.totalFilters || 0)) >= 10;
+            const family = classifyBenchmarkFamily(profile);
+            const familyOverride = tuning.familyStrategyOverrides?.[family];
+            if (familyOverride?.strategy) return familyOverride.strategy;
+            const t = tuning.thresholds;
+            if ((profile?.portalCount || 0) >= t.portalHeavyMinPortals) return 'portal-heavy';
+            const reqLenHeavy = (profile?.reqLen || 0) >= t.constraintReqLen;
+            const reqIntHeavy = (profile?.reqInt || 0) >= t.constraintReqInt;
+            const mustHeavy = (profile?.totalMustConstraints || 0) >= t.constraintMust;
+            const obstacles = (profile?.blockCount || 0) + (profile?.gooseCount || 0) + (profile?.falseGoalCount || 0) + (profile?.totalFilters || 0);
+            const obstaclesHeavy = obstacles >= t.constraintObstacleCount;
             if (reqLenHeavy || reqIntHeavy || mustHeavy || obstaclesHeavy) return 'constraint-heavy';
+
+            const w = tuning.weights;
+            const fastScore = 1 + Math.max(0, 6 - ((profile?.reqLen || 0) / 4));
+            const constraintScore = ((profile?.reqLen || 0) * w.reqLen) + ((profile?.reqInt || 0) * w.reqInt) + ((profile?.totalMustConstraints || 0) * w.must) + (obstacles * w.obstacles) + ((profile?.gridArea || 0) * w.gridArea);
+            const portalScore = ((profile?.portalCount || 0) * w.portal) + ((profile?.reqLen || 0) * (w.reqLen * 0.6));
+            if (portalScore > constraintScore && portalScore > fastScore) return 'portal-heavy';
+            if (constraintScore > fastScore) return 'constraint-heavy';
             return 'fast-default';
         };
 
         const solveLevel = async (level, opts = {}) => {
             const purpose = opts.purpose || 'solve';
             const complexityProfile = classifyLevelComplexity(level);
-            const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, purpose);
+            const selectorConfig = opts.selectorConfig || null;
+            const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, purpose, selectorConfig);
             const baseTimeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
             const strategyBudgetMultiplier = selectedStrategy === 'constraint-heavy' ? 1.35 : (selectedStrategy === 'portal-heavy' ? 1.2 : 1);
             const timeBudgetMs = Math.floor(baseTimeBudgetMs * strategyBudgetMultiplier);
@@ -3717,7 +3795,8 @@
                         timeLimit: timeBudgetMs,
                         debug,
                         debugLevel,
-                        signal: controller.signal
+                        signal: controller.signal,
+                        randomFn: opts.randomFn
                     });
                     const legacySolution = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
                     if (legacy?.ok && legacySolution.length > 0) {
@@ -3732,9 +3811,10 @@
                     const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
                     const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
                     const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
-                    const strategyTier = selectedStrategy === 'constraint-heavy' ? 1 : 0;
+                    const tuning = mergeTuningConfig(selectorConfig);
+                    const strategyTier = Number(tuning.strategyTierBoost?.[selectedStrategy]) || (selectedStrategy === 'constraint-heavy' ? 1 : 0);
                     const escalationTier = Math.max(requestedTier, autoTier, strategyTier);
-                    const stageVariant = selectedStrategy === 'portal-heavy' ? 'altOrder' : (opts.variant || 'default');
+                    const stageVariant = opts.variant || tuning.orderVariantByStrategy?.[selectedStrategy] || (selectedStrategy === 'portal-heavy' ? 'altOrder' : 'default');
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
                     if (escalationTier >= 2) APP.UI.showMessage('Deep search enabled: brute-force fallback and extended budgets…', 'text-amber-700');
                     solverResult = await Referee.solve(level, {
@@ -3747,7 +3827,8 @@
                             APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
                             if (APP.State.ENGINE.flags.refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
                             if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
-                        }
+                        },
+                        randomFn: opts.randomFn
                     });
                     const canonical = solverResult.solution ?? solverResult.solutions ?? [];
                     solverResult.solution = canonical;
@@ -3764,7 +3845,8 @@
                             timeLimit: fallbackBudgetMs,
                             debug,
                             debugLevel,
-                            signal: controller.signal
+                            signal: controller.signal,
+                            randomFn: opts.randomFn
                         });
                         const legacySolution = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
                         if (legacy?.ok && legacySolution.length > 0) {
@@ -3872,7 +3954,7 @@
             if (Number.isFinite(requestedBudget) && requestedBudget > 0) return Math.floor(requestedBudget);
 
             const profile = classifyLevelComplexity(level);
-            const strategy = opts.strategy || selectSolverStrategy(profile, 'trap');
+            const strategy = opts.strategy || selectSolverStrategy(profile, 'trap', opts.selectorConfig || null);
             const specialObjects =
                 profile.totalMustConstraints
                 + profile.falseGoalCount
@@ -3889,7 +3971,7 @@
 
         const findTrapSpots = async (level, opts = {}) => {
             const complexityProfile = classifyLevelComplexity(level);
-            const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, 'trap');
+            const selectedStrategy = opts.strategy || selectSolverStrategy(complexityProfile, 'trap', opts.selectorConfig || null);
             const controller = startRun({ label: 'Finding trap spots…', mode: 'trap' });
             if (!controller) return { ok: false, status: 'error', completion: 'complete', proof: 'none-found-inconclusive', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0, strategy: selectedStrategy, profile: complexityProfile, debug: { strategy: selectedStrategy, purpose: 'trap', profile: complexityProfile } };
             const timeLimit = getTrapSpotBudgetMs(level, { ...opts, strategy: selectedStrategy });
@@ -4183,7 +4265,8 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload),
-                        signal: controller.signal
+                        signal: controller.signal,
+                        randomFn: opts.randomFn
                     });
                     const data = await resp.json();
                     if (!data?.ok) {
@@ -4360,6 +4443,139 @@
                 }
                 return lines.join('\n');
             }
+            const Benchmark = {
+                lastRun: null,
+                defaultSweepConfigs: [
+                    { name: 'control', selectorConfig: {} },
+                    { name: 'portal-bias', selectorConfig: { weights: { portal: 3.1 }, orderVariantByStrategy: { 'portal-heavy': 'altOrder' } } },
+                    { name: 'constraint-deep', selectorConfig: { thresholds: { constraintReqInt: 3 }, strategyTierBoost: { 'constraint-heavy': 2, 'portal-heavy': 1 } } },
+                    { name: 'beam-first', selectorConfig: { orderVariantByStrategy: { 'constraint-heavy': 'beamFirst', 'portal-heavy': 'beamFirst' } } }
+                ],
+                buildDifficultSuite(limitPerFamily = 4) {
+                    const levels = APP.Data.getLevels() || [];
+                    const grouped = { 'large-grid': [], 'portal-heavy': [], 'high-reqInt': [] };
+                    levels.forEach((_, idx) => {
+                        const level = APP.LevelUtils.normalizeLevel(idx);
+                        const profile = classifyLevelComplexity(level);
+                        const family = classifyBenchmarkFamily(profile);
+                        if (grouped[family]) grouped[family].push({ levelNum: idx + 1, profile });
+                    });
+                    const score = (entry) => (entry.profile.reqLen * 2) + (entry.profile.reqInt * 18) + (entry.profile.portalCount * 24) + (entry.profile.totalMustConstraints * 7) + (entry.profile.gridArea * 0.1);
+                    const selected = [];
+                    Object.keys(grouped).forEach(family => {
+                        grouped[family].sort((a, b) => score(b) - score(a));
+                        grouped[family].slice(0, limitPerFamily).forEach(entry => selected.push({ ...entry, family }));
+                    });
+                    return selected;
+                },
+                async runSuite(opts = {}) {
+                    if (!APP.State.ENGINE.isDevMode) throw new Error('Benchmark runner is dev-only.');
+                    const suite = Array.isArray(opts.levelSuite) && opts.levelSuite.length ? opts.levelSuite : this.buildDifficultSuite();
+                    const seedBase = Number(opts.seedBase ?? 1337);
+                    const timeBudgetMs = Number(opts.timeBudgetMs ?? 20000);
+                    const trapBudgetMs = Number(opts.trapBudgetMs ?? 7000);
+                    const selectorConfig = opts.selectorConfig || {};
+                    const runs = [];
+                    for (let i = 0; i < suite.length; i++) {
+                        const entry = suite[i];
+                        const levelNum = Number(entry.levelNum);
+                        const level = APP.LevelUtils.normalizeLevel(levelNum - 1);
+                        const profile = classifyLevelComplexity(level);
+                        const family = entry.family || classifyBenchmarkFamily(profile);
+                        const seed = seedBase + (levelNum * 97) + i;
+                        const solveRes = await solveLevel(APP.LevelUtils.deepCloneLevel(level), {
+                            purpose: 'solve',
+                            timeBudgetMs,
+                            selectorConfig,
+                            debug: true,
+                            variant: opts.variant,
+                            onStage: opts.onStage,
+                            allowReferee: true,
+                            randomFn: createSeededRandom(seed)
+                        });
+                        const trapRes = await findTrapSpots(APP.LevelUtils.deepCloneLevel(level), {
+                            timeLimit: trapBudgetMs,
+                            selectorConfig
+                        });
+                        const prune = solveRes?.debug?.prune || {};
+                        runs.push({
+                            configName: opts.configName || 'custom',
+                            levelNum,
+                            family,
+                            seed,
+                            strategy: solveRes.strategy,
+                            elapsedMs: Number(solveRes.duration || solveRes.debug?.elapsedMs || 0),
+                            nodesExpanded: Number(solveRes.nodesVisited || solveRes.debug?.nodesExpanded || 0),
+                            pruneReasons: { ...prune },
+                            outcome: solveRes.status,
+                            timedOut: !!solveRes.timedOut,
+                            aborted: solveRes.status === 'aborted',
+                            trapOutcome: trapRes?.status || 'error',
+                            trapCount: trapRes?.spots?.size || 0,
+                            trapTimedOut: !!trapRes?.timedOut
+                        });
+                    }
+                    const summary = this.summarize(runs);
+                    this.lastRun = { runs, summary, opts: { ...opts, suiteSize: suite.length } };
+                    return this.lastRun;
+                },
+                summarize(runs = []) {
+                    const byFamily = {};
+                    runs.forEach(run => {
+                        const fam = run.family || 'baseline';
+                        const bucket = byFamily[fam] || (byFamily[fam] = { runs: 0, success: 0, timeout: 0, aborted: 0, avgElapsedMs: 0, avgNodesExpanded: 0, zeroBombRuns: 0, pruneReasons: {} });
+                        bucket.runs++;
+                        if (run.outcome === 'solved') bucket.success++;
+                        if (run.outcome === 'timeout') bucket.timeout++;
+                        if (run.outcome === 'aborted') bucket.aborted++;
+                        if (run.trapCount === 0 && !run.trapTimedOut) bucket.zeroBombRuns++;
+                        bucket.avgElapsedMs += run.elapsedMs;
+                        bucket.avgNodesExpanded += run.nodesExpanded;
+                        Object.entries(run.pruneReasons || {}).forEach(([k, v]) => { bucket.pruneReasons[k] = (bucket.pruneReasons[k] || 0) + Number(v || 0); });
+                    });
+                    Object.values(byFamily).forEach(bucket => {
+                        const denom = Math.max(1, bucket.runs);
+                        bucket.avgElapsedMs = Math.round(bucket.avgElapsedMs / denom);
+                        bucket.avgNodesExpanded = Math.round(bucket.avgNodesExpanded / denom);
+                    });
+                    return { totalRuns: runs.length, byFamily };
+                },
+                async sweep(opts = {}) {
+                    const configs = Array.isArray(opts.configs) && opts.configs.length ? opts.configs : this.defaultSweepConfigs;
+                    const all = [];
+                    for (const cfg of configs) {
+                        const result = await this.runSuite({ ...opts, configName: cfg.name, selectorConfig: cfg.selectorConfig || {} });
+                        all.push({ configName: cfg.name, summary: result.summary, runs: result.runs });
+                    }
+                    const champions = {};
+                    ['large-grid', 'portal-heavy', 'high-reqInt'].forEach(family => {
+                        let best = null;
+                        for (const entry of all) {
+                            const fam = entry.summary.byFamily?.[family];
+                            if (!fam) continue;
+                            const score = (fam.success * 1000) - (fam.timeout * 220) - fam.avgElapsedMs - (fam.avgNodesExpanded * 0.02);
+                            if (!best || score > best.score) best = { configName: entry.configName, selectorConfig: configs.find(c => c.name === entry.configName)?.selectorConfig || {}, family, score, metrics: fam };
+                        }
+                        if (best) champions[family] = best;
+                    });
+                    return { runsByConfig: all, champions };
+                },
+                applyChampionConfigs(champions = {}) {
+                    Object.entries(champions).forEach(([family, info]) => {
+                        const selectorConfig = info?.selectorConfig || {};
+                        const strategy = selectorConfig?.familyStrategyOverrides?.[family]?.strategy || null;
+                        if (strategy) solverStrategyTuning.familyStrategyOverrides[family] = { strategy };
+                        if (selectorConfig.thresholds) Object.assign(solverStrategyTuning.thresholds, selectorConfig.thresholds);
+                        if (selectorConfig.weights) Object.assign(solverStrategyTuning.weights, selectorConfig.weights);
+                        if (selectorConfig.orderVariantByStrategy) Object.assign(solverStrategyTuning.orderVariantByStrategy, selectorConfig.orderVariantByStrategy);
+                        if (selectorConfig.strategyTierBoost) Object.assign(solverStrategyTuning.strategyTierBoost, selectorConfig.strategyTierBoost);
+                        solverStrategyTuning.championConfigsByFamily[family] = { configName: info?.configName || 'unknown', selectorConfig };
+                    });
+                    return { ...solverStrategyTuning.championConfigsByFamily };
+                },
+                getTuning: () => JSON.parse(JSON.stringify(solverStrategyTuning))
+            };
+
 
         return {
             solveLevel,
@@ -4376,7 +4592,17 @@
             getHint: (tier = 0) => runGameSolver('hint', tier),
             startHintAnimation,
             stopHintAnimation,
-            validateCandidatePath
+            validateCandidatePath,
+            Benchmark,
+            getStrategyTuning: () => Benchmark.getTuning(),
+            setStrategyTuning: (patch = {}) => {
+                if (patch.thresholds) Object.assign(solverStrategyTuning.thresholds, patch.thresholds);
+                if (patch.weights) Object.assign(solverStrategyTuning.weights, patch.weights);
+                if (patch.orderVariantByStrategy) Object.assign(solverStrategyTuning.orderVariantByStrategy, patch.orderVariantByStrategy);
+                if (patch.strategyTierBoost) Object.assign(solverStrategyTuning.strategyTierBoost, patch.strategyTierBoost);
+                if (patch.familyStrategyOverrides) Object.assign(solverStrategyTuning.familyStrategyOverrides, patch.familyStrategyOverrides);
+                return Benchmark.getTuning();
+            }
         };
     })();
 
