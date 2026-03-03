@@ -2931,7 +2931,7 @@
                     const state = { path: [startKey], counts: new Map(), usage: new Map(), ints: 0, isJump: new Set(), flipCount: 0, crossedFlippers: new Map() };
                     state.counts.set(startKey, 1);
                     if (l.flippingFilterMap.has(startKey)) {
-                        state.crossedFlippersAt[startIdx] = state.flipCount;
+                        state.crossedFlippers.set(startKey, state.flipCount);
                         state.flipCount++;
                     }
                     const getNeighbors = (k, s) => {
@@ -3281,12 +3281,24 @@
                     const validSpots = new Set();
                     let timedOut = false;
                     let gatesProcessed = 0;
+                    const minPerGateBudgetMs = 500;
                     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
                     onStateUpdate(`Mapping Traps (${level.gateKeys.length} gates)...`);
                     for (const gateKey of level.gateKeys) {
-                        if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
+                        const elapsedMs = Date.now() - startTime;
+                        if (elapsedMs > timeLimit) { timedOut = true; break; }
                         await new Promise(r => setTimeout(r, 0));
-                        const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
+                        const gatesRemaining = Math.max(1, level.gateKeys.length - gatesProcessed);
+                        const remainingMs = Math.max(0, timeLimit - elapsedMs);
+                        const perGateBudgetMs = Math.max(minPerGateBudgetMs, Math.floor(remainingMs / gatesRemaining));
+                        const gateStartTime = Date.now();
+                        const internalOpts = {
+                            timeLimit: perGateBudgetMs,
+                            startTime: gateStartTime,
+                            onProgress: () => onProgress(Date.now() - startTime),
+                            signal,
+                            hazardPolicy
+                        };
                         await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts);
                         gatesProcessed++;
                         if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
