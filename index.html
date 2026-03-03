@@ -2928,11 +2928,57 @@
                     options = options || {};
                     options.hazardPolicy = options.hazardPolicy || 'forbid';
                     const { w, h } = l.grid;
-                    const state = { path: [startKey], counts: new Map(), usage: new Map(), ints: 0, isJump: new Set(), flipCount: 0, crossedFlippers: new Map() };
-                    state.counts.set(startKey, 1);
+                    const mustCount = l.mustPassKeys.length;
+                    const mustCrossCount = l.mustCrossKeys.length;
+                    const cols = l.grid.w;
+                    const keyCount = l.grid.w * l.grid.h;
+                    const idxToKey = new Int32Array(keyCount);
+                    for (let y = 0; y < l.grid.h; y++) {
+                        const rowBase = y * cols;
+                        for (let x = 0; x < cols; x++) idxToKey[rowBase + x] = (y << 16) | x;
+                    }
+                    const gateMask = new Uint8Array(keyCount);
+                    for (const gateKey of l.gateKeys) gateMask[this._gridIndexFromKey(gateKey, cols)] = 1;
+                    const maxLogTriples = Math.max(3, l.reqLen * 24);
+                    const state = {
+                        path: [startKey],
+                        countsArr: new Uint16Array(keyCount),
+                        usageBits: new Uint8Array(keyCount),
+                        ints: 0,
+                        jumpMarks: new Uint8Array(Math.max(2, l.reqLen + 3)),
+                        jumpCount: 0,
+                        flipCount: 0,
+                        flipParity: 0,
+                        crossedFlippersAt: new Int16Array(keyCount),
+                        gateMask,
+                        keyCount,
+                        idxToKey,
+                        keyToIdx: (key) => this._gridIndexFromKey(key, cols),
+                        undoLog: new Array(maxLogTriples * 3),
+                        logCursor: 0,
+                        nonZeroCounts: 0,
+                        nonZeroUsage: 0,
+                        flipperCrossMask: 0n,
+                        flipperParityAtCrossMask: 0n,
+                        mustMask: mustCount > 0 ? ((1n << BigInt(mustCount)) - 1n) : 0n,
+                        mustCrossMask: mustCrossCount > 0 ? ((1n << BigInt(mustCrossCount)) - 1n) : 0n,
+                        mustCrossCounts: mustCrossCount > 0 ? new Uint8Array(mustCrossCount) : null
+                    };
+                    state.crossedFlippersAt.fill(-1);
+                    this._makeTypedStateViews(state);
+                    const startIdx = state.keyToIdx(startKey);
+                    state.countsArr[startIdx] = 1;
+                    state.nonZeroCounts = 1;
+                    const startMustIdx = l.mustPassIndex ? l.mustPassIndex.get(startKey) : undefined;
+                    if (startMustIdx !== undefined) state.mustMask &= ~(1n << BigInt(startMustIdx));
+                    const startCrossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(startKey) : undefined;
+                    if (startCrossIdx !== undefined && state.mustCrossCounts) state.mustCrossCounts[startCrossIdx] = 1;
                     if (l.flippingFilterMap.has(startKey)) {
-                        state.crossedFlippers.set(startKey, state.flipCount);
+                        state.crossedFlippersAt[startIdx] = state.flipCount;
+                        const flipIdx = l.flipperIndex ? l.flipperIndex.get(startKey) : undefined;
+                        if (flipIdx !== undefined) state.flipperCrossMask |= (1n << BigInt(flipIdx));
                         state.flipCount++;
+                        state.flipParity = state.flipCount % 2;
                     }
                     const getNeighbors = (k, s) => {
                         const p = APP.LevelUtils.UNPACK(k);
@@ -2956,31 +3002,31 @@
                         }
                         const top = stack[stack.length - 1];
                         if (top.neighbors.length === 0) {
-                            this._popState(state, top.log);
+                            this._popStateZeroAlloc(state, top.log);
                             stack.pop();
                             continue;
                         }
                         const nextKey = top.neighbors.pop();
                         const topPortal = APP.LevelUtils.resolvePortal(l, top.k);
                         const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
-                        const transLog = this._pushState(state, nextKey, isP, l);
+                        const transLog = this._pushStateZeroAlloc(state, nextKey, isP, l);
                         const hazard = this._hazardDecisionForKey(nextKey, state, l, options);
                         if (!hazard.allowed) {
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         const realLen = state.path.length - 1 - state.isJump.size;
                         if (realLen > l.reqLen) {
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         if (realLen === l.reqLen) {
                             if (state.ints === l.reqInt && this._checkFinalConstraints(state, l)) validSpotsSet.add(nextKey);
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         if (hazard.terminal) {
-                            this._popState(state, transLog);
+                            this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
                         stack.push({ k: nextKey, neighbors: getNeighbors(nextKey, state), log: transLog });
