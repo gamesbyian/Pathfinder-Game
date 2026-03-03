@@ -3277,7 +3277,11 @@
                         gatesProcessed++;
                         if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
                     }
-                    return { spots: validSpots, timedOut, gatesProcessed, elapsedMs: Date.now() - startTime };
+                    const count = validSpots.size;
+                    const completion = timedOut ? 'partial' : 'complete';
+                    const proof = count > 0 ? 'spots-found' : (timedOut ? 'none-found-inconclusive' : 'none-found-proven');
+                    const status = timedOut ? 'timeout' : 'solved';
+                    return { spots: validSpots, timedOut, gatesProcessed, elapsedMs: Date.now() - startTime, count, completion, proof, status };
                 }
             };
 
@@ -3989,12 +3993,13 @@
                 });
                 const timedOut = !!trapResult?.timedOut;
                 const spots = trapResult?.spots || new Set();
-                const count = spots.size || 0;
-                const completion = timedOut ? 'partial' : 'complete';
-                const proof = count > 0 ? 'spots-found' : (timedOut ? 'none-found-inconclusive' : 'none-found-proven');
+                const count = Number(trapResult?.count ?? spots.size) || 0;
+                const completion = normalizeTrapCompletion(trapResult);
+                const proof = normalizeTrapProof(trapResult, count, completion);
+                const status = trapResult?.status || (timedOut ? 'timeout' : 'solved');
                 return {
                     ok: true,
-                    status: timedOut ? 'timeout' : 'solved',
+                    status,
                     completion,
                     proof,
                     spots,
@@ -7743,7 +7748,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 `levels ${p.levelsProcessed}/${p.levelsTotal}`,
                 `saved hints valid ${p.validHints}/${Math.max(1, p.validHints + p.invalidHints)} (invalid ${p.invalidHints})`,
                 `new hint success ${p.newHint.success} fail ${p.newHint.failure}`,
-                `bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`
+                `bombs success ${p.bombs.success} none(proven) ${p.bombs.noneFoundProven} partial ${p.bombs.partial} timeout(inconclusive) ${p.bombs.timeoutInconclusive} error ${p.bombs.error}`
             ].join(' | ');
         };
         const normalizeTrapCompletion = (res = {}) => {
@@ -7765,6 +7770,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             return { status, completion, proof };
         };
         const formatBombAuditOutcome = (bombs = {}) => {
+            if (bombs.status === 'timeout' || bombs.completion === 'partial') return `timeout(partial/inconclusive, count=${bombs.count || 0})`;
             if (bombs.proof === 'none-found-proven') return 'none-found(proven)';
             if (bombs.proof === 'none-found-inconclusive') return 'none-found(inconclusive)';
             return `${bombs.status || 'error'}(${bombs.completion || 'complete'}, count=${bombs.count || 0})`;
@@ -7794,7 +7800,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             auditCancelRequested = false;
             auditReport = [];
             const rawLevels = APP.LevelUtils.getRawLevels();
-            auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0 }, bombs: { success: 0, noneFound: 0, error: 0 } };
+            auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0 }, bombs: { success: 0, noneFoundProven: 0, partial: 0, timeoutInconclusive: 0, error: 0 } };
             renderAuditReport();
 
             const stateSnap = {
@@ -7895,8 +7901,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             levelEntry.bombs.completion = bombSummary.completion;
                             levelEntry.bombs.proof = bombSummary.proof;
                             if (bombSummary.status === 'success') auditProgress.bombs.success++;
-                            else if (bombSummary.status === 'none-found') auditProgress.bombs.noneFound++;
-                            else auditProgress.bombs.error++;
+                            else if (bombSummary.status === 'none-found' && bombSummary.proof === 'none-found-proven') auditProgress.bombs.noneFoundProven++;
+                            else if (bombSummary.completion === 'partial') {
+                                auditProgress.bombs.partial++;
+                                if (bombSummary.status === 'timeout' || bombSummary.proof === 'none-found-inconclusive') {
+                                    auditProgress.bombs.timeoutInconclusive++;
+                                }
+                            } else auditProgress.bombs.error++;
                             if (levelEntry.bombs.status !== 'success' && levelEntry.bombs.status !== 'none-found' && !levelEntry.error) {
                                 const detail = [bombRes?.status, bombRes?.strategy, bombRes?.error?.message].filter(Boolean).join(' | ');
                                 if (detail) levelEntry.error = trimAuditError(detail);
@@ -7907,7 +7918,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             levelEntry.bombs.completion = timed ? 'partial' : 'complete';
                             levelEntry.bombs.proof = timed ? 'none-found-inconclusive' : 'none-found-proven';
                             APP.Solver.cancel();
-                            auditProgress.bombs.error++;
+                            if (timed) {
+                                auditProgress.bombs.partial++;
+                                auditProgress.bombs.timeoutInconclusive++;
+                            } else {
+                                auditProgress.bombs.error++;
+                            }
                             if (!levelEntry.error) levelEntry.error = trimAuditError(bombErr);
                         }
                     } catch (levelErr) {
