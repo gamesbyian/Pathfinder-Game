@@ -3135,140 +3135,6 @@
                     }
                     return foundSolutions;
                 },
-                _buildTargetSearchContext(level, targetKey) {
-                    const searchLevel = {
-                        ...level,
-                        goalKey: targetKey,
-                        gateSet: new Set(level.gateKeys || []),
-                        mustPassKeys: Array.isArray(level.mustPassKeys) ? level.mustPassKeys.slice() : [],
-                        mustCrossKeys: Array.isArray(level.mustCrossKeys) ? level.mustCrossKeys.slice() : []
-                    };
-                    const distMap = SolverCore._buildOptimisticDistMap(searchLevel, [targetKey]);
-
-                    searchLevel.mustPassIndex = new Map();
-                    searchLevel.mustPassDistMaps = [];
-                    searchLevel.mustPassToGoalDist = [];
-                    searchLevel.mustPassPairDist = [];
-                    searchLevel.mustPassKeyMaskCache = new Map();
-                    searchLevel.mustPassDpMode = 'none';
-                    searchLevel.mustPassDp = () => Infinity;
-                    if (searchLevel.mustPassKeys.length > 0) {
-                        for (let i = 0; i < searchLevel.mustPassKeys.length; i++) {
-                            const mustKey = searchLevel.mustPassKeys[i];
-                            searchLevel.mustPassIndex.set(mustKey, i);
-                            searchLevel.mustPassDistMaps.push(SolverCore._buildOptimisticDistMap(searchLevel, [mustKey]));
-                            searchLevel.mustPassToGoalDist.push(distMap.get(mustKey) ?? Infinity);
-                        }
-                        const n = searchLevel.mustPassKeys.length;
-                        searchLevel.mustPassPairDist = Array.from({ length: n }, () => Array(n).fill(Infinity));
-                        for (let i = 0; i < n; i++) {
-                            searchLevel.mustPassPairDist[i][i] = 0;
-                            for (let j = i + 1; j < n; j++) {
-                                const d = searchLevel.mustPassDistMaps[i].get(searchLevel.mustPassKeys[j]);
-                                const val = d === undefined ? Infinity : d;
-                                searchLevel.mustPassPairDist[i][j] = val;
-                                searchLevel.mustPassPairDist[j][i] = val;
-                            }
-                        }
-                    }
-
-                    searchLevel.mustCrossIndex = new Map();
-                    searchLevel.mustCrossDistMaps = [];
-                    searchLevel.mustCrossToGoalDist = [];
-                    searchLevel.mustCrossPairDist = [];
-                    searchLevel.mustCrossDpMode = 'none';
-                    searchLevel.mustCrossDp = () => Infinity;
-                    if (searchLevel.mustCrossKeys.length > 0) {
-                        for (let i = 0; i < searchLevel.mustCrossKeys.length; i++) {
-                            const crossKey = searchLevel.mustCrossKeys[i];
-                            searchLevel.mustCrossIndex.set(crossKey, i);
-                            searchLevel.mustCrossDistMaps.push(SolverCore._buildOptimisticDistMap(searchLevel, [crossKey]));
-                            searchLevel.mustCrossToGoalDist.push(distMap.get(crossKey) ?? Infinity);
-                        }
-                        const n = searchLevel.mustCrossKeys.length;
-                        searchLevel.mustCrossPairDist = Array.from({ length: n }, () => Array(n).fill(Infinity));
-                        for (let i = 0; i < n; i++) {
-                            searchLevel.mustCrossPairDist[i][i] = 0;
-                            for (let j = i + 1; j < n; j++) {
-                                const d = searchLevel.mustCrossDistMaps[i].get(searchLevel.mustCrossKeys[j]);
-                                const val = d === undefined ? Infinity : d;
-                                searchLevel.mustCrossPairDist[i][j] = val;
-                                searchLevel.mustCrossPairDist[j][i] = val;
-                            }
-                        }
-                    }
-
-                    searchLevel.flipperIndex = new Map();
-                    let fIdx = 0;
-                    searchLevel.flippingFilterMap.forEach((_, k) => searchLevel.flipperIndex.set(k, fIdx++));
-
-                    const flipperSet = new Set();
-                    searchLevel.hasParityBreaker = false;
-                    searchLevel.parityBreakers = [];
-                    searchLevel.parityDistMaps = [];
-                    searchLevel.portalMap.forEach((v, k) => {
-                        const p1 = APP.LevelUtils.UNPACK(k);
-                        const p2 = APP.LevelUtils.UNPACK(v.dest);
-                        if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) {
-                            searchLevel.hasParityBreaker = true;
-                            searchLevel.parityBreakers.push(k);
-                            searchLevel.parityDistMaps.push(SolverCore._buildOptimisticDistMap(searchLevel, [k]));
-                        } else {
-                            flipperSet.add(k);
-                        }
-                    });
-                    const flipperDistMap = SolverCore._buildFlipperDistMap(searchLevel, flipperSet);
-                    return { level: searchLevel, distMap, flipperDistMap };
-                },
-                _passesFastFail(startNodes, ctx) {
-                    const { level, distMap } = ctx;
-                    let hasReachableStart = false;
-                    for (const startKey of startNodes) {
-                        const d = distMap.get(startKey);
-                        if (d === undefined || d > level.reqLen) continue;
-                        if (!level.hasParityBreaker && ((level.reqLen - d) % 2 !== 0)) continue;
-                        hasReachableStart = true;
-                        break;
-                    }
-                    if (!hasReachableStart) return false;
-                    if (level.mustPassKeys.length > 0) {
-                        let chainOk = false;
-                        for (const startKey of startNodes) {
-                            for (let i = 0; i < level.mustPassKeys.length; i++) {
-                                const gateToMust = level.mustPassDistMaps[i].get(startKey);
-                                const mustToTarget = level.mustPassToGoalDist[i];
-                                if (gateToMust === undefined || mustToTarget === Infinity) continue;
-                                if ((gateToMust + mustToTarget) <= level.reqLen) {
-                                    chainOk = true;
-                                    break;
-                                }
-                            }
-                            if (chainOk) break;
-                        }
-                        if (!chainOk) return false;
-                    }
-                    return true;
-                },
-                async findConstrainedPath(startNodes, targetNode, stateContext, options = {}) {
-                    const startTime = options.startTime || Date.now();
-                    const context = stateContext || this._buildTargetSearchContext(options.level || {}, targetNode);
-                    if (!this._passesFastFail(startNodes, context)) return null;
-                    const { level: searchLevel, distMap, flipperDistMap } = context;
-                    const usageFreq = new Map();
-                    for (const startKey of startNodes) {
-                        const d = distMap.get(startKey);
-                        if (d === undefined || d > searchLevel.reqLen) continue;
-                        if (!searchLevel.hasParityBreaker && ((searchLevel.reqLen - d) % 2 !== 0)) continue;
-                        const result = await SolverCore._solveInstance(startKey, distMap, flipperDistMap, usageFreq, searchLevel, {
-                            ...options,
-                            startTime,
-                            timeLimit: options.timeLimit || 8000
-                        });
-                        if (result && result !== SOLVER_TIMEOUT && result !== SOLVER_ABORTED) return result;
-                        if (result === SOLVER_TIMEOUT) return SOLVER_TIMEOUT;
-                    }
-                    return null;
-                },
                 async findTrapSpots(level, options = {}) {
                     const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
                     const startTime = Date.now();
@@ -3276,41 +3142,14 @@
                     let timedOut = false;
                     let gatesProcessed = 0;
                     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-
-                    const occupied = new Set([
-                        ...level.gateKeys,
-                        level.goalKey,
-                        ...Array.from(level.blockSet),
-                        ...Array.from(level.falseGoalKeys),
-                        ...Array.from(level.gooseSet),
-                        ...Array.from(level.filterMap.keys()),
-                        ...Array.from(level.flippingFilterMap.keys()),
-                        ...Array.from(level.portalMap.keys()),
-                        ...level.mustPassKeys,
-                        ...level.mustCrossKeys
-                    ]);
-                    const candidates = [];
-                    for (let y = 0; y < level.grid.h; y++) {
-                        for (let x = 0; x < level.grid.w; x++) {
-                            const k = APP.LevelUtils.PACK(x, y);
-                            if (!occupied.has(k)) candidates.push(k);
-                        }
-                    }
-
-                    onStateUpdate(`Mapping Traps (${candidates.length} candidates)...`);
-                    for (let i = 0; i < candidates.length; i++) {
-                        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                    onStateUpdate(`Mapping Traps (${level.gateKeys.length} gates)...`);
+                    for (const gateKey of level.gateKeys) {
                         if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
-                        const targetKey = candidates[i];
-                        const context = this._buildTargetSearchContext(level, targetKey);
-                        if (!this._passesFastFail(level.gateKeys, context)) continue;
-                        if (i % 4 === 0) {
-                            await new Promise(r => setTimeout(r, 0));
-                            onProgress(Date.now() - startTime);
-                        }
-                        const result = await this.findConstrainedPath(level.gateKeys, targetKey, context, { timeLimit, startTime, onProgress, signal, hazardPolicy });
-                        if (result && result !== SOLVER_TIMEOUT && result !== SOLVER_ABORTED) validSpots.add(targetKey);
+                        await new Promise(r => setTimeout(r, 0));
+                        const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
+                        await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts);
                         gatesProcessed++;
+                        if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
                     }
                     return { spots: validSpots, timedOut, gatesProcessed, elapsedMs: Date.now() - startTime };
                 }
