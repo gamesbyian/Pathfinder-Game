@@ -546,7 +546,24 @@
         return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS };
     })();
 
-    if (APP.Core.DEV) window.AXIS = APP.Core.AXIS;
+    APP.Debug = (() => {
+        const debugExports = {};
+
+        function register(name, value) {
+            if (!name) return;
+            debugExports[name] = value;
+        }
+
+        function expose() {
+            if (!APP?.Core?.DEV) return;
+            window.AXIS = APP.Core.AXIS;
+            Object.entries(debugExports).forEach(([name, value]) => {
+                window[name] = value;
+            });
+        }
+
+        return { register, expose };
+    })();
 
     // Purpose: sole DOM mutation boundary for non-canvas UI.
     // Owns:
@@ -729,6 +746,26 @@
             if (el) el.value = value;
         };
         const setSolutionOutput = (value = '') => setFieldValue('solutionOutput', value);
+        const renderMetricsPanel = ({ currentLen = 0, reqLen = 0, currentInt = 0, reqInt = 0 } = {}) => {
+            const lenEl = resolveEl('lengthInfo');
+            if (lenEl) lenEl.innerText = `${currentLen}/${reqLen}`;
+            const intEl = resolveEl('intersectionInfo');
+            if (!intEl) return;
+            intEl.innerText = `${currentInt}/${reqInt}`;
+            if (currentInt > reqInt) {
+                intEl.classList.remove('text-white');
+                intEl.classList.add('text-red-300');
+            } else {
+                intEl.classList.add('text-white');
+                intEl.classList.remove('text-red-300');
+            }
+        };
+        const renderWinExportPanel = ({ solutionOutput = '', showExportArea = false } = {}) => {
+            const outputEl = resolveEl('winSolutionOutput');
+            if (outputEl) outputEl.value = `${solutionOutput}`;
+            const exportAreaEl = resolveEl('winExportArea');
+            if (exportAreaEl) exportAreaEl.classList.toggle('hidden', !showExportArea);
+        };
         const setMegaOutput = (value = '') => {
             setFieldValue('megaOutput', value);
             const el = resolveEl('megaOutput');
@@ -1552,7 +1589,7 @@
             return { update, getPaletteIconSVG, isPointerOverPalette };
         })();
 
-        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
+        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
     })();
 
     // ======================================================
@@ -3056,7 +3093,7 @@
                 console.log('[Trap Timeout Boundary] diagnostics:', report);
                 return report;
             }
-            window.runTrapTimeoutBoundaryDiagnostics = runTrapTimeoutBoundaryDiagnostics;
+            APP.Debug.register('runTrapTimeoutBoundaryDiagnostics', runTrapTimeoutBoundaryDiagnostics);
 
         function _solverPolicySelfCheck() {
                 try {
@@ -4151,13 +4188,13 @@
                 if (console.table) console.table(report);
                 return report;
             }
-            window.runPortalSolverDiscoveryDiagnostics = runPortalSolverDiscoveryDiagnostics;
+            APP.Debug.register('runPortalSolverDiscoveryDiagnostics', runPortalSolverDiscoveryDiagnostics);
 
             async function runPortalRegressionDiagnostics() {
                 runPortalValidatorDiagnostics();
                 return runPortalSolverDiscoveryDiagnostics();
             }
-            window.runPortalRegressionDiagnostics = runPortalRegressionDiagnostics;
+            APP.Debug.register('runPortalRegressionDiagnostics', runPortalRegressionDiagnostics);
 
             function runSolverUnitDiagnostics() {
                 const mustCrossCounts = new Uint8Array([3, 0, 0, 0]);
@@ -4174,7 +4211,7 @@
                 console.log('[Solver Unit] cross-need diagnostics:', result);
                 return result;
             }
-            window.runSolverUnitDiagnostics = runSolverUnitDiagnostics;
+            APP.Debug.register('runSolverUnitDiagnostics', runSolverUnitDiagnostics);
 
             function runPortalValidatorDiagnostics() {
                 try {
@@ -4201,7 +4238,7 @@
                     console.error('[Portal/Validator Diagnostic] Failed to run diagnostics:', err);
                 }
             }
-            window.runPortalValidatorDiagnostics = runPortalValidatorDiagnostics;
+            APP.Debug.register('runPortalValidatorDiagnostics', runPortalValidatorDiagnostics);
             setTimeout(() => {
                 if (window.__PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__) return;
                 runPortalValidatorDiagnostics();
@@ -4835,7 +4872,7 @@
 
 
 
-                if (APP.State.ENGINE.mode === APP.Core.PLAY) { const curLen = APP.Engine.getRealLength(APP.State.ENGINE); document.getElementById('lengthInfo').innerText = `${curLen}/${l.reqLen}`; const intEl = document.getElementById('intersectionInfo'); intEl.innerText = `${APP.State.ENGINE.intersections}/${l.reqInt}`; if (APP.State.ENGINE.intersections > l.reqInt) { intEl.classList.remove('text-white'); intEl.classList.add('text-red-300'); } else { intEl.classList.add('text-white'); intEl.classList.remove('text-red-300'); } }
+                if (APP.State.ENGINE.mode === APP.Core.PLAY) { const curLen = APP.Engine.getRealLength(APP.State.ENGINE); APP.UI.renderMetricsPanel({ currentLen: curLen, reqLen: l.reqLen, currentInt: APP.State.ENGINE.intersections, reqInt: l.reqInt }); }
 
                 else if (APP.State.ENGINE.mode === APP.Core.EDITOR) { const curLen = APP.Engine.getRealLength(APP.State.ENGINE); const lMet = document.getElementById('editCopyMetrics'); if (lMet) lMet.innerText = `Set (${curLen}/${APP.State.ENGINE.intersections})`; }
 
@@ -4888,7 +4925,7 @@
 
             function attemptMoveTo(target) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
 
-            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(APP.Core.RESOLVED); document.getElementById('winSolutionOutput').value = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); document.getElementById('winExportArea').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); APP.Core.SOUND_BUS.play("C5", "8n"); } }
+            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(APP.Core.RESOLVED); APP.UI.renderWinExportPanel({ solutionOutput: JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''), showExportArea: APP.State.ENGINE.isDevMode }); if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); APP.Core.SOUND_BUS.play("C5", "8n"); } }
 
             function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [APP.Core.HAZARD_TRIGGERED].includes(logicState) || mode === APP.Core.EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return APP.Engine.areWinMetricsSatisfied(stubState, level); }
 
@@ -7134,8 +7171,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // ======================================================
     // D) Rules / ValidationAndWin
     // ======================================================
-    APP.State.ENGINE.ui.gamepadGridPrimaryAction = () => {};
-
     // ======================================================
     // F/G/H) Input + UI Wiring + Solver Boot
     // ======================================================
@@ -7150,6 +7185,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const init = () => {
             if (initialized) return;
             initialized = true;
+            APP.State.ENGINE.ui.gamepadGridPrimaryAction = () => {};
             const originalLoadLevel = APP.Engine.loadLevel.bind(APP.Engine);
             APP.Engine.loadLevel = (...args) => {
                 const result = originalLoadLevel(...args);
@@ -7909,6 +7945,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
             APP.UI.initDom();
             APP.UI.ThemeEditor.init();
+            APP.Debug.expose();
             APP.Themes.ensureThemeLeaveColors();
 
             const persistedSession = APP.Persistence.applySessionState();
