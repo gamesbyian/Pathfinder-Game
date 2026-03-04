@@ -3135,6 +3135,13 @@
                     }
                     return foundSolutions;
                 },
+            };
+
+        const PathHintSolver = {
+                solve: (...args) => PathfinderSolver.solve(...args)
+            };
+
+        const TrapSpotSolver = {
                 async findTrapSpots(level, options = {}) {
                     const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
                     const startTime = Date.now();
@@ -3194,7 +3201,7 @@
         async runBaselineStage(level, budgetMs, opts = {}) {
             const started = Date.now();
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
-                const r = await PathfinderSolver.solve(level, {
+                const r = await PathHintSolver.solve(level, {
                     timeLimit: attemptBudgetMs,
                     debug: true,
                     debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
@@ -3268,7 +3275,7 @@
 
         async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity'], opts = {}) {
             const started = Date.now();
-            const r = await PathfinderSolver.solve(level, {
+            const r = await PathHintSolver.solve(level, {
                 timeLimit: budgetMs,
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
@@ -3544,7 +3551,7 @@
                 let solverResult;
                 if (!allowReferee) {
                     APP.UI.showMessage('Solving…', 'text-sky-600');
-                    const legacy = await PathfinderSolver.solve(level, {
+                    const legacy = await PathHintSolver.solve(level, {
                         timeLimit: timeBudgetMs,
                         debug,
                         debugLevel,
@@ -3588,7 +3595,7 @@
                     if (shouldTryLegacyFallback) {
                         const fallbackBudgetMs = Number.isFinite(solverResult.budgetMs) ? solverResult.budgetMs : timeBudgetMs;
                         APP.UI.showMessage('Referee was inconclusive. Trying legacy solver…', 'text-amber-600');
-                        const legacy = await PathfinderSolver.solve(level, {
+                        const legacy = await PathHintSolver.solve(level, {
                             timeLimit: fallbackBudgetMs,
                             debug,
                             debugLevel,
@@ -3716,7 +3723,7 @@
             if (!controller) return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0 };
             const timeLimit = getTrapSpotBudgetMs(level, opts);
             try {
-                const trapResult = await PathfinderSolver.findTrapSpots(level, {
+                const trapResult = await TrapSpotSolver.findTrapSpots(level, {
                     timeLimit,
                     signal: controller.signal,
                     onStateUpdate: (msg) => {
