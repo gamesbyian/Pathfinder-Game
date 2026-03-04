@@ -7532,7 +7532,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
         document.getElementById('copyMegaDataBtn').onclick = async () => { const out = APP.UI.getMegaOutputText(); if (out) await APP.UI.copyText(out, { fallbackElId: 'megaOutput' }); };
         document.getElementById('openAuditModalBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode) return; APP.UI.closeAllModals(); auditModalOpen = true; renderAuditReport(); APP.UI.openModal('auditModal'); };
-        document.getElementById('closeAuditModalBtn').onclick = () => { auditModalOpen = false; APP.UI.closeModal('auditModal'); };
+        document.getElementById('closeAuditModalBtn').onclick = () => {
+            auditCancelRequested = true;
+            APP.Solver.cancel();
+            auditModalOpen = false;
+            APP.UI.closeModal('auditModal');
+        };
         document.getElementById('startAuditBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(); };
         document.getElementById('cancelAuditBtn').onclick = () => { auditCancelRequested = true; APP.Solver.cancel(); };
         document.getElementById('copyAuditBtn').onclick = async () => {
