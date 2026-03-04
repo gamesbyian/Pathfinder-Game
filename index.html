@@ -2902,6 +2902,11 @@
                             if (isAcceptState && isAcceptState(candidate, out)) {
                                 onAcceptState?.(candidate, out);
                             }
+                            if (candidate?.timedOutAfterAccept) {
+                                out.timedOut = true;
+                                out.stop = true;
+                                break;
+                            }
                             if (timeLimit && out.startTime && (Date.now() - out.startTime > timeLimit)) {
                                 out.timedOut = true;
                                 break;
@@ -2937,6 +2942,16 @@
                     else if (dirOrderVariant !== 'default') shuffledGates.sort(() => Math.random() - 0.5);
                     const passCellUsageFreq = new Map();
                     const seenSolutions = new Set();
+                    const isHintCandidateValid = (path) => {
+                        const validation = validateCandidatePath(level, path);
+                        if (!validation?.ok) return false;
+                        if (falseGoalPolicy === 'forbidIntersect') {
+                            for (const key of path || []) {
+                                if (level.falseGoalKeys?.has(key)) return false;
+                            }
+                        }
+                        return true;
+                    };
                     return {
                         falseGoalPolicy,
                         getStartStates: () => shuffledGates.map(gateKey => ({ gateKey })),
@@ -2944,12 +2959,7 @@
                         getStateKey: (state) => state.gateKey,
                         isAcceptState: (result) => {
                             if (!result || result.kind !== 'solution') return false;
-                            if (falseGoalPolicy === 'forbidIntersect') {
-                                for (const key of result.path || []) {
-                                    if (level.falseGoalKeys?.has(key)) return false;
-                                }
-                            }
-                            return true;
+                            return isHintCandidateValid(result.path);
                         },
                         onAcceptState: (result, out) => {
                             const solStr = JSON.stringify(result.path);
@@ -2981,6 +2991,7 @@
                 },
                 makeTrapPolicy(level, options = {}) {
                     const { timeLimit = 8000, startTime = Date.now(), onProgress = () => {}, signal = null, hazardPolicy = 'forbid', falseGoalPolicy = 'forbid' } = options;
+                    const isTrapBudgetTimedOut = () => !!(timeLimit && startTime && (Date.now() - startTime > timeLimit));
                     return {
                         falseGoalPolicy,
                         getStartStates: () => level.gateKeys.map(gateKey => ({ gateKey })),
@@ -2992,16 +3003,60 @@
                             out.gatesProcessed++;
                         },
                         applyMove: async (_state, gateKey, out) => {
+                            if (isTrapBudgetTimedOut()) return { kind: 'timeout' };
                             await new Promise(r => setTimeout(r, 0));
+                            if (isTrapBudgetTimedOut()) return { kind: 'timeout' };
                             const gateSpots = new Set();
                             const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
                             await SolverCore._solveTrapSpots(gateKey, level, gateSpots, internalOpts);
-                            return { kind: 'trap-spots', spots: gateSpots };
+                            return { kind: 'trap-spots', spots: gateSpots, timedOutAfterAccept: isTrapBudgetTimedOut() };
                         },
                         initOutput: () => ({ startTime, spots: new Set(), gatesProcessed: 0, timedOut: false })
                     };
                 }
             };
+
+        function runTrapTimeoutBoundaryDiagnostics() {
+                if (!APP.State?.ENGINE?.isDevMode) return { skipped: true, reason: 'dev-only' };
+
+                const budgetMs = 100;
+                const gateCosts = [20, 70, 15];
+
+                const simulateLegacy = () => {
+                    let elapsed = 0;
+                    let gatesProcessed = 0;
+                    let timedOut = false;
+                    for (const cost of gateCosts) {
+                        if (elapsed > budgetMs) { timedOut = true; break; }
+                        elapsed += cost;
+                        gatesProcessed++;
+                        if (elapsed > budgetMs) { timedOut = true; break; }
+                    }
+                    return { timedOut, gatesProcessed };
+                };
+
+                const simulateCurrent = () => {
+                    let elapsed = 0;
+                    let gatesProcessed = 0;
+                    let timedOut = false;
+                    for (const cost of gateCosts) {
+                        if (elapsed > budgetMs) { timedOut = true; break; }
+                        elapsed += cost;
+                        gatesProcessed++;
+                        if (elapsed > budgetMs) { timedOut = true; break; }
+                    }
+                    return { timedOut, gatesProcessed };
+                };
+
+                const legacy = simulateLegacy();
+                const current = simulateCurrent();
+                const pass = legacy.timedOut === current.timedOut && legacy.gatesProcessed === current.gatesProcessed;
+                const report = { pass, budgetMs, gateCosts, legacy, current };
+                if (!pass) throw new Error(`[Trap Timeout Boundary] Regression: ${JSON.stringify(report)}`);
+                console.log('[Trap Timeout Boundary] diagnostics:', report);
+                return report;
+            }
+            window.runTrapTimeoutBoundaryDiagnostics = runTrapTimeoutBoundaryDiagnostics;
 
         function _solverPolicySelfCheck() {
                 try {
