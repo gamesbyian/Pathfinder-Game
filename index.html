@@ -1589,7 +1589,7 @@
                         crossedFlippingFilters: crossedSet
                     }, l, {
                         isStrict: false,
-                        checkFalseGoals: true,
+                        checkFalseGoals: options.falseGoalPolicy !== 'ignore',
                         hazardPolicy: options.hazardPolicy || 'forbid'
                     });
                 },
@@ -2990,7 +2990,7 @@
                     };
                 },
                 makeTrapPolicy(level, options = {}) {
-                    const { timeLimit = 8000, startTime = Date.now(), onProgress = () => {}, signal = null, hazardPolicy = 'forbid', falseGoalPolicy = 'forbid' } = options;
+                    const { timeLimit = 8000, startTime = Date.now(), onProgress = () => {}, signal = null, hazardPolicy = 'forbid', falseGoalPolicy = 'ignore' } = options;
                     const isTrapBudgetTimedOut = () => !!(timeLimit && startTime && (Date.now() - startTime > timeLimit));
                     return {
                         falseGoalPolicy,
@@ -3007,7 +3007,7 @@
                             await new Promise(r => setTimeout(r, 0));
                             if (isTrapBudgetTimedOut()) return { kind: 'timeout' };
                             const gateSpots = new Set();
-                            const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
+                            const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy, falseGoalPolicy };
                             await SolverCore._solveTrapSpots(gateKey, level, gateSpots, internalOpts);
                             return { kind: 'trap-spots', spots: gateSpots, timedOutAfterAccept: isTrapBudgetTimedOut() };
                         },
@@ -3366,7 +3366,7 @@
                         onProgress,
                         signal,
                         hazardPolicy,
-                        falseGoalPolicy: 'forbid'
+                        falseGoalPolicy: 'ignore'
                     });
                     const out = await SearchFramework.runSearch({
                         level,
@@ -3377,6 +3377,9 @@
                         onStateUpdate,
                         ...policy
                     });
+                    if (APP.State?.ENGINE?.isDevMode) {
+                        console.log('[TrapSpots] gatesProcessed=', out.gatesProcessed || 0, 'spots=', (out.spots || new Set()).size, 'timedOut=', !!out.timedOut);
+                    }
                     return { spots: out.spots || new Set(), timedOut: !!out.timedOut, gatesProcessed: out.gatesProcessed || 0, elapsedMs: Date.now() - startTime };
                 }
             };
