@@ -2795,7 +2795,7 @@
                     const state = { path: [startKey], counts: new Map(), usage: new Map(), ints: 0, isJump: new Set(), flipCount: 0, crossedFlippers: new Map() };
                     state.counts.set(startKey, 1);
                     if (l.flippingFilterMap.has(startKey)) {
-                        state.crossedFlippersAt[startIdx] = state.flipCount;
+                        state.crossedFlippers.set(startKey, state.flipCount);
                         state.flipCount++;
                     }
                     const getNeighbors = (k, s) => {
