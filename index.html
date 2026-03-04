@@ -8636,10 +8636,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Editor.setTrapSpots(res.spots || new Set());
             APP.Renderer.render();
             const trapOutcome = summarizeTrapOutcome(res, APP.State.ENGINE.editor.validTrapSpots.size);
+            const shouldOfferTrapRetry = res.status !== 'aborted' && (res.status === 'timeout' || res.timedOut || trapOutcome.status === 'timeout' || trapOutcome.proof === 'none-found-inconclusive');
             if (trapOutcome.proof === 'spots-found') APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
-            else if (res.status !== 'aborted' && trapOutcome.completion !== 'proven-none' && trapOutcome.proof !== 'none-found-proven') {
+            else if (shouldOfferTrapRetry) {
                 APP.UI.showMessage('Search incomplete; results may be partial/inconclusive.', 'text-amber-300 font-black');
-                const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
+                const retryPrompt = (res.status === 'timeout' || res.timedOut || trapOutcome.status === 'timeout')
+                    ? 'Trap spot search timed out. Retry with a longer budget?'
+                    : 'Trap spot search ended inconclusively. Retry with a longer budget?';
+                const retry = window.confirm(retryPrompt);
                 if (retry) {
                     const retryBudgetMs = Math.min(120000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
                     const retryRes = await APP.Solver.findTrapSpots(l, { timeLimit: retryBudgetMs });
@@ -8647,7 +8651,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.Renderer.render();
                     const retryOutcome = summarizeTrapOutcome(retryRes, APP.State.ENGINE.editor.validTrapSpots.size);
                     if (retryOutcome.proof === 'spots-found') APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
-                    else if (retryRes.status !== 'aborted' && retryOutcome.completion !== 'proven-none' && retryOutcome.proof !== 'none-found-proven') APP.UI.showMessage('Retry timed out; partial/inconclusive results may be incomplete.', 'text-amber-300 font-black');
+                    else if (retryRes.status !== 'aborted' && (retryRes.status === 'timeout' || retryRes.timedOut || retryOutcome.status === 'timeout' || retryOutcome.proof === 'none-found-inconclusive')) APP.UI.showMessage('Retry timed out; partial/inconclusive results may be incomplete.', 'text-amber-300 font-black');
                     else if (retryRes.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
                 }
             } else if (res.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
