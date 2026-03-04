@@ -2979,6 +2979,7 @@
                     signal,
                     onProgress = () => {},
                     onStateUpdate = () => {},
+                    policy,
                     getStartStates,
                     isAcceptState,
                     onAcceptState,
@@ -2990,24 +2991,35 @@
                     initOutput,
                     initialOutput
                 }) {
-                    const out = (typeof initOutput === 'function') ? (initOutput() || {}) : (initialOutput || {});
+                    const resolvedGetStartStates = getStartStates || policy?.getStartStates;
+                    const resolvedIsAcceptState = isAcceptState || policy?.isAcceptState;
+                    const resolvedOnAcceptState = onAcceptState || policy?.onAcceptState;
+                    const resolvedExpandMoves = expandMoves || policy?.expandMoves;
+                    const resolvedApplyMove = applyMove || policy?.applyMove;
+                    const resolvedGetStateKey = getStateKey || policy?.getStateKey;
+                    const resolvedDominates = dominates || policy?.dominates;
+                    const resolvedRecordBest = recordBest || policy?.recordBest;
+                    const resolvedInitOutput = initOutput || policy?.initOutput;
+                    const resolvedInitialOutput = initialOutput || policy?.initialOutput;
+
+                    const out = (typeof resolvedInitOutput === 'function') ? (resolvedInitOutput() || {}) : (resolvedInitialOutput || {});
                     const bestMap = new Map();
-                    const startStates = (typeof getStartStates === 'function') ? (getStartStates() || []) : [];
+                    const startStates = (typeof resolvedGetStartStates === 'function') ? (resolvedGetStartStates() || []) : [];
                     for (const startState of startStates) {
                         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                        const key = getStateKey ? getStateKey(startState) : null;
+                        const key = resolvedGetStateKey ? resolvedGetStateKey(startState) : null;
                         if (key !== null && key !== undefined) {
                             const prevBest = bestMap.get(key);
                             if (prevBest !== undefined) {
-                                if (!dominates || dominates(prevBest, startState)) continue;
+                                if (!resolvedDominates || resolvedDominates(prevBest, startState)) continue;
                             }
-                            if (recordBest) recordBest(bestMap, key, startState);
+                            if (resolvedRecordBest) resolvedRecordBest(bestMap, key, startState);
                             else bestMap.set(key, startState);
                         }
-                        const moves = expandMoves ? (expandMoves(startState, out) || []) : [null];
+                        const moves = resolvedExpandMoves ? (resolvedExpandMoves(startState, out) || []) : [null];
                         for (const move of moves) {
                             if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                            const candidate = await applyMove(startState, move, out);
+                            const candidate = await resolvedApplyMove(startState, move, out);
                             if (candidate?.kind === 'aborted') {
                                 out.aborted = true;
                                 out.stop = true;
@@ -3018,8 +3030,8 @@
                                 out.stop = true;
                                 break;
                             }
-                            if (isAcceptState && isAcceptState(candidate, out)) {
-                                onAcceptState?.(candidate, out);
+                            if (resolvedIsAcceptState && resolvedIsAcceptState(candidate, out)) {
+                                resolvedOnAcceptState?.(candidate, out);
                             }
                             if (candidate?.timedOutAfterAccept) {
                                 out.timedOut = true;
@@ -3403,7 +3415,7 @@
                             signal,
                             onProgress,
                             onStateUpdate,
-                            ...policy
+                            policy
                         });
                         if (out.aborted) {
                             if (debugStats) {
@@ -3531,6 +3543,11 @@
                         enableForcedMoves: true,
                         stageMode: 'first'
                     });
+                    if (APP.State?.ENGINE?.isDevMode) {
+                        if (!policyStageA || typeof policyStageA.getStartStates !== 'function') {
+                            console.warn('[TrapSpots] policyStageA missing callbacks', policyStageA);
+                        }
+                    }
                     const outA = await SearchFramework.runSearch({
                         level,
                         purpose: 'trap',
@@ -3538,7 +3555,7 @@
                         signal,
                         onProgress,
                         onStateUpdate,
-                        ...policyStageA
+                        policy: policyStageA
                     });
                     const spots = new Set(outA.spots || []);
                     const stageBStart = Date.now();
@@ -3555,6 +3572,11 @@
                             enableForcedMoves: true,
                             stageMode: 'enumerate'
                         });
+                        if (APP.State?.ENGINE?.isDevMode) {
+                            if (!policyStageB || typeof policyStageB.getStartStates !== 'function') {
+                                console.warn('[TrapSpots] policyStageB missing callbacks', policyStageB);
+                            }
+                        }
                         outB = await SearchFramework.runSearch({
                             level,
                             purpose: 'trap',
@@ -3562,7 +3584,7 @@
                             signal,
                             onProgress,
                             onStateUpdate,
-                            ...policyStageB
+                            policy: policyStageB
                         });
                     }
                     for (const key of (outB.spots || [])) spots.add(key);
