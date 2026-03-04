@@ -2887,6 +2887,8 @@
                         });
                         const legal = candidates.filter(nk => this._isMoveValid(nk, s.path, s.counts, s.usage, s.ints, s.isJump, l, s.flipCount, s.crossedFlippers, options) && this._hazardDecisionForKey(nk, s, l, options).allowed);
                         if (options.stageMode !== 'first') return legal;
+                        const progressBias = (l.mustPassKeys.reduce((acc, key) => acc + (s.counts.has(key) ? 1 : 0), 0) * 4)
+                            + l.mustCrossKeys.reduce((acc, key) => acc + Math.min(2, s.counts.get(key) || 0), 0);
                         return legal.slice().sort((a, b) => {
                             const ap = APP.LevelUtils.UNPACK(a);
                             const bp = APP.LevelUtils.UNPACK(b);
@@ -2894,12 +2896,7 @@
                             const ad = Math.abs(ap.x - gp.x) + Math.abs(ap.y - gp.y);
                             const bd = Math.abs(bp.x - gp.x) + Math.abs(bp.y - gp.y);
                             if (ad !== bd) return ad - bd;
-                            const aPass = l.mustPassIndex?.has(a) ? 1 : 0;
-                            const bPass = l.mustPassIndex?.has(b) ? 1 : 0;
-                            if (aPass !== bPass) return bPass - aPass;
-                            const aCross = l.mustCrossIndex?.has(a) ? 1 : 0;
-                            const bCross = l.mustCrossIndex?.has(b) ? 1 : 0;
-                            if (aCross !== bCross) return bCross - aCross;
+                            if (progressBias !== 0) return -progressBias;
                             return a - b;
                         });
                     };
@@ -2977,12 +2974,6 @@
                             }
                         }
                         if (cursorKey === null) continue;
-                        const cursorRealLen = state.path.length - 1 - state.isJump.size;
-                        if (cursorRealLen === l.reqLen) {
-                            if (state.ints === l.reqInt && this._checkFinalConstraints(state, l)) validSpotsSet.add(cursorKey);
-                            for (let i = transLog.length - 1; i >= 0; i--) this._popState(state, transLog[i]);
-                            continue;
-                        }
                         stack.push({ k: cursorKey, neighbors: getNeighbors(cursorKey, state), log: transLog });
                     }
                 }
