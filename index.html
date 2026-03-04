@@ -2927,6 +2927,7 @@
                 async _solveTrapSpots(startKey, l, validSpotsSet, options) {
                     options = options || {};
                     options.hazardPolicy = options.hazardPolicy || 'forbid';
+                    const disabledPruneSet = new Set(options.disabledPrunes || []);
                     const { w, h } = l.grid;
                     const mustCount = l.mustPassKeys.length;
                     const mustCrossCount = l.mustCrossKeys.length;
@@ -3052,6 +3053,22 @@
                             continue;
                         }
                         if (hazard.terminal) {
+                            this._popStateZeroAlloc(state, transLog);
+                            continue;
+                        }
+                        const shouldRunConnectivityPrune = !disabledPruneSet.has('connectivity') && l.mustCrossKeys.length === 0;
+                        if (shouldRunConnectivityPrune) {
+                            const reach = this._analyzeReachability(state, nextKey, l);
+                            if (!this._checkTopology(state, nextKey, rSteps, l, reach)) {
+                                this._popStateZeroAlloc(state, transLog);
+                                continue;
+                            }
+                            if (state.mustMask !== 0n && (reach.remainingMustReachableMask & state.mustMask) !== state.mustMask) {
+                                this._popStateZeroAlloc(state, transLog);
+                                continue;
+                            }
+                        }
+                        if (!disabledPruneSet.has('connectivity') && !this._floodFillReachable(nextKey, state, l)) {
                             this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
