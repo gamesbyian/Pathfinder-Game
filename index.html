@@ -2852,6 +2852,170 @@
                 }
             };
 
+        const SearchFramework = {
+                async runSearch({
+                    level,
+                    purpose = 'search',
+                    timeLimit,
+                    signal,
+                    onProgress = () => {},
+                    onStateUpdate = () => {},
+                    getStartStates,
+                    isAcceptState,
+                    onAcceptState,
+                    expandMoves,
+                    applyMove,
+                    getStateKey,
+                    dominates,
+                    recordBest,
+                    initOutput,
+                    initialOutput
+                }) {
+                    const out = (typeof initOutput === 'function') ? (initOutput() || {}) : (initialOutput || {});
+                    const bestMap = new Map();
+                    const startStates = (typeof getStartStates === 'function') ? (getStartStates() || []) : [];
+                    for (const startState of startStates) {
+                        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                        const key = getStateKey ? getStateKey(startState) : null;
+                        if (key !== null && key !== undefined) {
+                            const prevBest = bestMap.get(key);
+                            if (prevBest !== undefined) {
+                                if (!dominates || dominates(prevBest, startState)) continue;
+                            }
+                            if (recordBest) recordBest(bestMap, key, startState);
+                            else bestMap.set(key, startState);
+                        }
+                        const moves = expandMoves ? (expandMoves(startState, out) || []) : [null];
+                        for (const move of moves) {
+                            if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                            const candidate = await applyMove(startState, move, out);
+                            if (candidate?.kind === 'aborted') {
+                                out.aborted = true;
+                                out.stop = true;
+                                break;
+                            }
+                            if (candidate?.kind === 'timeout') {
+                                out.timedOut = true;
+                                out.stop = true;
+                                break;
+                            }
+                            if (isAcceptState && isAcceptState(candidate, out)) {
+                                onAcceptState?.(candidate, out);
+                            }
+                            if (timeLimit && out.startTime && (Date.now() - out.startTime > timeLimit)) {
+                                out.timedOut = true;
+                                break;
+                            }
+                        }
+                        if (out.stop || out.timedOut) break;
+                        onProgress?.(Date.now() - (out.startTime || Date.now()));
+                    }
+                    return out;
+                }
+            };
+
+        const SolverPolicies = {
+                makeHintPolicy(level, options = {}) {
+                    const {
+                        validGates,
+                        dirOrderVariant = 'default',
+                        maxSolutions = 5,
+                        distMap,
+                        flipperDistMap,
+                        startTime,
+                        localTimeLimit,
+                        onProgress,
+                        signal,
+                        hazardPolicy = 'forbid',
+                        disabledPrunes = [],
+                        useFailMemo = true,
+                        debugStats,
+                        falseGoalPolicy = 'forbidIntersect'
+                    } = options;
+                    const shuffledGates = (validGates || level.gateKeys || []).slice();
+                    if (dirOrderVariant === 'alt') shuffledGates.reverse();
+                    else if (dirOrderVariant !== 'default') shuffledGates.sort(() => Math.random() - 0.5);
+                    const passCellUsageFreq = new Map();
+                    const seenSolutions = new Set();
+                    return {
+                        falseGoalPolicy,
+                        getStartStates: () => shuffledGates.map(gateKey => ({ gateKey })),
+                        expandMoves: (state) => [state.gateKey],
+                        getStateKey: (state) => state.gateKey,
+                        isAcceptState: (result) => {
+                            if (!result || result.kind !== 'solution') return false;
+                            if (falseGoalPolicy === 'forbidIntersect') {
+                                for (const key of result.path || []) {
+                                    if (level.falseGoalKeys?.has(key)) return false;
+                                }
+                            }
+                            return true;
+                        },
+                        onAcceptState: (result, out) => {
+                            const solStr = JSON.stringify(result.path);
+                            if (seenSolutions.has(solStr)) return;
+                            seenSolutions.add(solStr);
+                            out.solutions.push(result);
+                            result.path.forEach(k => passCellUsageFreq.set(k, (passCellUsageFreq.get(k) || 0) + 1));
+                            if (out.solutions.length >= maxSolutions) out.stop = true;
+                        },
+                        applyMove: async (_state, gateKey, out) => {
+                            await new Promise(r => setTimeout(r, 0));
+                            const internalOpts = {
+                                timeLimit: localTimeLimit,
+                                dirOrderVariant,
+                                startTime,
+                                onProgress,
+                                signal,
+                                hazardPolicy,
+                                disabledPrunes,
+                                useFailMemo
+                            };
+                            const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
+                            if (result === SOLVER_ABORTED) return { kind: 'aborted' };
+                            if (result === SOLVER_TIMEOUT) return { kind: 'timeout' };
+                            return result ? { kind: 'solution', ...result } : null;
+                        },
+                        initOutput: () => ({ startTime, solutions: [], timedOut: false, aborted: false })
+                    };
+                },
+                makeTrapPolicy(level, options = {}) {
+                    const { timeLimit = 8000, startTime = Date.now(), onProgress = () => {}, signal = null, hazardPolicy = 'forbid', falseGoalPolicy = 'forbid' } = options;
+                    return {
+                        falseGoalPolicy,
+                        getStartStates: () => level.gateKeys.map(gateKey => ({ gateKey })),
+                        expandMoves: (state) => [state.gateKey],
+                        getStateKey: (state) => state.gateKey,
+                        isAcceptState: (result) => !!result && result.kind === 'trap-spots',
+                        onAcceptState: (result, out) => {
+                            for (const key of (result.spots || [])) out.spots.add(key);
+                            out.gatesProcessed++;
+                        },
+                        applyMove: async (_state, gateKey, out) => {
+                            await new Promise(r => setTimeout(r, 0));
+                            const gateSpots = new Set();
+                            const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
+                            await SolverCore._solveTrapSpots(gateKey, level, gateSpots, internalOpts);
+                            return { kind: 'trap-spots', spots: gateSpots };
+                        },
+                        initOutput: () => ({ startTime, spots: new Set(), gatesProcessed: 0, timedOut: false })
+                    };
+                }
+            };
+
+        function _solverPolicySelfCheck() {
+                try {
+                    const hintPolicy = SolverPolicies.makeHintPolicy({ gateKeys: [], falseGoalKeys: new Set() }, { validGates: [], distMap: new Map(), flipperDistMap: new Map(), startTime: Date.now(), localTimeLimit: 1 });
+                    const trapPolicy = SolverPolicies.makeTrapPolicy({ gateKeys: [] }, { startTime: Date.now() });
+                    const requiredKeys = ['getStartStates', 'isAcceptState', 'onAcceptState', 'expandMoves', 'applyMove', 'getStateKey'];
+                    const hasAll = (policy) => requiredKeys.every(k => typeof policy[k] === 'function');
+                    if (!hasAll(hintPolicy) || !hasAll(trapPolicy)) console.warn('Solver policy self-check: missing callbacks.');
+                } catch (err) {
+                    console.warn('Solver policy self-check skipped:', err);
+                }
+            }
+            if (APP.State?.ENGINE?.isDevMode) _solverPolicySelfCheck();
+
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null } = options;
@@ -3031,55 +3195,53 @@
                     const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
-                        // Solver ordering must remain independent from saved hints.
-                        // In production, users often request hints specifically when no saved hint exists.
-                        let passCellUsageFreq = new Map();
-                        const shuffledGates = validGates.slice();
-                        if (dirOrderVariant === 'alt') shuffledGates.reverse();
-                        else shuffledGates.sort(() => Math.random() - 0.5);
                         if (debugStats) {
                             debugStats.pass = passName;
                             debugStats.disabledPrunes = disabledPrunes.slice();
                             debugStats.failMemoUsed = useFailMemo && disabledPrunes.length === 0;
                         }
-                        onStateUpdate(statusLabel || `Solving (${shuffledGates.length} viable gates)...`);
-                        for (const gateKey of shuffledGates) {
-                            if (passSolutions.length >= maxSolutions) break;
-                            await new Promise(r => setTimeout(r, 0));
-                            const internalOpts = {
-                                timeLimit: localTimeLimit,
-                                dirOrderVariant,
-                                startTime,
-                                onProgress,
-                                signal,
-                                hazardPolicy,
-                                disabledPrunes,
-                                useFailMemo
-                            };
-                            const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
-                            if (result === SOLVER_ABORTED) {
-                                if (debugStats) {
-                                    finalizeSolverDebugStats(debugStats, "aborted", perfStart);
-                                    return { kind: "aborted", solutions: null };
-                                }
-                                throw new DOMException("Aborted", "AbortError");
+                        onStateUpdate(statusLabel || `Solving (${validGates.length} viable gates)...`);
+                        const policy = SolverPolicies.makeHintPolicy(level, {
+                            validGates,
+                            dirOrderVariant,
+                            maxSolutions,
+                            distMap,
+                            flipperDistMap,
+                            startTime,
+                            localTimeLimit,
+                            onProgress,
+                            signal,
+                            hazardPolicy,
+                            disabledPrunes,
+                            useFailMemo,
+                            debugStats,
+                            falseGoalPolicy: 'forbidIntersect'
+                        });
+                        const out = await SearchFramework.runSearch({
+                            level,
+                            purpose: 'hint',
+                            timeLimit: localTimeLimit,
+                            signal,
+                            onProgress,
+                            onStateUpdate,
+                            ...policy
+                        });
+                        if (out.aborted) {
+                            if (debugStats) {
+                                finalizeSolverDebugStats(debugStats, "aborted", perfStart);
+                                return { kind: "aborted", solutions: null };
                             }
-                            if (result === SOLVER_TIMEOUT) {
-                                passSolutions.timedOut = true;
-                                if (debugStats) {
-                                    finalizeSolverDebugStats(debugStats, "timeout", perfStart);
-                                    return { kind: "timeout", solutions: null };
-                                }
-                                break;
-                            }
-                            if (result) {
-                                const solStr = JSON.stringify(result.path);
-                                if (!passSolutions.some(s => JSON.stringify(s.path) === solStr)) {
-                                    passSolutions.push(result);
-                                    result.path.forEach(k => passCellUsageFreq.set(k, (passCellUsageFreq.get(k) || 0) + 1));
-                                }
-                            }
+                            throw new DOMException("Aborted", "AbortError");
                         }
+                        if (out.timedOut) {
+                            passSolutions.timedOut = true;
+                            if (debugStats) {
+                                finalizeSolverDebugStats(debugStats, "timeout", perfStart);
+                                return { kind: "timeout", solutions: null };
+                            }
+                            return { kind: "ok", solutions: passSolutions };
+                        }
+                        passSolutions.push(...(out.solutions || []));
                         return { kind: "ok", solutions: passSolutions };
                     };
 
@@ -3141,20 +3303,26 @@
                 async findTrapSpots(level, options = {}) {
                     const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
                     const startTime = Date.now();
-                    const validSpots = new Set();
-                    let timedOut = false;
-                    let gatesProcessed = 0;
                     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
                     onStateUpdate(`Mapping Traps (${level.gateKeys.length} gates)...`);
-                    for (const gateKey of level.gateKeys) {
-                        if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
-                        await new Promise(r => setTimeout(r, 0));
-                        const internalOpts = { timeLimit, startTime, onProgress, signal, hazardPolicy };
-                        await SolverCore._solveTrapSpots(gateKey, level, validSpots, internalOpts);
-                        gatesProcessed++;
-                        if (Date.now() - startTime > timeLimit) { timedOut = true; break; }
-                    }
-                    return { spots: validSpots, timedOut, gatesProcessed, elapsedMs: Date.now() - startTime };
+                    const policy = SolverPolicies.makeTrapPolicy(level, {
+                        timeLimit,
+                        startTime,
+                        onProgress,
+                        signal,
+                        hazardPolicy,
+                        falseGoalPolicy: 'forbid'
+                    });
+                    const out = await SearchFramework.runSearch({
+                        level,
+                        purpose: 'trap',
+                        timeLimit,
+                        signal,
+                        onProgress,
+                        onStateUpdate,
+                        ...policy
+                    });
+                    return { spots: out.spots || new Set(), timedOut: !!out.timedOut, gatesProcessed: out.gatesProcessed || 0, elapsedMs: Date.now() - startTime };
                 }
             };
 
