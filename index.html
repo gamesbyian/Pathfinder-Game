@@ -1576,6 +1576,7 @@
                 topoVisited: new Uint8Array(65536),
                 topoQueue: new Uint32Array(65536),
                 _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet, options = {}) {
+                    const armedFalseGoals = new Set(l?.falseGoalKeys || []);
                     return APP.LevelUtils.isValidMove(key, {
                         mode: APP.Core.PLAY,
                         path,
@@ -1583,10 +1584,12 @@
                         cellUsage: usage,
                         intersections: ints,
                         isPortalJump: jumpSet,
+                        armedFalseGoals,
                         flipCount,
                         crossedFlippingFilters: crossedSet
                     }, l, {
                         isStrict: false,
+                        checkFalseGoals: true,
                         hazardPolicy: options.hazardPolicy || 'forbid'
                     });
                 },
@@ -3815,6 +3818,7 @@
                 for (let i = 1; i < path.length; i++) {
                     const prev = path[i - 1];
                     const cur = path[i];
+                    const armedFalseGoals = new Set(level.falseGoalKeys || []);
                     if (!APP.LevelUtils.isValidMove(cur, {
                         mode: APP.Core.PLAY,
                         path: path.slice(0, i),
@@ -3822,9 +3826,10 @@
                         cellUsage: usage,
                         intersections,
                         isPortalJump: jumpSet,
+                        armedFalseGoals,
                         flipCount,
                         crossedFlippingFilters: crossedSet
-                    }, level, { isStrict: false, hazardPolicy: 'forbid' })) {
+                    }, level, { isStrict: false, checkFalseGoals: true, hazardPolicy: 'forbid' })) {
                         return { ok: false, reason: `Invalid move at step ${i + 1}.` };
                     }
                     const portal = APP.LevelUtils.resolvePortal(level, prev);
