@@ -7538,6 +7538,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             rowsEl.textContent = auditReport.map(r => `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${r.error ? ` | ${r.error}` : ''}`).join('\n');
         };
 
+        const stopAuditRun = () => {
+            auditCancelRequested = true;
+            APP.Solver.cancel();
+            renderAuditReport();
+        };
+
         const runAudit = async () => {
             if (auditRunning) return;
             auditRunning = true;
@@ -7800,9 +7806,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
         document.getElementById('copyMegaDataBtn').onclick = async () => { const out = APP.UI.getMegaOutputText(); if (out) await APP.UI.copyText(out, { fallbackElId: 'megaOutput' }); };
         document.getElementById('openAuditModalBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode) return; APP.UI.closeAllModals(); auditModalOpen = true; renderAuditReport(); APP.UI.openModal('auditModal'); };
-        document.getElementById('closeAuditModalBtn').onclick = () => { auditModalOpen = false; APP.UI.closeModal('auditModal'); };
+        document.getElementById('closeAuditModalBtn').onclick = () => { if (auditRunning) stopAuditRun(); auditModalOpen = false; APP.UI.closeModal('auditModal'); };
         document.getElementById('startAuditBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(); };
-        document.getElementById('cancelAuditBtn').onclick = () => { auditCancelRequested = true; APP.Solver.cancel(); };
+        document.getElementById('cancelAuditBtn').onclick = () => { if (!auditRunning) return; stopAuditRun(); };
         document.getElementById('copyAuditBtn').onclick = async () => {
             const payload = { progress: auditProgress, levels: auditReport };
             await APP.UI.copyText(JSON.stringify(payload, null, 2), { fallbackElId: 'auditReportRows' });
