@@ -2900,9 +2900,6 @@
                             return a - b;
                         });
                     };
-                    const dominanceMemo = new Map();
-                    const startSig = StateSignature.makeKey(state, { level: l, stepsUsed: 0, falseGoalPolicy: options.falseGoalPolicy || '' });
-                    this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0 });
                     const stack = [{ k: startKey, neighbors: getNeighbors(startKey, state), log: [] }];
                     let steps = 0;
                     while (stack.length > 0) {
@@ -2938,11 +2935,6 @@
                         }
                         if (realLen === l.reqLen) {
                             if (state.ints === l.reqInt && this._checkFinalConstraints(state, l)) validSpotsSet.add(nextKey);
-                            for (let i = transLog.length - 1; i >= 0; i--) this._popState(state, transLog[i]);
-                            continue;
-                        }
-                        const stateSig = StateSignature.makeKey(state, { level: l, stepsUsed: realLen, falseGoalPolicy: options.falseGoalPolicy || '' });
-                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen })) {
                             for (let i = transLog.length - 1; i >= 0; i--) this._popState(state, transLog[i]);
                             continue;
                         }
