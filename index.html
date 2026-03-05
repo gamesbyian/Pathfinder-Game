@@ -472,14 +472,16 @@
         <div class="flex flex-col gap-2 hidden mt-3 pt-3 border-t" id="exportArea">
             <div class="flex justify-between items-center px-1"><label id="exportLabel" class="text-[0.6rem] uppercase font-black text-slate-400 tracking-widest">Level Data Export</label></div>
             <div class="flex flex-col w-full">
-                <div id="exportBtnStack" class="flex gap-2 w-full">
-                    <button id="devCopyBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
-                    <button id="devGenBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Copy Hints</button>
-                    <button id="editCopyBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
-                    <button id="editGenBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
+                <hr id="exportDivider" class="mt-2 mb-1 border-0 border-t-2 border-slate-700" />
+                <div class="flex gap-2 w-full items-stretch">
+                    <textarea id="solutionOutput" readonly class="flex-1 h-[5rem] p-3 bg-slate-900 text-sky-300 rounded-xl border border-slate-700 text-[0.6rem] font-mono leading-tight" placeholder="Solution data..."></textarea>
+                    <div id="exportBtnStack" class="flex flex-col gap-2 w-[7rem] shrink-0">
+                        <button id="devCopyBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
+                        <button id="devGenBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Copy Hints</button>
+                        <button id="editCopyBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
+                        <button id="editGenBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
+                    </div>
                 </div>
-                <hr id="exportDivider" class="mt-2 mb-0 border-0 border-t-2 border-slate-500" />
-                <textarea id="solutionOutput" readonly class="w-full h-[5rem] p-3 bg-slate-900 text-sky-300 rounded-xl border border-slate-700 text-[0.6rem] font-mono leading-tight" placeholder="Solution data..."></textarea>
             </div>
         </div>
     </div>
@@ -4996,7 +4998,7 @@
                     const crossed = hintOverlayActive ? hintCrossedFlippingFilters.has(k) : APP.State.ENGINE.crossedFlippingFilters.has(k);
 
                     const targetFlips = hintOverlayActive
-                        ? (crossed ? (hintCrossedFlippingFilters.get(k) + 1) : hintDisplayFlipCount)
+                        ? (crossed ? hintCrossedFlippingFilters.get(k) : hintDisplayFlipCount)
                         : (crossed ? APP.State.ENGINE.crossedFlippingFilters.get(k) : APP.State.ENGINE.flipCount);
 
                     let currentVisualFlips = targetFlips;
