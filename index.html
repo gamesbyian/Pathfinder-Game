@@ -5739,17 +5739,10 @@
             } catch (e) {}
         }
 
-        function isKnownTheme(themeName) {
-            if (typeof themeName !== 'string' || !themeName) return false;
-            const fromLoadedData = APP.Data?.getTheme?.(themeName);
-            const fromStaticThemes = (typeof THEMES === 'object' && THEMES) ? THEMES[themeName] : null;
-            return !!(fromLoadedData || fromStaticThemes);
-        }
-
         function sanitizeSessionPayload(raw, fallback = {}) {
             const levelCount = APP.LevelUtils.getRawLevels()?.length || 0;
             const maxIdx = Math.max(0, levelCount - 1);
-            const fallbackTheme = isKnownTheme(fallback?.currentTheme)
+            const fallbackTheme = (typeof fallback?.currentTheme === 'string' && APP.Themes.getTheme(fallback.currentTheme))
                 ? fallback.currentTheme
                 : (APP.State.ENGINE.runtime.currentTheme || 'classic');
             const fallbackLevel = Number.isInteger(fallback?.levelIdx) ? Math.max(0, fallback.levelIdx) : 0;
@@ -5757,7 +5750,7 @@
             const safeLevel = Number.isInteger(raw?.levelIdx)
                 ? (levelCount > 0 ? Math.max(0, Math.min(raw.levelIdx, maxIdx)) : Math.max(0, raw.levelIdx))
                 : fallbackLevel;
-            const safeTheme = isKnownTheme(raw?.currentTheme)
+            const safeTheme = (typeof raw?.currentTheme === 'string' && APP.Themes.getTheme(raw.currentTheme))
                 ? raw.currentTheme
                 : fallbackTheme;
             const updatedAt = Number.isFinite(raw?.updatedAt) ? Math.max(0, Math.floor(raw.updatedAt)) : 0;
