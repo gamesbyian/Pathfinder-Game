@@ -4495,7 +4495,8 @@
                 }
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-                const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose, escalationTier });
+                const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
+                const solverResult = await APP.Solver.solveLevel(solveInputLevel, { purpose, escalationTier });
                 const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 solverResult.solution = canonical;
                 solverResult.solutions = canonical;
