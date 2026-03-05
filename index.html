@@ -8024,7 +8024,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         document.getElementById('editTrapSpotsBtn').onclick = async () => {
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
-            if (isVisible) { APP.UI.closeModal('editorHelpModal'); return; }
+            if (isVisible) APP.UI.closeModal('editorHelpModal');
             APP.UI.closeAllModals();
             if (APP.Solver.isRunning()) return;
             APP.Solver.stopHintAnimation();
