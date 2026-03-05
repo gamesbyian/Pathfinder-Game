@@ -4883,7 +4883,7 @@ window.THEMES_MORE = {
         theme.text.actionBtn = chooseReadableTextColor(actionBg, '#ffffff');
 
         const themeModalBg = theme.modal.panelBg || theme.canvasBg || '#ffffff';
-        theme.text.themeName = theme.text.themeName || pickHighestContrastColor(
+        theme.text.themeName = pickHighestContrastColor(
             themeModalBg,
             [
                 theme.text.modalAccent,
@@ -4901,4 +4901,3 @@ window.THEMES_MORE = {
         );
     });
 })();
-
