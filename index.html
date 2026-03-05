@@ -469,8 +469,8 @@
                 <p id="message" class="font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
             </div>
         </div>
-        <div class="flex flex-col gap-2 hidden mt-0" id="exportArea">
-            <div class="flex justify-between items-center px-1"><label id="exportLabel" class="text-[0.6rem] uppercase font-black text-slate-400 tracking-widest">Level Data Export</label></div>
+        <div class="flex flex-col gap-0 hidden mt-0" id="exportArea">
+            <label id="exportLabel" class="hidden text-[0.6rem] uppercase font-black text-slate-400 tracking-widest">Level Data Export</label>
             <div class="flex flex-col w-full">
                 <hr id="exportDivider" class="border-0 border-t" />
                 <div class="flex gap-2 w-full items-stretch">
@@ -7270,7 +7270,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const themes = getThemeRegistry();
         const grid = document.getElementById('themeGrid'); APP.UI.clearElement('themeGrid');
         const themeKeys = Object.keys(themes).filter(key => key !== 'classic' && key !== 'chaos');
-        themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-2 rounded-xl"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; btn.style.backgroundColor = t.shell.btnBg; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black uppercase tracking-widest"; label.style.color = t.text.modal; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
+        themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1"; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black uppercase tracking-widest"; label.style.color = t.text.modal; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
 
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
