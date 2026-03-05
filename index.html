@@ -966,6 +966,10 @@
             messageTimer = setTimeout(() => { setInlineStyle(overlay, 'opacity', '0'); }, 2000);
         };
 
+        const showSolverAlreadyRunning = () => {
+            showMessage('Solver already running.', 'text-amber-600');
+        };
+
 
         const setSolverAbortRequested = (requested) => {
             solverAbortRequested = !!requested;
@@ -1592,7 +1596,7 @@
             return { update, getPaletteIconSVG, isPointerOverPalette };
         })();
 
-        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
+        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, showSolverAlreadyRunning, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
     })();
 
     // ======================================================
@@ -4485,7 +4489,10 @@
             }
 
             async function runGameSolver(purpose = 'solve', escalationTier = 0) {
-                if (APP.Solver.isRunning()) return;
+                if (APP.Solver.isRunning()) {
+                    APP.UI.showSolverAlreadyRunning();
+                    return { ok: false, reason: 'already-running' };
+                }
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solverResult = await APP.Solver.solveLevel(activeLevel, { purpose, escalationTier });
@@ -5597,8 +5604,10 @@
             commitWorkingLevel() { refs.ENGINE.level = APP.LevelUtils.deepCloneLevel(refs.ENGINE.editor.workingLevel); refs.ENGINE.editor.isModified = false; },
             applyMetricsFromUI() {
                 if (!refs.ENGINE?.editor?.workingLevel) return;
-                refs.ENGINE.editor.workingLevel.reqLen = parseInt(refs.UI.getValue('editReqLen'));
-                refs.ENGINE.editor.workingLevel.reqInt = parseInt(refs.UI.getValue('editReqInt'));
+                const reqLen = parseInt(refs.UI.getValue('editReqLen'), 10);
+                const reqInt = parseInt(refs.UI.getValue('editReqInt'), 10);
+                refs.ENGINE.editor.workingLevel.reqLen = Number.isFinite(reqLen) ? reqLen : 0;
+                refs.ENGINE.editor.workingLevel.reqInt = Number.isFinite(reqInt) ? reqInt : 0;
             },
             setWorkingLevelHintsFromSolutions(paths = []) {
                 this.setWorkingHints(paths);
@@ -8072,7 +8081,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
             if (isVisible) APP.UI.closeModal('editorHelpModal');
             APP.UI.closeAllModals();
-            if (APP.Solver.isRunning()) return;
+            if (APP.Solver.isRunning()) {
+                APP.UI.showSolverAlreadyRunning();
+                return;
+            }
             APP.Solver.stopHintAnimation();
             APP.Editor.applyMetricsFromUI();
             const l = APP.State.ENGINE.editor.workingLevel;
@@ -8153,16 +8165,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!isVisible) APP.UI.openModal('editorHelpModal');
         };
         document.getElementById('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
-        document.getElementById('editMegaSolver').onclick = () => {
+        document.getElementById('editMegaSolver').onclick = async () => {
             APP.UI.closeAllModals();
-            APP.Solver.runGameSolver('solve', consecutiveSolveFails).then((solveResult) => {
+            APP.Editor.applyMetricsFromUI();
+            try {
+                const solveResult = await APP.Solver.runGameSolver('solve', consecutiveSolveFails);
+                if (solveResult?.reason === 'already-running') return;
                 if (!solveResult?.ok) consecutiveSolveFails++;
-            }).catch((err) => {
+            } catch (err) {
                 consecutiveSolveFails++;
                 console.error('Solve failed:', err);
                 APP.UI.showMessage(`Solve failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-            });
+            }
         };
         document.getElementById('editCopyMetrics').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const len = APP.Engine.getRealLength(); APP.UI.setInputValue('editReqLen', len); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.intersections); APP.Editor.applyMetricsFromUI(); APP.UI.showMessage("Metrics Set", "text-white font-black"); } };
 
