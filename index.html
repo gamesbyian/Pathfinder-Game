@@ -2175,7 +2175,7 @@
                         if (foundGoal && volume >= rSteps) return true;
 
                         // 1. Get standard grid neighbors
-                        const neighbors = this._getRawNeighbors(k, l); 
+                        const neighbors = this._getRawNeighbors(k, l);
                         for (let i = 0; i < neighbors.length; i++) {
                             const nk = neighbors[i];
                             const nIdx = state.keyToIdx(nk);
@@ -2188,7 +2188,7 @@
                                 }
                             }
                         }
-                        
+
                         // 2. NEW: Check for Portal Connectivity
                         const pDest = l.portalMap ? l.portalMap.get(k) : null;
                         if (pDest) {
@@ -4939,7 +4939,7 @@
                     bomb(drawCtx, size) { const scale = size / 100; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = '#94a3b8'; drawCtx.lineWidth = 4; drawCtx.stroke(); drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = '#ef4444'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill(); },
                     goose(drawCtx, size, color, options = {}) { if (options.isCheatReveal) drawCtx.globalAlpha = 0.5; const mapX = (v) => -size / 2 + (v / 100 * size), mapY = (v) => -size / 2 + (v / 100 * size); drawCtx.fillStyle = '#000000'; drawCtx.beginPath(); drawCtx.moveTo(mapX(30), mapY(0)); drawCtx.lineTo(mapX(70), mapY(0)); drawCtx.lineTo(mapX(100), mapY(30)); drawCtx.lineTo(mapX(100), mapY(70)); drawCtx.lineTo(mapX(70), mapY(100)); drawCtx.lineTo(mapX(30), mapY(100)); drawCtx.lineTo(mapX(0), mapY(70)); drawCtx.lineTo(mapX(0), mapY(30)); drawCtx.closePath(); drawCtx.fill(); drawCtx.fillStyle = '#FFFFFF'; drawCtx.beginPath(); drawCtx.moveTo(mapX(25), mapY(60)); drawCtx.quadraticCurveTo(mapX(25), mapY(45), mapX(45), mapY(45)); drawCtx.lineTo(mapX(65), mapY(45)); drawCtx.quadraticCurveTo(mapX(75), mapY(45), mapX(75), mapY(55)); drawCtx.quadraticCurveTo(mapX(75), mapY(65), mapX(65), mapY(65)); drawCtx.lineTo(mapX(40), mapY(65)); drawCtx.quadraticCurveTo(mapX(25), mapY(65), mapX(25), mapY(60)); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(25), mapY(55)); drawCtx.lineTo(mapX(15), mapY(45)); drawCtx.lineTo(mapX(30), mapY(55)); drawCtx.closePath(); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(60), mapY(45)); drawCtx.lineTo(mapX(60), mapY(25)); drawCtx.quadraticCurveTo(mapX(60), mapY(18), mapX(68), mapY(18)); drawCtx.quadraticCurveTo(mapX(75), mapY(18), mapX(75), mapY(25)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.lineTo(mapX(68), mapY(35)); drawCtx.lineTo(mapX(68), mapY(45)); drawCtx.closePath(); drawCtx.fill(); drawCtx.fillStyle = '#000000'; drawCtx.beginPath(); drawCtx.arc(mapX(70), mapY(23), size * 0.02, 0, Math.PI * 2); drawCtx.fill(); drawCtx.fillStyle = '#f97316'; drawCtx.beginPath(); drawCtx.moveTo(mapX(75), mapY(29)); drawCtx.lineTo(mapX(88), mapY(32)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.closePath(); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(45), mapY(65)); drawCtx.lineTo(mapX(40), mapY(78)); drawCtx.lineTo(mapX(52), mapY(78)); drawCtx.closePath(); drawCtx.moveTo(mapX(58), mapY(65)); drawCtx.lineTo(mapX(53), mapY(78)); drawCtx.lineTo(mapX(65), mapY(78)); drawCtx.closePath(); drawCtx.fill(); },
                     prohibited(drawCtx, size) { drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke(); drawCtx.beginPath(); const lineLen = size * 0.25; drawCtx.moveTo(-lineLen, -lineLen); drawCtx.lineTo(lineLen, lineLen); drawCtx.stroke(); },
-                    required(drawCtx, size, color, options = {}) { const tilt = options.isSatisfied ? 15 : -15; drawCtx.rotate(tilt * Math.PI / 180); const scale = size / 35; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.moveTo(-1, 0); drawCtx.lineTo(1, 0); drawCtx.lineTo(1.5, -12); drawCtx.lineTo(-1.5, -12); drawCtx.closePath(); drawCtx.fillStyle = '#94a3b8'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(0, -18, 7, 0, Math.PI * 2); drawCtx.fillStyle = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped; drawCtx.fill(); },
+                    required(drawCtx, size, color, options = {}) { const tilt = options.isSatisfied ? 15 : -15; const pinYOffset = options.pinYOffset || 0; drawCtx.translate(0, pinYOffset); drawCtx.rotate(tilt * Math.PI / 180); const scale = size / 35; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.moveTo(-1, 0); drawCtx.lineTo(1, 0); drawCtx.lineTo(1.5, -12); drawCtx.lineTo(-1.5, -12); drawCtx.closePath(); drawCtx.fillStyle = '#94a3b8'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(0, -18, 7, 0, Math.PI * 2); drawCtx.fillStyle = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped; drawCtx.fill(); },
                     mustCross(drawCtx, size, color) { drawCtx.strokeStyle = color; drawCtx.globalAlpha = 0.25; drawCtx.lineWidth = size * 0.08; const outer = size * 0.4, inner = size * 0.18; drawCtx.beginPath(); drawCtx.moveTo(-outer, -inner); drawCtx.lineTo(-inner, -inner); drawCtx.lineTo(-inner, -outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(outer, -inner); drawCtx.lineTo(inner, -inner); drawCtx.lineTo(inner, -outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(-outer, inner); drawCtx.lineTo(-inner, inner); drawCtx.lineTo(-inner, outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(outer, inner); drawCtx.lineTo(inner, inner); drawCtx.lineTo(inner, outer); drawCtx.stroke(); },
                     filter(drawCtx, size, color, options = {}) { if (options.axis === APP.Core.V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); },
                     flippingFilter(drawCtx, size, color, options = {}) { drawCtx.rotate(options.rotation || 0); if (options.axis === APP.Core.V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); if (APP.State.ENGINE.mode === APP.Core.EDITOR) { drawCtx.globalAlpha = options.crossed ? 0.4 : 1.0; drawCtx.fillStyle = color; drawCtx.font = `900 ${size * 0.45}px sans-serif`; drawCtx.textAlign = 'center'; drawCtx.textBaseline = 'middle'; drawCtx.fillText('↺', 0, 0); } }
@@ -5033,7 +5033,7 @@
 
                 if (APP.State.ENGINE.editor.pendingPortal) { const pp = APP.LevelUtils.UNPACK(APP.State.ENGINE.editor.pendingPortal), { sx, sy } = getScreenPos(pp.x, pp.y); ctx.strokeStyle = th.colors.portal; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = th.colors.portal + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); }
 
-                l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; drawAsset('required', p.x, p.y, { isSatisfied: isHit, themeColors: th.colors }); });
+
 
 
 
@@ -5064,6 +5064,10 @@
                 }
 
 
+
+
+
+                l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; const pinYOffset = p.y === 0 ? -vp.cellH * 0.12 : 0; drawAsset('required', p.x, p.y, { isSatisfied: isHit, themeColors: th.colors, pinYOffset }); });
 
                 if (l.goalKey !== -1) { const goalP = APP.LevelUtils.UNPACK(l.goalKey), sGoal = getScreenPos(goalP.x, goalP.y); ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 
