@@ -8167,7 +8167,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
         document.getElementById('editMegaSolver').onclick = async () => {
             APP.UI.closeAllModals();
-            APP.Editor.applyMetricsFromUI();
             try {
                 const solveResult = await APP.Solver.runGameSolver('solve', consecutiveSolveFails);
                 if (solveResult?.reason === 'already-running') return;
