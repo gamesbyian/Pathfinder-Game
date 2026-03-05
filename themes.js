@@ -4845,12 +4845,31 @@ window.THEMES_MORE = {
         return contrastWithWhite >= contrastWithBlack ? '#ffffff' : '#000000';
     };
 
+    const contrastRatio = (a, b) => {
+        const rgbA = parseHexColor(a);
+        const rgbB = parseHexColor(b);
+        if (!rgbA || !rgbB) return 0;
+        const l1 = getLuminance(rgbA);
+        const l2 = getLuminance(rgbB);
+        const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+        return (hi + 0.05) / (lo + 0.05);
+    };
+
+    const pickHighestContrastColor = (bgColor, candidates, fallback = '#000000') => {
+        const valid = (candidates || []).filter((color) => typeof color === 'string' && color.trim().length > 0);
+        if (!valid.length) return fallback;
+        return valid.reduce((best, color) => (
+            contrastRatio(bgColor, color) > contrastRatio(bgColor, best) ? color : best
+        ));
+    };
+
     Object.values(window.THEMES_MORE || {}).forEach((theme) => {
         if (!theme || typeof theme !== 'object') return;
         theme.alert = theme.alert || {};
         theme.text = theme.text || {};
         theme.shell = theme.shell || {};
         theme.btns = theme.btns || {};
+        theme.modal = theme.modal || {};
 
         theme.alert.text = chooseReadableTextColor(theme.alert.bg, '#ffffff');
 
@@ -4862,6 +4881,24 @@ window.THEMES_MORE = {
 
         const actionBg = theme.btns.modeToggle || theme.btns.solve || theme.btns.hint || theme.headerRight || theme.alert.bg;
         theme.text.actionBtn = chooseReadableTextColor(actionBg, '#ffffff');
+
+        const themeModalBg = theme.modal.panelBg || theme.canvasBg || '#ffffff';
+        theme.text.themeName = theme.text.themeName || pickHighestContrastColor(
+            themeModalBg,
+            [
+                theme.text.modalAccent,
+                theme.modal.accent,
+                theme.text.modal,
+                theme.modal.text,
+                theme.text.modalMuted,
+                theme.modal.textMuted,
+                theme.text.body,
+                theme.headerLeftText,
+                '#000000',
+                '#ffffff'
+            ],
+            chooseReadableTextColor(themeModalBg, '#000000')
+        );
     });
 })();
 
