@@ -471,14 +471,15 @@
         </div>
         <div class="flex flex-col gap-2 hidden mt-3 pt-3 border-t" id="exportArea">
             <div class="flex justify-between items-center px-1"><label id="exportLabel" class="text-[0.6rem] uppercase font-black text-slate-400 tracking-widest">Level Data Export</label></div>
-            <div class="flex gap-2 items-stretch w-full">
-                <textarea id="solutionOutput" readonly class="flex-grow h-[5rem] p-3 bg-slate-900 text-sky-300 rounded-xl border border-slate-700 text-[0.6rem] font-mono leading-tight" placeholder="Solution data..."></textarea>
-                <div id="exportBtnStack" class="flex flex-col gap-1 w-24 shrink-0">
+            <div class="flex flex-col gap-2 w-full">
+                <div id="exportBtnStack" class="flex gap-2 w-full">
                     <button id="devCopyBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
                     <button id="devGenBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Copy Hints</button>
                     <button id="editCopyBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
                     <button id="editGenBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
                 </div>
+                <hr id="exportDivider" class="border-0 border-t border-slate-300" />
+                <textarea id="solutionOutput" readonly class="w-full h-[5rem] p-3 bg-slate-900 text-sky-300 rounded-xl border border-slate-700 text-[0.6rem] font-mono leading-tight" placeholder="Solution data..."></textarea>
             </div>
         </div>
     </div>
@@ -4971,6 +4972,22 @@
 
 
 
+                const hintOverlayActive = APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING && APP.State.ENGINE.hinter.pathList.length;
+                let hintPath = [];
+                let hintDisplayPath = [];
+                const hintCrossedFlippingFilters = new Map();
+                let hintDisplayFlipCount = 0;
+                if (hintOverlayActive) {
+                    hintPath = APP.State.ENGINE.hinter.pathList[APP.State.ENGINE.hinter.currentPathIdx] || [];
+                    hintDisplayPath = hintPath.slice(0, Math.floor(APP.State.ENGINE.hinter.index));
+                    for (const key of hintDisplayPath) {
+                        if (l.flippingFilterMap.has(key) && !hintCrossedFlippingFilters.has(key)) {
+                            hintCrossedFlippingFilters.set(key, hintDisplayFlipCount);
+                            hintDisplayFlipCount++;
+                        }
+                    }
+                }
+
                 l.filterMap.forEach((axis, k) => { const p = APP.LevelUtils.UNPACK(k); drawAsset('filter', p.x, p.y, { axis: APP.LevelUtils.transformAxis(axis, APP.State.ENGINE.variant), color: th.colors.filter }); });
 
 
@@ -4979,13 +4996,15 @@
 
                     const p = APP.LevelUtils.UNPACK(k);
 
-                    const crossed = APP.State.ENGINE.crossedFlippingFilters.has(k);
+                    const crossed = hintOverlayActive ? hintCrossedFlippingFilters.has(k) : APP.State.ENGINE.crossedFlippingFilters.has(k);
 
-                    const targetFlips = crossed ? APP.State.ENGINE.crossedFlippingFilters.get(k) : APP.State.ENGINE.flipCount;
+                    const targetFlips = hintOverlayActive
+                        ? (crossed ? hintCrossedFlippingFilters.get(k) : hintDisplayFlipCount)
+                        : (crossed ? APP.State.ENGINE.crossedFlippingFilters.get(k) : APP.State.ENGINE.flipCount);
 
                     let currentVisualFlips = targetFlips;
 
-                    if (!crossed && APP.State.ENGINE.visualFlipCount !== undefined) { currentVisualFlips = APP.State.ENGINE.visualFlipCount; }
+                    if (!hintOverlayActive && !crossed && APP.State.ENGINE.visualFlipCount !== undefined) { currentVisualFlips = APP.State.ENGINE.visualFlipCount; }
 
                     const rotation = currentVisualFlips * (Math.PI / 2);
 
@@ -5023,11 +5042,11 @@
 
 
 
-                if (APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING && APP.State.ENGINE.hinter.pathList.length) {
+                if (hintOverlayActive) {
 
                     ctx.save(); ctx.globalAlpha = APP.State.ENGINE.hinter.alpha;
 
-                    const hPath = APP.State.ENGINE.hinter.pathList[APP.State.ENGINE.hinter.currentPathIdx], displayPath = hPath.slice(0, Math.floor(APP.State.ENGINE.hinter.index)), hintsJumps = new Set();
+                    const hPath = hintPath, displayPath = hintDisplayPath, hintsJumps = new Set();
 
                     for(let i=1; i<displayPath.length; i++){ const p1 = APP.LevelUtils.UNPACK(displayPath[i-1]), p2 = APP.LevelUtils.UNPACK(displayPath[i]); if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) hintsJumps.add(i); }
 
@@ -5149,7 +5168,7 @@
 
             function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
-            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
+            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.UI.setSolutionOutput(''); APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
             function updatePencilState() {
                 const btn = document.getElementById('editPencilBtn');
@@ -5240,6 +5259,7 @@
                 APP.UI.closeModal('winModal');
 
                 APP.UI.showMessage("", "");
+                APP.UI.setSolutionOutput('');
 
                 APP.UI.updateAppScale();
 
@@ -7906,7 +7926,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('undoBtn').onclick = () => { APP.UI.closeAllModals(); if(APP.State.ENGINE.undoStack.length) APP.Engine.applySnapshot(APP.State.ENGINE.undoStack.pop()); };
         document.getElementById('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = (APP.State.ENGINE.foundHintsSinceLoad || []).filter(path => APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level), path)?.ok); if (!hints.length) { APP.UI.showMessage("No valid hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); APP.UI.setSolutionOutput(hintText); await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
         document.getElementById('editGenBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.setButtonState('editGenBtn', { enabled: true }); APP.Editor.generateLevelString(); };
-        document.getElementById('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); const outValue = APP.UI.getValue('solutionOutput'); if (outValue) { if (await APP.UI.copyText(outValue, { fallbackElId: 'solutionOutput' })) APP.UI.showMessage("Copied", "text-white font-black"); } };
+        document.getElementById('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
         document.getElementById('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
 
         const hintBtn = document.getElementById('hintBtn'); const hintTopHalf = document.getElementById('hintTopHalf');
