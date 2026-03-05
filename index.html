@@ -3921,7 +3921,7 @@
         async askGeminiForFailed() {
             const failed = this.getFailedLevels();
             if (!failed.length) {
-                APP.UI.showMessage('No failed levels eligible for Gemini (only proven-unsat remain).', 'text-emerald-600');
+                APP.UI.showMessage('No failed lvls for Gemini (only unsat).', 'text-emerald-600');
                 return;
             }
             return this.runTargets({ targets: failed, timeLimitMs: 15000, variant: 'default', allowGemini: true });
@@ -4009,8 +4009,8 @@
                     const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
                     const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
                     const escalationTier = Math.max(requestedTier, autoTier);
-                    if (escalationTier === 1) APP.UI.showMessage('Retrying with alternate ordering and longer budget…', 'text-amber-600');
-                    if (escalationTier >= 2) APP.UI.showMessage('Deep search enabled: brute-force fallback and extended budgets…', 'text-amber-700');
+                    if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
+                    if (escalationTier >= 2) APP.UI.showMessage('Deep search on: extended search mode.', 'text-amber-700');
                     solverResult = await Referee.solve(level, {
                         purpose,
                         timeBudgetMs,
@@ -4032,7 +4032,7 @@
                     const shouldTryLegacyFallback = !solverResult.ok && ['timeout', 'no-solution-inconclusive', 'error'].includes(rawStatus);
                     if (shouldTryLegacyFallback) {
                         const fallbackBudgetMs = Number.isFinite(solverResult.budgetMs) ? solverResult.budgetMs : timeBudgetMs;
-                        APP.UI.showMessage('Referee was inconclusive. Trying legacy solver…', 'text-amber-600');
+                        APP.UI.showMessage('Referee inconclusive. Trying old solver…', 'text-amber-600');
                         const legacy = await PathfinderSolver.solve(level, {
                             timeLimit: fallbackBudgetMs,
                             debug,
@@ -4508,7 +4508,7 @@
                 if (normalizedPaths.length > 0) {
                     APP.Solver.applySolutionsToEngine(validEntries, purpose);
                 } else if (solverResult.rawStatus === 'no-solution-proven') {
-                    APP.UI.showMessage('No solution exists for this level (proven by exhaustive search).', 'text-amber-600');
+                    APP.UI.showMessage('No solution exists for this level.', 'text-amber-600');
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution proven.');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else if (solverResult.status === 'aborted') {
@@ -4516,9 +4516,9 @@
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else {
                     if (purpose === 'hint') {
-                        APP.UI.showMessage('No hint found within 5s. Press New Hint again to try a deeper strategy (15s).', 'text-amber-600');
+                        APP.UI.showMessage('No hint in 5s. Tap New Hint for deep 15s.', 'text-amber-600');
                     } else {
-                        APP.UI.showMessage('No solution found within 15s (inconclusive). Press Solve again to try a deeper strategy (60s + alt ordering).', 'text-amber-600');
+                        APP.UI.showMessage('No solution in 15s. Press Solve for 60s.', 'text-amber-600');
                     }
                     APP.UI.setSolutionOutput(solverResult.message || 'No solution found within budget.');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
@@ -8035,7 +8035,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Renderer.render();
             if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
             else if (res.status !== 'aborted' && res.timedOut) {
-                APP.UI.showMessage('Search timed out; partial results may be incomplete.', 'text-amber-300 font-black');
+                APP.UI.showMessage('Search timed out; results incomplete.', 'text-amber-300 font-black');
                 const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
                 if (retry) {
                     const retryBudgetMs = Math.min(120000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
@@ -8043,7 +8043,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.Editor.setTrapSpots(retryRes.spots || new Set());
                     APP.Renderer.render();
                     if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
-                    else if (retryRes.status !== 'aborted' && retryRes.timedOut) APP.UI.showMessage('Retry timed out; partial results may be incomplete.', 'text-amber-300 font-black');
+                    else if (retryRes.status !== 'aborted' && retryRes.timedOut) APP.UI.showMessage('Retry timed out; results incomplete.', 'text-amber-300 font-black');
                     else if (retryRes.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
                 }
             } else if (res.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
