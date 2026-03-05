@@ -7099,6 +7099,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const existing = current || pickContrastText(bg);
             return contrastRatio(bg, existing) >= min ? existing : pickContrastText(bg);
         };
+        const pickThemeNameColor = (bg, candidates, fallback) => {
+            const valid = candidates.filter(Boolean);
+            if (!valid.length) return fallback;
+            return valid.reduce((best, candidate) => (
+                contrastRatio(bg, candidate) > contrastRatio(bg, best) ? candidate : best
+            ));
+        };
 
         t.ctrlArea.bg = t.ctrlArea.bg || t.palette.bg;
         t.ctrlArea.border = t.ctrlArea.border || t.palette.border;
@@ -7119,6 +7126,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.text.megaGemini = t.text.megaGemini || '#ffffff';
         t.text.megaCopy = t.text.megaCopy || t.modal.text;
         t.text.body = t.text.body || t.modal.text;
+        t.text.themeName = t.text.themeName || pickThemeNameColor(
+            t.modal.panelBg || t.canvasBg || '#ffffff',
+            [
+                t.text.modalAccent,
+                t.modal.accent,
+                t.text.modal,
+                t.modal.text,
+                t.text.modalMuted,
+                t.modal.textMuted,
+                t.text.body,
+                t.headerLeftText
+            ],
+            t.text.modal
+        );
         t.text.shellBtn = t.text.shellBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#475569');
         t.text.actionBtn = t.text.actionBtn || ((t.bodyBg === "#020617" || t.bodyBg === "#000000") ? "#f8fafc" : "#ffffff");
         t.text.utilityBtn = keepOrImproveContrast(t.btns.copy || '#334155', t.btns.muteIcon);
@@ -7271,7 +7292,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const themes = getThemeRegistry();
         const grid = document.getElementById('themeGrid'); APP.UI.clearElement('themeGrid');
         const themeKeys = Object.keys(themes).filter(key => key !== 'classic' && key !== 'chaos');
-        themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none"; btn.style.background = 'transparent'; btn.style.border = '0'; btn.style.boxShadow = 'none'; btn.style.borderRadius = '0'; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black uppercase tracking-widest"; label.style.color = t.text.modal; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
+        themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none"; btn.style.background = 'transparent'; btn.style.border = '0'; btn.style.boxShadow = 'none'; btn.style.borderRadius = '0'; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black uppercase tracking-widest"; label.style.color = t.text.themeName || t.text.modal; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
     }
 
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
