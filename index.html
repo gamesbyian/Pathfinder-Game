@@ -4937,11 +4937,32 @@
 
                 function getScreenPos(cx, cy) { const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const { tx, ty } = APP.LevelUtils.transformPoint(cx, cy, APP.State.ENGINE.variant, l.grid.w, l.grid.h); return { sx: (tx + 0.5) * APP.State.ENGINE.viewport.cellW, sy: (ty + 0.5) * APP.State.ENGINE.viewport.cellH }; }
 
+                function drawRequiredPin(drawCtx, size, options = {}) {
+                    const tilt = options.isSatisfied ? 15 : -15;
+                    const pinYOffset = options.pinYOffset || 0;
+                    drawCtx.translate(0, pinYOffset);
+                    drawCtx.rotate(tilt * Math.PI / 180);
+                    const scale = size / 35;
+                    drawCtx.scale(scale, scale);
+                    drawCtx.beginPath();
+                    drawCtx.moveTo(-1, 0);
+                    drawCtx.lineTo(1, 0);
+                    drawCtx.lineTo(1.5, -12);
+                    drawCtx.lineTo(-1.5, -12);
+                    drawCtx.closePath();
+                    drawCtx.fillStyle = '#94a3b8';
+                    drawCtx.fill();
+                    drawCtx.beginPath();
+                    drawCtx.arc(0, -18, 7, 0, Math.PI * 2);
+                    drawCtx.fillStyle = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped;
+                    drawCtx.fill();
+                }
+
                 const DRAW_REGISTRY = {
                     bomb(drawCtx, size) { const scale = size / 100; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = '#94a3b8'; drawCtx.lineWidth = 4; drawCtx.stroke(); drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = '#ef4444'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill(); },
                     goose(drawCtx, size, color, options = {}) { if (options.isCheatReveal) drawCtx.globalAlpha = 0.5; const mapX = (v) => -size / 2 + (v / 100 * size), mapY = (v) => -size / 2 + (v / 100 * size); drawCtx.fillStyle = '#000000'; drawCtx.beginPath(); drawCtx.moveTo(mapX(30), mapY(0)); drawCtx.lineTo(mapX(70), mapY(0)); drawCtx.lineTo(mapX(100), mapY(30)); drawCtx.lineTo(mapX(100), mapY(70)); drawCtx.lineTo(mapX(70), mapY(100)); drawCtx.lineTo(mapX(30), mapY(100)); drawCtx.lineTo(mapX(0), mapY(70)); drawCtx.lineTo(mapX(0), mapY(30)); drawCtx.closePath(); drawCtx.fill(); drawCtx.fillStyle = '#FFFFFF'; drawCtx.beginPath(); drawCtx.moveTo(mapX(25), mapY(60)); drawCtx.quadraticCurveTo(mapX(25), mapY(45), mapX(45), mapY(45)); drawCtx.lineTo(mapX(65), mapY(45)); drawCtx.quadraticCurveTo(mapX(75), mapY(45), mapX(75), mapY(55)); drawCtx.quadraticCurveTo(mapX(75), mapY(65), mapX(65), mapY(65)); drawCtx.lineTo(mapX(40), mapY(65)); drawCtx.quadraticCurveTo(mapX(25), mapY(65), mapX(25), mapY(60)); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(25), mapY(55)); drawCtx.lineTo(mapX(15), mapY(45)); drawCtx.lineTo(mapX(30), mapY(55)); drawCtx.closePath(); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(60), mapY(45)); drawCtx.lineTo(mapX(60), mapY(25)); drawCtx.quadraticCurveTo(mapX(60), mapY(18), mapX(68), mapY(18)); drawCtx.quadraticCurveTo(mapX(75), mapY(18), mapX(75), mapY(25)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.lineTo(mapX(68), mapY(35)); drawCtx.lineTo(mapX(68), mapY(45)); drawCtx.closePath(); drawCtx.fill(); drawCtx.fillStyle = '#000000'; drawCtx.beginPath(); drawCtx.arc(mapX(70), mapY(23), size * 0.02, 0, Math.PI * 2); drawCtx.fill(); drawCtx.fillStyle = '#f97316'; drawCtx.beginPath(); drawCtx.moveTo(mapX(75), mapY(29)); drawCtx.lineTo(mapX(88), mapY(32)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.closePath(); drawCtx.fill(); drawCtx.beginPath(); drawCtx.moveTo(mapX(45), mapY(65)); drawCtx.lineTo(mapX(40), mapY(78)); drawCtx.lineTo(mapX(52), mapY(78)); drawCtx.closePath(); drawCtx.moveTo(mapX(58), mapY(65)); drawCtx.lineTo(mapX(53), mapY(78)); drawCtx.lineTo(mapX(65), mapY(78)); drawCtx.closePath(); drawCtx.fill(); },
                     prohibited(drawCtx, size) { drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke(); drawCtx.beginPath(); const lineLen = size * 0.25; drawCtx.moveTo(-lineLen, -lineLen); drawCtx.lineTo(lineLen, lineLen); drawCtx.stroke(); },
-                    required(drawCtx, size, color, options = {}) { const tilt = options.isSatisfied ? 15 : -15; const pinYOffset = options.pinYOffset || 0; drawCtx.translate(0, pinYOffset); drawCtx.rotate(tilt * Math.PI / 180); const scale = size / 35; drawCtx.scale(scale, scale); drawCtx.beginPath(); drawCtx.moveTo(-1, 0); drawCtx.lineTo(1, 0); drawCtx.lineTo(1.5, -12); drawCtx.lineTo(-1.5, -12); drawCtx.closePath(); drawCtx.fillStyle = '#94a3b8'; drawCtx.fill(); drawCtx.beginPath(); drawCtx.arc(0, -18, 7, 0, Math.PI * 2); drawCtx.fillStyle = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped; drawCtx.fill(); },
+                    required(drawCtx, size, color, options = {}) { drawRequiredPin(drawCtx, size, options); },
                     mustCross(drawCtx, size, color) { drawCtx.strokeStyle = color; drawCtx.globalAlpha = 0.25; drawCtx.lineWidth = size * 0.08; const outer = size * 0.4, inner = size * 0.18; drawCtx.beginPath(); drawCtx.moveTo(-outer, -inner); drawCtx.lineTo(-inner, -inner); drawCtx.lineTo(-inner, -outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(outer, -inner); drawCtx.lineTo(inner, -inner); drawCtx.lineTo(inner, -outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(-outer, inner); drawCtx.lineTo(-inner, inner); drawCtx.lineTo(-inner, outer); drawCtx.stroke(); drawCtx.beginPath(); drawCtx.moveTo(outer, inner); drawCtx.lineTo(inner, inner); drawCtx.lineTo(inner, outer); drawCtx.stroke(); },
                     filter(drawCtx, size, color, options = {}) { if (options.axis === APP.Core.V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); },
                     flippingFilter(drawCtx, size, color, options = {}) { drawCtx.rotate(options.rotation || 0); if (options.axis === APP.Core.V) drawCtx.rotate(Math.PI / 2); drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25; const w = size * 0.45, t = size * 0.08; drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t); drawCtx.fillRect(-size / 2 + size * 0.1, w / 2 - t, size * 0.8, t); if (APP.State.ENGINE.mode === APP.Core.EDITOR) { drawCtx.globalAlpha = options.crossed ? 0.4 : 1.0; drawCtx.fillStyle = color; drawCtx.font = `900 ${size * 0.45}px sans-serif`; drawCtx.textAlign = 'center'; drawCtx.textBaseline = 'middle'; drawCtx.fillText('↺', 0, 0); } }
@@ -4953,7 +4974,53 @@
 
                 function drawScorchMark(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 0.4); grad.addColorStop(0, 'rgba(0,0,0,0.5)'); grad.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = grad; ctx.beginPath(); const radii = [0.35, 0.15, 0.4, 0.2, 0.3, 0.15, 0.35, 0.2, 0.4, 0.15, 0.3, 0.25, 0.35, 0.15, 0.4, 0.2]; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; const r = s * radii[i]; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.restore(); }
 
-                function drawMustPassOverflowOverlay(pins, th, vp) { const overlay = document.getElementById('mustPassOverlay'); if (!overlay) return; overlay.innerHTML = ''; if (!pins || !pins.length) return; const canvasRect = cvs.getBoundingClientRect(); const paneRect = overlay.getBoundingClientRect(); if (!canvasRect.width || !canvasRect.height || !paneRect.width || !paneRect.height) { APP.State.ENGINE.isDirty = true; return; } const size = Math.min(vp.cellW, vp.cellH) * 0.82; const svgScale = 2.05; pins.forEach(({ x, y, isHit }) => { const { sx, sy } = getScreenPos(x, y); const tilt = isHit ? 15 : -15; const pinColor = isHit ? th.colors.pin : th.colors.pinUnflipped; const pin = document.createElement('div'); pin.style.position = 'absolute'; pin.style.left = `${canvasRect.left - paneRect.left + sx - size / 2}px`; pin.style.top = `${canvasRect.top - paneRect.top + sy - size / 2 - vp.cellH * 0.08}px`; pin.style.width = `${size}px`; pin.style.height = `${size}px`; pin.innerHTML = `<svg viewBox="0 0 100 100" style="width:100%;height:100%;overflow:visible;"><g transform="translate(50 75) rotate(${tilt}) scale(${svgScale})"><path d="M-1 0 L1 0 L1.5 -12 L-1.5 -12 Z" fill="#94a3b8"></path><circle cx="0" cy="-18" r="7" fill="${pinColor}"></circle></g></svg>`; overlay.appendChild(pin); }); }
+                function drawMustPassOverflowOverlay(pins, th, vp) {
+                    const overlay = document.getElementById('mustPassOverlay');
+                    if (!overlay) return;
+                    overlay.innerHTML = '';
+                    if (!pins || !pins.length) return;
+                    const canvasRect = cvs.getBoundingClientRect();
+                    const paneRect = overlay.getBoundingClientRect();
+                    if (!canvasRect.width || !canvasRect.height || !paneRect.width || !paneRect.height || !cvs.width || !cvs.height) {
+                        APP.State.ENGINE.isDirty = true;
+                        return;
+                    }
+
+                    const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                    if (!l) return;
+                    const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w;
+                    const gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h;
+
+                    const scaleX = canvasRect.width / cvs.width;
+                    const scaleY = canvasRect.height / cvs.height;
+                    const cssCellW = (vp.cellW || (cvs.width / gridW)) * scaleX;
+                    const cssCellH = (vp.cellH || (cvs.height / gridH)) * scaleY;
+                    const markerCanvasSize = Math.max(cssCellW, cssCellH) * 1.5;
+
+                    pins.forEach(({ x, y, isHit }) => {
+                        const { sx, sy } = getScreenPos(x, y);
+                        const cssX = canvasRect.left - paneRect.left + sx * scaleX;
+                        const cssY = canvasRect.top - paneRect.top + sy * scaleY;
+
+                        const pinCanvas = document.createElement('canvas');
+                        pinCanvas.width = Math.max(1, Math.round(markerCanvasSize * window.devicePixelRatio));
+                        pinCanvas.height = Math.max(1, Math.round(markerCanvasSize * window.devicePixelRatio));
+                        pinCanvas.style.position = 'absolute';
+                        pinCanvas.style.left = `${cssX - markerCanvasSize / 2}px`;
+                        pinCanvas.style.top = `${cssY - markerCanvasSize / 2}px`;
+                        pinCanvas.style.width = `${markerCanvasSize}px`;
+                        pinCanvas.style.height = `${markerCanvasSize}px`;
+                        pinCanvas.style.pointerEvents = 'none';
+
+                        const pinCtx = pinCanvas.getContext('2d');
+                        if (!pinCtx) return;
+                        pinCtx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+                        pinCtx.translate(markerCanvasSize / 2, markerCanvasSize / 2);
+                        drawRequiredPin(pinCtx, Math.min(cssCellW, cssCellH), { isSatisfied: isHit, themeColors: th.colors });
+
+                        overlay.appendChild(pinCanvas);
+                    });
+                }
 
                 function render() {
 
@@ -5303,9 +5370,10 @@
                 }
                 const hasContinuousAnimation = APP.State.ENGINE.ripples.length > 0 || APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING;
                 if (hasContinuousAnimation) APP.State.ENGINE.isDirty = true;
-                if (APP.State.ENGINE.isDirty || hasContinuousAnimation) {
-                    APP.Renderer.render();
+                const shouldRender = APP.State.ENGINE.isDirty || hasContinuousAnimation;
+                if (shouldRender) {
                     APP.State.ENGINE.isDirty = false;
+                    APP.Renderer.render();
                 }
                 requestAnimationFrame(loop);
             }
