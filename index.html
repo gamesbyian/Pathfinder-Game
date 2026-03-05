@@ -5739,6 +5739,41 @@
             } catch (e) {}
         }
 
+        function isKnownTheme(themeName) {
+            if (typeof themeName !== 'string' || !themeName) return false;
+            const fromLoadedData = APP.Data?.getTheme?.(themeName);
+            const fromStaticThemes = (typeof THEMES === 'object' && THEMES) ? THEMES[themeName] : null;
+            return !!(fromLoadedData || fromStaticThemes);
+        }
+
+        function sanitizeSessionPayload(raw, fallback = {}) {
+            const levelCount = APP.LevelUtils.getRawLevels()?.length || 0;
+            const maxIdx = Math.max(0, levelCount - 1);
+            const fallbackTheme = isKnownTheme(fallback?.currentTheme)
+                ? fallback.currentTheme
+                : (APP.State.ENGINE.runtime.currentTheme || 'classic');
+            const fallbackLevel = Number.isInteger(fallback?.levelIdx) ? Math.max(0, fallback.levelIdx) : 0;
+
+            const safeLevel = Number.isInteger(raw?.levelIdx)
+                ? (levelCount > 0 ? Math.max(0, Math.min(raw.levelIdx, maxIdx)) : Math.max(0, raw.levelIdx))
+                : fallbackLevel;
+            const safeTheme = isKnownTheme(raw?.currentTheme)
+                ? raw.currentTheme
+                : fallbackTheme;
+            const updatedAt = Number.isFinite(raw?.updatedAt) ? Math.max(0, Math.floor(raw.updatedAt)) : 0;
+            return { levelIdx: safeLevel, currentTheme: safeTheme, updatedAt };
+        }
+
+        function getLocalSessionState() {
+            try {
+                const raw = localStorage.getItem(`pathfinder_session_${appId}`);
+                if (!raw) return sanitizeSessionPayload({}, {});
+                return sanitizeSessionPayload(JSON.parse(raw), {});
+            } catch (e) {
+                return sanitizeSessionPayload({}, {});
+            }
+        }
+
         function syncProgress(user) {
             const localData = localStorage.getItem(`pathfinder_progress_${appId}`);
             if (localData) {
@@ -5763,11 +5798,9 @@
                 sessionDoc.onSnapshot((doc) => {
                     if (!doc.exists) return;
                     const data = doc.data() || {};
-                    const localSession = APP.Persistence.applySessionState();
-                    const nextSession = {
-                        levelIdx: Number.isInteger(data.levelIdx) ? Math.max(0, data.levelIdx) : localSession.levelIdx,
-                        currentTheme: (typeof data.currentTheme === 'string' && APP.Themes.getTheme(data.currentTheme)) ? data.currentTheme : localSession.currentTheme
-                    };
+                    const localSession = getLocalSessionState();
+                    const cloudSession = sanitizeSessionPayload(data, localSession);
+                    const nextSession = cloudSession.updatedAt > localSession.updatedAt ? cloudSession : localSession;
                     localStorage.setItem(`pathfinder_session_${appId}`, JSON.stringify(nextSession));
                 }, (err) => {});
             }
@@ -5789,7 +5822,8 @@
             try {
                 const payload = {
                     levelIdx: APP.State.ENGINE.levelIdx,
-                    currentTheme: APP.State.ENGINE.runtime.currentTheme || 'classic'
+                    currentTheme: APP.State.ENGINE.runtime.currentTheme || 'classic',
+                    updatedAt: Date.now()
                 };
                 localStorage.setItem(`pathfinder_session_${appId}`, JSON.stringify(payload));
 
@@ -5802,20 +5836,8 @@
         }
 
         function applySessionState() {
-            try {
-                const raw = localStorage.getItem(`pathfinder_session_${appId}`);
-                if (!raw) return { levelIdx: 0, currentTheme: APP.State.ENGINE.runtime.currentTheme || 'classic' };
-                const parsed = JSON.parse(raw);
-                const levelCount = APP.LevelUtils.getRawLevels()?.length || 0;
-                const maxIdx = Math.max(0, levelCount - 1);
-                const safeLevel = Number.isInteger(parsed?.levelIdx)
-                    ? (levelCount > 0 ? Math.max(0, Math.min(parsed.levelIdx, maxIdx)) : Math.max(0, parsed.levelIdx))
-                    : 0;
-                const safeTheme = (typeof parsed?.currentTheme === 'string' && APP.Themes.getTheme(parsed.currentTheme)) ? parsed.currentTheme : (APP.State.ENGINE.runtime.currentTheme || 'classic');
-                return { levelIdx: safeLevel, currentTheme: safeTheme };
-            } catch (e) {
-                return { levelIdx: 0, currentTheme: APP.State.ENGINE.runtime.currentTheme || 'classic' };
-            }
+            const localSession = getLocalSessionState();
+            return { levelIdx: localSession.levelIdx, currentTheme: localSession.currentTheme };
         }
 
         function updateCompletionUI() {
