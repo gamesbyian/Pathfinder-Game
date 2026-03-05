@@ -191,7 +191,7 @@
 
 <div id="appLayout" class="app-layout mx-auto stack h-full w-full justify-start relative gap-[var(--ui-gap)] pb-[var(--ui-gap)]">
     <div id="gamePane" class="layout-right-pane">
-    <div id="mainGamePane" class="bg-white rounded-2xl overflow-hidden shadow-2xl border flex flex-col shrink-0">
+    <div id="mainGamePane" class="bg-white rounded-2xl overflow-hidden shadow-2xl border flex flex-col shrink-0 relative">
         <div id="headerBar" class="flex h-20 border-b">
             <div id="headerLeft" class="flex-shrink-0 flex items-center justify-center border-r transition-colors duration-300 bg-[var(--theme-logo-bg)] aspect-square">
                 <svg viewBox="0 0 9 9" class="h-full w-auto p-[var(--ui-pad)]">
@@ -235,6 +235,8 @@
                 </div>
             </div>
         </div>
+
+        <div id="mustPassOverlay" class="absolute inset-0 pointer-events-none z-50"></div>
 
         <div id="canvasContainer" class="relative overflow-hidden">
             <canvas id="gameCanvas" width="800" height="800"></canvas>
@@ -4951,9 +4953,11 @@
 
                 function drawScorchMark(ctx, cx, cy, s) { ctx.save(); ctx.translate(cx, cy); const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 0.4); grad.addColorStop(0, 'rgba(0,0,0,0.5)'); grad.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = grad; ctx.beginPath(); const radii = [0.35, 0.15, 0.4, 0.2, 0.3, 0.15, 0.35, 0.2, 0.4, 0.15, 0.3, 0.25, 0.35, 0.15, 0.4, 0.2]; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2; const r = s * radii[i]; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.closePath(); ctx.fill(); ctx.restore(); }
 
+                function drawMustPassOverflowOverlay(pins, th, vp) { const overlay = document.getElementById('mustPassOverlay'); if (!overlay) return; overlay.innerHTML = ''; if (!pins || !pins.length) return; const canvasRect = cvs.getBoundingClientRect(); const paneRect = overlay.getBoundingClientRect(); pins.forEach(({ x, y, isHit }) => { const { sx, sy } = getScreenPos(x, y); const size = vp.cellW; const tilt = isHit ? 15 : -15; const pinColor = isHit ? th.colors.pin : th.colors.pinUnflipped; const pin = document.createElement('div'); pin.style.position = 'absolute'; pin.style.left = `${canvasRect.left - paneRect.left + sx - size / 2}px`; pin.style.top = `${canvasRect.top - paneRect.top + sy - size / 2 - vp.cellH * 0.12}px`; pin.style.width = `${size}px`; pin.style.height = `${size}px`; pin.innerHTML = `<svg viewBox="0 0 100 100" style="width:100%;height:100%;overflow:visible;"><g transform="translate(50 75) rotate(${tilt}) scale(${(size / 35) * 2.4})"><path d="M-1 0 L1 0 L1.5 -12 L-1.5 -12 Z" fill="#94a3b8"></path><circle cx="0" cy="-18" r="7" fill="${pinColor}"></circle></g></svg>`; overlay.appendChild(pin); }); }
+
                 function render() {
 
-                const vp = APP.State.ENGINE.viewport, l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!vp.cellW || !l) return; const th = APP.Themes.THEMES[APP.Themes.getCurrentTheme()]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = APP.State.ENGINE.viewport.swapped ? H : W, dispH = APP.State.ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke();
+                const vp = APP.State.ENGINE.viewport, l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const mustPassOverlay = document.getElementById('mustPassOverlay'); if (mustPassOverlay) mustPassOverlay.innerHTML = ''; if (!vp.cellW || !l) return; const th = APP.Themes.THEMES[APP.Themes.getCurrentTheme()]; ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); const W = l.grid.w, H = l.grid.h, dispW = APP.State.ENGINE.viewport.swapped ? H : W, dispH = APP.State.ENGINE.viewport.swapped ? W : H, inset = vp.cellW * 0.25; ctx.beginPath(); ctx.strokeStyle = th.grid; ctx.lineWidth = 1; for (let i = 0; i <= dispW; i++) { const x = i * vp.cellW; ctx.moveTo(x, inset); ctx.lineTo(x, cvs.height - inset); } for (let i = 0; i <= dispH; i++) { const y = i * vp.cellH; ctx.moveTo(inset, y); ctx.lineTo(cvs.width - inset, y); } ctx.stroke();
 
 
 
@@ -5067,7 +5071,7 @@
 
 
 
-                l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; const pinYOffset = p.y === 0 ? -vp.cellH * 0.12 : 0; drawAsset('required', p.x, p.y, { isSatisfied: isHit, themeColors: th.colors, pinYOffset }); });
+                const mustPassOverlayPins = []; l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; if (p.y === 0) { mustPassOverlayPins.push({ x: p.x, y: p.y, isHit }); return; } drawAsset('required', p.x, p.y, { isSatisfied: isHit, themeColors: th.colors }); }); if (mustPassOverlayPins.length > 0) drawMustPassOverflowOverlay(mustPassOverlayPins, th, vp);
 
                 if (l.goalKey !== -1) { const goalP = APP.LevelUtils.UNPACK(l.goalKey), sGoal = getScreenPos(goalP.x, goalP.y); ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 
