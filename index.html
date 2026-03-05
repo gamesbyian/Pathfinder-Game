@@ -7126,7 +7126,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.text.megaGemini = t.text.megaGemini || '#ffffff';
         t.text.megaCopy = t.text.megaCopy || t.modal.text;
         t.text.body = t.text.body || t.modal.text;
-        t.text.themeName = t.text.themeName || pickThemeNameColor(
+        t.text.themeName = pickThemeNameColor(
             t.modal.panelBg || t.canvasBg || '#ffffff',
             [
                 t.text.modalAccent,
@@ -7136,9 +7136,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 t.text.modalMuted,
                 t.modal.textMuted,
                 t.text.body,
-                t.headerLeftText
+                t.headerLeftText,
+                '#000000',
+                '#ffffff'
             ],
-            t.text.modal
+            pickContrastText(t.modal.panelBg || t.canvasBg || '#ffffff', '#ffffff', '#000000')
         );
         t.text.shellBtn = t.text.shellBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#475569');
         t.text.actionBtn = t.text.actionBtn || ((t.bodyBg === "#020617" || t.bodyBg === "#000000") ? "#f8fafc" : "#ffffff");
