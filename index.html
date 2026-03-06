@@ -4904,7 +4904,7 @@
         foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, paletteColors: ['#d946ef', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444'], undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true }
         ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
-        ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, isHintExpanded: false }
+        ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, isHintExpanded: false, tapStartCoord: null, tapMoved: false }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
         ,flags: { useRefereeSolver: true, refereeDebug: false }
     };
@@ -5204,7 +5204,147 @@
                 })) { APP.State.ENGINE.isDirty = true; if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== APP.Core.EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } APP.Engine.setLogicState(APP.Core.HAZARD_TRIGGERED); APP.Core.SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = APP.LevelUtils.resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); APP.Core.SOUND_BUS.play("A5", "16n"); APP.Engine.setLogicState(APP.Core.PORTAL_PAUSE); checkWinCondition(); return "portal"; } APP.Core.SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
 
 
-            function attemptMoveTo(target) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const dx = target.x - headPos.x; const dy = target.y - headPos.y; if (dx !== 0 && dy !== 0) return; const pathSteps = []; if (dx !== 0) { for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y)); } else if (dy !== 0) { for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i)); } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
+            const buildStraightPathSteps = (headPos, target) => {
+                const dx = target.x - headPos.x;
+                const dy = target.y - headPos.y;
+                if (dx !== 0 && dy !== 0) return [];
+                const pathSteps = [];
+                if (dx !== 0) {
+                    for (let i = 1; i <= Math.abs(dx); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x + Math.sign(dx) * i, headPos.y));
+                } else if (dy !== 0) {
+                    for (let i = 1; i <= Math.abs(dy); i++) pathSteps.push(APP.LevelUtils.PACK(headPos.x, headPos.y + Math.sign(dy) * i));
+                }
+                return pathSteps;
+            };
+
+            const cloneTapRouteState = (state) => ({
+                mode: state.mode,
+                path: [...state.path],
+                isPortalJump: new Set(state.isPortalJump),
+                visitedCounts: new Map(state.visitedCounts),
+                cellUsage: new Map(Array.from(state.cellUsage.entries(), ([k, u]) => [k, { h: !!u.h, v: !!u.v }])),
+                intersections: state.intersections,
+                flipCount: state.flipCount,
+                crossedFlippingFilters: new Map(state.crossedFlippingFilters),
+                activeGateKey: state.activeGateKey,
+                armedFalseGoals: new Set(state.armedFalseGoals || [])
+            });
+
+            const rebuildTapRouteDerivedState = (state, level) => {
+                state.visitedCounts = new Map();
+                state.cellUsage = new Map();
+                state.intersections = 0;
+                state.flipCount = 0;
+                state.crossedFlippingFilters = new Map();
+                for (let i = 0; i < state.path.length; i++) {
+                    const k = state.path[i];
+                    const c = state.visitedCounts.get(k) || 0;
+                    if (c > 0 && k !== state.activeGateKey && (level && k !== level.goalKey)) state.intersections++;
+                    state.visitedCounts.set(k, c + 1);
+                    if (i > 0 && !state.isPortalJump.has(i)) {
+                        const prevK = state.path[i - 1];
+                        const p1 = APP.LevelUtils.UNPACK(prevK), p2 = APP.LevelUtils.UNPACK(k);
+                        const axis = (p2.y === p1.y) ? APP.Core.H : APP.Core.V;
+                        const mark = (key, ax) => {
+                            const u = state.cellUsage.get(key) || { h: false, v: false };
+                            if (ax === APP.Core.H) u.h = true; else u.v = true;
+                            state.cellUsage.set(key, u);
+                        };
+                        mark(prevK, axis);
+                        mark(k, axis);
+                    }
+                    if (level && level.flippingFilterMap.has(k) && !state.crossedFlippingFilters.has(k)) {
+                        state.crossedFlippingFilters.set(k, state.flipCount);
+                        state.flipCount++;
+                    }
+                }
+            };
+
+            const pushTapRouteStep = (state, key, isJump, level) => {
+                const lastK = state.path[state.path.length - 1];
+                if (lastK !== undefined && !isJump) {
+                    const p1 = APP.LevelUtils.UNPACK(lastK), p2 = APP.LevelUtils.UNPACK(key);
+                    const axis = (p2.y === p1.y) ? APP.Core.H : APP.Core.V;
+                    const mark = (k, ax) => { const u = state.cellUsage.get(k) || { h: false, v: false }; if (ax === APP.Core.H) u.h = true; else u.v = true; state.cellUsage.set(k, u); };
+                    mark(lastK, axis); mark(key, axis);
+                }
+                const count = state.visitedCounts.get(key) || 0;
+                if (count > 0 && key !== state.activeGateKey && (level && key !== level.goalKey)) state.intersections++;
+                state.visitedCounts.set(key, count + 1);
+                state.path.push(key);
+                if (isJump) state.isPortalJump.add(state.path.length - 1);
+                if (level && level.flippingFilterMap.has(key) && !state.crossedFlippingFilters.has(key)) {
+                    state.crossedFlippingFilters.set(key, state.flipCount);
+                    state.flipCount++;
+                }
+            };
+
+            function simulateTapRouteStep(baseState, key, level) {
+                const nextState = cloneTapRouteState(baseState);
+                if (nextState.path.length > 1 && key === nextState.path[nextState.path.length - 2]) {
+                    nextState.path.pop();
+                    const prevLen = nextState.path.length;
+                    nextState.isPortalJump = new Set(Array.from(nextState.isPortalJump).filter(i => i < prevLen));
+                    rebuildTapRouteDerivedState(nextState, level);
+                    return { state: nextState, result: "valid" };
+                }
+                if (!APP.LevelUtils.isValidMove(key, nextState, level, {
+                    isStrict: true,
+                    mode: nextState.mode,
+                    allowJump: true,
+                    checkWinMetrics: false,
+                    checkHazards: false,
+                    checkFalseGoals: true,
+                    armedFalseGoals: nextState.armedFalseGoals,
+                    flipCount: nextState.flipCount,
+                    crossedSet: nextState.crossedFlippingFilters
+                })) return null;
+                if (nextState.mode !== APP.Core.EDITOR && level.gooseSet.has(key)) return { state: nextState, result: "goose" };
+                pushTapRouteStep(nextState, key, false, level);
+                if (nextState.armedFalseGoals.has(key) && APP.Engine.areWinMetricsSatisfied(nextState, level)) return { state: nextState, result: "detonate" };
+                const portal = APP.LevelUtils.resolvePortal(level, key);
+                if (portal && portal.dest !== -1) {
+                    pushTapRouteStep(nextState, portal.dest, true, level);
+                    if (nextState.armedFalseGoals.has(portal.dest) && APP.Engine.areWinMetricsSatisfied(nextState, level)) return { state: nextState, result: "detonate" };
+                    return { state: nextState, result: "portal" };
+                }
+                return { state: nextState, result: "valid" };
+            }
+
+            function findTapRoute(target, options = {}) {
+                const level = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                if (!level || !APP.State.ENGINE.path.length) return null;
+                const targetKey = APP.LevelUtils.PACK(target.x, target.y);
+                const startState = cloneTapRouteState(APP.State.ENGINE);
+                const startKey = startState.path[startState.path.length - 1];
+                if (targetKey === startKey) return [];
+                const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+                const maxExpansions = options.maxExpansions || Math.max(200, level.grid.w * level.grid.h * 40);
+                const queue = [{ state: startState, inputs: [] }];
+                const seen = new Set([`${startKey}|${startState.path.join('.')}`]);
+                let expansions = 0;
+                while (queue.length > 0 && expansions < maxExpansions) {
+                    const cur = queue.shift();
+                    expansions++;
+                    const headKey = cur.state.path[cur.state.path.length - 1];
+                    const head = APP.LevelUtils.UNPACK(headKey);
+                    for (const [dx, dy] of dirs) {
+                        const nk = APP.LevelUtils.PACK(head.x + dx, head.y + dy);
+                        const sim = simulateTapRouteStep(cur.state, nk, level);
+                        if (!sim || sim.result === "goose" || sim.result === "detonate") continue;
+                        const newInputs = [...cur.inputs, nk];
+                        const nextKey = sim.state.path[sim.state.path.length - 1];
+                        if (nextKey === targetKey) return newInputs;
+                        const sig = `${nextKey}|${sim.state.path.join('.')}`;
+                        if (seen.has(sig)) continue;
+                        seen.add(sig);
+                        queue.push({ state: sim.state, inputs: newInputs });
+                    }
+                }
+                return null;
+            }
+
+            function attemptMoveTo(target, opts = {}) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; let pathSteps = buildStraightPathSteps(headPos, target); if (opts.inputType === 'tap') { const tapRoute = findTapRoute(target); if (Array.isArray(tapRoute) && tapRoute.length > 0) pathSteps = tapRoute; } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
 
             function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(APP.Core.RESOLVED); APP.UI.renderWinExportPanel({ solutionOutput: JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''), showExportArea: APP.State.ENGINE.isDevMode }); if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); APP.Core.SOUND_BUS.play("C5", "8n"); } }
 
@@ -7534,6 +7674,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const pathBeforeMove = APP.State.ENGINE.path.join(',');
             const p = APP.LevelUtils.getGridCoord(e); const k = APP.LevelUtils.PACK(p.x, p.y); const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
             APP.State.ENGINE.resetStreak = 0;
+            APP.State.ENGINE.runtime.tapStartCoord = { x: p.x, y: p.y };
+            APP.State.ENGINE.runtime.tapMoved = false;
             if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) {
                 const occupied = activeLevel.gateKeys.includes(k) || activeLevel.goalKey === k || activeLevel.falseGoalKeys.has(k) || activeLevel.blockSet.has(k) || activeLevel.gooseSet.has(k) || activeLevel.filterMap.has(k) || activeLevel.flippingFilterMap.has(k) || activeLevel.portalMap.has(k) || activeLevel.mustPassKeys.includes(k) || activeLevel.mustCrossKeys.includes(k);
                 if (occupied) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.State.ENGINE.editor.draggedObject = APP.Editor.pickUpObject(k); if (APP.State.ENGINE.editor.draggedObject) { APP.Engine.setLogicState(APP.Core.EDIT_DRAG); APP.UI.EditorDragGhost.update({ visible: true, cellSize: APP.State.ENGINE.viewport.cellW, type: APP.State.ENGINE.editor.draggedObject.type }); } } else if (APP.State.ENGINE.editor.selectedTool) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.Editor.placeEditorObject(k); } else { APP.State.ENGINE.editor.emptyClickCount++; if (APP.State.ENGINE.editor.emptyClickCount >= 2) { APP.UI.showMessage("Click pencil to draw.", "text-white font-bold"); } } return;
@@ -7552,12 +7694,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     if (shouldReverse) { APP.State.ENGINE.path.reverse(); const newJumps = new Set(); APP.State.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(APP.State.ENGINE.path.length - jIdx)); APP.State.ENGINE.isPortalJump = newJumps; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); }
                 }
                 const lastIdx = APP.State.ENGINE.path.lastIndexOf(k); if (lastIdx !== -1 && lastIdx < APP.State.ENGINE.path.length - 1) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, lastIdx); APP.Engine.setLogicState(APP.Core.DRAGGING); return; }
-                APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p);
+                APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' });
             } else {
                 if (!activeLevel) return;
-                if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isPencilMode) { APP.State.ENGINE.activeGateKey = null; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, k, false); APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p); } else {
+                if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isPencilMode) { APP.State.ENGINE.activeGateKey = null; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, k, false); APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' }); } else {
                     let bestGate = null; if (activeLevel.gateKeys.includes(k)) { bestGate = k; } else { let minDist = Infinity; for (let i = 0; i < activeLevel.gateKeys.length; i++) { const gk = activeLevel.gateKeys[i]; const gp = APP.LevelUtils.UNPACK(gk); if (p.x === gp.x || p.y === gp.y) { const dist = Math.abs(p.x - gp.x) + Math.abs(p.y - gp.y); if (dist > 0 && dist < minDist) { minDist = dist; bestGate = gk; } } } }
-                    if (bestGate !== null) { APP.State.ENGINE.activeGateKey = bestGate; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, bestGate, false); APP.Engine.setLogicState(APP.Core.DRAGGING); if (bestGate !== k) { APP.Engine.handlePrimaryGridInput(p); } }
+                    if (bestGate !== null) { APP.State.ENGINE.activeGateKey = bestGate; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, bestGate, false); APP.Engine.setLogicState(APP.Core.DRAGGING); if (bestGate !== k) { APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' }); } }
                 }
             }
             if (APP.State.ENGINE.path.join(',') !== pathBeforeMove) resetSearchEscalation();
@@ -7613,10 +7755,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.UI.EditorDragGhost.update({ visible: false });
             }
             if (e.pointerId !== APP.State.ENGINE.runtime.activePointerId && APP.State.ENGINE.logicState !== APP.Core.EDIT_DRAG) return;
+            const dragCoord = APP.LevelUtils.getGridCoord(e);
+            const tapStart = APP.State.ENGINE.runtime.tapStartCoord;
+            if (tapStart && (dragCoord.x !== tapStart.x || dragCoord.y !== tapStart.y)) APP.State.ENGINE.runtime.tapMoved = true;
             e.preventDefault();
-            if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.handlePrimaryGridInput(APP.LevelUtils.getGridCoord(e));
+            if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.handlePrimaryGridInput(dragCoord, { inputType: 'drag' });
         });
-        window.addEventListener('pointerup', e => { handleUp(e); if (APP.State.ENGINE.runtime.activePointerId !== null && APP.Renderer.getCanvas().hasPointerCapture(APP.State.ENGINE.runtime.activePointerId)) APP.Renderer.getCanvas().releasePointerCapture(APP.State.ENGINE.runtime.activePointerId); APP.State.ENGINE.runtime.activePointerId = null; });
+        window.addEventListener('pointerup', e => { handleUp(e); if (APP.State.ENGINE.runtime.activePointerId !== null && APP.Renderer.getCanvas().hasPointerCapture(APP.State.ENGINE.runtime.activePointerId)) APP.Renderer.getCanvas().releasePointerCapture(APP.State.ENGINE.runtime.activePointerId); APP.State.ENGINE.runtime.activePointerId = null; APP.State.ENGINE.runtime.tapStartCoord = null; APP.State.ENGINE.runtime.tapMoved = false; });
 
         [APP.Renderer.getCanvas(), document.getElementById('hintBtn'), document.getElementById('editCopyMetrics')].forEach(el => { if (!el) return; if (!el.hasAttribute('tabindex')) el.setAttribute('tabindex', '0'); });
 
