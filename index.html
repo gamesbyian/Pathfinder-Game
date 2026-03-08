@@ -4963,6 +4963,99 @@
             return result;
         };
 
+        // Canonical solver status/result helpers used by all Referee engines (core + adapters).
+        const normalizeSolveStatus = (statusLike = 'error', ok = false) => {
+            if (ok) return 'solved';
+            const status = `${statusLike || ''}`.trim();
+            if (!status) return 'error';
+            if (status === 'no-solution') return 'no-solution-inconclusive';
+            return status;
+        };
+        const createCanonicalSolveResult = (partial = {}) => {
+            const canonical = normalizeSolutionEntries(partial.solution ?? partial.solutions ?? []);
+            const ok = !!partial.ok && canonical.length > 0;
+            const status = normalizeSolveStatus(partial.status || partial.rawStatus || 'error', ok);
+            return {
+                ok,
+                status,
+                rawStatus: partial.rawStatus || status,
+                stage: Number.isFinite(partial.stage) ? partial.stage : null,
+                solution: ok ? canonical : [],
+                solutions: ok ? canonical : [],
+                stagesTried: Array.isArray(partial.stagesTried) ? partial.stagesTried : [],
+                message: partial.message || '',
+                elapsedMs: Number.isFinite(partial.elapsedMs) ? partial.elapsedMs : null,
+                diagnostics: partial.diagnostics || null,
+                debug: partial.debug || partial.stats?.debug || null,
+                preExpansionAbort: partial.preExpansionAbort || null,
+                zeroExpansionSummary: partial.zeroExpansionSummary || null,
+                rootSearchSummary: partial.rootSearchSummary || null,
+                engine: partial.engine || null
+            };
+        };
+        const normalizeLegacySolverResult = (legacy, fallbackStatus = 'error', context = {}) => {
+            const debugLevel = context.debugLevel;
+            const debug = legacy?.debug || createSolverDebugStats(debugLevel);
+            ensureDepthZeroDebug(debug);
+            if (debug?.debug) {
+                if (!debug.debug.startState && debug.startState) debug.debug.startState = debug.startState;
+                if (!debug.debug.startNeighborTrace && debug.startNeighborTrace) debug.debug.startNeighborTrace = debug.startNeighborTrace;
+            }
+            recordDepthZeroHandoff(legacy?.debug || null, debug, context?.normalizedBy || 'legacy-adapter');
+            const diagnostics = buildSearchDiagnostics(debug, fallbackStatus);
+            if (diagnostics.preExpansionExit && !debug?.debug?.depthZeroReason) {
+                setDepthZeroReason(debug, fallbackStatus === 'error' ? 'status-error-before-expansion' : 'returned-without-expansion', {
+                    normalizedBy: context?.normalizedBy || 'legacy-adapter',
+                    returnedBeforeExpansion: true
+                });
+            }
+            if (diagnostics.preExpansionExit && !getPreExpansionAbort(debug)) {
+                setPreExpansionAbort(debug, {
+                    code: 'status-returned-before-expansion',
+                    message: `Legacy adapter observed ${fallbackStatus || 'unknown'} before root candidate expansion.`,
+                    phase: Number.isFinite(getStartStateDebug(debug)?.startNeighborsCount)
+                        ? 'after-start-neighbor-enumeration-before-root-expansion'
+                        : 'before-start-neighbor-enumeration',
+                    source: context?.normalizedBy || 'legacy-adapter',
+                    details: {
+                        fallbackStatus: fallbackStatus || 'unknown',
+                        statusPath: context?.statusPath || 'legacy-adapter'
+                    }
+                });
+            }
+            const canonical = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
+            const ok = !!legacy?.ok && canonical.length > 0;
+            const normalizedStatus = ok
+                ? 'solved'
+                : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : fallbackStatus));
+            return createCanonicalSolveResult({
+                ok,
+                status: normalizedStatus,
+                rawStatus: normalizedStatus,
+                stage: Number.isFinite(context.stage) ? context.stage : null,
+                solution: ok ? canonical : [],
+                message: ok ? '' : 'No solution found.',
+                debug,
+                engine: 'legacy-adapter',
+                preExpansionAbort: getPreExpansionAbort(debug),
+                zeroExpansionSummary: makeZeroExpansionSummary({ statusPath: context?.statusPath || 'legacy-adapter', debug, diagnostics, droppedBy: context?.droppedBy || 'legacy-wrapper' })
+            });
+        };
+        const deriveLegacyCompatFromAttempts = (stagesTried = []) => {
+            const attempts = Array.isArray(stagesTried) ? stagesTried : [];
+            const legacyAttempts = attempts.filter(st => st?.engine === 'legacy-adapter');
+            const firstLegacy = legacyAttempts[0] || null;
+            const solvedLegacy = legacyAttempts.find(st => st?.solved);
+            const solvedByReferee = attempts.find(st => st?.solved && st?.engine !== 'legacy-adapter');
+            return {
+                legacyFallbackTried: legacyAttempts.length > 0,
+                legacyFallbackStatus: solvedLegacy?.status || firstLegacy?.status || null,
+                legacyFallbackSolved: !!solvedLegacy,
+                legacyFallbackTimeMs: Number.isFinite(firstLegacy?.elapsedMs) ? firstLegacy.elapsedMs : null,
+                finalSolvedBy: solvedLegacy ? 'legacy' : (solvedByReferee ? 'referee' : 'none')
+            };
+        };
+
         const Referee = {
         buildLevelProfile(level) {
             const w = level?.grid?.w || 0;
@@ -6508,6 +6601,43 @@
             }, 'triage-final', 'triage-wrapper');
         },
 
+
+        async runLegacyAdapterStage(level, budgetMs, opts = {}) {
+            const started = Date.now();
+            let legacy;
+            try {
+                legacy = await PathfinderSolver.solve(level, {
+                    timeLimit: budgetMs,
+                    debug: opts.debug !== undefined ? !!opts.debug : true,
+                    debugLevel: opts.debugLevel,
+                    signal: opts.signal,
+                    enableLowExpansionProbe: !!opts.enableLowExpansionProbe
+                });
+            } catch (legacyErr) {
+                const thrownDebug = createSolverDebugStats(opts.debugLevel);
+                setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: legacyErr?.message || 'legacy-throw' });
+                setPreExpansionAbort(thrownDebug, {
+                    code: 'unexpected-exception',
+                    message: legacyErr?.message || 'legacy-throw',
+                    phase: 'strategy-setup',
+                    source: 'Referee.runLegacyAdapterStage',
+                    details: { name: legacyErr?.name || null }
+                });
+                finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
+                legacy = { ok: false, solution: [], solutions: [], debug: thrownDebug, error: legacyErr };
+            }
+            const normalized = normalizeLegacySolverResult(legacy, 'error', {
+                stage: 11,
+                debugLevel: opts.debugLevel,
+                normalizedBy: 'referee-legacy-adapter',
+                statusPath: 'referee-stage-legacy-adapter',
+                droppedBy: 'legacy-wrapper'
+            });
+            normalized.elapsedMs = Date.now() - started;
+            normalized.engine = 'legacy-adapter';
+            return normalized;
+        },
+
         async solve(levelInput, opts = {}) {
             const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
@@ -6552,6 +6682,9 @@
                 && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
                 && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
+            // Referee is the single orchestrator; legacy pathfinder is invoked as an internal adapter stage.
+            const allowLegacyAdapter = opts.allowLegacyAdapter !== undefined ? !!opts.allowLegacyAdapter : true;
+            const onlyLegacyAdapter = !!opts.onlyLegacyAdapter;
             const makePhaseOrder = (totalBudgetMs, tierIdx) => {
                 const disabledPruneSet = fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[tierIdx] || [];
                 const budgets = this.allocateStageBudgets(totalBudgetMs, level.solverProfile);
@@ -6576,12 +6709,16 @@
                     switch: { stage: 4, name: 'Stage 4', variant: 'hypothesis-switch', budgetMs: switchBudget, run: () => { this.maybeSwitchHypothesis(controlPlane, 'alternate-hypothesis-run'); return this.runBaselineStage(level, switchBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }); }, successMessage: 'Solved (alternate hypothesis).', timeoutMessage: 'Alternate hypothesis timed out.', failMessage: 'hypothesis-switch fail' },
                     portalSweep: { stage: 7, name: 'Stage 7', variant: 'portal-sweep', budgetMs: portalSweepBudget, run: () => this.runBaselineStage(level, portalSweepBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.portalSweep || 'alt', portalBiasMode: 'aggressive', scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (portal sweep).', timeoutMessage: 'Portal sweep timed out.', failMessage: 'portal sweep fail' },
                     macroSkeleton: { stage: 6, name: 'Stage 6', variant: 'macro-skeleton', budgetMs: macroSkeletonBudget, run: () => this.runBaselineStage(level, macroSkeletonBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: false, allowRandomizedExploration: false, purpose, preferMacroSkeleton: true }), successMessage: 'Solved (macro skeleton focus).', timeoutMessage: 'Macro skeleton search timed out.', failMessage: 'macro skeleton fail' },
-                    fallback: { stage: 5, name: 'Stage 5', variant: 'fallback', budgetMs: fallbackBudget, run: () => this.runStage2Fallback(level, fallbackBudget, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'broad fallback fail' }
+                    fallback: { stage: 5, name: 'Stage 5', variant: 'fallback', budgetMs: fallbackBudget, run: () => this.runStage2Fallback(level, fallbackBudget, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'broad fallback fail' },
+                    legacyAdapter: { stage: 11, name: 'Stage 11', variant: 'legacy-adapter', budgetMs: Math.max(500, Math.floor(totalBudgetMs * 0.4)), run: () => this.runLegacyAdapterStage(level, Math.max(500, Math.floor(totalBudgetMs * 0.4)), { signal: APP.State.ENGINE.activeSolverController?.signal, debug: true, debugLevel: (typeof level?.id === 'number' ? level.id + 1 : null), enableLowExpansionProbe: !!opts.auditMode }), successMessage: 'Solved (legacy adapter).', timeoutMessage: 'Legacy adapter timed out.', failMessage: 'legacy adapter inconclusive' }
                 };
-                const ordered = (complexityStrategy.stageOrder || ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback'])
-                    .map(id => stageCatalog[id])
-                    .filter(Boolean);
-                if (lowComplexityLevel) return ordered.filter(p => p.stage <= 1 || p.stage === 5);
+                const baseOrder = onlyLegacyAdapter
+                    ? ['legacyAdapter']
+                    : (complexityStrategy.stageOrder || ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback']);
+                if (allowLegacyAdapter && !baseOrder.includes('legacyAdapter')) baseOrder.push('legacyAdapter');
+                const ordered = baseOrder.map(id => stageCatalog[id]).filter(Boolean);
+                if (onlyLegacyAdapter) return ordered;
+                if (lowComplexityLevel) return ordered.filter(p => p.stage <= 1 || p.stage === 5 || p.stage === 11);
                 return ordered;
             };
             const phases = [
@@ -6592,11 +6729,15 @@
             const activePhases = phases[Math.min(tier || 0, phases.length - 1)];
             const allowGemini = !!opts.allowGemini;
 
-            const markStage = (stage, name, variant, budget, startedAt, result) => {
+            const markStage = (stage, name, variant, budget, startedAt, result, meta = {}) => {
+                const normalized = createCanonicalSolveResult(result || {});
                 stagesTried.push({
                     stage,
                     name,
                     variant,
+                    engine: meta.engine || normalized.engine || 'referee-core',
+                    status: normalized.rawStatus || normalized.status || 'error',
+                    solved: !!normalized.ok,
                     budgetMs: budget,
                     elapsedMs: Date.now() - startedAt,
                     result: toStageResultStatus(result?.status),
@@ -6628,7 +6769,7 @@
                 if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: phaseBudgetMs });
                 const startedAt = Date.now();
                 const result = await run();
-                markStage(stage, name, variant, phaseBudgetMs, startedAt, result);
+                markStage(stage, name, variant, phaseBudgetMs, startedAt, result, { engine: variant === 'legacy-adapter' ? 'legacy-adapter' : 'referee-core' });
                 last = { ...result, stage, message: result.ok ? successMessage : (result.status === 'timeout' ? timeoutMessage : failMessage), stagesTried };
                 if (result.ok || result.status === 'no-solution-proven') break;
             }
@@ -6646,7 +6787,7 @@
                     if (opts.onStage) opts.onStage({ stage: plan.stage, name: plan.name, variant: plan.variant, budgetMs: plan.budgetMs });
                     const startedAt = Date.now();
                     const triageResult = await this.runStage2Fallback(level, plan.budgetMs, plan.disabledPrunes, { portalBiasMode: plan.portalBiasMode, phasePolicy: plan.phasePolicy, enableLowExpansionProbe: true });
-                    markStage(plan.stage, plan.name, plan.variant, plan.budgetMs, startedAt, triageResult);
+                    markStage(plan.stage, plan.name, plan.variant, plan.budgetMs, startedAt, triageResult, { engine: 'referee-core' });
                     const triageDebug = triageResult?.stats?.debug || {};
                     const searchDiagnostics = buildSearchDiagnostics(triageDebug, triageResult?.status || 'error');
                     const triageStartState = getStartStateDebug(triageDebug);
@@ -6773,6 +6914,9 @@
                     stage: 6,
                     name: 'Stage 6',
                     variant: 'gemini',
+                    engine: 'referee-core',
+                    status: last.rawStatus || last.status || 'error',
+                    solved: !!last.ok,
                     budgetMs: 15000,
                     elapsedMs: Date.now() - t4,
                     result: toStageResultStatus(last.status),
@@ -6792,6 +6936,8 @@
             else attemptHistory[key] = { timesTried, lastStageReached: last.stage, lastStatus: last.status };
 
             applyCanonicalSolutionShape(last);
+            const usedLegacyAdapter = (stagesTried || []).some(st => st?.engine === 'legacy-adapter');
+            last.executionPath = onlyLegacyAdapter ? 'legacy-only' : (usedLegacyAdapter ? 'referee-then-legacy' : 'referee-only');
             last.retrySuggested = !last.ok && ['timeout', 'no-solution-inconclusive'].includes(last.status);
             last.escalationTier = escalationTier;
             last.usedEscalation = escalationTier > 0;
@@ -6967,7 +7113,6 @@
             const purpose = opts.purpose || 'solve';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
             const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
-            const disableLegacyFallback = !!opts.disableLegacyFallback;
             const requestedEscalationTierRaw = Number(opts.escalationTier ?? opts.tier);
             const requestedEscalationTier = Number.isFinite(requestedEscalationTierRaw) ? Math.max(0, Math.floor(requestedEscalationTierRaw)) : 0;
             const levelId = Number.isFinite(level?.id) ? level.id + 1 : null;
@@ -6975,21 +7120,6 @@
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
             const requestedSolverPath = allowReferee ? 'referee' : 'legacy';
             const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-only';
-                const baseReport = {
-                requestedSolverPath,
-                refereeAttempted: false,
-                refereeStatus: null,
-                refereeSolved: false,
-                refereeTimeMs: null,
-                legacyFallbackTried: false,
-                legacyFallbackStatus: null,
-                legacyFallbackSolved: false,
-                legacyFallbackTimeMs: null,
-                finalStatus: 'error',
-                finalSolvedBy: 'none',
-                executionPath: defaultExecutionPath,
-                    totalSolveTimeMs: 0
-                };
                 const attachDepthZeroAudit = (payload, statusPath = 'solver-wrapper', droppedBy = 'unknown') => {
                     if (!payload || typeof payload !== 'object') return payload;
                     const dbg = payload.debug || payload.stats?.debug || null;
@@ -7009,53 +7139,21 @@
                     }
                     return payload;
                 };
-                const normalizeLegacyRun = (legacy, fallbackStatus = 'error', context = {}) => {
-                    const debug = legacy?.debug || createSolverDebugStats(debugLevel);
-                    ensureDepthZeroDebug(debug);
-                    if (debug?.debug) {
-                        if (!debug.debug.startState && debug.startState) debug.debug.startState = debug.startState;
-                        if (!debug.debug.startNeighborTrace && debug.startNeighborTrace) debug.debug.startNeighborTrace = debug.startNeighborTrace;
-                    }
-                    recordDepthZeroHandoff(legacy?.debug || null, debug, context?.normalizedBy || 'legacy-wrapper');
-                    const diagnostics = buildSearchDiagnostics(debug, fallbackStatus);
-                    if (diagnostics.preExpansionExit && !debug?.debug?.depthZeroReason) {
-                        setDepthZeroReason(debug, fallbackStatus === 'error' ? 'status-error-before-expansion' : 'returned-without-expansion', {
-                            normalizedBy: context?.normalizedBy || 'legacy-wrapper',
-                            returnedBeforeExpansion: true
-                        });
-                    }
-                    if (diagnostics.preExpansionExit && !getPreExpansionAbort(debug)) {
-                        setPreExpansionAbort(debug, {
-                            code: 'status-returned-before-expansion',
-                            message: `Legacy solver wrapper observed ${fallbackStatus || 'unknown'} before root candidate expansion.`,
-                            phase: Number.isFinite(getStartStateDebug(debug)?.startNeighborsCount)
-                                ? 'after-start-neighbor-enumeration-before-root-expansion'
-                                : 'before-start-neighbor-enumeration',
-                            source: context?.normalizedBy || 'legacy-wrapper',
-                            details: {
-                                fallbackStatus: fallbackStatus || 'unknown',
-                                statusPath: context?.statusPath || 'legacy-run'
-                            }
-                        });
-                    }
-                    const canonical = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
-                    const ok = !!legacy?.ok && canonical.length > 0;
-                    const normalizedStatus = ok
-                        ? 'solved'
-                        : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : fallbackStatus));
-                    return {
-                        ok,
-                        status: normalizedStatus,
-                        rawStatus: normalizedStatus,
-                        stage: 0,
-                        solution: ok ? canonical : [],
-                        solutions: ok ? canonical : [],
-                        message: ok ? '' : 'No solution found.',
-                        stagesTried: [],
-                        debug,
-                        preExpansionAbort: getPreExpansionAbort(debug),
-                        zeroExpansionSummary: makeZeroExpansionSummary({ statusPath: context?.statusPath || 'legacy-run', debug, diagnostics, droppedBy: context?.droppedBy || 'legacy-wrapper' })
-                    };
+                const baseReport = {
+                requestedSolverPath,
+                refereeAttempted: allowReferee,
+                refereeStatus: null,
+                refereeSolved: false,
+                refereeTimeMs: null,
+                // Legacy compatibility fields are now derived from unified Referee attempt history.
+                legacyFallbackTried: false,
+                legacyFallbackStatus: null,
+                legacyFallbackSolved: false,
+                legacyFallbackTimeMs: null,
+                finalStatus: 'error',
+                finalSolvedBy: 'none',
+                executionPath: defaultExecutionPath,
+                    totalSolveTimeMs: 0
                 };
                 const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
             if (!controller) {
@@ -7075,127 +7173,43 @@
 
             const solveStart = performance.now();
             try {
-                let solverResult;
-                let escalationTierUsed = requestedEscalationTier;
-                let executionPath = defaultExecutionPath;
-                let refereeStatus = null;
-                let legacyStatus = null;
-                let refereeSolved = false;
-                let legacyFallbackSolved = false;
-                let refereeTimeMs = null;
-                let legacyFallbackTimeMs = null;
-                let refereeAttempted = false;
-                let legacyFallbackTried = false;
-
-                if (!allowReferee) {
-                    APP.UI.showMessage('Solving…', 'text-sky-600');
-                    legacyFallbackTried = true;
-                    const legacyStart = performance.now();
-                    let legacy;
-                    try {
-                        legacy = await PathfinderSolver.solve(level, {
-                            timeLimit: timeBudgetMs,
-                            debug,
-                            debugLevel,
-                            signal: controller.signal,
-                            enableLowExpansionProbe: !!opts.auditMode
-                        });
-                    } catch (legacyErr) {
-                        const thrownDebug = createSolverDebugStats(debugLevel);
-                        setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: legacyErr?.message || 'legacy-throw' });
-                        setPreExpansionAbort(thrownDebug, {
-                            code: 'unexpected-exception',
-                            message: legacyErr?.message || 'legacy-throw',
-                            phase: 'strategy-setup',
-                            source: 'APP.Solver.solveLevel/legacy-only',
-                            details: { name: legacyErr?.name || null }
-                        });
-                        finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
-                        legacy = { ok: false, solution: [], solutions: [], debug: thrownDebug, error: legacyErr };
-                    }
-                    legacyFallbackTimeMs = Math.round(performance.now() - legacyStart);
-                    solverResult = normalizeLegacyRun(legacy, 'error', { normalizedBy: 'legacy-only-wrapper', statusPath: 'legacy-only', droppedBy: 'legacy-wrapper' });
-                    legacyStatus = solverResult.rawStatus;
-                    legacyFallbackSolved = !!solverResult.ok;
-                } else {
-                    refereeAttempted = true;
-                    const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
-                    const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
-                    const escalationTier = Math.max(requestedEscalationTier, autoTier);
-                    escalationTierUsed = escalationTier;
+                const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
+                const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
+                const escalationTier = Math.max(requestedEscalationTier, autoTier);
+                if (allowReferee) {
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
                     if (escalationTier >= 2) APP.UI.showMessage('Deep search on: extended search mode.', 'text-amber-700');
-                    const refereeStart = performance.now();
-                    solverResult = await Referee.solve(level, {
-                        purpose,
-                        timeBudgetMs,
-                        tier: escalationTier,
-                        allowGemini: false,
-                        onStage: ({ name, variant, budgetMs }) => {
-                            APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
-                            if (APP.State.ENGINE.flags?.refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
-                            if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
-                        }
-                    });
-                    refereeTimeMs = Math.round(performance.now() - refereeStart);
-                    const canonical = solverResult.solution ?? solverResult.solutions ?? [];
-                    solverResult.solution = canonical;
-                    solverResult.solutions = canonical;
-                    solverResult.rawStatus = solverResult.status;
-                    refereeStatus = solverResult.rawStatus || solverResult.status || 'error';
-                    refereeSolved = !!solverResult.ok;
-                    const shouldTryLegacyFallback = !disableLegacyFallback && !solverResult.ok && ['timeout', 'no-solution-inconclusive', 'error'].includes(refereeStatus);
-                    if (shouldTryLegacyFallback) {
-                        executionPath = 'referee-then-legacy';
-                        const fallbackBudgetMs = Number.isFinite(solverResult.budgetMs) ? solverResult.budgetMs : timeBudgetMs;
-                        APP.UI.showMessage('Referee inconclusive. Trying old solver…', 'text-amber-600');
-                        legacyFallbackTried = true;
-                        const legacyStart = performance.now();
-                        let legacy;
-                        try {
-                            legacy = await PathfinderSolver.solve(level, {
-                                timeLimit: fallbackBudgetMs,
-                                debug,
-                                debugLevel,
-                                signal: controller.signal,
-                                enableLowExpansionProbe: !!opts.auditMode
-                            });
-                        } catch (legacyErr) {
-                            const thrownDebug = createSolverDebugStats(debugLevel);
-                            setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: legacyErr?.message || 'legacy-throw' });
-                        setPreExpansionAbort(thrownDebug, {
-                            code: 'unexpected-exception',
-                            message: legacyErr?.message || 'legacy-throw',
-                            phase: 'strategy-setup',
-                            source: 'APP.Solver.solveLevel/referee-fallback-legacy',
-                            details: { name: legacyErr?.name || null }
-                        });
-                            finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
-                            legacy = { ok: false, solution: [], solutions: [], debug: thrownDebug, error: legacyErr };
-                        }
-                        legacyFallbackTimeMs = Math.round(performance.now() - legacyStart);
-                        const normalizedLegacy = normalizeLegacyRun(legacy, 'error', { normalizedBy: 'referee-fallback-wrapper', statusPath: 'referee->legacy', droppedBy: 'legacy-wrapper' });
-                        legacyStatus = normalizedLegacy.rawStatus;
-                        if (normalizedLegacy.ok) {
-                            legacyFallbackSolved = true;
-                            solverResult = {
-                                ...normalizedLegacy,
-                                stage: solverResult.stage,
-                                stagesTried: solverResult.stagesTried || []
-                            };
-                        } else {
-                            if (!solverResult.debug && normalizedLegacy.debug) solverResult.debug = normalizedLegacy.debug;
-                            if (!solverResult.zeroExpansionSummary && normalizedLegacy.zeroExpansionSummary) solverResult.zeroExpansionSummary = normalizedLegacy.zeroExpansionSummary;
-                        }
-                    }
+                } else {
+                    APP.UI.showMessage('Solving…', 'text-sky-600');
                 }
-
-                const finalStatus = solverResult.rawStatus || solverResult.status || 'error';
-                const finalSolvedBy = refereeSolved ? 'referee' : (legacyFallbackSolved ? 'legacy' : 'none');
-                const totalSolveTimeMs = Math.round(performance.now() - solveStart);
-                solverResult.solverPath = executionPath;
+                const refereeStart = performance.now();
+                // Unified architecture: outer callers invoke Referee once and receive one normalized solve result.
+                let solverResult = await Referee.solve(level, {
+                    purpose,
+                    timeBudgetMs,
+                    tier: escalationTier,
+                    allowGemini: !!opts.allowGemini,
+                    allowLegacyAdapter: !opts.disableLegacyFallback,
+                    onlyLegacyAdapter: !allowReferee,
+                    auditMode: !!opts.auditMode,
+                    onStage: ({ name, variant, budgetMs }) => {
+                        APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
+                        if (APP.State.ENGINE.flags?.refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
+                        if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
+                    }
+                });
+                const refereeTimeMs = Math.round(performance.now() - refereeStart);
+                solverResult = createCanonicalSolveResult(solverResult || {});
                 applyCanonicalSolutionShape(solverResult);
-                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${refereeStatus || 'not-run'} legacyTried=${legacyFallbackTried} legacyStatus=${legacyStatus || 'not-run'} final=${finalStatus} solvedBy=${finalSolvedBy}`);
+
+                const compat = deriveLegacyCompatFromAttempts(solverResult.stagesTried || []);
+                const finalStatus = solverResult.rawStatus || solverResult.status || 'error';
+                const executionPath = solverResult.executionPath
+                    || (!allowReferee ? 'legacy-only' : (compat.legacyFallbackTried ? 'referee-then-legacy' : 'referee-only'));
+                const totalSolveTimeMs = Math.round(performance.now() - solveStart);
+
+                solverResult.solverPath = executionPath;
+                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compat.legacyFallbackTried} legacyStatus=${compat.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compat.finalSolvedBy}`);
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
@@ -7222,16 +7236,16 @@
                     // Compatibility alias: final effective execution path, not the requested engine.
                     solverPath: executionPath,
                     requestedSolverPath,
-                    refereeAttempted,
-                    refereeStatus,
-                    refereeSolved,
+                    refereeAttempted: allowReferee,
+                    refereeStatus: finalStatus,
+                    refereeSolved: !!solverResult.ok,
                     refereeTimeMs,
-                    legacyFallbackTried,
-                    legacyFallbackStatus: legacyStatus,
-                    legacyFallbackSolved,
-                    legacyFallbackTimeMs,
+                    legacyFallbackTried: compat.legacyFallbackTried,
+                    legacyFallbackStatus: compat.legacyFallbackStatus,
+                    legacyFallbackSolved: compat.legacyFallbackSolved,
+                    legacyFallbackTimeMs: compat.legacyFallbackTimeMs,
                     finalStatus,
-                    finalSolvedBy,
+                    finalSolvedBy: compat.finalSolvedBy,
                     executionPath,
                     totalSolveTimeMs,
                     message: solverResult.message || '',
@@ -7287,6 +7301,7 @@
                 finishRun();
             }
         };
+
 
         const megaSolve = async (levels, opts = {}) => {
             if (APP.State.ENGINE.activeSolverController) return { cancelled: true };
@@ -11630,7 +11645,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
                         finalSolvedBy: hintRes?.finalSolvedBy || 'none',
                         totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
-                        diagnostics: hintRes?.diagnostics || null,
+                        diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics),
                         preExpansionAbort: hintRes?.preExpansionAbort || null,
                         zeroExpansionSummary: hintRes?.zeroExpansionSummary || null,
                         rootSearchSummary: hintRes?.rootSearchSummary || null,
@@ -11640,7 +11655,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         rootCandidatesExpanded: Number.isFinite(hintRes?.debug?.rootCandidatesExpanded) ? hintRes.debug.rootCandidatesExpanded : null,
                         rootMoveOrder: Array.isArray(hintRes?.debug?.rootMoveOrder) ? hintRes.debug.rootMoveOrder.slice(0, 20) : null,
                         rootMoveScores: Array.isArray(hintRes?.debug?.rootMoveScores) ? hintRes.debug.rootMoveScores.slice(0, 20) : null,
-                        rootSuppressionLog: Array.isArray(hintRes?.debug?.debug?.rootSuppressionLog) ? hintRes.debug.debug.rootSuppressionLog.slice(0, 20) : null
+                        rootSuppressionLog: Array.isArray(hintRes?.debug?.debug?.rootSuppressionLog) ? hintRes.debug.debug.rootSuppressionLog.slice(0, 20) : null,
+                        refereeAttempts: (hintRes?.stagesTried || []).map(st => ({ stage: st.stage, name: st.name, variant: st.variant, engine: st.engine || null, status: st.status || st.result || null, solved: !!st.solved, elapsedMs: Number.isFinite(st.elapsedMs) ? st.elapsedMs : null }))
                     };
                     levelEntry.newHint.attemptHistory.push(attemptRecord);
                     finalAttempt = attemptRecord;
@@ -11678,7 +11694,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
                         finalSolvedBy: hintRes?.finalSolvedBy || 'none',
                         totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
-                        diagnostics: hintRes?.diagnostics || null,
+                        diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics),
                         preExpansionAbort: hintRes?.preExpansionAbort || null,
                         zeroExpansionSummary: hintRes?.zeroExpansionSummary || null,
                         rootSearchSummary: hintRes?.rootSearchSummary || null,
@@ -11688,14 +11704,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         rootCandidatesExpanded: Number.isFinite(hintRes?.debug?.rootCandidatesExpanded) ? hintRes.debug.rootCandidatesExpanded : null,
                         rootMoveOrder: Array.isArray(hintRes?.debug?.rootMoveOrder) ? hintRes.debug.rootMoveOrder.slice(0, 20) : null,
                         rootMoveScores: Array.isArray(hintRes?.debug?.rootMoveScores) ? hintRes.debug.rootMoveScores.slice(0, 20) : null,
-                        rootSuppressionLog: Array.isArray(hintRes?.debug?.debug?.rootSuppressionLog) ? hintRes.debug.debug.rootSuppressionLog.slice(0, 20) : null
+                        rootSuppressionLog: Array.isArray(hintRes?.debug?.debug?.rootSuppressionLog) ? hintRes.debug.debug.rootSuppressionLog.slice(0, 20) : null,
+                        refereeAttempts: (hintRes?.stagesTried || []).map(st => ({ stage: st.stage, name: st.name, variant: st.variant, engine: st.engine || null, status: st.status || st.result || null, solved: !!st.solved, elapsedMs: Number.isFinite(st.elapsedMs) ? st.elapsedMs : null }))
                     };
                     levelEntry.newHint.attemptHistory.push(geminiAttempt);
                     finalAttempt = geminiAttempt;
                 }
 
                 if (finalAttempt?.rawStatus === 'no-solution-inconclusive') {
-                    const triage = finalAttempt?.diagnostics?.inconclusiveTriage || null;
+                    const triage = finalAttempt?.diagnosticsSummary?.inconclusiveTriage || null;
                     if (triage) {
                         const triageSummary = summarizeTriage(triage);
                         levelEntry.diagnostics.inconclusiveTriageSummary = triageSummary;
@@ -11729,7 +11746,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     finalStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
                     finalSolvedBy: 'none',
                     totalSolveTimeMs: 0,
-                    preExpansionAbort: null
+                    preExpansionAbort: null,
+                    diagnosticsSummary: null,
+                    refereeAttempts: []
                 };
                 levelEntry.newHint.attemptHistory.push(failedAttempt);
                 finalAttempt = failedAttempt;
@@ -11764,7 +11783,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.rootMoveOrder = Array.isArray(finalAttempt?.rootMoveOrder) ? finalAttempt.rootMoveOrder : null;
             levelEntry.newHint.rootMoveScores = Array.isArray(finalAttempt?.rootMoveScores) ? finalAttempt.rootMoveScores : null;
             levelEntry.newHint.rootSuppressionLog = Array.isArray(finalAttempt?.rootSuppressionLog) ? finalAttempt.rootSuppressionLog : null;
-            levelEntry.newHint.diagnosticsSummary = summarizeDiagnostics(finalAttempt?.diagnostics);
+            levelEntry.newHint.diagnosticsSummary = finalAttempt?.diagnosticsSummary || null;
             if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
                 const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
                 if (detail) setLevelError(detail, { source: 'newHint-status' });
