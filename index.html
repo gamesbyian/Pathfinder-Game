@@ -1870,14 +1870,12 @@
                     const portalSig = this._encodePortalReentries(state);
                     const posKey = state.path[state.path.length - 1];
                     const portalForced = this._portalForced(state, l);
-                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, posKey, l, portalForced);
                     return [
                         base,
                         crossCounts,
                         countsSig,
                         usageSig,
                         portalSig,
-                        Number.isFinite(activeObjectiveId) ? activeObjectiveId : -1,
                         Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1,
                         Number.isFinite(state.portalSelectedEntry) ? state.portalSelectedEntry : -1,
                         Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1,
@@ -6584,14 +6582,25 @@
                         ? triageStartState.startNeighborKeys
                         : (Array.isArray(triageStartTrace?.finalNeighbors) ? triageStartTrace.finalNeighbors.slice(0, 12) : null);
                     const triageDepthZeroReason = getDepthZeroReason(triageDebug, triageResult?.status || 'error');
+                    const triageDepthZeroCaptured = !!triageDebug?.debug?.depthZeroCaptured;
+                    const triageDroppedBy = triageDebug?.debug?.depthZeroDroppedBy
+                        || ((searchDiagnostics.returnedWithoutExpansion && triageDepthZeroCaptured && !triageDepthZeroReason) ? 'triage-wrapper' : 'unknown');
                     const missingDepthZero = (searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion)
                         && (!Number.isFinite(triageStartState?.startNeighborsCount) || !Array.isArray(triageStartNeighborKeys) || !triageDepthZeroReason);
+                    const resolvedDepthZeroReason = triageDepthZeroReason
+                        || (missingDepthZero
+                            ? (triageDepthZeroCaptured ? 'depth-zero-debug-lost-in-wrapper' : 'depth-zero-debug-never-captured')
+                            : null);
                     const triageZeroExpansionSummary = makeZeroExpansionSummary({
                         statusPath: `triage-stage-${plan.stage}`,
                         debug: triageDebug,
                         diagnostics: searchDiagnostics,
-                        droppedBy: missingDepthZero ? 'triage-wrapper' : 'legacy-solver'
+                        droppedBy: triageDroppedBy
                     });
+                    const rootSuppressionLog = Array.isArray(triageDebug?.debug?.rootSuppressionLog)
+                        ? triageDebug.debug.rootSuppressionLog.slice(0, 20)
+                        : [];
+                    const rootSearchSummary = makeRootSearchSummary(triageDebug, searchDiagnostics);
                     triageAttempts.push({
                         stage: plan.stage,
                         name: plan.name,
@@ -6605,12 +6614,12 @@
                         branchesGenerated: searchDiagnostics.branchesGenerated,
                         startNeighborsCount: Number.isFinite(triageStartState?.startNeighborsCount)
                             ? triageStartState.startNeighborsCount
-                            : ((searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion) ? 'missing-debug-propagation' : null),
+                            : null,
                         startNeighborKeys: Array.isArray(triageStartNeighborKeys)
                             ? triageStartNeighborKeys
-                            : ((searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion) ? 'missing-debug-propagation' : null),
-                        depthZeroReason: triageDepthZeroReason
-                            || ((searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion) ? 'missing-debug-propagation' : null),
+                            : null,
+                        depthZeroReason: resolvedDepthZeroReason,
+                        droppedBy: (resolvedDepthZeroReason === 'depth-zero-debug-lost-in-wrapper') ? triageDroppedBy : null,
                         candidateMovesConsidered: searchDiagnostics.candidateMovesConsidered,
                         memoHits: searchDiagnostics.memoHits,
                         failedStateHits: searchDiagnostics.failedStateHits,
@@ -6620,6 +6629,14 @@
                         returnedWithoutExpansion: searchDiagnostics.returnedWithoutExpansion,
                         disabledPrunesApplied: searchDiagnostics.disabledPrunesApplied,
                         triageProbe: triageDebug?.triageProbe || null,
+                        rootCandidatesGenerated: Math.max(0, Number(triageDebug?.rootCandidatesGenerated) || 0),
+                        rootCandidatesSuppressedByMemo: Math.max(0, Number(triageDebug?.rootCandidatesSuppressedByMemo) || 0),
+                        rootCandidatesSuppressedByDominance: Math.max(0, Number(triageDebug?.rootCandidatesSuppressedByDominance) || 0),
+                        rootCandidatesExpanded: Math.max(0, Number(triageDebug?.rootCandidatesExpanded) || 0),
+                        rootMoveOrder: Array.isArray(triageDebug?.rootMoveOrder) ? triageDebug.rootMoveOrder.slice(0, 20) : [],
+                        rootMoveScores: Array.isArray(triageDebug?.rootMoveScores) ? triageDebug.rootMoveScores.slice(0, 20) : [],
+                        rootSuppressionLog,
+                        rootSearchSummary,
                         zeroExpansionSummary: triageZeroExpansionSummary
                     });
                     last = { ...triageResult, stage: plan.stage, message: triageResult.ok ? `Solved (${plan.variant}).` : `${plan.variant} ${triageResult.status || 'error'}.`, stagesTried };
@@ -6649,6 +6666,14 @@
                             returnedWithoutExpansion: a.returnedWithoutExpansion,
                             disabledPrunesApplied: a.disabledPrunesApplied,
                             triageProbe: a.triageProbe || null,
+                            rootCandidatesGenerated: a.rootCandidatesGenerated,
+                            rootCandidatesSuppressedByMemo: a.rootCandidatesSuppressedByMemo,
+                            rootCandidatesSuppressedByDominance: a.rootCandidatesSuppressedByDominance,
+                            rootCandidatesExpanded: a.rootCandidatesExpanded,
+                            rootMoveOrder: a.rootMoveOrder,
+                            rootMoveScores: a.rootMoveScores,
+                            rootSuppressionLog: a.rootSuppressionLog,
+                            rootSearchSummary: a.rootSearchSummary || null,
                             zeroExpansionSummary: a.zeroExpansionSummary || null
                         })),
                         debugNotes: triageAttempts.flatMap(a => Array.isArray(a.debugNotes) ? a.debugNotes : (a.debugNotes ? [a.debugNotes] : []))
@@ -6894,9 +6919,17 @@
                     if (!payload || typeof payload !== 'object') return payload;
                     const dbg = payload.debug || payload.stats?.debug || null;
                     if (!dbg) return payload;
+                    const existingDroppedBy = dbg?.debug?.depthZeroDroppedBy || null;
+                    if (!existingDroppedBy && droppedBy) {
+                        const dz = ensureDepthZeroDebug(dbg);
+                        if (dz && dz.depthZeroCaptured && !hasDepthZeroPayload(dbg)) dz.depthZeroDroppedBy = droppedBy;
+                    }
                     const diagnostics = buildSearchDiagnostics(dbg, payload.rawStatus || payload.status || 'unknown');
-                    const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy });
+                    const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy: dbg?.debug?.depthZeroDroppedBy || droppedBy });
                     if (summary) payload.zeroExpansionSummary = summary;
+                    if ((payload.rawStatus === 'timeout' || payload.rawStatus === 'no-solution-inconclusive' || payload.status === 'timeout' || payload.status === 'no-solution-inconclusive') && !payload.rootSearchSummary) {
+                        payload.rootSearchSummary = makeRootSearchSummary(dbg, diagnostics);
+                    }
                     return payload;
                 };
                 const normalizeLegacyRun = (legacy, fallbackStatus = 'error', context = {}) => {
@@ -6906,6 +6939,7 @@
                         if (!debug.debug.startState && debug.startState) debug.debug.startState = debug.startState;
                         if (!debug.debug.startNeighborTrace && debug.startNeighborTrace) debug.debug.startNeighborTrace = debug.startNeighborTrace;
                     }
+                    recordDepthZeroHandoff(legacy?.debug || null, debug, context?.normalizedBy || 'legacy-wrapper');
                     const diagnostics = buildSearchDiagnostics(debug, fallbackStatus);
                     if (diagnostics.returnedWithoutExpansion && !debug?.debug?.depthZeroReason) {
                         setDepthZeroReason(debug, fallbackStatus === 'error' ? 'status-error-before-expansion' : 'returned-without-expansion', {
@@ -7096,7 +7130,8 @@
                     totalSolveTimeMs,
                     message: solverResult.message || '',
                     diagnostics: solverResult.diagnostics || null,
-                    zeroExpansionSummary: solverResult.zeroExpansionSummary || null
+                    zeroExpansionSummary: solverResult.zeroExpansionSummary || null,
+                    rootSearchSummary: solverResult.rootSearchSummary || null
                 }, executionPath, 'audit-normalizer');
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
@@ -7658,7 +7693,14 @@
             function ensureDepthZeroDebug(debugStats) {
                 if (!debugStats || typeof debugStats !== 'object') return null;
                 if (!debugStats.debug || typeof debugStats.debug !== 'object') {
-                    debugStats.debug = { startState: null, startNeighborTrace: null, depthZeroReason: null, rootSuppressionLog: [] };
+                    debugStats.debug = {
+                        startState: null,
+                        startNeighborTrace: null,
+                        depthZeroReason: null,
+                        depthZeroCaptured: false,
+                        depthZeroDroppedBy: null,
+                        rootSuppressionLog: []
+                    };
                 }
                 if (!Array.isArray(debugStats.debug.rootSuppressionLog)) debugStats.debug.rootSuppressionLog = [];
                 return debugStats.debug;
@@ -7668,10 +7710,29 @@
                 const dbg = ensureDepthZeroDebug(debugStats);
                 if (!dbg) return;
                 dbg.depthZeroReason = reason;
+                dbg.depthZeroCaptured = true;
                 dbg.depthZeroMeta = {
                     ...(dbg.depthZeroMeta || {}),
                     ...meta
                 };
+            }
+
+            function hasDepthZeroPayload(debug = {}) {
+                return !!(getStartStateDebug(debug)
+                    || getStartNeighborTraceDebug(debug)
+                    || debug?.debug?.depthZeroReason
+                    || debug?.depthZeroReason
+                    || debug?.depth0?.reason);
+            }
+
+            function recordDepthZeroHandoff(sourceDebug = null, targetDebug = null, layer = 'unknown') {
+                if (!targetDebug || typeof targetDebug !== 'object') return;
+                const dbg = ensureDepthZeroDebug(targetDebug);
+                if (!dbg) return;
+                const sourceHasDepthZero = hasDepthZeroPayload(sourceDebug || targetDebug);
+                const targetHasDepthZero = hasDepthZeroPayload(targetDebug);
+                if (sourceHasDepthZero && !targetHasDepthZero && !dbg.depthZeroDroppedBy) dbg.depthZeroDroppedBy = layer;
+                if (sourceHasDepthZero || targetHasDepthZero) dbg.depthZeroCaptured = true;
             }
 
             function getStartStateDebug(debug = {}) {
@@ -7683,7 +7744,7 @@
             }
 
             function getDepthZeroReason(debug = {}, status = null) {
-                return debug?.debug?.depthZeroReason || debug?.depthZeroReason || debug?.depth0?.reason || (status ? `${status}-before-expansion` : null);
+                return debug?.debug?.depthZeroReason || debug?.depthZeroReason || debug?.depth0?.reason || null;
             }
 
             function makeZeroExpansionSummary({ statusPath = 'unknown', debug = {}, diagnostics = null, droppedBy = 'unknown' } = {}) {
@@ -7691,15 +7752,19 @@
                 if (!(d.nodesExpanded === 0 && d.branchesGenerated === 0 && d.returnedWithoutExpansion)) return null;
                 const startState = getStartStateDebug(debug);
                 const startTrace = getStartNeighborTraceDebug(debug);
+                const depthZeroDbg = debug?.debug || {};
+                const captured = !!depthZeroDbg?.depthZeroCaptured;
                 const startNeighborKeys = Array.isArray(startState?.startNeighborKeys)
                     ? startState.startNeighborKeys
                     : (Array.isArray(startTrace?.finalNeighbors) ? startTrace.finalNeighbors.slice(0, 12) : []);
+                const droppedAt = depthZeroDbg?.depthZeroDroppedBy || droppedBy || 'unknown';
+                const missingReason = captured ? 'depth-zero-debug-lost-in-wrapper' : 'depth-zero-debug-never-captured';
                 return {
-                    reason: getDepthZeroReason(debug, d.budgetExhausted ? 'timeout' : null) || 'missing-debug-propagation',
-                    startNeighborsCount: Number.isFinite(startState?.startNeighborsCount) ? startState.startNeighborsCount : 'missing-debug-propagation',
-                    startNeighborKeys: startNeighborKeys.length > 0 ? startNeighborKeys : 'missing-debug-propagation',
+                    reason: getDepthZeroReason(debug, d.budgetExhausted ? 'timeout' : null) || missingReason,
+                    startNeighborsCount: Number.isFinite(startState?.startNeighborsCount) ? startState.startNeighborsCount : null,
+                    startNeighborKeys: startNeighborKeys.length > 0 ? startNeighborKeys : null,
                     statusPath,
-                    droppedBy
+                    droppedBy: (missingReason === 'depth-zero-debug-lost-in-wrapper') ? droppedAt : null
                 };
             }
 
@@ -7735,13 +7800,42 @@
                 };
             }
 
+
+
+            function makeRootSearchSummary(debug = {}, diagnostics = null) {
+                const d = diagnostics || buildSearchDiagnostics(debug, debug?.status || 'unknown');
+                const generated = Math.max(0, Number(debug?.rootCandidatesGenerated) || 0);
+                const expanded = Math.max(0, Number(debug?.rootCandidatesExpanded) || 0);
+                const suppressedByMemo = Math.max(0, Number(debug?.rootCandidatesSuppressedByMemo) || 0);
+                const suppressedByDominance = Math.max(0, Number(debug?.rootCandidatesSuppressedByDominance) || 0);
+                if (!d.returnedWithoutExpansion && d.nodesExpanded <= 0 && generated <= 0 && expanded <= 0 && suppressedByMemo <= 0 && suppressedByDominance <= 0) return null;
+                const firstRootMoves = Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 8) : [];
+                const totalSuppressed = suppressedByMemo + suppressedByDominance;
+                return {
+                    rootCandidatesGenerated: generated,
+                    rootCandidatesExpanded: expanded,
+                    suppressedByMemo,
+                    suppressedByDominance,
+                    firstRootMoves,
+                    hasRootSuppressionLog: Array.isArray(debug?.debug?.rootSuppressionLog) && debug.debug.rootSuppressionLog.length > 0,
+                    dominanceLikelyOverAggressive: generated > 0 && suppressedByDominance >= Math.max(2, Math.ceil(generated * 0.7)) && expanded <= Math.ceil(generated * 0.2),
+                    memoLikelyMergingDistinctRoots: generated > 0 && suppressedByMemo >= Math.max(2, Math.ceil(generated * 0.6)) && expanded <= Math.ceil(generated * 0.25),
+                    suppressionRatio: generated > 0 ? Number((totalSuppressed / generated).toFixed(3)) : null
+                };
+            }
             function withZeroExpansionSummary(entry = {}, statusPath = 'unknown', droppedBy = 'unknown') {
                 if (!entry || typeof entry !== 'object') return entry;
                 const debug = entry?.debug || entry?.stats?.debug || {};
                 const status = entry?.status || entry?.rawStatus || 'unknown';
                 const diagnostics = buildSearchDiagnostics(debug, status);
-                const summary = makeZeroExpansionSummary({ statusPath, debug, diagnostics, droppedBy });
+                const dz = ensureDepthZeroDebug(debug);
+                if (dz && !hasDepthZeroPayload(debug) && dz.depthZeroCaptured && droppedBy && !dz.depthZeroDroppedBy) dz.depthZeroDroppedBy = droppedBy;
+                const summary = makeZeroExpansionSummary({ statusPath, debug, diagnostics, droppedBy: debug?.debug?.depthZeroDroppedBy || droppedBy });
                 if (summary) entry.zeroExpansionSummary = summary;
+                if (!entry.rootSearchSummary && (status === 'timeout' || status === 'no-solution-inconclusive')) {
+                    const rootSummary = makeRootSearchSummary(debug, diagnostics);
+                    if (rootSummary) entry.rootSearchSummary = rootSummary;
+                }
                 return entry;
             }
 
@@ -11223,7 +11317,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriage: null }
@@ -11306,7 +11400,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
                         finalSolvedBy: hintRes?.finalSolvedBy || 'none',
                         totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
-                        diagnostics: hintRes?.diagnostics || null
+                        diagnostics: hintRes?.diagnostics || null,
+                        zeroExpansionSummary: hintRes?.zeroExpansionSummary || null,
+                        rootSearchSummary: hintRes?.rootSearchSummary || null,
+                        rootCandidatesGenerated: Number.isFinite(hintRes?.debug?.rootCandidatesGenerated) ? hintRes.debug.rootCandidatesGenerated : null,
+                        rootCandidatesSuppressedByMemo: Number.isFinite(hintRes?.debug?.rootCandidatesSuppressedByMemo) ? hintRes.debug.rootCandidatesSuppressedByMemo : null,
+                        rootCandidatesSuppressedByDominance: Number.isFinite(hintRes?.debug?.rootCandidatesSuppressedByDominance) ? hintRes.debug.rootCandidatesSuppressedByDominance : null,
+                        rootCandidatesExpanded: Number.isFinite(hintRes?.debug?.rootCandidatesExpanded) ? hintRes.debug.rootCandidatesExpanded : null,
+                        rootMoveOrder: Array.isArray(hintRes?.debug?.rootMoveOrder) ? hintRes.debug.rootMoveOrder.slice(0, 20) : null,
+                        rootMoveScores: Array.isArray(hintRes?.debug?.rootMoveScores) ? hintRes.debug.rootMoveScores.slice(0, 20) : null,
+                        rootSuppressionLog: Array.isArray(hintRes?.debug?.debug?.rootSuppressionLog) ? hintRes.debug.debug.rootSuppressionLog.slice(0, 20) : null
                     };
                     levelEntry.newHint.attemptHistory.push(attemptRecord);
                     finalAttempt = attemptRecord;
@@ -11344,7 +11447,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
                         finalSolvedBy: hintRes?.finalSolvedBy || 'none',
                         totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
-                        diagnostics: hintRes?.diagnostics || null
+                        diagnostics: hintRes?.diagnostics || null,
+                        zeroExpansionSummary: hintRes?.zeroExpansionSummary || null,
+                        rootSearchSummary: hintRes?.rootSearchSummary || null,
+                        rootCandidatesGenerated: Number.isFinite(hintRes?.debug?.rootCandidatesGenerated) ? hintRes.debug.rootCandidatesGenerated : null,
+                        rootCandidatesSuppressedByMemo: Number.isFinite(hintRes?.debug?.rootCandidatesSuppressedByMemo) ? hintRes.debug.rootCandidatesSuppressedByMemo : null,
+                        rootCandidatesSuppressedByDominance: Number.isFinite(hintRes?.debug?.rootCandidatesSuppressedByDominance) ? hintRes.debug.rootCandidatesSuppressedByDominance : null,
+                        rootCandidatesExpanded: Number.isFinite(hintRes?.debug?.rootCandidatesExpanded) ? hintRes.debug.rootCandidatesExpanded : null,
+                        rootMoveOrder: Array.isArray(hintRes?.debug?.rootMoveOrder) ? hintRes.debug.rootMoveOrder.slice(0, 20) : null,
+                        rootMoveScores: Array.isArray(hintRes?.debug?.rootMoveScores) ? hintRes.debug.rootMoveScores.slice(0, 20) : null,
+                        rootSuppressionLog: Array.isArray(hintRes?.debug?.debug?.rootSuppressionLog) ? hintRes.debug.debug.rootSuppressionLog.slice(0, 20) : null
                     };
                     levelEntry.newHint.attemptHistory.push(geminiAttempt);
                     finalAttempt = geminiAttempt;
@@ -11408,6 +11520,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.finalStatus = finalAttempt?.finalStatus || finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.finalSolvedBy = finalAttempt?.finalSolvedBy || 'none';
             levelEntry.newHint.totalSolveTimeMs = Number.isFinite(finalAttempt?.totalSolveTimeMs) ? finalAttempt.totalSolveTimeMs : 0;
+            levelEntry.newHint.zeroExpansionSummary = finalAttempt?.zeroExpansionSummary || null;
+            levelEntry.newHint.rootSearchSummary = finalAttempt?.rootSearchSummary || null;
+            levelEntry.newHint.rootCandidatesGenerated = Number.isFinite(finalAttempt?.rootCandidatesGenerated) ? finalAttempt.rootCandidatesGenerated : null;
+            levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
+            levelEntry.newHint.rootCandidatesSuppressedByDominance = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByDominance) ? finalAttempt.rootCandidatesSuppressedByDominance : null;
+            levelEntry.newHint.rootCandidatesExpanded = Number.isFinite(finalAttempt?.rootCandidatesExpanded) ? finalAttempt.rootCandidatesExpanded : null;
+            levelEntry.newHint.rootMoveOrder = Array.isArray(finalAttempt?.rootMoveOrder) ? finalAttempt.rootMoveOrder : null;
+            levelEntry.newHint.rootMoveScores = Array.isArray(finalAttempt?.rootMoveScores) ? finalAttempt.rootMoveScores : null;
+            levelEntry.newHint.rootSuppressionLog = Array.isArray(finalAttempt?.rootSuppressionLog) ? finalAttempt.rootSuppressionLog : null;
             if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
                 const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
                 if (detail) setLevelError(detail, { source: 'newHint-status' });
