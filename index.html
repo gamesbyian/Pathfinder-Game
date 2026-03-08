@@ -6060,6 +6060,7 @@
                 : [15000, 60000, 180000];
             const allowRandomizedExploration = !!opts.allowRandomizedExploration;
             const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
+            const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
             const stagesTried = [];
             const controlPlane = this.createControlPlane(level.solverProfile || {});
             const lowComplexityLevel = (level.solverProfile?.objectiveCount || 0) <= 1
@@ -6067,7 +6068,7 @@
                 && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
             const makePhaseOrder = (totalBudgetMs, tierIdx) => {
-                const disabledPruneSet = complexityStrategy.pruneTogglesByTier?.[tierIdx] || [];
+                const disabledPruneSet = fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[tierIdx] || [];
                 const budgets = this.allocateStageBudgets(totalBudgetMs, level.solverProfile);
                 const split = complexityStrategy.budgetSplit || {};
                 const allowRandomThisTier = (allowRandomizedExploration || complexityStrategy.directionPolicy?.allowRandomized)
@@ -6143,6 +6144,46 @@
                 if (result.ok || result.status === 'no-solution-proven') break;
             }
 
+
+            if (!last.ok && last.status === 'no-solution-inconclusive') {
+                const triagePlans = [
+                    { stage: 8, name: 'Stage 8', variant: 'triage-prune-relax', budgetMs: Math.max(1500, Math.floor(budgetMs * 0.16)), portalBiasMode: 'adaptiveMustCross', phasePolicy: resolvedPhasePolicy, disabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity'] },
+                    { stage: 9, name: 'Stage 9', variant: 'triage-portal-off', budgetMs: Math.max(1500, Math.floor(budgetMs * 0.18)), portalBiasMode: 'off', phasePolicy: null, disabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance'] },
+                    { stage: 10, name: 'Stage 10', variant: 'triage-aggressive-legacy-phase', budgetMs: Math.max(1500, Math.floor(budgetMs * 0.2)), portalBiasMode: 'aggressive', phasePolicy: { archetype: 'legacy', thresholds: null }, disabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'] }
+                ];
+                const triageAttempts = [];
+                for (const plan of triagePlans) {
+                    if (APP.State.ENGINE.activeSolverController?.signal?.aborted) break;
+                    if (opts.onStage) opts.onStage({ stage: plan.stage, name: plan.name, variant: plan.variant, budgetMs: plan.budgetMs });
+                    const startedAt = Date.now();
+                    const triageResult = await this.runStage2Fallback(level, plan.budgetMs, plan.disabledPrunes, { portalBiasMode: plan.portalBiasMode, phasePolicy: plan.phasePolicy });
+                    markStage(plan.stage, plan.name, plan.variant, plan.budgetMs, startedAt, triageResult);
+                    const triageDebug = triageResult?.stats?.debug || {};
+                    triageAttempts.push({
+                        stage: plan.stage,
+                        name: plan.name,
+                        variant: plan.variant,
+                        status: triageResult?.status || 'error',
+                        elapsedMs: Date.now() - startedAt,
+                        strategy: { portalBiasMode: plan.portalBiasMode, phasePolicy: plan.phasePolicy || null, disabledPrunes: plan.disabledPrunes || [] },
+                        pruneCounters: triageDebug?.prune || null,
+                        debugNotes: triageDebug?.notes || null
+                    });
+                    last = { ...triageResult, stage: plan.stage, message: triageResult.ok ? `Solved (${plan.variant}).` : `${plan.variant} ${triageResult.status || 'error'}.`, stagesTried };
+                    if (triageResult.ok || triageResult.status === 'no-solution-proven') break;
+                }
+                last.diagnostics = {
+                    ...(last.diagnostics || {}),
+                    inconclusiveTriage: {
+                        triggeredBy: 'no-solution-inconclusive',
+                        status: last.status,
+                        attempts: triageAttempts,
+                        stagesTried: triageAttempts.map(a => ({ stage: a.stage, name: a.name, variant: a.variant, status: a.status, elapsedMs: a.elapsedMs })),
+                        pruneCounters: triageAttempts.map(a => ({ stage: a.stage, counters: a.pruneCounters })),
+                        debugNotes: triageAttempts.flatMap(a => Array.isArray(a.debugNotes) ? a.debugNotes : (a.debugNotes ? [a.debugNotes] : []))
+                    }
+                };
+            }
             if (!last.ok && allowGemini && last.status !== 'no-solution-proven') {
                 if (opts.onStage) opts.onStage({ stage: 6, name: 'Stage 6', variant: 'gemini', budgetMs: 15000 });
                 const t4 = Date.now();
@@ -6373,8 +6414,7 @@
                         solverResult = { ok: true, status: 'solved', rawStatus: 'solved', stage: 0, solution: legacySolution, solutions: legacySolution, stagesTried: [] };
                     } else {
                         const rawStatus = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
-                        const normalizedStatus = rawStatus === 'no-solution-proven' ? 'no-solution' : rawStatus;
-                        solverResult = { ok: false, status: normalizedStatus, rawStatus, stage: 0, solution: [], solutions: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
+                        solverResult = { ok: false, status: rawStatus, rawStatus, stage: 0, solution: [], solutions: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
                     }
                 } else {
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
@@ -6399,8 +6439,6 @@
                     solverResult.solution = canonical;
                     solverResult.solutions = canonical;
                     solverResult.rawStatus = solverResult.status;
-                    if (solverResult.status === 'no-solution-proven') solverResult.status = 'no-solution';
-
                     const rawStatus = solverResult.rawStatus || solverResult.status;
                     const shouldTryLegacyFallback = !solverResult.ok && ['timeout', 'no-solution-inconclusive', 'error'].includes(rawStatus);
                     if (shouldTryLegacyFallback) {
@@ -6450,7 +6488,8 @@
                     debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
                     stage: solverResult.stage,
-                    message: solverResult.message || ''
+                    message: solverResult.message || '',
+                    diagnostics: solverResult.diagnostics || null
                 };
             } catch (err) {
                 if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [] };
@@ -6601,7 +6640,7 @@
                 if (status === 'cancelled') return 'cancelled';
                 if (status === 'error') return 'error';
                 if (status === 'timeout') return 'timeout';
-                if (status === 'no-solution-proven') return 'inconclusive';
+                if (status === 'no-solution-proven') return 'no-solution-proven';
                 if (status === 'no-solution-inconclusive') return 'inconclusive';
                 if (status === 'gemini-invalid') return 'inconclusive';
                 if (status === 'gemini-failed') return 'error';
@@ -10404,7 +10443,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 rowsEl.textContent = 'Run Audit to generate report.';
                 return;
             }
-            rowsEl.textContent = auditReport.map(r => `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${r.error ? ` | ${r.error}` : ''}`).join('\n');
+            rowsEl.textContent = auditReport.map(r => {
+                const errSummary = r.error?.message || '';
+                const triageSummary = r.diagnostics?.inconclusiveTriage
+                    ? ` | triage ${r.diagnostics.inconclusiveTriage.status || 'unknown'} (${(r.diagnostics.inconclusiveTriage.attempts || []).length} tries)`
+                    : '';
+                return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            }).join('\n');
         };
 
         const stopAuditRun = () => {
@@ -10443,7 +10488,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
                         newHint: { status: 'error', rawStatus: 'error', timeMs: 0, producedHintValid: false, attemptHistory: [] },
                         bombs: { status: 'error', count: 0 },
-                        error: ''
+                        error: null,
+                        diagnostics: { inconclusiveTriage: null }
+                    };
+                    const setLevelError = (messageLike, extra = {}) => {
+                        levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...extra };
                     };
 
                     try {
@@ -10471,7 +10520,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         const t0 = performance.now();
                         const classifyHintStatus = (hintRes, hintValidation) => {
                             if (hintRes?.ok && hintValidation?.ok) return 'success';
-                            if (hintRes?.status === 'no-solution' || hintRes?.rawStatus === 'no-solution-proven') return 'no-solution';
+                            if (hintRes?.rawStatus === 'no-solution-proven') return 'no-solution-proven';
+                            if (hintRes?.rawStatus === 'no-solution-inconclusive') return 'no-solution-inconclusive';
+                            if (hintRes?.status === 'no-solution') return 'no-solution-inconclusive';
                             if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') return 'timeout';
                             if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') return 'aborted';
                             return 'error';
@@ -10504,14 +10555,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                     stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
                                     elapsedMs: Math.round(performance.now() - attemptStart),
                                     producedHintValid: !!hintValidation?.ok,
-                                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : ''
+                                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                                    diagnostics: hintRes?.diagnostics || null
                                 };
                                 levelEntry.newHint.attemptHistory.push(attemptRecord);
                                 finalAttempt = attemptRecord;
-                                if (attemptRecord.status === 'success' || attemptRecord.status === 'no-solution') break;
+                                if (attemptRecord.status === 'success' || attemptRecord.status === 'no-solution-proven') break;
                             }
 
-                            if (finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution') {
+                            if (finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution-proven') {
                                 if (!(await waitForSolverIdle(2000))) {
                                     APP.Solver.cancel();
                                     await waitForSolverIdle(2000);
@@ -10527,10 +10579,23 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                     stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
                                     elapsedMs: Math.round(performance.now() - attemptStart),
                                     producedHintValid: !!hintValidation?.ok,
-                                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : ''
+                                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                                    diagnostics: hintRes?.diagnostics || null
                                 };
                                 levelEntry.newHint.attemptHistory.push(geminiAttempt);
                                 finalAttempt = geminiAttempt;
+                            }
+
+                            if (finalAttempt?.rawStatus === 'no-solution-inconclusive') {
+                                const triage = finalAttempt?.diagnostics?.inconclusiveTriage || null;
+                                if (triage) {
+                                    levelEntry.diagnostics.inconclusiveTriage = triage;
+                                    setLevelError(`inconclusive triage ended with ${triage.status}`, {
+                                        rawStatus: finalAttempt.rawStatus,
+                                        status: finalAttempt.status,
+                                        triage
+                                    });
+                                }
                             }
                         } catch (newHintErr) {
                             const failedAttempt = {
@@ -10545,14 +10610,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             levelEntry.newHint.attemptHistory.push(failedAttempt);
                             finalAttempt = failedAttempt;
                             APP.Solver.cancel();
-                            if (failedAttempt.status === 'error') levelEntry.error = trimAuditError(newHintErr);
+                            if (failedAttempt.status === 'error') setLevelError(newHintErr, { source: 'newHint' });
                         }
                         levelEntry.newHint.status = finalAttempt?.status || 'error';
                         levelEntry.newHint.rawStatus = finalAttempt?.rawStatus || 'error';
                         levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
-                        if (levelEntry.newHint.status !== 'success' && !levelEntry.error) {
+                        if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
                             const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
-                            if (detail) levelEntry.error = trimAuditError(detail);
+                            if (detail) setLevelError(detail, { source: 'newHint-status' });
                         }
                         levelEntry.newHint.timeMs = Math.round(performance.now() - t0);
                         if (levelEntry.newHint.status === 'success') auditProgress.newHint.success++; else auditProgress.newHint.failure++;
@@ -10579,19 +10644,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                 levelEntry.bombs.status = 'none-found';
                                 auditProgress.bombs.noneFound++;
                             }
-                            if (levelEntry.bombs.status !== 'success' && levelEntry.bombs.status !== 'none-found' && !levelEntry.error) {
+                            if (levelEntry.bombs.status !== 'success' && levelEntry.bombs.status !== 'none-found' && !levelEntry.error?.message) {
                                 const detail = [bombRes?.status, bombRes?.error?.message].filter(Boolean).join(' | ');
-                                if (detail) levelEntry.error = trimAuditError(detail);
+                                if (detail) setLevelError(detail, { source: 'bombs' });
                             }
                         } catch (bombErr) {
                             const timed = `${bombErr?.message || ''}`.includes('timeout');
                             levelEntry.bombs.status = timed ? 'timeout' : 'error';
                             APP.Solver.cancel();
                             auditProgress.bombs.error++;
-                            if (!levelEntry.error) levelEntry.error = trimAuditError(bombErr);
+                            if (!levelEntry.error?.message) setLevelError(bombErr, { source: 'bombs' });
                         }
                     } catch (levelErr) {
-                        levelEntry.error = trimAuditError(levelErr);
+                        setLevelError(levelErr, { source: 'level' });
                         levelEntry.newHint.status = 'error';
                         levelEntry.bombs.status = 'error';
                         auditProgress.newHint.failure++;
