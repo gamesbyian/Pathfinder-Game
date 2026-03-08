@@ -1820,7 +1820,10 @@
                     const crossCounts = this._encodeMustCrossCounts(state).toString();
                     const countsSig = this._encodeCounts(state);
                     const usageSig = this._encodeUsage(state);
-                    return [base, crossCounts, countsSig, usageSig].join('|');
+                    const posKey = state.path[state.path.length - 1];
+                    const portalForced = this._portalForced(state, l);
+                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, posKey, l, portalForced);
+                    return [base, crossCounts, countsSig, usageSig, Number.isFinite(activeObjectiveId) ? activeObjectiveId : -1].join('|');
                 },
                 _dominancePruneOrStore(map, key, candidate, stats = null) {
                     if (!map || key === null || key === undefined || !candidate) return false;
@@ -1854,6 +1857,74 @@
                     let needs = 0;
                     for (let i = 0; i < state.mustCrossCounts.length; i++) needs += Math.max(0, 2 - state.mustCrossCounts[i]);
                     return needs;
+                },
+                _isObjectiveOutstanding(state, l, objectiveId) {
+                    if (!l.objectiveNodes || objectiveId < 0 || objectiveId >= l.objectiveNodes.length) return false;
+                    const node = l.objectiveNodes[objectiveId];
+                    if (!node) return false;
+                    if (node.type === 'mustPass') {
+                        if (typeof state.mustMask !== 'bigint') return false;
+                        const bit = 1n << BigInt(node.localIdx);
+                        return (state.mustMask & bit) !== 0n;
+                    }
+                    if (!state.mustCrossCounts) return false;
+                    return (state.mustCrossCounts[node.localIdx] || 0) < 2;
+                },
+                _resolveActiveObjectiveTarget(state, currentKey, l, portalForced = false) {
+                    if (!l.objectiveNodes || l.objectiveNodes.length === 0) {
+                        state.activeObjectiveId = -1;
+                        state.activeObjectivePortalForced = portalForced ? 1 : 0;
+                        return -1;
+                    }
+                    const remaining = [];
+                    for (let i = 0; i < l.objectiveNodes.length; i++) {
+                        if (this._isObjectiveOutstanding(state, l, i)) remaining.push(i);
+                    }
+                    if (remaining.length === 0) {
+                        state.activeObjectiveId = -1;
+                        state.activeObjectivePortalForced = portalForced ? 1 : 0;
+                        return -1;
+                    }
+                    const prevTarget = Number.isFinite(state.activeObjectiveId) ? state.activeObjectiveId : -1;
+                    const portalFrontierChanged = (state.activeObjectivePortalForced ?? -1) !== (portalForced ? 1 : 0);
+                    const scoreObjective = (objectiveId) => {
+                        const dMap = l.objectiveDistMaps?.[objectiveId];
+                        const detour = dMap?.get(currentKey) ?? Infinity;
+                        const toGoal = l.objectiveToGoalDist?.[objectiveId] ?? Infinity;
+                        const gateMin = l.objectiveGateMinDist?.[objectiveId] ?? Infinity;
+                        let nearestPeer = Infinity;
+                        for (let j = 0; j < remaining.length; j++) {
+                            const otherId = remaining[j];
+                            if (otherId === objectiveId) continue;
+                            const d = l.objectivePairDist?.[objectiveId]?.[otherId] ?? Infinity;
+                            if (d < nearestPeer) nearestPeer = d;
+                        }
+                        const ambiguityPenalty = Number.isFinite(nearestPeer) ? Math.max(0, 6 - nearestPeer) : 6;
+                        const ambiguityFuture = Number.isFinite(nearestPeer) ? nearestPeer : 0;
+                        const detourCost = Number.isFinite(detour) ? detour : 10000;
+                        const goalCost = Number.isFinite(toGoal) ? toGoal : 10000;
+                        const gateCost = Number.isFinite(gateMin) ? gateMin : 0;
+                        return detourCost * 14 + ambiguityPenalty * 30 + ambiguityFuture * 2 + goalCost * 2 + gateCost;
+                    };
+                    let bestId = remaining[0];
+                    let bestScore = scoreObjective(bestId);
+                    for (let i = 1; i < remaining.length; i++) {
+                        const oid = remaining[i];
+                        const score = scoreObjective(oid);
+                        if (score < bestScore) {
+                            bestScore = score;
+                            bestId = oid;
+                        }
+                    }
+                    let chosen = bestId;
+                    if (prevTarget >= 0 && !portalFrontierChanged && this._isObjectiveOutstanding(state, l, prevTarget)) {
+                        const prevScore = scoreObjective(prevTarget);
+                        const dominanceMargin = 18;
+                        if ((prevScore - bestScore) <= dominanceMargin) chosen = prevTarget;
+                    }
+                    state.activeObjectiveId = chosen;
+                    state.activeObjectivePortalForced = portalForced ? 1 : 0;
+                    return chosen;
                 },
                 _gridIndexFromKey(key, cols) {
                     return ((key >> 16) * cols) + (key & 0xFFFF);
@@ -2331,6 +2402,9 @@
                     const crossDistCache = scratch.crossDistCache;
                     const mustCachePrefix = `${state.mustMask.toString()}|`;
                     const crossCachePrefix = `${state.mustCrossMask?.toString() || '0'}|${crossNeed}|`;
+                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, !!portalForced);
+                    const activeObjectiveDistMap = activeObjectiveId >= 0 ? l.objectiveDistMaps?.[activeObjectiveId] : null;
+                    const activeObjectiveCurDist = activeObjectiveDistMap ? (activeObjectiveDistMap.get(k) ?? Infinity) : Infinity;
                     const getMustBound = (key) => {
                         if (!hasMust) return 0;
                         const cKey = mustCachePrefix + key;
@@ -2493,6 +2567,18 @@
                             score -= (mustBound === Infinity ? 100000 : mustBound * gravityMult);
                             score -= (crossBound === Infinity ? 100000 : crossBound * gravityMult);
                             if (crossNeed > 0) score += crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1));
+
+                            if (activeObjectiveDistMap && activeObjectiveId >= 0) {
+                                const nextObjectiveDist = activeObjectiveDistMap.get(nk) ?? Infinity;
+                                const pullScale = Math.max(0.2, phaseProfile.objectivePull || 1);
+                                if (Number.isFinite(activeObjectiveCurDist) && Number.isFinite(nextObjectiveDist)) {
+                                    const delta = activeObjectiveCurDist - nextObjectiveDist;
+                                    score -= Math.round(delta * 42 * pullScale);
+                                    if (delta < 0) score += Math.round(Math.abs(delta) * 18 * pullScale);
+                                } else if (Number.isFinite(nextObjectiveDist)) {
+                                    score -= Math.round(16 * pullScale);
+                                }
+                            }
 
                             if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
                                 let waypointDist = Infinity;
@@ -2849,7 +2935,9 @@
                         remainingSteps: 0,
                         phase: 'harvest',
                         phasePolicy,
-                        phaseTimeline: []
+                        phaseTimeline: [],
+                        activeObjectiveId: -1,
+                        activeObjectivePortalForced: 0
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -3542,6 +3630,35 @@
                                 dpMemo.set(key, best);
                                 return best;
                             };
+                        }
+                    }
+
+                    level.objectiveNodes = [];
+                    for (let i = 0; i < level.mustPassKeys.length; i++) {
+                        level.objectiveNodes.push({ key: level.mustPassKeys[i], type: 'mustPass', localIdx: i });
+                    }
+                    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+                        level.objectiveNodes.push({ key: level.mustCrossKeys[i], type: 'mustCross', localIdx: i });
+                    }
+                    level.objectiveDistMaps = level.objectiveNodes.map(node => SolverCore._buildOptimisticDistMap(level, [node.key]));
+                    level.objectiveToGoalDist = level.objectiveNodes.map(node => distMap.get(node.key) ?? Infinity);
+                    level.objectiveGateMinDist = level.objectiveNodes.map((_, idx) => {
+                        let best = Infinity;
+                        for (let i = 0; i < level.gateKeys.length; i++) {
+                            const d = level.objectiveDistMaps[idx].get(level.gateKeys[i]);
+                            if (d !== undefined && d < best) best = d;
+                        }
+                        return best;
+                    });
+                    const objectiveCount = level.objectiveNodes.length;
+                    level.objectivePairDist = Array.from({ length: objectiveCount }, () => Array(objectiveCount).fill(Infinity));
+                    for (let i = 0; i < objectiveCount; i++) {
+                        level.objectivePairDist[i][i] = 0;
+                        for (let j = i + 1; j < objectiveCount; j++) {
+                            const d = level.objectiveDistMaps[i].get(level.objectiveNodes[j].key);
+                            const val = d === undefined ? Infinity : d;
+                            level.objectivePairDist[i][j] = val;
+                            level.objectivePairDist[j][i] = val;
                         }
                     }
 
