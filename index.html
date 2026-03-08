@@ -3059,6 +3059,23 @@
                 }
             };
 
+        const SavedHintArchitecture = {
+                // Architectural contract:
+                // - Saved hints (level.hints) are UI-only playback data.
+                // - Solver discovery/referee/audit/new-hint/editor solve flows must be hint-blind.
+                // - Mega solver may consult saved-hint PRESENCE only to skip already-covered levels.
+                toHintBlindSolverLevel(level) {
+                    if (!level || typeof level !== 'object') return level;
+                    return Array.isArray(level.hints) && level.hints.length > 0
+                        ? { ...level, hints: [] }
+                        : level;
+                },
+                makePassCellUsageSeed() {
+                    // Intentionally blank: solver ordering may only learn from paths found during this run.
+                    return new Map();
+                }
+            };
+
         const SolverPolicies = {
                 makeHintPolicy(level, options = {}) {
                     const {
@@ -3081,7 +3098,7 @@
                     const shuffledGates = (validGates || level.gateKeys || []).slice();
                     if (dirOrderVariant === 'alt') shuffledGates.reverse();
                     else if (dirOrderVariant !== 'default') shuffledGates.sort(() => Math.random() - 0.5);
-                    const passCellUsageFreq = new Map();
+                    const passCellUsageFreq = SavedHintArchitecture.makePassCellUsageSeed();
                     const seenSolutions = new Set();
                     const isHintCandidateValid = (path) => {
                         const validation = validateCandidatePath(level, path);
@@ -3217,6 +3234,7 @@
 
         const PathfinderSolver = {
                 async solve(level, options = {}) {
+                    level = SavedHintArchitecture.toHintBlindSolverLevel(level);
                     const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
@@ -3743,7 +3761,8 @@
             const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             console.log('Referee starting tier:', tier);
-            const level = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
+            const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
+            const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
             const purpose = opts.purpose || 'solve';
             const resolvedPortalBiasMode = opts.portalBiasMode || 'adaptiveMustCross';
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
@@ -3985,6 +4004,7 @@
         };
 
         const solveLevel = async (level, opts = {}) => {
+            level = SavedHintArchitecture.toHintBlindSolverLevel(level);
             const purpose = opts.purpose || 'solve';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
             const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
@@ -4112,7 +4132,7 @@
                     if (controller.signal.aborted) break;
                     const lvlNum = toRun[i];
                     const idx = lvlNum - 1;
-                    const l = APP.LevelUtils.normalizeLevel(idx);
+                    const l = SavedHintArchitecture.toHintBlindSolverLevel(APP.LevelUtils.normalizeLevel(idx));
                     const prevMeta = meta[lvlNum] || { attempts: 0 };
                     const attempt = prevMeta.attempts + 1;
                     if (typeof opts.onProgress === 'function') opts.onProgress({ index: i, total: toRun.length, lvlNum, attempt });
@@ -4165,6 +4185,7 @@
         };
 
         const findTrapSpots = async (level, opts = {}) => {
+            level = SavedHintArchitecture.toHintBlindSolverLevel(level);
             const controller = startRun({ label: 'Finding trap spots…', mode: 'trap' });
             if (!controller) return { ok: false, status: 'error', spots: new Set(), timedOut: false, gatesProcessed: 0, elapsedMs: 0, timeLimit: 0 };
             const timeLimit = getTrapSpotBudgetMs(level, opts);
