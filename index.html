@@ -1829,6 +1829,19 @@
                     const crossNeed = this._crossNeeds(state);
                     return (state.ints || 0) + ((mustLeft + crossNeed) * 3);
                 },
+                _derivePortalLockState(state, options = {}) {
+                    const policy = options?.portalLockPolicy || {};
+                    const probationReentries = Number.isFinite(policy?.probationReentries) ? policy.probationReentries : 1;
+                    const lockReentries = Number.isFinite(policy?.lockReentries) ? policy.lockReentries : 2;
+                    const lockOscillationMax = Number.isFinite(policy?.lockOscillationMax) ? policy.lockOscillationMax : 1;
+                    const family = Number.isFinite(state?.portalSelectedFamily) ? state.portalSelectedFamily : -1;
+                    if (family < 0) return 'uncommitted';
+                    const reentries = state?.portalReentryCounts?.[family] || 0;
+                    const oscillation = Number.isFinite(state?.portalOscillationCount) ? state.portalOscillationCount : 0;
+                    if (reentries >= lockReentries && oscillation <= lockOscillationMax) return 'locked';
+                    if (reentries >= probationReentries) return 'probation';
+                    return 'uncommitted';
+                },
                 _portalTransitionContext(fromKey, toKey, state, l) {
                     const family = l.portalFamilyByEntry ? l.portalFamilyByEntry.get(fromKey) : undefined;
                     if (family === undefined || family === null || !Number.isFinite(family)) return null;
@@ -1859,7 +1872,8 @@
                         Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1,
                         Number.isFinite(state.portalSelectedEntry) ? state.portalSelectedEntry : -1,
                         Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1,
-                        Number.isFinite(state.portalOscillationCount) ? state.portalOscillationCount : 0
+                        Number.isFinite(state.portalOscillationCount) ? state.portalOscillationCount : 0,
+                        this._derivePortalLockState(state, options)
                     ].join('|');
                 },
                 _dominancePruneOrStore(map, key, candidate, stats = null) {
@@ -1953,11 +1967,23 @@
                             bestId = oid;
                         }
                     }
-                    let chosen = bestId;
+                    const trackKeys = Array.isArray(state?.objectiveTrackKeys) ? state.objectiveTrackKeys : [];
+                    const trackSet = new Set(remaining);
+                    let trackChoice = -1;
+                    for (let ti = 0; ti < trackKeys.length; ti++) {
+                        const tKey = trackKeys[ti];
+                        const oid = l.objectiveNodes.findIndex(n => n?.key === tKey);
+                        if (oid >= 0 && trackSet.has(oid)) {
+                            trackChoice = oid;
+                            break;
+                        }
+                    }
+                    let chosen = trackChoice >= 0 ? trackChoice : bestId;
                     if (prevTarget >= 0 && !portalFrontierChanged && this._isObjectiveOutstanding(state, l, prevTarget)) {
                         const prevScore = scoreObjective(prevTarget);
-                        const dominanceMargin = 18;
-                        if ((prevScore - bestScore) <= dominanceMargin) chosen = prevTarget;
+                        const chosenScore = scoreObjective(chosen);
+                        const dominanceMargin = trackChoice >= 0 ? 10 : 18;
+                        if ((prevScore - chosenScore) <= dominanceMargin) chosen = prevTarget;
                     }
                     state.activeObjectiveId = chosen;
                     state.activeObjectivePortalForced = portalForced ? 1 : 0;
@@ -2724,6 +2750,11 @@
                     const currentGoalDist = distMap.get(k) ?? Infinity;
                     const committedRegion = Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1;
                     const committedFamily = Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1;
+                    const portalLockState = this._derivePortalLockState(state, options);
+                    const templateCommitment = structuralMode ? (options?.templateCommitment || null) : null;
+                    const templateCommitDepthRatio = Number.isFinite(templateCommitment?.depthRatio) ? templateCommitment.depthRatio : 0.38;
+                    const inTemplateCommitWindow = !!(structuralTemplate && (l.reqLen > 0) && ((curLen / l.reqLen) <= templateCommitDepthRatio));
+                    const objectiveTrackStrictness = Number.isFinite(options?.objectiveTrack?.strictness) ? options.objectiveTrack.strictness : 0.72;
                     const scored = valid.map(nk => {
                         let score = 0;
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
@@ -2745,6 +2776,34 @@
                         const nextInKnot = !!(knotZone && knotZone.has(nk));
                         const nextRegion = l.portalRegionByKey instanceof Map ? (l.portalRegionByKey.get(nk) ?? -1) : -1;
                         const nextFamily = l.portalFamilyByEntry instanceof Map ? (l.portalFamilyByEntry.get(nk) ?? -1) : -1;
+
+                        if (portalLockState === 'locked' && committedFamily >= 0 && nextFamily >= 0 && nextFamily !== committedFamily) {
+                            const rCount = state.portalReentryCounts?.[committedFamily] || 0;
+                            const canEscape = rCount >= 3 && Number.isFinite(state.portalLastProgressValue) && this._portalProgressValue(state) >= state.portalLastProgressValue;
+                            if (!canEscape) {
+                                if (debugStats) debugStats.portalLockRejects = (debugStats.portalLockRejects || 0) + 1;
+                                return { nk, score: 1000000 };
+                            }
+                        }
+
+                        if (inTemplateCommitWindow && structuralTemplate?.consistency) {
+                            const c = structuralTemplate.consistency;
+                            const nxCommit = nk & 0xFFFF;
+                            const nyCommit = nk >> 16;
+                            const edgeNowCommit = Math.min(px, py, (l.grid.w - 1) - px, (l.grid.h - 1) - py);
+                            const edgeNextCommit = Math.min(nxCommit, nyCommit, (l.grid.w - 1) - nxCommit, (l.grid.h - 1) - nyCommit);
+                            if (c.prefersPerimeter && edgeNextCommit > edgeNowCommit + 1) {
+                                if (debugStats) debugStats.templateCommitRejects = (debugStats.templateCommitRejects || 0) + 1;
+                                return { nk, score: 1000000 };
+                            }
+                            if (c.prefersPortalBridge) {
+                                const mandatoryFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies) ? profile.portalHints.mandatoryFamilies : [];
+                                if (mandatoryFamilies.length > 0 && nextFamily >= 0 && !mandatoryFamilies.includes(nextFamily)) {
+                                    if (debugStats) debugStats.templateCommitRejects = (debugStats.templateCommitRejects || 0) + 1;
+                                    return { nk, score: 1000000 };
+                                }
+                            }
+                        }
 
                         if (isP && Number.isFinite(state.portalLastProgressValue) && state.portalLastProgressValue >= 0 && committedFamily >= 0) {
                             const progressNow = this._portalProgressValue(state);
@@ -2796,6 +2855,11 @@
                             if (activeObjectiveDistMap && activeObjectiveId >= 0) {
                                 const nextObjectiveDist = activeObjectiveDistMap.get(nk) ?? Infinity;
                                 const pullScale = Math.max(0.2, phaseProfile.objectivePull || 1);
+                                const objectiveTrackWindow = l.reqLen > 0 ? (nLen / l.reqLen) <= 0.72 : true;
+                                if (Array.isArray(state.objectiveTrackKeys) && state.objectiveTrackKeys.length > 0 && objectiveTrackWindow && !isP && Number.isFinite(activeObjectiveCurDist) && Number.isFinite(nextObjectiveDist) && nextObjectiveDist > activeObjectiveCurDist && objectiveTrackStrictness > 0.6) {
+                                    if (debugStats) debugStats.objectiveTrackRejects = (debugStats.objectiveTrackRejects || 0) + 1;
+                                    return { nk, score: 1000000 };
+                                }
                                 if (Number.isFinite(activeObjectiveCurDist) && Number.isFinite(nextObjectiveDist)) {
                                     const delta = activeObjectiveCurDist - nextObjectiveDist;
                                     score -= Math.round(delta * 42 * pullScale);
@@ -2987,6 +3051,15 @@
 
                         const rRatio = l.reqLen > 0 ? Math.max(0, Math.min(1, nLen / l.reqLen)) : 1;
                         const remainsObligations = hasMust || crossNeed > 0 || Math.max(0, l.reqInt - state.ints) > 0;
+                        const projectedRevisit = (state.countsArr[state.keyToIdx(nk)] || 0) > 0;
+                        const projectedNonKnot = projectedRevisit && !nextInKnot;
+                        const inLateKnotPhases = activePhase === 'knot' || activePhase === 'finish';
+                        const projectedIntersections = state.ints + (projectedRevisit ? 1 : 0);
+                        const projectedNonKnotIntersections = Math.max(0, projectedIntersections - Math.max(0, state.knotCrossBudget || 0));
+                        if (inLateKnotPhases && projectedNonKnot && projectedNonKnotIntersections > Math.max(0, state.nonKnotCrossCap || 0)) {
+                            if (debugStats) debugStats.knotBudgetRejects = (debugStats.knotBudgetRejects || 0) + 1;
+                            return { nk, score: 1000000 };
+                        }
                         const earlySlack = rSteps - (nextGoalDist ?? 999);
                         const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1);
 
@@ -3336,7 +3409,11 @@
                         recentTurnbackCount: 0,
                         recentAxisFlipCount: 0,
                         recentDirRepeatCount: 0,
-                        startGateArchetype: options?.startGateArchetype || null
+                        startGateArchetype: options?.startGateArchetype || null,
+                        objectiveTrackId: options?.objectiveTrack?.id || null,
+                        objectiveTrackKeys: Array.isArray(options?.objectiveTrack?.keys) ? options.objectiveTrack.keys : [],
+                        knotCrossBudget: Number.isFinite(options?.knotBudgetPolicy?.knotCrossBudget) ? options.knotBudgetPolicy.knotCrossBudget : Math.max(0, Math.ceil((l.reqInt || 0) * 0.7)),
+                        nonKnotCrossCap: Number.isFinite(options?.knotBudgetPolicy?.nonKnotCrossCap) ? options.knotBudgetPolicy.nonKnotCrossCap : Math.max(0, Math.floor((l.reqInt || 0) * 0.35))
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -3766,6 +3843,10 @@
                         structuralMode = false,
                         phasePolicy = null,
                         structuralTemplate = null,
+                        objectiveTrack = null,
+                        templateCommitment = null,
+                        portalLockPolicy = null,
+                        knotBudgetPolicy = null,
                         gateBeamTopK = 0,
                         debugGateVariant = false
                     } = options;
@@ -3921,6 +4002,10 @@
                                 structuralMode,
                                 phasePolicy,
                                 structuralTemplate,
+                                objectiveTrack,
+                                templateCommitment,
+                                portalLockPolicy,
+                                knotBudgetPolicy,
                                 startGateArchetype: state?.startGateArchetype || null
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
@@ -4017,7 +4102,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -4274,6 +4359,10 @@
                             structuralMode: passStructuralMode,
                             phasePolicy,
                             structuralTemplate,
+                            objectiveTrack,
+                            templateCommitment,
+                            portalLockPolicy,
+                            knotBudgetPolicy,
                             gateBeamTopK,
                             debugGateVariant
                         });
@@ -5346,6 +5435,20 @@
                 const conservativeBudget = Math.max(1, Math.floor(total * structuralConservativeShare));
                 const remainingBudget = Math.max(1, total - modernBudget - conservativeBudget);
                 const attempts = [];
+                const objectiveKeys = Array.isArray(profile?.objectiveModel?.features) ? profile.objectiveModel.features.map(f => f.key).filter(k => Number.isFinite(k)) : [];
+                const objectiveTracks = [];
+                if (objectiveKeys.length > 0) {
+                    objectiveTracks.push({ id: 'obj-primary', keys: objectiveKeys, strictness: 0.82 });
+                    if (objectiveKeys.length >= 2) objectiveTracks.push({ id: 'obj-swap12', keys: [objectiveKeys[1], objectiveKeys[0], ...objectiveKeys.slice(2)], strictness: 0.74 });
+                    if (objectiveKeys.length >= 3) objectiveTracks.push({ id: 'obj-reverse3', keys: [...objectiveKeys.slice(0, 3).reverse(), ...objectiveKeys.slice(3)], strictness: 0.72 });
+                }
+                const defaultTrack = objectiveTracks[0] || null;
+                const commonTemplateCommitment = { depthRatio: 0.4 };
+                const commonPortalLockPolicy = { probationReentries: 1, lockReentries: 2, lockOscillationMax: 1 };
+                const commonKnotBudgetPolicy = {
+                    knotCrossBudget: Math.max(0, Math.ceil((level.reqInt || 0) * 0.72)),
+                    nonKnotCrossCap: Math.max(0, Math.floor((level.reqInt || 0) * 0.3))
+                };
                 if (opts.structuralMode && Array.isArray(profile?.templateCandidates) && profile.templateCandidates.length > 0) {
                     const templates = profile.templateCandidates.slice(0, 3);
                     const warmupTotal = Math.max(1, Math.floor(modernBudget * 0.58));
@@ -5362,6 +5465,10 @@
                             structuralMode: true,
                             phasePolicy: opts.phasePolicy || null,
                             structuralTemplate: template,
+                            objectiveTrack: objectiveTracks[idx % Math.max(1, objectiveTracks.length)] || defaultTrack,
+                            templateCommitment: commonTemplateCommitment,
+                            portalLockPolicy: commonPortalLockPolicy,
+                            knotBudgetPolicy: commonKnotBudgetPolicy,
                             templatePhase: 'warmup'
                         });
                     });
@@ -5374,6 +5481,10 @@
                         structuralMode: true,
                         phasePolicy: opts.phasePolicy || null,
                         structuralTemplate: null,
+                        objectiveTrack: defaultTrack,
+                        templateCommitment: commonTemplateCommitment,
+                        portalLockPolicy: commonPortalLockPolicy,
+                        knotBudgetPolicy: commonKnotBudgetPolicy,
                         templatePhase: 'reallocated'
                     });
                 } else {
@@ -5383,7 +5494,11 @@
                         scoringMode: 'modern',
                         portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
                         structuralMode: true,
-                        phasePolicy: opts.phasePolicy || null
+                        phasePolicy: opts.phasePolicy || null,
+                        objectiveTrack: defaultTrack,
+                        templateCommitment: commonTemplateCommitment,
+                        portalLockPolicy: commonPortalLockPolicy,
+                        knotBudgetPolicy: commonKnotBudgetPolicy
                     });
                 }
                 attempts.push({
@@ -5392,7 +5507,11 @@
                     scoringMode: 'modern',
                     portalBiasMode: 'off',
                     structuralMode: true,
-                    phasePolicy: opts.phasePolicy || null
+                    phasePolicy: opts.phasePolicy || null,
+                    objectiveTrack: defaultTrack,
+                    templateCommitment: commonTemplateCommitment,
+                    portalLockPolicy: commonPortalLockPolicy,
+                    knotBudgetPolicy: commonKnotBudgetPolicy
                 });
 
                 if (allowLegacyRescue) {
@@ -5450,7 +5569,11 @@
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     structuralMode: !!attemptOpts.structuralMode,
                     phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
-                    structuralTemplate: attemptOpts.structuralTemplate || null
+                    structuralTemplate: attemptOpts.structuralTemplate || null,
+                    objectiveTrack: attemptOpts.objectiveTrack || null,
+                    templateCommitment: attemptOpts.templateCommitment || null,
+                    portalLockPolicy: attemptOpts.portalLockPolicy || null,
+                    knotBudgetPolicy: attemptOpts.knotBudgetPolicy || null
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
