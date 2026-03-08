@@ -1811,19 +1811,56 @@
                     entries.sort((a, b) => a[0] - b[0]);
                     return entries.map(([key, usage]) => `${key}:${usage}`).join(',');
                 },
+                _encodePortalReentries(state) {
+                    if (!state?.portalReentryCounts || state.portalReentryCounts.length === 0) return '';
+                    const out = [];
+                    for (let i = 0; i < state.portalReentryCounts.length; i++) {
+                        const c = state.portalReentryCounts[i] || 0;
+                        if (c > 0) out.push(`${i}:${c}`);
+                    }
+                    return out.join(',');
+                },
                 _portalForced(state, l) {
                     const k = state.path[state.path.length - 1];
                     return l.portalMap.has(k) && !state.isJump.has(state.path.length - 1);
+                },
+                _portalProgressValue(state) {
+                    const mustLeft = typeof state.mustMask === 'bigint' ? Number(state.mustMask !== 0n) : 0;
+                    const crossNeed = this._crossNeeds(state);
+                    return (state.ints || 0) + ((mustLeft + crossNeed) * 3);
+                },
+                _portalTransitionContext(fromKey, toKey, state, l) {
+                    const family = l.portalFamilyByEntry ? l.portalFamilyByEntry.get(fromKey) : undefined;
+                    if (family === undefined || family === null || !Number.isFinite(family)) return null;
+                    const toRegion = l.portalRegionByKey ? l.portalRegionByKey.get(toKey) : undefined;
+                    return {
+                        family,
+                        toRegion: Number.isFinite(toRegion) ? toRegion : -1,
+                        isReentry: Number.isFinite(state.portalSelectedFamily) && state.portalSelectedFamily === family,
+                        progressBefore: this._portalProgressValue(state)
+                    };
                 },
                 _stateSignature(state, l, realLen, options = {}) {
                     const base = StateSignature.makeKey(state, { level: l, stepsUsed: realLen, falseGoalPolicy: options.falseGoalPolicy || '' }) || '';
                     const crossCounts = this._encodeMustCrossCounts(state).toString();
                     const countsSig = this._encodeCounts(state);
                     const usageSig = this._encodeUsage(state);
+                    const portalSig = this._encodePortalReentries(state);
                     const posKey = state.path[state.path.length - 1];
                     const portalForced = this._portalForced(state, l);
                     const activeObjectiveId = this._resolveActiveObjectiveTarget(state, posKey, l, portalForced);
-                    return [base, crossCounts, countsSig, usageSig, Number.isFinite(activeObjectiveId) ? activeObjectiveId : -1].join('|');
+                    return [
+                        base,
+                        crossCounts,
+                        countsSig,
+                        usageSig,
+                        portalSig,
+                        Number.isFinite(activeObjectiveId) ? activeObjectiveId : -1,
+                        Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1,
+                        Number.isFinite(state.portalSelectedEntry) ? state.portalSelectedEntry : -1,
+                        Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1,
+                        Number.isFinite(state.portalOscillationCount) ? state.portalOscillationCount : 0
+                    ].join('|');
                 },
                 _dominancePruneOrStore(map, key, candidate, stats = null) {
                     if (!map || key === null || key === undefined || !candidate) return false;
@@ -2015,6 +2052,14 @@
                     const LOG_MUSTCROSSMASK = 10;
                     const LOG_FLIPPERCROSSMASK = 11;
                     const LOG_FLIPPERPARITYMASK = 12;
+                    const LOG_PORTAL_SELECTED_FAMILY = 13;
+                    const LOG_PORTAL_SELECTED_ENTRY = 14;
+                    const LOG_PORTAL_COMMITTED_REGION = 15;
+                    const LOG_PORTAL_REENTRY = 16;
+                    const LOG_PORTAL_OSC = 17;
+                    const LOG_PORTAL_LAST_PROGRESS = 18;
+                    const LOG_PORTAL_LAST_FAMILY = 19;
+                    const LOG_PORTAL_LAST_REGION = 20;
                     const startLogCursor = s.logCursor;
                     const prevKey = s.path[s.path.length - 1];
                     const prevPathLen = s.path.length;
@@ -2076,6 +2121,31 @@
                         this._undoLogWrite(s, LOG_JUMP, -1, s.jumpCount);
                         s.jumpMarks[prevPathLen] = 1;
                         s.jumpCount++;
+                        const portalCtx = this._portalTransitionContext(prevKey, k, s, l);
+                        if (portalCtx) {
+                            const prevPortalFamily = Number.isFinite(s.portalLastFamily) ? s.portalLastFamily : -1;
+                            const switchedFamily = prevPortalFamily >= 0 && prevPortalFamily !== portalCtx.family;
+                            this._undoLogWrite(s, LOG_PORTAL_SELECTED_FAMILY, 0, Number.isFinite(s.portalSelectedFamily) ? s.portalSelectedFamily : -1);
+                            s.portalSelectedFamily = portalCtx.family;
+                            this._undoLogWrite(s, LOG_PORTAL_SELECTED_ENTRY, 0, Number.isFinite(s.portalSelectedEntry) ? s.portalSelectedEntry : -1);
+                            s.portalSelectedEntry = prevKey;
+                            this._undoLogWrite(s, LOG_PORTAL_COMMITTED_REGION, 0, Number.isFinite(s.portalCommittedRegion) ? s.portalCommittedRegion : -1);
+                            s.portalCommittedRegion = portalCtx.toRegion;
+                            this._undoLogWrite(s, LOG_PORTAL_LAST_PROGRESS, 0, Number.isFinite(s.portalLastProgressValue) ? s.portalLastProgressValue : -1);
+                            s.portalLastProgressValue = portalCtx.progressBefore;
+                            this._undoLogWrite(s, LOG_PORTAL_LAST_FAMILY, 0, Number.isFinite(s.portalLastFamily) ? s.portalLastFamily : -1);
+                            s.portalLastFamily = portalCtx.family;
+                            this._undoLogWrite(s, LOG_PORTAL_LAST_REGION, 0, Number.isFinite(s.portalLastRegion) ? s.portalLastRegion : -1);
+                            s.portalLastRegion = portalCtx.toRegion;
+                            if (portalCtx.isReentry && s.portalReentryCounts && s.portalReentryCounts.length > portalCtx.family) {
+                                this._undoLogWrite(s, LOG_PORTAL_REENTRY, portalCtx.family, s.portalReentryCounts[portalCtx.family] || 0);
+                                s.portalReentryCounts[portalCtx.family] = (s.portalReentryCounts[portalCtx.family] || 0) + 1;
+                            }
+                            if (switchedFamily) {
+                                this._undoLogWrite(s, LOG_PORTAL_OSC, 0, Number.isFinite(s.portalOscillationCount) ? s.portalOscillationCount : 0);
+                                s.portalOscillationCount = (s.portalOscillationCount || 0) + 1;
+                            }
+                        }
                     }
                     if (l.flippingFilterMap.has(k) && s.crossedFlippersAt[idx] < 0) {
                         this._undoLogWrite(s, LOG_CROSSED, idx, s.crossedFlippersAt[idx]);
@@ -2110,6 +2180,14 @@
                     const LOG_MUSTCROSSMASK = 10;
                     const LOG_FLIPPERCROSSMASK = 11;
                     const LOG_FLIPPERPARITYMASK = 12;
+                    const LOG_PORTAL_SELECTED_FAMILY = 13;
+                    const LOG_PORTAL_SELECTED_ENTRY = 14;
+                    const LOG_PORTAL_COMMITTED_REGION = 15;
+                    const LOG_PORTAL_REENTRY = 16;
+                    const LOG_PORTAL_OSC = 17;
+                    const LOG_PORTAL_LAST_PROGRESS = 18;
+                    const LOG_PORTAL_LAST_FAMILY = 19;
+                    const LOG_PORTAL_LAST_REGION = 20;
                     s.path.pop();
                     while (s.logCursor > logMark) {
                         s.logCursor -= 3;
@@ -2136,6 +2214,14 @@
                         else if (arrayId === LOG_MUSTCROSSMASK) s.mustCrossMask |= (1n << BigInt(idx));
                         else if (arrayId === LOG_FLIPPERCROSSMASK) s.flipperCrossMask = prev;
                         else if (arrayId === LOG_FLIPPERPARITYMASK) s.flipperParityAtCrossMask = prev;
+                        else if (arrayId === LOG_PORTAL_SELECTED_FAMILY) s.portalSelectedFamily = prev;
+                        else if (arrayId === LOG_PORTAL_SELECTED_ENTRY) s.portalSelectedEntry = prev;
+                        else if (arrayId === LOG_PORTAL_COMMITTED_REGION) s.portalCommittedRegion = prev;
+                        else if (arrayId === LOG_PORTAL_REENTRY) s.portalReentryCounts[idx] = prev;
+                        else if (arrayId === LOG_PORTAL_OSC) s.portalOscillationCount = prev;
+                        else if (arrayId === LOG_PORTAL_LAST_PROGRESS) s.portalLastProgressValue = prev;
+                        else if (arrayId === LOG_PORTAL_LAST_FAMILY) s.portalLastFamily = prev;
+                        else if (arrayId === LOG_PORTAL_LAST_REGION) s.portalLastRegion = prev;
                     }
                 },
                 _mustCrossExtraVisitsLowerBound(mask, crossNeed, l) {
@@ -2519,6 +2605,11 @@
                         goalAttraction: 1,
                         antiDither: 1
                     };
+                    const currentMustBound = hasMust ? getMustBound(k) : 0;
+                    const currentCrossBound = crossNeed > 0 ? getCrossBound(k) : 0;
+                    const currentObjectiveGap = (Number.isFinite(currentMustBound) ? currentMustBound : 9999) + (Number.isFinite(currentCrossBound) ? currentCrossBound : 9999);
+                    const committedRegion = Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1;
+                    const committedFamily = Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1;
                     const scored = valid.map(nk => {
                         let score = 0;
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
@@ -2536,6 +2627,26 @@
                         const rSteps = l.reqLen - nLen;
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
+                        const nextObjectiveGap = (Number.isFinite(mustBound) ? mustBound : 9999) + (Number.isFinite(crossBound) ? crossBound : 9999);
+                        const nextInKnot = !!(knotZone && knotZone.has(nk));
+                        const nextRegion = l.portalRegionByKey instanceof Map ? (l.portalRegionByKey.get(nk) ?? -1) : -1;
+                        const nextFamily = l.portalFamilyByEntry instanceof Map ? (l.portalFamilyByEntry.get(nk) ?? -1) : -1;
+
+                        if (isP && Number.isFinite(state.portalLastProgressValue) && state.portalLastProgressValue >= 0 && committedFamily >= 0) {
+                            const progressNow = this._portalProgressValue(state);
+                            const stagnated = progressNow >= state.portalLastProgressValue;
+                            if (stagnated && (nextObjectiveGap >= currentObjectiveGap) && !nextInKnot) {
+                                score += 95 + ((state.portalReentryCounts?.[committedFamily] || 0) * 30);
+                            }
+                        }
+
+                        if (committedRegion >= 0 && nextRegion >= 0) {
+                            if (nextRegion === committedRegion) score -= 48;
+                            else score += 62;
+                        }
+                        if (committedFamily >= 0 && nextFamily >= 0 && nextFamily !== committedFamily) {
+                            score += profile?.symmetryAxis ? 74 : 36;
+                        }
 
                         if (scoringMode === 'legacy') {
                             score -= (mustBound === Infinity ? 100000 : mustBound * 6);
@@ -2653,6 +2764,13 @@
 
                             if (profile.portalCommitment > 0 && portalDest === nk && portalForced) {
                                 score -= profile.portalCommitment;
+                            }
+                            const mandatoryPortalFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies)
+                                ? profile.portalHints.mandatoryFamilies
+                                : [];
+                            if (mandatoryPortalFamilies.length > 0 && nextFamily >= 0) {
+                                if (mandatoryPortalFamilies.includes(nextFamily)) score -= 44;
+                                else if (committedFamily >= 0 && nextFamily !== committedFamily) score += 28;
                             }
                         }
 
@@ -2937,7 +3055,15 @@
                         phasePolicy,
                         phaseTimeline: [],
                         activeObjectiveId: -1,
-                        activeObjectivePortalForced: 0
+                        activeObjectivePortalForced: 0,
+                        portalSelectedFamily: -1,
+                        portalSelectedEntry: -1,
+                        portalCommittedRegion: -1,
+                        portalReentryCounts: new Uint8Array(Math.max(0, l.portalFamilyCount || 0)),
+                        portalOscillationCount: 0,
+                        portalLastProgressValue: -1,
+                        portalLastFamily: -1,
+                        portalLastRegion: -1
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -3633,6 +3759,28 @@
                         }
                     }
 
+                    const portalHints = level?.solverProfile?.portalHints || null;
+                    level.portalFamilyByEntry = new Map();
+                    level.portalRegionByKey = new Map();
+                    level.portalFamilyCount = 0;
+                    if (portalHints && Array.isArray(portalHints.families)) {
+                        for (let i = 0; i < portalHints.families.length; i++) {
+                            const fam = portalHints.families[i];
+                            if (!fam || !Array.isArray(fam.entries)) continue;
+                            for (const key of fam.entries) level.portalFamilyByEntry.set(key, i);
+                        }
+                        level.portalFamilyCount = portalHints.families.length;
+                        if (portalHints.regionByKey instanceof Map) level.portalRegionByKey = portalHints.regionByKey;
+                    }
+                    if (!level.portalFamilyByEntry.size && Array.isArray(level.portalVisuals)) {
+                        for (let i = 0; i < level.portalVisuals.length; i++) {
+                            const pv = level.portalVisuals[i];
+                            level.portalFamilyByEntry.set(pv.k1, i);
+                            level.portalFamilyByEntry.set(pv.k2, i);
+                        }
+                        level.portalFamilyCount = level.portalVisuals.length;
+                    }
+
                     level.objectiveNodes = [];
                     for (let i = 0; i < level.mustPassKeys.length; i++) {
                         level.objectiveNodes.push({ key: level.mustPassKeys[i], type: 'mustPass', localIdx: i });
@@ -4023,6 +4171,11 @@
                 connectedRegions.push(nodes);
             }
 
+            const regionByKey = new Map();
+            connectedRegions.forEach((nodes, idx) => {
+                for (const key of nodes) regionByKey.set(key, idx);
+            });
+
             const compactnessPerRegion = [];
             for (const region of connectedRegions) {
                 let perimeter = 0;
@@ -4324,6 +4477,55 @@
                 })()
             };
 
+            const portalFamilies = [];
+            const portalBridgeHints = [];
+            const seenPortalPair = new Set();
+            if (level?.portalMap instanceof Map) {
+                level.portalMap.forEach((v, fromKey) => {
+                    const toKey = v?.dest;
+                    if (!Number.isFinite(toKey) || toKey < 0) return;
+                    const pairId = fromKey < toKey ? `${fromKey}|${toKey}` : `${toKey}|${fromKey}`;
+                    if (seenPortalPair.has(pairId)) return;
+                    seenPortalPair.add(pairId);
+                    const fromRegion = regionByKey.get(fromKey);
+                    const toRegion = regionByKey.get(toKey);
+                    const familyId = portalFamilies.length;
+                    portalFamilies.push({
+                        familyId,
+                        color: v?.color || '#d946ef',
+                        entries: [fromKey, toKey],
+                        regions: [Number.isFinite(fromRegion) ? fromRegion : -1, Number.isFinite(toRegion) ? toRegion : -1]
+                    });
+                    const fromDeg = degreeMap.get(fromKey) || 0;
+                    const toDeg = degreeMap.get(toKey) || 0;
+                    const objectiveNear = objectiveFeatures.some(obj => {
+                        const pObj = APP.LevelUtils.UNPACK(obj.key);
+                        const pFrom = APP.LevelUtils.UNPACK(fromKey);
+                        const pTo = APP.LevelUtils.UNPACK(toKey);
+                        const d1 = Math.abs(pObj.x - pFrom.x) + Math.abs(pObj.y - pFrom.y);
+                        const d2 = Math.abs(pObj.x - pTo.x) + Math.abs(pObj.y - pTo.y);
+                        return Math.min(d1, d2) <= 3;
+                    });
+                    const mandatoryLike = (fromRegion !== toRegion)
+                        || fromDeg <= 2
+                        || toDeg <= 2
+                        || objectiveNear;
+                    if (mandatoryLike) {
+                        portalBridgeHints.push({
+                            familyId,
+                            mandatoryLike: true,
+                            reason: (fromRegion !== toRegion) ? 'region-bridge' : (fromDeg <= 2 || toDeg <= 2 ? 'constrained-exit' : 'objective-proximity')
+                        });
+                    }
+                });
+            }
+            const portalHintModel = {
+                families: portalFamilies,
+                regionByKey,
+                bridgeHints: portalBridgeHints,
+                mandatoryFamilies: portalBridgeHints.filter(h => h.mandatoryLike).map(h => h.familyId)
+            };
+
             const topology = {
                 walkableCellCount: walkableKeys.length,
                 degreeHistogram,
@@ -4356,6 +4558,7 @@
                 knotZone,
                 symmetryAxis,
                 topology,
+                portalHints: portalHintModel,
                 objectiveModel: {
                     features: objectiveFeatures,
                     priorityMap: objectivePriority,
@@ -4374,6 +4577,7 @@
             const objectiveModel = safe.objectiveModel && typeof safe.objectiveModel === 'object' ? safe.objectiveModel : {};
             const symmetryModel = safe.symmetryModel && typeof safe.symmetryModel === 'object' ? safe.symmetryModel : {};
             const knotCandidates = Array.isArray(safe.knotCandidates) ? safe.knotCandidates : [];
+            const portalHints = safe.portalHints && typeof safe.portalHints === 'object' ? safe.portalHints : {};
             return {
                 routePressure: Number.isFinite(safe.routePressure) ? safe.routePressure : 0,
                 openness: Number.isFinite(safe.openness) ? safe.openness : 0,
@@ -4389,6 +4593,12 @@
                     : (objectiveModel.priorityMap instanceof Map ? objectiveModel.priorityMap : new Map()),
                 knotZone: safe.knotZone instanceof Set ? safe.knotZone : new Set(),
                 symmetryAxis: (safe.symmetryAxis === 'vertical' || safe.symmetryAxis === 'horizontal') ? safe.symmetryAxis : null,
+                portalHints: {
+                    families: Array.isArray(portalHints.families) ? portalHints.families : [],
+                    regionByKey: portalHints.regionByKey instanceof Map ? portalHints.regionByKey : new Map(),
+                    bridgeHints: Array.isArray(portalHints.bridgeHints) ? portalHints.bridgeHints : [],
+                    mandatoryFamilies: Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies : []
+                },
                 topology: {
                     walkableCellCount: Number.isFinite(topology.walkableCellCount) ? topology.walkableCellCount : 0,
                     degreeHistogram: topology.degreeHistogram || { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
