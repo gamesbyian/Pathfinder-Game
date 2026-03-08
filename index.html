@@ -347,12 +347,12 @@
                         <div id="auditReportRows" class="min-h-[7rem] max-h-[10rem] overflow-y-auto border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[0.6rem] font-mono leading-tight p-2 whitespace-pre-wrap">Run a check to generate report.</div>
                     </div>
                     <div class="pt-3 border-t border-[var(--theme-modal-border)] grid grid-cols-3 grid-rows-2 gap-2 shrink-0 auto-rows-fr">
-                        <button id="auditHintsBtn" class="h-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Hints</button>
-                        <button id="auditNewHintBtn" class="h-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">New Hint</button>
-                        <button id="auditBombsBtn" class="h-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Bombs</button>
-                        <button id="cancelAuditBtn" class="h-full border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Stop</button>
-                        <button id="copyAuditAllBtn" class="h-full border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy All</button>
-                        <button id="copyAuditIssuesBtn" class="h-full border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Issues</button>
+                        <button id="auditHintsBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Hints</button>
+                        <button id="auditNewHintBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">New Hint</button>
+                        <button id="auditBombsBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Bombs</button>
+                        <button id="cancelAuditBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Stop</button>
+                        <button id="copyAuditAllBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy All</button>
+                        <button id="copyAuditIssuesBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Issues</button>
                     </div>
                 </div>
             </div>
@@ -3720,7 +3720,7 @@
                         const parityGoal = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
                         const parityMatch = (parityCurrent === parityGoal);
                         const stepsEven = (rSteps % 2 === 0);
-                        if (parityMatch !== stepsEven) {
+                        if (!disabledPruneSet.has('parity') && parityMatch !== stepsEven) {
                             let canBreak = false;
                             if (l.hasParityBreaker && l.parityBreakers) {
                                 for (let i = 0; i < l.parityBreakers.length; i++) {
@@ -4576,7 +4576,7 @@
                             passName: pass.passName,
                             localTimeLimit: localBudget,
                             disabledPrunes: disabledPrunes || [],
-                            useFailMemo: !disabledPrunes,
+                            useFailMemo: !(Array.isArray(disabledPrunes) && disabledPrunes.length > 0),
                             statusLabel: pass.statusLabel,
                             passVariant: pass.variant,
                             enableForcedMoves: true,
@@ -6202,22 +6202,68 @@
 
         async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity'], opts = {}) {
             const started = Date.now();
-            const r = await PathfinderSolver.solve(level, {
-                timeLimit: budgetMs,
-                debug: true,
-                debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                disabledPrunes,
-                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
-                phasePolicy: opts.phasePolicy || null
-            });
-            const elapsedMs = Date.now() - started;
-            const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
-            if (r?.ok && solution.length > 0) {
-                return { ok: true, status: 'solved', solution, solutions: solution, elapsedMs, stats: { debug: r.debug } };
+            const resolveRun = async (runBudgetMs, runOpts = {}) => {
+                const r = await PathfinderSolver.solve(level, {
+                    timeLimit: runBudgetMs,
+                    debug: true,
+                    debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
+                    disabledPrunes: runOpts.disabledPrunes || disabledPrunes,
+                    portalBiasMode: runOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    phasePolicy: runOpts.phasePolicy !== undefined ? runOpts.phasePolicy : (opts.phasePolicy || null)
+                });
+                const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
+                if (r?.ok && solution.length > 0) {
+                    return { ok: true, status: 'solved', solution, solutions: solution, debug: r?.debug || {} };
+                }
+                const debug = r?.debug || {};
+                if (debug.status === 'timeout') return { ok: false, status: 'timeout', solution: [], solutions: [], debug };
+                return { ok: false, status: 'no-solution-inconclusive', solution: [], solutions: [], debug };
+            };
+
+            // Root-cause guard: triage runs were occasionally returning inconclusive with almost zero expansion.
+            // If that happens under relaxed prune settings, force a second pass with parity disabled and portal bias off
+            // so stale/over-strict branch filtering cannot terminate triage before meaningful exploration.
+            let outcome = await resolveRun(budgetMs);
+            const primaryDiag = buildSearchDiagnostics(outcome?.debug, outcome?.status);
+            const shouldForceProbe = !!opts.enableLowExpansionProbe
+                && outcome?.status === 'no-solution-inconclusive'
+                && primaryDiag.returnedWithoutExpansion
+                && isGoalReachableFromAnyGate(level);
+            if (shouldForceProbe) {
+                const probeDisabled = Array.from(new Set([...(disabledPrunes || []), 'parity']));
+                const probeBudgetMs = Math.max(1200, Math.floor(budgetMs * 0.8));
+                const probe = await resolveRun(probeBudgetMs, {
+                    disabledPrunes: probeDisabled,
+                    portalBiasMode: 'off',
+                    phasePolicy: null
+                });
+                if ((probe?.ok && !outcome?.ok)
+                    || ((probe?.status === 'timeout') && outcome?.status !== 'timeout')
+                    || ((probe?.status === 'no-solution-inconclusive') && (probe?.debug?.nodesExpanded || 0) > (outcome?.debug?.nodesExpanded || 0))) {
+                    outcome = probe;
+                }
+                outcome.debug = {
+                    ...(outcome.debug || {}),
+                    triageProbe: {
+                        triggered: true,
+                        reason: 'returned-without-expansion',
+                        initial: primaryDiag,
+                        probe: buildSearchDiagnostics(probe?.debug, probe?.status),
+                        probeDisabledPrunes: probeDisabled,
+                        probeBudgetMs
+                    }
+                };
             }
-            const debug = r?.debug || {};
-            if (debug.status === 'timeout') return { ok: false, status: 'timeout', elapsedMs, stats: { debug } };
-            return { ok: false, status: 'no-solution-inconclusive', elapsedMs, stats: { debug } };
+
+            const elapsedMs = Date.now() - started;
+            return {
+                ok: !!outcome.ok,
+                status: outcome.status,
+                solution: outcome.solution || [],
+                solutions: outcome.solutions || [],
+                elapsedMs,
+                stats: { debug: outcome.debug || {} }
+            };
         },
 
         async solve(levelInput, opts = {}) {
@@ -6357,9 +6403,10 @@
                     if (APP.State.ENGINE.activeSolverController?.signal?.aborted) break;
                     if (opts.onStage) opts.onStage({ stage: plan.stage, name: plan.name, variant: plan.variant, budgetMs: plan.budgetMs });
                     const startedAt = Date.now();
-                    const triageResult = await this.runStage2Fallback(level, plan.budgetMs, plan.disabledPrunes, { portalBiasMode: plan.portalBiasMode, phasePolicy: plan.phasePolicy });
+                    const triageResult = await this.runStage2Fallback(level, plan.budgetMs, plan.disabledPrunes, { portalBiasMode: plan.portalBiasMode, phasePolicy: plan.phasePolicy, enableLowExpansionProbe: true });
                     markStage(plan.stage, plan.name, plan.variant, plan.budgetMs, startedAt, triageResult);
                     const triageDebug = triageResult?.stats?.debug || {};
+                    const searchDiagnostics = buildSearchDiagnostics(triageDebug, triageResult?.status || 'error');
                     triageAttempts.push({
                         stage: plan.stage,
                         name: plan.name,
@@ -6368,7 +6415,18 @@
                         elapsedMs: Date.now() - startedAt,
                         strategy: { portalBiasMode: plan.portalBiasMode, phasePolicy: plan.phasePolicy || null, disabledPrunes: plan.disabledPrunes || [] },
                         pruneCounters: triageDebug?.prune || null,
-                        debugNotes: triageDebug?.notes || null
+                        debugNotes: triageDebug?.notes || null,
+                        nodesExpanded: searchDiagnostics.nodesExpanded,
+                        branchesGenerated: searchDiagnostics.branchesGenerated,
+                        candidateMovesConsidered: searchDiagnostics.candidateMovesConsidered,
+                        memoHits: searchDiagnostics.memoHits,
+                        failedStateHits: searchDiagnostics.failedStateHits,
+                        depthReached: searchDiagnostics.depthReached,
+                        frontierExhausted: searchDiagnostics.frontierExhausted,
+                        budgetExhausted: searchDiagnostics.budgetExhausted,
+                        returnedWithoutExpansion: searchDiagnostics.returnedWithoutExpansion,
+                        disabledPrunesApplied: searchDiagnostics.disabledPrunesApplied,
+                        triageProbe: triageDebug?.triageProbe || null
                     });
                     last = { ...triageResult, stage: plan.stage, message: triageResult.ok ? `Solved (${plan.variant}).` : `${plan.variant} ${triageResult.status || 'error'}.`, stagesTried };
                     if (triageResult.ok || triageResult.status === 'no-solution-proven') break;
@@ -6381,6 +6439,20 @@
                         attempts: triageAttempts,
                         stagesTried: triageAttempts.map(a => ({ stage: a.stage, name: a.name, variant: a.variant, status: a.status, elapsedMs: a.elapsedMs })),
                         pruneCounters: triageAttempts.map(a => ({ stage: a.stage, counters: a.pruneCounters })),
+                        exploration: triageAttempts.map(a => ({
+                            stage: a.stage,
+                            nodesExpanded: a.nodesExpanded,
+                            branchesGenerated: a.branchesGenerated,
+                            candidateMovesConsidered: a.candidateMovesConsidered,
+                            memoHits: a.memoHits,
+                            failedStateHits: a.failedStateHits,
+                            depthReached: a.depthReached,
+                            frontierExhausted: a.frontierExhausted,
+                            budgetExhausted: a.budgetExhausted,
+                            returnedWithoutExpansion: a.returnedWithoutExpansion,
+                            disabledPrunesApplied: a.disabledPrunesApplied,
+                            triageProbe: a.triageProbe || null
+                        })),
                         debugNotes: triageAttempts.flatMap(a => Array.isArray(a.debugNotes) ? a.debugNotes : (a.debugNotes ? [a.debugNotes] : []))
                     }
                 };
@@ -6737,7 +6809,7 @@
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
                 solverResult.solverPath = executionPath;
                 applyCanonicalSolutionShape(solverResult);
-                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${refereeStatus || 'not-run'} legacyStatus=${legacyStatus || 'not-run'} final=${finalStatus} solvedBy=${finalSolvedBy}`);
+                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${refereeStatus || 'not-run'} legacyTried=${legacyFallbackTried} legacyStatus=${legacyStatus || 'not-run'} final=${finalStatus} solvedBy=${finalSolvedBy}`);
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
@@ -7322,6 +7394,32 @@
                 if (!debugStats) return;
                 debugStats.status = status;
                 debugStats.elapsedMs = Math.round(performance.now() - startPerf);
+            }
+
+            function buildSearchDiagnostics(debug = {}, status = 'unknown') {
+                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
+                const branchesGenerated = Math.max(0, Number(debug?.branchesTried) || 0);
+                const candidateMovesConsidered = branchesGenerated;
+                const memoHits = Math.max(0, Number(debug?.memoHits) || 0);
+                const failedStateHits = Math.max(0, Number(debug?.prune?.failedStateHit) || 0);
+                const depthReached = Math.max(0, Number(debug?.maxDepth) || 0);
+                const normalizedStatus = String(status || debug?.status || 'unknown');
+                const budgetExhausted = normalizedStatus === 'timeout';
+                const frontierExhausted = normalizedStatus === 'no-solution-inconclusive' && !budgetExhausted;
+                const returnedWithoutExpansion = nodesExpanded === 0 || (nodesExpanded <= 2 && depthReached <= 1 && branchesGenerated <= 2);
+                const disabledPrunesApplied = Array.isArray(debug?.disabledPrunes) ? debug.disabledPrunes.slice() : [];
+                return {
+                    nodesExpanded,
+                    branchesGenerated,
+                    candidateMovesConsidered,
+                    memoHits,
+                    failedStateHits,
+                    depthReached,
+                    frontierExhausted,
+                    budgetExhausted,
+                    returnedWithoutExpansion,
+                    disabledPrunesApplied
+                };
             }
 
             function isGoalReachableFromAnyGate(level) {
@@ -10761,7 +10859,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const triageSummary = r.diagnostics?.inconclusiveTriage
                 ? ` | triage ${r.diagnostics.inconclusiveTriage.status || 'unknown'} (${(r.diagnostics.inconclusiveTriage.attempts || []).length} tries)`
                 : '';
-            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || 'n/a'} leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')} final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} total=${r.newHint.totalSolveTimeMs || 0}ms | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const getAuditIssueLine = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -10802,7 +10900,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeStatus: null, legacyFallbackTried: false, legacyFallbackStatus: null, finalStatus: 'not-run', finalSolvedBy: 'none', attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriage: null }
@@ -10874,11 +10972,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         solverPath: hintRes?.solverPath || 'unknown',
                         requestedSolverPath: hintRes?.requestedSolverPath || 'unknown',
                         executionPath: hintRes?.executionPath || hintRes?.solverPath || 'unknown',
+                        refereeAttempted: !!hintRes?.refereeAttempted,
                         refereeStatus: hintRes?.refereeStatus || null,
+                        refereeSolved: !!hintRes?.refereeSolved,
+                        refereeTimeMs: Number.isFinite(hintRes?.refereeTimeMs) ? hintRes.refereeTimeMs : null,
                         legacyFallbackTried: !!hintRes?.legacyFallbackTried,
                         legacyFallbackStatus: hintRes?.legacyFallbackStatus || null,
+                        legacyFallbackSolved: !!hintRes?.legacyFallbackSolved,
+                        legacyFallbackTimeMs: Number.isFinite(hintRes?.legacyFallbackTimeMs) ? hintRes.legacyFallbackTimeMs : null,
                         finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
                         finalSolvedBy: hintRes?.finalSolvedBy || 'none',
+                        totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
                         diagnostics: hintRes?.diagnostics || null
                     };
                     levelEntry.newHint.attemptHistory.push(attemptRecord);
@@ -10906,11 +11010,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         solverPath: hintRes?.solverPath || 'unknown',
                         requestedSolverPath: hintRes?.requestedSolverPath || 'unknown',
                         executionPath: hintRes?.executionPath || hintRes?.solverPath || 'unknown',
+                        refereeAttempted: !!hintRes?.refereeAttempted,
                         refereeStatus: hintRes?.refereeStatus || null,
+                        refereeSolved: !!hintRes?.refereeSolved,
+                        refereeTimeMs: Number.isFinite(hintRes?.refereeTimeMs) ? hintRes.refereeTimeMs : null,
                         legacyFallbackTried: !!hintRes?.legacyFallbackTried,
                         legacyFallbackStatus: hintRes?.legacyFallbackStatus || null,
+                        legacyFallbackSolved: !!hintRes?.legacyFallbackSolved,
+                        legacyFallbackTimeMs: Number.isFinite(hintRes?.legacyFallbackTimeMs) ? hintRes.legacyFallbackTimeMs : null,
                         finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
                         finalSolvedBy: hintRes?.finalSolvedBy || 'none',
+                        totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
                         diagnostics: hintRes?.diagnostics || null
                     };
                     levelEntry.newHint.attemptHistory.push(geminiAttempt);
@@ -10940,11 +11050,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     solverPath: 'unknown',
                     requestedSolverPath: 'unknown',
                     executionPath: 'unknown',
+                    refereeAttempted: false,
                     refereeStatus: null,
+                    refereeSolved: false,
+                    refereeTimeMs: null,
                     legacyFallbackTried: false,
                     legacyFallbackStatus: null,
+                    legacyFallbackSolved: false,
+                    legacyFallbackTimeMs: null,
                     finalStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
-                    finalSolvedBy: 'none'
+                    finalSolvedBy: 'none',
+                    totalSolveTimeMs: 0
                 };
                 levelEntry.newHint.attemptHistory.push(failedAttempt);
                 finalAttempt = failedAttempt;
@@ -10958,11 +11074,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.solverPath = finalAttempt?.solverPath || 'unknown';
             levelEntry.newHint.requestedSolverPath = finalAttempt?.requestedSolverPath || 'unknown';
             levelEntry.newHint.executionPath = finalAttempt?.executionPath || finalAttempt?.solverPath || 'unknown';
+            levelEntry.newHint.refereeAttempted = !!finalAttempt?.refereeAttempted;
             levelEntry.newHint.refereeStatus = finalAttempt?.refereeStatus || null;
+            levelEntry.newHint.refereeSolved = !!finalAttempt?.refereeSolved;
+            levelEntry.newHint.refereeTimeMs = Number.isFinite(finalAttempt?.refereeTimeMs) ? finalAttempt.refereeTimeMs : null;
             levelEntry.newHint.legacyFallbackTried = !!finalAttempt?.legacyFallbackTried;
             levelEntry.newHint.legacyFallbackStatus = finalAttempt?.legacyFallbackStatus || null;
+            levelEntry.newHint.legacyFallbackSolved = !!finalAttempt?.legacyFallbackSolved;
+            levelEntry.newHint.legacyFallbackTimeMs = Number.isFinite(finalAttempt?.legacyFallbackTimeMs) ? finalAttempt.legacyFallbackTimeMs : null;
             levelEntry.newHint.finalStatus = finalAttempt?.finalStatus || finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.finalSolvedBy = finalAttempt?.finalSolvedBy || 'none';
+            levelEntry.newHint.totalSolveTimeMs = Number.isFinite(finalAttempt?.totalSolveTimeMs) ? finalAttempt.totalSolveTimeMs : 0;
             if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
                 const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
                 if (detail) setLevelError(detail, { source: 'newHint-status' });
