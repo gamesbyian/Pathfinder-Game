@@ -2589,9 +2589,65 @@
                     const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'modern';
                     const structuralMode = !!options?.structuralMode;
                     const profile = structuralMode ? (l.solverProfile || null) : null;
-                    const knotZone = profile?.knotZone instanceof Set
-                        ? profile.knotZone
-                        : (profile?.knotCandidates?.[0]?.cells instanceof Set ? profile.knotCandidates[0].cells : null);
+                    const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
+                    const evaluateKnotCandidate = (candidate) => {
+                        if (!candidate || !(candidate.cells instanceof Set) || !(candidate.distMap instanceof Map)) return null;
+                        const dist = candidate.distMap.get(k);
+                        if (!Number.isFinite(dist)) return null;
+                        let unresolvedCross = 0;
+                        let revisitOpportunity = 0;
+                        for (const cell of candidate.cells) {
+                            const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(cell) : undefined;
+                            if (crossIdx !== undefined && state.mustCrossCounts && (state.mustCrossCounts[crossIdx] || 0) < 2) unresolvedCross++;
+                            if ((state.countsArr ? state.countsArr[state.keyToIdx(cell)] : (state.counts?.get(cell) || 0)) === 0) revisitOpportunity++;
+                        }
+                        const unresolvedScore = (unresolvedCross * 2.4) + (Math.min(4, revisitOpportunity) * 0.7);
+                        const weighted = (dist * 18)
+                            - ((candidate.score || 0) * 0.35)
+                            - (unresolvedScore * 16)
+                            - ((candidate.confidence || 0) * 12);
+                        return { candidate, dist, unresolvedScore, weighted };
+                    };
+                    const knotEvaluations = knotCandidates.map(evaluateKnotCandidate).filter(Boolean).sort((a, b) => a.weighted - b.weighted);
+                    let activeKnotTarget = knotEvaluations.length > 0 ? knotEvaluations[0] : null;
+                    let knotSwitchedByStall = false;
+                    if (knotEvaluations.length > 1 && activeKnotTarget) {
+                        const recentDepth = Math.min(5, state.path.length - 1);
+                        let stalled = recentDepth >= 3;
+                        let prevDist = null;
+                        for (let i = 0; i <= recentDepth; i++) {
+                            const idx = state.path.length - 1 - i;
+                            if (idx < 0) break;
+                            const keyAt = state.path[idx];
+                            const d = activeKnotTarget.candidate.distMap.get(keyAt);
+                            if (!Number.isFinite(d)) continue;
+                            if (prevDist !== null && d < prevDist) stalled = false;
+                            prevDist = d;
+                        }
+                        const runnerUp = knotEvaluations[1];
+                        const hysteresisMargin = 6;
+                        if (stalled && runnerUp && (runnerUp.weighted + hysteresisMargin) < activeKnotTarget.weighted) {
+                            activeKnotTarget = runnerUp;
+                            knotSwitchedByStall = true;
+                        }
+                    }
+                    if (debugStats && activeKnotTarget) {
+                        if (!Array.isArray(debugStats.knotSelectionEvents)) debugStats.knotSelectionEvents = [];
+                        const selectedId = Number.isFinite(activeKnotTarget.candidate?.id) ? activeKnotTarget.candidate.id : -1;
+                        const prevId = Number.isFinite(debugStats.lastKnotCandidateId) ? debugStats.lastKnotCandidateId : null;
+                        if (prevId === null || prevId !== selectedId || knotSwitchedByStall) {
+                            debugStats.knotSelectionEvents.push({
+                                atLen: curLen,
+                                selectedId,
+                                type: activeKnotTarget.candidate?.type || 'unknown',
+                                confidence: Number((activeKnotTarget.candidate?.confidence || 0).toFixed(3)),
+                                dist: activeKnotTarget.dist,
+                                reason: knotSwitchedByStall ? 'stall-switch' : (prevId === null ? 'initial' : 'phase-progress')
+                            });
+                            if (debugStats.knotSelectionEvents.length > 24) debugStats.knotSelectionEvents.shift();
+                        }
+                        debugStats.lastKnotCandidateId = selectedId;
+                    }
                     const objectivePriority = profile?.objectivePriority instanceof Map
                         ? profile.objectivePriority
                         : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
@@ -2741,10 +2797,18 @@
                                 if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
                             }
 
-                            if (intsRemaining > 0 && knotZone && knotZone.size > 0) {
+                            if (intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
                                 const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1);
-                                if (knotZone.has(nk)) score -= Math.round(profile.knotBias * knotWeight);
-                                else score += Math.round(profile.knotBias * 0.2 * knotWeight);
+                                const candidate = activeKnotTarget.candidate;
+                                const targetDist = candidate.distMap instanceof Map ? candidate.distMap.get(nk) : undefined;
+                                const currentTargetDist = candidate.distMap instanceof Map ? candidate.distMap.get(k) : undefined;
+                                if (candidate.cells.has(nk)) score -= Math.round(profile.knotBias * 1.2 * knotWeight);
+                                else score += Math.round(profile.knotBias * 0.25 * knotWeight);
+                                if (Number.isFinite(targetDist) && Number.isFinite(currentTargetDist)) {
+                                    const delta = currentTargetDist - targetDist;
+                                    score -= Math.round(delta * 24 * knotWeight);
+                                    if (delta < 0) score += Math.round(Math.abs(delta) * 10 * knotWeight);
+                                }
                             }
 
                             if (objectivePriority && objectiveCount > 0) {
@@ -4328,18 +4392,29 @@
             objectiveFeatures.forEach((n, i) => objectivePriority.set(n.key, i));
 
             const knotCandidates = [];
-            const makeZoneCells = (seedKeys) => {
+            const makeZoneCells = (seedKeys, maxCells = 12) => {
                 const zone = new Set();
+                const queue = [];
+                const seen = new Set();
                 for (const seed of seedKeys) {
-                    if (seed === undefined || seed === null || !walkableSet.has(seed)) continue;
-                    zone.add(seed);
-                    const p = APP.LevelUtils.UNPACK(seed);
-                    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
-                        const nx = p.x + dx, ny = p.y + dy;
-                        if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
-                        const nk = APP.LevelUtils.PACK(nx, ny);
-                        if (walkableSet.has(nk)) zone.add(nk);
+                    if (seed === undefined || seed === null || !walkableSet.has(seed) || seen.has(seed)) continue;
+                    seen.add(seed);
+                    queue.push(seed);
+                }
+                while (queue.length > 0 && zone.size < maxCells) {
+                    const cur = queue.shift();
+                    zone.add(cur);
+                    const neighbors = (adjacency.get(cur) || []).slice().sort((a, b) => {
+                        const sa = (chokeScoreMap.get(a) || 0) + ((mustCrossSet.has(a) ? 1 : 0) * 2);
+                        const sb = (chokeScoreMap.get(b) || 0) + ((mustCrossSet.has(b) ? 1 : 0) * 2);
+                        return sb - sa;
                     });
+                    for (const nb of neighbors) {
+                        if (zone.size + queue.length >= maxCells) break;
+                        if (!walkableSet.has(nb) || seen.has(nb)) continue;
+                        seen.add(nb);
+                        queue.push(nb);
+                    }
                 }
                 return zone;
             };
@@ -4361,7 +4436,7 @@
                     }
                 }
                 if (cluster.length > 0) {
-                    const zone = makeZoneCells(cluster);
+                    const zone = makeZoneCells(cluster, 14);
                     const chokeAvg = cluster.reduce((acc, key) => acc + (chokeScoreMap.get(key) || 0), 0) / cluster.length;
                     knotCandidates.push({ type: 'mustCrossCluster', score: 70 + (cluster.length * 9) + (chokeAvg * 8), cells: zone });
                 }
@@ -4375,7 +4450,7 @@
                 knotCandidates.push({
                     type: 'bottleneckNeighborhood',
                     score: 60 + ((chokeScoreMap.get(key) || 0) * 14),
-                    cells: makeZoneCells([key])
+                    cells: makeZoneCells([key], 10)
                 });
             }
 
@@ -4390,7 +4465,7 @@
                 knotCandidates.push({
                     type: 'portalExitConstrained',
                     score: 55 + (constraint * 11) + ((chokeScoreMap.get(dest) || 0) * 10),
-                    cells: makeZoneCells([dest])
+                    cells: makeZoneCells([dest], 9)
                 });
             }
 
@@ -4407,21 +4482,74 @@
                 knotCandidates.push({
                     type: 'goalAdjacentLateChokePocket',
                     score: 68 + (goalPocketSeeds.length * 2.5),
-                    cells: makeZoneCells(goalPocketSeeds.slice(0, 8))
+                    cells: makeZoneCells(goalPocketSeeds.slice(0, 8), 12)
                 });
             }
 
-            knotCandidates.sort((a, b) => b.score - a.score);
-            const rankedKnotCandidates = knotCandidates.slice(0, 10);
+            const enrichedKnotCandidates = knotCandidates.map((candidate, idx) => {
+                const cells = candidate.cells instanceof Set ? candidate.cells : new Set();
+                const cellList = Array.from(cells);
+                const mustCrossHits = cellList.filter(key => mustCrossSet.has(key)).length;
+                const chokeAvg = cellList.length > 0
+                    ? cellList.reduce((acc, key) => acc + (chokeScoreMap.get(key) || 0), 0) / cellList.length
+                    : 0;
+                const revisitPotential = cellList.length > 0
+                    ? cellList.reduce((acc, key) => {
+                        const deg = degreeMap.get(key) || 0;
+                        return acc + Math.max(0, deg - 2);
+                    }, 0) / cellList.length
+                    : 0;
+                const portalAdjacency = cellList.reduce((acc, key) => {
+                    if (level.portalMap?.has(key)) return acc + 1;
+                    const nearPortal = (adjacency.get(key) || []).some(nb => level.portalMap?.has(nb));
+                    return acc + (nearPortal ? 1 : 0);
+                }, 0);
+                const portalAdjNorm = cellList.length > 0 ? portalAdjacency / cellList.length : 0;
+                const score = candidate.score
+                    + (mustCrossHits * 14)
+                    + (chokeAvg * 10)
+                    + (revisitPotential * 16)
+                    + (portalAdjNorm * 20);
+                const distMap = SolverCore._buildOptimisticDistMap(level, cellList);
+                return {
+                    id: idx,
+                    type: candidate.type,
+                    score,
+                    confidence: 0,
+                    mustCrossHits,
+                    chokeAvg,
+                    revisitPotential,
+                    portalExitAdjacency: portalAdjNorm,
+                    revisitVisitTarget: Math.max(1, Math.min(3, Math.round(revisitPotential + portalAdjNorm + (mustCrossHits > 0 ? 1 : 0)))),
+                    cells,
+                    distMap
+                };
+            });
+
+            const dedupedKnotCandidates = [];
+            const seenZoneSignatures = new Set();
+            for (const candidate of enrichedKnotCandidates) {
+                const signature = Array.from(candidate.cells).sort((a, b) => a - b).join(',');
+                if (!signature || seenZoneSignatures.has(signature)) continue;
+                seenZoneSignatures.add(signature);
+                dedupedKnotCandidates.push(candidate);
+            }
+
+            dedupedKnotCandidates.sort((a, b) => b.score - a.score);
+            const knotTopN = 6;
+            const rankedKnotCandidates = dedupedKnotCandidates.slice(0, knotTopN);
+            const topScore = rankedKnotCandidates.length > 0 ? rankedKnotCandidates[0].score : 1;
+            rankedKnotCandidates.forEach((candidate) => {
+                candidate.confidence = Math.max(0.05, Math.min(1, candidate.score / Math.max(1, topScore)));
+            });
 
             const knotZone = new Set();
-            for (const candidate of rankedKnotCandidates.slice(0, 4)) {
-                for (const key of candidate.cells) knotZone.add(key);
-            }
-            if (knotZone.size > 24) {
-                const trimmed = Array.from(knotZone).slice(0, 24);
-                knotZone.clear();
-                trimmed.forEach(k => knotZone.add(k));
+            for (const candidate of rankedKnotCandidates) {
+                for (const key of candidate.cells) {
+                    if (knotZone.size >= 24) break;
+                    knotZone.add(key);
+                }
+                if (knotZone.size >= 24) break;
             }
 
             let symmetryAxis = null;
@@ -4622,9 +4750,17 @@
                     seedMode: objectiveModel.seedMode || 'legacy-distance'
                 },
                 knotCandidates: knotCandidates.map(c => ({
+                    id: Number.isFinite(c?.id) ? c.id : -1,
                     type: c?.type || 'legacy-zone',
                     score: Number.isFinite(c?.score) ? c.score : 0,
-                    cells: c?.cells instanceof Set ? c.cells : new Set()
+                    confidence: Number.isFinite(c?.confidence) ? c.confidence : 0,
+                    mustCrossHits: Number.isFinite(c?.mustCrossHits) ? c.mustCrossHits : 0,
+                    chokeAvg: Number.isFinite(c?.chokeAvg) ? c.chokeAvg : 0,
+                    revisitPotential: Number.isFinite(c?.revisitPotential) ? c.revisitPotential : 0,
+                    portalExitAdjacency: Number.isFinite(c?.portalExitAdjacency) ? c.portalExitAdjacency : 0,
+                    revisitVisitTarget: Number.isFinite(c?.revisitVisitTarget) ? c.revisitVisitTarget : 1,
+                    cells: c?.cells instanceof Set ? c.cells : new Set(),
+                    distMap: c?.distMap instanceof Map ? c.distMap : new Map()
                 })),
                 symmetryModel: {
                     axis: (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal') ? symmetryModel.axis : (safe.symmetryAxis || null),
@@ -5589,6 +5725,8 @@
                     depth0: null,
                     phaseTimeline: [],
                     phaseAttempts: [],
+                    knotSelectionEvents: [],
+                    lastKnotCandidateId: null,
                     prune: {
                         lenOverflow: 0,
                         intsOverflow: 0,
@@ -5650,6 +5788,12 @@
                 if (Array.isArray(debug?.phaseAttempts) && debug.phaseAttempts.length > 0) {
                     const phaseAttemptSummary = debug.phaseAttempts.slice(0, 4).map(a => `gate=${a.gateKey} status=${a.status} phases=${(a.timeline || []).map(t => t.phase).join('>') || 'none'}`).join(' | ');
                     lines.push(`phaseAttempts: ${phaseAttemptSummary}${debug.phaseAttempts.length > 4 ? ` ... (+${debug.phaseAttempts.length - 4} more)` : ''}`);
+                }
+                if (Array.isArray(debug?.knotSelectionEvents) && debug.knotSelectionEvents.length > 0) {
+                    const knotPreview = debug.knotSelectionEvents.slice(0, 8)
+                        .map(e => `id=${e.selectedId}:${e.type}@${e.atLen}[${e.reason}] conf=${e.confidence} d=${e.dist}`)
+                        .join(' -> ');
+                    lines.push(`knotCandidates: ${knotPreview}${debug.knotSelectionEvents.length > 8 ? ` ... (+${debug.knotSelectionEvents.length - 8} events)` : ''}`);
                 }
                 if (Array.isArray(debug?.notes) && debug.notes.length > 0) {
                     lines.push(...debug.notes);
