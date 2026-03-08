@@ -2147,6 +2147,106 @@
                     if (l.portalMap.has(key)) degree++;
                     return degree;
                 },
+                _phasePolicyFromArchetype(archetype = 'corridor-commitment') {
+                    const base = {
+                        thresholds: {
+                            transitionProgress: 0.34,
+                            knotProgress: 0.58,
+                            finishProgress: 0.82,
+                            finishGoalDist: 4,
+                            finishSlackMax: 2,
+                            knotIntsRemainingMax: 2,
+                            knotObjectivesRemainingMax: 2
+                        },
+                        profiles: {
+                            harvest: { perimeterBias: 1.2, objectivePull: 0.8, knotPull: 0.25, goalAttraction: 0.55, antiDither: 0.25 },
+                            transition: { perimeterBias: 0.9, objectivePull: 1.1, knotPull: 0.7, goalAttraction: 0.75, antiDither: 0.45 },
+                            knot: { perimeterBias: 0.45, objectivePull: 0.95, knotPull: 1.45, goalAttraction: 0.95, antiDither: 0.65 },
+                            finish: { perimeterBias: 0.15, objectivePull: 0.65, knotPull: 0.55, goalAttraction: 1.7, antiDither: 1.1 }
+                        }
+                    };
+                    if (archetype === 'open-harvest') {
+                        base.thresholds.transitionProgress = 0.4;
+                        base.thresholds.knotProgress = 0.62;
+                        base.profiles.harvest.perimeterBias = 1.45;
+                        base.profiles.finish.goalAttraction = 1.55;
+                    } else if (archetype === 'portal-bridge') {
+                        base.thresholds.transitionProgress = 0.28;
+                        base.thresholds.knotProgress = 0.52;
+                        base.thresholds.finishProgress = 0.74;
+                        base.thresholds.finishGoalDist = 5;
+                        base.profiles.transition.objectivePull = 1.35;
+                        base.profiles.knot.knotPull = 1.2;
+                        base.profiles.finish.goalAttraction = 1.95;
+                    }
+                    return base;
+                },
+                _resolvePhasePolicy(l, options = {}) {
+                    const archetype = l?.solverProfile?.archetype || 'corridor-commitment';
+                    const base = this._phasePolicyFromArchetype(archetype);
+                    const override = options?.phasePolicy;
+                    if (!override || typeof override !== 'object') return { ...base, archetype };
+                    return {
+                        archetype,
+                        thresholds: { ...base.thresholds, ...(override.thresholds || {}) },
+                        profiles: {
+                            harvest: { ...base.profiles.harvest, ...(override.profiles?.harvest || {}) },
+                            transition: { ...base.profiles.transition, ...(override.profiles?.transition || {}) },
+                            knot: { ...base.profiles.knot, ...(override.profiles?.knot || {}) },
+                            finish: { ...base.profiles.finish, ...(override.profiles?.finish || {}) }
+                        }
+                    };
+                },
+                _objectiveRemainingCount(state, l) {
+                    let remaining = this._crossNeeds(state);
+                    if (typeof state.mustMask === 'bigint' && state.mustMask !== 0n) {
+                        remaining += l?._popcountMask ? l._popcountMask(state.mustMask) : 1;
+                    }
+                    return remaining;
+                },
+                _deriveSolverPhase(state, key, l, distMap) {
+                    const realLen = state.path.length - 1 - state.isJump.size;
+                    const progressRatio = l.reqLen > 0 ? Math.max(0, Math.min(1, realLen / l.reqLen)) : 1;
+                    const goalDist = distMap.get(key) ?? Infinity;
+                    const rSteps = Math.max(0, l.reqLen - realLen);
+                    const slack = Number.isFinite(goalDist) ? (rSteps - goalDist) : -Infinity;
+                    const remainingObjectives = this._objectiveRemainingCount(state, l);
+                    const remainingIntersections = Math.max(0, l.reqInt - state.ints);
+                    const t = state.phasePolicy?.thresholds || {};
+
+                    let phase = 'harvest';
+                    const inFinishWindow = progressRatio >= (t.finishProgress ?? 0.82)
+                        || (Number.isFinite(goalDist) && goalDist <= (t.finishGoalDist ?? 4) && slack <= (t.finishSlackMax ?? 2));
+                    if (inFinishWindow && remainingObjectives <= 1 && remainingIntersections <= 1) phase = 'finish';
+                    else if (progressRatio >= (t.knotProgress ?? 0.58)
+                        && remainingIntersections <= (t.knotIntsRemainingMax ?? 2)
+                        && remainingObjectives <= (t.knotObjectivesRemainingMax ?? 2)) phase = 'knot';
+                    else if (progressRatio >= (t.transitionProgress ?? 0.34)
+                        || remainingObjectives <= Math.max(2, Math.floor((l.mustPassKeys.length + l.mustCrossKeys.length) * 0.5))) phase = 'transition';
+
+                    return { phase, realLen, progressRatio, goalDist, rSteps, slack, remainingObjectives, remainingIntersections };
+                },
+                _updateSolverPhase(state, key, l, distMap, debugStats = null) {
+                    const derived = this._deriveSolverPhase(state, key, l, distMap);
+                    if (!state.phase || state.phase !== derived.phase) {
+                        state.phase = derived.phase;
+                        const event = {
+                            phase: derived.phase,
+                            atLen: derived.realLen,
+                            progress: Number(derived.progressRatio.toFixed(3)),
+                            remainingObjectives: derived.remainingObjectives,
+                            remainingIntersections: derived.remainingIntersections,
+                            goalDist: Number.isFinite(derived.goalDist) ? derived.goalDist : null,
+                            slack: Number.isFinite(derived.slack) ? derived.slack : null
+                        };
+                        if (Array.isArray(state.phaseTimeline)) state.phaseTimeline.push(event);
+                        if (debugStats) {
+                            if (!Array.isArray(debugStats.phaseTimeline)) debugStats.phaseTimeline = [];
+                            debugStats.phaseTimeline.push(event);
+                        }
+                    }
+                    return derived;
+                },
                 _getRawNeighbors(k, l) {
                     const { w, h } = l.grid;
                     const neighbors = [];
@@ -2337,6 +2437,14 @@
                         : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
                     const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
                     const perimeterThreshold = profile?.perimeterThreshold || 1;
+                    const activePhase = state.phase || 'harvest';
+                    const phaseProfile = state.phasePolicy?.profiles?.[activePhase] || state.phasePolicy?.profiles?.harvest || {
+                        perimeterBias: 1,
+                        objectivePull: 1,
+                        knotPull: 1,
+                        goalAttraction: 1,
+                        antiDither: 1
+                    };
                     const scored = valid.map(nk => {
                         let score = 0;
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
@@ -2380,11 +2488,11 @@
                             const currentSlack = l.reqLen - nLen - activeDist;
 
                             // Penalty scales from 5 (high slack) up to 40 (low slack)
-                            const gravityMult = currentSlack > 5 ? 5 : 40;
+                            const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1);
 
                             score -= (mustBound === Infinity ? 100000 : mustBound * gravityMult);
                             score -= (crossBound === Infinity ? 100000 : crossBound * gravityMult);
-                            if (crossNeed > 0) score += crossNeed * 15;
+                            if (crossNeed > 0) score += crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1));
 
                             if (inParityDeficit && l.hasParityBreaker && l.parityBreakers && l.parityDistMaps) {
                                 let waypointDist = Infinity;
@@ -2405,7 +2513,7 @@
 
                             if (isTargetingWaypoint) {
                                 // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
-                                score -= activeDist * 10;
+                                score -= activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1));
                                 score -= this._staticNeighborDegree(nk, l) * 2;
                             } else {
                                 const slack = rSteps - activeDist;
@@ -2413,10 +2521,10 @@
                                     // SLACK MODE: Decaying Orbit + Wall Hugging
                                     const targetSlack = Math.floor(rSteps / 2);
                                     score -= Math.abs(slack - targetSlack) * 5;
-                                    score -= this._staticNeighborDegree(nk, l) * 15;
+                                    score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1));
                                 } else {
                                     // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
-                                    score -= activeDist * 10;
+                                    score -= activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1));
                                 }
                             }
                         }
@@ -2430,20 +2538,22 @@
                             const goalDist = distMap.get(nk) ?? 999;
 
                             if (profile.perimeterBias > 0 && rRatio < 0.45) {
-                                if (edgeDist <= perimeterThreshold) score -= profile.perimeterBias;
-                                else score += Math.round(profile.perimeterBias * 0.45);
-                                if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35);
+                                const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
+                                if (edgeDist <= perimeterThreshold) score -= Math.round(profile.perimeterBias * perimeterWeight);
+                                else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
+                                if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
                             }
 
                             if (intsRemaining > 0 && knotZone && knotZone.size > 0) {
-                                if (knotZone.has(nk)) score -= profile.knotBias;
-                                else score += Math.round(profile.knotBias * 0.2);
+                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1);
+                                if (knotZone.has(nk)) score -= Math.round(profile.knotBias * knotWeight);
+                                else score += Math.round(profile.knotBias * 0.2 * knotWeight);
                             }
 
                             if (objectivePriority && objectiveCount > 0) {
                                 const rank = objectivePriority.get(nk);
                                 if (rank !== undefined) {
-                                    score -= Math.max(20, (objectiveCount - rank) * 28);
+                                    score -= Math.round(Math.max(20, (objectiveCount - rank) * 28) * Math.max(0.2, phaseProfile.objectivePull || 1));
                                 }
                             }
 
@@ -2710,6 +2820,7 @@
                     const gateMask = new Uint8Array(keyCount);
                     for (const gateKey of l.gateKeys) gateMask[this._gridIndexFromKey(gateKey, cols)] = 1;
                     const maxLogTriples = Math.max(3, l.reqLen * 24);
+                    const phasePolicy = this._resolvePhasePolicy(l, options);
                     const state = {
                         path: [startKey],
                         countsArr: new Uint16Array(keyCount),
@@ -2735,7 +2846,10 @@
                         mustCrossCounts: mustCrossCount > 0 ? new Uint8Array(mustCrossCount) : null,
                         floodVisited: new Uint8Array(keyCount),
                         floodQueue: new Int32Array(keyCount),
-                        remainingSteps: 0
+                        remainingSteps: 0,
+                        phase: 'harvest',
+                        phasePolicy,
+                        phaseTimeline: []
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -2758,14 +2872,26 @@
                     }
                     const failMemo = useFailMemo ? new Map() : null;
                     const dominanceMemo = new Map();
+                    const recordPhaseAttempt = (status) => {
+                        if (!debugStats) return;
+                        if (!Array.isArray(debugStats.phaseAttempts)) debugStats.phaseAttempts = [];
+                        debugStats.phaseAttempts.push({ gateKey: startKey, status, timeline: (state.phaseTimeline || []).slice() });
+                    };
+                    this._updateSolverPhase(state, startKey, l, distMap, debugStats);
                     const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
                     const startSig = this._stateSignature(state, l, 0, options);
                     this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0 }, debugStats);
                     const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig }];
                     let steps = 0;
                     while (stack.length > 0) {
-                        if (options.signal?.aborted) return SOLVER_ABORTED;
-                        if (Date.now() - options.startTime > options.timeLimit) return SOLVER_TIMEOUT;
+                        if (options.signal?.aborted) {
+                            recordPhaseAttempt('aborted');
+                            return SOLVER_ABORTED;
+                        }
+                        if (Date.now() - options.startTime > options.timeLimit) {
+                            recordPhaseAttempt('timeout');
+                            return SOLVER_TIMEOUT;
+                        }
                         if (++steps % 500 === 0) {
                             await new Promise(r => setTimeout(r, 0));
                             options.onProgress(Date.now() - options.startTime);
@@ -2790,6 +2916,7 @@
                             continue;
                         }
                         const realLen = state.path.length - 1 - state.isJump.size;
+                        this._updateSolverPhase(state, lastK, l, distMap, debugStats);
                         if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
                         if (realLen > l.reqLen) {
                             if (debugStats) debugStats.prune.lenOverflow++;
@@ -2854,7 +2981,10 @@
                         }
                         if (lastK === l.goalKey) {
                             if (realLen === l.reqLen && state.ints === l.reqInt) {
-                                if (this._checkFinalConstraints(state, l)) return { path: state.path.slice(), len: realLen };
+                                if (this._checkFinalConstraints(state, l)) {
+                                    recordPhaseAttempt('solved');
+                                    return { path: state.path.slice(), len: realLen };
+                                }
                             }
                             this._popStateZeroAlloc(state, transLog);
                             continue;
@@ -2922,6 +3052,7 @@
                         stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig });
                     }
                     if (debugStats) debugStats.memoSize = useFailMemo ? failMemo.size : 0;
+                    recordPhaseAttempt('exhausted');
                     return null;
                 },
                 async _solveTrapSpots(startKey, l, validSpotsSet, options) {
@@ -3142,7 +3273,11 @@
                         useFailMemo = true,
                         debugStats,
                         falseGoalPolicy = 'forbidIntersect',
-                        enableForcedMoves = true
+                        enableForcedMoves = true,
+                        scoringMode = 'modern',
+                        portalBiasMode = 'adaptiveMustCross',
+                        structuralMode = false,
+                        phasePolicy = null
                     } = options;
                     const shuffledGates = (validGates || level.gateKeys || []).slice();
                     if (dirOrderVariant === 'alt') shuffledGates.reverse();
@@ -3191,7 +3326,8 @@
                                 enableForcedMoves,
                                 scoringMode,
                                 portalBiasMode,
-                                structuralMode
+                                structuralMode,
+                                phasePolicy
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
                             if (result === SOLVER_ABORTED) return { kind: 'aborted' };
@@ -3287,7 +3423,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -3468,6 +3604,8 @@
                             debugStats.pass = passName;
                             debugStats.disabledPrunes = disabledPrunes.slice();
                             debugStats.failMemoUsed = useFailMemo && disabledPrunes.length === 0;
+                            debugStats.phaseTimeline = [];
+                            debugStats.phaseAttempts = [];
                         }
                         onStateUpdate(statusLabel || `Solving (${validGates.length} viable gates)...`);
                         const policy = SolverPolicies.makeHintPolicy(level, {
@@ -3485,7 +3623,11 @@
                             useFailMemo,
                             debugStats,
                             falseGoalPolicy: 'forbidIntersect',
-                            enableForcedMoves
+                            enableForcedMoves,
+                            scoringMode,
+                            portalBiasMode,
+                            structuralMode,
+                            phasePolicy
                         });
                         const out = await SearchFramework.runSearch({
                             level,
@@ -4104,7 +4246,8 @@
                 },
                 knotCandidates: rankedKnotCandidates,
                 symmetryModel,
-                archetype: portalLoad > 0 ? 'portal-bridge' : (openness > 0.75 ? 'open-harvest' : 'corridor-commitment')
+                archetype: portalLoad > 0 ? 'portal-bridge' : (openness > 0.75 ? 'open-harvest' : 'corridor-commitment'),
+                phasePolicy: SolverCore._phasePolicyFromArchetype(portalLoad > 0 ? 'portal-bridge' : (openness > 0.75 ? 'open-harvest' : 'corridor-commitment'))
             };
         },
 
@@ -4161,7 +4304,10 @@
                     verticalAgreement: Number.isFinite(symmetryModel.verticalAgreement) ? symmetryModel.verticalAgreement : 0,
                     horizontalAgreement: Number.isFinite(symmetryModel.horizontalAgreement) ? symmetryModel.horizontalAgreement : 0
                 },
-                archetype: safe.archetype || 'corridor-commitment'
+                archetype: safe.archetype || 'corridor-commitment',
+                phasePolicy: (safe.phasePolicy && typeof safe.phasePolicy === 'object')
+                    ? safe.phasePolicy
+                    : SolverCore._phasePolicyFromArchetype(safe.archetype || 'corridor-commitment')
             };
         },
 
@@ -4191,7 +4337,8 @@
                     dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
                     scoringMode: attemptOpts.scoringMode || 'modern',
-                    structuralMode: !!attemptOpts.structuralMode
+                    structuralMode: !!attemptOpts.structuralMode,
+                    phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -4205,17 +4352,18 @@
                     debug,
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
-                    structuralMode: !!attemptOpts.structuralMode
+                    structuralMode: !!attemptOpts.structuralMode,
+                    phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null
                 };
             };
 
             const portalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 2;
             const attempts = portalMustCrossHeavy
                 ? [
-                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', structuralMode: !!opts.structuralMode },
-                    { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off', structuralMode: !!opts.structuralMode }
+                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', structuralMode: !!opts.structuralMode, phasePolicy: opts.phasePolicy || null },
+                    { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off', structuralMode: !!opts.structuralMode, phasePolicy: opts.phasePolicy || null }
                 ]
-                : [{ budgetMs, scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', structuralMode: !!opts.structuralMode }];
+                : [{ budgetMs, scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', structuralMode: !!opts.structuralMode, phasePolicy: opts.phasePolicy || null }];
 
             let attemptsUsed = [];
             let lastAttempt = null;
@@ -4226,7 +4374,9 @@
                     budgetMs: attempt.budgetMs,
                     scoringMode: attempt.scoringMode,
                     portalBiasMode: attempt.portalBiasMode,
-                    structuralMode: !!attempt.structuralMode
+                    structuralMode: !!attempt.structuralMode,
+                    phasePolicy: attempt.phasePolicy?.archetype || null,
+                    phaseTimeline: attemptResult?.debug?.phaseTimeline || []
                 });
                 if (APP.State.ENGINE.flags?.refereeDebug || APP.State.ENGINE.flags?.debugSolver) {
                     const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
@@ -4266,7 +4416,8 @@
                 debug: true,
                 debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                 disabledPrunes,
-                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross'
+                portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
+                phasePolicy: opts.phasePolicy || null
             });
             const elapsedMs = Date.now() - started;
             const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -4287,6 +4438,7 @@
             level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
             const purpose = opts.purpose || 'solve';
             const resolvedPortalBiasMode = opts.portalBiasMode || 'adaptiveMustCross';
+            const resolvedPhasePolicy = opts.phasePolicy || level.solverProfile?.phasePolicy || null;
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
@@ -4303,10 +4455,10 @@
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
                 const budgets = this.allocateStageBudgets(totalBudgetMs, level.solverProfile);
                 let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'structural', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, purpose }), successMessage: 'Solved (structural strategy).', timeoutMessage: 'Structural strategy timed out.', failMessage: 'Structural strategy did not find a solution.' },
-                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'structural', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, purpose }), successMessage: 'Solved (structural strategy).', timeoutMessage: 'Structural strategy timed out.', failMessage: 'Structural strategy did not find a solution.' },
+                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
                 if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
@@ -5108,6 +5260,8 @@
                     failMemoUsed: true,
                     invalidReasons: [],
                     depth0: null,
+                    phaseTimeline: [],
+                    phaseAttempts: [],
                     prune: {
                         lenOverflow: 0,
                         intsOverflow: 0,
@@ -5161,6 +5315,14 @@
                 }
                 if (debug?.depth0 && (debug.nodesExpanded === 0 || debug.maxDepth === 0 || debug.status === 'no-solution')) {
                     lines.push(`depth0Prune: ${debug.depth0.reason} ${debug.depth0.details}`);
+                }
+                if (Array.isArray(debug?.phaseTimeline) && debug.phaseTimeline.length > 0) {
+                    const preview = debug.phaseTimeline.slice(0, 8).map(e => `${e.phase}@${e.atLen}(obj=${e.remainingObjectives},int=${e.remainingIntersections},slack=${e.slack ?? 'n/a'})`).join(' -> ');
+                    lines.push(`phaseTimeline: ${preview}${debug.phaseTimeline.length > 8 ? ` ... (+${debug.phaseTimeline.length - 8} events)` : ''}`);
+                }
+                if (Array.isArray(debug?.phaseAttempts) && debug.phaseAttempts.length > 0) {
+                    const phaseAttemptSummary = debug.phaseAttempts.slice(0, 4).map(a => `gate=${a.gateKey} status=${a.status} phases=${(a.timeline || []).map(t => t.phase).join('>') || 'none'}`).join(' | ');
+                    lines.push(`phaseAttempts: ${phaseAttemptSummary}${debug.phaseAttempts.length > 4 ? ` ... (+${debug.phaseAttempts.length - 4} more)` : ''}`);
                 }
                 if (Array.isArray(debug?.notes) && debug.notes.length > 0) {
                     lines.push(...debug.notes);
