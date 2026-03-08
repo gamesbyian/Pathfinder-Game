@@ -6999,7 +6999,7 @@
                         allowGemini: false,
                         onStage: ({ name, variant, budgetMs }) => {
                             APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
-                            if (APP.State.ENGINE.flags.refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
+                            if (APP.State.ENGINE.flags?.refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
                             if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
                         }
                     });
