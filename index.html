@@ -2884,6 +2884,34 @@
                             if (profile.portalCommitment > 0 && portalDest === nk && portalForced) {
                                 score -= profile.portalCommitment;
                             }
+                            const startArchetype = state.startGateArchetype;
+                            if (startArchetype === 'perimeter-early') {
+                                if (edgeDist <= perimeterThreshold + 1) score -= 22;
+                                else if (rRatio < 0.35) score += 10;
+                            } else if (startArchetype === 'objective-order') {
+                                if (objectivePriority && objectiveCount > 0) {
+                                    const rank = objectivePriority.get(nk);
+                                    if (rank !== undefined) score -= Math.round(Math.max(6, (objectiveCount - rank) * 6));
+                                }
+                            } else if (startArchetype === 'knot-access') {
+                                if (knotZone?.has(nk)) score -= 18;
+                                else if (intsRemaining > 0 && activePhase !== 'finish') score += 8;
+                            } else if (startArchetype === 'portal-symmetry') {
+                                if (portalDest === nk && portalForced) score -= 20;
+                                if (symmetryCommitted) {
+                                    if (symmetryModel.axis === 'vertical') {
+                                        const mid = (l.grid.w - 1) / 2;
+                                        const pref = symmetryModel?.preferredBreak?.half;
+                                        const towardPreferred = (pref === 'left' && nx <= mid) || (pref === 'right' && nx >= mid);
+                                        if (towardPreferred) score -= 10;
+                                    } else if (symmetryModel.axis === 'horizontal') {
+                                        const mid = (l.grid.h - 1) / 2;
+                                        const pref = symmetryModel?.preferredBreak?.half;
+                                        const towardPreferred = (pref === 'top' && ny <= mid) || (pref === 'bottom' && ny >= mid);
+                                        if (towardPreferred) score -= 10;
+                                    }
+                                }
+                            }
                             const mandatoryPortalFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies)
                                 ? profile.portalHints.mandatoryFamilies
                                 : [];
@@ -3253,7 +3281,8 @@
                         recentMoveEntropy: 0,
                         recentTurnbackCount: 0,
                         recentAxisFlipCount: 0,
-                        recentDirRepeatCount: 0
+                        recentDirRepeatCount: 0,
+                        startGateArchetype: options?.startGateArchetype || null
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -3681,36 +3710,105 @@
                         scoringMode = 'modern',
                         portalBiasMode = 'adaptiveMustCross',
                         structuralMode = false,
-                        phasePolicy = null
+                        phasePolicy = null,
+                        gateBeamTopK = 0,
+                        debugGateVariant = false
                     } = options;
-                    const shuffledGates = (validGates || level.gateKeys || []).slice();
+                    const candidateGates = (validGates || level.gateKeys || []).slice();
                     const profile = level?.solverProfile || null;
                     const symmetryModel = profile?.symmetryModel || null;
                     const symmetryCommitted = !!(symmetryModel && symmetryModel.committed && (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal'));
-                    if (symmetryCommitted) {
-                        const axis = symmetryModel.axis;
-                        const preferredHalf = symmetryModel?.preferredBreak?.half;
-                        const center = axis === 'vertical' ? ((level.grid.w - 1) / 2) : ((level.grid.h - 1) / 2);
-                        const halfScore = (coord) => {
-                            if (preferredHalf === 'left' || preferredHalf === 'top') return coord <= center ? -1 : 1;
-                            if (preferredHalf === 'right' || preferredHalf === 'bottom') return coord >= center ? -1 : 1;
-                            return Math.abs(coord - center);
-                        };
-                        shuffledGates.sort((a, b) => {
-                            const pa = APP.LevelUtils.UNPACK(a);
-                            const pb = APP.LevelUtils.UNPACK(b);
-                            const ca = axis === 'vertical' ? pa.x : pa.y;
-                            const cb = axis === 'vertical' ? pb.x : pb.y;
-                            const hs = halfScore(ca) - halfScore(cb);
-                            if (hs !== 0) return hs;
-                            const da = Math.abs(ca - center);
-                            const db = Math.abs(cb - center);
-                            if (da !== db) return db - da;
-                            return a - b;
+                    const objectiveFeatures = Array.isArray(profile?.objectiveModel?.features) ? profile.objectiveModel.features : [];
+                    const objectiveDistByKey = new Map();
+                    if (Array.isArray(level.objectiveNodes) && Array.isArray(level.objectiveDistMaps)) {
+                        level.objectiveNodes.forEach((node, idx) => {
+                            if (node?.key !== undefined) objectiveDistByKey.set(node.key, level.objectiveDistMaps[idx]);
                         });
                     }
-                    if (dirOrderVariant === 'alt') shuffledGates.reverse();
-                    else if (dirOrderVariant !== 'default') shuffledGates.sort(() => Math.random() - 0.5);
+                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : new Set();
+                    const knotDistMap = knotZone.size > 0 ? SolverCore._buildOptimisticDistMap(level, Array.from(knotZone)) : null;
+                    const portalHints = profile?.portalHints || {};
+                    const portalFamilies = Array.isArray(portalHints.families) ? portalHints.families : [];
+                    const mandatoryFamilySet = new Set(Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies : []);
+                    const perimeterThreshold = Number.isFinite(profile?.perimeterThreshold) ? profile.perimeterThreshold : 1;
+                    const symmetryAxis = symmetryCommitted ? symmetryModel.axis : null;
+                    const preferredHalf = symmetryModel?.preferredBreak?.half || null;
+                    const symmetryMid = symmetryAxis === 'vertical'
+                        ? ((level.grid.w - 1) / 2)
+                        : (symmetryAxis === 'horizontal' ? ((level.grid.h - 1) / 2) : 0);
+
+                    const gateRankings = candidateGates.map(gateKey => {
+                        const p = APP.LevelUtils.UNPACK(gateKey);
+                        const edgeDist = Math.min(p.x, p.y, level.grid.w - 1 - p.x, level.grid.h - 1 - p.y);
+                        const perimeterScore = Math.max(0, (perimeterThreshold + 1) - edgeDist) * 26;
+
+                        const rankedObjectives = objectiveFeatures.slice(0, Math.min(4, objectiveFeatures.length));
+                        let objectiveScore = 0;
+                        const objectiveDistances = [];
+                        rankedObjectives.forEach((obj, idx) => {
+                            const dMap = objectiveDistByKey.get(obj.key);
+                            const d = dMap ? (dMap.get(gateKey) ?? Infinity) : Infinity;
+                            objectiveDistances.push(d);
+                            const rankWeight = Math.max(1, rankedObjectives.length - idx);
+                            if (Number.isFinite(d)) objectiveScore += Math.max(0, 28 - d * 4) * rankWeight;
+                            else objectiveScore -= 26 * rankWeight;
+                        });
+                        for (let i = 1; i < objectiveDistances.length; i++) {
+                            const prev = objectiveDistances[i - 1];
+                            const cur = objectiveDistances[i];
+                            if (Number.isFinite(prev) && Number.isFinite(cur) && prev > cur) objectiveScore -= Math.min(24, (prev - cur) * 3);
+                        }
+
+                        const knotDist = knotDistMap ? (knotDistMap.get(gateKey) ?? Infinity) : Infinity;
+                        const knotScore = Number.isFinite(knotDist) ? Math.max(0, 24 - knotDist * 3) : 0;
+
+                        let portalScore = 0;
+                        for (const family of portalFamilies) {
+                            const entries = Array.isArray(family?.entries) ? family.entries : [];
+                            let best = Infinity;
+                            for (const entry of entries) {
+                                const d = SolverCore._manhattanDist(gateKey, entry);
+                                if (d < best) best = d;
+                            }
+                            if (Number.isFinite(best)) {
+                                const mandatoryBoost = mandatoryFamilySet.has(family.familyId) ? 1.4 : 1;
+                                portalScore += Math.max(0, 16 - best * 2) * mandatoryBoost;
+                            }
+                        }
+                        if (symmetryAxis) {
+                            const coord = symmetryAxis === 'vertical' ? p.x : p.y;
+                            if ((preferredHalf === 'left' || preferredHalf === 'top') && coord <= symmetryMid) portalScore += 16;
+                            else if ((preferredHalf === 'right' || preferredHalf === 'bottom') && coord >= symmetryMid) portalScore += 16;
+                            else portalScore -= 8;
+                        }
+
+                        const totalScore = perimeterScore + objectiveScore + knotScore + portalScore;
+                        const componentPairs = [
+                            ['perimeter-early', perimeterScore],
+                            ['objective-order', objectiveScore],
+                            ['knot-access', knotScore],
+                            ['portal-symmetry', portalScore]
+                        ];
+                        componentPairs.sort((a, b) => b[1] - a[1]);
+                        const startGateArchetype = componentPairs[0][0];
+                        return { gateKey, totalScore, startGateArchetype };
+                    });
+
+                    gateRankings.sort((a, b) => {
+                        if (a.totalScore !== b.totalScore) return b.totalScore - a.totalScore;
+                        return a.gateKey - b.gateKey;
+                    });
+
+                    let rankedQueue = gateRankings.slice();
+                    const beamK = Math.max(0, Math.min(gateRankings.length, Math.floor(gateBeamTopK || 0)));
+                    if (beamK > 0 && beamK < gateRankings.length) {
+                        rankedQueue = [...gateRankings.slice(0, beamK), ...gateRankings.slice(beamK)];
+                    }
+
+                    const shouldApplyDebugVariant = !!(debugGateVariant || window.__PF_DEBUG_HINT_GATE_VARIANTS__);
+                    if (shouldApplyDebugVariant && dirOrderVariant === 'alt') rankedQueue = rankedQueue.slice().reverse();
+                    else if (shouldApplyDebugVariant && dirOrderVariant === 'random') rankedQueue = rankedQueue.slice().sort(() => Math.random() - 0.5);
+
                     const passCellUsageFreq = SavedHintArchitecture.makePassCellUsageSeed();
                     const seenSolutions = new Set();
                     const isHintCandidateValid = (path) => {
@@ -3725,7 +3823,7 @@
                     };
                     return {
                         falseGoalPolicy,
-                        getStartStates: () => shuffledGates.map(gateKey => ({ gateKey })),
+                        getStartStates: () => rankedQueue.map(item => ({ gateKey: item.gateKey, startGateArchetype: item.startGateArchetype })),
                         expandMoves: (state) => [state.gateKey],
                         getStateKey: (state) => state.gateKey,
                         isAcceptState: (result) => {
@@ -3740,7 +3838,7 @@
                             result.path.forEach(k => passCellUsageFreq.set(k, (passCellUsageFreq.get(k) || 0) + 1));
                             if (out.solutions.length >= maxSolutions) out.stop = true;
                         },
-                        applyMove: async (_state, gateKey, out) => {
+                        applyMove: async (state, gateKey, out) => {
                             await new Promise(r => setTimeout(r, 0));
                             const internalOpts = {
                                 timeLimit: localTimeLimit,
@@ -3756,7 +3854,8 @@
                                 scoringMode,
                                 portalBiasMode,
                                 structuralMode,
-                                phasePolicy
+                                phasePolicy,
+                                startGateArchetype: state?.startGateArchetype || null
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
                             if (result === SOLVER_ABORTED) return { kind: 'aborted' };
@@ -4077,7 +4176,7 @@
                         return [];
                     }
 
-                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true }) => {
+                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
                         if (debugStats) {
@@ -4107,7 +4206,9 @@
                             scoringMode,
                             portalBiasMode,
                             structuralMode,
-                            phasePolicy
+                            phasePolicy,
+                            gateBeamTopK,
+                            debugGateVariant
                         });
                         const out = await SearchFramework.runSearch({
                             level,
@@ -4138,10 +4239,12 @@
                     };
 
                     const remainingBudget = () => Math.max(0, timeLimit - (Date.now() - startTime));
+                    const gateBeamTopK = validGates.length >= 12 ? Math.min(8, Math.max(4, Math.floor(validGates.length * 0.35))) : 0;
+                    const debugGateVariant = !!window.__PF_DEBUG_HINT_GATE_VARIANTS__;
                     const stagedHintPasses = [
-                        { passName: 'pass-1-fast', ratio: 0.35, variant: dirOrderVariant === 'default' ? 'default' : dirOrderVariant, statusLabel: `Solving (${validGates.length} viable gates)...` },
-                        { passName: 'pass-2-alt', ratio: 0.35, variant: dirOrderVariant === 'alt' ? 'default' : 'alt', statusLabel: `Solving (${validGates.length} viable gates, alt order)...` },
-                        { passName: 'pass-3-fallback', ratio: 1, variant: dirOrderVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
+                        { passName: 'pass-1-fast', ratio: 0.45, variant: 'default', beamTopK: gateBeamTopK, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates)...` },
+                        { passName: 'pass-2-ranked', ratio: 0.35, variant: 'default', beamTopK: 0, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates, full ranked queue)...` },
+                        { passName: 'pass-3-fallback', ratio: 1, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
                     let primaryRun = { kind: 'ok', solutions: [] };
                     for (let i = 0; i < stagedHintPasses.length; i++) {
@@ -4161,7 +4264,9 @@
                             useFailMemo: !disabledPrunes,
                             statusLabel: pass.statusLabel,
                             passVariant: pass.variant,
-                            enableForcedMoves: true
+                            enableForcedMoves: true,
+                            gateBeamTopK: pass.beamTopK || 0,
+                            debugGateVariant: !!pass.debugVariant
                         });
                         if (passRun.kind !== 'ok') {
                             primaryRun = passRun;
