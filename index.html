@@ -3769,6 +3769,16 @@
                         gateBeamTopK = 0,
                         debugGateVariant = false
                     } = options;
+                    if (APP.State?.ENGINE?.isDevMode) {
+                        const undefinedModes = [
+                            ['scoringMode', scoringMode],
+                            ['portalBiasMode', portalBiasMode],
+                            ['structuralMode', structuralMode]
+                        ].filter(([, value]) => typeof value === 'undefined');
+                        if (undefinedModes.length > 0) {
+                            throw new Error(`[SolverPolicies.makeHintPolicy] Missing required option(s): ${undefinedModes.map(([name]) => name).join(', ')}`);
+                        }
+                    }
                     const candidateGates = (validGates || level.gateKeys || []).slice();
                     const profile = level?.solverProfile || null;
                     const symmetryModel = profile?.symmetryModel || null;
@@ -4232,7 +4242,7 @@
                         return [];
                     }
 
-                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false }) => {
+                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
                         if (debugStats) {
@@ -4259,9 +4269,9 @@
                             debugStats,
                             falseGoalPolicy: 'forbidIntersect',
                             enableForcedMoves,
-                            scoringMode,
-                            portalBiasMode,
-                            structuralMode,
+                            scoringMode: passScoringMode,
+                            portalBiasMode: passPortalBiasMode,
+                            structuralMode: passStructuralMode,
                             phasePolicy,
                             structuralTemplate,
                             gateBeamTopK,
@@ -4323,7 +4333,10 @@
                             passVariant: pass.variant,
                             enableForcedMoves: true,
                             gateBeamTopK: pass.beamTopK || 0,
-                            debugGateVariant: !!pass.debugVariant
+                            debugGateVariant: !!pass.debugVariant,
+                            passScoringMode: scoringMode,
+                            passPortalBiasMode: portalBiasMode,
+                            passStructuralMode: structuralMode
                         });
                         if (passRun.kind !== 'ok') {
                             primaryRun = passRun;
@@ -4364,7 +4377,10 @@
                             localTimeLimit: diagnosticBudget,
                             disabledPrunes: ["mustPassBound", "mustCrossBound"],
                             useFailMemo: false,
-                            statusLabel: `Sanity pass (${validGates.length} viable gates)...`
+                            statusLabel: `Sanity pass (${validGates.length} viable gates)...`,
+                            passScoringMode: scoringMode,
+                            passPortalBiasMode: portalBiasMode,
+                            passStructuralMode: structuralMode
                         });
                         if (sanityRun.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
                         if (sanityRun.kind === "timeout") return { ok: false, solution: null, debug: debugStats };
