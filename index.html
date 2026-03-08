@@ -6597,13 +6597,18 @@
             const purpose = opts.purpose || 'solve';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
             const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
+            const requestedEscalationTierRaw = Number(opts.escalationTier ?? opts.tier);
+            const requestedEscalationTier = Number.isFinite(requestedEscalationTierRaw) ? Math.max(0, Math.floor(requestedEscalationTierRaw)) : 0;
+            const levelId = Number.isFinite(level?.id) ? level.id + 1 : null;
             const debug = opts.debug !== undefined ? !!opts.debug : true;
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
             const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
-            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solution: [], solutions: [], stagesTried: [] };
+            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solution: [], solutions: [], stagesTried: [], solverPath: allowReferee ? 'referee' : 'legacy' };
 
             try {
                 let solverResult;
+                let solverPath = 'legacy';
+                let escalationTierUsed = requestedEscalationTier;
                 if (!allowReferee) {
                     APP.UI.showMessage('Solving…', 'text-sky-600');
                     const legacy = await PathfinderSolver.solve(level, {
@@ -6620,11 +6625,11 @@
                         solverResult = { ok: false, status: rawStatus, rawStatus, stage: 0, solution: [], solutions: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
                     }
                 } else {
+                    solverPath = 'referee';
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
                     const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
-                    const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
-                    const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
-                    const escalationTier = Math.max(requestedTier, autoTier);
+                    const escalationTier = Math.max(requestedEscalationTier, autoTier);
+                    escalationTierUsed = escalationTier;
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
                     if (escalationTier >= 2) APP.UI.showMessage('Deep search on: extended search mode.', 'text-amber-700');
                     solverResult = await Referee.solve(level, {
@@ -6667,7 +6672,17 @@
                         }
                     }
                 }
+                solverResult.solverPath = solverPath;
                 applyCanonicalSolutionShape(solverResult);
+                console.info('[Solver] attempt complete', {
+                    purpose,
+                    levelId,
+                    solverPath,
+                    allowRefereeRequested: allowReferee,
+                    escalationTierUsed,
+                    status: solverResult.status,
+                    rawStatus: solverResult.rawStatus || solverResult.status
+                });
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
@@ -6691,13 +6706,14 @@
                     debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
                     stage: solverResult.stage,
+                    solverPath: solverResult.solverPath || (allowReferee ? 'referee' : 'legacy'),
                     message: solverResult.message || '',
                     diagnostics: solverResult.diagnostics || null
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [] };
+                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [], solverPath: allowReferee ? 'referee' : 'legacy' };
                 console.error('Solver error:', err);
-                return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], stagesTried: [], message: err?.message || 'Solver error' };
+                return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], stagesTried: [], solverPath: allowReferee ? 'referee' : 'legacy', message: err?.message || 'Solver error' };
             } finally {
                 finishRun();
             }
@@ -7106,7 +7122,14 @@
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
-                const solverResult = await APP.Solver.solveLevel(solveInputLevel, { purpose, escalationTier });
+                const solverResult = await APP.Solver.solveLevel(solveInputLevel, { purpose, escalationTier, allowReferee: true });
+                console.info('[Solver] runGameSolver', {
+                    purpose,
+                    levelId: Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null,
+                    solverPath: solverResult?.solverPath || 'unknown',
+                    allowRefereeRequested: true,
+                    escalationTierUsed: escalationTier
+                });
                 const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 solverResult.solution = canonical;
                 solverResult.solutions = canonical;
@@ -10636,7 +10659,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const triageSummary = r.diagnostics?.inconclusiveTriage
                 ? ` | triage ${r.diagnostics.inconclusiveTriage.status || 'unknown'} (${(r.diagnostics.inconclusiveTriage.attempts || []).length} tries)`
                 : '';
-            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} solver=${r.newHint.solverPath || 'unknown'} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const getAuditIssueLine = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -10673,7 +10696,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriage: null }
@@ -10717,9 +10740,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             };
             const isRetryableInconclusive = (attemptStatus, rawStatus) => ['timeout', 'no-solution-inconclusive'].includes(rawStatus || attemptStatus);
             const hintAttempts = [
-                { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false },
-                { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false },
-                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false }
+                { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false, allowReferee: true },
+                { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false, allowReferee: true },
+                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false, allowReferee: true }
             ];
             let finalAttempt = null;
             try {
@@ -10742,6 +10765,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
                         validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                        solverPath: hintRes?.solverPath || 'unknown',
                         diagnostics: hintRes?.diagnostics || null
                     };
                     levelEntry.newHint.attemptHistory.push(attemptRecord);
@@ -10755,7 +10779,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         await waitForSolverIdle(2000);
                     }
                     const attemptStart = performance.now();
-                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true });
+                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true, allowReferee: true });
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
                     const geminiAttempt = {
@@ -10766,6 +10790,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
                         validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                        solverPath: hintRes?.solverPath || 'unknown',
                         diagnostics: hintRes?.diagnostics || null
                     };
                     levelEntry.newHint.attemptHistory.push(geminiAttempt);
@@ -10791,7 +10816,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     stage: null,
                     elapsedMs: 0,
                     producedHintValid: false,
-                    validationReason: ''
+                    validationReason: '',
+                    solverPath: 'unknown'
                 };
                 levelEntry.newHint.attemptHistory.push(failedAttempt);
                 finalAttempt = failedAttempt;
@@ -10802,6 +10828,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.status = finalAttempt?.status || 'error';
             levelEntry.newHint.rawStatus = finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
+            levelEntry.newHint.solverPath = finalAttempt?.solverPath || 'unknown';
             if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
                 const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
                 if (detail) setLevelError(detail, { source: 'newHint-status' });
