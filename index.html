@@ -351,8 +351,12 @@
                         <button id="auditNewHintBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">New Hint</button>
                         <button id="auditBombsBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Bombs</button>
                         <button id="cancelAuditBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Stop</button>
-                        <button id="copyAuditAllBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy All</button>
-                        <button id="copyAuditIssuesBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Issues</button>
+                        <select id="auditExportMode" class="h-full w-full text-center border px-2 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)]">
+                            <option value="summary">Summary</option>
+                            <option value="issues" selected>Issues</option>
+                            <option value="full">Full</option>
+                        </select>
+                        <button id="copyAuditExportBtn" class="h-full flex items-center justify-center text-center border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Export</button>
                     </div>
                 </div>
             </div>
@@ -626,7 +630,7 @@
                 'megaStatus','megaSummary','megaOutput','megaModal','megaSolverBtn',
                 'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
                 'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
-                'themeEditList','themeSelectView','themeEditView','dragGhost','auditModal','auditSummary','auditProgressLabel','auditReportRows','openAuditModalBtn','auditHintsBtn','auditNewHintBtn','auditBombsBtn','cancelAuditBtn','copyAuditAllBtn','copyAuditIssuesBtn'
+                'themeEditList','themeSelectView','themeEditView','dragGhost','auditModal','auditSummary','auditProgressLabel','auditReportRows','openAuditModalBtn','auditHintsBtn','auditNewHintBtn','auditBombsBtn','cancelAuditBtn','auditExportMode','copyAuditExportBtn'
             ].forEach(id => { dom[id] = document.getElementById(id); });
         };
 
@@ -11442,10 +11446,39 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 `fallback ${p.disableLegacyFallback ? 'referee-only' : 'referee+legacy'}`
             ].join(' | ');
         };
+        const summarizeTriage = (triage) => {
+            if (!triage) return null;
+            const attempts = Array.isArray(triage.attempts) ? triage.attempts : [];
+            return {
+                status: triage.status || 'unknown',
+                attempts: attempts.length,
+                finalReason: triage.finalReason || triage.reason || null
+            };
+        };
+        const summarizeDiagnostics = (diagnostics) => {
+            if (!diagnostics) return null;
+            return { inconclusiveTriage: summarizeTriage(diagnostics.inconclusiveTriage) };
+        };
+        const summarizeSearchSignal = (signal) => {
+            if (!signal || typeof signal !== 'object') return null;
+            return {
+                status: signal.status || signal.result || null,
+                reason: signal.reason || signal.message || null,
+                expanded: Number.isFinite(signal.expanded) ? signal.expanded : null
+            };
+        };
+        const summarizeErrorContext = (ctx = {}) => {
+            const out = {};
+            if (ctx.source) out.source = ctx.source;
+            if (ctx.rawStatus) out.rawStatus = ctx.rawStatus;
+            if (ctx.status) out.status = ctx.status;
+            if (ctx.triageSummary) out.triageSummary = ctx.triageSummary;
+            return out;
+        };
         const formatAuditLine = (r) => {
             const errSummary = r.error?.message || '';
-            const triageSummary = r.diagnostics?.inconclusiveTriage
-                ? ` | triage ${r.diagnostics.inconclusiveTriage.status || 'unknown'} (${(r.diagnostics.inconclusiveTriage.attempts || []).length} tries)`
+            const triageSummary = r.diagnostics?.inconclusiveTriageSummary
+                ? ` | triage ${r.diagnostics.inconclusiveTriageSummary.status || 'unknown'} (${r.diagnostics.inconclusiveTriageSummary.attempts || 0} tries)`
                 : '';
             return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} total=${r.newHint.totalSolveTimeMs || 0}ms | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
@@ -11460,6 +11493,36 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 return r.bombs.status === 'none-found';
             }
             return false;
+        };
+        const getAuditExportMode = () => document.getElementById('auditExportMode')?.value || 'issues';
+        const createAuditSummaryLevel = (r) => ({
+            level: r.level,
+            savedHints: { total: r.savedHints.total, valid: r.savedHints.valid, invalid: r.savedHints.invalid },
+            newHint: {
+                status: r.newHint.status,
+                rawStatus: r.newHint.rawStatus,
+                finalStatus: r.newHint.finalStatus,
+                finalSolvedBy: r.newHint.finalSolvedBy,
+                timeMs: r.newHint.timeMs,
+                totalSolveTimeMs: r.newHint.totalSolveTimeMs,
+                attempts: Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : 0,
+                diagnosticsSummary: r.newHint.diagnosticsSummary || null
+            },
+            bombs: { status: r.bombs.status, count: r.bombs.count },
+            diagnostics: r.diagnostics,
+            error: r.error
+        });
+        const buildAuditExportPayload = (mode = 'issues') => {
+            const selectedMode = ['summary', 'issues', 'full'].includes(mode) ? mode : 'issues';
+            const sourceLevels = selectedMode === 'issues' ? auditReport.filter(hasAuditIssue) : auditReport;
+            const levels = selectedMode === 'summary' ? sourceLevels.map(createAuditSummaryLevel) : sourceLevels;
+            return {
+                exportMode: selectedMode,
+                runType: auditLastRunType,
+                progress: auditProgress,
+                levelCount: levels.length,
+                levels
+            };
         };
         const renderAuditReport = () => {
             const summaryEl = document.getElementById('auditSummary');
@@ -11484,10 +11547,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, preExpansionAbort: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
-            diagnostics: { inconclusiveTriage: null }
+            diagnostics: { inconclusiveTriageSummary: null }
         });
 
         const runSavedHintsCheck = (rawLevel, normalized, levelEntry, progress) => {
@@ -11514,7 +11577,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const runNewHintCheck = async (normalized, levelEntry, progress) => {
             const setLevelError = (messageLike, extra = {}) => {
-                levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...extra };
+                levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...summarizeErrorContext(extra) };
             };
             const t0 = performance.now();
             const classifyHintStatus = (hintRes, hintValidation) => {
@@ -11634,11 +11697,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (finalAttempt?.rawStatus === 'no-solution-inconclusive') {
                     const triage = finalAttempt?.diagnostics?.inconclusiveTriage || null;
                     if (triage) {
-                        levelEntry.diagnostics.inconclusiveTriage = triage;
+                        const triageSummary = summarizeTriage(triage);
+                        levelEntry.diagnostics.inconclusiveTriageSummary = triageSummary;
                         setLevelError(`inconclusive triage ended with ${triage.status}`, {
                             rawStatus: finalAttempt.rawStatus,
                             status: finalAttempt.status,
-                            triage
+                            triageSummary
                         });
                     }
                 }
@@ -11690,9 +11754,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.finalStatus = finalAttempt?.finalStatus || finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.finalSolvedBy = finalAttempt?.finalSolvedBy || 'none';
             levelEntry.newHint.totalSolveTimeMs = Number.isFinite(finalAttempt?.totalSolveTimeMs) ? finalAttempt.totalSolveTimeMs : 0;
-            levelEntry.newHint.preExpansionAbort = finalAttempt?.preExpansionAbort || null;
-            levelEntry.newHint.zeroExpansionSummary = finalAttempt?.zeroExpansionSummary || null;
-            levelEntry.newHint.rootSearchSummary = finalAttempt?.rootSearchSummary || null;
+            levelEntry.newHint.preExpansionAbort = summarizeSearchSignal(finalAttempt?.preExpansionAbort);
+            levelEntry.newHint.zeroExpansionSummary = summarizeSearchSignal(finalAttempt?.zeroExpansionSummary);
+            levelEntry.newHint.rootSearchSummary = summarizeSearchSignal(finalAttempt?.rootSearchSummary);
             levelEntry.newHint.rootCandidatesGenerated = Number.isFinite(finalAttempt?.rootCandidatesGenerated) ? finalAttempt.rootCandidatesGenerated : null;
             levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
             levelEntry.newHint.rootCandidatesSuppressedByDominance = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByDominance) ? finalAttempt.rootCandidatesSuppressedByDominance : null;
@@ -11700,6 +11764,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.rootMoveOrder = Array.isArray(finalAttempt?.rootMoveOrder) ? finalAttempt.rootMoveOrder : null;
             levelEntry.newHint.rootMoveScores = Array.isArray(finalAttempt?.rootMoveScores) ? finalAttempt.rootMoveScores : null;
             levelEntry.newHint.rootSuppressionLog = Array.isArray(finalAttempt?.rootSuppressionLog) ? finalAttempt.rootSuppressionLog : null;
+            levelEntry.newHint.diagnosticsSummary = summarizeDiagnostics(finalAttempt?.diagnostics);
             if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
                 const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
                 if (detail) setLevelError(detail, { source: 'newHint-status' });
@@ -11710,7 +11775,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const runBombSearchCheck = async (normalized, levelEntry, progress) => {
             const setLevelError = (messageLike, extra = {}) => {
-                levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...extra };
+                levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...summarizeErrorContext(extra) };
             };
             try {
                 if (!(await waitForSolverIdle(2000))) {
@@ -11933,18 +11998,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('auditNewHintBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(AUDIT_RUN_TYPES.newHint); };
         document.getElementById('auditBombsBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(AUDIT_RUN_TYPES.bombs); };
         document.getElementById('cancelAuditBtn').onclick = () => { if (!auditRunning) return; stopAuditRun(); };
-        document.getElementById('copyAuditAllBtn').onclick = async () => {
-            const payload = { runType: auditLastRunType, progress: auditProgress, levels: auditReport };
-            await APP.UI.copyText(JSON.stringify(payload, null, 2), { fallbackElId: 'auditReportRows' });
-            APP.UI.showMessage('Audit data copied.', 'text-white font-black');
-        };
-        document.getElementById('copyAuditIssuesBtn').onclick = async () => {
-            const levelsWithIssues = auditReport.filter(hasAuditIssue);
-            const out = levelsWithIssues.length
-                ? JSON.stringify({ runType: auditLastRunType, progress: auditProgress, levels: levelsWithIssues }, null, 2)
-                : 'No issues found for last check.';
+        document.getElementById('copyAuditExportBtn').onclick = async () => {
+            const mode = getAuditExportMode();
+            const payload = buildAuditExportPayload(mode);
+            const out = mode === 'issues' && payload.levelCount === 0
+                ? 'No issues found for last check.'
+                : JSON.stringify(payload, null, 2);
             await APP.UI.copyText(out, { fallbackElId: 'auditReportRows' });
-            APP.UI.showMessage('Audit issues copied.', 'text-white font-black');
+            APP.UI.showMessage(`Audit ${mode} copied.`, 'text-white font-black');
         };
         document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
         document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
