@@ -338,18 +338,21 @@
             <div id="auditModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
                 <div id="auditModalContent" class="screen-modal-panel panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content">
                     <div class="flex justify-between items-center mb-3 shrink-0">
-                        <div><h2 class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Audit</h2><p class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Developer validation run</p></div>
+                        <div><h2 class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Audit</h2></div>
                         <button id="closeAuditModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                     </div>
                     <div class="flex-grow min-h-0 overflow-y-auto pr-1 space-y-3">
                         <div id="auditSummary" class="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">No run yet.</div>
                         <div id="auditProgressLabel" class="text-[0.62rem] font-mono text-[var(--theme-modal-text)]">Idle</div>
-                        <div id="auditReportRows" class="min-h-[9rem] max-h-[14rem] overflow-y-auto border rounded-xl border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[0.6rem] font-mono leading-tight p-2 whitespace-pre-wrap">Run Audit to generate report.</div>
+                        <div id="auditReportRows" class="min-h-[7rem] max-h-[10rem] overflow-y-auto border rounded-xl border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[0.6rem] font-mono leading-tight p-2 whitespace-pre-wrap">Run a check to generate report.</div>
                     </div>
-                    <div class="pt-3 border-t border-[var(--theme-modal-border)] flex gap-2 shrink-0">
-                        <button id="startAuditBtn" class="flex-1 text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Run Audit</button>
+                    <div class="pt-3 border-t border-[var(--theme-modal-border)] flex flex-wrap gap-2 shrink-0">
+                        <button id="auditHintsBtn" class="flex-1 text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Hints</button>
+                        <button id="auditNewHintBtn" class="flex-1 text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">New Hint</button>
+                        <button id="auditBombsBtn" class="flex-1 text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Bombs</button>
                         <button id="cancelAuditBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Stop</button>
-                        <button id="copyAuditBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Report</button>
+                        <button id="copyAuditAllBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy All</button>
+                        <button id="copyAuditIssuesBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Issues</button>
                     </div>
                 </div>
             </div>
@@ -623,7 +626,7 @@
                 'megaStatus','megaSummary','megaOutput','megaModal','megaSolverBtn',
                 'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
                 'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
-                'themeEditList','themeSelectView','themeEditView','dragGhost','auditModal','auditSummary','auditProgressLabel','auditReportRows','openAuditModalBtn','startAuditBtn','cancelAuditBtn','copyAuditBtn'
+                'themeEditList','themeSelectView','themeEditView','dragGhost','auditModal','auditSummary','auditProgressLabel','auditReportRows','openAuditModalBtn','auditHintsBtn','auditNewHintBtn','auditBombsBtn','cancelAuditBtn','copyAuditAllBtn','copyAuditIssuesBtn'
             ].forEach(id => { dom[id] = document.getElementById(id); });
         };
 
@@ -10400,21 +10403,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         let auditCancelRequested = false;
         let auditProgress = null;
         let auditReport = [];
+        let auditLastRunType = null;
+
+        const AUDIT_RUN_TYPES = {
+            hints: 'hints',
+            newHint: 'newHint',
+            bombs: 'bombs'
+        };
 
         const trimAuditError = (err) => `${err?.message || err || ''}`.trim().slice(0, 140);
         const copyClone = (v) => JSON.parse(JSON.stringify(v));
         const delay0 = () => new Promise(r => setTimeout(r, 0));
-        const withTimeout = async (promise, ms) => {
-            let timer = null;
-            try {
-                return await Promise.race([
-                    promise,
-                    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('timeout')), ms); })
-                ]);
-            } finally {
-                if (timer) clearTimeout(timer);
-            }
-        };
         const waitForSolverIdle = async (maxWaitMs = 3000) => {
             const started = performance.now();
             while (APP.Solver.isRunning()) {
@@ -10432,6 +10431,25 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 `bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`
             ].join(' | ');
         };
+        const formatAuditLine = (r) => {
+            const errSummary = r.error?.message || '';
+            const triageSummary = r.diagnostics?.inconclusiveTriage
+                ? ` | triage ${r.diagnostics.inconclusiveTriage.status || 'unknown'} (${(r.diagnostics.inconclusiveTriage.attempts || []).length} tries)`
+                : '';
+            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+        };
+        const getAuditIssueLine = (r) => {
+            if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
+                return r.savedHints.invalid > 0 ? `L${r.level}: bad hints ${r.savedHints.invalid}/${r.savedHints.total}` : '';
+            }
+            if (auditLastRunType === AUDIT_RUN_TYPES.newHint) {
+                return r.newHint.status === 'timeout' ? `L${r.level}: new hint timeout (${r.newHint.timeMs}ms)` : '';
+            }
+            if (auditLastRunType === AUDIT_RUN_TYPES.bombs) {
+                return r.bombs.status === 'none-found' ? `L${r.level}: 0 bomb spots found` : '';
+            }
+            return '';
+        };
         const renderAuditReport = () => {
             const summaryEl = document.getElementById('auditSummary');
             const progEl = document.getElementById('auditProgressLabel');
@@ -10440,16 +10458,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (progEl) progEl.textContent = auditRunning ? `Running level ${Math.min((auditProgress?.levelsProcessed || 0) + 1, auditProgress?.levelsTotal || 0)}...` : (auditCancelRequested ? 'Stopped.' : 'Idle');
             if (!rowsEl) return;
             if (!auditReport.length) {
-                rowsEl.textContent = 'Run Audit to generate report.';
+                rowsEl.textContent = 'Run a check to generate report.';
                 return;
             }
-            rowsEl.textContent = auditReport.map(r => {
-                const errSummary = r.error?.message || '';
-                const triageSummary = r.diagnostics?.inconclusiveTriage
-                    ? ` | triage ${r.diagnostics.inconclusiveTriage.status || 'unknown'} (${(r.diagnostics.inconclusiveTriage.attempts || []).length} tries)`
-                    : '';
-                return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
-            }).join('\n');
+            rowsEl.textContent = auditReport.map(formatAuditLine).join('\n');
         };
 
         const stopAuditRun = () => {
@@ -10458,10 +10470,190 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             renderAuditReport();
         };
 
-        const runAudit = async () => {
+        const buildAuditLevelEntry = (levelNum) => ({
+            level: levelNum,
+            savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, attemptHistory: [] },
+            bombs: { status: 'not-run', count: 0 },
+            error: null,
+            diagnostics: { inconclusiveTriage: null }
+        });
+
+        const runSavedHintsCheck = (rawLevel, normalized, levelEntry, progress) => {
+            const rawHints = Array.isArray(rawLevel?.hints) ? rawLevel.hints : [];
+            levelEntry.savedHints.total = rawHints.length;
+            for (const hint of rawHints) {
+                try {
+                    const validation = APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(hint));
+                    if (validation?.ok) {
+                        levelEntry.savedHints.valid++;
+                        progress.validHints++;
+                    } else {
+                        levelEntry.savedHints.invalid++;
+                        progress.invalidHints++;
+                        levelEntry.savedHints.invalidReasons.push(validation?.reason || 'invalid (reason unknown)');
+                    }
+                } catch (hintErr) {
+                    levelEntry.savedHints.invalid++;
+                    progress.invalidHints++;
+                    levelEntry.savedHints.invalidReasons.push(trimAuditError(hintErr) || 'invalid (reason unknown)');
+                }
+            }
+        };
+
+        const runNewHintCheck = async (normalized, levelEntry, progress) => {
+            const setLevelError = (messageLike, extra = {}) => {
+                levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...extra };
+            };
+            const t0 = performance.now();
+            const classifyHintStatus = (hintRes, hintValidation) => {
+                if (hintRes?.ok && hintValidation?.ok) return 'success';
+                if (hintRes?.rawStatus === 'no-solution-proven') return 'no-solution-proven';
+                if (hintRes?.rawStatus === 'no-solution-inconclusive') return 'no-solution-inconclusive';
+                if (hintRes?.status === 'no-solution') return 'no-solution-inconclusive';
+                if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') return 'timeout';
+                if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') return 'aborted';
+                return 'error';
+            };
+            const isRetryableInconclusive = (attemptStatus, rawStatus) => ['timeout', 'no-solution-inconclusive'].includes(rawStatus || attemptStatus);
+            const hintAttempts = [
+                { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false },
+                { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false },
+                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false }
+            ];
+            let finalAttempt = null;
+            try {
+                for (let attemptIdx = 0; attemptIdx < hintAttempts.length; attemptIdx++) {
+                    const attemptPlan = hintAttempts[attemptIdx];
+                    if (attemptIdx > 0 && (!finalAttempt || !isRetryableInconclusive(finalAttempt.status, finalAttempt.rawStatus))) break;
+                    if (!(await waitForSolverIdle(2000))) {
+                        APP.Solver.cancel();
+                        await waitForSolverIdle(2000);
+                    }
+                    const attemptStart = performance.now();
+                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), attemptPlan);
+                    const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
+                    const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
+                    const attemptRecord = {
+                        attempt: attemptPlan.key,
+                        status: classifyHintStatus(hintRes, hintValidation),
+                        rawStatus: hintRes?.rawStatus || hintRes?.status || 'error',
+                        stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
+                        elapsedMs: Math.round(performance.now() - attemptStart),
+                        producedHintValid: !!hintValidation?.ok,
+                        validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                        diagnostics: hintRes?.diagnostics || null
+                    };
+                    levelEntry.newHint.attemptHistory.push(attemptRecord);
+                    finalAttempt = attemptRecord;
+                    if (attemptRecord.status === 'success' || attemptRecord.status === 'no-solution-proven') break;
+                }
+
+                if (finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution-proven') {
+                    if (!(await waitForSolverIdle(2000))) {
+                        APP.Solver.cancel();
+                        await waitForSolverIdle(2000);
+                    }
+                    const attemptStart = performance.now();
+                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true });
+                    const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
+                    const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
+                    const geminiAttempt = {
+                        attempt: 'D',
+                        status: classifyHintStatus(hintRes, hintValidation),
+                        rawStatus: hintRes?.rawStatus || hintRes?.status || 'error',
+                        stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
+                        elapsedMs: Math.round(performance.now() - attemptStart),
+                        producedHintValid: !!hintValidation?.ok,
+                        validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                        diagnostics: hintRes?.diagnostics || null
+                    };
+                    levelEntry.newHint.attemptHistory.push(geminiAttempt);
+                    finalAttempt = geminiAttempt;
+                }
+
+                if (finalAttempt?.rawStatus === 'no-solution-inconclusive') {
+                    const triage = finalAttempt?.diagnostics?.inconclusiveTriage || null;
+                    if (triage) {
+                        levelEntry.diagnostics.inconclusiveTriage = triage;
+                        setLevelError(`inconclusive triage ended with ${triage.status}`, {
+                            rawStatus: finalAttempt.rawStatus,
+                            status: finalAttempt.status,
+                            triage
+                        });
+                    }
+                }
+            } catch (newHintErr) {
+                const failedAttempt = {
+                    attempt: `ERR-${levelEntry.newHint.attemptHistory.length + 1}`,
+                    status: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
+                    rawStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
+                    stage: null,
+                    elapsedMs: 0,
+                    producedHintValid: false,
+                    validationReason: ''
+                };
+                levelEntry.newHint.attemptHistory.push(failedAttempt);
+                finalAttempt = failedAttempt;
+                APP.Solver.cancel();
+                if (failedAttempt.status === 'error') setLevelError(newHintErr, { source: 'newHint' });
+            }
+
+            levelEntry.newHint.status = finalAttempt?.status || 'error';
+            levelEntry.newHint.rawStatus = finalAttempt?.rawStatus || 'error';
+            levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
+            if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
+                const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
+                if (detail) setLevelError(detail, { source: 'newHint-status' });
+            }
+            levelEntry.newHint.timeMs = Math.round(performance.now() - t0);
+            if (levelEntry.newHint.status === 'success') progress.newHint.success++; else progress.newHint.failure++;
+        };
+
+        const runBombSearchCheck = async (normalized, levelEntry, progress) => {
+            const setLevelError = (messageLike, extra = {}) => {
+                levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...extra };
+            };
+            try {
+                if (!(await waitForSolverIdle(2000))) {
+                    APP.Solver.cancel();
+                    await waitForSolverIdle(2000);
+                }
+                const trapBudget = Math.min(5000, APP.Solver.getTrapSpotBudgetMs(normalized));
+                const bombRes = await APP.Solver.findTrapSpots(APP.LevelUtils.deepCloneLevel(normalized), { timeLimit: trapBudget });
+                const bombCount = bombRes?.spots?.size || 0;
+                levelEntry.bombs.count = bombCount;
+                if (bombRes?.status === 'timeout' || bombRes?.timedOut) {
+                    levelEntry.bombs.status = 'timeout';
+                    progress.bombs.error++;
+                } else if (!bombRes?.ok) {
+                    levelEntry.bombs.status = 'error';
+                    progress.bombs.error++;
+                } else if (bombCount > 0) {
+                    levelEntry.bombs.status = 'success';
+                    progress.bombs.success++;
+                } else {
+                    levelEntry.bombs.status = 'none-found';
+                    progress.bombs.noneFound++;
+                }
+                if (levelEntry.bombs.status !== 'success' && levelEntry.bombs.status !== 'none-found' && !levelEntry.error?.message) {
+                    const detail = [bombRes?.status, bombRes?.error?.message].filter(Boolean).join(' | ');
+                    if (detail) setLevelError(detail, { source: 'bombs' });
+                }
+            } catch (bombErr) {
+                const timed = `${bombErr?.message || ''}`.includes('timeout');
+                levelEntry.bombs.status = timed ? 'timeout' : 'error';
+                APP.Solver.cancel();
+                progress.bombs.error++;
+                if (!levelEntry.error?.message) setLevelError(bombErr, { source: 'bombs' });
+            }
+        };
+
+        const runAudit = async (runType) => {
             if (auditRunning) return;
             auditRunning = true;
             auditCancelRequested = false;
+            auditLastRunType = runType;
             auditReport = [];
             const rawLevels = APP.LevelUtils.getRawLevels();
             auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0 }, bombs: { success: 0, noneFound: 0, error: 0 } };
@@ -10482,185 +10674,22 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             try {
                 for (let i = 0; i < rawLevels.length; i++) {
                     if (auditCancelRequested) break;
-                    const levelNum = i + 1;
-                    const levelEntry = {
-                        level: levelNum,
-                        savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-                        newHint: { status: 'error', rawStatus: 'error', timeMs: 0, producedHintValid: false, attemptHistory: [] },
-                        bombs: { status: 'error', count: 0 },
-                        error: null,
-                        diagnostics: { inconclusiveTriage: null }
-                    };
-                    const setLevelError = (messageLike, extra = {}) => {
-                        levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...extra };
-                    };
-
+                    const levelEntry = buildAuditLevelEntry(i + 1);
                     try {
                         const normalized = APP.LevelUtils.normalizeLevel(i);
-                        const rawHints = Array.isArray(rawLevels[i]?.hints) ? rawLevels[i].hints : [];
-                        levelEntry.savedHints.total = rawHints.length;
-                        for (const hint of rawHints) {
-                            try {
-                                const validation = APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(hint));
-                                if (validation?.ok) {
-                                    levelEntry.savedHints.valid++;
-                                    auditProgress.validHints++;
-                                } else {
-                                    levelEntry.savedHints.invalid++;
-                                    auditProgress.invalidHints++;
-                                    levelEntry.savedHints.invalidReasons.push(validation?.reason || 'invalid (reason unknown)');
-                                }
-                            } catch (hintErr) {
-                                levelEntry.savedHints.invalid++;
-                                auditProgress.invalidHints++;
-                                levelEntry.savedHints.invalidReasons.push(trimAuditError(hintErr) || 'invalid (reason unknown)');
-                            }
-                        }
-
-                        const t0 = performance.now();
-                        const classifyHintStatus = (hintRes, hintValidation) => {
-                            if (hintRes?.ok && hintValidation?.ok) return 'success';
-                            if (hintRes?.rawStatus === 'no-solution-proven') return 'no-solution-proven';
-                            if (hintRes?.rawStatus === 'no-solution-inconclusive') return 'no-solution-inconclusive';
-                            if (hintRes?.status === 'no-solution') return 'no-solution-inconclusive';
-                            if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') return 'timeout';
-                            if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') return 'aborted';
-                            return 'error';
-                        };
-                        const isRetryableInconclusive = (attemptStatus, rawStatus) => ['timeout', 'no-solution-inconclusive'].includes(rawStatus || attemptStatus);
-                        const hintAttempts = [
-                            { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false },
-                            { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false },
-                            { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false }
-                        ];
-                        let finalAttempt = null;
-                        try {
-                            for (let attemptIdx = 0; attemptIdx < hintAttempts.length; attemptIdx++) {
-                                const attemptPlan = hintAttempts[attemptIdx];
-                                if (attemptIdx > 0) {
-                                    if (!finalAttempt || !isRetryableInconclusive(finalAttempt.status, finalAttempt.rawStatus)) break;
-                                }
-                                if (!(await waitForSolverIdle(2000))) {
-                                    APP.Solver.cancel();
-                                    await waitForSolverIdle(2000);
-                                }
-                                const attemptStart = performance.now();
-                                const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), attemptPlan);
-                                const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
-                                const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
-                                const attemptRecord = {
-                                    attempt: attemptPlan.key,
-                                    status: classifyHintStatus(hintRes, hintValidation),
-                                    rawStatus: hintRes?.rawStatus || hintRes?.status || 'error',
-                                    stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
-                                    elapsedMs: Math.round(performance.now() - attemptStart),
-                                    producedHintValid: !!hintValidation?.ok,
-                                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
-                                    diagnostics: hintRes?.diagnostics || null
-                                };
-                                levelEntry.newHint.attemptHistory.push(attemptRecord);
-                                finalAttempt = attemptRecord;
-                                if (attemptRecord.status === 'success' || attemptRecord.status === 'no-solution-proven') break;
-                            }
-
-                            if (finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution-proven') {
-                                if (!(await waitForSolverIdle(2000))) {
-                                    APP.Solver.cancel();
-                                    await waitForSolverIdle(2000);
-                                }
-                                const attemptStart = performance.now();
-                                const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true });
-                                const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
-                                const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
-                                const geminiAttempt = {
-                                    attempt: 'D',
-                                    status: classifyHintStatus(hintRes, hintValidation),
-                                    rawStatus: hintRes?.rawStatus || hintRes?.status || 'error',
-                                    stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
-                                    elapsedMs: Math.round(performance.now() - attemptStart),
-                                    producedHintValid: !!hintValidation?.ok,
-                                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
-                                    diagnostics: hintRes?.diagnostics || null
-                                };
-                                levelEntry.newHint.attemptHistory.push(geminiAttempt);
-                                finalAttempt = geminiAttempt;
-                            }
-
-                            if (finalAttempt?.rawStatus === 'no-solution-inconclusive') {
-                                const triage = finalAttempt?.diagnostics?.inconclusiveTriage || null;
-                                if (triage) {
-                                    levelEntry.diagnostics.inconclusiveTriage = triage;
-                                    setLevelError(`inconclusive triage ended with ${triage.status}`, {
-                                        rawStatus: finalAttempt.rawStatus,
-                                        status: finalAttempt.status,
-                                        triage
-                                    });
-                                }
-                            }
-                        } catch (newHintErr) {
-                            const failedAttempt = {
-                                attempt: `ERR-${levelEntry.newHint.attemptHistory.length + 1}`,
-                                status: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
-                                rawStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
-                                stage: null,
-                                elapsedMs: 0,
-                                producedHintValid: false,
-                                validationReason: ''
-                            };
-                            levelEntry.newHint.attemptHistory.push(failedAttempt);
-                            finalAttempt = failedAttempt;
-                            APP.Solver.cancel();
-                            if (failedAttempt.status === 'error') setLevelError(newHintErr, { source: 'newHint' });
-                        }
-                        levelEntry.newHint.status = finalAttempt?.status || 'error';
-                        levelEntry.newHint.rawStatus = finalAttempt?.rawStatus || 'error';
-                        levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
-                        if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
-                            const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
-                            if (detail) setLevelError(detail, { source: 'newHint-status' });
-                        }
-                        levelEntry.newHint.timeMs = Math.round(performance.now() - t0);
-                        if (levelEntry.newHint.status === 'success') auditProgress.newHint.success++; else auditProgress.newHint.failure++;
-
-                        try {
-                            if (!(await waitForSolverIdle(2000))) {
-                                APP.Solver.cancel();
-                                await waitForSolverIdle(2000);
-                            }
-                            const trapBudget = Math.min(5000, APP.Solver.getTrapSpotBudgetMs(normalized));
-                            const bombRes = await APP.Solver.findTrapSpots(APP.LevelUtils.deepCloneLevel(normalized), { timeLimit: trapBudget });
-                            const bombCount = bombRes?.spots?.size || 0;
-                            levelEntry.bombs.count = bombCount;
-                            if (bombRes?.status === 'timeout' || bombRes?.timedOut) {
-                                levelEntry.bombs.status = 'timeout';
-                                auditProgress.bombs.error++;
-                            } else if (!bombRes?.ok) {
-                                levelEntry.bombs.status = 'error';
-                                auditProgress.bombs.error++;
-                            } else if (bombCount > 0) {
-                                levelEntry.bombs.status = 'success';
-                                auditProgress.bombs.success++;
-                            } else {
-                                levelEntry.bombs.status = 'none-found';
-                                auditProgress.bombs.noneFound++;
-                            }
-                            if (levelEntry.bombs.status !== 'success' && levelEntry.bombs.status !== 'none-found' && !levelEntry.error?.message) {
-                                const detail = [bombRes?.status, bombRes?.error?.message].filter(Boolean).join(' | ');
-                                if (detail) setLevelError(detail, { source: 'bombs' });
-                            }
-                        } catch (bombErr) {
-                            const timed = `${bombErr?.message || ''}`.includes('timeout');
-                            levelEntry.bombs.status = timed ? 'timeout' : 'error';
-                            APP.Solver.cancel();
-                            auditProgress.bombs.error++;
-                            if (!levelEntry.error?.message) setLevelError(bombErr, { source: 'bombs' });
-                        }
+                        if (runType === AUDIT_RUN_TYPES.hints) runSavedHintsCheck(rawLevels[i], normalized, levelEntry, auditProgress);
+                        if (runType === AUDIT_RUN_TYPES.newHint) await runNewHintCheck(normalized, levelEntry, auditProgress);
+                        if (runType === AUDIT_RUN_TYPES.bombs) await runBombSearchCheck(normalized, levelEntry, auditProgress);
                     } catch (levelErr) {
-                        setLevelError(levelErr, { source: 'level' });
-                        levelEntry.newHint.status = 'error';
-                        levelEntry.bombs.status = 'error';
-                        auditProgress.newHint.failure++;
-                        auditProgress.bombs.error++;
+                        levelEntry.error = { message: trimAuditError(levelErr), source: 'level' };
+                        if (runType === AUDIT_RUN_TYPES.newHint) {
+                            levelEntry.newHint.status = 'error';
+                            auditProgress.newHint.failure++;
+                        }
+                        if (runType === AUDIT_RUN_TYPES.bombs) {
+                            levelEntry.bombs.status = 'error';
+                            auditProgress.bombs.error++;
+                        }
                     }
 
                     auditReport.push(levelEntry);
@@ -10802,12 +10831,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('copyMegaDataBtn').onclick = async () => { const out = APP.UI.getMegaOutputText(); if (out) await APP.UI.copyText(out, { fallbackElId: 'megaOutput' }); };
         document.getElementById('openAuditModalBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode) return; APP.UI.closeAllModals(); auditModalOpen = true; renderAuditReport(); APP.UI.openModal('auditModal'); };
         document.getElementById('closeAuditModalBtn').onclick = () => { if (auditRunning) stopAuditRun(); auditModalOpen = false; APP.UI.closeModal('auditModal'); };
-        document.getElementById('startAuditBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(); };
+        document.getElementById('auditHintsBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(AUDIT_RUN_TYPES.hints); };
+        document.getElementById('auditNewHintBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(AUDIT_RUN_TYPES.newHint); };
+        document.getElementById('auditBombsBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(AUDIT_RUN_TYPES.bombs); };
         document.getElementById('cancelAuditBtn').onclick = () => { if (!auditRunning) return; stopAuditRun(); };
-        document.getElementById('copyAuditBtn').onclick = async () => {
-            const payload = { progress: auditProgress, levels: auditReport };
+        document.getElementById('copyAuditAllBtn').onclick = async () => {
+            const payload = { runType: auditLastRunType, progress: auditProgress, levels: auditReport };
             await APP.UI.copyText(JSON.stringify(payload, null, 2), { fallbackElId: 'auditReportRows' });
-            APP.UI.showMessage('Audit report copied.', 'text-white font-black');
+            APP.UI.showMessage('Audit data copied.', 'text-white font-black');
+        };
+        document.getElementById('copyAuditIssuesBtn').onclick = async () => {
+            const issueLines = auditReport.map(getAuditIssueLine).filter(Boolean);
+            const out = issueLines.length ? issueLines.join('\n') : 'No issues found for last check.';
+            await APP.UI.copyText(out, { fallbackElId: 'auditReportRows' });
+            APP.UI.showMessage('Audit issues copied.', 'text-white font-black');
         };
         document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
         document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
