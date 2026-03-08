@@ -1714,6 +1714,12 @@
                 _buildFlipperDistMap(l, flipperSet) {
                     return this._buildOptimisticDistMap(l, flipperSet);
                 },
+                _manhattanDist(fromKey, toKey) {
+                    if (!Number.isFinite(fromKey) || !Number.isFinite(toKey)) return Infinity;
+                    const from = APP.LevelUtils.UNPACK(fromKey);
+                    const to = APP.LevelUtils.UNPACK(toKey);
+                    return Math.abs(from.x - to.x) + Math.abs(from.y - to.y);
+                },
                 _mstBoundFromNodes(nodes, pairDist, toGoalDist, nearestFromStart) {
                     if (nodes.length === 0) return Infinity;
                     if (nearestFromStart === Infinity) return Infinity;
@@ -2855,6 +2861,8 @@
                     const inTemplateCommitWindow = !!(structuralTemplate && (l.reqLen > 0) && ((curLen / l.reqLen) <= templateCommitDepthRatio));
                     const objectiveTrackStrictness = Number.isFinite(options?.objectiveTrack?.strictness) ? options.objectiveTrack.strictness : 0.72;
                     const scored = valid.map(nk => {
+                        const px = k & 0xFFFF;
+                        const py = k >> 16;
                         let score = 0;
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
                         if (mustIdx !== undefined) {
@@ -3163,8 +3171,6 @@
 
                         // Anti-dither 1: discourage inward drift during early, high-slack harvest.
                         if ((activePhase === 'harvest' || activePhase === 'transition') && rRatio < 0.45 && earlySlack >= 6) {
-                            const px = k & 0xFFFF;
-                            const py = k >> 16;
                             const nx = nk & 0xFFFF;
                             const ny = nk >> 16;
                             const edgeNow = Math.min(px, py, (l.grid.w - 1) - px, (l.grid.h - 1) - py);
