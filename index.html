@@ -5041,18 +5041,115 @@
                 zeroExpansionSummary: makeZeroExpansionSummary({ statusPath: context?.statusPath || 'legacy-adapter', debug, diagnostics, droppedBy: context?.droppedBy || 'legacy-wrapper' })
             });
         };
-        const deriveLegacyCompatFromAttempts = (stagesTried = []) => {
-            const attempts = Array.isArray(stagesTried) ? stagesTried : [];
+        const compactDefined = (obj = {}) => {
+            const out = {};
+            Object.entries(obj).forEach(([key, value]) => {
+                if (value === undefined || value === null) return;
+                out[key] = value;
+            });
+            return out;
+        };
+        const toAuditAttemptSummary = (attempt = {}, options = {}) => {
+            const debug = attempt?.debug || attempt?.stats?.debug || {};
+            const summary = compactDefined({
+                attempt: options.attemptLabel || null,
+                stage: Number.isFinite(attempt?.stage) ? attempt.stage : null,
+                status: options.status || attempt?.status || null,
+                rawStatus: attempt?.rawStatus || attempt?.status || null,
+                solved: !!attempt?.ok,
+                elapsedMs: Number.isFinite(options.elapsedMs) ? options.elapsedMs : null,
+                producedHintValid: !!options.producedHintValid,
+                validationReason: options.validationReason || null,
+                preExpansionAbort: attempt?.preExpansionAbort || null,
+                zeroExpansionSummary: attempt?.zeroExpansionSummary || null,
+                rootSearchSummary: attempt?.rootSearchSummary || null,
+                diagnosticsSummary: options.diagnosticsSummary || null,
+                rootCandidatesGenerated: Number.isFinite(debug?.rootCandidatesGenerated) ? debug.rootCandidatesGenerated : null,
+                rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
+                rootCandidatesSuppressedByDominance: Number.isFinite(debug?.rootCandidatesSuppressedByDominance) ? debug.rootCandidatesSuppressedByDominance : null,
+                rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
+                rootMoveOrder: Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 20) : null,
+                rootMoveScores: Array.isArray(debug?.rootMoveScores) ? debug.rootMoveScores.slice(0, 20) : null,
+                rootSuppressionLog: Array.isArray(debug?.debug?.rootSuppressionLog) ? debug.debug.rootSuppressionLog.slice(0, 20) : null,
+                refereeAttempts: Array.isArray(attempt?.stagesTried)
+                    ? attempt.stagesTried.map(st => compactDefined({
+                        stage: Number.isFinite(st?.stage) ? st.stage : null,
+                        name: st?.name || null,
+                        variant: st?.variant || null,
+                        engine: st?.engine || null,
+                        status: st?.status || st?.result || null,
+                        rawStatus: st?.rawStatus || null,
+                        solved: !!st?.solved,
+                        elapsedMs: Number.isFinite(st?.elapsedMs) ? st.elapsedMs : null,
+                        zeroExpansionSummary: st?.zeroExpansionSummary || null,
+                        rootSearchSummary: st?.rootSearchSummary || null,
+                        diagnosticsSummary: st?.diagnosticsSummary || null
+                    }))
+                    : []
+            });
+            if (summary.validationReason === '') delete summary.validationReason;
+            if (Array.isArray(summary.rootMoveOrder) && summary.rootMoveOrder.length === 0) delete summary.rootMoveOrder;
+            if (Array.isArray(summary.rootMoveScores) && summary.rootMoveScores.length === 0) delete summary.rootMoveScores;
+            if (Array.isArray(summary.rootSuppressionLog) && summary.rootSuppressionLog.length === 0) delete summary.rootSuppressionLog;
+            if (Array.isArray(summary.refereeAttempts) && summary.refereeAttempts.length === 0) delete summary.refereeAttempts;
+            return summary;
+        };
+        // Canonical internal stage records are stage-native only. Compatibility aliases are derived once at top-level.
+        const toStageAttemptSummary = ({ stage, name, variant, budgetMs, elapsedMs, normalized = {}, meta = {} } = {}) => compactDefined({
+            stage: Number.isFinite(stage) ? stage : null,
+            name: name || null,
+            variant: variant || null,
+            engine: meta.engine || normalized.engine || 'referee-core',
+            status: normalized.rawStatus || normalized.status || 'error',
+            rawStatus: normalized.rawStatus || normalized.status || 'error',
+            solved: !!normalized.ok,
+            budgetMs: Number.isFinite(budgetMs) ? budgetMs : null,
+            elapsedMs: Number.isFinite(elapsedMs) ? elapsedMs : null,
+            result: toStageResultStatus(normalized.rawStatus || normalized.status || 'error'),
+            preExpansionAbort: normalized.preExpansionAbort || null,
+            zeroExpansionSummary: normalized.zeroExpansionSummary || null,
+            rootSearchSummary: normalized.rootSearchSummary || null
+        });
+        const toCompactTriageStageSummary = (entry = {}) => compactDefined({
+            stage: Number.isFinite(entry.stage) ? entry.stage : null,
+            variant: entry.variant || null,
+            status: entry.status || 'error',
+            elapsedMs: Number.isFinite(entry.elapsedMs) ? entry.elapsedMs : null,
+            strategy: entry.strategy || null,
+            pruneCounters: entry.pruneCounters || null,
+            nodesExpanded: Number.isFinite(entry.nodesExpanded) ? entry.nodesExpanded : null,
+            branchesGenerated: Number.isFinite(entry.branchesGenerated) ? entry.branchesGenerated : null,
+            candidateMovesConsidered: Number.isFinite(entry.candidateMovesConsidered) ? entry.candidateMovesConsidered : null,
+            memoHits: Number.isFinite(entry.memoHits) ? entry.memoHits : null,
+            failedStateHits: Number.isFinite(entry.failedStateHits) ? entry.failedStateHits : null,
+            depthReached: Number.isFinite(entry.depthReached) ? entry.depthReached : null,
+            frontierExhausted: !!entry.frontierExhausted,
+            budgetExhausted: !!entry.budgetExhausted,
+            returnedWithoutExpansion: !!entry.returnedWithoutExpansion,
+            rootSearchSummary: entry.rootSearchSummary || null,
+            zeroExpansionSummary: entry.zeroExpansionSummary || null,
+            debugNotes: entry.debugNotes || null
+        });
+        // Compatibility aliases are outward-facing only and must be derived in this single function.
+        const deriveCompatibilityAliasesFromAttempts = (attemptsLike = [], options = {}) => {
+            const attempts = Array.isArray(attemptsLike) ? attemptsLike : [];
+            const allowReferee = options.allowReferee !== undefined ? !!options.allowReferee : true;
             const legacyAttempts = attempts.filter(st => st?.engine === 'legacy-adapter');
             const firstLegacy = legacyAttempts[0] || null;
             const solvedLegacy = legacyAttempts.find(st => st?.solved);
             const solvedByReferee = attempts.find(st => st?.solved && st?.engine !== 'legacy-adapter');
+            const executionPath = options.executionPath
+                || (!allowReferee ? 'legacy-only' : (legacyAttempts.length > 0 ? 'referee-then-legacy' : 'referee-only'));
+            const totalSolveTimeMs = Number.isFinite(options.totalSolveTimeMs) ? options.totalSolveTimeMs : 0;
             return {
+                solverPath: executionPath,
+                executionPath,
                 legacyFallbackTried: legacyAttempts.length > 0,
                 legacyFallbackStatus: solvedLegacy?.status || firstLegacy?.status || null,
                 legacyFallbackSolved: !!solvedLegacy,
                 legacyFallbackTimeMs: Number.isFinite(firstLegacy?.elapsedMs) ? firstLegacy.elapsedMs : null,
-                finalSolvedBy: solvedLegacy ? 'legacy' : (solvedByReferee ? 'referee' : 'none')
+                finalSolvedBy: solvedLegacy ? 'legacy' : (solvedByReferee ? 'referee' : 'none'),
+                totalSolveTimeMs
             };
         };
 
@@ -6731,31 +6828,22 @@
 
             const markStage = (stage, name, variant, budget, startedAt, result, meta = {}) => {
                 const normalized = createCanonicalSolveResult(result || {});
-                stagesTried.push({
+                const stageSummary = toStageAttemptSummary({
                     stage,
                     name,
                     variant,
-                    engine: meta.engine || normalized.engine || 'referee-core',
-                    status: normalized.rawStatus || normalized.status || 'error',
-                    solved: !!normalized.ok,
                     budgetMs: budget,
                     elapsedMs: Date.now() - startedAt,
-                    result: toStageResultStatus(result?.status),
-                    templateDiagnostics: result?.templateDiagnostics || result?.stats?.templateDiagnostics || null,
-                    chosenHypothesis: result?.controlPlane?.activeHypothesis?.archetype || controlPlane?.activeHypothesis?.archetype || null,
-                    hypothesisConfidence: result?.controlPlane?.activeHypothesis?.confidence || controlPlane?.activeHypothesis?.confidence || null,
-                    hypothesisSwitchReason: result?.controlPlane?.activeHypothesis?.switchReason || null,
-                    derivedThresholds: result?.stats?.debug?.phaseTimeline?.[0]?.thresholds || null,
-                    complexityClass,
-                    strategySubtype,
-                    strategySignals: level?.solverProfile?.strategySubtypeSignals || null,
-                    strategy: {
-                        portalBiasMode: resolvedPortalBiasMode,
-                        pruneToggles: complexityStrategy.pruneTogglesByTier?.[Math.min(2, tier)] || [],
-                        stageOrder: complexityStrategy.stageOrder || [],
-                        directionPolicy: complexityStrategy.directionPolicy || {}
-                    }
+                    normalized,
+                    meta
                 });
+                if (APP.State?.ENGINE?.isDevMode || opts?.auditMode) {
+                    // Dev assertion: canonical stage records should remain stage-native, never full result mirrors.
+                    const leakedCompat = ['solverPath', 'executionPath', 'legacyFallbackTried', 'legacyFallbackStatus', 'legacyFallbackSolved', 'legacyFallbackTimeMs', 'finalSolvedBy', 'totalSolveTimeMs']
+                        .filter(k => Object.prototype.hasOwnProperty.call(stageSummary, k));
+                    if (leakedCompat.length > 0) console.warn('[Referee canonical-stage leak]', { stage, leakedCompat });
+                }
+                stagesTried.push(stageSummary);
             };
 
             let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
@@ -6857,41 +6945,13 @@
                     last = { ...triageResult, stage: plan.stage, message: triageResult.ok ? `Solved (${plan.variant}).` : `${plan.variant} ${triageResult.status || 'error'}.`, stagesTried };
                     if (triageResult.ok || triageResult.status === 'no-solution-proven') break;
                 }
+                const compactTriageAttempts = triageAttempts.map(a => toCompactTriageStageSummary(a));
                 last.diagnostics = {
                     ...(last.diagnostics || {}),
                     inconclusiveTriage: {
                         triggeredBy: 'no-solution-inconclusive',
                         status: last.status,
-                        attempts: triageAttempts,
-                        stagesTried: triageAttempts.map(a => ({ stage: a.stage, name: a.name, variant: a.variant, status: a.status, elapsedMs: a.elapsedMs })),
-                        pruneCounters: triageAttempts.map(a => ({ stage: a.stage, counters: a.pruneCounters })),
-                        exploration: triageAttempts.map(a => ({
-                            stage: a.stage,
-                            nodesExpanded: a.nodesExpanded,
-                            branchesGenerated: a.branchesGenerated,
-                            startNeighborsCount: a.startNeighborsCount,
-                            startNeighborKeys: a.startNeighborKeys,
-                            depthZeroReason: a.depthZeroReason,
-                            candidateMovesConsidered: a.candidateMovesConsidered,
-                            memoHits: a.memoHits,
-                            failedStateHits: a.failedStateHits,
-                            depthReached: a.depthReached,
-                            frontierExhausted: a.frontierExhausted,
-                            budgetExhausted: a.budgetExhausted,
-                            returnedWithoutExpansion: a.returnedWithoutExpansion,
-                            disabledPrunesApplied: a.disabledPrunesApplied,
-                            triageProbe: a.triageProbe || null,
-                            rootCandidatesGenerated: a.rootCandidatesGenerated,
-                            rootCandidatesSuppressedByMemo: a.rootCandidatesSuppressedByMemo,
-                            rootCandidatesSuppressedByDominance: a.rootCandidatesSuppressedByDominance,
-                            rootCandidatesExpanded: a.rootCandidatesExpanded,
-                            rootMoveOrder: a.rootMoveOrder,
-                            rootMoveScores: a.rootMoveScores,
-                            rootSuppressionLog: a.rootSuppressionLog,
-                            rootSearchSummary: a.rootSearchSummary || null,
-                            preExpansionAbort: a.preExpansionAbort || null,
-                            zeroExpansionSummary: a.zeroExpansionSummary || null
-                        })),
+                        attempts: compactTriageAttempts,
                         debugNotes: triageAttempts.flatMap(a => Array.isArray(a.debugNotes) ? a.debugNotes : (a.debugNotes ? [a.debugNotes] : []))
                     }
                 };
@@ -6910,26 +6970,15 @@
                 } else {
                     last = { ok: false, status: 'gemini-failed', stage: 6, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
                 }
-                stagesTried.push({
+                stagesTried.push(toStageAttemptSummary({
                     stage: 6,
                     name: 'Stage 6',
                     variant: 'gemini',
-                    engine: 'referee-core',
-                    status: last.rawStatus || last.status || 'error',
-                    solved: !!last.ok,
                     budgetMs: 15000,
                     elapsedMs: Date.now() - t4,
-                    result: toStageResultStatus(last.status),
-                    complexityClass,
-                    strategySubtype,
-                    strategySignals: level?.solverProfile?.strategySubtypeSignals || null,
-                    strategy: {
-                        portalBiasMode: resolvedPortalBiasMode,
-                        pruneToggles: complexityStrategy.pruneTogglesByTier?.[Math.min(2, tier)] || [],
-                        stageOrder: complexityStrategy.stageOrder || [],
-                        directionPolicy: complexityStrategy.directionPolicy || {}
-                    }
-                });
+                    normalized: createCanonicalSolveResult(last || {}),
+                    meta: { engine: 'referee-core' }
+                }));
             }
 
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
@@ -7202,14 +7251,19 @@
                 solverResult = createCanonicalSolveResult(solverResult || {});
                 applyCanonicalSolutionShape(solverResult);
 
-                const compat = deriveLegacyCompatFromAttempts(solverResult.stagesTried || []);
+                const compat = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], { allowReferee });
                 const finalStatus = solverResult.rawStatus || solverResult.status || 'error';
                 const executionPath = solverResult.executionPath
                     || (!allowReferee ? 'legacy-only' : (compat.legacyFallbackTried ? 'referee-then-legacy' : 'referee-only'));
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
+                const compatAliases = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], {
+                    allowReferee,
+                    executionPath,
+                    totalSolveTimeMs
+                });
 
-                solverResult.solverPath = executionPath;
-                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compat.legacyFallbackTried} legacyStatus=${compat.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compat.finalSolvedBy}`);
+                solverResult.solverPath = compatAliases.solverPath;
+                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
@@ -7234,26 +7288,26 @@
                     stagesTried: solverResult.stagesTried || [],
                     stage: solverResult.stage,
                     // Compatibility alias: final effective execution path, not the requested engine.
-                    solverPath: executionPath,
+                    solverPath: compatAliases.solverPath,
                     requestedSolverPath,
                     refereeAttempted: allowReferee,
                     refereeStatus: finalStatus,
                     refereeSolved: !!solverResult.ok,
                     refereeTimeMs,
-                    legacyFallbackTried: compat.legacyFallbackTried,
-                    legacyFallbackStatus: compat.legacyFallbackStatus,
-                    legacyFallbackSolved: compat.legacyFallbackSolved,
-                    legacyFallbackTimeMs: compat.legacyFallbackTimeMs,
+                    legacyFallbackTried: compatAliases.legacyFallbackTried,
+                    legacyFallbackStatus: compatAliases.legacyFallbackStatus,
+                    legacyFallbackSolved: compatAliases.legacyFallbackSolved,
+                    legacyFallbackTimeMs: compatAliases.legacyFallbackTimeMs,
                     finalStatus,
-                    finalSolvedBy: compat.finalSolvedBy,
-                    executionPath,
+                    finalSolvedBy: compatAliases.finalSolvedBy,
+                    executionPath: compatAliases.executionPath,
                     totalSolveTimeMs,
                     message: solverResult.message || '',
                     diagnostics: solverResult.diagnostics || null,
                     preExpansionAbort: solverResult.preExpansionAbort || getPreExpansionAbort(debugInfo) || null,
                     zeroExpansionSummary: solverResult.zeroExpansionSummary || null,
                     rootSearchSummary: solverResult.rootSearchSummary || null
-                }, executionPath, 'audit-normalizer');
+                }, compatAliases.executionPath, 'audit-normalizer');
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
                 if (err?.name === 'AbortError') {
@@ -11611,6 +11665,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
+            let finalHintResult = null;
             try {
                 for (let attemptIdx = 0; attemptIdx < hintAttempts.length; attemptIdx++) {
                     const attemptPlan = hintAttempts[attemptIdx];
@@ -11621,43 +11676,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }
                     const attemptStart = performance.now();
                     const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), attemptPlan);
+                    finalHintResult = hintRes || null;
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
-                    const attemptRecord = {
-                        attempt: attemptPlan.key,
-                        status: classifyHintStatus(hintRes, hintValidation),
-                        rawStatus: hintRes?.rawStatus || hintRes?.status || 'error',
-                        stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
+                    const attemptStatus = classifyHintStatus(hintRes, hintValidation);
+                    const attemptRecord = toAuditAttemptSummary(hintRes, {
+                        attemptLabel: attemptPlan.key,
+                        status: attemptStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
                         validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
-                        solverPath: hintRes?.solverPath || 'unknown',
-                        requestedSolverPath: hintRes?.requestedSolverPath || 'unknown',
-                        executionPath: hintRes?.executionPath || hintRes?.solverPath || 'unknown',
-                        refereeAttempted: !!hintRes?.refereeAttempted,
-                        refereeStatus: hintRes?.refereeStatus || null,
-                        refereeSolved: !!hintRes?.refereeSolved,
-                        refereeTimeMs: Number.isFinite(hintRes?.refereeTimeMs) ? hintRes.refereeTimeMs : null,
-                        legacyFallbackTried: !!hintRes?.legacyFallbackTried,
-                        legacyFallbackStatus: hintRes?.legacyFallbackStatus || null,
-                        legacyFallbackSolved: !!hintRes?.legacyFallbackSolved,
-                        legacyFallbackTimeMs: Number.isFinite(hintRes?.legacyFallbackTimeMs) ? hintRes.legacyFallbackTimeMs : null,
-                        finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
-                        finalSolvedBy: hintRes?.finalSolvedBy || 'none',
-                        totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
-                        diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics),
-                        preExpansionAbort: hintRes?.preExpansionAbort || null,
-                        zeroExpansionSummary: hintRes?.zeroExpansionSummary || null,
-                        rootSearchSummary: hintRes?.rootSearchSummary || null,
-                        rootCandidatesGenerated: Number.isFinite(hintRes?.debug?.rootCandidatesGenerated) ? hintRes.debug.rootCandidatesGenerated : null,
-                        rootCandidatesSuppressedByMemo: Number.isFinite(hintRes?.debug?.rootCandidatesSuppressedByMemo) ? hintRes.debug.rootCandidatesSuppressedByMemo : null,
-                        rootCandidatesSuppressedByDominance: Number.isFinite(hintRes?.debug?.rootCandidatesSuppressedByDominance) ? hintRes.debug.rootCandidatesSuppressedByDominance : null,
-                        rootCandidatesExpanded: Number.isFinite(hintRes?.debug?.rootCandidatesExpanded) ? hintRes.debug.rootCandidatesExpanded : null,
-                        rootMoveOrder: Array.isArray(hintRes?.debug?.rootMoveOrder) ? hintRes.debug.rootMoveOrder.slice(0, 20) : null,
-                        rootMoveScores: Array.isArray(hintRes?.debug?.rootMoveScores) ? hintRes.debug.rootMoveScores.slice(0, 20) : null,
-                        rootSuppressionLog: Array.isArray(hintRes?.debug?.debug?.rootSuppressionLog) ? hintRes.debug.debug.rootSuppressionLog.slice(0, 20) : null,
-                        refereeAttempts: (hintRes?.stagesTried || []).map(st => ({ stage: st.stage, name: st.name, variant: st.variant, engine: st.engine || null, status: st.status || st.result || null, solved: !!st.solved, elapsedMs: Number.isFinite(st.elapsedMs) ? st.elapsedMs : null }))
-                    };
+                        diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics)
+                    });
                     levelEntry.newHint.attemptHistory.push(attemptRecord);
                     finalAttempt = attemptRecord;
                     if (attemptRecord.status === 'success' || attemptRecord.status === 'no-solution-proven') break;
@@ -11670,43 +11700,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }
                     const attemptStart = performance.now();
                     const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() });
+                    finalHintResult = hintRes || null;
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
-                    const geminiAttempt = {
-                        attempt: 'D',
-                        status: classifyHintStatus(hintRes, hintValidation),
-                        rawStatus: hintRes?.rawStatus || hintRes?.status || 'error',
-                        stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
+                    const geminiAttemptStatus = classifyHintStatus(hintRes, hintValidation);
+                    const geminiAttempt = toAuditAttemptSummary(hintRes, {
+                        attemptLabel: 'D',
+                        status: geminiAttemptStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
                         validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
-                        solverPath: hintRes?.solverPath || 'unknown',
-                        requestedSolverPath: hintRes?.requestedSolverPath || 'unknown',
-                        executionPath: hintRes?.executionPath || hintRes?.solverPath || 'unknown',
-                        refereeAttempted: !!hintRes?.refereeAttempted,
-                        refereeStatus: hintRes?.refereeStatus || null,
-                        refereeSolved: !!hintRes?.refereeSolved,
-                        refereeTimeMs: Number.isFinite(hintRes?.refereeTimeMs) ? hintRes.refereeTimeMs : null,
-                        legacyFallbackTried: !!hintRes?.legacyFallbackTried,
-                        legacyFallbackStatus: hintRes?.legacyFallbackStatus || null,
-                        legacyFallbackSolved: !!hintRes?.legacyFallbackSolved,
-                        legacyFallbackTimeMs: Number.isFinite(hintRes?.legacyFallbackTimeMs) ? hintRes.legacyFallbackTimeMs : null,
-                        finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
-                        finalSolvedBy: hintRes?.finalSolvedBy || 'none',
-                        totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
-                        diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics),
-                        preExpansionAbort: hintRes?.preExpansionAbort || null,
-                        zeroExpansionSummary: hintRes?.zeroExpansionSummary || null,
-                        rootSearchSummary: hintRes?.rootSearchSummary || null,
-                        rootCandidatesGenerated: Number.isFinite(hintRes?.debug?.rootCandidatesGenerated) ? hintRes.debug.rootCandidatesGenerated : null,
-                        rootCandidatesSuppressedByMemo: Number.isFinite(hintRes?.debug?.rootCandidatesSuppressedByMemo) ? hintRes.debug.rootCandidatesSuppressedByMemo : null,
-                        rootCandidatesSuppressedByDominance: Number.isFinite(hintRes?.debug?.rootCandidatesSuppressedByDominance) ? hintRes.debug.rootCandidatesSuppressedByDominance : null,
-                        rootCandidatesExpanded: Number.isFinite(hintRes?.debug?.rootCandidatesExpanded) ? hintRes.debug.rootCandidatesExpanded : null,
-                        rootMoveOrder: Array.isArray(hintRes?.debug?.rootMoveOrder) ? hintRes.debug.rootMoveOrder.slice(0, 20) : null,
-                        rootMoveScores: Array.isArray(hintRes?.debug?.rootMoveScores) ? hintRes.debug.rootMoveScores.slice(0, 20) : null,
-                        rootSuppressionLog: Array.isArray(hintRes?.debug?.debug?.rootSuppressionLog) ? hintRes.debug.debug.rootSuppressionLog.slice(0, 20) : null,
-                        refereeAttempts: (hintRes?.stagesTried || []).map(st => ({ stage: st.stage, name: st.name, variant: st.variant, engine: st.engine || null, status: st.status || st.result || null, solved: !!st.solved, elapsedMs: Number.isFinite(st.elapsedMs) ? st.elapsedMs : null }))
-                    };
+                        diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics)
+                    });
                     levelEntry.newHint.attemptHistory.push(geminiAttempt);
                     finalAttempt = geminiAttempt;
                 }
@@ -11724,32 +11729,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }
                 }
             } catch (newHintErr) {
-                const failedAttempt = {
+                const failedAttempt = compactDefined({
                     attempt: `ERR-${levelEntry.newHint.attemptHistory.length + 1}`,
                     status: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
                     rawStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
-                    stage: null,
                     elapsedMs: 0,
                     producedHintValid: false,
-                    validationReason: '',
-                    solverPath: 'unknown',
-                    requestedSolverPath: 'unknown',
-                    executionPath: 'unknown',
-                    refereeAttempted: false,
-                    refereeStatus: null,
-                    refereeSolved: false,
-                    refereeTimeMs: null,
-                    legacyFallbackTried: false,
-                    legacyFallbackStatus: null,
-                    legacyFallbackSolved: false,
-                    legacyFallbackTimeMs: null,
-                    finalStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
-                    finalSolvedBy: 'none',
-                    totalSolveTimeMs: 0,
-                    preExpansionAbort: null,
-                    diagnosticsSummary: null,
-                    refereeAttempts: []
-                };
+                    diagnosticsSummary: null
+                });
                 levelEntry.newHint.attemptHistory.push(failedAttempt);
                 finalAttempt = failedAttempt;
                 APP.Solver.cancel();
@@ -11757,22 +11744,22 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
 
             levelEntry.newHint.status = finalAttempt?.status || 'error';
-            levelEntry.newHint.rawStatus = finalAttempt?.rawStatus || 'error';
+            levelEntry.newHint.rawStatus = finalHintResult?.rawStatus || finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
-            levelEntry.newHint.solverPath = finalAttempt?.solverPath || 'unknown';
-            levelEntry.newHint.requestedSolverPath = finalAttempt?.requestedSolverPath || 'unknown';
-            levelEntry.newHint.executionPath = finalAttempt?.executionPath || finalAttempt?.solverPath || 'unknown';
-            levelEntry.newHint.refereeAttempted = !!finalAttempt?.refereeAttempted;
-            levelEntry.newHint.refereeStatus = finalAttempt?.refereeStatus || null;
-            levelEntry.newHint.refereeSolved = !!finalAttempt?.refereeSolved;
-            levelEntry.newHint.refereeTimeMs = Number.isFinite(finalAttempt?.refereeTimeMs) ? finalAttempt.refereeTimeMs : null;
-            levelEntry.newHint.legacyFallbackTried = !!finalAttempt?.legacyFallbackTried;
-            levelEntry.newHint.legacyFallbackStatus = finalAttempt?.legacyFallbackStatus || null;
-            levelEntry.newHint.legacyFallbackSolved = !!finalAttempt?.legacyFallbackSolved;
-            levelEntry.newHint.legacyFallbackTimeMs = Number.isFinite(finalAttempt?.legacyFallbackTimeMs) ? finalAttempt.legacyFallbackTimeMs : null;
-            levelEntry.newHint.finalStatus = finalAttempt?.finalStatus || finalAttempt?.rawStatus || 'error';
-            levelEntry.newHint.finalSolvedBy = finalAttempt?.finalSolvedBy || 'none';
-            levelEntry.newHint.totalSolveTimeMs = Number.isFinite(finalAttempt?.totalSolveTimeMs) ? finalAttempt.totalSolveTimeMs : 0;
+            levelEntry.newHint.solverPath = finalHintResult?.solverPath || 'unknown';
+            levelEntry.newHint.requestedSolverPath = finalHintResult?.requestedSolverPath || 'unknown';
+            levelEntry.newHint.executionPath = finalHintResult?.executionPath || finalHintResult?.solverPath || 'unknown';
+            levelEntry.newHint.refereeAttempted = !!finalHintResult?.refereeAttempted;
+            levelEntry.newHint.refereeStatus = finalHintResult?.refereeStatus || null;
+            levelEntry.newHint.refereeSolved = !!finalHintResult?.refereeSolved;
+            levelEntry.newHint.refereeTimeMs = Number.isFinite(finalHintResult?.refereeTimeMs) ? finalHintResult.refereeTimeMs : null;
+            levelEntry.newHint.legacyFallbackTried = !!finalHintResult?.legacyFallbackTried;
+            levelEntry.newHint.legacyFallbackStatus = finalHintResult?.legacyFallbackStatus || null;
+            levelEntry.newHint.legacyFallbackSolved = !!finalHintResult?.legacyFallbackSolved;
+            levelEntry.newHint.legacyFallbackTimeMs = Number.isFinite(finalHintResult?.legacyFallbackTimeMs) ? finalHintResult.legacyFallbackTimeMs : null;
+            levelEntry.newHint.finalStatus = finalHintResult?.finalStatus || finalHintResult?.rawStatus || finalAttempt?.rawStatus || 'error';
+            levelEntry.newHint.finalSolvedBy = finalHintResult?.finalSolvedBy || 'none';
+            levelEntry.newHint.totalSolveTimeMs = Number.isFinite(finalHintResult?.totalSolveTimeMs) ? finalHintResult.totalSolveTimeMs : 0;
             levelEntry.newHint.preExpansionAbort = summarizeSearchSignal(finalAttempt?.preExpansionAbort);
             levelEntry.newHint.zeroExpansionSummary = summarizeSearchSignal(finalAttempt?.zeroExpansionSummary);
             levelEntry.newHint.rootSearchSummary = summarizeSearchSignal(finalAttempt?.rootSearchSummary);
