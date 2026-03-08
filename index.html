@@ -2821,6 +2821,7 @@
                         ? profile.objectivePriority
                         : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
                     const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
+                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : null;
                     const perimeterThreshold = profile?.perimeterThreshold || 1;
                     const activePhase = state.phase || 'harvest';
                     const phaseProfileBase = state.phasePolicy?.profiles?.[activePhase] || state.phasePolicy?.profiles?.harvest || {
