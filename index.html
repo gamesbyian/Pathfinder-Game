@@ -2589,6 +2589,8 @@
                     const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'modern';
                     const structuralMode = !!options?.structuralMode;
                     const profile = structuralMode ? (l.solverProfile || null) : null;
+                    const symmetryModel = profile?.symmetryModel || null;
+                    const symmetryCommitted = !!(symmetryModel && symmetryModel.committed && (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal'));
                     const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
                     const evaluateKnotCandidate = (candidate) => {
                         if (!candidate || !(candidate.cells instanceof Set) || !(candidate.distMap instanceof Map)) return null;
@@ -2701,7 +2703,7 @@
                             else score += 62;
                         }
                         if (committedFamily >= 0 && nextFamily >= 0 && nextFamily !== committedFamily) {
-                            score += profile?.symmetryAxis ? 74 : 36;
+                            score += symmetryCommitted ? 74 : 36;
                         }
 
                         if (scoringMode === 'legacy') {
@@ -2818,12 +2820,21 @@
                                 }
                             }
 
-                            if (profile.symmetryAxis === 'vertical') {
-                                const mid = (l.grid.w - 1) / 2;
-                                score += Math.abs(nx - mid) * 6;
-                            } else if (profile.symmetryAxis === 'horizontal') {
-                                const mid = (l.grid.h - 1) / 2;
-                                score += Math.abs(ny - mid) * 6;
+                            if (symmetryCommitted) {
+                                const axis = symmetryModel.axis;
+                                const preferredHalf = symmetryModel?.preferredBreak?.half;
+                                const strength = Math.max(0.35, Math.min(1.35, (symmetryModel?.confidence || 0) * 1.25));
+                                if (axis === 'vertical') {
+                                    const mid = (l.grid.w - 1) / 2;
+                                    const towardPreferred = (preferredHalf === 'left' && nx < mid) || (preferredHalf === 'right' && nx > mid);
+                                    score += Math.round(Math.abs(nx - mid) * 6 * strength);
+                                    if (towardPreferred) score -= Math.round(8 * strength);
+                                } else if (axis === 'horizontal') {
+                                    const mid = (l.grid.h - 1) / 2;
+                                    const towardPreferred = (preferredHalf === 'top' && ny < mid) || (preferredHalf === 'bottom' && ny > mid);
+                                    score += Math.round(Math.abs(ny - mid) * 6 * strength);
+                                    if (towardPreferred) score -= Math.round(8 * strength);
+                                }
                             }
 
                             if (profile.portalCommitment > 0 && portalDest === nk && portalForced) {
@@ -2846,6 +2857,22 @@
                     } else {
                         scored.sort((a, b) => {
                             if (a.score !== b.score) return a.score - b.score;
+                            if (structuralMode && symmetryCommitted) {
+                                const axis = symmetryModel.axis;
+                                const prefHalf = symmetryModel?.preferredBreak?.half;
+                                const pa = APP.LevelUtils.UNPACK(a.nk);
+                                const pb = APP.LevelUtils.UNPACK(b.nk);
+                                const ca = axis === 'vertical' ? pa.x : pa.y;
+                                const cb = axis === 'vertical' ? pb.x : pb.y;
+                                const mid = axis === 'vertical' ? ((l.grid.w - 1) / 2) : ((l.grid.h - 1) / 2);
+                                const prefBias = (coord) => {
+                                    if (prefHalf === 'left' || prefHalf === 'top') return coord <= mid ? -1 : 1;
+                                    if (prefHalf === 'right' || prefHalf === 'bottom') return coord >= mid ? -1 : 1;
+                                    return 0;
+                                };
+                                const sideOrder = prefBias(ca) - prefBias(cb);
+                                if (sideOrder !== 0) return sideOrder;
+                            }
                             return options?.dirOrderVariant === 'alt' ? (a.nk - b.nk) : (b.nk - a.nk);
                         });
                     }
@@ -3558,6 +3585,31 @@
                         phasePolicy = null
                     } = options;
                     const shuffledGates = (validGates || level.gateKeys || []).slice();
+                    const profile = level?.solverProfile || null;
+                    const symmetryModel = profile?.symmetryModel || null;
+                    const symmetryCommitted = !!(symmetryModel && symmetryModel.committed && (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal'));
+                    if (symmetryCommitted) {
+                        const axis = symmetryModel.axis;
+                        const preferredHalf = symmetryModel?.preferredBreak?.half;
+                        const center = axis === 'vertical' ? ((level.grid.w - 1) / 2) : ((level.grid.h - 1) / 2);
+                        const halfScore = (coord) => {
+                            if (preferredHalf === 'left' || preferredHalf === 'top') return coord <= center ? -1 : 1;
+                            if (preferredHalf === 'right' || preferredHalf === 'bottom') return coord >= center ? -1 : 1;
+                            return Math.abs(coord - center);
+                        };
+                        shuffledGates.sort((a, b) => {
+                            const pa = APP.LevelUtils.UNPACK(a);
+                            const pb = APP.LevelUtils.UNPACK(b);
+                            const ca = axis === 'vertical' ? pa.x : pa.y;
+                            const cb = axis === 'vertical' ? pb.x : pb.y;
+                            const hs = halfScore(ca) - halfScore(cb);
+                            if (hs !== 0) return hs;
+                            const da = Math.abs(ca - center);
+                            const db = Math.abs(cb - center);
+                            if (da !== db) return db - da;
+                            return a - b;
+                        });
+                    }
                     if (dirOrderVariant === 'alt') shuffledGates.reverse();
                     else if (dirOrderVariant !== 'default') shuffledGates.sort(() => Math.random() - 0.5);
                     const passCellUsageFreq = SavedHintArchitecture.makePassCellUsageSeed();
@@ -4552,57 +4604,135 @@
                 if (knotZone.size >= 24) break;
             }
 
-            let symmetryAxis = null;
-            if (w > 0 && h > 0) {
-                const hasBlock = (x, y) => level.blockSet?.has(APP.LevelUtils.PACK(x, y));
-                let vScore = 0, hScore = 0, vPairs = 0, hPairs = 0;
-                for (let y = 0; y < h; y++) {
-                    for (let x = 0; x < w; x++) {
-                        const mx = w - 1 - x;
-                        if (x <= mx) {
-                            vPairs++;
-                            if (!!hasBlock(x, y) === !!hasBlock(mx, y)) vScore++;
-                        }
-                        const my = h - 1 - y;
-                        if (y <= my) {
-                            hPairs++;
-                            if (!!hasBlock(x, y) === !!hasBlock(x, my)) hScore++;
-                        }
-                    }
+            const symmetryCommitmentThreshold = 0.82;
+            const levelFeatureSets = {
+                blocks: new Set(level?.blockSet || []),
+                gatesAndGoals: new Set([...(level?.gateKeys || []), level?.goalKey, ...(level?.falseGoalKeys || [])].filter(Number.isFinite)),
+                mustObjectives: new Set([...(level?.mustPassKeys || []), ...(level?.mustCrossKeys || [])]),
+                portalFilterPlacements: new Set([
+                    ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.keys()) : []),
+                    ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.values()).map(v => v?.dest).filter(Number.isFinite) : []),
+                    ...(level?.filterMap instanceof Map ? Array.from(level.filterMap.keys()) : []),
+                    ...(level?.flippingFilterMap instanceof Map ? Array.from(level.flippingFilterMap.keys()) : [])
+                ]),
+                hazards: new Set(level?.gooseSet || [])
+            };
+            const symmetryFeatureWeights = {
+                blocks: 1.8,
+                gatesAndGoals: 1.45,
+                mustObjectives: 1.55,
+                portalFilterPlacements: 1.35,
+                hazards: 1.25
+            };
+            const transformKey = (key, transformName) => {
+                if (!Number.isFinite(key)) return null;
+                const p = APP.LevelUtils.UNPACK(key);
+                let tx = p.x;
+                let ty = p.y;
+                if (transformName === 'vertical') {
+                    tx = (w - 1) - p.x;
+                } else if (transformName === 'horizontal') {
+                    ty = (h - 1) - p.y;
+                } else if (transformName === 'rot180') {
+                    tx = (w - 1) - p.x;
+                    ty = (h - 1) - p.y;
+                } else if (transformName === 'rot90cw') {
+                    if (w !== h) return null;
+                    tx = (w - 1) - p.y;
+                    ty = p.x;
+                } else {
+                    return null;
                 }
-                const vRatio = vPairs > 0 ? (vScore / vPairs) : 0;
-                const hRatio = hPairs > 0 ? (hScore / hPairs) : 0;
-                if (vRatio >= 0.78 || hRatio >= 0.78) symmetryAxis = vRatio >= hRatio ? 'vertical' : 'horizontal';
-            }
+                if (tx < 0 || ty < 0 || tx >= w || ty >= h) return null;
+                return APP.LevelUtils.PACK(tx, ty);
+            };
+            const evaluateTransformAgreement = (transformName) => {
+                let weighted = 0;
+                let totalWeight = 0;
+                const featureAgreement = {};
+                Object.entries(levelFeatureSets).forEach(([feature, set]) => {
+                    const entries = Array.from(set || []);
+                    if (entries.length === 0) {
+                        featureAgreement[feature] = 1;
+                        return;
+                    }
+                    let matches = 0;
+                    for (const key of entries) {
+                        const tk = transformKey(key, transformName);
+                        if (tk !== null && set.has(tk)) matches++;
+                    }
+                    const agreement = matches / entries.length;
+                    const weight = symmetryFeatureWeights[feature] || 1;
+                    weighted += agreement * weight;
+                    totalWeight += weight;
+                    featureAgreement[feature] = agreement;
+                });
+                return {
+                    score: totalWeight > 0 ? (weighted / totalWeight) : 0,
+                    featureAgreement
+                };
+            };
+            const transformScores = {
+                vertical: evaluateTransformAgreement('vertical'),
+                horizontal: evaluateTransformAgreement('horizontal'),
+                rotational180: evaluateTransformAgreement('rot180')
+            };
+            if (w === h) transformScores.rotational90 = evaluateTransformAgreement('rot90cw');
+
+            const preferredBreakForAxis = (axis) => {
+                const mid = axis === 'vertical' ? ((w - 1) / 2) : ((h - 1) / 2);
+                let signedLoad = 0;
+                Object.entries(levelFeatureSets).forEach(([feature, set]) => {
+                    const weight = symmetryFeatureWeights[feature] || 1;
+                    for (const key of set || []) {
+                        const p = APP.LevelUtils.UNPACK(key);
+                        const coord = axis === 'vertical' ? p.x : p.y;
+                        if (coord === mid) continue;
+                        signedLoad += (coord < mid ? -1 : 1) * weight;
+                    }
+                });
+                if (Math.abs(signedLoad) < 0.25) {
+                    return {
+                        axis,
+                        half: axis === 'vertical' ? 'left' : 'top',
+                        direction: axis === 'vertical' ? 'toward-left' : 'toward-top',
+                        strength: 0
+                    };
+                }
+                const positive = signedLoad > 0;
+                return {
+                    axis,
+                    half: axis === 'vertical' ? (positive ? 'right' : 'left') : (positive ? 'bottom' : 'top'),
+                    direction: axis === 'vertical'
+                        ? (positive ? 'toward-right' : 'toward-left')
+                        : (positive ? 'toward-bottom' : 'toward-top'),
+                    strength: Math.min(1, Math.abs(signedLoad) / 12)
+                };
+            };
+
+            const verticalAgreement = transformScores.vertical.score;
+            const horizontalAgreement = transformScores.horizontal.score;
+            const bestPlanarAxis = verticalAgreement >= horizontalAgreement ? 'vertical' : 'horizontal';
+            const bestPlanarAgreement = Math.max(verticalAgreement, horizontalAgreement);
+            const secondPlanarAgreement = Math.min(verticalAgreement, horizontalAgreement);
+            const rotationalSupport = Math.max(transformScores.rotational180.score, transformScores.rotational90?.score || 0);
+            const separation = Math.max(0, bestPlanarAgreement - secondPlanarAgreement);
+            const confidence = Math.max(0, Math.min(1, (bestPlanarAgreement * 0.74) + (separation * 0.18) + (rotationalSupport * 0.08)));
+            const symmetryAxis = confidence >= symmetryCommitmentThreshold ? bestPlanarAxis : null;
+            const preferredBreak = preferredBreakForAxis(bestPlanarAxis);
 
             const symmetryModel = {
                 axis: symmetryAxis,
-                verticalAgreement: (() => {
-                    let score = 0, pairs = 0;
-                    const hasBlock = (x, y) => level.blockSet?.has(APP.LevelUtils.PACK(x, y));
-                    for (let y = 0; y < h; y++) {
-                        for (let x = 0; x < w; x++) {
-                            const mx = w - 1 - x;
-                            if (x > mx) continue;
-                            pairs++;
-                            if (!!hasBlock(x, y) === !!hasBlock(mx, y)) score++;
-                        }
-                    }
-                    return pairs > 0 ? score / pairs : 0;
-                })(),
-                horizontalAgreement: (() => {
-                    let score = 0, pairs = 0;
-                    const hasBlock = (x, y) => level.blockSet?.has(APP.LevelUtils.PACK(x, y));
-                    for (let y = 0; y < h; y++) {
-                        for (let x = 0; x < w; x++) {
-                            const my = h - 1 - y;
-                            if (y > my) continue;
-                            pairs++;
-                            if (!!hasBlock(x, y) === !!hasBlock(x, my)) score++;
-                        }
-                    }
-                    return pairs > 0 ? score / pairs : 0;
-                })()
+                dominantAxis: bestPlanarAxis,
+                confidence,
+                commitmentThreshold: symmetryCommitmentThreshold,
+                committed: confidence >= symmetryCommitmentThreshold,
+                preferredBreak,
+                verticalAgreement,
+                horizontalAgreement,
+                rotational180Agreement: transformScores.rotational180.score,
+                rotational90Agreement: transformScores.rotational90?.score || 0,
+                transformScores
             };
 
             const portalFamilies = [];
@@ -4764,8 +4894,27 @@
                 })),
                 symmetryModel: {
                     axis: (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal') ? symmetryModel.axis : (safe.symmetryAxis || null),
+                    dominantAxis: (symmetryModel.dominantAxis === 'vertical' || symmetryModel.dominantAxis === 'horizontal')
+                        ? symmetryModel.dominantAxis
+                        : ((symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal') ? symmetryModel.axis : (safe.symmetryAxis || null)),
+                    confidence: Number.isFinite(symmetryModel.confidence) ? symmetryModel.confidence : 0,
+                    commitmentThreshold: Number.isFinite(symmetryModel.commitmentThreshold) ? symmetryModel.commitmentThreshold : 0.82,
+                    committed: !!symmetryModel.committed,
+                    preferredBreak: (symmetryModel.preferredBreak && typeof symmetryModel.preferredBreak === 'object')
+                        ? {
+                            axis: (symmetryModel.preferredBreak.axis === 'vertical' || symmetryModel.preferredBreak.axis === 'horizontal')
+                                ? symmetryModel.preferredBreak.axis
+                                : null,
+                            half: symmetryModel.preferredBreak.half || null,
+                            direction: symmetryModel.preferredBreak.direction || null,
+                            strength: Number.isFinite(symmetryModel.preferredBreak.strength) ? symmetryModel.preferredBreak.strength : 0
+                        }
+                        : { axis: null, half: null, direction: null, strength: 0 },
                     verticalAgreement: Number.isFinite(symmetryModel.verticalAgreement) ? symmetryModel.verticalAgreement : 0,
-                    horizontalAgreement: Number.isFinite(symmetryModel.horizontalAgreement) ? symmetryModel.horizontalAgreement : 0
+                    horizontalAgreement: Number.isFinite(symmetryModel.horizontalAgreement) ? symmetryModel.horizontalAgreement : 0,
+                    rotational180Agreement: Number.isFinite(symmetryModel.rotational180Agreement) ? symmetryModel.rotational180Agreement : 0,
+                    rotational90Agreement: Number.isFinite(symmetryModel.rotational90Agreement) ? symmetryModel.rotational90Agreement : 0,
+                    transformScores: (symmetryModel.transformScores && typeof symmetryModel.transformScores === 'object') ? symmetryModel.transformScores : {}
                 },
                 archetype: safe.archetype || 'corridor-commitment',
                 phasePolicy: (safe.phasePolicy && typeof safe.phasePolicy === 'object')
