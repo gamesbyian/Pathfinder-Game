@@ -7251,16 +7251,14 @@
                 solverResult = createCanonicalSolveResult(solverResult || {});
                 applyCanonicalSolutionShape(solverResult);
 
-                const compat = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], { allowReferee });
                 const finalStatus = solverResult.rawStatus || solverResult.status || 'error';
-                const executionPath = solverResult.executionPath
-                    || (!allowReferee ? 'legacy-only' : (compat.legacyFallbackTried ? 'referee-then-legacy' : 'referee-only'));
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
                 const compatAliases = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], {
                     allowReferee,
-                    executionPath,
+                    executionPath: solverResult.executionPath,
                     totalSolveTimeMs
                 });
+                const executionPath = compatAliases.executionPath;
 
                 solverResult.solverPath = compatAliases.solverPath;
                 console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
