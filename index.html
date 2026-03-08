@@ -5040,12 +5040,97 @@
 
         async runBaselineStage(level, budgetMs, opts = {}) {
             const started = Date.now();
+            const profile = opts.profile || level?.solverProfile || null;
+            const randomExplorationEnabled = !!opts.allowRandomizedExploration;
+            const buildAttemptPlan = () => {
+                const total = Math.max(1, Math.floor(budgetMs || 1));
+                const routePressure = Math.max(0, profile?.routePressure || 0);
+                const objectiveCount = Math.max(0, profile?.objectiveCount || 0);
+                const portalCommitment = Math.max(0, Math.min(1, profile?.portalCommitment || 0));
+                const complexityBias = Math.max(0, Math.min(0.18,
+                    Math.max(0, (routePressure - 0.95) * 0.08)
+                    + Math.min(0.06, objectiveCount * 0.008)
+                    + Math.min(0.04, portalCommitment * 0.05)
+                ));
+                const structuralModernShare = Math.max(0.36, Math.min(0.68, 0.54 + complexityBias));
+                const structuralConservativeShare = Math.max(0.22, Math.min(0.44, 0.34 - (complexityBias * 0.45)));
+                const allowLegacyRescue = opts.enableLegacyRescue !== undefined
+                    ? !!opts.enableLegacyRescue
+                    : ((opts.purpose === 'hint' ? false : true) && (portalCommitment > 0.2 || objectiveCount >= 3));
+
+                const modernBudget = Math.max(1, Math.floor(total * structuralModernShare));
+                const conservativeBudget = Math.max(1, Math.floor(total * structuralConservativeShare));
+                const remainingBudget = Math.max(1, total - modernBudget - conservativeBudget);
+                const attempts = [
+                    {
+                        label: 'structural-modern',
+                        budgetMs: modernBudget,
+                        scoringMode: 'modern',
+                        portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
+                        structuralMode: true,
+                        phasePolicy: opts.phasePolicy || null
+                    },
+                    {
+                        label: 'structural-conservative',
+                        budgetMs: Math.max(1, allowLegacyRescue ? conservativeBudget : (conservativeBudget + remainingBudget)),
+                        scoringMode: 'modern',
+                        portalBiasMode: 'off',
+                        structuralMode: true,
+                        phasePolicy: opts.phasePolicy || null
+                    }
+                ];
+
+                if (allowLegacyRescue) {
+                    attempts.push({
+                        label: 'legacy-rescue',
+                        budgetMs: Math.max(1, total - attempts[0].budgetMs - attempts[1].budgetMs),
+                        scoringMode: 'legacy',
+                        portalBiasMode: 'off',
+                        structuralMode: false,
+                        phasePolicy: null
+                    });
+                }
+                return attempts;
+            };
+
+            const getSearchQuality = (attemptResult) => {
+                const debug = attemptResult?.debug || {};
+                const nodesExpanded = Math.max(0, Number(debug.nodesExpanded) || 0);
+                const branchesTried = Math.max(0, Number(debug.branchesTried) || 0);
+                const branchFactor = nodesExpanded > 0 ? (branchesTried / nodesExpanded) : 0;
+                const timeline = Array.isArray(debug.phaseTimeline) ? debug.phaseTimeline : [];
+                const maxProgress = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
+                const minObjectives = timeline.reduce((m, ev) => Math.min(m, Number.isFinite(ev?.remainingObjectives) ? ev.remainingObjectives : m), Infinity);
+                const finalObjectives = Number.isFinite(minObjectives) ? minObjectives : null;
+                const reachedTransition = timeline.some(ev => ev?.phase === 'transition' || ev?.phase === 'knot' || ev?.phase === 'finish');
+                const branchingCollapse = nodesExpanded >= 80 && branchFactor <= 0.18;
+                return {
+                    branchFactor,
+                    branchingCollapse,
+                    maxProgress,
+                    targetProgressGood: maxProgress >= 0.62 || reachedTransition || (finalObjectives !== null && finalObjectives <= 1),
+                    finalObjectives
+                };
+            };
+
+            const shouldStopAfterAttempt = (attemptResult, quality, attemptIndex, totalAttempts) => {
+                if (!attemptResult || attemptResult.ok) return true;
+                if (attemptResult.status === 'timeout' || attemptResult.status === 'no-solution-proven') return true;
+                const isLast = attemptIndex >= totalAttempts - 1;
+                if (isLast) return true;
+                if (quality.branchingCollapse && !quality.targetProgressGood) return true;
+                if (attemptResult.status === 'no-solution-inconclusive' && !quality.targetProgressGood && quality.maxProgress < 0.28) return true;
+                return false;
+            };
+
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const r = await PathfinderSolver.solve(level, {
                     timeLimit: attemptBudgetMs,
                     debug: true,
                     debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                    dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
+                    dirOrderVariant: (opts.dirOrderVariant === 'alt' || (opts.dirOrderVariant === 'random' && randomExplorationEnabled))
+                        ? opts.dirOrderVariant
+                        : 'default',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     structuralMode: !!attemptOpts.structuralMode,
@@ -5064,34 +5149,32 @@
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
                     structuralMode: !!attemptOpts.structuralMode,
-                    phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null
+                    phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
+                    label: attemptOpts.label || null
                 };
             };
-
-            const portalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 2;
-            const attempts = portalMustCrossHeavy
-                ? [
-                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', structuralMode: !!opts.structuralMode, phasePolicy: opts.phasePolicy || null },
-                    { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off', structuralMode: !!opts.structuralMode, phasePolicy: opts.phasePolicy || null }
-                ]
-                : [{ budgetMs, scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', structuralMode: !!opts.structuralMode, phasePolicy: opts.phasePolicy || null }];
+            const attempts = buildAttemptPlan();
 
             let attemptsUsed = [];
             let lastAttempt = null;
-            for (const attempt of attempts) {
+            for (let i = 0; i < attempts.length; i++) {
+                const attempt = attempts[i];
                 const attemptResult = await runAttempt(attempt.budgetMs, attempt);
+                const quality = getSearchQuality(attemptResult);
                 attemptsUsed.push({
+                    label: attempt.label || null,
                     status: attemptResult.status,
                     budgetMs: attempt.budgetMs,
                     scoringMode: attempt.scoringMode,
                     portalBiasMode: attempt.portalBiasMode,
                     structuralMode: !!attempt.structuralMode,
                     phasePolicy: attempt.phasePolicy?.archetype || null,
-                    phaseTimeline: attemptResult?.debug?.phaseTimeline || []
+                    phaseTimeline: attemptResult?.debug?.phaseTimeline || [],
+                    quality
                 });
                 if (APP.State.ENGINE.flags?.refereeDebug || APP.State.ENGINE.flags?.debugSolver) {
                     const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
-                    console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] baseline attempt status=${attemptResult.status} scoringMode=${attempt.scoringMode} portalBiasMode=${attempt.portalBiasMode} budgetMs=${attempt.budgetMs}`);
+                    console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] baseline attempt=${attempt.label || 'unnamed'} status=${attemptResult.status} scoringMode=${attempt.scoringMode} portalBiasMode=${attempt.portalBiasMode} budgetMs=${attempt.budgetMs} branchFactor=${quality.branchFactor.toFixed(3)} maxProgress=${quality.maxProgress.toFixed(3)}`);
                 }
                 if (attemptResult.ok) {
                     const elapsedMs = Date.now() - started;
@@ -5107,6 +5190,7 @@
                     };
                 }
                 lastAttempt = attemptResult;
+                if (shouldStopAfterAttempt(attemptResult, quality, i, attempts.length)) break;
             }
 
             const elapsedMs = Date.now() - started;
@@ -5162,22 +5246,26 @@
                 ? (purpose === 'hint' ? 60000 : 180000)
                 : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
+            const tierBudgets = purpose === 'hint'
+                ? [5000, 15000, 60000]
+                : [15000, 60000, 180000];
+            const allowRandomizedExploration = !!opts.allowRandomizedExploration;
+            const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
             const stagesTried = [];
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
                 const budgets = this.allocateStageBudgets(totalBudgetMs, level.solverProfile);
+                const allowRandomThisTier = allowRandomizedExploration
+                    && (totalBudgetMs <= tierBudgets[0] || allowRandomizedExplorationOnExpensiveTiers);
                 let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'structural', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, purpose }), successMessage: 'Solved (structural strategy).', timeoutMessage: 'Structural strategy timed out.', failMessage: 'Structural strategy did not find a solution.' },
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, allowRandomizedExploration: allowRandomThisTier, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'structural', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, enableLegacyRescue: false, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (structural strategy).', timeoutMessage: 'Structural strategy timed out.', failMessage: 'Structural strategy did not find a solution.' },
                     { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
                 if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
                 return phaseOrder;
             };
-            const tierBudgets = purpose === 'hint'
-                ? [5000, 15000, 60000]
-                : [15000, 60000, 180000];
             // Keep must-pass/must-cross bounds active in primary stages so multi-mustCross levels
             // (e.g. level 130) don't blow up search breadth; reserve broad prune disabling for fallback.
             const phases = [
