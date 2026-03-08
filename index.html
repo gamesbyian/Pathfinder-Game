@@ -3577,6 +3577,7 @@
                     return !needGoal && needMust === 0 && needCross === 0;
                 },
                 async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options, debugStats = null) {
+                    try {
                     const mustCount = l.mustPassKeys.length;
                     const mustCrossCount = l.mustCrossKeys.length;
                     const cols = l.grid.w;
@@ -3725,6 +3726,17 @@
                         setDepthZeroReason(debugStats, 'no-start-neighbors', {
                             emptyStartNeighbors: true,
                             returnedBeforeExpansion: true
+                        });
+                        setPreExpansionAbort(debugStats, {
+                            code: 'no-legal-start-neighbors',
+                            message: `No legal start neighbors from gate ${startKey}.`,
+                            phase: 'after-start-neighbor-enumeration-before-root-expansion',
+                            source: 'SolverPolicies.makeHintPolicy/_solveInstance',
+                            details: {
+                                gateKey: startKey,
+                                filterBreakdown: fb || null,
+                                portalForced: !!trace?.portalForced
+                            }
                         });
                     }
                     const startSig = this._stateSignature(state, l, 0, options);
@@ -3921,9 +3933,37 @@
                             emptyStartNeighbors: startNeighbors.length === 0,
                             returnedBeforeExpansion: true
                         });
+                        if (!getPreExpansionAbort(debugStats)) {
+                            setPreExpansionAbort(debugStats, {
+                                code: startNeighbors.length === 0 ? 'no-legal-start-neighbors' : 'status-returned-before-expansion',
+                                message: startNeighbors.length === 0
+                                    ? `No legal start neighbors from gate ${startKey}.`
+                                    : 'Search exhausted before root candidate expansion.',
+                                phase: startNeighbors.length === 0
+                                    ? 'after-start-neighbor-enumeration-before-root-expansion'
+                                    : 'after-start-neighbor-enumeration-before-root-expansion',
+                                source: 'SolverPolicies.makeHintPolicy/_solveInstance',
+                                details: { gateKey: startKey, startNeighborsCount: startNeighbors.length }
+                            });
+                        }
                     }
                     recordPhaseAttempt('exhausted');
                     return null;
+                    } catch (err) {
+                        if (debugStats) {
+                            setDepthZeroReason(debugStats, 'thrown-before-expansion', { message: err?.message || 'unexpected-exception' });
+                            setPreExpansionAbort(debugStats, {
+                                code: 'unexpected-exception',
+                                message: err?.message || 'unexpected-exception',
+                                phase: Number.isFinite(getStartStateDebug(debugStats)?.startNeighborsCount)
+                                    ? 'after-start-neighbor-enumeration-before-root-expansion'
+                                    : 'before-start-neighbor-enumeration',
+                                source: 'SolverPolicies.makeHintPolicy/_solveInstance',
+                                details: { name: err?.name || null, gateKey: startKey }
+                            }, { overwrite: true });
+                        }
+                        throw err;
+                    }
                 },
                 async _solveTrapSpots(startKey, l, validSpotsSet, options) {
                     options = options || {};
@@ -4422,6 +4462,13 @@
                     if (!validity.ok) {
                         if (debugStats) {
                             debugStats.invalidReasons = validity.reasons || [];
+                            setPreExpansionAbort(debugStats, {
+                                code: 'invalid-start-state',
+                                message: (validity.reasons || []).join('; ') || 'Level validation failed before solver expansion.',
+                                phase: 'preflight-validation',
+                                source: 'PathfinderSolver.solve',
+                                details: { reasons: validity.reasons || [] }
+                            });
                             appendReachabilitySanityNote(level, debugStats, "invalid");
                             finalizeSolverDebugStats(debugStats, "invalid", perfStart);
                             return { ok: false, solution: null, debug: debugStats };
@@ -4630,6 +4677,13 @@
                             debugStats.prune.other++;
                             const suffix = gatePruneReasons.length ? ` (${gatePruneReasons.join('; ')})` : '';
                             if (!debugStats.depth0) debugStats.depth0 = { reason: "noViableGate", details: `all gates pruned by safe bounds${suffix}` };
+                            setPreExpansionAbort(debugStats, {
+                                code: 'no-start-node',
+                                message: `All gates pruned by safe bounds${suffix}`,
+                                phase: 'start-state-selection',
+                                source: 'PathfinderSolver.solve',
+                                details: { gatePruneReasons: gatePruneReasons.slice(0, 30) }
+                            });
                             appendReachabilitySanityNote(level, debugStats, "no-solution");
                             finalizeSolverDebugStats(debugStats, "no-solution", perfStart);
                             return { ok: false, solution: null, debug: debugStats };
@@ -6372,10 +6426,25 @@
                 const depthZeroDebug = ensureDepthZeroDebug(debug);
                 if (depthZeroDebug && !depthZeroDebug.startState && debug.startState) depthZeroDebug.startState = debug.startState;
                 if (depthZeroDebug && !depthZeroDebug.startNeighborTrace && debug.startNeighborTrace) depthZeroDebug.startNeighborTrace = debug.startNeighborTrace;
-                if ((debug.nodesExpanded || 0) === 0 && !depthZeroDebug?.depthZeroReason) {
+                const triageDiag = buildSearchDiagnostics(debug, debug.status || 'unknown');
+                if (triageDiag.preExpansionExit && !depthZeroDebug?.depthZeroReason) {
                     setDepthZeroReason(debug, debug.status === 'timeout' ? 'returned-without-expansion' : 'status-error-before-expansion', {
                         returnedBeforeExpansion: true,
                         stage: 'triage-resolve'
+                    });
+                }
+                if (triageDiag.preExpansionExit && !getPreExpansionAbort(debug)) {
+                    setPreExpansionAbort(debug, {
+                        code: debug.status === 'timeout' ? 'status-returned-before-expansion' : 'status-returned-before-expansion',
+                        message: `Solver returned status ${debug.status || 'unknown'} before root candidate expansion.`,
+                        phase: Number.isFinite(getStartStateDebug(debug)?.startNeighborsCount)
+                            ? 'after-start-neighbor-enumeration-before-root-expansion'
+                            : 'before-start-neighbor-enumeration',
+                        source: 'Referee.runStage2Fallback/resolveRun',
+                        details: {
+                            status: debug.status || 'unknown',
+                            statusPath: 'triage-resolve'
+                        }
                     });
                 }
                 if (debug.status === 'timeout') return withZeroExpansionSummary({ ok: false, status: 'timeout', solution: [], solutions: [], debug }, 'triage-resolve', 'legacy-solver');
@@ -6637,6 +6706,7 @@
                         rootMoveScores: Array.isArray(triageDebug?.rootMoveScores) ? triageDebug.rootMoveScores.slice(0, 20) : [],
                         rootSuppressionLog,
                         rootSearchSummary,
+                        preExpansionAbort: getPreExpansionAbort(triageDebug),
                         zeroExpansionSummary: triageZeroExpansionSummary
                     });
                     last = { ...triageResult, stage: plan.stage, message: triageResult.ok ? `Solved (${plan.variant}).` : `${plan.variant} ${triageResult.status || 'error'}.`, stagesTried };
@@ -6674,6 +6744,7 @@
                             rootMoveScores: a.rootMoveScores,
                             rootSuppressionLog: a.rootSuppressionLog,
                             rootSearchSummary: a.rootSearchSummary || null,
+                            preExpansionAbort: a.preExpansionAbort || null,
                             zeroExpansionSummary: a.zeroExpansionSummary || null
                         })),
                         debugNotes: triageAttempts.flatMap(a => Array.isArray(a.debugNotes) ? a.debugNotes : (a.debugNotes ? [a.debugNotes] : []))
@@ -6926,6 +6997,8 @@
                     }
                     const diagnostics = buildSearchDiagnostics(dbg, payload.rawStatus || payload.status || 'unknown');
                     const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy: dbg?.debug?.depthZeroDroppedBy || droppedBy });
+                    const preExpansionAbort = getPreExpansionAbort(dbg);
+                    if (preExpansionAbort) payload.preExpansionAbort = preExpansionAbort;
                     if (summary) payload.zeroExpansionSummary = summary;
                     if ((payload.rawStatus === 'timeout' || payload.rawStatus === 'no-solution-inconclusive' || payload.status === 'timeout' || payload.status === 'no-solution-inconclusive') && !payload.rootSearchSummary) {
                         payload.rootSearchSummary = makeRootSearchSummary(dbg, diagnostics);
@@ -6941,10 +7014,24 @@
                     }
                     recordDepthZeroHandoff(legacy?.debug || null, debug, context?.normalizedBy || 'legacy-wrapper');
                     const diagnostics = buildSearchDiagnostics(debug, fallbackStatus);
-                    if (diagnostics.returnedWithoutExpansion && !debug?.debug?.depthZeroReason) {
+                    if (diagnostics.preExpansionExit && !debug?.debug?.depthZeroReason) {
                         setDepthZeroReason(debug, fallbackStatus === 'error' ? 'status-error-before-expansion' : 'returned-without-expansion', {
                             normalizedBy: context?.normalizedBy || 'legacy-wrapper',
                             returnedBeforeExpansion: true
+                        });
+                    }
+                    if (diagnostics.preExpansionExit && !getPreExpansionAbort(debug)) {
+                        setPreExpansionAbort(debug, {
+                            code: 'status-returned-before-expansion',
+                            message: `Legacy solver wrapper observed ${fallbackStatus || 'unknown'} before root candidate expansion.`,
+                            phase: Number.isFinite(getStartStateDebug(debug)?.startNeighborsCount)
+                                ? 'after-start-neighbor-enumeration-before-root-expansion'
+                                : 'before-start-neighbor-enumeration',
+                            source: context?.normalizedBy || 'legacy-wrapper',
+                            details: {
+                                fallbackStatus: fallbackStatus || 'unknown',
+                                statusPath: context?.statusPath || 'legacy-run'
+                            }
                         });
                     }
                     const canonical = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
@@ -6962,6 +7049,7 @@
                         message: ok ? '' : 'No solution found.',
                         stagesTried: [],
                         debug,
+                        preExpansionAbort: getPreExpansionAbort(debug),
                         zeroExpansionSummary: makeZeroExpansionSummary({ statusPath: context?.statusPath || 'legacy-run', debug, diagnostics, droppedBy: context?.droppedBy || 'legacy-wrapper' })
                     };
                 };
@@ -7011,6 +7099,13 @@
                     } catch (legacyErr) {
                         const thrownDebug = createSolverDebugStats(debugLevel);
                         setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: legacyErr?.message || 'legacy-throw' });
+                        setPreExpansionAbort(thrownDebug, {
+                            code: 'unexpected-exception',
+                            message: legacyErr?.message || 'legacy-throw',
+                            phase: 'strategy-setup',
+                            source: 'APP.Solver.solveLevel/legacy-only',
+                            details: { name: legacyErr?.name || null }
+                        });
                         finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
                         legacy = { ok: false, solution: [], solutions: [], debug: thrownDebug, error: legacyErr };
                     }
@@ -7064,6 +7159,13 @@
                         } catch (legacyErr) {
                             const thrownDebug = createSolverDebugStats(debugLevel);
                             setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: legacyErr?.message || 'legacy-throw' });
+                        setPreExpansionAbort(thrownDebug, {
+                            code: 'unexpected-exception',
+                            message: legacyErr?.message || 'legacy-throw',
+                            phase: 'strategy-setup',
+                            source: 'APP.Solver.solveLevel/referee-fallback-legacy',
+                            details: { name: legacyErr?.name || null }
+                        });
                             finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
                             legacy = { ok: false, solution: [], solutions: [], debug: thrownDebug, error: legacyErr };
                         }
@@ -7130,6 +7232,7 @@
                     totalSolveTimeMs,
                     message: solverResult.message || '',
                     diagnostics: solverResult.diagnostics || null,
+                    preExpansionAbort: solverResult.preExpansionAbort || getPreExpansionAbort(debugInfo) || null,
                     zeroExpansionSummary: solverResult.zeroExpansionSummary || null,
                     rootSearchSummary: solverResult.rootSearchSummary || null
                 }, executionPath, 'audit-normalizer');
@@ -7153,6 +7256,13 @@
                 console.error('Solver error:', err);
                 const thrownDebug = createSolverDebugStats(debugLevel);
                 setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: err?.message || 'solver error' });
+                setPreExpansionAbort(thrownDebug, {
+                    code: 'unexpected-exception',
+                    message: err?.message || 'solver error',
+                    phase: 'strategy-setup',
+                    source: 'APP.Solver.solveLevel',
+                    details: { name: err?.name || null }
+                });
                 finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
                 return attachDepthZeroAudit({
                     ok: false,
@@ -7654,12 +7764,14 @@
                     failMemoUsed: true,
                     invalidReasons: [],
                     depth0: null,
+                    preExpansionAbort: null,
                     startState: null,
                     startNeighborTrace: null,
                     debug: {
                         startState: null,
                         startNeighborTrace: null,
                         depthZeroReason: null,
+                        preExpansionAbort: null,
                         rootSuppressionLog: []
                     },
                     rootCandidatesGenerated: 0,
@@ -7697,13 +7809,47 @@
                         startState: null,
                         startNeighborTrace: null,
                         depthZeroReason: null,
+                        preExpansionAbort: null,
                         depthZeroCaptured: false,
                         depthZeroDroppedBy: null,
                         rootSuppressionLog: []
                     };
                 }
+                if (!Object.prototype.hasOwnProperty.call(debugStats.debug, 'preExpansionAbort')) debugStats.debug.preExpansionAbort = null;
                 if (!Array.isArray(debugStats.debug.rootSuppressionLog)) debugStats.debug.rootSuppressionLog = [];
                 return debugStats.debug;
+            }
+
+            function sanitizePreExpansionAbort(rawAbort = null) {
+                if (!rawAbort || typeof rawAbort !== 'object') return null;
+                const code = String(rawAbort.code || '').trim();
+                const message = String(rawAbort.message || '').trim();
+                const phase = String(rawAbort.phase || '').trim();
+                const source = String(rawAbort.source || '').trim();
+                if (!code || !message || !phase || !source) return null;
+                return {
+                    code,
+                    message,
+                    phase,
+                    source,
+                    details: (rawAbort.details && typeof rawAbort.details === 'object') ? rawAbort.details : undefined
+                };
+            }
+
+            function setPreExpansionAbort(debugStats, rawAbort = null, options = {}) {
+                if (!debugStats || typeof debugStats !== 'object') return null;
+                const normalized = sanitizePreExpansionAbort(rawAbort);
+                if (!normalized) return null;
+                const existing = sanitizePreExpansionAbort(debugStats?.debug?.preExpansionAbort || debugStats?.preExpansionAbort || null);
+                if (existing && !options?.overwrite) return existing;
+                const dbg = ensureDepthZeroDebug(debugStats);
+                debugStats.preExpansionAbort = normalized;
+                if (dbg) dbg.preExpansionAbort = normalized;
+                return normalized;
+            }
+
+            function getPreExpansionAbort(debug = {}) {
+                return sanitizePreExpansionAbort(debug?.debug?.preExpansionAbort || debug?.preExpansionAbort || null);
             }
 
             function setDepthZeroReason(debugStats, reason, meta = {}) {
@@ -7759,8 +7905,13 @@
                     : (Array.isArray(startTrace?.finalNeighbors) ? startTrace.finalNeighbors.slice(0, 12) : []);
                 const droppedAt = depthZeroDbg?.depthZeroDroppedBy || droppedBy || 'unknown';
                 const missingReason = captured ? 'depth-zero-debug-lost-in-wrapper' : 'depth-zero-debug-never-captured';
+                const preExpansionAbort = getPreExpansionAbort(debug);
                 return {
                     reason: getDepthZeroReason(debug, d.budgetExhausted ? 'timeout' : null) || missingReason,
+                    preExpansionAbortCode: preExpansionAbort?.code || null,
+                    preExpansionAbortMessage: preExpansionAbort?.message || null,
+                    preExpansionAbortPhase: preExpansionAbort?.phase || null,
+                    preExpansionAbortSource: preExpansionAbort?.source || null,
                     startNeighborsCount: Number.isFinite(startState?.startNeighborsCount) ? startState.startNeighborsCount : null,
                     startNeighborKeys: startNeighborKeys.length > 0 ? startNeighborKeys : null,
                     statusPath,
@@ -7785,6 +7936,9 @@
                 const budgetExhausted = normalizedStatus === 'timeout';
                 const frontierExhausted = normalizedStatus === 'no-solution-inconclusive' && !budgetExhausted;
                 const returnedWithoutExpansion = nodesExpanded === 0 || (nodesExpanded <= 2 && depthReached <= 1 && branchesGenerated <= 2);
+                const rootCandidatesGenerated = Math.max(0, Number(debug?.rootCandidatesGenerated) || 0);
+                const rootCandidatesExpanded = Math.max(0, Number(debug?.rootCandidatesExpanded) || 0);
+                const preExpansionExit = nodesExpanded === 0 && branchesGenerated === 0 && rootCandidatesGenerated === 0 && rootCandidatesExpanded === 0 && returnedWithoutExpansion;
                 const disabledPrunesApplied = Array.isArray(debug?.disabledPrunes) ? debug.disabledPrunes.slice() : [];
                 return {
                     nodesExpanded,
@@ -7796,6 +7950,7 @@
                     frontierExhausted,
                     budgetExhausted,
                     returnedWithoutExpansion,
+                    preExpansionExit,
                     disabledPrunesApplied
                 };
             }
@@ -7811,6 +7966,7 @@
                 if (!d.returnedWithoutExpansion && d.nodesExpanded <= 0 && generated <= 0 && expanded <= 0 && suppressedByMemo <= 0 && suppressedByDominance <= 0) return null;
                 const firstRootMoves = Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 8) : [];
                 const totalSuppressed = suppressedByMemo + suppressedByDominance;
+                const preExpansionAbort = getPreExpansionAbort(debug);
                 return {
                     rootCandidatesGenerated: generated,
                     rootCandidatesExpanded: expanded,
@@ -7820,7 +7976,8 @@
                     hasRootSuppressionLog: Array.isArray(debug?.debug?.rootSuppressionLog) && debug.debug.rootSuppressionLog.length > 0,
                     dominanceLikelyOverAggressive: generated > 0 && suppressedByDominance >= Math.max(2, Math.ceil(generated * 0.7)) && expanded <= Math.ceil(generated * 0.2),
                     memoLikelyMergingDistinctRoots: generated > 0 && suppressedByMemo >= Math.max(2, Math.ceil(generated * 0.6)) && expanded <= Math.ceil(generated * 0.25),
-                    suppressionRatio: generated > 0 ? Number((totalSuppressed / generated).toFixed(3)) : null
+                    suppressionRatio: generated > 0 ? Number((totalSuppressed / generated).toFixed(3)) : null,
+                    preExpansionAbortCode: preExpansionAbort?.code || null
                 };
             }
             function withZeroExpansionSummary(entry = {}, statusPath = 'unknown', droppedBy = 'unknown') {
@@ -7829,8 +7986,22 @@
                 const status = entry?.status || entry?.rawStatus || 'unknown';
                 const diagnostics = buildSearchDiagnostics(debug, status);
                 const dz = ensureDepthZeroDebug(debug);
+                if (diagnostics.preExpansionExit && !getPreExpansionAbort(debug)) {
+                    const startState = getStartStateDebug(debug);
+                    setPreExpansionAbort(debug, {
+                        code: 'status-returned-before-expansion',
+                        message: `Solver returned status ${status || 'unknown'} before root candidate expansion.`,
+                        phase: Number.isFinite(startState?.startNeighborsCount)
+                            ? 'after-start-neighbor-enumeration-before-root-expansion'
+                            : 'before-start-neighbor-enumeration',
+                        source: droppedBy || 'withZeroExpansionSummary',
+                        details: { status: status || 'unknown', statusPath }
+                    });
+                }
                 if (dz && !hasDepthZeroPayload(debug) && dz.depthZeroCaptured && droppedBy && !dz.depthZeroDroppedBy) dz.depthZeroDroppedBy = droppedBy;
                 const summary = makeZeroExpansionSummary({ statusPath, debug, diagnostics, droppedBy: debug?.debug?.depthZeroDroppedBy || droppedBy });
+                const preExpansionAbort = getPreExpansionAbort(debug);
+                if (preExpansionAbort) entry.preExpansionAbort = preExpansionAbort;
                 if (summary) entry.zeroExpansionSummary = summary;
                 if (!entry.rootSearchSummary && (status === 'timeout' || status === 'no-solution-inconclusive')) {
                     const rootSummary = makeRootSearchSummary(debug, diagnostics);
@@ -11317,7 +11488,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, preExpansionAbort: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriage: null }
@@ -11401,6 +11572,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         finalSolvedBy: hintRes?.finalSolvedBy || 'none',
                         totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
                         diagnostics: hintRes?.diagnostics || null,
+                        preExpansionAbort: hintRes?.preExpansionAbort || null,
                         zeroExpansionSummary: hintRes?.zeroExpansionSummary || null,
                         rootSearchSummary: hintRes?.rootSearchSummary || null,
                         rootCandidatesGenerated: Number.isFinite(hintRes?.debug?.rootCandidatesGenerated) ? hintRes.debug.rootCandidatesGenerated : null,
@@ -11448,6 +11620,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         finalSolvedBy: hintRes?.finalSolvedBy || 'none',
                         totalSolveTimeMs: Number.isFinite(hintRes?.totalSolveTimeMs) ? hintRes.totalSolveTimeMs : 0,
                         diagnostics: hintRes?.diagnostics || null,
+                        preExpansionAbort: hintRes?.preExpansionAbort || null,
                         zeroExpansionSummary: hintRes?.zeroExpansionSummary || null,
                         rootSearchSummary: hintRes?.rootSearchSummary || null,
                         rootCandidatesGenerated: Number.isFinite(hintRes?.debug?.rootCandidatesGenerated) ? hintRes.debug.rootCandidatesGenerated : null,
@@ -11495,7 +11668,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     legacyFallbackTimeMs: null,
                     finalStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
                     finalSolvedBy: 'none',
-                    totalSolveTimeMs: 0
+                    totalSolveTimeMs: 0,
+                    preExpansionAbort: null
                 };
                 levelEntry.newHint.attemptHistory.push(failedAttempt);
                 finalAttempt = failedAttempt;
@@ -11520,6 +11694,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.finalStatus = finalAttempt?.finalStatus || finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.finalSolvedBy = finalAttempt?.finalSolvedBy || 'none';
             levelEntry.newHint.totalSolveTimeMs = Number.isFinite(finalAttempt?.totalSolveTimeMs) ? finalAttempt.totalSolveTimeMs : 0;
+            levelEntry.newHint.preExpansionAbort = finalAttempt?.preExpansionAbort || null;
             levelEntry.newHint.zeroExpansionSummary = finalAttempt?.zeroExpansionSummary || null;
             levelEntry.newHint.rootSearchSummary = finalAttempt?.rootSearchSummary || null;
             levelEntry.newHint.rootCandidatesGenerated = Number.isFinite(finalAttempt?.rootCandidatesGenerated) ? finalAttempt.rootCandidatesGenerated : null;
