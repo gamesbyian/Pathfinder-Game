@@ -2361,22 +2361,118 @@
                         base.profiles.transition.objectivePull = 1.35;
                         base.profiles.knot.knotPull = 1.2;
                         base.profiles.finish.goalAttraction = 1.95;
+                    } else if (archetype === 'intersection-knot') {
+                        base.thresholds.transitionProgress = 0.32;
+                        base.thresholds.knotProgress = 0.5;
+                        base.thresholds.knotIntsRemainingMax = 3;
+                        base.profiles.knot.knotPull = 1.7;
+                        base.profiles.transition.knotPull = 0.85;
+                    } else if (archetype === 'objective-order') {
+                        base.thresholds.transitionProgress = 0.28;
+                        base.thresholds.knotProgress = 0.56;
+                        base.profiles.transition.objectivePull = 1.35;
+                        base.profiles.knot.objectivePull = 1.2;
+                    } else if (archetype === 'portal-long-route-hybrid') {
+                        base.thresholds.transitionProgress = 0.26;
+                        base.thresholds.finishProgress = 0.78;
+                        base.thresholds.finishGoalDist = 5;
+                        base.profiles.transition.objectivePull = 1.25;
+                        base.profiles.finish.goalAttraction = 1.85;
                     }
                     return base;
                 },
-                _resolvePhasePolicy(l, options = {}) {
-                    const archetype = l?.solverProfile?.archetype || 'corridor-commitment';
+                deriveDynamicPhasePolicy(profile = {}, runtimeState = {}) {
+                    const hypothesis = runtimeState?.hypothesis || profile?.hypothesisModel || {};
+                    const archetype = runtimeState?.activeArchetype
+                        || hypothesis?.activeArchetype
+                        || hypothesis?.primaryArchetype
+                        || profile?.archetype
+                        || 'corridor-commitment';
                     const base = this._phasePolicyFromArchetype(archetype);
-                    const override = options?.phasePolicy;
-                    if (!override || typeof override !== 'object') return { ...base, archetype };
+                    const topology = profile?.topology || {};
+                    const objectiveModel = profile?.objectiveModel || {};
+                    const portalHints = profile?.portalHints || {};
+                    const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
+                    const objectiveCount = Array.isArray(objectiveModel.features) ? objectiveModel.features.length : Math.max(0, Number(profile?.objectiveCount) || 0);
+                    const articulationRatio = (Number(topology.articulationPointCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
+                    const bridgeRatio = (Number(topology.bridgeCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
+                    const corridorRatio = Math.max(0, Number(topology.corridorRatio) || 0);
+                    const mandatoryFamilies = Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies.length : 0;
+                    const objectiveDensity = objectiveCount / Math.max(1, Number(topology.walkableCellCount) || 1);
+                    const objectiveOrderComplexity = objectiveCount >= 3 ? 1 : (objectiveCount >= 2 ? 0.55 : 0.2);
+                    const knotConfidence = knotCandidates.length > 0 ? Math.max(0, Number(knotCandidates[0]?.confidence) || 0) : 0;
+                    const confidence = Math.max(0, Math.min(1, Number(hypothesis?.confidence) || 0));
+
+                    const thresholds = { ...base.thresholds };
+                    thresholds.transitionProgress = Math.max(0.16, Math.min(0.66,
+                        thresholds.transitionProgress
+                        - corridorRatio * 0.08
+                        - bridgeRatio * 0.12
+                        - mandatoryFamilies * 0.02
+                        - objectiveOrderComplexity * 0.02
+                        + objectiveDensity * 0.2
+                    ));
+                    thresholds.knotProgress = Math.max(0.32, Math.min(0.82,
+                        thresholds.knotProgress
+                        - articulationRatio * 0.35
+                        - knotConfidence * 0.1
+                        + (objectiveCount <= 1 ? 0.08 : 0)
+                    ));
+                    thresholds.finishProgress = Math.max(0.62, Math.min(0.95,
+                        thresholds.finishProgress
+                        - mandatoryFamilies * 0.025
+                        - bridgeRatio * 0.18
+                        + objectiveDensity * 0.22
+                        + confidence * 0.03
+                    ));
+                    thresholds.finishGoalDist = Math.max(3, Math.min(8,
+                        thresholds.finishGoalDist
+                        + (mandatoryFamilies > 0 ? 1 : 0)
+                        + Math.round(corridorRatio * 2)
+                    ));
+                    thresholds.knotObjectivesRemainingMax = Math.max(1, Math.min(4,
+                        thresholds.knotObjectivesRemainingMax
+                        + (objectiveCount >= 4 ? 1 : 0)
+                        + (knotConfidence > 0.72 ? 1 : 0)
+                    ));
+
                     return {
                         archetype,
-                        thresholds: { ...base.thresholds, ...(override.thresholds || {}) },
+                        thresholds,
                         profiles: {
-                            harvest: { ...base.profiles.harvest, ...(override.profiles?.harvest || {}) },
-                            transition: { ...base.profiles.transition, ...(override.profiles?.transition || {}) },
-                            knot: { ...base.profiles.knot, ...(override.profiles?.knot || {}) },
-                            finish: { ...base.profiles.finish, ...(override.profiles?.finish || {}) }
+                            harvest: { ...base.profiles.harvest },
+                            transition: { ...base.profiles.transition },
+                            knot: { ...base.profiles.knot },
+                            finish: { ...base.profiles.finish }
+                        },
+                        derivedInputs: {
+                            articulationRatio: Number(articulationRatio.toFixed(3)),
+                            bridgeRatio: Number(bridgeRatio.toFixed(3)),
+                            corridorRatio: Number(corridorRatio.toFixed(3)),
+                            objectiveDensity: Number(objectiveDensity.toFixed(3)),
+                            objectiveOrderComplexity: Number(objectiveOrderComplexity.toFixed(3)),
+                            mandatoryFamilies,
+                            knotConfidence: Number(knotConfidence.toFixed(3)),
+                            hypothesisConfidence: Number(confidence.toFixed(3))
+                        }
+                    };
+                },
+                _resolvePhasePolicy(l, options = {}) {
+                    const dynamic = this.deriveDynamicPhasePolicy(l?.solverProfile || {}, {
+                        hypothesis: options?.controlPlane?.activeHypothesis || l?.solverProfile?.hypothesisModel || null,
+                        activeArchetype: options?.controlPlane?.activeHypothesis?.archetype || null
+                    });
+                    const override = options?.phasePolicy;
+                    if (!override || typeof override !== 'object') return dynamic;
+                    return {
+                        archetype: dynamic.archetype,
+                        derivedInputs: dynamic.derivedInputs,
+                        thresholds: { ...dynamic.thresholds, ...(override.thresholds || {}) },
+                        profiles: {
+                            harvest: { ...dynamic.profiles.harvest, ...(override.profiles?.harvest || {}) },
+                            transition: { ...dynamic.profiles.transition, ...(override.profiles?.transition || {}) },
+                            knot: { ...dynamic.profiles.knot, ...(override.profiles?.knot || {}) },
+                            finish: { ...dynamic.profiles.finish, ...(override.profiles?.finish || {}) }
                         }
                     };
                 },
@@ -2420,7 +2516,9 @@
                             remainingObjectives: derived.remainingObjectives,
                             remainingIntersections: derived.remainingIntersections,
                             goalDist: Number.isFinite(derived.goalDist) ? derived.goalDist : null,
-                            slack: Number.isFinite(derived.slack) ? derived.slack : null
+                            slack: Number.isFinite(derived.slack) ? derived.slack : null,
+                            thresholdInputs: state.phasePolicy?.derivedInputs || null,
+                            thresholds: state.phasePolicy?.thresholds || null
                         };
                         if (Array.isArray(state.phaseTimeline)) state.phaseTimeline.push(event);
                         if (debugStats) {
@@ -3846,6 +3944,7 @@
                         templateCommitment = null,
                         portalLockPolicy = null,
                         knotBudgetPolicy = null,
+                        controlPlane = null,
                         gateBeamTopK = 0,
                         debugGateVariant = false
                     } = options;
@@ -4005,6 +4104,7 @@
                                 templateCommitment,
                                 portalLockPolicy,
                                 knotBudgetPolicy,
+                                controlPlane,
                                 startGateArchetype: state?.startGateArchetype || null
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
@@ -4101,7 +4201,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -4362,6 +4462,7 @@
                             templateCommitment,
                             portalLockPolicy,
                             knotBudgetPolicy,
+                            controlPlane,
                             gateBeamTopK,
                             debugGateVariant
                         });
@@ -5168,7 +5269,17 @@
                     : 0,
                 chokeScoreMap
             };
-            const archetype = portalLoad > 0 ? 'portal-bridge' : (openness > 0.75 ? 'open-harvest' : 'corridor-commitment');
+            const hypothesisModel = this.buildHypothesisModel({
+                routePressure,
+                openness,
+                objectiveCount: objectiveFeatures.length,
+                topology,
+                portalHints: portalHintModel,
+                knotCandidates: rankedKnotCandidates,
+                objectiveModel: { features: objectiveFeatures, priorityMap: objectivePriority },
+                symmetryModel
+            });
+            const archetype = hypothesisModel.primaryArchetype || (portalLoad > 0 ? 'portal-bridge' : (openness > 0.75 ? 'open-harvest' : 'corridor-commitment'));
             const templateLibrary = this.buildTemplateLibrary();
             const templateCandidates = this.selectTemplateCandidates({
                 archetype,
@@ -5179,7 +5290,8 @@
                 topology,
                 portalHints: portalHintModel,
                 symmetryModel,
-                knotCandidates: rankedKnotCandidates
+                knotCandidates: rankedKnotCandidates,
+                hypothesisModel
             }, templateLibrary);
 
             return {
@@ -5203,10 +5315,121 @@
                 knotCandidates: rankedKnotCandidates,
                 symmetryModel,
                 archetype,
+                hypothesisModel,
                 phasePolicy: SolverCore._phasePolicyFromArchetype(archetype),
                 templateLibrary,
                 templateCandidates
             };
+        },
+
+        buildHypothesisModel(profile = {}) {
+            const topology = profile?.topology || {};
+            const portalHints = profile?.portalHints || {};
+            const symmetryModel = profile?.symmetryModel || {};
+            const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
+            const objectiveModel = profile?.objectiveModel || {};
+            const objectiveCount = Number(profile?.objectiveCount) || (Array.isArray(objectiveModel.features) ? objectiveModel.features.length : 0);
+            const routePressure = Math.max(0, Number(profile?.routePressure) || 0);
+            const openness = Math.max(0, Number(profile?.openness) || 0);
+            const corridorRatio = Math.max(0, Number(topology.corridorRatio) || 0);
+            const articulationRatio = (Number(topology.articulationPointCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
+            const bridgeRatio = (Number(topology.bridgeCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
+            const mandatoryFamilies = Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies.length : 0;
+            const knotConfidence = knotCandidates.length > 0 ? Math.max(0, Number(knotCandidates[0]?.confidence) || 0) : 0;
+            const objectiveOrderComplexity = objectiveCount >= 4 ? 1 : (objectiveCount >= 3 ? 0.75 : (objectiveCount >= 2 ? 0.45 : 0.2));
+            const symmetryConfidence = Math.max(0, Number(symmetryModel.confidence) || 0);
+
+            const rawScores = {
+                'corridor-commitment': 0.22 + corridorRatio * 0.68 + articulationRatio * 0.28 + Math.max(0, routePressure - 0.6) * 0.35,
+                'open-harvest': 0.2 + openness * 0.72 + Math.max(0, 1 - corridorRatio) * 0.2,
+                'portal-bridge': 0.2 + mandatoryFamilies * 0.24 + bridgeRatio * 0.45 + (profile?.portalHints?.families?.length > 0 ? 0.2 : 0),
+                'intersection-knot': 0.18 + knotConfidence * 0.65 + articulationRatio * 0.4 + Math.max(0, Number(profile?.objectiveCount || 0) - 1) * 0.03,
+                'objective-order': 0.16 + objectiveOrderComplexity * 0.62 + Math.max(0, routePressure - 0.55) * 0.22,
+                'portal-long-route-hybrid': 0.15 + (mandatoryFamilies > 0 ? 0.34 : 0) + Math.max(0, routePressure - 0.7) * 0.5 + bridgeRatio * 0.2
+            };
+            if (symmetryConfidence > 0.72) rawScores['objective-order'] += 0.1;
+            const entries = Object.entries(rawScores).map(([id, score]) => [id, Math.max(0.01, Number(score) || 0)]);
+            const total = entries.reduce((sum, [, score]) => sum + score, 0) || 1;
+            const archetypeScores = {};
+            entries.forEach(([id, score]) => {
+                archetypeScores[id] = Number((score / total).toFixed(4));
+            });
+            const ranked = entries.sort((a, b) => b[1] - a[1]).map(([id]) => id);
+            const primaryArchetype = ranked[0] || 'corridor-commitment';
+            const secondaryArchetypes = ranked.slice(1, 4).map(id => ({ id, confidence: archetypeScores[id] || 0 }));
+            return {
+                archetypeScores,
+                primaryArchetype,
+                secondaryArchetypes,
+                confidence: archetypeScores[primaryArchetype] || 0,
+                activeArchetype: primaryArchetype,
+                switchReason: 'initial'
+            };
+        },
+
+        createControlPlane(profile = {}) {
+            const baseHypothesis = profile?.hypothesisModel && typeof profile.hypothesisModel === 'object'
+                ? profile.hypothesisModel
+                : this.buildHypothesisModel(profile);
+            const ranked = Object.entries(baseHypothesis.archetypeScores || {})
+                .sort((a, b) => b[1] - a[1])
+                .map(([id, confidence]) => ({ archetype: id, confidence: Number(confidence) || 0 }));
+            return {
+                rankedHypotheses: ranked,
+                activeIndex: 0,
+                activeHypothesis: {
+                    archetype: baseHypothesis.primaryArchetype || (ranked[0]?.archetype || 'corridor-commitment'),
+                    confidence: Number(baseHypothesis.confidence) || Number(ranked[0]?.confidence) || 0,
+                    switchReason: baseHypothesis.switchReason || 'initial',
+                    attempts: 0
+                },
+                history: []
+            };
+        },
+
+        updateHypothesisConfidence(controlPlane, telemetry = {}) {
+            if (!controlPlane?.activeHypothesis) return null;
+            const progress = Math.max(0, Math.min(1, Number(telemetry?.phaseProgress) || 0));
+            const objectiveReduction = Math.max(0, Math.min(1, Number(telemetry?.objectiveReduction) || 0));
+            const portalLockStability = Math.max(0, Math.min(1, Number(telemetry?.portalLockStability) || 0));
+            const knotUtilization = Math.max(0, Math.min(1, Number(telemetry?.knotZoneUtilization) || 0));
+            const solvedBonus = telemetry?.status === 'solved' ? 0.28 : 0;
+            const stallPenalty = telemetry?.status === 'no-solution-inconclusive' && progress < 0.2 ? 0.12 : 0;
+            const delta = (progress * 0.26) + (objectiveReduction * 0.28) + (portalLockStability * 0.2) + (knotUtilization * 0.16) + solvedBonus - stallPenalty - 0.09;
+            const nextConfidence = Math.max(0.02, Math.min(0.99, (Number(controlPlane.activeHypothesis.confidence) || 0) + delta));
+            controlPlane.activeHypothesis.confidence = Number(nextConfidence.toFixed(3));
+            controlPlane.activeHypothesis.attempts = (controlPlane.activeHypothesis.attempts || 0) + 1;
+            controlPlane.history.push({
+                archetype: controlPlane.activeHypothesis.archetype,
+                confidence: controlPlane.activeHypothesis.confidence,
+                delta: Number(delta.toFixed(3)),
+                telemetry,
+                switched: false
+            });
+            return controlPlane.activeHypothesis.confidence;
+        },
+
+        maybeSwitchHypothesis(controlPlane, reason = 'stalled') {
+            if (!controlPlane?.activeHypothesis || !Array.isArray(controlPlane?.rankedHypotheses)) return false;
+            const currentConf = Number(controlPlane.activeHypothesis.confidence) || 0;
+            const nextIdx = (controlPlane.activeIndex || 0) + 1;
+            if (currentConf >= 0.26 || nextIdx >= controlPlane.rankedHypotheses.length) return false;
+            const candidate = controlPlane.rankedHypotheses[nextIdx];
+            if (!candidate) return false;
+            controlPlane.activeIndex = nextIdx;
+            controlPlane.activeHypothesis = {
+                archetype: candidate.archetype,
+                confidence: Math.max(0.08, Number(candidate.confidence) || 0.08),
+                switchReason: reason,
+                attempts: 0
+            };
+            controlPlane.history.push({
+                switched: true,
+                reason,
+                to: controlPlane.activeHypothesis.archetype,
+                confidence: controlPlane.activeHypothesis.confidence
+            });
+            return true;
         },
 
 
@@ -5385,9 +5608,15 @@
                     transformScores: (symmetryModel.transformScores && typeof symmetryModel.transformScores === 'object') ? symmetryModel.transformScores : {}
                 },
                 archetype: safe.archetype || 'corridor-commitment',
+                hypothesisModel: (safe.hypothesisModel && typeof safe.hypothesisModel === 'object')
+                    ? safe.hypothesisModel
+                    : this.buildHypothesisModel({ ...safe, topology, objectiveModel, symmetryModel, knotCandidates, portalHints }),
                 phasePolicy: (safe.phasePolicy && typeof safe.phasePolicy === 'object')
                     ? safe.phasePolicy
-                    : SolverCore._phasePolicyFromArchetype(safe.archetype || 'corridor-commitment'),
+                    : SolverCore.deriveDynamicPhasePolicy(safe, {
+                        hypothesis: safe.hypothesisModel || null,
+                        activeArchetype: safe.hypothesisModel?.primaryArchetype || safe.archetype || 'corridor-commitment'
+                    }),
                 templateLibrary,
                 templateCandidates
             };
@@ -5412,8 +5641,9 @@
         async runBaselineStage(level, budgetMs, opts = {}) {
             const started = Date.now();
             const profile = opts.profile || level?.solverProfile || null;
+            const controlPlane = opts.controlPlane || this.createControlPlane(profile || {});
             const randomExplorationEnabled = !!opts.allowRandomizedExploration;
-            const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0 };
+            const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
             const buildAttemptPlan = () => {
                 const total = Math.max(1, Math.floor(budgetMs || 1));
                 const routePressure = Math.max(0, profile?.routePressure || 0);
@@ -5462,7 +5692,7 @@
                             scoringMode: 'modern',
                             portalBiasMode: template?.weightOverrides?.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
                             structuralMode: true,
-                            phasePolicy: opts.phasePolicy || null,
+                            phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
                             structuralTemplate: template,
                             objectiveTrack: objectiveTracks[idx % Math.max(1, objectiveTracks.length)] || defaultTrack,
                             templateCommitment: commonTemplateCommitment,
@@ -5478,7 +5708,7 @@
                         scoringMode: 'modern',
                         portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
                         structuralMode: true,
-                        phasePolicy: opts.phasePolicy || null,
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
                         structuralTemplate: null,
                         objectiveTrack: defaultTrack,
                         templateCommitment: commonTemplateCommitment,
@@ -5493,7 +5723,7 @@
                         scoringMode: 'modern',
                         portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
                         structuralMode: true,
-                        phasePolicy: opts.phasePolicy || null,
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
                         objectiveTrack: defaultTrack,
                         templateCommitment: commonTemplateCommitment,
                         portalLockPolicy: commonPortalLockPolicy,
@@ -5506,7 +5736,7 @@
                     scoringMode: 'modern',
                     portalBiasMode: 'off',
                     structuralMode: true,
-                    phasePolicy: opts.phasePolicy || null,
+                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
                     objectiveTrack: defaultTrack,
                     templateCommitment: commonTemplateCommitment,
                     portalLockPolicy: commonPortalLockPolicy,
@@ -5572,10 +5802,16 @@
                     objectiveTrack: attemptOpts.objectiveTrack || null,
                     templateCommitment: attemptOpts.templateCommitment || null,
                     portalLockPolicy: attemptOpts.portalLockPolicy || null,
-                    knotBudgetPolicy: attemptOpts.knotBudgetPolicy || null
+                    knotBudgetPolicy: attemptOpts.knotBudgetPolicy || null,
+                    controlPlane
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
+                debug.primaryArchetype = profile?.hypothesisModel?.primaryArchetype || controlPlane?.activeHypothesis?.archetype || profile?.archetype || null;
+                debug.archetypeScores = profile?.hypothesisModel?.archetypeScores || null;
+                debug.chosenHypothesis = controlPlane?.activeHypothesis ? { ...controlPlane.activeHypothesis } : null;
+                debug.hypothesisHistory = Array.isArray(controlPlane?.history) ? controlPlane.history.slice(-8) : [];
+                debug.derivedPhaseThresholds = attemptOpts.phasePolicy?.thresholds || null;
                 const status = r?.ok && solution.length > 0
                     ? 'solved'
                     : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error'));
@@ -5617,6 +5853,13 @@
                 const attemptResult = await runAttempt(attempt.budgetMs, attempt);
                 const quality = getSearchQuality(attemptResult);
                 const templateScore = templatePerfScore(quality, attemptResult);
+                this.updateHypothesisConfidence(controlPlane, {
+                    phaseProgress: quality.maxProgress,
+                    objectiveReduction: Number.isFinite(quality.finalObjectives) ? Math.max(0, 1 - (quality.finalObjectives / Math.max(1, profile?.objectiveCount || 1))) : 0,
+                    portalLockStability: attemptResult?.debug?.portalOscillationCount ? Math.max(0, 1 - Math.min(1, attemptResult.debug.portalOscillationCount / 4)) : 0.5,
+                    knotZoneUtilization: attemptResult?.debug?.knotSelectionEvents?.length > 0 ? 0.8 : 0.35,
+                    status: attemptResult?.status
+                });
                 const isTemplateAttempt = !!attempt.structuralTemplate;
                 if (isTemplateAttempt) {
                     templateDiagnostics.attempts.push({
@@ -5649,7 +5892,8 @@
                     phasePolicy: attempt.phasePolicy?.archetype || null,
                     phaseTimeline: attemptResult?.debug?.phaseTimeline || [],
                     quality,
-                    structuralTemplate: attempt.structuralTemplate ? { id: attempt.structuralTemplate.id, confidence: attempt.structuralTemplate.confidence || 0 } : null
+                    structuralTemplate: attempt.structuralTemplate ? { id: attempt.structuralTemplate.id, confidence: attempt.structuralTemplate.confidence || 0 } : null,
+                    hypothesis: controlPlane?.activeHypothesis ? { ...controlPlane.activeHypothesis } : null
                 });
                 if (APP.State.ENGINE.flags?.refereeDebug || APP.State.ENGINE.flags?.debugSolver) {
                     const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
@@ -5666,10 +5910,14 @@
                         stats: { debug: attemptResult.debug, templateDiagnostics },
                         scoringMode: attempt.scoringMode,
                         attempts: attemptsUsed,
-                        templateDiagnostics
+                        templateDiagnostics,
+                        controlPlane
                     };
                 }
                 lastAttempt = attemptResult;
+                if (!attemptResult.ok && quality.maxProgress < 0.22) {
+                    this.maybeSwitchHypothesis(controlPlane, 'low-progress');
+                }
                 if (shouldStopAfterAttempt(attemptResult, quality, i, attempts.length)) break;
             }
 
@@ -5681,7 +5929,8 @@
                 stats: { debug: lastAttempt ? lastAttempt.debug : {}, templateDiagnostics },
                 attempts: attemptsUsed,
                 scoringMode: lastAttempt ? lastAttempt.scoringMode : 'modern',
-                templateDiagnostics
+                templateDiagnostics,
+                controlPlane
             };
         },
 
@@ -5733,18 +5982,24 @@
             const allowRandomizedExploration = !!opts.allowRandomizedExploration;
             const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
             const stagesTried = [];
+            const controlPlane = this.createControlPlane(level.solverProfile || {});
+            const lowComplexityLevel = (level.solverProfile?.objectiveCount || 0) <= 1
+                && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
+                && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
+                && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
                 const budgets = this.allocateStageBudgets(totalBudgetMs, level.solverProfile);
                 const allowRandomThisTier = allowRandomizedExploration
                     && (totalBudgetMs <= tierBudgets[0] || allowRandomizedExplorationOnExpensiveTiers);
-                let phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, allowRandomizedExploration: allowRandomThisTier, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'structural', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, enableLegacyRescue: false, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (structural strategy).', timeoutMessage: 'Structural strategy timed out.', failMessage: 'Structural strategy did not find a solution.' },
-                    { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
+                const phaseOrder = [
+                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: allowRandomThisTier, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'strict-structural', budgetMs: Math.max(500, Math.floor(budgets.stage2 * 0.34)), run: () => this.runBaselineStage(level, Math.max(500, Math.floor(budgets.stage2 * 0.34)), { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: false, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (strict structural hypothesis).', timeoutMessage: 'Strict structural hypothesis timed out.', failMessage: 'strict structural fail' },
+                    { stage: 3, name: 'Stage 3', variant: 'retained-hypothesis-relax', budgetMs: Math.max(500, Math.floor(budgets.stage2 * 0.26)), run: () => this.runBaselineStage(level, Math.max(500, Math.floor(budgets.stage2 * 0.26)), { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (retained hypothesis).', timeoutMessage: 'Retained hypothesis retry timed out.', failMessage: 'retained-hypothesis fail' },
+                    { stage: 4, name: 'Stage 4', variant: 'hypothesis-switch', budgetMs: Math.max(500, Math.floor(budgets.stage2 * 0.4)), run: () => { this.maybeSwitchHypothesis(controlPlane, 'alternate-hypothesis-run'); return this.runBaselineStage(level, Math.max(500, Math.floor(budgets.stage2 * 0.4)), { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }); }, successMessage: 'Solved (alternate hypothesis).', timeoutMessage: 'Alternate hypothesis timed out.', failMessage: 'hypothesis-switch fail' },
+                    { stage: 5, name: 'Stage 5', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'broad fallback fail' }
                 ];
-                if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
-                if (opts.variant === 'altOrder') phaseOrder = [phaseOrder[1], phaseOrder[2], phaseOrder[0], phaseOrder[3]];
+                if (lowComplexityLevel) return phaseOrder.filter(p => p.stage <= 1 || p.stage === 5);
                 return phaseOrder;
             };
             // Keep must-pass/must-cross bounds active in primary stages so multi-mustCross levels
@@ -5765,7 +6020,11 @@
                     budgetMs: budget,
                     elapsedMs: Date.now() - startedAt,
                     result: toStageResultStatus(result?.status),
-                    templateDiagnostics: result?.templateDiagnostics || result?.stats?.templateDiagnostics || null
+                    templateDiagnostics: result?.templateDiagnostics || result?.stats?.templateDiagnostics || null,
+                    chosenHypothesis: result?.controlPlane?.activeHypothesis?.archetype || controlPlane?.activeHypothesis?.archetype || null,
+                    hypothesisConfidence: result?.controlPlane?.activeHypothesis?.confidence || controlPlane?.activeHypothesis?.confidence || null,
+                    hypothesisSwitchReason: result?.controlPlane?.activeHypothesis?.switchReason || null,
+                    derivedThresholds: result?.stats?.debug?.phaseTimeline?.[0]?.thresholds || null
                 });
             };
 
@@ -5786,20 +6045,20 @@
             }
 
             if (!last.ok && allowGemini && last.status !== 'no-solution-proven') {
-                if (opts.onStage) opts.onStage({ stage: 4, name: 'Stage 4', variant: 'gemini', budgetMs: 15000 });
+                if (opts.onStage) opts.onStage({ stage: 6, name: 'Stage 6', variant: 'gemini', budgetMs: 15000 });
                 const t4 = Date.now();
                 const gem = await requestGeminiSolverSuggestion(level, purpose, timesTried, 15000);
                 if (gem.ok) {
                     const validation = validateCandidatePath(level, gem.candidate);
                     if (validation.ok) {
-                        last = { ok: true, status: 'solved', stage: 4, solution: [{ path: validation.path }], solutions: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
+                        last = { ok: true, status: 'solved', stage: 6, solution: [{ path: validation.path }], solutions: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
                     } else {
-                        last = { ok: false, status: 'gemini-invalid', stage: 4, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried };
+                        last = { ok: false, status: 'gemini-invalid', stage: 6, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried };
                     }
                 } else {
-                    last = { ok: false, status: 'gemini-failed', stage: 4, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
+                    last = { ok: false, status: 'gemini-failed', stage: 6, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
                 }
-                stagesTried.push({ stage: 4, name: 'Stage 4', variant: 'gemini', budgetMs: 15000, elapsedMs: Date.now() - t4, result: toStageResultStatus(last.status) });
+                stagesTried.push({ stage: 6, name: 'Stage 6', variant: 'gemini', budgetMs: 15000, elapsedMs: Date.now() - t4, result: toStageResultStatus(last.status) });
             }
 
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
@@ -5810,6 +6069,9 @@
             last.escalationTier = escalationTier;
             last.usedEscalation = escalationTier > 0;
             last.budgetMs = budgetMs;
+            last.primaryArchetype = level.solverProfile?.hypothesisModel?.primaryArchetype || level.solverProfile?.archetype || null;
+            last.archetypeScores = level.solverProfile?.hypothesisModel?.archetypeScores || null;
+            last.controlPlane = controlPlane;
             return last;
         },
 
@@ -6616,6 +6878,16 @@
                 if (Array.isArray(debug?.phaseAttempts) && debug.phaseAttempts.length > 0) {
                     const phaseAttemptSummary = debug.phaseAttempts.slice(0, 4).map(a => `gate=${a.gateKey} status=${a.status} phases=${(a.timeline || []).map(t => t.phase).join('>') || 'none'}`).join(' | ');
                     lines.push(`phaseAttempts: ${phaseAttemptSummary}${debug.phaseAttempts.length > 4 ? ` ... (+${debug.phaseAttempts.length - 4} more)` : ''}`);
+                }
+                if (debug?.primaryArchetype) {
+                    lines.push(`hypothesis: primary=${debug.primaryArchetype} chosen=${debug?.chosenHypothesis?.archetype || 'n/a'} conf=${debug?.chosenHypothesis?.confidence ?? 'n/a'} switch=${debug?.chosenHypothesis?.switchReason || 'n/a'}`);
+                }
+                if (debug?.archetypeScores && typeof debug.archetypeScores === 'object') {
+                    const top = Object.entries(debug.archetypeScores).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${k}:${Number(v).toFixed(3)}`).join(', ');
+                    lines.push(`archetypeScores: ${top}`);
+                }
+                if (debug?.derivedPhaseThresholds && typeof debug.derivedPhaseThresholds === 'object') {
+                    lines.push(`derivedPhaseThresholds: ${JSON.stringify(debug.derivedPhaseThresholds)}`);
                 }
                 if (Array.isArray(debug?.knotSelectionEvents) && debug.knotSelectionEvents.length > 0) {
                     const knotPreview = debug.knotSelectionEvents.slice(0, 8)
