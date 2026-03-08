@@ -2329,9 +2329,13 @@
                     const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'modern';
                     const structuralMode = !!options?.structuralMode;
                     const profile = structuralMode ? (l.solverProfile || null) : null;
-                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : null;
-                    const objectivePriority = profile?.objectivePriority instanceof Map ? profile.objectivePriority : null;
-                    const objectiveCount = profile?.objectiveCount || 0;
+                    const knotZone = profile?.knotZone instanceof Set
+                        ? profile.knotZone
+                        : (profile?.knotCandidates?.[0]?.cells instanceof Set ? profile.knotCandidates[0].cells : null);
+                    const objectivePriority = profile?.objectivePriority instanceof Map
+                        ? profile.objectivePriority
+                        : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
+                    const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
                     const perimeterThreshold = profile?.perimeterThreshold || 1;
                     const scored = valid.map(nk => {
                         let score = 0;
@@ -3709,40 +3713,301 @@
             const blocks = level?.blockSet?.size || 0;
             const freeCells = Math.max(1, totalCells - blocks);
             const routePressure = (Math.max(0, level?.reqLen || 0) / freeCells) + ((level?.reqInt || 0) * 0.35);
-            const openness = Math.max(0, 1 - (blocks / totalCells));
             const portalLoad = level?.portalMap?.size || 0;
             const perimeterThreshold = (w >= 9 || h >= 9) ? 1 : 0;
+
+            const walkableKeys = [];
+            const walkableSet = new Set();
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const key = APP.LevelUtils.PACK(x, y);
+                    if (level?.blockSet?.has(key)) continue;
+                    walkableKeys.push(key);
+                    walkableSet.add(key);
+                }
+            }
+
+            const adjacency = new Map();
+            const degreeMap = new Map();
+            const degreeHistogram = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
+            for (const key of walkableKeys) {
+                const p = APP.LevelUtils.UNPACK(key);
+                const neighbors = [];
+                [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+                    const nx = p.x + dx, ny = p.y + dy;
+                    if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
+                    const nk = APP.LevelUtils.PACK(nx, ny);
+                    if (walkableSet.has(nk)) neighbors.push(nk);
+                });
+                adjacency.set(key, neighbors);
+                const degree = neighbors.length;
+                degreeMap.set(key, degree);
+                degreeHistogram[Math.max(0, Math.min(4, degree))]++;
+            }
+
+            const connectedRegions = [];
+            const visitedRegions = new Set();
+            for (const start of walkableKeys) {
+                if (visitedRegions.has(start)) continue;
+                const q = [start];
+                visitedRegions.add(start);
+                const nodes = [];
+                while (q.length > 0) {
+                    const key = q.shift();
+                    nodes.push(key);
+                    for (const nb of (adjacency.get(key) || [])) {
+                        if (visitedRegions.has(nb)) continue;
+                        visitedRegions.add(nb);
+                        q.push(nb);
+                    }
+                }
+                connectedRegions.push(nodes);
+            }
+
+            const compactnessPerRegion = [];
+            for (const region of connectedRegions) {
+                let perimeter = 0;
+                for (const key of region) {
+                    const p = APP.LevelUtils.UNPACK(key);
+                    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+                        const nx = p.x + dx, ny = p.y + dy;
+                        if (!APP.LevelUtils.inBounds(nx, ny, w, h)) {
+                            perimeter++;
+                            return;
+                        }
+                        const nk = APP.LevelUtils.PACK(nx, ny);
+                        if (!walkableSet.has(nk)) perimeter++;
+                    });
+                }
+                const area = region.length;
+                const compactness = perimeter > 0 ? Math.min(1, (4 * Math.PI * area) / (perimeter * perimeter)) : 0;
+                compactnessPerRegion.push(compactness);
+            }
+
+            const articulationSet = new Set();
+            const bridgeEdges = [];
+            const disc = new Map();
+            const low = new Map();
+            const parent = new Map();
+            let dfsTime = 0;
+            const tarjanDfs = (u) => {
+                dfsTime++;
+                disc.set(u, dfsTime);
+                low.set(u, dfsTime);
+                let childCount = 0;
+                const neighbors = adjacency.get(u) || [];
+                for (const v of neighbors) {
+                    if (!disc.has(v)) {
+                        childCount++;
+                        parent.set(v, u);
+                        tarjanDfs(v);
+                        low.set(u, Math.min(low.get(u), low.get(v)));
+                        const uParent = parent.get(u);
+                        if (uParent === undefined && childCount > 1) articulationSet.add(u);
+                        if (uParent !== undefined && low.get(v) >= disc.get(u)) articulationSet.add(u);
+                        if (low.get(v) > disc.get(u)) {
+                            bridgeEdges.push([u, v]);
+                        }
+                    } else if (v !== parent.get(u)) {
+                        low.set(u, Math.min(low.get(u), disc.get(v)));
+                    }
+                }
+            };
+            for (const k of walkableKeys) {
+                if (!disc.has(k)) tarjanDfs(k);
+            }
+
+            const corridorDepthMap = new Map();
+            const corridorNodes = new Set();
+            const seenEdge = new Set();
+            const edgeId = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+            for (const key of walkableKeys) {
+                if ((degreeMap.get(key) || 0) !== 1) continue;
+                let prev = null;
+                let cur = key;
+                let depth = 0;
+                while (true) {
+                    corridorNodes.add(cur);
+                    corridorDepthMap.set(cur, Math.max(corridorDepthMap.get(cur) || 0, depth));
+                    const nextChoices = (adjacency.get(cur) || []).filter(n => n !== prev);
+                    if (nextChoices.length === 0) break;
+                    const next = nextChoices[0];
+                    const eid = edgeId(cur, next);
+                    if (seenEdge.has(eid)) break;
+                    seenEdge.add(eid);
+                    prev = cur;
+                    cur = next;
+                    depth++;
+                    const deg = degreeMap.get(cur) || 0;
+                    if (deg !== 2) {
+                        corridorNodes.add(cur);
+                        corridorDepthMap.set(cur, Math.max(corridorDepthMap.get(cur) || 0, depth));
+                        break;
+                    }
+                }
+            }
+
+            const chokeScoreMap = new Map();
+            const bumpChoke = (key, delta) => {
+                chokeScoreMap.set(key, (chokeScoreMap.get(key) || 0) + delta);
+            };
+            for (const key of articulationSet) bumpChoke(key, 2.5);
+            for (const [a, b] of bridgeEdges) {
+                bumpChoke(a, 1.25);
+                bumpChoke(b, 1.25);
+            }
+            corridorDepthMap.forEach((depth, key) => {
+                if (depth >= 2) bumpChoke(key, Math.min(2, depth * 0.4));
+            });
+
+            const meanDegree = walkableKeys.length > 0
+                ? walkableKeys.reduce((acc, key) => acc + (degreeMap.get(key) || 0), 0) / walkableKeys.length
+                : 0;
+            const degreeVariance = walkableKeys.length > 0
+                ? walkableKeys.reduce((acc, key) => {
+                    const d = (degreeMap.get(key) || 0) - meanDegree;
+                    return acc + d * d;
+                }, 0) / walkableKeys.length
+                : 0;
+            const avgDegreeNorm = Math.max(0, Math.min(1, meanDegree / 4));
+            const degreeVarianceNorm = Math.max(0, Math.min(1, degreeVariance / 3));
+            const corridorRatio = walkableKeys.length > 0 ? (corridorNodes.size / walkableKeys.length) : 0;
+            const openness = Math.max(0, Math.min(1,
+                (avgDegreeNorm * 0.55)
+                + ((1 - degreeVarianceNorm) * 0.25)
+                + ((1 - Math.max(0, Math.min(1, corridorRatio))) * 0.2)
+            ));
 
             const objectiveNodes = [];
             for (const key of (level?.mustPassKeys || [])) objectiveNodes.push({ key, type: 'mustPass' });
             for (const key of (level?.mustCrossKeys || [])) objectiveNodes.push({ key, type: 'mustCross' });
-            objectiveNodes.sort((a, b) => {
-                const da = level.distMapForSolver?.get(a.key) ?? 999;
-                const db = level.distMapForSolver?.get(b.key) ?? 999;
-                const wa = (a.type === 'mustCross' ? 0 : 1);
-                const wb = (b.type === 'mustCross' ? 0 : 1);
-                if (da !== db) return da - db;
-                if (wa !== wb) return wa - wb;
+            const gateKeys = level?.gateKeys || [];
+            const objectiveFeatures = objectiveNodes.map((node) => {
+                const objMap = SolverCore._buildOptimisticDistMap(level, [node.key]);
+                let gateToObjective = Infinity;
+                for (const gk of gateKeys) {
+                    const d = objMap.get(gk);
+                    if (d !== undefined && d < gateToObjective) gateToObjective = d;
+                }
+                const objectiveToGoal = level.distMapForSolver?.get(node.key) ?? Infinity;
+                const gateObjectiveGoalCost = gateToObjective + objectiveToGoal;
+                const chokeWeight = chokeScoreMap.get(node.key) || 0;
+                const priorityScore =
+                    (Number.isFinite(gateObjectiveGoalCost) ? gateObjectiveGoalCost : 9999)
+                    - (node.type === 'mustCross' ? 8 : 0)
+                    - Math.min(6, chokeWeight * 1.8);
+                return {
+                    ...node,
+                    gateToObjective: Number.isFinite(gateToObjective) ? gateToObjective : null,
+                    objectiveToGoal: Number.isFinite(objectiveToGoal) ? objectiveToGoal : null,
+                    gateObjectiveGoalCost: Number.isFinite(gateObjectiveGoalCost) ? gateObjectiveGoalCost : null,
+                    chokeWeight,
+                    priorityScore
+                };
+            });
+            objectiveFeatures.sort((a, b) => {
+                if (a.priorityScore !== b.priorityScore) return a.priorityScore - b.priorityScore;
+                const ac = a.gateObjectiveGoalCost ?? 9999;
+                const bc = b.gateObjectiveGoalCost ?? 9999;
+                if (ac !== bc) return ac - bc;
                 return a.key - b.key;
             });
             const objectivePriority = new Map();
-            objectiveNodes.forEach((n, i) => objectivePriority.set(n.key, i));
+            objectiveFeatures.forEach((n, i) => objectivePriority.set(n.key, i));
+
+            const knotCandidates = [];
+            const makeZoneCells = (seedKeys) => {
+                const zone = new Set();
+                for (const seed of seedKeys) {
+                    if (seed === undefined || seed === null || !walkableSet.has(seed)) continue;
+                    zone.add(seed);
+                    const p = APP.LevelUtils.UNPACK(seed);
+                    [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+                        const nx = p.x + dx, ny = p.y + dy;
+                        if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
+                        const nk = APP.LevelUtils.PACK(nx, ny);
+                        if (walkableSet.has(nk)) zone.add(nk);
+                    });
+                }
+                return zone;
+            };
+
+            const mustCrossSet = new Set(level?.mustCrossKeys || []);
+            const visitedCross = new Set();
+            for (const start of mustCrossSet) {
+                if (visitedCross.has(start)) continue;
+                const cluster = [];
+                const q = [start];
+                visitedCross.add(start);
+                while (q.length > 0) {
+                    const cur = q.shift();
+                    cluster.push(cur);
+                    for (const nb of (adjacency.get(cur) || [])) {
+                        if (!mustCrossSet.has(nb) || visitedCross.has(nb)) continue;
+                        visitedCross.add(nb);
+                        q.push(nb);
+                    }
+                }
+                if (cluster.length > 0) {
+                    const zone = makeZoneCells(cluster);
+                    const chokeAvg = cluster.reduce((acc, key) => acc + (chokeScoreMap.get(key) || 0), 0) / cluster.length;
+                    knotCandidates.push({ type: 'mustCrossCluster', score: 70 + (cluster.length * 9) + (chokeAvg * 8), cells: zone });
+                }
+            }
+
+            const bottleneckNodes = Array.from(chokeScoreMap.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 6)
+                .map(([key]) => key);
+            for (const key of bottleneckNodes) {
+                knotCandidates.push({
+                    type: 'bottleneckNeighborhood',
+                    score: 60 + ((chokeScoreMap.get(key) || 0) * 14),
+                    cells: makeZoneCells([key])
+                });
+            }
+
+            const portalExitSeeds = [];
+            for (const portalEntry of (level?.portalMap?.values?.() || [])) {
+                const dest = typeof portalEntry === 'number' ? portalEntry : portalEntry?.dest;
+                if (dest !== undefined && dest !== null && dest !== -1) portalExitSeeds.push(dest);
+            }
+            for (const dest of portalExitSeeds) {
+                const deg = degreeMap.get(dest) || 0;
+                const constraint = Math.max(0, 3 - deg);
+                knotCandidates.push({
+                    type: 'portalExitConstrained',
+                    score: 55 + (constraint * 11) + ((chokeScoreMap.get(dest) || 0) * 10),
+                    cells: makeZoneCells([dest])
+                });
+            }
+
+            const goalPocketSeeds = [];
+            for (const key of walkableKeys) {
+                const gd = level?.distMapForSolver?.get(key);
+                const nearGoal = gd !== undefined && gd <= 3;
+                if (!nearGoal) continue;
+                if ((chokeScoreMap.get(key) || 0) >= 1.4 || (corridorDepthMap.get(key) || 0) >= 2) {
+                    goalPocketSeeds.push(key);
+                }
+            }
+            if (goalPocketSeeds.length > 0) {
+                knotCandidates.push({
+                    type: 'goalAdjacentLateChokePocket',
+                    score: 68 + (goalPocketSeeds.length * 2.5),
+                    cells: makeZoneCells(goalPocketSeeds.slice(0, 8))
+                });
+            }
+
+            knotCandidates.sort((a, b) => b.score - a.score);
+            const rankedKnotCandidates = knotCandidates.slice(0, 10);
 
             const knotZone = new Set();
-            const maybeAddKnot = (key) => {
-                if (key === undefined || key === null) return;
-                knotZone.add(key);
-                const p = APP.LevelUtils.UNPACK(key);
-                [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy]) => {
-                    const nx = p.x + dx, ny = p.y + dy;
-                    if (APP.LevelUtils.inBounds(nx, ny, w, h)) knotZone.add(APP.LevelUtils.PACK(nx, ny));
-                });
-            };
-            for (const key of (level?.mustCrossKeys || [])) maybeAddKnot(key);
-            for (const key of (level?.blockSet || [])) maybeAddKnot(key);
-            if ((level?.goalKey || 0) !== 0) maybeAddKnot(level.goalKey);
-            if (knotZone.size > 18) {
-                const trimmed = Array.from(knotZone).slice(0, 18);
+            for (const candidate of rankedKnotCandidates.slice(0, 4)) {
+                for (const key of candidate.cells) knotZone.add(key);
+            }
+            if (knotZone.size > 24) {
+                const trimmed = Array.from(knotZone).slice(0, 24);
                 knotZone.clear();
                 trimmed.forEach(k => knotZone.add(k));
             }
@@ -3770,10 +4035,60 @@
                 if (vRatio >= 0.78 || hRatio >= 0.78) symmetryAxis = vRatio >= hRatio ? 'vertical' : 'horizontal';
             }
 
+            const symmetryModel = {
+                axis: symmetryAxis,
+                verticalAgreement: (() => {
+                    let score = 0, pairs = 0;
+                    const hasBlock = (x, y) => level.blockSet?.has(APP.LevelUtils.PACK(x, y));
+                    for (let y = 0; y < h; y++) {
+                        for (let x = 0; x < w; x++) {
+                            const mx = w - 1 - x;
+                            if (x > mx) continue;
+                            pairs++;
+                            if (!!hasBlock(x, y) === !!hasBlock(mx, y)) score++;
+                        }
+                    }
+                    return pairs > 0 ? score / pairs : 0;
+                })(),
+                horizontalAgreement: (() => {
+                    let score = 0, pairs = 0;
+                    const hasBlock = (x, y) => level.blockSet?.has(APP.LevelUtils.PACK(x, y));
+                    for (let y = 0; y < h; y++) {
+                        for (let x = 0; x < w; x++) {
+                            const my = h - 1 - y;
+                            if (y > my) continue;
+                            pairs++;
+                            if (!!hasBlock(x, y) === !!hasBlock(x, my)) score++;
+                        }
+                    }
+                    return pairs > 0 ? score / pairs : 0;
+                })()
+            };
+
+            const topology = {
+                walkableCellCount: walkableKeys.length,
+                degreeHistogram,
+                averageDegree: meanDegree,
+                degreeVariance,
+                articulationPointCount: articulationSet.size,
+                bridgeCount: bridgeEdges.length,
+                corridorRatio,
+                maxCorridorDepth: Math.max(0, ...Array.from(corridorDepthMap.values(), v => v || 0)),
+                connectedRegionCount: connectedRegions.length,
+                connectedRegionCompactness: compactnessPerRegion,
+                meanRegionCompactness: compactnessPerRegion.length > 0
+                    ? compactnessPerRegion.reduce((a, b) => a + b, 0) / compactnessPerRegion.length
+                    : 0,
+                largestRegionRatio: connectedRegions.length > 0
+                    ? Math.max(...connectedRegions.map(r => r.length)) / Math.max(1, walkableKeys.length)
+                    : 0,
+                chokeScoreMap
+            };
+
             return {
                 routePressure,
                 openness,
-                objectiveCount: objectiveNodes.length,
+                objectiveCount: objectiveFeatures.length,
                 perimeterThreshold,
                 perimeterBias: routePressure > 0.8 || openness > 0.72 ? 40 : 0,
                 knotBias: (level?.reqInt || 0) > 0 ? 34 : 0,
@@ -3781,7 +4096,72 @@
                 objectivePriority,
                 knotZone,
                 symmetryAxis,
+                topology,
+                objectiveModel: {
+                    features: objectiveFeatures,
+                    priorityMap: objectivePriority,
+                    seedMode: 'gate-objective-goal-cost'
+                },
+                knotCandidates: rankedKnotCandidates,
+                symmetryModel,
                 archetype: portalLoad > 0 ? 'portal-bridge' : (openness > 0.75 ? 'open-harvest' : 'corridor-commitment')
+            };
+        },
+
+        normalizeSolverProfile(profile = null) {
+            const safe = profile && typeof profile === 'object' ? profile : {};
+            const topology = safe.topology && typeof safe.topology === 'object' ? safe.topology : {};
+            const objectiveModel = safe.objectiveModel && typeof safe.objectiveModel === 'object' ? safe.objectiveModel : {};
+            const symmetryModel = safe.symmetryModel && typeof safe.symmetryModel === 'object' ? safe.symmetryModel : {};
+            const knotCandidates = Array.isArray(safe.knotCandidates) ? safe.knotCandidates : [];
+            return {
+                routePressure: Number.isFinite(safe.routePressure) ? safe.routePressure : 0,
+                openness: Number.isFinite(safe.openness) ? safe.openness : 0,
+                objectiveCount: Number.isFinite(safe.objectiveCount)
+                    ? safe.objectiveCount
+                    : (Array.isArray(objectiveModel.features) ? objectiveModel.features.length : 0),
+                perimeterThreshold: Number.isFinite(safe.perimeterThreshold) ? safe.perimeterThreshold : 1,
+                perimeterBias: Number.isFinite(safe.perimeterBias) ? safe.perimeterBias : 0,
+                knotBias: Number.isFinite(safe.knotBias) ? safe.knotBias : 0,
+                portalCommitment: Number.isFinite(safe.portalCommitment) ? safe.portalCommitment : 0,
+                objectivePriority: safe.objectivePriority instanceof Map
+                    ? safe.objectivePriority
+                    : (objectiveModel.priorityMap instanceof Map ? objectiveModel.priorityMap : new Map()),
+                knotZone: safe.knotZone instanceof Set ? safe.knotZone : new Set(),
+                symmetryAxis: (safe.symmetryAxis === 'vertical' || safe.symmetryAxis === 'horizontal') ? safe.symmetryAxis : null,
+                topology: {
+                    walkableCellCount: Number.isFinite(topology.walkableCellCount) ? topology.walkableCellCount : 0,
+                    degreeHistogram: topology.degreeHistogram || { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 },
+                    averageDegree: Number.isFinite(topology.averageDegree) ? topology.averageDegree : 0,
+                    degreeVariance: Number.isFinite(topology.degreeVariance) ? topology.degreeVariance : 0,
+                    articulationPointCount: Number.isFinite(topology.articulationPointCount) ? topology.articulationPointCount : 0,
+                    bridgeCount: Number.isFinite(topology.bridgeCount) ? topology.bridgeCount : 0,
+                    corridorRatio: Number.isFinite(topology.corridorRatio) ? topology.corridorRatio : 0,
+                    maxCorridorDepth: Number.isFinite(topology.maxCorridorDepth) ? topology.maxCorridorDepth : 0,
+                    connectedRegionCount: Number.isFinite(topology.connectedRegionCount) ? topology.connectedRegionCount : 0,
+                    connectedRegionCompactness: Array.isArray(topology.connectedRegionCompactness) ? topology.connectedRegionCompactness : [],
+                    meanRegionCompactness: Number.isFinite(topology.meanRegionCompactness) ? topology.meanRegionCompactness : 0,
+                    largestRegionRatio: Number.isFinite(topology.largestRegionRatio) ? topology.largestRegionRatio : 0,
+                    chokeScoreMap: topology.chokeScoreMap instanceof Map ? topology.chokeScoreMap : new Map()
+                },
+                objectiveModel: {
+                    features: Array.isArray(objectiveModel.features) ? objectiveModel.features : [],
+                    priorityMap: objectiveModel.priorityMap instanceof Map
+                        ? objectiveModel.priorityMap
+                        : (safe.objectivePriority instanceof Map ? safe.objectivePriority : new Map()),
+                    seedMode: objectiveModel.seedMode || 'legacy-distance'
+                },
+                knotCandidates: knotCandidates.map(c => ({
+                    type: c?.type || 'legacy-zone',
+                    score: Number.isFinite(c?.score) ? c.score : 0,
+                    cells: c?.cells instanceof Set ? c.cells : new Set()
+                })),
+                symmetryModel: {
+                    axis: (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal') ? symmetryModel.axis : (safe.symmetryAxis || null),
+                    verticalAgreement: Number.isFinite(symmetryModel.verticalAgreement) ? symmetryModel.verticalAgreement : 0,
+                    horizontalAgreement: Number.isFinite(symmetryModel.horizontalAgreement) ? symmetryModel.horizontalAgreement : 0
+                },
+                archetype: safe.archetype || 'corridor-commitment'
             };
         },
 
@@ -3904,7 +4284,7 @@
             console.log('Referee starting tier:', tier);
             const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
-            level.solverProfile = this.buildLevelProfile(level);
+            level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
             const purpose = opts.purpose || 'solve';
             const resolvedPortalBiasMode = opts.portalBiasMode || 'adaptiveMustCross';
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
