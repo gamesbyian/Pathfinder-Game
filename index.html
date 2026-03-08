@@ -335,8 +335,8 @@
                 </div>
             </div>
 
-            <div id="auditModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
-                <div id="auditModalContent" class="screen-modal-panel panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content">
+            <div id="auditModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content p-0">
+                <div id="auditModalContent" class="panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content px-[var(--ui-panel-pad)] py-[var(--ui-panel-pad)] rounded-none">
                     <div class="flex justify-between items-center mb-3 shrink-0">
                         <div><h2 class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Audit</h2></div>
                         <button id="closeAuditModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
@@ -344,15 +344,15 @@
                     <div class="flex-grow min-h-0 overflow-y-auto pr-1 space-y-3">
                         <div id="auditSummary" class="text-[0.65rem] font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">No run yet.</div>
                         <div id="auditProgressLabel" class="text-[0.62rem] font-mono text-[var(--theme-modal-text)]">Idle</div>
-                        <div id="auditReportRows" class="min-h-[7rem] max-h-[10rem] overflow-y-auto border rounded-xl border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[0.6rem] font-mono leading-tight p-2 whitespace-pre-wrap">Run a check to generate report.</div>
+                        <div id="auditReportRows" class="min-h-[7rem] max-h-[10rem] overflow-y-auto border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[0.6rem] font-mono leading-tight p-2 whitespace-pre-wrap">Run a check to generate report.</div>
                     </div>
-                    <div class="pt-3 border-t border-[var(--theme-modal-border)] flex flex-wrap gap-2 shrink-0">
-                        <button id="auditHintsBtn" class="flex-1 text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Hints</button>
-                        <button id="auditNewHintBtn" class="flex-1 text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">New Hint</button>
-                        <button id="auditBombsBtn" class="flex-1 text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Bombs</button>
-                        <button id="cancelAuditBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Stop</button>
-                        <button id="copyAuditAllBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy All</button>
-                        <button id="copyAuditIssuesBtn" class="border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Issues</button>
+                    <div class="pt-3 border-t border-[var(--theme-modal-border)] grid grid-cols-3 grid-rows-2 gap-2 shrink-0 auto-rows-fr">
+                        <button id="auditHintsBtn" class="h-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Hints</button>
+                        <button id="auditNewHintBtn" class="h-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">New Hint</button>
+                        <button id="auditBombsBtn" class="h-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Bombs</button>
+                        <button id="cancelAuditBtn" class="h-full border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Stop</button>
+                        <button id="copyAuditAllBtn" class="h-full border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy All</button>
+                        <button id="copyAuditIssuesBtn" class="h-full border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Copy Issues</button>
                     </div>
                 </div>
             </div>
@@ -6597,41 +6597,89 @@
             const purpose = opts.purpose || 'solve';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
             const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
+            const disableLegacyFallback = !!opts.disableLegacyFallback;
             const requestedEscalationTierRaw = Number(opts.escalationTier ?? opts.tier);
             const requestedEscalationTier = Number.isFinite(requestedEscalationTierRaw) ? Math.max(0, Math.floor(requestedEscalationTierRaw)) : 0;
             const levelId = Number.isFinite(level?.id) ? level.id + 1 : null;
             const debug = opts.debug !== undefined ? !!opts.debug : true;
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
+            const requestedSolverPath = allowReferee ? 'referee' : 'legacy';
+            const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-only';
+            const baseReport = {
+                requestedSolverPath,
+                refereeAttempted: false,
+                refereeStatus: null,
+                refereeSolved: false,
+                refereeTimeMs: null,
+                legacyFallbackTried: false,
+                legacyFallbackStatus: null,
+                legacyFallbackSolved: false,
+                legacyFallbackTimeMs: null,
+                finalStatus: 'error',
+                finalSolvedBy: 'none',
+                executionPath: defaultExecutionPath,
+                totalSolveTimeMs: 0
+            };
             const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
-            if (!controller) return { ok: false, status: 'error', rawStatus: 'already-running', solution: [], solutions: [], stagesTried: [], solverPath: allowReferee ? 'referee' : 'legacy' };
+            if (!controller) {
+                return {
+                    ok: false,
+                    status: 'error',
+                    rawStatus: 'already-running',
+                    solution: [],
+                    solutions: [],
+                    stagesTried: [],
+                    solverPath: defaultExecutionPath,
+                    ...baseReport,
+                    finalStatus: 'already-running',
+                    totalSolveTimeMs: 0
+                };
+            }
 
+            const solveStart = performance.now();
             try {
                 let solverResult;
-                let solverPath = 'legacy';
                 let escalationTierUsed = requestedEscalationTier;
+                let executionPath = defaultExecutionPath;
+                let refereeStatus = null;
+                let legacyStatus = null;
+                let refereeSolved = false;
+                let legacyFallbackSolved = false;
+                let refereeTimeMs = null;
+                let legacyFallbackTimeMs = null;
+                let refereeAttempted = false;
+                let legacyFallbackTried = false;
+
                 if (!allowReferee) {
                     APP.UI.showMessage('Solving…', 'text-sky-600');
+                    legacyFallbackTried = true;
+                    const legacyStart = performance.now();
                     const legacy = await PathfinderSolver.solve(level, {
                         timeLimit: timeBudgetMs,
                         debug,
                         debugLevel,
                         signal: controller.signal
                     });
+                    legacyFallbackTimeMs = Math.round(performance.now() - legacyStart);
                     const legacySolution = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
                     if (legacy?.ok && legacySolution.length > 0) {
+                        legacyStatus = 'solved';
+                        legacyFallbackSolved = true;
                         solverResult = { ok: true, status: 'solved', rawStatus: 'solved', stage: 0, solution: legacySolution, solutions: legacySolution, stagesTried: [] };
                     } else {
                         const rawStatus = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
+                        legacyStatus = rawStatus;
                         solverResult = { ok: false, status: rawStatus, rawStatus, stage: 0, solution: [], solutions: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
                     }
                 } else {
-                    solverPath = 'referee';
+                    refereeAttempted = true;
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
                     const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
                     const escalationTier = Math.max(requestedEscalationTier, autoTier);
                     escalationTierUsed = escalationTier;
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
                     if (escalationTier >= 2) APP.UI.showMessage('Deep search on: extended search mode.', 'text-amber-700');
+                    const refereeStart = performance.now();
                     solverResult = await Referee.solve(level, {
                         purpose,
                         timeBudgetMs,
@@ -6643,23 +6691,31 @@
                             if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
                         }
                     });
+                    refereeTimeMs = Math.round(performance.now() - refereeStart);
                     const canonical = solverResult.solution ?? solverResult.solutions ?? [];
                     solverResult.solution = canonical;
                     solverResult.solutions = canonical;
                     solverResult.rawStatus = solverResult.status;
-                    const rawStatus = solverResult.rawStatus || solverResult.status;
-                    const shouldTryLegacyFallback = !solverResult.ok && ['timeout', 'no-solution-inconclusive', 'error'].includes(rawStatus);
+                    refereeStatus = solverResult.rawStatus || solverResult.status || 'error';
+                    refereeSolved = !!solverResult.ok;
+                    const shouldTryLegacyFallback = !disableLegacyFallback && !solverResult.ok && ['timeout', 'no-solution-inconclusive', 'error'].includes(refereeStatus);
                     if (shouldTryLegacyFallback) {
+                        executionPath = 'referee-then-legacy';
                         const fallbackBudgetMs = Number.isFinite(solverResult.budgetMs) ? solverResult.budgetMs : timeBudgetMs;
                         APP.UI.showMessage('Referee inconclusive. Trying old solver…', 'text-amber-600');
+                        legacyFallbackTried = true;
+                        const legacyStart = performance.now();
                         const legacy = await PathfinderSolver.solve(level, {
                             timeLimit: fallbackBudgetMs,
                             debug,
                             debugLevel,
                             signal: controller.signal
                         });
+                        legacyFallbackTimeMs = Math.round(performance.now() - legacyStart);
                         const legacySolution = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
                         if (legacy?.ok && legacySolution.length > 0) {
+                            legacyStatus = 'solved';
+                            legacyFallbackSolved = true;
                             solverResult = {
                                 ok: true,
                                 status: 'solved',
@@ -6669,20 +6725,19 @@
                                 solutions: legacySolution,
                                 stagesTried: solverResult.stagesTried || []
                             };
+                        } else {
+                            const legacyRawStatus = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
+                            legacyStatus = legacyRawStatus;
                         }
                     }
                 }
-                solverResult.solverPath = solverPath;
+
+                const finalStatus = solverResult.rawStatus || solverResult.status || 'error';
+                const finalSolvedBy = refereeSolved ? 'referee' : (legacyFallbackSolved ? 'legacy' : 'none');
+                const totalSolveTimeMs = Math.round(performance.now() - solveStart);
+                solverResult.solverPath = executionPath;
                 applyCanonicalSolutionShape(solverResult);
-                console.info('[Solver] attempt complete', {
-                    purpose,
-                    levelId,
-                    solverPath,
-                    allowRefereeRequested: allowReferee,
-                    escalationTierUsed,
-                    status: solverResult.status,
-                    rawStatus: solverResult.rawStatus || solverResult.status
-                });
+                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${refereeStatus || 'not-run'} legacyStatus=${legacyStatus || 'not-run'} final=${finalStatus} solvedBy=${finalSolvedBy}`);
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
@@ -6691,11 +6746,11 @@
                 return {
                     ok: !!solverResult.ok,
                     status: solverResult.status || 'error',
-                    rawStatus: solverResult.rawStatus || solverResult.status || 'error',
-                    timedOut: (solverResult.rawStatus || solverResult.status) === 'timeout',
+                    rawStatus: finalStatus,
+                    timedOut: finalStatus === 'timeout',
                     duration: Number.isFinite(solverResult.duration)
                         ? solverResult.duration
-                        : (Number.isFinite(solverResult.elapsedMs) ? solverResult.elapsedMs : (debugInfo?.elapsedMs || 0)),
+                        : (Number.isFinite(solverResult.elapsedMs) ? solverResult.elapsedMs : (debugInfo?.elapsedMs || totalSolveTimeMs)),
                     nodesVisited: Number.isFinite(solverResult.nodesVisited)
                         ? solverResult.nodesVisited
                         : (Number.isFinite(debugInfo?.nodesVisited)
@@ -6706,14 +6761,56 @@
                     debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
                     stage: solverResult.stage,
-                    solverPath: solverResult.solverPath || (allowReferee ? 'referee' : 'legacy'),
+                    // Compatibility alias: final effective execution path, not the requested engine.
+                    solverPath: executionPath,
+                    requestedSolverPath,
+                    refereeAttempted,
+                    refereeStatus,
+                    refereeSolved,
+                    refereeTimeMs,
+                    legacyFallbackTried,
+                    legacyFallbackStatus: legacyStatus,
+                    legacyFallbackSolved,
+                    legacyFallbackTimeMs,
+                    finalStatus,
+                    finalSolvedBy,
+                    executionPath,
+                    totalSolveTimeMs,
                     message: solverResult.message || '',
                     diagnostics: solverResult.diagnostics || null
                 };
             } catch (err) {
-                if (err?.name === 'AbortError') return { ok: false, status: 'aborted', rawStatus: 'aborted', solution: [], solutions: [], stagesTried: [], solverPath: allowReferee ? 'referee' : 'legacy' };
+                const totalSolveTimeMs = Math.round(performance.now() - solveStart);
+                if (err?.name === 'AbortError') {
+                    return {
+                        ok: false,
+                        status: 'aborted',
+                        rawStatus: 'aborted',
+                        solution: [],
+                        solutions: [],
+                        stagesTried: [],
+                        solverPath: defaultExecutionPath,
+                        ...baseReport,
+                        finalStatus: 'aborted',
+                        executionPath: defaultExecutionPath,
+                        totalSolveTimeMs
+                    };
+                }
                 console.error('Solver error:', err);
-                return { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [], stagesTried: [], solverPath: allowReferee ? 'referee' : 'legacy', message: err?.message || 'Solver error' };
+                return {
+                    ok: false,
+                    status: 'error',
+                    rawStatus: 'error',
+                    solution: [],
+                    solutions: [],
+                    stagesTried: [],
+                    solverPath: defaultExecutionPath,
+                    ...baseReport,
+                    finalStatus: 'error',
+                    executionPath: defaultExecutionPath,
+                    totalSolveTimeMs,
+                    message: err?.message || 'Solver error'
+                };
             } finally {
                 finishRun();
             }
@@ -7126,7 +7223,10 @@
                 console.info('[Solver] runGameSolver', {
                     purpose,
                     levelId: Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null,
-                    solverPath: solverResult?.solverPath || 'unknown',
+                    requestedSolverPath: solverResult?.requestedSolverPath || 'unknown',
+                    executionPath: solverResult?.executionPath || solverResult?.solverPath || 'unknown',
+                    finalStatus: solverResult?.finalStatus || solverResult?.rawStatus || solverResult?.status || 'unknown',
+                    finalSolvedBy: solverResult?.finalSolvedBy || 'none',
                     allowRefereeRequested: true,
                     escalationTierUsed: escalationTier
                 });
@@ -10633,6 +10733,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             newHint: 'newHint',
             bombs: 'bombs'
         };
+        const getAuditDisableLegacyFallback = () => !!APP.State.ENGINE.flags?.auditDisableLegacyFallback;
 
         const trimAuditError = (err) => `${err?.message || err || ''}`.trim().slice(0, 140);
         const copyClone = (v) => JSON.parse(JSON.stringify(v));
@@ -10651,7 +10752,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 `levels ${p.levelsProcessed}/${p.levelsTotal}`,
                 `saved hints valid ${p.validHints}/${Math.max(1, p.validHints + p.invalidHints)} (invalid ${p.invalidHints})`,
                 `new hint success ${p.newHint.success} fail ${p.newHint.failure}`,
-                `bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`
+                `bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`,
+                `fallback ${p.disableLegacyFallback ? 'referee-only' : 'referee+legacy'}`
             ].join(' | ');
         };
         const formatAuditLine = (r) => {
@@ -10659,7 +10761,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const triageSummary = r.diagnostics?.inconclusiveTriage
                 ? ` | triage ${r.diagnostics.inconclusiveTriage.status || 'unknown'} (${(r.diagnostics.inconclusiveTriage.attempts || []).length} tries)`
                 : '';
-            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} solver=${r.newHint.solverPath || 'unknown'} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || 'n/a'} leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')} final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const getAuditIssueLine = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -10700,7 +10802,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeStatus: null, legacyFallbackTried: false, legacyFallbackStatus: null, finalStatus: 'not-run', finalSolvedBy: 'none', attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriage: null }
@@ -10744,9 +10846,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             };
             const isRetryableInconclusive = (attemptStatus, rawStatus) => ['timeout', 'no-solution-inconclusive'].includes(rawStatus || attemptStatus);
             const hintAttempts = [
-                { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false, allowReferee: true },
-                { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false, allowReferee: true },
-                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false, allowReferee: true }
+                { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
             try {
@@ -10770,6 +10872,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         producedHintValid: !!hintValidation?.ok,
                         validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
                         solverPath: hintRes?.solverPath || 'unknown',
+                        requestedSolverPath: hintRes?.requestedSolverPath || 'unknown',
+                        executionPath: hintRes?.executionPath || hintRes?.solverPath || 'unknown',
+                        refereeStatus: hintRes?.refereeStatus || null,
+                        legacyFallbackTried: !!hintRes?.legacyFallbackTried,
+                        legacyFallbackStatus: hintRes?.legacyFallbackStatus || null,
+                        finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
+                        finalSolvedBy: hintRes?.finalSolvedBy || 'none',
                         diagnostics: hintRes?.diagnostics || null
                     };
                     levelEntry.newHint.attemptHistory.push(attemptRecord);
@@ -10783,7 +10892,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         await waitForSolverIdle(2000);
                     }
                     const attemptStart = performance.now();
-                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true, allowReferee: true });
+                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() });
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
                     const geminiAttempt = {
@@ -10795,6 +10904,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         producedHintValid: !!hintValidation?.ok,
                         validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
                         solverPath: hintRes?.solverPath || 'unknown',
+                        requestedSolverPath: hintRes?.requestedSolverPath || 'unknown',
+                        executionPath: hintRes?.executionPath || hintRes?.solverPath || 'unknown',
+                        refereeStatus: hintRes?.refereeStatus || null,
+                        legacyFallbackTried: !!hintRes?.legacyFallbackTried,
+                        legacyFallbackStatus: hintRes?.legacyFallbackStatus || null,
+                        finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || 'error',
+                        finalSolvedBy: hintRes?.finalSolvedBy || 'none',
                         diagnostics: hintRes?.diagnostics || null
                     };
                     levelEntry.newHint.attemptHistory.push(geminiAttempt);
@@ -10821,7 +10937,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     elapsedMs: 0,
                     producedHintValid: false,
                     validationReason: '',
-                    solverPath: 'unknown'
+                    solverPath: 'unknown',
+                    requestedSolverPath: 'unknown',
+                    executionPath: 'unknown',
+                    refereeStatus: null,
+                    legacyFallbackTried: false,
+                    legacyFallbackStatus: null,
+                    finalStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
+                    finalSolvedBy: 'none'
                 };
                 levelEntry.newHint.attemptHistory.push(failedAttempt);
                 finalAttempt = failedAttempt;
@@ -10833,6 +10956,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.rawStatus = finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
             levelEntry.newHint.solverPath = finalAttempt?.solverPath || 'unknown';
+            levelEntry.newHint.requestedSolverPath = finalAttempt?.requestedSolverPath || 'unknown';
+            levelEntry.newHint.executionPath = finalAttempt?.executionPath || finalAttempt?.solverPath || 'unknown';
+            levelEntry.newHint.refereeStatus = finalAttempt?.refereeStatus || null;
+            levelEntry.newHint.legacyFallbackTried = !!finalAttempt?.legacyFallbackTried;
+            levelEntry.newHint.legacyFallbackStatus = finalAttempt?.legacyFallbackStatus || null;
+            levelEntry.newHint.finalStatus = finalAttempt?.finalStatus || finalAttempt?.rawStatus || 'error';
+            levelEntry.newHint.finalSolvedBy = finalAttempt?.finalSolvedBy || 'none';
             if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
                 const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
                 if (detail) setLevelError(detail, { source: 'newHint-status' });
@@ -10887,7 +11017,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             auditLastRunType = runType;
             auditReport = [];
             const rawLevels = APP.LevelUtils.getRawLevels();
-            auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0 }, bombs: { success: 0, noneFound: 0, error: 0 } };
+            auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0 }, bombs: { success: 0, noneFound: 0, error: 0 }, disableLegacyFallback: getAuditDisableLegacyFallback() };
             renderAuditReport();
 
             const stateSnap = {
