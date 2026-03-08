@@ -2832,6 +2832,8 @@
                     const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
                     const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : null;
                     const perimeterThreshold = profile?.perimeterThreshold || 1;
+                    const macroSkeleton = options?.macroSkeleton || null;
+                    const regionCrossingModel = options?.regionCrossingModel || null;
                     const activePhase = state.phase || 'harvest';
                     const phaseProfileBase = state.phasePolicy?.profiles?.[activePhase] || state.phasePolicy?.profiles?.harvest || {
                         perimeterBias: 1,
@@ -3118,8 +3120,10 @@
                         const productiveAmbiguity = objectiveImproved || knotImproved || portalCommitImproved;
                         if (structuralTemplate?.consistency) {
                             const consistency = structuralTemplate.consistency;
+                            const skx = nk & 0xFFFF;
+                            const sky = nk >> 16;
                             const edgeNow = Math.min(px, py, (l.grid.w - 1) - px, (l.grid.h - 1) - py);
-                            const edgeNext = Math.min(nx, ny, (l.grid.w - 1) - nx, (l.grid.h - 1) - ny);
+                            const edgeNext = Math.min(skx, sky, (l.grid.w - 1) - skx, (l.grid.h - 1) - sky);
                             const rRatioTemplate = l.reqLen > 0 ? Math.max(0, Math.min(1, nLen / l.reqLen)) : 1;
                             if (consistency.prefersPerimeter && rRatioTemplate < 0.7 && edgeNext > edgeNow) {
                                 score += consistency.edgeDriftPenalty || 16;
@@ -3133,7 +3137,7 @@
                                 }
                             }
                             if (consistency.prefersCornerHarvest && rRatioTemplate < 0.6) {
-                                const cornerDist = Math.min(nx + ny, (l.grid.w - 1 - nx) + ny, nx + (l.grid.h - 1 - ny), (l.grid.w - 1 - nx) + (l.grid.h - 1 - ny));
+                                const cornerDist = Math.min(skx + sky, (l.grid.w - 1 - skx) + sky, skx + (l.grid.h - 1 - sky), (l.grid.w - 1 - skx) + (l.grid.h - 1 - sky));
                                 if (cornerDist > 2) score += consistency.cornerMissPenalty || 14;
                             }
                             if (consistency.prefersSideCommitment && symmetryCommitted) {
@@ -3150,8 +3154,8 @@
                                 const cy = ((l.grid.h - 1) / 2);
                                 const vx1 = px - cx;
                                 const vy1 = py - cy;
-                                const vx2 = nx - cx;
-                                const vy2 = ny - cy;
+                                const vx2 = skx - cx;
+                                const vy2 = sky - cy;
                                 const cross = (vx1 * vy2) - (vy1 * vx2);
                                 if ((consistency.perimeterDirection === 'cw' && cross > 0) || (consistency.perimeterDirection === 'ccw' && cross < 0)) {
                                     score += consistency.directionPenalty || 12;
@@ -3170,6 +3174,48 @@
                             if (debugStats) debugStats.knotBudgetRejects = (debugStats.knotBudgetRejects || 0) + 1;
                             return { nk, score: 1000000 };
                         }
+
+                        if (regionCrossingModel && crossNeed > 0) {
+                            const zoneCount = Math.max(1, Number(regionCrossingModel.zoneCount) || 1);
+                            const zoneMin = Math.max(0, Number(regionCrossingModel.zoneMinCrossOpportunity) || 0);
+                            const zonePenaltyWeight = Math.max(1, Number(regionCrossingModel.zonePenaltyWeight) || 16);
+                            const knotRetentionWeight = Math.max(1, Number(regionCrossingModel.knotRetentionWeight) || 18);
+                            const curZone = Math.max(0, state.keyToIdx(k) % zoneCount);
+                            const nextZone = Math.max(0, state.keyToIdx(nk) % zoneCount);
+                            if (nextZone !== curZone && crossNeed >= zoneMin + 1) {
+                                score += zonePenaltyWeight;
+                                if (debugStats && state.path.length < 14) debugStats.regionCrossPenaltyHits = (debugStats.regionCrossPenaltyHits || 0) + 1;
+                            }
+                            if (crossNeed >= Math.max(2, zoneMin) && !nextInKnot) {
+                                score += knotRetentionWeight;
+                                if (debugStats && state.path.length < 14) debugStats.regionKnotRetentionPenaltyHits = (debugStats.regionKnotRetentionPenaltyHits || 0) + 1;
+                            }
+                        }
+
+                        if (macroSkeleton?.policy) {
+                            const sk = macroSkeleton.policy;
+                            const rRatioEarly = l.reqLen > 0 ? Math.max(0, Math.min(1, nLen / l.reqLen)) : 1;
+                            const skx = nk & 0xFFFF;
+                            const sky = nk >> 16;
+                            const edgeNow = Math.min(px, py, (l.grid.w - 1) - px, (l.grid.h - 1) - py);
+                            const edgeNext = Math.min(skx, sky, (l.grid.w - 1) - skx, (l.grid.h - 1) - sky);
+                            if (sk.preferredFirstRegion === 'edge' && rRatioEarly < 0.4 && edgeNext > edgeNow) score += sk.violationPenalty || 12;
+                            if (sk.preferredFirstRegion === 'corner' && rRatioEarly < 0.4) {
+                                const cornerDist = Math.min(skx + sky, (l.grid.w - 1 - skx) + sky, skx + (l.grid.h - 1 - sky), (l.grid.w - 1 - skx) + (l.grid.h - 1 - sky));
+                                if (cornerDist > 2) score += sk.violationPenalty || 12;
+                            }
+                            if (sk.perimeterDirection && edgeNow === 0 && edgeNext === 0) {
+                                const cx = ((l.grid.w - 1) / 2);
+                                const cy = ((l.grid.h - 1) / 2);
+                                const vx1 = px - cx;
+                                const vy1 = py - cy;
+                                const vx2 = skx - cx;
+                                const vy2 = sky - cy;
+                                const cross = (vx1 * vy2) - (vy1 * vx2);
+                                if ((sk.perimeterDirection === 'cw' && cross < 0) || (sk.perimeterDirection === 'ccw' && cross > 0)) score -= sk.branchBiasBoost || 16;
+                                else score += sk.violationPenalty || 12;
+                            }
+                        }
                         const earlySlack = rSteps - (nextGoalDist ?? 999);
                         const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1);
 
@@ -3177,8 +3223,10 @@
                         if ((activePhase === 'harvest' || activePhase === 'transition') && rRatio < 0.45 && earlySlack >= 6) {
                             const nx = nk & 0xFFFF;
                             const ny = nk >> 16;
+                            const skx = nk & 0xFFFF;
+                            const sky = nk >> 16;
                             const edgeNow = Math.min(px, py, (l.grid.w - 1) - px, (l.grid.h - 1) - py);
-                            const edgeNext = Math.min(nx, ny, (l.grid.w - 1) - nx, (l.grid.h - 1) - ny);
+                            const edgeNext = Math.min(skx, sky, (l.grid.w - 1) - skx, (l.grid.h - 1) - sky);
                             if (edgeNext > edgeNow) {
                                 let inwardPenalty = Math.round((10 + (edgeNext - edgeNow) * 12) * antiDitherScale);
                                 if (productiveAmbiguity) inwardPenalty = Math.floor(inwardPenalty * 0.4);
@@ -5317,6 +5365,19 @@
                 objectiveDensity
             };
             const complexityClass = this.classifyComplexityProfile(complexitySignals);
+            const filterPressure = ((level?.filterMap?.size || 0) + (level?.flippingFilterMap?.size || 0)) / Math.max(1, walkableKeys.length);
+            const strategySubtypeInfo = this.deriveStrategySubtype({
+                routePressure,
+                openness,
+                objectiveCount: objectiveFeatures.length,
+                mustCrossCount,
+                boardArea: (w * h),
+                filterPressure,
+                topology,
+                portalHints: portalHintModel,
+                symmetryModel,
+                objectiveModel: { features: objectiveFeatures, priorityMap: objectivePriority }
+            });
 
             return {
                 routePressure,
@@ -5324,8 +5385,14 @@
                 objectiveCount: objectiveFeatures.length,
                 objectiveSignalCount,
                 objectiveDensity,
+                mustCrossCount,
+                boardArea: (w * h),
+                filterPressure,
                 complexitySignals,
                 complexityClass,
+                strategySubtype: strategySubtypeInfo.subtype,
+                strategySubtypeSignals: strategySubtypeInfo.keySignals,
+                strategySubtypeRanked: strategySubtypeInfo.ranked,
                 perimeterThreshold,
                 perimeterBias: routePressure > 0.8 || openness > 0.72 ? 40 : 0,
                 knotBias: (level?.reqInt || 0) > 0 ? 34 : 0,
@@ -5641,6 +5708,9 @@
                     transformScores: (symmetryModel.transformScores && typeof symmetryModel.transformScores === 'object') ? symmetryModel.transformScores : {}
                 },
                 archetype: safe.archetype || 'corridor-commitment',
+                strategySubtype: safe.strategySubtype || 'corridor_commitment',
+                strategySubtypeSignals: (safe.strategySubtypeSignals && typeof safe.strategySubtypeSignals === 'object') ? safe.strategySubtypeSignals : {},
+                strategySubtypeRanked: Array.isArray(safe.strategySubtypeRanked) ? safe.strategySubtypeRanked : [],
                 hypothesisModel: (safe.hypothesisModel && typeof safe.hypothesisModel === 'object')
                     ? safe.hypothesisModel
                     : this.buildHypothesisModel({ ...safe, topology, objectiveModel, symmetryModel, knotCandidates, portalHints }),
@@ -5668,7 +5738,103 @@
             return 'standard';
         },
 
-        getComplexityStrategy(complexityClass = 'standard') {
+        deriveStrategySubtype(profile = {}) {
+            const topology = profile?.topology || {};
+            const objectiveModel = profile?.objectiveModel || {};
+            const portalHints = profile?.portalHints || {};
+            const symmetryModel = profile?.symmetryModel || {};
+            const filterPressure = Number(profile?.filterPressure) || 0;
+            const objectiveCount = Number(profile?.objectiveCount) || (Array.isArray(objectiveModel.features) ? objectiveModel.features.length : 0);
+            const mustCrossCount = Number(profile?.mustCrossCount) || 0;
+            const routePressure = Math.max(0, Number(profile?.routePressure) || 0);
+            const openness = Math.max(0, Number(profile?.openness) || 0);
+            const corridorRatio = Math.max(0, Number(topology.corridorRatio) || 0);
+            const articulationRatio = (Number(topology.articulationPointCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
+            const bridgeRatio = (Number(topology.bridgeCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
+            const mandatoryPortalFamilies = Array.isArray(portalHints?.mandatoryFamilies) ? portalHints.mandatoryFamilies.length : 0;
+            const hasPortal = Array.isArray(portalHints?.families) && portalHints.families.length > 0;
+            const symmetryConfidence = Math.max(0, Number(symmetryModel?.confidence) || 0);
+            const wideBoard = (Number(profile?.boardArea) || 0) >= 90;
+
+            const subtypeScores = {
+                macro_sweep: (routePressure * 0.85) + (openness * 0.35) + (wideBoard ? 0.16 : 0) - (corridorRatio * 0.2),
+                choke_knot: (mustCrossCount * 0.22) + (articulationRatio * 1.35) + (bridgeRatio * 1.15) + (corridorRatio * 0.2),
+                objective_order: (objectiveCount * 0.24) + (routePressure * 0.32) + ((objectiveCount >= 4) ? 0.2 : 0),
+                corridor_commitment: (corridorRatio * 1.15) + (articulationRatio * 0.6) + (Math.max(0, routePressure - 0.7) * 0.35),
+                filter_commitment: (filterPressure * 1.35) + (routePressure * 0.24) + (mustCrossCount * 0.08),
+                portal_macro_hybrid: (hasPortal ? 0.42 : 0) + (mandatoryPortalFamilies * 0.24) + (routePressure * 0.45) + (wideBoard ? 0.08 : 0),
+                symmetric_split: (symmetryConfidence * 0.95) + (corridorRatio * 0.2) + ((symmetryModel?.committed && objectiveCount >= 2) ? 0.18 : 0)
+            };
+            const ranked = Object.entries(subtypeScores).sort((a, b) => b[1] - a[1]);
+            const subtype = ranked[0]?.[0] || 'corridor_commitment';
+            return {
+                subtype,
+                ranked: ranked.slice(0, 3).map(([id, score]) => ({ id, score: Number((score || 0).toFixed(3)) })),
+                keySignals: {
+                    routePressure: Number(routePressure.toFixed(3)),
+                    openness: Number(openness.toFixed(3)),
+                    corridorRatio: Number(corridorRatio.toFixed(3)),
+                    articulationRatio: Number(articulationRatio.toFixed(3)),
+                    bridgeRatio: Number(bridgeRatio.toFixed(3)),
+                    objectiveCount,
+                    mustCrossCount,
+                    filterPressure: Number(filterPressure.toFixed(3)),
+                    mandatoryPortalFamilies,
+                    symmetryConfidence: Number(symmetryConfidence.toFixed(3))
+                }
+            };
+        },
+
+
+
+        buildMacroSkeletonHypotheses(profile = {}) {
+            const subtype = profile?.strategySubtype || 'corridor_commitment';
+            const routePressure = Number(profile?.routePressure) || 0;
+            const openness = Number(profile?.openness) || 0;
+            const symmetry = profile?.symmetryModel || {};
+            const mandatoryPortalFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies) ? profile.portalHints.mandatoryFamilies.length : 0;
+            const hypotheses = [];
+            const push = (id, confidence, policy = {}) => hypotheses.push({ id, confidence: Number(Math.max(0.05, Math.min(0.99, confidence)).toFixed(3)), policy });
+            if (subtype === 'macro_sweep' || subtype === 'portal_macro_hybrid') {
+                push('outer_perimeter_sweep', 0.42 + (routePressure * 0.24), { perimeterDirection: 'cw', preferredFirstRegion: 'edge', earlySideCommitment: true, branchBiasBoost: 26, violationPenalty: 18 });
+                push('counter_perimeter_sweep', 0.39 + (routePressure * 0.2), { perimeterDirection: 'ccw', preferredFirstRegion: 'edge', earlySideCommitment: true, branchBiasBoost: 24, violationPenalty: 18 });
+                push('corner_harvest_funnel', 0.36 + (openness * 0.2), { preferredFirstRegion: 'corner', objectiveClusterOrder: 'corner-first', branchBiasBoost: 18, violationPenalty: 12 });
+            }
+            if (subtype === 'portal_macro_hybrid') {
+                push('portal_bridged_grand_tour', 0.5 + (mandatoryPortalFamilies * 0.08), { portalTiming: 'middle', requirePortalGlue: true, preferredFirstRegion: 'portal-adjacent', branchBiasBoost: 28, violationPenalty: 20 });
+            }
+            if (subtype === 'symmetric_split' && symmetry?.committed) {
+                push('split_lobe_sweep', 0.44 + (Number(symmetry?.confidence) || 0) * 0.2, { splitAxis: symmetry.axis || symmetry.dominantAxis || null, preferredFirstRegion: 'preferred-half', branchBiasBoost: 20, violationPenalty: 14 });
+            }
+            if (hypotheses.length === 0) return [];
+            return hypotheses.sort((a, b) => b.confidence - a.confidence).slice(0, 4);
+        },
+
+        buildRegionAwareCrossingModel(level = null, profile = {}) {
+            const zoneCount = Math.max(1, Number(profile?.topology?.connectedRegionCount) || 1);
+            const reqInt = Math.max(0, Number(level?.reqInt) || 0);
+            const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
+            const knotStrength = knotCandidates.length > 0 ? Math.max(0, Number(knotCandidates[0]?.confidence) || 0) : 0;
+            const regionPressure = Math.max(0, Number(profile?.topology?.corridorRatio) || 0) + Math.max(0, Number(profile?.topology?.bridgeCount) || 0) * 0.02;
+            return {
+                zoneCount,
+                zoneMinCrossOpportunity: Math.max(0, Math.ceil((reqInt * (0.35 + Math.min(0.3, knotStrength * 0.4))) / zoneCount)),
+                zonePenaltyWeight: Math.max(6, Math.round(18 + (regionPressure * 24))),
+                knotRetentionWeight: Math.max(8, Math.round(16 + knotStrength * 24))
+            };
+        },
+
+        buildObjectiveOrderBundles(profile = {}) {
+            const features = Array.isArray(profile?.objectiveModel?.features) ? profile.objectiveModel.features : [];
+            const keys = features.map(f => f?.key).filter(k => Number.isFinite(k));
+            if (keys.length <= 1) return [];
+            const bundles = [{ id: 'bundle-primary', keys, strictness: 0.82 }];
+            if (keys.length >= 2) bundles.push({ id: 'bundle-bookend-swap', keys: [keys[1], keys[0], ...keys.slice(2)], strictness: 0.76 });
+            if (keys.length >= 3) bundles.push({ id: 'bundle-front-reverse3', keys: [...keys.slice(0, 3).reverse(), ...keys.slice(3)], strictness: 0.73 });
+            if (keys.length >= 4) bundles.push({ id: 'bundle-diagonal-bookend', keys: [keys[0], keys[2], keys[1], keys[3], ...keys.slice(4)], strictness: 0.69 });
+            return bundles.slice(0, 4);
+        },
+        getComplexityStrategy(complexityClass = 'standard', strategySubtype = 'corridor_commitment') {
             const strategyByClass = {
                 'portal-heavy': {
                     stageOrder: ['fast', 'portalSweep', 'strict', 'alt', 'switch', 'fallback'],
@@ -5699,7 +5865,16 @@
                     directionPolicy: { fast: 'default', alt: 'alt', allowRandomized: false }
                 }
             };
-            return strategyByClass[complexityClass] || strategyByClass.standard;
+            const base = strategyByClass[complexityClass] || strategyByClass.standard;
+            const subtypeOverrides = {
+                macro_sweep: { stageOrder: ['fast', 'macroSkeleton', 'strict', 'retained', 'switch', 'fallback'], budgetSplit: { fast: 0.1, macroSkeleton: 0.2, strict: 0.21, retained: 0.16, switch: 0.15, fallback: 0.18 }, directionPolicy: { ...base.directionPolicy, allowRandomized: false } },
+                portal_macro_hybrid: { stageOrder: ['fast', 'portalSweep', 'macroSkeleton', 'strict', 'switch', 'fallback'], budgetSplit: { fast: 0.1, portalSweep: 0.19, macroSkeleton: 0.19, strict: 0.18, switch: 0.14, fallback: 0.2 }, portalBiasMode: 'aggressive' },
+                choke_knot: { stageOrder: ['fast', 'strict', 'retained', 'switch', 'alt', 'fallback'], budgetSplit: { fast: 0.1, strict: 0.24, retained: 0.2, switch: 0.16, alt: 0.12, fallback: 0.18 } },
+                objective_order: { stageOrder: ['fast', 'strict', 'retained', 'alt', 'switch', 'fallback'], budgetSplit: { fast: 0.1, strict: 0.23, retained: 0.22, alt: 0.12, switch: 0.14, fallback: 0.19 } },
+                filter_commitment: { stageOrder: ['fast', 'strict', 'alt', 'retained', 'switch', 'fallback'], budgetSplit: { fast: 0.13, strict: 0.22, alt: 0.14, retained: 0.18, switch: 0.14, fallback: 0.19 } },
+                symmetric_split: { stageOrder: ['fast', 'strict', 'switch', 'retained', 'alt', 'fallback'], budgetSplit: { fast: 0.12, strict: 0.23, switch: 0.18, retained: 0.17, alt: 0.11, fallback: 0.19 } }
+            };
+            return { ...base, ...(subtypeOverrides[strategySubtype] || {}) };
         },
 
         allocateStageBudgets(totalMs, profile = null) {
@@ -5744,14 +5919,11 @@
                 const conservativeBudget = Math.max(1, Math.floor(total * structuralConservativeShare));
                 const remainingBudget = Math.max(1, total - modernBudget - conservativeBudget);
                 const attempts = [];
-                const objectiveKeys = Array.isArray(profile?.objectiveModel?.features) ? profile.objectiveModel.features.map(f => f.key).filter(k => Number.isFinite(k)) : [];
-                const objectiveTracks = [];
-                if (objectiveKeys.length > 0) {
-                    objectiveTracks.push({ id: 'obj-primary', keys: objectiveKeys, strictness: 0.82 });
-                    if (objectiveKeys.length >= 2) objectiveTracks.push({ id: 'obj-swap12', keys: [objectiveKeys[1], objectiveKeys[0], ...objectiveKeys.slice(2)], strictness: 0.74 });
-                    if (objectiveKeys.length >= 3) objectiveTracks.push({ id: 'obj-reverse3', keys: [...objectiveKeys.slice(0, 3).reverse(), ...objectiveKeys.slice(3)], strictness: 0.72 });
-                }
+                const objectiveTracks = this.buildObjectiveOrderBundles(profile || {});
                 const defaultTrack = objectiveTracks[0] || null;
+                const macroSkeletons = this.buildMacroSkeletonHypotheses(profile || {});
+                const defaultSkeleton = opts.preferMacroSkeleton ? (macroSkeletons[0] || null) : (macroSkeletons[0] || null);
+                const regionCrossingModel = this.buildRegionAwareCrossingModel(level, profile || {});
                 const commonTemplateCommitment = { depthRatio: 0.4 };
                 const commonPortalLockPolicy = { probationReentries: 1, lockReentries: 2, lockOscillationMax: 1 };
                 const commonKnotBudgetPolicy = {
@@ -5778,6 +5950,8 @@
                             templateCommitment: commonTemplateCommitment,
                             portalLockPolicy: commonPortalLockPolicy,
                             knotBudgetPolicy: commonKnotBudgetPolicy,
+                            macroSkeleton: macroSkeletons[idx % Math.max(1, macroSkeletons.length)] || defaultSkeleton,
+                            regionCrossingModel,
                             templatePhase: 'warmup'
                         });
                     });
@@ -5794,6 +5968,8 @@
                         templateCommitment: commonTemplateCommitment,
                         portalLockPolicy: commonPortalLockPolicy,
                         knotBudgetPolicy: commonKnotBudgetPolicy,
+                        macroSkeleton: defaultSkeleton,
+                        regionCrossingModel,
                         templatePhase: 'reallocated'
                     });
                 } else {
@@ -5807,7 +5983,9 @@
                         objectiveTrack: defaultTrack,
                         templateCommitment: commonTemplateCommitment,
                         portalLockPolicy: commonPortalLockPolicy,
-                        knotBudgetPolicy: commonKnotBudgetPolicy
+                        knotBudgetPolicy: commonKnotBudgetPolicy,
+                        macroSkeleton: defaultSkeleton,
+                        regionCrossingModel
                     });
                 }
                 attempts.push({
@@ -5820,7 +5998,9 @@
                     objectiveTrack: defaultTrack,
                     templateCommitment: commonTemplateCommitment,
                     portalLockPolicy: commonPortalLockPolicy,
-                    knotBudgetPolicy: commonKnotBudgetPolicy
+                    knotBudgetPolicy: commonKnotBudgetPolicy,
+                    macroSkeleton: defaultSkeleton,
+                    regionCrossingModel
                 });
 
                 if (allowLegacyRescue) {
@@ -5883,6 +6063,8 @@
                     templateCommitment: attemptOpts.templateCommitment || null,
                     portalLockPolicy: attemptOpts.portalLockPolicy || null,
                     knotBudgetPolicy: attemptOpts.knotBudgetPolicy || null,
+                    macroSkeleton: attemptOpts.macroSkeleton || null,
+                    regionCrossingModel: attemptOpts.regionCrossingModel || null,
                     controlPlane
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -5892,6 +6074,10 @@
                 debug.chosenHypothesis = controlPlane?.activeHypothesis ? { ...controlPlane.activeHypothesis } : null;
                 debug.hypothesisHistory = Array.isArray(controlPlane?.history) ? controlPlane.history.slice(-8) : [];
                 debug.derivedPhaseThresholds = attemptOpts.phasePolicy?.thresholds || null;
+                debug.macroSkeleton = attemptOpts.macroSkeleton || null;
+                debug.regionCrossingModel = attemptOpts.regionCrossingModel || null;
+                debug.strategySubtype = profile?.strategySubtype || null;
+                debug.strategySubtypeSignals = profile?.strategySubtypeSignals || null;
                 const status = r?.ok && solution.length > 0
                     ? 'solved'
                     : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error'));
@@ -6041,9 +6227,17 @@
             const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
             level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
+            if (APP?.State?.ENGINE?.isDevMode || opts?.auditMode) {
+                console.log('[Referee strategy]', {
+                    complexityClass: level.solverProfile?.complexityClass || 'standard',
+                    strategySubtype: level.solverProfile?.strategySubtype || 'corridor_commitment',
+                    keySignals: level.solverProfile?.strategySubtypeSignals || {}
+                });
+            }
             const purpose = opts.purpose || 'solve';
             const complexityClass = level.solverProfile?.complexityClass || 'standard';
-            const complexityStrategy = this.getComplexityStrategy(complexityClass);
+            const strategySubtype = level.solverProfile?.strategySubtype || 'corridor_commitment';
+            const complexityStrategy = this.getComplexityStrategy(complexityClass, strategySubtype);
             const resolvedPortalBiasMode = opts.portalBiasMode || complexityStrategy.portalBiasMode || 'adaptiveMustCross';
             const resolvedPhasePolicy = opts.phasePolicy || level.solverProfile?.phasePolicy || null;
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
@@ -6083,7 +6277,8 @@
                 const retainedBudget = stageBudget('retained', (budgets.stage2 * 0.26) / totalBudgetMs);
                 const switchBudget = stageBudget('switch', (budgets.stage2 * 0.4) / totalBudgetMs);
                 const portalSweepBudget = stageBudget('portalSweep', 0.15);
-                const fallbackBudget = Math.max(500, totalBudgetMs - fastBudget - altBudget - strictBudget - retainedBudget - switchBudget - portalSweepBudget);
+                const macroSkeletonBudget = stageBudget('macroSkeleton', 0.16);
+                const fallbackBudget = Math.max(500, totalBudgetMs - fastBudget - altBudget - strictBudget - retainedBudget - switchBudget - portalSweepBudget - macroSkeletonBudget);
 
                 const stageCatalog = {
                     fast: { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: fastBudget, run: () => this.runBaselineStage(level, fastBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.fast || 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: allowRandomThisTier, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
@@ -6092,6 +6287,7 @@
                     retained: { stage: 3, name: 'Stage 3', variant: 'retained-hypothesis-relax', budgetMs: retainedBudget, run: () => this.runBaselineStage(level, retainedBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (retained hypothesis).', timeoutMessage: 'Retained hypothesis retry timed out.', failMessage: 'retained-hypothesis fail' },
                     switch: { stage: 4, name: 'Stage 4', variant: 'hypothesis-switch', budgetMs: switchBudget, run: () => { this.maybeSwitchHypothesis(controlPlane, 'alternate-hypothesis-run'); return this.runBaselineStage(level, switchBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }); }, successMessage: 'Solved (alternate hypothesis).', timeoutMessage: 'Alternate hypothesis timed out.', failMessage: 'hypothesis-switch fail' },
                     portalSweep: { stage: 7, name: 'Stage 7', variant: 'portal-sweep', budgetMs: portalSweepBudget, run: () => this.runBaselineStage(level, portalSweepBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.portalSweep || 'alt', portalBiasMode: 'aggressive', scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (portal sweep).', timeoutMessage: 'Portal sweep timed out.', failMessage: 'portal sweep fail' },
+                    macroSkeleton: { stage: 6, name: 'Stage 6', variant: 'macro-skeleton', budgetMs: macroSkeletonBudget, run: () => this.runBaselineStage(level, macroSkeletonBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: false, allowRandomizedExploration: false, purpose, preferMacroSkeleton: true }), successMessage: 'Solved (macro skeleton focus).', timeoutMessage: 'Macro skeleton search timed out.', failMessage: 'macro skeleton fail' },
                     fallback: { stage: 5, name: 'Stage 5', variant: 'fallback', budgetMs: fallbackBudget, run: () => this.runStage2Fallback(level, fallbackBudget, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'broad fallback fail' }
                 };
                 const ordered = (complexityStrategy.stageOrder || ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback'])
@@ -6122,6 +6318,8 @@
                     hypothesisSwitchReason: result?.controlPlane?.activeHypothesis?.switchReason || null,
                     derivedThresholds: result?.stats?.debug?.phaseTimeline?.[0]?.thresholds || null,
                     complexityClass,
+                    strategySubtype,
+                    strategySignals: level?.solverProfile?.strategySubtypeSignals || null,
                     strategy: {
                         portalBiasMode: resolvedPortalBiasMode,
                         pruneToggles: complexityStrategy.pruneTogglesByTier?.[Math.min(2, tier)] || [],
@@ -6209,6 +6407,8 @@
                     elapsedMs: Date.now() - t4,
                     result: toStageResultStatus(last.status),
                     complexityClass,
+                    strategySubtype,
+                    strategySignals: level?.solverProfile?.strategySubtypeSignals || null,
                     strategy: {
                         portalBiasMode: resolvedPortalBiasMode,
                         pruneToggles: complexityStrategy.pruneTogglesByTier?.[Math.min(2, tier)] || [],
