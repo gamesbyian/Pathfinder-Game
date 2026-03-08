@@ -2327,6 +2327,12 @@
                         return true;
                     });
                     const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'modern';
+                    const structuralMode = !!options?.structuralMode;
+                    const profile = structuralMode ? (l.solverProfile || null) : null;
+                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : null;
+                    const objectivePriority = profile?.objectivePriority instanceof Map ? profile.objectivePriority : null;
+                    const objectiveCount = profile?.objectiveCount || 0;
+                    const perimeterThreshold = profile?.perimeterThreshold || 1;
                     const scored = valid.map(nk => {
                         let score = 0;
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
@@ -2408,6 +2414,45 @@
                                     // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
                                     score -= activeDist * 10;
                                 }
+                            }
+                        }
+
+                        if (profile) {
+                            const rRatio = l.reqLen > 0 ? Math.max(0, Math.min(1, nLen / l.reqLen)) : 1;
+                            const nx = nk & 0xFFFF;
+                            const ny = nk >> 16;
+                            const edgeDist = Math.min(nx, ny, (l.grid.w - 1) - nx, (l.grid.h - 1) - ny);
+                            const intsRemaining = Math.max(0, l.reqInt - state.ints);
+                            const goalDist = distMap.get(nk) ?? 999;
+
+                            if (profile.perimeterBias > 0 && rRatio < 0.45) {
+                                if (edgeDist <= perimeterThreshold) score -= profile.perimeterBias;
+                                else score += Math.round(profile.perimeterBias * 0.45);
+                                if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35);
+                            }
+
+                            if (intsRemaining > 0 && knotZone && knotZone.size > 0) {
+                                if (knotZone.has(nk)) score -= profile.knotBias;
+                                else score += Math.round(profile.knotBias * 0.2);
+                            }
+
+                            if (objectivePriority && objectiveCount > 0) {
+                                const rank = objectivePriority.get(nk);
+                                if (rank !== undefined) {
+                                    score -= Math.max(20, (objectiveCount - rank) * 28);
+                                }
+                            }
+
+                            if (profile.symmetryAxis === 'vertical') {
+                                const mid = (l.grid.w - 1) / 2;
+                                score += Math.abs(nx - mid) * 6;
+                            } else if (profile.symmetryAxis === 'horizontal') {
+                                const mid = (l.grid.h - 1) / 2;
+                                score += Math.abs(ny - mid) * 6;
+                            }
+
+                            if (profile.portalCommitment > 0 && portalDest === nk && portalForced) {
+                                score -= profile.portalCommitment;
                             }
                         }
 
@@ -3139,7 +3184,10 @@
                                 disabledPrunes,
                                 useFailMemo,
                                 falseGoalPolicy,
-                                enableForcedMoves
+                                enableForcedMoves,
+                                scoringMode,
+                                portalBiasMode,
+                                structuralMode
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
                             if (result === SOLVER_ABORTED) return { kind: 'aborted' };
@@ -3235,7 +3283,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -3654,11 +3702,101 @@
         };
 
         const Referee = {
-        allocateStageBudgets(totalMs) {
+        buildLevelProfile(level) {
+            const w = level?.grid?.w || 0;
+            const h = level?.grid?.h || 0;
+            const totalCells = Math.max(1, w * h);
+            const blocks = level?.blockSet?.size || 0;
+            const freeCells = Math.max(1, totalCells - blocks);
+            const routePressure = (Math.max(0, level?.reqLen || 0) / freeCells) + ((level?.reqInt || 0) * 0.35);
+            const openness = Math.max(0, 1 - (blocks / totalCells));
+            const portalLoad = level?.portalMap?.size || 0;
+            const perimeterThreshold = (w >= 9 || h >= 9) ? 1 : 0;
+
+            const objectiveNodes = [];
+            for (const key of (level?.mustPassKeys || [])) objectiveNodes.push({ key, type: 'mustPass' });
+            for (const key of (level?.mustCrossKeys || [])) objectiveNodes.push({ key, type: 'mustCross' });
+            objectiveNodes.sort((a, b) => {
+                const da = level.distMapForSolver?.get(a.key) ?? 999;
+                const db = level.distMapForSolver?.get(b.key) ?? 999;
+                const wa = (a.type === 'mustCross' ? 0 : 1);
+                const wb = (b.type === 'mustCross' ? 0 : 1);
+                if (da !== db) return da - db;
+                if (wa !== wb) return wa - wb;
+                return a.key - b.key;
+            });
+            const objectivePriority = new Map();
+            objectiveNodes.forEach((n, i) => objectivePriority.set(n.key, i));
+
+            const knotZone = new Set();
+            const maybeAddKnot = (key) => {
+                if (key === undefined || key === null) return;
+                knotZone.add(key);
+                const p = APP.LevelUtils.UNPACK(key);
+                [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy]) => {
+                    const nx = p.x + dx, ny = p.y + dy;
+                    if (APP.LevelUtils.inBounds(nx, ny, w, h)) knotZone.add(APP.LevelUtils.PACK(nx, ny));
+                });
+            };
+            for (const key of (level?.mustCrossKeys || [])) maybeAddKnot(key);
+            for (const key of (level?.blockSet || [])) maybeAddKnot(key);
+            if ((level?.goalKey || 0) !== 0) maybeAddKnot(level.goalKey);
+            if (knotZone.size > 18) {
+                const trimmed = Array.from(knotZone).slice(0, 18);
+                knotZone.clear();
+                trimmed.forEach(k => knotZone.add(k));
+            }
+
+            let symmetryAxis = null;
+            if (w > 0 && h > 0) {
+                const hasBlock = (x, y) => level.blockSet?.has(APP.LevelUtils.PACK(x, y));
+                let vScore = 0, hScore = 0, vPairs = 0, hPairs = 0;
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        const mx = w - 1 - x;
+                        if (x <= mx) {
+                            vPairs++;
+                            if (!!hasBlock(x, y) === !!hasBlock(mx, y)) vScore++;
+                        }
+                        const my = h - 1 - y;
+                        if (y <= my) {
+                            hPairs++;
+                            if (!!hasBlock(x, y) === !!hasBlock(x, my)) hScore++;
+                        }
+                    }
+                }
+                const vRatio = vPairs > 0 ? (vScore / vPairs) : 0;
+                const hRatio = hPairs > 0 ? (hScore / hPairs) : 0;
+                if (vRatio >= 0.78 || hRatio >= 0.78) symmetryAxis = vRatio >= hRatio ? 'vertical' : 'horizontal';
+            }
+
+            return {
+                routePressure,
+                openness,
+                objectiveCount: objectiveNodes.length,
+                perimeterThreshold,
+                perimeterBias: routePressure > 0.8 || openness > 0.72 ? 40 : 0,
+                knotBias: (level?.reqInt || 0) > 0 ? 34 : 0,
+                portalCommitment: portalLoad > 0 ? 55 : 0,
+                objectivePriority,
+                knotZone,
+                symmetryAxis,
+                archetype: portalLoad > 0 ? 'portal-bridge' : (openness > 0.75 ? 'open-harvest' : 'corridor-commitment')
+            };
+        },
+
+        allocateStageBudgets(totalMs, profile = null) {
             const total = Math.max(1000, Math.floor(totalMs || 15000));
-            const stage0 = Math.min(Math.floor(total * 0.2), Math.max(500, total - 3500));
-            const stage1 = Math.min(Math.floor(total * 0.4), Math.max(1500, total - stage0 - 2000));
-            const stage2 = Math.min(Math.floor(total * 0.2), Math.max(1000, total - stage0 - stage1 - 500));
+            const routePressure = profile?.routePressure || 0;
+            const objectiveCount = profile?.objectiveCount || 0;
+            const portalWeight = profile?.portalCommitment > 0 ? 1 : 0;
+            const structuralWeight = Math.min(0.18, Math.max(0, (routePressure - 0.8) * 0.12) + Math.min(0.08, objectiveCount * 0.01) + (portalWeight * 0.04));
+            const stage0Ratio = Math.max(0.12, 0.2 - structuralWeight * 0.7);
+            const stage1Ratio = Math.max(0.2, 0.4 - structuralWeight * 0.5);
+            const stage2Ratio = Math.min(0.42, 0.2 + structuralWeight);
+            const stage0 = Math.min(Math.floor(total * stage0Ratio), Math.max(500, total - 3500));
+            const stage1 = Math.min(Math.floor(total * stage1Ratio), Math.max(1500, total - stage0 - 2000));
+            const stage2 = Math.min(Math.floor(total * stage2Ratio), Math.max(1000, total - stage0 - stage1 - 500));
             const stage3 = Math.max(500, total - stage0 - stage1 - stage2);
             return { stage0, stage1, stage2, stage3, total };
         },
@@ -3672,7 +3810,8 @@
                     debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                     dirOrderVariant: (opts.dirOrderVariant === 'alt' || opts.dirOrderVariant === 'random') ? opts.dirOrderVariant : 'default',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
-                    scoringMode: attemptOpts.scoringMode || 'modern'
+                    scoringMode: attemptOpts.scoringMode || 'modern',
+                    structuralMode: !!attemptOpts.structuralMode
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -3685,17 +3824,18 @@
                     solution,
                     debug,
                     scoringMode: attemptOpts.scoringMode || 'modern',
-                    portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross'
+                    portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    structuralMode: !!attemptOpts.structuralMode
                 };
             };
 
             const portalMustCrossHeavy = (level?.portalMap?.size || 0) > 0 && (level?.mustCrossKeys?.length || 0) >= 2;
             const attempts = portalMustCrossHeavy
                 ? [
-                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' },
-                    { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off' }
+                    { budgetMs: Math.max(1, Math.floor(budgetMs * 0.6)), scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', structuralMode: !!opts.structuralMode },
+                    { budgetMs: Math.max(1, budgetMs - Math.max(1, Math.floor(budgetMs * 0.6))), scoringMode: 'legacy', portalBiasMode: 'off', structuralMode: !!opts.structuralMode }
                 ]
-                : [{ budgetMs, scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross' }];
+                : [{ budgetMs, scoringMode: 'modern', portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross', structuralMode: !!opts.structuralMode }];
 
             let attemptsUsed = [];
             let lastAttempt = null;
@@ -3705,7 +3845,8 @@
                     status: attemptResult.status,
                     budgetMs: attempt.budgetMs,
                     scoringMode: attempt.scoringMode,
-                    portalBiasMode: attempt.portalBiasMode
+                    portalBiasMode: attempt.portalBiasMode,
+                    structuralMode: !!attempt.structuralMode
                 });
                 if (APP.State.ENGINE.flags?.refereeDebug || APP.State.ENGINE.flags?.debugSolver) {
                     const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
@@ -3763,6 +3904,7 @@
             console.log('Referee starting tier:', tier);
             const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
+            level.solverProfile = this.buildLevelProfile(level);
             const purpose = opts.purpose || 'solve';
             const resolvedPortalBiasMode = opts.portalBiasMode || 'adaptiveMustCross';
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
@@ -3779,11 +3921,11 @@
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
             const stagesTried = [];
             const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
-                const budgets = this.allocateStageBudgets(totalBudgetMs);
+                const budgets = this.allocateStageBudgets(totalBudgetMs, level.solverProfile);
                 let phaseOrder = [
                     { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
                     { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'shuffle', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'random', portalBiasMode: resolvedPortalBiasMode, purpose }), successMessage: 'Solved (randomized ordering).', timeoutMessage: 'Randomized ordering timed out.', failMessage: 'Randomized ordering did not find a solution.' },
+                    { stage: 2, name: 'Stage 2', variant: 'structural', budgetMs: budgets.stage2, run: () => this.runBaselineStage(level, budgets.stage2, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, purpose }), successMessage: 'Solved (structural strategy).', timeoutMessage: 'Structural strategy timed out.', failMessage: 'Structural strategy did not find a solution.' },
                     { stage: 3, name: 'Stage 3', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'Fallback strategy inconclusive.' }
                 ];
                 if (opts.variant === 'beamFirst') phaseOrder = [phaseOrder[0], phaseOrder[2], phaseOrder[3], phaseOrder[1]];
