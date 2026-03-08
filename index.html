@@ -1881,7 +1881,6 @@
                         Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1,
                         Number.isFinite(state.portalSelectedEntry) ? state.portalSelectedEntry : -1,
                         Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1,
-                        Number.isFinite(state.portalOscillationCount) ? state.portalOscillationCount : 0,
                         this._derivePortalLockState(state, options)
                     ].join('|');
                 },
@@ -2823,6 +2822,7 @@
                         if (debugStats.neighborTrace.length < 8) debugStats.neighborTrace.push(stageTrace);
                     }
                     const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'modern';
+                    const shouldRecordRootSuppression = depth === 0 && !!debugStats && (!!options?.enableLowExpansionProbe || !!APP?.State?.ENGINE?.isDevMode || !!APP?.State?.ENGINE?.flags?.refereeDebug || !!APP?.State?.ENGINE?.flags?.debugSolver);
                     const structuralMode = !!options?.structuralMode;
                     const profile = structuralMode ? (l.solverProfile || null) : null;
                     const symmetryModel = profile?.symmetryModel || null;
@@ -3343,9 +3343,20 @@
                         });
                     }
                     const orderedNeighbors = scored.map(item => item.nk);
+                    if (depth === 0 && debugStats) {
+                        debugStats.rootCandidatesGenerated = candidates.length;
+                        debugStats.rootMoveOrder = orderedNeighbors.slice(0, 20);
+                        debugStats.rootCandidatesExpanded = orderedNeighbors.length;
+                        if (shouldRecordRootSuppression) {
+                            debugStats.rootMoveScores = scored.slice(0, 20).map(item => ({ key: item.nk, score: item.score }));
+                        }
+                    }
                     if (stageTrace) {
                         stageTrace.afterOrdering = orderedNeighbors.slice();
                         stageTrace.finalNeighbors = orderedNeighbors.slice();
+                        if (depth === 0 && shouldRecordRootSuppression) {
+                            stageTrace.rootMoveScores = scored.slice(0, 20).map(item => ({ key: item.nk, score: item.score }));
+                        }
                     }
                     if (stageTrace && depth === 0 && debugStats) debugStats.startNeighborTrace = stageTrace;
                     return orderedNeighbors;
@@ -3668,6 +3679,7 @@
                     const startPortal = APP.LevelUtils.resolvePortal(l, startKey);
                     const startPortalForced = !!(startPortal && !state.isJump.has(state.path.length - 1));
                     if (debugStats) {
+                        const depthZeroDebug = ensureDepthZeroDebug(debugStats);
                         debugStats.startState = {
                             gateKey: startKey,
                             startNeighborsCount: startNeighbors.length,
@@ -3682,6 +3694,18 @@
                             portalBiasMode: options?.portalBiasMode || 'adaptiveMustCross',
                             phasePolicyArchetype: state.phasePolicy?.archetype || options?.phasePolicy?.archetype || null
                         };
+                        if (depthZeroDebug) {
+                            depthZeroDebug.startState = {
+                                ...debugStats.startState,
+                                startPosition: APP.LevelUtils.UNPACK(startKey),
+                                startKey
+                            };
+                            depthZeroDebug.startNeighborTrace = debugStats.startNeighborTrace || null;
+                        }
+                        setDepthZeroReason(debugStats, startNeighbors.length === 0 ? 'no-start-neighbors' : 'root-neighbors-ready', {
+                            emptyStartNeighbors: startNeighbors.length === 0,
+                            returnedBeforeExpansion: true
+                        });
                     }
                     if (startNeighbors.length === 0 && debugStats) {
                         const trace = debugStats.startNeighborTrace || null;
@@ -3700,6 +3724,10 @@
                         this._recordDepth0Prune(debugStats, 'noStartNeighbors', detailParts.join(' '));
                         if (!Array.isArray(debugStats.notes)) debugStats.notes = [];
                         debugStats.notes.push(`START: no legal depth-0 neighbors from gate ${startKey}; ${(detailParts.join(' | ') || 'no trace')}`);
+                        setDepthZeroReason(debugStats, 'no-start-neighbors', {
+                            emptyStartNeighbors: true,
+                            returnedBeforeExpansion: true
+                        });
                     }
                     const startSig = this._stateSignature(state, l, 0, options);
                     this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0 }, debugStats);
@@ -3708,10 +3736,16 @@
                     while (stack.length > 0) {
                         if (options.signal?.aborted) {
                             recordPhaseAttempt('aborted');
+                            if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
+                                setDepthZeroReason(debugStats, 'returned-without-expansion', { returnedBeforeExpansion: true, aborted: true });
+                            }
                             return SOLVER_ABORTED;
                         }
                         if (Date.now() - options.startTime > options.timeLimit) {
                             recordPhaseAttempt('timeout');
+                            if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
+                                setDepthZeroReason(debugStats, 'returned-without-expansion', { returnedBeforeExpansion: true, timeout: true });
+                            }
                             return SOLVER_TIMEOUT;
                         }
                         if (++steps % 500 === 0) {
@@ -3840,6 +3874,11 @@
                         }
                         let stateSig = this._stateSignature(state, l, realLen, options);
                         if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen }, debugStats)) {
+                            if (realLen <= 1 && debugStats) {
+                                debugStats.rootCandidatesSuppressedByDominance = (debugStats.rootCandidatesSuppressedByDominance || 0) + 1;
+                                const dbg = ensureDepthZeroDebug(debugStats);
+                                if (dbg && dbg.rootSuppressionLog.length < 20) dbg.rootSuppressionLog.push({ type: 'dominance', key: nextKey, depth: realLen, reason: 'dominance-prune' });
+                            }
                             this._popStateZeroAlloc(state, transLog);
                             continue;
                         }
@@ -3848,6 +3887,11 @@
                             if (debugStats) {
                                 debugStats.prune.failedStateHit++;
                                 debugStats.prune.failedStateHitSignature = (debugStats.prune.failedStateHitSignature || 0) + 1;
+                                if (realLen <= 1) {
+                                    debugStats.rootCandidatesSuppressedByMemo = (debugStats.rootCandidatesSuppressedByMemo || 0) + 1;
+                                    const dbg = ensureDepthZeroDebug(debugStats);
+                                    if (dbg && dbg.rootSuppressionLog.length < 20) dbg.rootSuppressionLog.push({ type: 'memo', key: nextKey, depth: realLen, reason: 'failed-state-hit' });
+                                }
                             }
                             this._popStateZeroAlloc(state, transLog);
                             continue;
@@ -3874,6 +3918,12 @@
                         stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig });
                     }
                     if (debugStats) debugStats.memoSize = useFailMemo ? failMemo.size : 0;
+                    if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
+                        setDepthZeroReason(debugStats, startNeighbors.length === 0 ? 'no-start-neighbors' : 'returned-without-expansion', {
+                            emptyStartNeighbors: startNeighbors.length === 0,
+                            returnedBeforeExpansion: true
+                        });
+                    }
                     recordPhaseAttempt('exhausted');
                     return null;
                 },
@@ -4266,6 +4316,7 @@
                                 portalLockPolicy,
                                 knotBudgetPolicy,
                                 controlPlane,
+                                enableLowExpansionProbe,
                                 startGateArchetype: state?.startGateArchetype || null
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
@@ -4362,7 +4413,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -6304,7 +6355,7 @@
 
         async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity'], opts = {}) {
             const started = Date.now();
-            const resolveRun = async (runBudgetMs, runOpts = {}) => {
+                const resolveRun = async (runBudgetMs, runOpts = {}) => {
                 const r = await PathfinderSolver.solve(level, {
                     timeLimit: runBudgetMs,
                     debug: true,
@@ -6316,11 +6367,20 @@
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 if (r?.ok && solution.length > 0) {
-                    return { ok: true, status: 'solved', solution, solutions: solution, debug: r?.debug || {} };
+                    return withZeroExpansionSummary({ ok: true, status: 'solved', solution, solutions: solution, debug: r?.debug || {} }, 'triage-resolve', 'legacy-solver');
                 }
                 const debug = r?.debug || {};
-                if (debug.status === 'timeout') return { ok: false, status: 'timeout', solution: [], solutions: [], debug };
-                return { ok: false, status: 'no-solution-inconclusive', solution: [], solutions: [], debug };
+                const depthZeroDebug = ensureDepthZeroDebug(debug);
+                if (depthZeroDebug && !depthZeroDebug.startState && debug.startState) depthZeroDebug.startState = debug.startState;
+                if (depthZeroDebug && !depthZeroDebug.startNeighborTrace && debug.startNeighborTrace) depthZeroDebug.startNeighborTrace = debug.startNeighborTrace;
+                if ((debug.nodesExpanded || 0) === 0 && !depthZeroDebug?.depthZeroReason) {
+                    setDepthZeroReason(debug, debug.status === 'timeout' ? 'returned-without-expansion' : 'status-error-before-expansion', {
+                        returnedBeforeExpansion: true,
+                        stage: 'triage-resolve'
+                    });
+                }
+                if (debug.status === 'timeout') return withZeroExpansionSummary({ ok: false, status: 'timeout', solution: [], solutions: [], debug }, 'triage-resolve', 'legacy-solver');
+                return withZeroExpansionSummary({ ok: false, status: 'no-solution-inconclusive', solution: [], solutions: [], debug }, 'triage-resolve', 'legacy-solver');
             };
 
             // Root-cause guard: triage runs were occasionally returning inconclusive with almost zero expansion.
@@ -6366,14 +6426,14 @@
             }
 
             const elapsedMs = Date.now() - started;
-            return {
+            return withZeroExpansionSummary({
                 ok: !!outcome.ok,
                 status: outcome.status,
                 solution: outcome.solution || [],
                 solutions: outcome.solutions || [],
                 elapsedMs,
                 stats: { debug: outcome.debug || {} }
-            };
+            }, 'triage-final', 'triage-wrapper');
         },
 
         async solve(levelInput, opts = {}) {
@@ -6517,6 +6577,20 @@
                     markStage(plan.stage, plan.name, plan.variant, plan.budgetMs, startedAt, triageResult);
                     const triageDebug = triageResult?.stats?.debug || {};
                     const searchDiagnostics = buildSearchDiagnostics(triageDebug, triageResult?.status || 'error');
+                    const triageStartState = getStartStateDebug(triageDebug);
+                    const triageStartTrace = getStartNeighborTraceDebug(triageDebug);
+                    const triageStartNeighborKeys = Array.isArray(triageStartState?.startNeighborKeys)
+                        ? triageStartState.startNeighborKeys
+                        : (Array.isArray(triageStartTrace?.finalNeighbors) ? triageStartTrace.finalNeighbors.slice(0, 12) : null);
+                    const triageDepthZeroReason = getDepthZeroReason(triageDebug, triageResult?.status || 'error');
+                    const missingDepthZero = (searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion)
+                        && (!Number.isFinite(triageStartState?.startNeighborsCount) || !Array.isArray(triageStartNeighborKeys) || !triageDepthZeroReason);
+                    const triageZeroExpansionSummary = makeZeroExpansionSummary({
+                        statusPath: `triage-stage-${plan.stage}`,
+                        debug: triageDebug,
+                        diagnostics: searchDiagnostics,
+                        droppedBy: missingDepthZero ? 'triage-wrapper' : 'legacy-solver'
+                    });
                     triageAttempts.push({
                         stage: plan.stage,
                         name: plan.name,
@@ -6528,7 +6602,14 @@
                         debugNotes: triageDebug?.notes || null,
                         nodesExpanded: searchDiagnostics.nodesExpanded,
                         branchesGenerated: searchDiagnostics.branchesGenerated,
-                        startNeighborsCount: triageDebug?.startState?.startNeighborsCount ?? null,
+                        startNeighborsCount: Number.isFinite(triageStartState?.startNeighborsCount)
+                            ? triageStartState.startNeighborsCount
+                            : ((searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion) ? 'missing-debug-propagation' : null),
+                        startNeighborKeys: Array.isArray(triageStartNeighborKeys)
+                            ? triageStartNeighborKeys
+                            : ((searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion) ? 'missing-debug-propagation' : null),
+                        depthZeroReason: triageDepthZeroReason
+                            || ((searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion) ? 'missing-debug-propagation' : null),
                         candidateMovesConsidered: searchDiagnostics.candidateMovesConsidered,
                         memoHits: searchDiagnostics.memoHits,
                         failedStateHits: searchDiagnostics.failedStateHits,
@@ -6537,7 +6618,8 @@
                         budgetExhausted: searchDiagnostics.budgetExhausted,
                         returnedWithoutExpansion: searchDiagnostics.returnedWithoutExpansion,
                         disabledPrunesApplied: searchDiagnostics.disabledPrunesApplied,
-                        triageProbe: triageDebug?.triageProbe || null
+                        triageProbe: triageDebug?.triageProbe || null,
+                        zeroExpansionSummary: triageZeroExpansionSummary
                     });
                     last = { ...triageResult, stage: plan.stage, message: triageResult.ok ? `Solved (${plan.variant}).` : `${plan.variant} ${triageResult.status || 'error'}.`, stagesTried };
                     if (triageResult.ok || triageResult.status === 'no-solution-proven') break;
@@ -6555,6 +6637,8 @@
                             nodesExpanded: a.nodesExpanded,
                             branchesGenerated: a.branchesGenerated,
                             startNeighborsCount: a.startNeighborsCount,
+                            startNeighborKeys: a.startNeighborKeys,
+                            depthZeroReason: a.depthZeroReason,
                             candidateMovesConsidered: a.candidateMovesConsidered,
                             memoHits: a.memoHits,
                             failedStateHits: a.failedStateHits,
@@ -6563,7 +6647,8 @@
                             budgetExhausted: a.budgetExhausted,
                             returnedWithoutExpansion: a.returnedWithoutExpansion,
                             disabledPrunesApplied: a.disabledPrunesApplied,
-                            triageProbe: a.triageProbe || null
+                            triageProbe: a.triageProbe || null,
+                            zeroExpansionSummary: a.zeroExpansionSummary || null
                         })),
                         debugNotes: triageAttempts.flatMap(a => Array.isArray(a.debugNotes) ? a.debugNotes : (a.debugNotes ? [a.debugNotes] : []))
                     }
@@ -6776,8 +6861,8 @@
             APP.UI.showMessage(purpose === 'hint' ? 'Hint found.' : 'Solved.', 'text-emerald-600');
         };
 
-        const solveLevel = async (level, opts = {}) => {
-            level = SavedHintArchitecture.toHintBlindSolverLevel(level);
+            const solveLevel = async (level, opts = {}) => {
+                level = SavedHintArchitecture.toHintBlindSolverLevel(level);
             const purpose = opts.purpose || 'solve';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
             const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
@@ -6789,7 +6874,7 @@
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
             const requestedSolverPath = allowReferee ? 'referee' : 'legacy';
             const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-only';
-            const baseReport = {
+                const baseReport = {
                 requestedSolverPath,
                 refereeAttempted: false,
                 refereeStatus: null,
@@ -6802,9 +6887,50 @@
                 finalStatus: 'error',
                 finalSolvedBy: 'none',
                 executionPath: defaultExecutionPath,
-                totalSolveTimeMs: 0
-            };
-            const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
+                    totalSolveTimeMs: 0
+                };
+                const attachDepthZeroAudit = (payload, statusPath = 'solver-wrapper', droppedBy = 'unknown') => {
+                    if (!payload || typeof payload !== 'object') return payload;
+                    const dbg = payload.debug || payload.stats?.debug || null;
+                    if (!dbg) return payload;
+                    const diagnostics = buildSearchDiagnostics(dbg, payload.rawStatus || payload.status || 'unknown');
+                    const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy });
+                    if (summary) payload.zeroExpansionSummary = summary;
+                    return payload;
+                };
+                const normalizeLegacyRun = (legacy, fallbackStatus = 'error', context = {}) => {
+                    const debug = legacy?.debug || createSolverDebugStats(debugLevel);
+                    ensureDepthZeroDebug(debug);
+                    if (debug?.debug) {
+                        if (!debug.debug.startState && debug.startState) debug.debug.startState = debug.startState;
+                        if (!debug.debug.startNeighborTrace && debug.startNeighborTrace) debug.debug.startNeighborTrace = debug.startNeighborTrace;
+                    }
+                    const diagnostics = buildSearchDiagnostics(debug, fallbackStatus);
+                    if (diagnostics.returnedWithoutExpansion && !debug?.debug?.depthZeroReason) {
+                        setDepthZeroReason(debug, fallbackStatus === 'error' ? 'status-error-before-expansion' : 'returned-without-expansion', {
+                            normalizedBy: context?.normalizedBy || 'legacy-wrapper',
+                            returnedBeforeExpansion: true
+                        });
+                    }
+                    const canonical = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
+                    const ok = !!legacy?.ok && canonical.length > 0;
+                    const normalizedStatus = ok
+                        ? 'solved'
+                        : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : fallbackStatus));
+                    return {
+                        ok,
+                        status: normalizedStatus,
+                        rawStatus: normalizedStatus,
+                        stage: 0,
+                        solution: ok ? canonical : [],
+                        solutions: ok ? canonical : [],
+                        message: ok ? '' : 'No solution found.',
+                        stagesTried: [],
+                        debug,
+                        zeroExpansionSummary: makeZeroExpansionSummary({ statusPath: context?.statusPath || 'legacy-run', debug, diagnostics, droppedBy: context?.droppedBy || 'legacy-wrapper' })
+                    };
+                };
+                const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
             if (!controller) {
                 return {
                     ok: false,
@@ -6838,23 +6964,25 @@
                     APP.UI.showMessage('Solving…', 'text-sky-600');
                     legacyFallbackTried = true;
                     const legacyStart = performance.now();
-                    const legacy = await PathfinderSolver.solve(level, {
-                        timeLimit: timeBudgetMs,
-                        debug,
-                        debugLevel,
-                        signal: controller.signal
-                    });
-                    legacyFallbackTimeMs = Math.round(performance.now() - legacyStart);
-                    const legacySolution = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
-                    if (legacy?.ok && legacySolution.length > 0) {
-                        legacyStatus = 'solved';
-                        legacyFallbackSolved = true;
-                        solverResult = { ok: true, status: 'solved', rawStatus: 'solved', stage: 0, solution: legacySolution, solutions: legacySolution, stagesTried: [] };
-                    } else {
-                        const rawStatus = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
-                        legacyStatus = rawStatus;
-                        solverResult = { ok: false, status: rawStatus, rawStatus, stage: 0, solution: [], solutions: [], message: 'No solution found.', stagesTried: [], debug: legacy?.debug || null };
+                    let legacy;
+                    try {
+                        legacy = await PathfinderSolver.solve(level, {
+                            timeLimit: timeBudgetMs,
+                            debug,
+                            debugLevel,
+                            signal: controller.signal,
+                            enableLowExpansionProbe: !!opts.auditMode
+                        });
+                    } catch (legacyErr) {
+                        const thrownDebug = createSolverDebugStats(debugLevel);
+                        setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: legacyErr?.message || 'legacy-throw' });
+                        finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
+                        legacy = { ok: false, solution: [], solutions: [], debug: thrownDebug, error: legacyErr };
                     }
+                    legacyFallbackTimeMs = Math.round(performance.now() - legacyStart);
+                    solverResult = normalizeLegacyRun(legacy, 'error', { normalizedBy: 'legacy-only-wrapper', statusPath: 'legacy-only', droppedBy: 'legacy-wrapper' });
+                    legacyStatus = solverResult.rawStatus;
+                    legacyFallbackSolved = !!solverResult.ok;
                 } else {
                     refereeAttempted = true;
                     const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
@@ -6889,29 +7017,34 @@
                         APP.UI.showMessage('Referee inconclusive. Trying old solver…', 'text-amber-600');
                         legacyFallbackTried = true;
                         const legacyStart = performance.now();
-                        const legacy = await PathfinderSolver.solve(level, {
-                            timeLimit: fallbackBudgetMs,
-                            debug,
-                            debugLevel,
-                            signal: controller.signal
-                        });
+                        let legacy;
+                        try {
+                            legacy = await PathfinderSolver.solve(level, {
+                                timeLimit: fallbackBudgetMs,
+                                debug,
+                                debugLevel,
+                                signal: controller.signal,
+                                enableLowExpansionProbe: !!opts.auditMode
+                            });
+                        } catch (legacyErr) {
+                            const thrownDebug = createSolverDebugStats(debugLevel);
+                            setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: legacyErr?.message || 'legacy-throw' });
+                            finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
+                            legacy = { ok: false, solution: [], solutions: [], debug: thrownDebug, error: legacyErr };
+                        }
                         legacyFallbackTimeMs = Math.round(performance.now() - legacyStart);
-                        const legacySolution = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
-                        if (legacy?.ok && legacySolution.length > 0) {
-                            legacyStatus = 'solved';
+                        const normalizedLegacy = normalizeLegacyRun(legacy, 'error', { normalizedBy: 'referee-fallback-wrapper', statusPath: 'referee->legacy', droppedBy: 'legacy-wrapper' });
+                        legacyStatus = normalizedLegacy.rawStatus;
+                        if (normalizedLegacy.ok) {
                             legacyFallbackSolved = true;
                             solverResult = {
-                                ok: true,
-                                status: 'solved',
-                                rawStatus: 'solved',
+                                ...normalizedLegacy,
                                 stage: solverResult.stage,
-                                solution: legacySolution,
-                                solutions: legacySolution,
                                 stagesTried: solverResult.stagesTried || []
                             };
                         } else {
-                            const legacyRawStatus = legacy?.debug?.status === 'timeout' ? 'timeout' : (legacy?.debug?.status === 'no-solution' ? normalizeNoSolutionStatus(legacy.debug) : 'error');
-                            legacyStatus = legacyRawStatus;
+                            if (!solverResult.debug && normalizedLegacy.debug) solverResult.debug = normalizedLegacy.debug;
+                            if (!solverResult.zeroExpansionSummary && normalizedLegacy.zeroExpansionSummary) solverResult.zeroExpansionSummary = normalizedLegacy.zeroExpansionSummary;
                         }
                     }
                 }
@@ -6927,7 +7060,7 @@
                 }
                 const solution = solverResult.ok ? solverResult.solution : [];
                 const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
-                return {
+                return attachDepthZeroAudit({
                     ok: !!solverResult.ok,
                     status: solverResult.status || 'error',
                     rawStatus: finalStatus,
@@ -6961,8 +7094,9 @@
                     executionPath,
                     totalSolveTimeMs,
                     message: solverResult.message || '',
-                    diagnostics: solverResult.diagnostics || null
-                };
+                    diagnostics: solverResult.diagnostics || null,
+                    zeroExpansionSummary: solverResult.zeroExpansionSummary || null
+                }, executionPath, 'audit-normalizer');
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
                 if (err?.name === 'AbortError') {
@@ -6981,7 +7115,10 @@
                     };
                 }
                 console.error('Solver error:', err);
-                return {
+                const thrownDebug = createSolverDebugStats(debugLevel);
+                setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: err?.message || 'solver error' });
+                finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
+                return attachDepthZeroAudit({
                     ok: false,
                     status: 'error',
                     rawStatus: 'error',
@@ -6993,8 +7130,9 @@
                     finalStatus: 'error',
                     executionPath: defaultExecutionPath,
                     totalSolveTimeMs,
-                    message: err?.message || 'Solver error'
-                };
+                    message: err?.message || 'Solver error',
+                    debug: thrownDebug
+                }, defaultExecutionPath, 'legacy-wrapper');
             } finally {
                 finishRun();
             }
@@ -7482,6 +7620,18 @@
                     depth0: null,
                     startState: null,
                     startNeighborTrace: null,
+                    debug: {
+                        startState: null,
+                        startNeighborTrace: null,
+                        depthZeroReason: null,
+                        rootSuppressionLog: []
+                    },
+                    rootCandidatesGenerated: 0,
+                    rootCandidatesSuppressedByMemo: 0,
+                    rootCandidatesSuppressedByDominance: 0,
+                    rootCandidatesExpanded: 0,
+                    rootMoveOrder: [],
+                    rootMoveScores: [],
                     phaseTimeline: [],
                     phaseAttempts: [],
                     knotSelectionEvents: [],
@@ -7501,6 +7651,54 @@
                         other: 0
                     },
                     notes: []
+                };
+            }
+
+            function ensureDepthZeroDebug(debugStats) {
+                if (!debugStats || typeof debugStats !== 'object') return null;
+                if (!debugStats.debug || typeof debugStats.debug !== 'object') {
+                    debugStats.debug = { startState: null, startNeighborTrace: null, depthZeroReason: null, rootSuppressionLog: [] };
+                }
+                if (!Array.isArray(debugStats.debug.rootSuppressionLog)) debugStats.debug.rootSuppressionLog = [];
+                return debugStats.debug;
+            }
+
+            function setDepthZeroReason(debugStats, reason, meta = {}) {
+                const dbg = ensureDepthZeroDebug(debugStats);
+                if (!dbg) return;
+                dbg.depthZeroReason = reason;
+                dbg.depthZeroMeta = {
+                    ...(dbg.depthZeroMeta || {}),
+                    ...meta
+                };
+            }
+
+            function getStartStateDebug(debug = {}) {
+                return debug?.debug?.startState || debug?.startState || null;
+            }
+
+            function getStartNeighborTraceDebug(debug = {}) {
+                return debug?.debug?.startNeighborTrace || debug?.startNeighborTrace || null;
+            }
+
+            function getDepthZeroReason(debug = {}, status = null) {
+                return debug?.debug?.depthZeroReason || debug?.depthZeroReason || debug?.depth0?.reason || (status ? `${status}-before-expansion` : null);
+            }
+
+            function makeZeroExpansionSummary({ statusPath = 'unknown', debug = {}, diagnostics = null, droppedBy = 'unknown' } = {}) {
+                const d = diagnostics || buildSearchDiagnostics(debug, null);
+                if (!(d.nodesExpanded === 0 && d.branchesGenerated === 0 && d.returnedWithoutExpansion)) return null;
+                const startState = getStartStateDebug(debug);
+                const startTrace = getStartNeighborTraceDebug(debug);
+                const startNeighborKeys = Array.isArray(startState?.startNeighborKeys)
+                    ? startState.startNeighborKeys
+                    : (Array.isArray(startTrace?.finalNeighbors) ? startTrace.finalNeighbors.slice(0, 12) : []);
+                return {
+                    reason: getDepthZeroReason(debug, d.budgetExhausted ? 'timeout' : null) || 'missing-debug-propagation',
+                    startNeighborsCount: Number.isFinite(startState?.startNeighborsCount) ? startState.startNeighborsCount : 'missing-debug-propagation',
+                    startNeighborKeys: startNeighborKeys.length > 0 ? startNeighborKeys : 'missing-debug-propagation',
+                    statusPath,
+                    droppedBy
                 };
             }
 
@@ -7534,6 +7732,16 @@
                     returnedWithoutExpansion,
                     disabledPrunesApplied
                 };
+            }
+
+            function withZeroExpansionSummary(entry = {}, statusPath = 'unknown', droppedBy = 'unknown') {
+                if (!entry || typeof entry !== 'object') return entry;
+                const debug = entry?.debug || entry?.stats?.debug || {};
+                const status = entry?.status || entry?.rawStatus || 'unknown';
+                const diagnostics = buildSearchDiagnostics(debug, status);
+                const summary = makeZeroExpansionSummary({ statusPath, debug, diagnostics, droppedBy });
+                if (summary) entry.zeroExpansionSummary = summary;
+                return entry;
             }
 
             function isGoalReachableFromAnyGate(level) {
