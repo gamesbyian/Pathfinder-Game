@@ -5342,6 +5342,7 @@
             const articulationRatio = (Number(topology.articulationPointCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
             const bridgeRatio = (Number(topology.bridgeCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
             const mandatoryFamilies = Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies.length : 0;
+            const portalFamilyCount = Array.isArray(portalHints.families) ? portalHints.families.length : 0;
             const knotConfidence = knotCandidates.length > 0 ? Math.max(0, Number(knotCandidates[0]?.confidence) || 0) : 0;
             const objectiveOrderComplexity = objectiveCount >= 4 ? 1 : (objectiveCount >= 3 ? 0.75 : (objectiveCount >= 2 ? 0.45 : 0.2));
             const symmetryConfidence = Math.max(0, Number(symmetryModel.confidence) || 0);
@@ -5349,8 +5350,8 @@
             const rawScores = {
                 'corridor-commitment': 0.22 + corridorRatio * 0.68 + articulationRatio * 0.28 + Math.max(0, routePressure - 0.6) * 0.35,
                 'open-harvest': 0.2 + openness * 0.72 + Math.max(0, 1 - corridorRatio) * 0.2,
-                'portal-bridge': 0.2 + mandatoryFamilies * 0.24 + bridgeRatio * 0.45 + (profile?.portalHints?.families?.length > 0 ? 0.2 : 0),
-                'intersection-knot': 0.18 + knotConfidence * 0.65 + articulationRatio * 0.4 + Math.max(0, Number(profile?.objectiveCount || 0) - 1) * 0.03,
+                'portal-bridge': 0.2 + mandatoryFamilies * 0.24 + bridgeRatio * 0.45 + (portalFamilyCount > 0 ? 0.2 : 0),
+                'intersection-knot': 0.18 + knotConfidence * 0.65 + articulationRatio * 0.4 + Math.max(0, objectiveCount - 1) * 0.03,
                 'objective-order': 0.16 + objectiveOrderComplexity * 0.62 + Math.max(0, routePressure - 0.55) * 0.22,
                 'portal-long-route-hybrid': 0.15 + (mandatoryFamilies > 0 ? 0.34 : 0) + Math.max(0, routePressure - 0.7) * 0.5 + bridgeRatio * 0.2
             };
