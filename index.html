@@ -4711,6 +4711,11 @@
             const freeCells = Math.max(1, totalCells - blocks);
             const routePressure = (Math.max(0, level?.reqLen || 0) / freeCells) + ((level?.reqInt || 0) * 0.35);
             const portalLoad = level?.portalMap?.size || 0;
+            const mustPassCount = level?.mustPassKeys?.length || 0;
+            const mustCrossCount = level?.mustCrossKeys?.length || 0;
+            const falseGoalCount = level?.falseGoalKeys?.size || 0;
+            const objectiveSignalCount = mustPassCount + mustCrossCount + falseGoalCount;
+            const objectiveDensity = objectiveSignalCount / freeCells;
             const perimeterThreshold = (w >= 9 || h >= 9) ? 1 : 0;
 
             const walkableKeys = [];
@@ -5301,11 +5306,23 @@
                 knotCandidates: rankedKnotCandidates,
                 hypothesisModel
             }, templateLibrary);
+            const complexitySignals = {
+                portalLoad,
+                routePressure,
+                reqLen: Math.max(0, level?.reqLen || 0),
+                objectiveSignalCount,
+                objectiveDensity
+            };
+            const complexityClass = this.classifyComplexityProfile(complexitySignals);
 
             return {
                 routePressure,
                 openness,
                 objectiveCount: objectiveFeatures.length,
+                objectiveSignalCount,
+                objectiveDensity,
+                complexitySignals,
+                complexityClass,
                 perimeterThreshold,
                 perimeterBias: routePressure > 0.8 || openness > 0.72 ? 40 : 0,
                 knotBias: (level?.reqInt || 0) > 0 ? 34 : 0,
@@ -5542,6 +5559,10 @@
                 objectiveCount: Number.isFinite(safe.objectiveCount)
                     ? safe.objectiveCount
                     : (Array.isArray(objectiveModel.features) ? objectiveModel.features.length : 0),
+                objectiveSignalCount: Number.isFinite(safe.objectiveSignalCount) ? safe.objectiveSignalCount : 0,
+                objectiveDensity: Number.isFinite(safe.objectiveDensity) ? safe.objectiveDensity : 0,
+                complexitySignals: (safe.complexitySignals && typeof safe.complexitySignals === 'object') ? safe.complexitySignals : {},
+                complexityClass: safe.complexityClass || 'standard',
                 perimeterThreshold: Number.isFinite(safe.perimeterThreshold) ? safe.perimeterThreshold : 1,
                 perimeterBias: Number.isFinite(safe.perimeterBias) ? safe.perimeterBias : 0,
                 knotBias: Number.isFinite(safe.knotBias) ? safe.knotBias : 0,
@@ -5629,6 +5650,53 @@
                 templateLibrary,
                 templateCandidates
             };
+        },
+
+
+        classifyComplexityProfile(signals = {}) {
+            const portalLoad = Math.max(0, Number(signals.portalLoad) || 0);
+            const routePressure = Math.max(0, Number(signals.routePressure) || 0);
+            const reqLen = Math.max(0, Number(signals.reqLen) || 0);
+            const objectiveSignalCount = Math.max(0, Number(signals.objectiveSignalCount) || 0);
+            const objectiveDensity = Math.max(0, Number(signals.objectiveDensity) || 0);
+            if (portalLoad >= 2) return 'portal-heavy';
+            if (objectiveSignalCount >= 5 || objectiveDensity >= 0.16) return 'objective-dense';
+            if (routePressure >= 0.92 || reqLen >= 18) return 'route-pressure';
+            return 'standard';
+        },
+
+        getComplexityStrategy(complexityClass = 'standard') {
+            const strategyByClass = {
+                'portal-heavy': {
+                    stageOrder: ['fast', 'portalSweep', 'strict', 'alt', 'switch', 'fallback'],
+                    budgetSplit: { fast: 0.16, portalSweep: 0.18, strict: 0.17, alt: 0.13, switch: 0.16, fallback: 0.2 },
+                    portalBiasMode: 'aggressive',
+                    pruneTogglesByTier: [[], ['distance'], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],
+                    directionPolicy: { fast: 'default', portalSweep: 'alt', alt: 'alt', allowRandomized: false }
+                },
+                'objective-dense': {
+                    stageOrder: ['fast', 'strict', 'retained', 'alt', 'switch', 'fallback'],
+                    budgetSplit: { fast: 0.12, strict: 0.2, retained: 0.18, alt: 0.14, switch: 0.16, fallback: 0.2 },
+                    portalBiasMode: 'adaptiveMustCross',
+                    pruneTogglesByTier: [[], [], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],
+                    directionPolicy: { fast: 'default', alt: 'alt', allowRandomized: false }
+                },
+                'route-pressure': {
+                    stageOrder: ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback'],
+                    budgetSplit: { fast: 0.1, alt: 0.16, strict: 0.2, retained: 0.18, switch: 0.16, fallback: 0.2 },
+                    portalBiasMode: 'adaptiveMustCross',
+                    pruneTogglesByTier: [[], ['distance'], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],
+                    directionPolicy: { fast: 'default', alt: 'alt', allowRandomized: true }
+                },
+                'standard': {
+                    stageOrder: ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback'],
+                    budgetSplit: { fast: 0.14, alt: 0.17, strict: 0.17, retained: 0.14, switch: 0.18, fallback: 0.2 },
+                    portalBiasMode: 'adaptiveMustCross',
+                    pruneTogglesByTier: [[], [], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],
+                    directionPolicy: { fast: 'default', alt: 'alt', allowRandomized: false }
+                }
+            };
+            return strategyByClass[complexityClass] || strategyByClass.standard;
         },
 
         allocateStageBudgets(totalMs, profile = null) {
@@ -5971,7 +6039,9 @@
             const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
             level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
             const purpose = opts.purpose || 'solve';
-            const resolvedPortalBiasMode = opts.portalBiasMode || 'adaptiveMustCross';
+            const complexityClass = level.solverProfile?.complexityClass || 'standard';
+            const complexityStrategy = this.getComplexityStrategy(complexityClass);
+            const resolvedPortalBiasMode = opts.portalBiasMode || complexityStrategy.portalBiasMode || 'adaptiveMustCross';
             const resolvedPhasePolicy = opts.phasePolicy || level.solverProfile?.phasePolicy || null;
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
@@ -5996,27 +6066,40 @@
                 && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
                 && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
-            const makePhaseOrder = (totalBudgetMs, disabledPruneSet) => {
+            const makePhaseOrder = (totalBudgetMs, tierIdx) => {
+                const disabledPruneSet = complexityStrategy.pruneTogglesByTier?.[tierIdx] || [];
                 const budgets = this.allocateStageBudgets(totalBudgetMs, level.solverProfile);
-                const allowRandomThisTier = allowRandomizedExploration
+                const split = complexityStrategy.budgetSplit || {};
+                const allowRandomThisTier = (allowRandomizedExploration || complexityStrategy.directionPolicy?.allowRandomized)
                     && (totalBudgetMs <= tierBudgets[0] || allowRandomizedExplorationOnExpensiveTiers);
-                const phaseOrder = [
-                    { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: budgets.stage0, run: () => this.runBaselineStage(level, budgets.stage0, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: allowRandomThisTier, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: budgets.stage1, run: () => this.runBaselineStage(level, budgets.stage1, { dirOrderVariant: 'alt', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    { stage: 2, name: 'Stage 2', variant: 'strict-structural', budgetMs: Math.max(500, Math.floor(budgets.stage2 * 0.34)), run: () => this.runBaselineStage(level, Math.max(500, Math.floor(budgets.stage2 * 0.34)), { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: false, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (strict structural hypothesis).', timeoutMessage: 'Strict structural hypothesis timed out.', failMessage: 'strict structural fail' },
-                    { stage: 3, name: 'Stage 3', variant: 'retained-hypothesis-relax', budgetMs: Math.max(500, Math.floor(budgets.stage2 * 0.26)), run: () => this.runBaselineStage(level, Math.max(500, Math.floor(budgets.stage2 * 0.26)), { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (retained hypothesis).', timeoutMessage: 'Retained hypothesis retry timed out.', failMessage: 'retained-hypothesis fail' },
-                    { stage: 4, name: 'Stage 4', variant: 'hypothesis-switch', budgetMs: Math.max(500, Math.floor(budgets.stage2 * 0.4)), run: () => { this.maybeSwitchHypothesis(controlPlane, 'alternate-hypothesis-run'); return this.runBaselineStage(level, Math.max(500, Math.floor(budgets.stage2 * 0.4)), { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }); }, successMessage: 'Solved (alternate hypothesis).', timeoutMessage: 'Alternate hypothesis timed out.', failMessage: 'hypothesis-switch fail' },
-                    { stage: 5, name: 'Stage 5', variant: 'fallback', budgetMs: budgets.stage3, run: () => this.runStage2Fallback(level, budgets.stage3, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'broad fallback fail' }
-                ];
-                if (lowComplexityLevel) return phaseOrder.filter(p => p.stage <= 1 || p.stage === 5);
-                return phaseOrder;
+                const stageBudget = (keyName, fallback) => Math.max(500, Math.floor(totalBudgetMs * (split[keyName] || fallback)));
+                const fastBudget = stageBudget('fast', budgets.stage0 / totalBudgetMs);
+                const altBudget = stageBudget('alt', budgets.stage1 / totalBudgetMs);
+                const strictBudget = stageBudget('strict', (budgets.stage2 * 0.34) / totalBudgetMs);
+                const retainedBudget = stageBudget('retained', (budgets.stage2 * 0.26) / totalBudgetMs);
+                const switchBudget = stageBudget('switch', (budgets.stage2 * 0.4) / totalBudgetMs);
+                const portalSweepBudget = stageBudget('portalSweep', 0.15);
+                const fallbackBudget = Math.max(500, totalBudgetMs - fastBudget - altBudget - strictBudget - retainedBudget - switchBudget - portalSweepBudget);
+
+                const stageCatalog = {
+                    fast: { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: fastBudget, run: () => this.runBaselineStage(level, fastBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.fast || 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: allowRandomThisTier, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
+                    alt: { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: altBudget, run: () => this.runBaselineStage(level, altBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.alt || 'alt', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
+                    strict: { stage: 2, name: 'Stage 2', variant: 'strict-structural', budgetMs: strictBudget, run: () => this.runBaselineStage(level, strictBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: false, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (strict structural hypothesis).', timeoutMessage: 'Strict structural hypothesis timed out.', failMessage: 'strict structural fail' },
+                    retained: { stage: 3, name: 'Stage 3', variant: 'retained-hypothesis-relax', budgetMs: retainedBudget, run: () => this.runBaselineStage(level, retainedBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (retained hypothesis).', timeoutMessage: 'Retained hypothesis retry timed out.', failMessage: 'retained-hypothesis fail' },
+                    switch: { stage: 4, name: 'Stage 4', variant: 'hypothesis-switch', budgetMs: switchBudget, run: () => { this.maybeSwitchHypothesis(controlPlane, 'alternate-hypothesis-run'); return this.runBaselineStage(level, switchBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }); }, successMessage: 'Solved (alternate hypothesis).', timeoutMessage: 'Alternate hypothesis timed out.', failMessage: 'hypothesis-switch fail' },
+                    portalSweep: { stage: 7, name: 'Stage 7', variant: 'portal-sweep', budgetMs: portalSweepBudget, run: () => this.runBaselineStage(level, portalSweepBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.portalSweep || 'alt', portalBiasMode: 'aggressive', scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (portal sweep).', timeoutMessage: 'Portal sweep timed out.', failMessage: 'portal sweep fail' },
+                    fallback: { stage: 5, name: 'Stage 5', variant: 'fallback', budgetMs: fallbackBudget, run: () => this.runStage2Fallback(level, fallbackBudget, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'broad fallback fail' }
+                };
+                const ordered = (complexityStrategy.stageOrder || ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback'])
+                    .map(id => stageCatalog[id])
+                    .filter(Boolean);
+                if (lowComplexityLevel) return ordered.filter(p => p.stage <= 1 || p.stage === 5);
+                return ordered;
             };
-            // Keep must-pass/must-cross bounds active in primary stages so multi-mustCross levels
-            // (e.g. level 130) don't blow up search breadth; reserve broad prune disabling for fallback.
             const phases = [
-                makePhaseOrder(tierBudgets[0], []),
-                makePhaseOrder(tierBudgets[1], []),
-                makePhaseOrder(tierBudgets[2], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'])
+                makePhaseOrder(tierBudgets[0], 0),
+                makePhaseOrder(tierBudgets[1], 1),
+                makePhaseOrder(tierBudgets[2], 2)
             ];
             const activePhases = phases[Math.min(tier || 0, phases.length - 1)];
             const allowGemini = !!opts.allowGemini;
@@ -6033,7 +6116,14 @@
                     chosenHypothesis: result?.controlPlane?.activeHypothesis?.archetype || controlPlane?.activeHypothesis?.archetype || null,
                     hypothesisConfidence: result?.controlPlane?.activeHypothesis?.confidence || controlPlane?.activeHypothesis?.confidence || null,
                     hypothesisSwitchReason: result?.controlPlane?.activeHypothesis?.switchReason || null,
-                    derivedThresholds: result?.stats?.debug?.phaseTimeline?.[0]?.thresholds || null
+                    derivedThresholds: result?.stats?.debug?.phaseTimeline?.[0]?.thresholds || null,
+                    complexityClass,
+                    strategy: {
+                        portalBiasMode: resolvedPortalBiasMode,
+                        pruneToggles: complexityStrategy.pruneTogglesByTier?.[Math.min(2, tier)] || [],
+                        stageOrder: complexityStrategy.stageOrder || [],
+                        directionPolicy: complexityStrategy.directionPolicy || {}
+                    }
                 });
             };
 
@@ -6067,7 +6157,21 @@
                 } else {
                     last = { ok: false, status: 'gemini-failed', stage: 6, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
                 }
-                stagesTried.push({ stage: 6, name: 'Stage 6', variant: 'gemini', budgetMs: 15000, elapsedMs: Date.now() - t4, result: toStageResultStatus(last.status) });
+                stagesTried.push({
+                    stage: 6,
+                    name: 'Stage 6',
+                    variant: 'gemini',
+                    budgetMs: 15000,
+                    elapsedMs: Date.now() - t4,
+                    result: toStageResultStatus(last.status),
+                    complexityClass,
+                    strategy: {
+                        portalBiasMode: resolvedPortalBiasMode,
+                        pruneToggles: complexityStrategy.pruneTogglesByTier?.[Math.min(2, tier)] || [],
+                        stageOrder: complexityStrategy.stageOrder || [],
+                        directionPolicy: complexityStrategy.directionPolicy || {}
+                    }
+                });
             }
 
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
@@ -6081,6 +6185,14 @@
             last.primaryArchetype = level.solverProfile?.hypothesisModel?.primaryArchetype || level.solverProfile?.archetype || null;
             last.archetypeScores = level.solverProfile?.hypothesisModel?.archetypeScores || null;
             last.controlPlane = controlPlane;
+            last.complexityClass = complexityClass;
+            last.complexityStrategy = {
+                portalBiasMode: resolvedPortalBiasMode,
+                pruneTogglesByTier: complexityStrategy.pruneTogglesByTier || [],
+                stageOrder: complexityStrategy.stageOrder || [],
+                budgetSplit: complexityStrategy.budgetSplit || {},
+                directionPolicy: complexityStrategy.directionPolicy || {}
+            };
             return last;
         },
 
