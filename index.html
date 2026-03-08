@@ -11449,21 +11449,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 : '';
             return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} total=${r.newHint.totalSolveTimeMs || 0}ms | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
-        const getAuditIssueLine = (r) => {
+        const hasAuditIssue = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
-                return r.savedHints.invalid > 0 ? `L${r.level}: bad hints ${r.savedHints.invalid}/${r.savedHints.total}` : '';
+                return r.savedHints.invalid > 0;
             }
             if (auditLastRunType === AUDIT_RUN_TYPES.newHint) {
-                if (r.newHint.status === 'timeout') return `L${r.level}: new hint timeout (${r.newHint.timeMs}ms)`;
-                if (r.newHint.status === 'no-solution-inconclusive' || r.newHint.rawStatus === 'no-solution-inconclusive') {
-                    return `L${r.level}: new hint inconclusive (${r.newHint.timeMs}ms)`;
-                }
-                return '';
+                return r.newHint.status === 'timeout' || r.newHint.status === 'no-solution-inconclusive' || r.newHint.rawStatus === 'no-solution-inconclusive';
             }
             if (auditLastRunType === AUDIT_RUN_TYPES.bombs) {
-                return r.bombs.status === 'none-found' ? `L${r.level}: 0 bomb spots found` : '';
+                return r.bombs.status === 'none-found';
             }
-            return '';
+            return false;
         };
         const renderAuditReport = () => {
             const summaryEl = document.getElementById('auditSummary');
@@ -11943,8 +11939,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.UI.showMessage('Audit data copied.', 'text-white font-black');
         };
         document.getElementById('copyAuditIssuesBtn').onclick = async () => {
-            const issueLines = auditReport.map(getAuditIssueLine).filter(Boolean);
-            const out = issueLines.length ? issueLines.join('\n') : 'No issues found for last check.';
+            const levelsWithIssues = auditReport.filter(hasAuditIssue);
+            const out = levelsWithIssues.length
+                ? JSON.stringify({ runType: auditLastRunType, progress: auditProgress, levels: levelsWithIssues }, null, 2)
+                : 'No issues found for last check.';
             await APP.UI.copyText(out, { fallbackElId: 'auditReportRows' });
             APP.UI.showMessage('Audit issues copied.', 'text-white font-black');
         };
