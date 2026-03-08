@@ -10326,7 +10326,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 for (let i = 0; i < rawLevels.length; i++) {
                     if (auditCancelRequested) break;
                     const levelNum = i + 1;
-                    const levelEntry = { level: levelNum, savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] }, newHint: { status: 'error', timeMs: 0, producedHintValid: false }, bombs: { status: 'error', count: 0 }, error: '' };
+                    const levelEntry = {
+                        level: levelNum,
+                        savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
+                        newHint: { status: 'error', rawStatus: 'error', timeMs: 0, producedHintValid: false, attemptHistory: [] },
+                        bombs: { status: 'error', count: 0 },
+                        error: ''
+                    };
 
                     try {
                         const normalized = APP.LevelUtils.normalizeLevel(i);
@@ -10351,35 +10357,90 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         }
 
                         const t0 = performance.now();
-                        let hintRes = null;
+                        const classifyHintStatus = (hintRes, hintValidation) => {
+                            if (hintRes?.ok && hintValidation?.ok) return 'success';
+                            if (hintRes?.status === 'no-solution' || hintRes?.rawStatus === 'no-solution-proven') return 'no-solution';
+                            if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') return 'timeout';
+                            if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') return 'aborted';
+                            return 'error';
+                        };
+                        const isRetryableInconclusive = (attemptStatus, rawStatus) => ['timeout', 'no-solution-inconclusive'].includes(rawStatus || attemptStatus);
+                        const hintAttempts = [
+                            { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false },
+                            { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false },
+                            { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false }
+                        ];
+                        let finalAttempt = null;
                         try {
-                            if (!(await waitForSolverIdle(2000))) {
-                                APP.Solver.cancel();
-                                await waitForSolverIdle(2000);
+                            for (let attemptIdx = 0; attemptIdx < hintAttempts.length; attemptIdx++) {
+                                const attemptPlan = hintAttempts[attemptIdx];
+                                if (attemptIdx > 0) {
+                                    if (!finalAttempt || !isRetryableInconclusive(finalAttempt.status, finalAttempt.rawStatus)) break;
+                                }
+                                if (!(await waitForSolverIdle(2000))) {
+                                    APP.Solver.cancel();
+                                    await waitForSolverIdle(2000);
+                                }
+                                const attemptStart = performance.now();
+                                const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), attemptPlan);
+                                const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
+                                const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
+                                const attemptRecord = {
+                                    attempt: attemptPlan.key,
+                                    status: classifyHintStatus(hintRes, hintValidation),
+                                    rawStatus: hintRes?.rawStatus || hintRes?.status || 'error',
+                                    stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
+                                    elapsedMs: Math.round(performance.now() - attemptStart),
+                                    producedHintValid: !!hintValidation?.ok,
+                                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : ''
+                                };
+                                levelEntry.newHint.attemptHistory.push(attemptRecord);
+                                finalAttempt = attemptRecord;
+                                if (attemptRecord.status === 'success' || attemptRecord.status === 'no-solution') break;
                             }
-                            hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 1000 });
-                            const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
-                            const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
-                            levelEntry.newHint.producedHintValid = !!hintValidation?.ok;
-                            if (hintRes?.ok && hintValidation?.ok) {
-                                levelEntry.newHint.status = 'success';
-                            } else if (hintRes?.status === 'no-solution' || hintRes?.rawStatus === 'no-solution-proven') {
-                                levelEntry.newHint.status = 'no-solution';
-                            } else if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') {
-                                levelEntry.newHint.status = 'timeout';
-                            } else if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') {
-                                levelEntry.newHint.status = 'aborted';
-                            } else {
-                                levelEntry.newHint.status = 'error';
-                            }
-                            if (levelEntry.newHint.status !== 'success' && !levelEntry.error) {
-                                const detail = [hintRes?.status, hintRes?.rawStatus, hintRes?.message].filter(Boolean).join(' | ');
-                                if (detail) levelEntry.error = trimAuditError(detail);
+
+                            if (finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution') {
+                                if (!(await waitForSolverIdle(2000))) {
+                                    APP.Solver.cancel();
+                                    await waitForSolverIdle(2000);
+                                }
+                                const attemptStart = performance.now();
+                                const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true });
+                                const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
+                                const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
+                                const geminiAttempt = {
+                                    attempt: 'D',
+                                    status: classifyHintStatus(hintRes, hintValidation),
+                                    rawStatus: hintRes?.rawStatus || hintRes?.status || 'error',
+                                    stage: Number.isFinite(hintRes?.stage) ? hintRes.stage : null,
+                                    elapsedMs: Math.round(performance.now() - attemptStart),
+                                    producedHintValid: !!hintValidation?.ok,
+                                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : ''
+                                };
+                                levelEntry.newHint.attemptHistory.push(geminiAttempt);
+                                finalAttempt = geminiAttempt;
                             }
                         } catch (newHintErr) {
-                            levelEntry.newHint.status = `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error';
+                            const failedAttempt = {
+                                attempt: `ERR-${levelEntry.newHint.attemptHistory.length + 1}`,
+                                status: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
+                                rawStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
+                                stage: null,
+                                elapsedMs: 0,
+                                producedHintValid: false,
+                                validationReason: ''
+                            };
+                            levelEntry.newHint.attemptHistory.push(failedAttempt);
+                            finalAttempt = failedAttempt;
                             APP.Solver.cancel();
-                            if (levelEntry.newHint.status === 'error') levelEntry.error = trimAuditError(newHintErr);
+                            if (failedAttempt.status === 'error') levelEntry.error = trimAuditError(newHintErr);
+                        }
+                        levelEntry.newHint.status = finalAttempt?.status || 'error';
+                        levelEntry.newHint.rawStatus = finalAttempt?.rawStatus || 'error';
+                        levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
+                        if (levelEntry.newHint.status !== 'success' && !levelEntry.error) {
+                            const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
+                            if (detail) levelEntry.error = trimAuditError(detail);
                         }
                         levelEntry.newHint.timeMs = Math.round(performance.now() - t0);
                         if (levelEntry.newHint.status === 'success') auditProgress.newHint.success++; else auditProgress.newHint.failure++;
