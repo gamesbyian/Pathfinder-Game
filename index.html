@@ -8030,9 +8030,9 @@
                     totalSolveTimeMs: options.totalSolveTimeMs,
                     auditMode: options.auditMode
                 });
-                return SolverCanonical.normalizeSolveResult({
+                const merged = {
                     ...telemetry.normalized,
-                    ...options.baseReport,
+                    ...(options.baseReport || {}),
                     ...telemetry.compatAliases,
                     finalStatus: options.finalStatus || telemetry.finalStatus,
                     totalSolveTimeMs: Number.isFinite(options.totalSolveTimeMs)
@@ -8042,10 +8042,11 @@
                     requestedSolverPath: options.requestedSolverPath || options.baseReport?.requestedSolverPath || 'referee',
                     solverPath: telemetry.executionPath,
                     executionPath: telemetry.executionPath
-                }, {
+                };
+                return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(merged, {
                     purpose: options.purpose || options.baseReport?.purpose || 'solve',
                     engine: options.solverResult?.engine || 'referee'
-                });
+                }));
             },
             buildSolveFailureResult(options = {}) {
                 const fallbackResult = {
@@ -8062,7 +8063,7 @@
                     droppedBy: options.droppedBy || null,
                     debug: options.debug || null,
                     message: options.message || null,
-                    ...options.baseReport
+                    ...(options.baseReport || {})
                 };
                 return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(fallbackResult, {
                     purpose: options.baseReport?.purpose || 'solve',
@@ -8078,8 +8079,8 @@
             },
             async run(level, request = {}) {
                 const purpose = request.purpose || 'solve';
-                const raw = await solveLevel(level, request);
                 if (purpose === 'trap') return this.runTrapSearch(level, request);
+                const raw = await solveLevel(level, request);
                 return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(raw, { purpose, engine: raw?.engine || 'referee' }));
             },
             async runTrapSearch(level, request = {}) {
