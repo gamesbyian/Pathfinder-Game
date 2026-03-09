@@ -7678,30 +7678,52 @@
         showReport() { this.updateSummary(); APP.UI.openModal('megaModal'); }
     };
 
-        const startRun = ({ label = 'Solve search running…', mode = 'solve' } = {}) => {
-            if (APP.State.ENGINE.activeSolverController) return null;
-            APP.State.ENGINE.activeSolverController = new AbortController();
-            APP.State.ENGINE.solverAbortRequested = false;
-            APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
-            runStart = Date.now();
-            status = { running: true, mode, startedAt: runStart };
-            APP.UI.setModalContent('searchLabel', label, 'text');
-            APP.UI.setSolverTimerText('0.0s');
-            timerTick = setInterval(() => {
-                APP.UI.setSolverTimerText(((Date.now() - runStart) / 1000).toFixed(1) + 's');
-            }, 100);
-            return APP.State.ENGINE.activeSolverController;
+        // ======================================================
+        // SolverController
+        // Migration intent: isolate run lifecycle (abort/timer/overlay state)
+        // from solving policy/engine logic.
+        // ======================================================
+        const SolverController = {
+            start({ label = 'Solve search running…', mode = 'solve' } = {}) {
+                if (APP.State.ENGINE.activeSolverController) return null;
+                APP.State.ENGINE.activeSolverController = new AbortController();
+                APP.State.ENGINE.solverAbortRequested = false;
+                APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
+                runStart = Date.now();
+                status = { running: true, mode, startedAt: runStart };
+                APP.UI.setModalContent('searchLabel', label, 'text');
+                APP.UI.setSolverTimerText('0.0s');
+                timerTick = setInterval(() => {
+                    APP.UI.setSolverTimerText(((Date.now() - runStart) / 1000).toFixed(1) + 's');
+                }, 100);
+                return APP.State.ENGINE.activeSolverController;
+            },
+            finish() {
+                if (timerTick) clearInterval(timerTick);
+                timerTick = null;
+                APP.State.ENGINE.activeSolverController = null;
+                status = { running: false, mode: null, startedAt: 0 };
+                APP.State.ENGINE.solverAbortRequested = false;
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                APP.UI.setButtonState('solverCloseBtn', { enabled: true });
+            },
+            cancel() {
+                if (!APP.State.ENGINE.activeSolverController) return;
+                APP.State.ENGINE.solverAbortRequested = true;
+                APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
+                APP.UI.setButtonState('solverCloseBtn', { enabled: false });
+                APP.State.ENGINE.activeSolverController.abort();
+            },
+            isRunning() {
+                return !!APP.State.ENGINE.activeSolverController;
+            },
+            getStatus() {
+                return { ...status, active: !!APP.State.ENGINE.activeSolverController };
+            }
         };
 
-        const finishRun = () => {
-            if (timerTick) clearInterval(timerTick);
-            timerTick = null;
-            APP.State.ENGINE.activeSolverController = null;
-            status = { running: false, mode: null, startedAt: 0 };
-            APP.State.ENGINE.solverAbortRequested = false;
-            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-            APP.UI.setButtonState('solverCloseBtn', { enabled: true });
-        };
+        const startRun = (...args) => SolverController.start(...args);
+        const finishRun = (...args) => SolverController.finish(...args);
 
         const applySolutionsToEngine = (solutionEntries, purpose = 'solve') => {
             const normalizedEntries = normalizeSolutionEntries(solutionEntries);
@@ -8148,6 +8170,22 @@
             APP.UI.setButtonState('solverCloseBtn', { enabled: false });
             APP.State.ENGINE.activeSolverController.abort();
         };
+
+        // ======================================================
+        // SolverAuditRunner
+        // Migration intent: audit should use the same public solve facade.
+        // Next TODO: further collapse audit-specific result shaping into this module.
+        // ======================================================
+        const SolverAuditRunner = {
+            run(level, request = {}) {
+                return SolverService.run(level, request);
+            },
+            runTrap(level, request = {}) {
+                return SolverService.runTrapSearch(level, { ...request, purpose: 'trap', auditMode: true });
+            }
+        };
+
+        const cancel = () => SolverController.cancel();
 
 
 
@@ -8890,8 +8928,8 @@
             getTrapSpotBudgetMs,
             applySolutionsToEngine,
             cancel,
-            isRunning: () => !!APP.State.ENGINE.activeSolverController,
-            getStatus: () => ({ ...status, active: !!APP.State.ENGINE.activeSolverController }),
+            isRunning: () => SolverController.isRunning(),
+            getStatus: () => SolverController.getStatus(),
             Referee,
             Mega,
             runGameSolver: (...args) => runGameSolver(...args),
