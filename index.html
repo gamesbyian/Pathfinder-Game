@@ -5199,15 +5199,62 @@
             zeroExpansionSummary: entry.zeroExpansionSummary || null,
             debugNotes: entry.debugNotes || null
         });
+        const isSolvedStageAttempt = (attempt = {}) => {
+            if (attempt?.solved === true) return true;
+            const status = `${attempt?.status || attempt?.rawStatus || attempt?.result || ''}`.trim();
+            return status === 'solved' || status === 'success';
+        };
+        const isCompatLegacyStageAttempt = (attempt = {}) => !!attempt?.compatLegacyOutputAlias
+            || `${attempt?.variant || ''}`.includes('endurance-longpath')
+            || `${attempt?.variant || ''}`.includes('memo-relaxed');
+        const deriveWinningAttemptFromStageAttempts = (attemptsLike = [], options = {}) => {
+            const attempts = Array.isArray(attemptsLike) ? attemptsLike : [];
+            const finalStatus = `${options.finalStatus || ''}`.trim();
+            const finalStage = Number.isFinite(options.finalStage) ? options.finalStage : null;
+            const solvedRun = options.finalSolved === true || finalStatus === 'solved' || finalStatus === 'success';
+            const solvedAttempts = attempts.filter(isSolvedStageAttempt);
+            const matchByStage = finalStage === null
+                ? null
+                : solvedAttempts.slice().reverse().find(st => Number.isFinite(st?.stage) && st.stage === finalStage);
+            const winningAttempt = matchByStage || solvedAttempts[solvedAttempts.length - 1] || null;
+            const inferredLegacy = isCompatLegacyStageAttempt(winningAttempt || {});
+            const inferredGemini = `${winningAttempt?.variant || ''}` === 'gemini' || `${winningAttempt?.engine || ''}` === 'gemini';
+            const winningEngine = !solvedRun
+                ? 'none'
+                : (inferredGemini ? 'gemini' : (inferredLegacy ? 'legacy' : 'referee'));
+            return {
+                solved: solvedRun,
+                winningAttempt,
+                winningEngine,
+                winningStage: winningAttempt?.variant || winningAttempt?.name || null,
+                winningStageNumber: Number.isFinite(winningAttempt?.stage) ? winningAttempt.stage : finalStage,
+                winningElapsedMs: Number.isFinite(winningAttempt?.elapsedMs) ? winningAttempt.elapsedMs : null,
+                attemptCount: attempts.length
+            };
+        };
+        const validateSolveAttributionConsistency = (summary = {}, context = {}) => {
+            if (!APP.State?.ENGINE?.isDevMode && !context.auditMode) return;
+            if (summary?.finalStatus === 'solved' && summary?.finalSolvedBy === 'none') {
+                console.warn('[Solver attribution inconsistency] solved status reported with finalSolvedBy=none', { summary, context });
+            }
+            const winningEngine = summary?.winningEngine || 'none';
+            if (winningEngine !== 'none' && summary?.finalSolvedBy && summary.finalSolvedBy !== winningEngine) {
+                console.warn('[Solver attribution inconsistency] compatibility alias disagrees with winning stage', { summary, context });
+            }
+        };
         // Compatibility aliases are outward-facing only and must be derived in this single function.
         const deriveCompatibilityAliasesFromAttempts = (attemptsLike = [], options = {}) => {
             const attempts = Array.isArray(attemptsLike) ? attemptsLike : [];
             const allowReferee = options.allowReferee !== undefined ? !!options.allowReferee : true;
             // Migration note: "legacy fallback" aliases are now synthesized from referee profile attempts.
-            const compatAliasAttempts = attempts.filter(st => !!st?.compatLegacyOutputAlias || `${st?.variant || ''}`.includes('endurance-longpath') || `${st?.variant || ''}`.includes('memo-relaxed'));
+            const compatAliasAttempts = attempts.filter(isCompatLegacyStageAttempt);
             const firstCompatAliasAttempt = compatAliasAttempts[0] || null;
-            const solvedCompatAliasAttempt = compatAliasAttempts.find(st => st?.solved);
-            const solvedByReferee = attempts.find(st => st?.solved && !st?.compatLegacyOutputAlias);
+            const solvedCompatAliasAttempt = compatAliasAttempts.find(isSolvedStageAttempt);
+            const winning = deriveWinningAttemptFromStageAttempts(attempts, {
+                finalStatus: options.finalStatus,
+                finalStage: options.finalStage,
+                finalSolved: options.finalSolved
+            });
             const executionPath = options.executionPath
                 || (!allowReferee ? 'legacy-compat-only' : (compatAliasAttempts.length > 0 ? 'referee-with-compat-profiles' : 'referee-only'));
             const totalSolveTimeMs = Number.isFinite(options.totalSolveTimeMs) ? options.totalSolveTimeMs : 0;
@@ -5219,8 +5266,13 @@
                 legacyFallbackStatus: solvedCompatAliasAttempt?.status || firstCompatAliasAttempt?.status || null,
                 legacyFallbackSolved: !!solvedCompatAliasAttempt,
                 legacyFallbackTimeMs: Number.isFinite(firstCompatAliasAttempt?.elapsedMs) ? firstCompatAliasAttempt.elapsedMs : null,
-                finalSolvedByProfile: solvedCompatAliasAttempt ? 'compat-rescue-profile' : (solvedByReferee ? 'referee-core' : 'none'),
-                finalSolvedBy: solvedCompatAliasAttempt ? 'legacy' : (solvedByReferee ? 'referee' : 'none'),
+                finalSolvedByProfile: winning.winningEngine === 'legacy' ? 'compat-rescue-profile' : (winning.winningEngine === 'gemini' ? 'gemini' : (winning.winningEngine === 'referee' ? 'referee-core' : 'none')),
+                finalSolvedBy: winning.winningEngine,
+                winningEngine: winning.winningEngine,
+                winningStage: winning.winningStage,
+                winningStageNumber: winning.winningStageNumber,
+                winningElapsedMs: winning.winningElapsedMs,
+                refereeAttemptCount: winning.attemptCount,
                 totalSolveTimeMs
             };
         };
@@ -7479,11 +7531,25 @@
                 const compatAliases = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], {
                     allowReferee,
                     executionPath: solverResult.executionPath,
-                    totalSolveTimeMs
+                    totalSolveTimeMs,
+                    finalStatus,
+                    finalStage: solverResult.stage,
+                    finalSolved: !!solverResult.ok
                 });
                 const executionPath = compatAliases.executionPath;
 
                 solverResult.solverPath = compatAliases.solverPath;
+                validateSolveAttributionConsistency({
+                    finalStatus,
+                    finalSolvedBy: compatAliases.finalSolvedBy,
+                    winningEngine: compatAliases.winningEngine
+                }, {
+                    levelId,
+                    purpose,
+                    allowReferee,
+                    stageCount: Array.isArray(solverResult.stagesTried) ? solverResult.stagesTried.length : 0,
+                    auditMode: !!opts.auditMode
+                });
                 console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
@@ -7521,6 +7587,11 @@
                     legacyFallbackTimeMs: compatAliases.legacyFallbackTimeMs,
                     finalStatus,
                     finalSolvedBy: compatAliases.finalSolvedBy,
+                    winningEngine: compatAliases.winningEngine,
+                    winningStage: compatAliases.winningStage,
+                    winningStageNumber: compatAliases.winningStageNumber,
+                    winningElapsedMs: compatAliases.winningElapsedMs,
+                    refereeAttemptCount: compatAliases.refereeAttemptCount,
                     executionPath: compatAliases.executionPath,
                     totalSolveTimeMs,
                     message: solverResult.message || '',
@@ -11899,6 +11970,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 timeMs: r.newHint.timeMs,
                 totalSolveTimeMs: r.newHint.totalSolveTimeMs,
                 attempts: Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : 0,
+                winningEngine: r.newHint.winningEngine || null,
+                winningStage: r.newHint.winningStage || null,
                 diagnosticsSummary: r.newHint.diagnosticsSummary || null
             },
             bombs: { status: r.bombs.status, count: r.bombs.count },
@@ -11940,7 +12013,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -12083,7 +12156,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.legacyFallbackTimeMs = Number.isFinite(finalHintResult?.legacyFallbackTimeMs) ? finalHintResult.legacyFallbackTimeMs : null;
             levelEntry.newHint.finalStatus = finalHintResult?.finalStatus || finalHintResult?.rawStatus || finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.finalSolvedBy = finalHintResult?.finalSolvedBy || 'none';
+            levelEntry.newHint.winningEngine = finalHintResult?.winningEngine || null;
+            levelEntry.newHint.winningStage = finalHintResult?.winningStage || null;
+            levelEntry.newHint.winningStageNumber = Number.isFinite(finalHintResult?.winningStageNumber) ? finalHintResult.winningStageNumber : null;
+            levelEntry.newHint.refereeAttemptCount = Number.isFinite(finalHintResult?.refereeAttemptCount) ? finalHintResult.refereeAttemptCount : (Array.isArray(finalHintResult?.stagesTried) ? finalHintResult.stagesTried.length : 0);
             levelEntry.newHint.totalSolveTimeMs = Number.isFinite(finalHintResult?.totalSolveTimeMs) ? finalHintResult.totalSolveTimeMs : 0;
+            validateSolveAttributionConsistency({
+                finalStatus: levelEntry.newHint.finalStatus,
+                finalSolvedBy: levelEntry.newHint.finalSolvedBy,
+                winningEngine: levelEntry.newHint.winningEngine || 'none'
+            }, { source: 'audit.newHint', level: levelEntry.level, auditMode: true });
             levelEntry.newHint.preExpansionAbort = summarizeSearchSignal(finalAttempt?.preExpansionAbort);
             levelEntry.newHint.zeroExpansionSummary = summarizeSearchSignal(finalAttempt?.zeroExpansionSummary);
             levelEntry.newHint.rootSearchSummary = summarizeSearchSignal(finalAttempt?.rootSearchSummary);
