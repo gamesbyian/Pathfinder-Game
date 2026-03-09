@@ -4990,6 +4990,8 @@
                 preExpansionAbort: partial.preExpansionAbort || null,
                 zeroExpansionSummary: partial.zeroExpansionSummary || null,
                 rootSearchSummary: partial.rootSearchSummary || null,
+                failureSummary: partial.failureSummary || null,
+                legacyRescueSummary: partial.legacyRescueSummary || null,
                 engine: partial.engine || null
             };
         };
@@ -5063,6 +5065,7 @@
                 preExpansionAbort: attempt?.preExpansionAbort || null,
                 zeroExpansionSummary: attempt?.zeroExpansionSummary || null,
                 rootSearchSummary: attempt?.rootSearchSummary || null,
+                failureSummary: attempt?.failureSummary || null,
                 diagnosticsSummary: options.diagnosticsSummary || null,
                 rootCandidatesGenerated: Number.isFinite(debug?.rootCandidatesGenerated) ? debug.rootCandidatesGenerated : null,
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
@@ -5108,7 +5111,8 @@
             result: toStageResultStatus(normalized.rawStatus || normalized.status || 'error'),
             preExpansionAbort: normalized.preExpansionAbort || null,
             zeroExpansionSummary: normalized.zeroExpansionSummary || null,
-            rootSearchSummary: normalized.rootSearchSummary || null
+            rootSearchSummary: normalized.rootSearchSummary || null,
+            failureSummary: normalized.failureSummary || null
         });
         const toCompactTriageStageSummary = (entry = {}) => compactDefined({
             stage: Number.isFinite(entry.stage) ? entry.stage : null,
@@ -6293,6 +6297,75 @@
             return { stage0, stage1, stage2, stage3, total };
         },
 
+        getOrderingPolicyConfig(policy = 'default', opts = {}) {
+            const allowShuffle = !!opts.allowShuffle;
+            const objectiveFirst = opts.objectiveFirst !== false;
+            const finishFirst = !!opts.finishFirst;
+            const byPolicy = {
+                default: { dirOrderVariant: 'default', allowRandomizedExploration: !!opts.allowRandomizedExploration },
+                alt: { dirOrderVariant: 'alt', allowRandomizedExploration: false },
+                shuffle: { dirOrderVariant: allowShuffle ? 'random' : 'default', allowRandomizedExploration: allowShuffle },
+                objectiveFirst: { dirOrderVariant: objectiveFirst ? 'alt' : 'default', allowRandomizedExploration: false },
+                finishFirst: { dirOrderVariant: finishFirst ? 'default' : 'alt', allowRandomizedExploration: false }
+            };
+            return byPolicy[policy] || byPolicy.default;
+        },
+
+        buildOrderingPolicyListForFailure(category, opts = {}) {
+            if (category === 'shallowCollapse') return ['alt', 'objectiveFirst'];
+            if (category === 'deepTimeout') return ['finishFirst'];
+            if (category === 'unknownFailure') return ['alt'];
+            const allowRandom = !!opts.allowRandomizedExploration;
+            return allowRandom ? ['shuffle'] : [];
+        },
+
+        async runBaselinePolicySweep(level, budgetMs, opts = {}) {
+            const policy = opts.orderingPolicy || 'default';
+            const policyCfg = this.getOrderingPolicyConfig(policy, {
+                allowShuffle: !!opts.allowRandomizedExploration,
+                allowRandomizedExploration: !!opts.allowRandomizedExploration,
+                objectiveFirst: true,
+                finishFirst: true
+            });
+            const merged = {
+                ...opts,
+                dirOrderVariant: policyCfg.dirOrderVariant,
+                allowRandomizedExploration: policyCfg.allowRandomizedExploration,
+                orderingPolicy: policy
+            };
+            const result = await this.runBaselineStage(level, budgetMs, merged);
+            result.orderingPolicy = policy;
+            return result;
+        },
+
+        async runSanityMode(level, budgetMs, opts = {}) {
+            const disabledPrunes = Array.from(new Set([
+                ...(Array.isArray(opts.disabledPrunes) ? opts.disabledPrunes : []),
+                'mustPassBound', 'mustCrossBound', 'connectivity'
+            ]));
+            const sanityResult = await this.runStage2Fallback(level, budgetMs, disabledPrunes, {
+                portalBiasMode: opts.portalBiasMode || 'off',
+                phasePolicy: null,
+                enableLowExpansionProbe: true
+            });
+            sanityResult.mode = 'sanity';
+            return sanityResult;
+        },
+
+        async runEnduranceMode(level, budgetMs, opts = {}) {
+            const enduranceResult = await this.runBaselinePolicySweep(level, budgetMs, {
+                ...opts,
+                orderingPolicy: 'finishFirst',
+                scoringMode: 'modern',
+                structuralMode: true,
+                enableLegacyRescue: true,
+                allowRandomizedExploration: false,
+                purpose: opts.purpose || 'solve'
+            });
+            enduranceResult.mode = 'endurance';
+            return enduranceResult;
+        },
+
         async runBaselineStage(level, budgetMs, opts = {}) {
             const started = Date.now();
             const profile = opts.profile || level?.solverProfile || null;
@@ -6782,48 +6855,6 @@
             // Referee is the single orchestrator; legacy pathfinder is invoked as an internal adapter stage.
             const allowLegacyAdapter = opts.allowLegacyAdapter !== undefined ? !!opts.allowLegacyAdapter : true;
             const onlyLegacyAdapter = !!opts.onlyLegacyAdapter;
-            const makePhaseOrder = (totalBudgetMs, tierIdx) => {
-                const disabledPruneSet = fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[tierIdx] || [];
-                const budgets = this.allocateStageBudgets(totalBudgetMs, level.solverProfile);
-                const split = complexityStrategy.budgetSplit || {};
-                const allowRandomThisTier = (allowRandomizedExploration || complexityStrategy.directionPolicy?.allowRandomized)
-                    && (totalBudgetMs <= tierBudgets[0] || allowRandomizedExplorationOnExpensiveTiers);
-                const stageBudget = (keyName, fallback) => Math.max(500, Math.floor(totalBudgetMs * (split[keyName] || fallback)));
-                const fastBudget = stageBudget('fast', budgets.stage0 / totalBudgetMs);
-                const altBudget = stageBudget('alt', budgets.stage1 / totalBudgetMs);
-                const strictBudget = stageBudget('strict', (budgets.stage2 * 0.34) / totalBudgetMs);
-                const retainedBudget = stageBudget('retained', (budgets.stage2 * 0.26) / totalBudgetMs);
-                const switchBudget = stageBudget('switch', (budgets.stage2 * 0.4) / totalBudgetMs);
-                const portalSweepBudget = stageBudget('portalSweep', 0.15);
-                const macroSkeletonBudget = stageBudget('macroSkeleton', 0.16);
-                const fallbackBudget = Math.max(500, totalBudgetMs - fastBudget - altBudget - strictBudget - retainedBudget - switchBudget - portalSweepBudget - macroSkeletonBudget);
-
-                const stageCatalog = {
-                    fast: { stage: 0, name: 'Stage 0', variant: 'default', budgetMs: fastBudget, run: () => this.runBaselineStage(level, fastBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.fast || 'default', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: allowRandomThisTier, purpose }), successMessage: 'Solved (fast pass).', timeoutMessage: 'Search timed out.', failMessage: 'No solution found in fast pass.' },
-                    alt: { stage: 1, name: 'Stage 1', variant: 'altOrder', budgetMs: altBudget, run: () => this.runBaselineStage(level, altBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.alt || 'alt', portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (alternate ordering).', timeoutMessage: 'Alternate ordering timed out.', failMessage: 'Alternate ordering did not find a solution.' },
-                    strict: { stage: 2, name: 'Stage 2', variant: 'strict-structural', budgetMs: strictBudget, run: () => this.runBaselineStage(level, strictBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: false, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (strict structural hypothesis).', timeoutMessage: 'Strict structural hypothesis timed out.', failMessage: 'strict structural fail' },
-                    retained: { stage: 3, name: 'Stage 3', variant: 'retained-hypothesis-relax', budgetMs: retainedBudget, run: () => this.runBaselineStage(level, retainedBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (retained hypothesis).', timeoutMessage: 'Retained hypothesis retry timed out.', failMessage: 'retained-hypothesis fail' },
-                    switch: { stage: 4, name: 'Stage 4', variant: 'hypothesis-switch', budgetMs: switchBudget, run: () => { this.maybeSwitchHypothesis(controlPlane, 'alternate-hypothesis-run'); return this.runBaselineStage(level, switchBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }); }, successMessage: 'Solved (alternate hypothesis).', timeoutMessage: 'Alternate hypothesis timed out.', failMessage: 'hypothesis-switch fail' },
-                    portalSweep: { stage: 7, name: 'Stage 7', variant: 'portal-sweep', budgetMs: portalSweepBudget, run: () => this.runBaselineStage(level, portalSweepBudget, { dirOrderVariant: complexityStrategy.directionPolicy?.portalSweep || 'alt', portalBiasMode: 'aggressive', scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: true, allowRandomizedExploration: false, purpose }), successMessage: 'Solved (portal sweep).', timeoutMessage: 'Portal sweep timed out.', failMessage: 'portal sweep fail' },
-                    macroSkeleton: { stage: 6, name: 'Stage 6', variant: 'macro-skeleton', budgetMs: macroSkeletonBudget, run: () => this.runBaselineStage(level, macroSkeletonBudget, { dirOrderVariant: 'default', portalBiasMode: resolvedPortalBiasMode, scoringMode: 'modern', structuralMode: true, phasePolicy: resolvedPhasePolicy, profile: level.solverProfile, controlPlane, enableLegacyRescue: false, allowRandomizedExploration: false, purpose, preferMacroSkeleton: true }), successMessage: 'Solved (macro skeleton focus).', timeoutMessage: 'Macro skeleton search timed out.', failMessage: 'macro skeleton fail' },
-                    fallback: { stage: 5, name: 'Stage 5', variant: 'fallback', budgetMs: fallbackBudget, run: () => this.runStage2Fallback(level, fallbackBudget, disabledPruneSet, { portalBiasMode: resolvedPortalBiasMode, phasePolicy: resolvedPhasePolicy }), successMessage: 'Solved (fallback strategy).', timeoutMessage: 'Fallback strategy timed out.', failMessage: 'broad fallback fail' },
-                    legacyAdapter: { stage: 11, name: 'Stage 11', variant: 'legacy-adapter', budgetMs: Math.max(500, Math.floor(totalBudgetMs * 0.4)), run: () => this.runLegacyAdapterStage(level, Math.max(500, Math.floor(totalBudgetMs * 0.4)), { signal: APP.State.ENGINE.activeSolverController?.signal, debug: true, debugLevel: (typeof level?.id === 'number' ? level.id + 1 : null), enableLowExpansionProbe: !!opts.auditMode }), successMessage: 'Solved (legacy adapter).', timeoutMessage: 'Legacy adapter timed out.', failMessage: 'legacy adapter inconclusive' }
-                };
-                const baseOrder = onlyLegacyAdapter
-                    ? ['legacyAdapter']
-                    : (complexityStrategy.stageOrder || ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback']);
-                if (allowLegacyAdapter && !baseOrder.includes('legacyAdapter')) baseOrder.push('legacyAdapter');
-                const ordered = baseOrder.map(id => stageCatalog[id]).filter(Boolean);
-                if (onlyLegacyAdapter) return ordered;
-                if (lowComplexityLevel) return ordered.filter(p => p.stage <= 1 || p.stage === 5 || p.stage === 11);
-                return ordered;
-            };
-            const phases = [
-                makePhaseOrder(tierBudgets[0], 0),
-                makePhaseOrder(tierBudgets[1], 1),
-                makePhaseOrder(tierBudgets[2], 2)
-            ];
-            const activePhases = phases[Math.min(tier || 0, phases.length - 1)];
             const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result, meta = {}) => {
@@ -6838,7 +6869,6 @@
                     meta
                 });
                 if (APP.State?.ENGINE?.isDevMode || opts?.auditMode) {
-                    // Dev assertion: canonical stage records should remain stage-native, never full result mirrors.
                     const leakedCompat = ['solverPath', 'executionPath', 'legacyFallbackTried', 'legacyFallbackStatus', 'legacyFallbackSolved', 'legacyFallbackTimeMs', 'finalSolvedBy', 'totalSolveTimeMs']
                         .filter(k => Object.prototype.hasOwnProperty.call(stageSummary, k));
                     if (leakedCompat.length > 0) console.warn('[Referee canonical-stage leak]', { stage, leakedCompat });
@@ -6846,116 +6876,142 @@
                 stagesTried.push(stageSummary);
             };
 
-            let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
-
-            for (const phase of activePhases) {
-                const { stage, name, variant, budgetMs: phaseBudgetMs, run, successMessage, timeoutMessage, failMessage } = phase;
+            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee-core', run }) => {
                 if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
-                    last = { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
-                    break;
+                    return { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
                 }
-                if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: phaseBudgetMs });
+                if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: stageBudgetMs });
                 const startedAt = Date.now();
                 const result = await run();
-                markStage(stage, name, variant, phaseBudgetMs, startedAt, result, { engine: variant === 'legacy-adapter' ? 'legacy-adapter' : 'referee-core' });
-                last = { ...result, stage, message: result.ok ? successMessage : (result.status === 'timeout' ? timeoutMessage : failMessage), stagesTried };
-                if (result.ok || result.status === 'no-solution-proven') break;
+                markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine });
+                const normalized = createCanonicalSolveResult(result || {});
+                normalized.stage = stage;
+                normalized.message = normalized.ok ? `Solved (${variant}).` : `${variant} ${normalized.status || 'error'}.`;
+                normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
+                return normalized;
+            };
+
+            let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
+            const totalBudget = Math.max(1500, budgetMs);
+            const baselineBudget = Math.max(750, Math.floor(totalBudget * 0.5));
+            const recoveryBudget = Math.max(750, Math.floor(totalBudget * 0.25));
+            const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.35));
+            const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
+            const legacyBudget = Math.max(500, Math.floor(totalBudget * 0.4));
+            const defaultOrderingPolicy = complexityStrategy.directionPolicy?.fast === 'alt' ? 'alt' : 'default';
+
+            if (!onlyLegacyAdapter) {
+                last = await runStage({
+                    stage: 0,
+                    name: 'Stage 0',
+                    variant: 'baseline-core',
+                    budgetMs: baselineBudget,
+                    run: () => this.runBaselinePolicySweep(level, baselineBudget, {
+                        orderingPolicy: defaultOrderingPolicy,
+                        portalBiasMode: resolvedPortalBiasMode,
+                        phasePolicy: resolvedPhasePolicy,
+                        profile: level.solverProfile,
+                        controlPlane,
+                        allowRandomizedExploration: allowRandomizedExploration || complexityStrategy.directionPolicy?.allowRandomized,
+                        purpose
+                    })
+                });
+
+                if (!last.ok && last.status !== 'no-solution-proven') {
+                    const failureCategory = last.failureSummary?.category || 'unknownFailure';
+                    if (failureCategory === 'preExpansionFailure') {
+                        last = await runStage({
+                            stage: 2,
+                            name: 'Stage 2',
+                            variant: 'sanity-mode',
+                            budgetMs: sanityBudget,
+                            run: () => this.runSanityMode(level, sanityBudget, {
+                                portalBiasMode: resolvedPortalBiasMode,
+                                phasePolicy: resolvedPhasePolicy,
+                                disabledPrunes: fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || []
+                            })
+                        });
+                    } else if (failureCategory === 'shallowCollapse') {
+                        const policies = this.buildOrderingPolicyListForFailure('shallowCollapse', { allowRandomizedExploration: false });
+                        for (const policy of policies) {
+                            if (last.ok || last.status === 'no-solution-proven') break;
+                            last = await runStage({
+                                stage: 2,
+                                name: 'Stage 2',
+                                variant: `baseline-retry-${policy}`,
+                                budgetMs: recoveryBudget,
+                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                                    orderingPolicy: policy,
+                                    portalBiasMode: resolvedPortalBiasMode,
+                                    phasePolicy: resolvedPhasePolicy,
+                                    profile: level.solverProfile,
+                                    controlPlane,
+                                    scoringMode: 'modern',
+                                    structuralMode: true,
+                                    enableLegacyRescue: true,
+                                    allowRandomizedExploration: policy === 'shuffle',
+                                    purpose
+                                })
+                            });
+                        }
+                    } else if (failureCategory === 'deepTimeout') {
+                        last = await runStage({
+                            stage: 3,
+                            name: 'Stage 3',
+                            variant: 'endurance-mode',
+                            budgetMs: enduranceBudget,
+                            run: () => this.runEnduranceMode(level, enduranceBudget, {
+                                portalBiasMode: resolvedPortalBiasMode,
+                                phasePolicy: resolvedPhasePolicy,
+                                profile: level.solverProfile,
+                                controlPlane,
+                                purpose
+                            })
+                        });
+                    } else if (failureCategory === 'unknownFailure') {
+                        last = await runStage({
+                            stage: 4,
+                            name: 'Stage 4',
+                            variant: 'conservative-fallback',
+                            budgetMs: recoveryBudget,
+                            run: () => this.runStage2Fallback(level, recoveryBudget, fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || ['mustPassBound', 'mustCrossBound', 'connectivity'], {
+                                portalBiasMode: resolvedPortalBiasMode,
+                                phasePolicy: resolvedPhasePolicy,
+                                enableLowExpansionProbe: true
+                            })
+                        });
+                    }
+                }
             }
 
-
-            if (!last.ok && last.status === 'no-solution-inconclusive') {
-                const triagePlans = [
-                    { stage: 8, name: 'Stage 8', variant: 'triage-prune-relax', budgetMs: Math.max(1500, Math.floor(budgetMs * 0.16)), portalBiasMode: 'adaptiveMustCross', phasePolicy: resolvedPhasePolicy, disabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity'] },
-                    { stage: 9, name: 'Stage 9', variant: 'triage-portal-off', budgetMs: Math.max(1500, Math.floor(budgetMs * 0.18)), portalBiasMode: 'off', phasePolicy: null, disabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance'] },
-                    { stage: 10, name: 'Stage 10', variant: 'triage-aggressive-legacy-phase', budgetMs: Math.max(1500, Math.floor(budgetMs * 0.2)), portalBiasMode: 'aggressive', phasePolicy: { archetype: 'legacy', thresholds: null }, disabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity'] }
-                ];
-                const triageAttempts = [];
-                for (const plan of triagePlans) {
-                    if (APP.State.ENGINE.activeSolverController?.signal?.aborted) break;
-                    if (opts.onStage) opts.onStage({ stage: plan.stage, name: plan.name, variant: plan.variant, budgetMs: plan.budgetMs });
-                    const startedAt = Date.now();
-                    const triageResult = await this.runStage2Fallback(level, plan.budgetMs, plan.disabledPrunes, { portalBiasMode: plan.portalBiasMode, phasePolicy: plan.phasePolicy, enableLowExpansionProbe: true });
-                    markStage(plan.stage, plan.name, plan.variant, plan.budgetMs, startedAt, triageResult, { engine: 'referee-core' });
-                    const triageDebug = triageResult?.stats?.debug || {};
-                    const searchDiagnostics = buildSearchDiagnostics(triageDebug, triageResult?.status || 'error');
-                    const triageStartState = getStartStateDebug(triageDebug);
-                    const triageStartTrace = getStartNeighborTraceDebug(triageDebug);
-                    const triageStartNeighborKeys = Array.isArray(triageStartState?.startNeighborKeys)
-                        ? triageStartState.startNeighborKeys
-                        : (Array.isArray(triageStartTrace?.finalNeighbors) ? triageStartTrace.finalNeighbors.slice(0, 12) : null);
-                    const triageDepthZeroReason = getDepthZeroReason(triageDebug, triageResult?.status || 'error');
-                    const triageDepthZeroCaptured = !!triageDebug?.debug?.depthZeroCaptured;
-                    const triageDroppedBy = triageDebug?.debug?.depthZeroDroppedBy
-                        || ((searchDiagnostics.returnedWithoutExpansion && triageDepthZeroCaptured && !triageDepthZeroReason) ? 'triage-wrapper' : 'unknown');
-                    const missingDepthZero = (searchDiagnostics.nodesExpanded === 0 || searchDiagnostics.returnedWithoutExpansion)
-                        && (!Number.isFinite(triageStartState?.startNeighborsCount) || !Array.isArray(triageStartNeighborKeys) || !triageDepthZeroReason);
-                    const resolvedDepthZeroReason = triageDepthZeroReason
-                        || (missingDepthZero
-                            ? (triageDepthZeroCaptured ? 'depth-zero-debug-lost-in-wrapper' : 'depth-zero-debug-never-captured')
-                            : null);
-                    const triageZeroExpansionSummary = makeZeroExpansionSummary({
-                        statusPath: `triage-stage-${plan.stage}`,
-                        debug: triageDebug,
-                        diagnostics: searchDiagnostics,
-                        droppedBy: triageDroppedBy
-                    });
-                    const rootSuppressionLog = Array.isArray(triageDebug?.debug?.rootSuppressionLog)
-                        ? triageDebug.debug.rootSuppressionLog.slice(0, 20)
-                        : [];
-                    const rootSearchSummary = makeRootSearchSummary(triageDebug, searchDiagnostics);
-                    triageAttempts.push({
-                        stage: plan.stage,
-                        name: plan.name,
-                        variant: plan.variant,
-                        status: triageResult?.status || 'error',
-                        elapsedMs: Date.now() - startedAt,
-                        strategy: { portalBiasMode: plan.portalBiasMode, phasePolicy: plan.phasePolicy || null, disabledPrunes: plan.disabledPrunes || [] },
-                        pruneCounters: triageDebug?.prune || null,
-                        debugNotes: triageDebug?.notes || null,
-                        nodesExpanded: searchDiagnostics.nodesExpanded,
-                        branchesGenerated: searchDiagnostics.branchesGenerated,
-                        startNeighborsCount: Number.isFinite(triageStartState?.startNeighborsCount)
-                            ? triageStartState.startNeighborsCount
-                            : null,
-                        startNeighborKeys: Array.isArray(triageStartNeighborKeys)
-                            ? triageStartNeighborKeys
-                            : null,
-                        depthZeroReason: resolvedDepthZeroReason,
-                        droppedBy: (resolvedDepthZeroReason === 'depth-zero-debug-lost-in-wrapper') ? triageDroppedBy : null,
-                        candidateMovesConsidered: searchDiagnostics.candidateMovesConsidered,
-                        memoHits: searchDiagnostics.memoHits,
-                        failedStateHits: searchDiagnostics.failedStateHits,
-                        depthReached: searchDiagnostics.depthReached,
-                        frontierExhausted: searchDiagnostics.frontierExhausted,
-                        budgetExhausted: searchDiagnostics.budgetExhausted,
-                        returnedWithoutExpansion: searchDiagnostics.returnedWithoutExpansion,
-                        disabledPrunesApplied: searchDiagnostics.disabledPrunesApplied,
-                        triageProbe: triageDebug?.triageProbe || null,
-                        rootCandidatesGenerated: Math.max(0, Number(triageDebug?.rootCandidatesGenerated) || 0),
-                        rootCandidatesSuppressedByMemo: Math.max(0, Number(triageDebug?.rootCandidatesSuppressedByMemo) || 0),
-                        rootCandidatesSuppressedByDominance: Math.max(0, Number(triageDebug?.rootCandidatesSuppressedByDominance) || 0),
-                        rootCandidatesExpanded: Math.max(0, Number(triageDebug?.rootCandidatesExpanded) || 0),
-                        rootMoveOrder: Array.isArray(triageDebug?.rootMoveOrder) ? triageDebug.rootMoveOrder.slice(0, 20) : [],
-                        rootMoveScores: Array.isArray(triageDebug?.rootMoveScores) ? triageDebug.rootMoveScores.slice(0, 20) : [],
-                        rootSuppressionLog,
-                        rootSearchSummary,
-                        preExpansionAbort: getPreExpansionAbort(triageDebug),
-                        zeroExpansionSummary: triageZeroExpansionSummary
-                    });
-                    last = { ...triageResult, stage: plan.stage, message: triageResult.ok ? `Solved (${plan.variant}).` : `${plan.variant} ${triageResult.status || 'error'}.`, stagesTried };
-                    if (triageResult.ok || triageResult.status === 'no-solution-proven') break;
-                }
-                const compactTriageAttempts = triageAttempts.map(a => toCompactTriageStageSummary(a));
-                last.diagnostics = {
-                    ...(last.diagnostics || {}),
-                    inconclusiveTriage: {
-                        triggeredBy: 'no-solution-inconclusive',
-                        status: last.status,
-                        attempts: compactTriageAttempts,
-                        debugNotes: triageAttempts.flatMap(a => Array.isArray(a.debugNotes) ? a.debugNotes : (a.debugNotes ? [a.debugNotes] : []))
-                    }
+            const priorFailureSummary = !last.ok ? (last.failureSummary || classifyFailureCategory(last)) : null;
+            if (!last.ok && allowLegacyAdapter && last.status !== 'no-solution-proven') {
+                const legacyResult = await runStage({
+                    stage: 11,
+                    name: 'Stage 11',
+                    variant: 'legacy-adapter',
+                    budgetMs: legacyBudget,
+                    engine: 'legacy-adapter',
+                    run: () => this.runLegacyAdapterStage(level, legacyBudget, { signal: APP.State.ENGINE.activeSolverController?.signal, debug: true, debugLevel: (typeof level?.id === 'number' ? level.id + 1 : null), enableLowExpansionProbe: !!opts.auditMode })
+                });
+                legacyResult.legacyRescueSummary = {
+                    attempted: true,
+                    rescued: !!legacyResult.ok,
+                    priorFailureCategory: priorFailureSummary?.category || null,
+                    priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
+                    priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null
+                };
+                last = legacyResult;
+            } else if (allowLegacyAdapter) {
+                last.legacyRescueSummary = {
+                    attempted: false,
+                    rescued: false,
+                    priorFailureCategory: priorFailureSummary?.category || null,
+                    priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
+                    priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null
                 };
             }
+
             if (!last.ok && allowGemini && last.status !== 'no-solution-proven') {
                 if (opts.onStage) opts.onStage({ stage: 6, name: 'Stage 6', variant: 'gemini', budgetMs: 15000 });
                 const t4 = Date.now();
@@ -7304,7 +7360,9 @@
                     diagnostics: solverResult.diagnostics || null,
                     preExpansionAbort: solverResult.preExpansionAbort || getPreExpansionAbort(debugInfo) || null,
                     zeroExpansionSummary: solverResult.zeroExpansionSummary || null,
-                    rootSearchSummary: solverResult.rootSearchSummary || null
+                    rootSearchSummary: solverResult.rootSearchSummary || null,
+                    failureSummary: solverResult.failureSummary || null,
+                    legacyRescueSummary: solverResult.legacyRescueSummary || null
                 }, compatAliases.executionPath, 'audit-normalizer');
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
@@ -8051,6 +8109,46 @@
                     preExpansionAbortCode: preExpansionAbort?.code || null
                 };
             }
+            function classifyFailureCategory(result = {}) {
+                const status = `${result?.status || result?.rawStatus || result?.debug?.status || 'unknown'}`;
+                const debug = result?.debug || result?.stats?.debug || {};
+                const diagnostics = result?.diagnosticsSummary || buildSearchDiagnostics(debug, status);
+                const zeroSummary = result?.zeroExpansionSummary || null;
+                const rootSummary = result?.rootSearchSummary || makeRootSearchSummary(debug, diagnostics);
+                const generated = Math.max(0, Number(rootSummary?.rootCandidatesGenerated ?? debug?.rootCandidatesGenerated) || 0);
+                const expanded = Math.max(0, Number(rootSummary?.rootCandidatesExpanded ?? debug?.rootCandidatesExpanded) || 0);
+                const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
+                const zeroReason = zeroSummary?.reason || zeroSummary?.depthZeroReason || null;
+                const preExpansionSignals = !!zeroSummary
+                    || generated === 0
+                    || expanded === 0
+                    || returnedWithoutExpansion
+                    || status === 'error'
+                    || String(getPreExpansionAbort(debug)?.code || '').includes('before-expansion')
+                    || String(getDepthZeroReason(debug, status) || '').includes('before-expansion');
+
+                let category = 'unknownFailure';
+                if (status === 'no-solution-proven') category = 'provenNoSolution';
+                else if (preExpansionSignals) category = 'preExpansionFailure';
+                else if (status === 'timeout') category = 'deepTimeout';
+                else {
+                    const lowExpansion = expanded <= Math.max(2, Math.ceil(generated * 0.2));
+                    const shallowNodes = (diagnostics?.nodesExpanded || 0) <= 60;
+                    const shallowDepth = (diagnostics?.depthReached || 0) <= 5;
+                    if (generated > 0 && lowExpansion && shallowNodes && shallowDepth) category = 'shallowCollapse';
+                }
+
+                return compactDefined({
+                    category,
+                    rootCandidatesGenerated: generated,
+                    rootCandidatesExpanded: expanded,
+                    zeroExpansionReason: zeroReason,
+                    returnedWithoutExpansion: returnedWithoutExpansion || null,
+                    likelyMemoIssue: rootSummary?.memoLikelyMergingDistinctRoots || null,
+                    likelyPruneIssue: rootSummary?.dominanceLikelyOverAggressive || null
+                });
+            }
+
             function withZeroExpansionSummary(entry = {}, statusPath = 'unknown', droppedBy = 'unknown') {
                 if (!entry || typeof entry !== 'object') return entry;
                 const debug = entry?.debug || entry?.stats?.debug || {};
@@ -11615,7 +11713,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, legacyRescueSummary: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -11762,6 +11860,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.preExpansionAbort = summarizeSearchSignal(finalAttempt?.preExpansionAbort);
             levelEntry.newHint.zeroExpansionSummary = summarizeSearchSignal(finalAttempt?.zeroExpansionSummary);
             levelEntry.newHint.rootSearchSummary = summarizeSearchSignal(finalAttempt?.rootSearchSummary);
+            levelEntry.newHint.failureSummary = summarizeSearchSignal(finalHintResult?.failureSummary || finalAttempt?.failureSummary || null);
+            levelEntry.newHint.legacyRescueSummary = summarizeSearchSignal(finalHintResult?.legacyRescueSummary || null);
             levelEntry.newHint.rootCandidatesGenerated = Number.isFinite(finalAttempt?.rootCandidatesGenerated) ? finalAttempt.rootCandidatesGenerated : null;
             levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
             levelEntry.newHint.rootCandidatesSuppressedByDominance = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByDominance) ? finalAttempt.rootCandidatesSuppressedByDominance : null;
