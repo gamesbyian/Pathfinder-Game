@@ -12400,13 +12400,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.failureTaxonomy = summarizeSearchSignal(finalHintResult?.failureTaxonomy || finalAttempt?.failureTaxonomy || null);
             levelEntry.newHint.failureProfile = finalHintResult?.failureProfile || finalAttempt?.failureProfile || null;
             levelEntry.newHint.structuralProfile = levelEntry.newHint.failureProfile
-                ? compactDefined({
+                ? {
                     family: levelEntry.newHint.failureProfile.family || 'other',
                     confidence: levelEntry.newHint.failureProfile.confidence || 'low',
                     reasons: Array.isArray(levelEntry.newHint.failureProfile.reasons)
                         ? levelEntry.newHint.failureProfile.reasons.slice(0, 4)
                         : []
-                })
+                }
                 : null;
             levelEntry.newHint.contradictionRecoveryActivated = !!(finalHintResult?.contradictionRecoveryActivated || finalAttempt?.contradictionRecoveryActivated);
             levelEntry.newHint.routingDecision = summarizeSearchSignal(finalHintResult?.routingDecision || finalAttempt?.routingDecision || null);
