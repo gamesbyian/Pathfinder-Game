@@ -7818,6 +7818,11 @@
                     totalSolveTimeMs,
                     auditMode: !!opts.auditMode
                 });
+                const {
+                    finalStatus,
+                    executionPath,
+                    compatAliases
+                } = telemetry;
                 console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
