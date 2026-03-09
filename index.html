@@ -8031,9 +8031,9 @@
                     auditMode: options.auditMode
                 });
                 const merged = {
-                    ...telemetry.normalized,
+                    ...(telemetry.normalized || {}),
                     ...(options.baseReport || {}),
-                    ...telemetry.compatAliases,
+                    ...(telemetry.compatAliases || {}),
                     finalStatus: options.finalStatus || telemetry.finalStatus,
                     totalSolveTimeMs: Number.isFinite(options.totalSolveTimeMs)
                         ? options.totalSolveTimeMs
