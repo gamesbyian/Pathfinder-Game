@@ -2849,7 +2849,7 @@
                         if (!Array.isArray(debugStats.neighborTrace)) debugStats.neighborTrace = [];
                         if (debugStats.neighborTrace.length < 8) debugStats.neighborTrace.push(stageTrace);
                     }
-                    const scoringMode = options?.scoringMode === 'legacy' ? 'legacy' : 'modern';
+                    const scoringProfile = (options?.scoringMode === 'legacy' || options?.scoringMode === 'endurance') ? 'endurance' : 'modern';
                     const shouldRecordRootSuppression = depth === 0 && !!debugStats && (!!options?.enableLowExpansionProbe || !!APP?.State?.ENGINE?.isDevMode || !!APP?.State?.ENGINE?.flags?.refereeDebug || !!APP?.State?.ENGINE?.flags?.debugSolver);
                     const structuralMode = !!options?.structuralMode;
                     const profile = structuralMode ? (l.solverProfile || null) : null;
@@ -3028,7 +3028,7 @@
                             score += symmetryCommitted ? 74 : 36;
                         }
 
-                        if (scoringMode === 'legacy') {
+                        if (scoringProfile === 'endurance') {
                             score -= (mustBound === Infinity ? 100000 : mustBound * 6);
                             score -= (crossBound === Infinity ? 100000 : crossBound * 6);
                             if (crossNeed > 0) score += crossNeed * 2;
@@ -5041,23 +5041,23 @@
                 rootSearchSummary: partial.rootSearchSummary || null,
                 failureSummary: partial.failureSummary || null,
                 failureTaxonomy: partial.failureTaxonomy || null,
-                legacyRescueSummary: partial.legacyRescueSummary || null,
+                rescueProfileSummary: partial.rescueProfileSummary || partial.legacyRescueSummary || null,
                 contradictionRecoveryActivated: !!partial.contradictionRecoveryActivated,
                 routingDecision: partial.routingDecision || null,
                 orderingPolicySummary: partial.orderingPolicySummary || null,
-                stage11RescueDelta: partial.stage11RescueDelta || null,
+                enduranceRescueDelta: partial.enduranceRescueDelta || partial.stage11RescueDelta || null,
                 engine: partial.engine || 'referee'
             };
         };
-        const normalizeLegacySolverResult = (legacy, fallbackStatus = 'error', context = {}) => {
+        const normalizeProfileSolveResult = (profileResult, fallbackStatus = 'error', context = {}) => {
             const debugLevel = context.debugLevel;
-            const debug = legacy?.debug || createSolverDebugStats(debugLevel);
+            const debug = profileResult?.debug || createSolverDebugStats(debugLevel);
             ensureDepthZeroDebug(debug);
             if (debug?.debug) {
                 if (!debug.debug.startState && debug.startState) debug.debug.startState = debug.startState;
                 if (!debug.debug.startNeighborTrace && debug.startNeighborTrace) debug.debug.startNeighborTrace = debug.startNeighborTrace;
             }
-            recordDepthZeroHandoff(legacy?.debug || null, debug, context?.normalizedBy || 'referee-compat-profile');
+            recordDepthZeroHandoff(profileResult?.debug || null, debug, context?.normalizedBy || 'referee-compat-profile');
             const diagnostics = buildSearchDiagnostics(debug, fallbackStatus);
             if (diagnostics.preExpansionExit && !debug?.debug?.depthZeroReason) {
                 setDepthZeroReason(debug, fallbackStatus === 'error' ? 'status-error-before-expansion' : 'returned-without-expansion', {
@@ -5068,7 +5068,7 @@
             if (diagnostics.preExpansionExit && !getPreExpansionAbort(debug)) {
                 setPreExpansionAbort(debug, {
                     code: 'status-returned-before-expansion',
-                    message: `Legacy adapter observed ${fallbackStatus || 'unknown'} before root candidate expansion.`,
+                    message: `Profile adapter observed ${fallbackStatus || 'unknown'} before root candidate expansion.`,
                     phase: Number.isFinite(getStartStateDebug(debug)?.startNeighborsCount)
                         ? 'after-start-neighbor-enumeration-before-root-expansion'
                         : 'before-start-neighbor-enumeration',
@@ -5079,8 +5079,8 @@
                     }
                 });
             }
-            const canonical = normalizeSolutionEntries(legacy?.solution ?? legacy?.solutions ?? []);
-            const ok = !!legacy?.ok && canonical.length > 0;
+            const canonical = normalizeSolutionEntries(profileResult?.solution ?? profileResult?.solutions ?? []);
+            const ok = !!profileResult?.ok && canonical.length > 0;
             const normalizedStatus = ok
                 ? 'solved'
                 : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : fallbackStatus));
@@ -5124,7 +5124,8 @@
                 contradictionRecoveryActivated: !!attempt?.contradictionRecoveryActivated,
                 routingDecision: attempt?.routingDecision || null,
                 orderingPolicySummary: attempt?.orderingPolicySummary || null,
-                stage11RescueDelta: attempt?.stage11RescueDelta || null,
+                enduranceRescueDelta: attempt?.enduranceRescueDelta || attempt?.stage11RescueDelta || null,
+                stage11RescueDelta: attempt?.stage11RescueDelta || attempt?.enduranceRescueDelta || null,
                 diagnosticsSummary: options.diagnosticsSummary || null,
                 rootCandidatesGenerated: Number.isFinite(debug?.rootCandidatesGenerated) ? debug.rootCandidatesGenerated : null,
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
@@ -5176,7 +5177,7 @@
             contradictionRecoveryActivated: !!normalized.contradictionRecoveryActivated,
             routingDecision: normalized.routingDecision || null,
             orderingPolicySummary: normalized.orderingPolicySummary || null,
-            compatLegacyAlias: !!(meta.compatLegacyAlias || normalized.compatLegacyAlias)
+            compatLegacyOutputAlias: !!(meta.compatLegacyOutputAlias || normalized.compatLegacyOutputAlias)
         });
         const toCompactTriageStageSummary = (entry = {}) => compactDefined({
             stage: Number.isFinite(entry.stage) ? entry.stage : null,
@@ -5203,22 +5204,23 @@
             const attempts = Array.isArray(attemptsLike) ? attemptsLike : [];
             const allowReferee = options.allowReferee !== undefined ? !!options.allowReferee : true;
             // Migration note: "legacy fallback" aliases are now synthesized from referee profile attempts.
-            const legacyAttempts = attempts.filter(st => !!st?.compatLegacyAlias || `${st?.variant || ''}`.includes('endurance-longpath') || `${st?.variant || ''}`.includes('memo-relaxed'));
-            const firstLegacy = legacyAttempts[0] || null;
-            const solvedLegacy = legacyAttempts.find(st => st?.solved);
-            const solvedByReferee = attempts.find(st => st?.solved && !st?.compatLegacyAlias);
+            const compatAliasAttempts = attempts.filter(st => !!st?.compatLegacyOutputAlias || `${st?.variant || ''}`.includes('endurance-longpath') || `${st?.variant || ''}`.includes('memo-relaxed'));
+            const firstCompatAliasAttempt = compatAliasAttempts[0] || null;
+            const solvedCompatAliasAttempt = compatAliasAttempts.find(st => st?.solved);
+            const solvedByReferee = attempts.find(st => st?.solved && !st?.compatLegacyOutputAlias);
             const executionPath = options.executionPath
-                || (!allowReferee ? 'legacy-compat-only' : (legacyAttempts.length > 0 ? 'referee-with-compat-profiles' : 'referee-only'));
+                || (!allowReferee ? 'legacy-compat-only' : (compatAliasAttempts.length > 0 ? 'referee-with-compat-profiles' : 'referee-only'));
             const totalSolveTimeMs = Number.isFinite(options.totalSolveTimeMs) ? options.totalSolveTimeMs : 0;
             return {
                 solverPath: executionPath,
                 executionPath,
                 // Compatibility aliases: kept for existing audit/UI readers.
-                legacyFallbackTried: legacyAttempts.length > 0,
-                legacyFallbackStatus: solvedLegacy?.status || firstLegacy?.status || null,
-                legacyFallbackSolved: !!solvedLegacy,
-                legacyFallbackTimeMs: Number.isFinite(firstLegacy?.elapsedMs) ? firstLegacy.elapsedMs : null,
-                finalSolvedBy: solvedLegacy ? 'legacy' : (solvedByReferee ? 'referee' : 'none'),
+                legacyFallbackTried: compatAliasAttempts.length > 0,
+                legacyFallbackStatus: solvedCompatAliasAttempt?.status || firstCompatAliasAttempt?.status || null,
+                legacyFallbackSolved: !!solvedCompatAliasAttempt,
+                legacyFallbackTimeMs: Number.isFinite(firstCompatAliasAttempt?.elapsedMs) ? firstCompatAliasAttempt.elapsedMs : null,
+                finalSolvedByProfile: solvedCompatAliasAttempt ? 'compat-rescue-profile' : (solvedByReferee ? 'referee-core' : 'none'),
+                finalSolvedBy: solvedCompatAliasAttempt ? 'legacy' : (solvedByReferee ? 'referee' : 'none'),
                 totalSolveTimeMs
             };
         };
@@ -6579,12 +6581,12 @@
                         // Migration note: this absorbs former legacy-adapter rescue behavior as a referee-native profile.
                         label: 'endurance-longpath',
                         budgetMs: Math.max(1, total - attempts.reduce((sum, a) => sum + a.budgetMs, 0)),
-                        scoringMode: 'legacy',
+                        scoringMode: 'endurance',
                         portalBiasMode: 'off',
                         structuralMode: true,
                         phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'corridor-commitment' }),
                         policyProfile: 'endurance-longpath',
-                        compatLegacyAlias: true
+                        compatLegacyOutputAlias: true
                     });
                 }
                 return attempts;
@@ -6835,7 +6837,7 @@
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 if (r?.ok && solution.length > 0) {
-                    return withZeroExpansionSummary({ ok: true, status: 'solved', solution, solutions: solution, debug: r?.debug || {} }, 'triage-resolve', 'legacy-solver');
+                    return withZeroExpansionSummary({ ok: true, status: 'solved', solution, solutions: solution, debug: r?.debug || {} }, 'triage-resolve', 'profile-triage');
                 }
                 const debug = r?.debug || {};
                 const depthZeroDebug = ensureDepthZeroDebug(debug);
@@ -6862,8 +6864,8 @@
                         }
                     });
                 }
-                if (debug.status === 'timeout') return withZeroExpansionSummary({ ok: false, status: 'timeout', solution: [], solutions: [], debug }, 'triage-resolve', 'legacy-solver');
-                return withZeroExpansionSummary({ ok: false, status: 'no-solution-inconclusive', solution: [], solutions: [], debug }, 'triage-resolve', 'legacy-solver');
+                if (debug.status === 'timeout') return withZeroExpansionSummary({ ok: false, status: 'timeout', solution: [], solutions: [], debug }, 'triage-resolve', 'profile-triage');
+                return withZeroExpansionSummary({ ok: false, status: 'no-solution-inconclusive', solution: [], solutions: [], debug }, 'triage-resolve', 'profile-triage');
             };
 
             // Root-cause guard: triage runs were occasionally returning inconclusive with almost zero expansion.
@@ -6988,19 +6990,19 @@
                 stagesTried.push(stageSummary);
             };
 
-            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee', run, compatLegacyAlias = false }) => {
+            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee', run, compatLegacyOutputAlias = false }) => {
                 if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
                     return { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
                 }
                 if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: stageBudgetMs });
                 const startedAt = Date.now();
                 const result = await run();
-                markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine, compatLegacyAlias });
+                markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine, compatLegacyOutputAlias });
                 const normalized = createCanonicalSolveResult(result || {});
                 normalized.stage = stage;
                 normalized.variant = variant;
                 normalized.engine = engine;
-                normalized.compatLegacyAlias = !!compatLegacyAlias;
+                normalized.compatLegacyOutputAlias = !!compatLegacyOutputAlias;
                 normalized.message = normalized.ok ? `Solved (${variant}).` : `${variant} ${normalized.status || 'error'}.`;
                 normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
                 return normalized;
@@ -7112,19 +7114,19 @@
             const priorFailureSummary = !last.ok ? (last.failureSummary || classifyFailureCategory(last)) : null;
             const priorFailureTaxonomy = !last.ok ? (last.failureTaxonomy || classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) })) : null;
             if (!last.ok && last.status !== 'no-solution-proven') {
-                const legacyProfileResult = await runStage({
+                const rescueProfileResult = await runStage({
                     stage: 5,
                     name: 'Stage 5',
                     variant: 'memo-relaxed-profile',
                     budgetMs: recoveryBudget,
-                    compatLegacyAlias: true,
+                    compatLegacyOutputAlias: true,
                     run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
                         orderingPolicy: 'memoRelaxed',
                         portalBiasMode: 'off',
                         phasePolicy: null,
                         profile: level.solverProfile,
                         controlPlane,
-                        scoringMode: 'legacy',
+                        scoringMode: 'endurance',
                         structuralMode: true,
                         enableEnduranceLongpath: true,
                         allowRandomizedExploration: false,
@@ -7132,30 +7134,30 @@
                         preferMacroSkeleton: true
                     })
                 });
-                legacyProfileResult.legacyRescueSummary = {
+                rescueProfileResult.rescueProfileSummary = {
                     attempted: true,
-                    rescued: !!legacyProfileResult.ok,
+                    rescued: !!rescueProfileResult.ok,
                     mode: 'memo-relaxed-profile',
                     priorFailureCategory: priorFailureSummary?.category || null,
                     failureTaxonomy: priorFailureTaxonomy || null,
                     priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
                     priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null
                 };
-                if (legacyProfileResult.ok) {
-                    legacyProfileResult.stage11RescueDelta = compactDefined({
+                if (rescueProfileResult.ok) {
+                    rescueProfileResult.enduranceRescueDelta = compactDefined({
                         failedByStage: Number.isFinite(last?.stage) ? last.stage : null,
                         failureTaxonomy: priorFailureTaxonomy || null,
                         refereeRootCandidatesGenerated: Number.isFinite((last?.debug || {})?.rootCandidatesGenerated) ? last.debug.rootCandidatesGenerated : null,
                         refereeRootCandidatesExpanded: Number.isFinite((last?.debug || {})?.rootCandidatesExpanded) ? last.debug.rootCandidatesExpanded : null,
                         refereeNodesExpanded: Number.isFinite((last?.debug || {})?.nodesExpanded) ? last.debug.nodesExpanded : null,
                         refereeTotalSolveTimeMs: Math.max(0, Date.now() - solveStartTime),
-                        compatProfileSolveTimeMs: Number.isFinite(legacyProfileResult?.elapsedMs) ? legacyProfileResult.elapsedMs : null,
-                        finalSolvedBy: 'referee-compat-profile',
+                        compatProfileSolveTimeMs: Number.isFinite(rescueProfileResult?.elapsedMs) ? rescueProfileResult.elapsedMs : null,
+                        finalSolvedByProfile: 'compat-rescue-profile',
                         materiallyDifferentPathShape: null
                     });
-                    last = legacyProfileResult;
+                    last = rescueProfileResult;
                 } else {
-                    last.legacyRescueSummary = legacyProfileResult.legacyRescueSummary;
+                    last.rescueProfileSummary = rescueProfileResult.rescueProfileSummary;
                 }
             }
 
@@ -7192,7 +7194,7 @@
                     level,
                     goalReachable: isGoalReachableFromAnyGate(level),
                     lastMeaningfulStage: last.stage,
-                    solvedBy: (last.compatLegacyAlias ? 'referee-compat-profile' : 'referee'),
+                    solvedBy: (last.compatLegacyOutputAlias ? 'referee-rescue-profile' : 'referee'),
                     solvedAfterRetry: !!(last.ok && (stagesTried || []).length > 1)
                 });
             }
@@ -7205,7 +7207,7 @@
                 });
             }
             applyCanonicalSolutionShape(last);
-            const usedCompatProfile = (stagesTried || []).some(st => !!st?.compatLegacyAlias || `${st?.variant || ''}`.includes('memo-relaxed') || `${st?.variant || ''}`.includes('endurance-longpath'));
+            const usedCompatProfile = (stagesTried || []).some(st => !!st?.compatLegacyOutputAlias || `${st?.variant || ''}`.includes('memo-relaxed') || `${st?.variant || ''}`.includes('endurance-longpath'));
             // Compatibility field synthesis: executionPath retains historical shape while all attempts are referee-native.
             last.executionPath = usedCompatProfile ? 'referee-with-compat-profiles' : 'referee-only';
             last.retrySuggested = !last.ok && ['timeout', 'no-solution-inconclusive'].includes(last.status);
@@ -7459,8 +7461,8 @@
                     timeBudgetMs,
                     tier: escalationTier,
                     allowGemini: !!opts.allowGemini,
-                    allowLegacyAdapter: !opts.disableLegacyFallback,
-                    onlyLegacyAdapter: false,
+                    allowRescueProfiles: !opts.disableLegacyFallback,
+                    onlyRescueProfiles: false,
                     auditMode: !!opts.auditMode,
                     onStage: ({ name, variant, budgetMs }) => {
                         APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
@@ -7531,8 +7533,11 @@
                     contradictionRecoveryActivated: !!solverResult.contradictionRecoveryActivated,
                     routingDecision: solverResult.routingDecision || null,
                     orderingPolicySummary: solverResult.orderingPolicySummary || null,
-                    stage11RescueDelta: solverResult.stage11RescueDelta || null,
-                    legacyRescueSummary: solverResult.legacyRescueSummary || null
+                    enduranceRescueDelta: solverResult.enduranceRescueDelta || null,
+                    rescueProfileSummary: solverResult.rescueProfileSummary || null,
+                    // Compatibility aliases for audit/UI consumers.
+                    stage11RescueDelta: solverResult.enduranceRescueDelta || solverResult.stage11RescueDelta || null,
+                    legacyRescueSummary: solverResult.rescueProfileSummary || solverResult.legacyRescueSummary || null
                 }, compatAliases.executionPath, 'audit-normalizer');
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
@@ -11825,7 +11830,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 `saved hints valid ${p.validHints}/${Math.max(1, p.validHints + p.invalidHints)} (invalid ${p.invalidHints})`,
                 `new hint success ${p.newHint.success} fail ${p.newHint.failure}`,
                 `bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`,
-                `fallback ${p.disableLegacyFallback ? 'referee-only' : 'referee+legacy'}`
+                `fallback ${p.disableLegacyFallback ? 'referee-only' : 'referee+profiles'}`
             ].join(' | ');
         };
         const summarizeTriage = (triage) => {
@@ -11931,7 +11936,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, stage11RescueDelta: null, legacyRescueSummary: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -12083,8 +12088,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.contradictionRecoveryActivated = !!(finalHintResult?.contradictionRecoveryActivated || finalAttempt?.contradictionRecoveryActivated);
             levelEntry.newHint.routingDecision = summarizeSearchSignal(finalHintResult?.routingDecision || finalAttempt?.routingDecision || null);
             levelEntry.newHint.orderingPolicySummary = summarizeSearchSignal(finalHintResult?.orderingPolicySummary || finalAttempt?.orderingPolicySummary || null);
-            levelEntry.newHint.stage11RescueDelta = summarizeSearchSignal(finalHintResult?.stage11RescueDelta || null);
-            levelEntry.newHint.legacyRescueSummary = summarizeSearchSignal(finalHintResult?.legacyRescueSummary || null);
+            levelEntry.newHint.enduranceRescueDelta = summarizeSearchSignal(finalHintResult?.enduranceRescueDelta || null);
+            levelEntry.newHint.rescueProfileSummary = summarizeSearchSignal(finalHintResult?.rescueProfileSummary || null);
+            // Compatibility aliases retained for audit/UI consumers.
+            levelEntry.newHint.stage11RescueDelta = summarizeSearchSignal(finalHintResult?.stage11RescueDelta || finalHintResult?.enduranceRescueDelta || null);
+            levelEntry.newHint.legacyRescueSummary = summarizeSearchSignal(finalHintResult?.legacyRescueSummary || finalHintResult?.rescueProfileSummary || null);
             levelEntry.newHint.rootCandidatesGenerated = Number.isFinite(finalAttempt?.rootCandidatesGenerated) ? finalAttempt.rootCandidatesGenerated : null;
             levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
             levelEntry.newHint.rootCandidatesSuppressedByDominance = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByDominance) ? finalAttempt.rootCandidatesSuppressedByDominance : null;
