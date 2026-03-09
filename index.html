@@ -11848,13 +11848,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         const summarizeSearchSignal = (signal) => {
             if (!signal || typeof signal !== 'object') return null;
-            return compactDefined({
+            const summary = {
                 status: signal.status || signal.result || signal.category || null,
                 reason: signal.reason || signal.message || signal.mode || null,
                 expanded: Number.isFinite(signal.expanded) ? signal.expanded : null,
                 category: signal.category || null,
                 mode: signal.mode || null
+            };
+            Object.keys(summary).forEach((key) => {
+                if (summary[key] === null || summary[key] === undefined) delete summary[key];
             });
+            return summary;
         };
         const summarizeErrorContext = (ctx = {}) => {
             const out = {};
