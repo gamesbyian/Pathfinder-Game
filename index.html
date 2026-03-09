@@ -8099,7 +8099,9 @@
                 solverResult.solution = canonical;
                 solverResult.solutions = canonical;
                 const normalizedEntries = solverResult.ok ? canonical : [];
-                const validationLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
+                const validationLevel = (APP.State.ENGINE.mode === APP.Core.PLAY && Number.isFinite(activeLevel?.id))
+                    ? APP.LevelUtils.normalizeLevel(activeLevel.id)
+                    : APP.LevelUtils.deepCloneLevel(activeLevel);
                 const validEntries = [];
                 normalizedEntries.forEach((entry) => {
                     const validation = APP.Solver.validateCandidatePath(validationLevel, entry.path);
@@ -8441,7 +8443,9 @@
                 }
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-                const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
+                const solveInputLevel = (APP.State.ENGINE.mode === APP.Core.PLAY && Number.isFinite(activeLevel?.id))
+                    ? APP.LevelUtils.normalizeLevel(activeLevel.id)
+                    : APP.LevelUtils.deepCloneLevel(activeLevel);
                 const solverResult = await SolverService.run(solveInputLevel, { purpose, escalationTier, allowReferee: true });
                 console.info('[Solver] runGameSolver', {
                     purpose,
