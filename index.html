@@ -5040,7 +5040,12 @@
                 zeroExpansionSummary: partial.zeroExpansionSummary || null,
                 rootSearchSummary: partial.rootSearchSummary || null,
                 failureSummary: partial.failureSummary || null,
+                failureTaxonomy: partial.failureTaxonomy || null,
                 legacyRescueSummary: partial.legacyRescueSummary || null,
+                contradictionRecoveryActivated: !!partial.contradictionRecoveryActivated,
+                routingDecision: partial.routingDecision || null,
+                orderingPolicySummary: partial.orderingPolicySummary || null,
+                stage11RescueDelta: partial.stage11RescueDelta || null,
                 engine: partial.engine || null
             };
         };
@@ -5115,6 +5120,11 @@
                 zeroExpansionSummary: attempt?.zeroExpansionSummary || null,
                 rootSearchSummary: attempt?.rootSearchSummary || null,
                 failureSummary: attempt?.failureSummary || null,
+                failureTaxonomy: attempt?.failureTaxonomy || null,
+                contradictionRecoveryActivated: !!attempt?.contradictionRecoveryActivated,
+                routingDecision: attempt?.routingDecision || null,
+                orderingPolicySummary: attempt?.orderingPolicySummary || null,
+                stage11RescueDelta: attempt?.stage11RescueDelta || null,
                 diagnosticsSummary: options.diagnosticsSummary || null,
                 rootCandidatesGenerated: Number.isFinite(debug?.rootCandidatesGenerated) ? debug.rootCandidatesGenerated : null,
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
@@ -5161,7 +5171,11 @@
             preExpansionAbort: normalized.preExpansionAbort || null,
             zeroExpansionSummary: normalized.zeroExpansionSummary || null,
             rootSearchSummary: normalized.rootSearchSummary || null,
-            failureSummary: normalized.failureSummary || null
+            failureSummary: normalized.failureSummary || null,
+            failureTaxonomy: normalized.failureTaxonomy || null,
+            contradictionRecoveryActivated: !!normalized.contradictionRecoveryActivated,
+            routingDecision: normalized.routingDecision || null,
+            orderingPolicySummary: normalized.orderingPolicySummary || null
         });
         const toCompactTriageStageSummary = (entry = {}) => compactDefined({
             stage: Number.isFinite(entry.stage) ? entry.stage : null,
@@ -6372,6 +6386,7 @@
 
         async runBaselinePolicySweep(level, budgetMs, opts = {}) {
             const policy = opts.orderingPolicy || 'default';
+            const adaptivePhase = opts.adaptiveOrderingPhase || 'objective-harvest';
             const policyCfg = this.getOrderingPolicyConfig(policy, {
                 allowShuffle: !!opts.allowRandomizedExploration,
                 allowRandomizedExploration: !!opts.allowRandomizedExploration,
@@ -6382,10 +6397,12 @@
                 ...opts,
                 dirOrderVariant: policyCfg.dirOrderVariant,
                 allowRandomizedExploration: policyCfg.allowRandomizedExploration,
-                orderingPolicy: policyCfg.policyName || policy
+                orderingPolicy: policyCfg.policyName || policy,
+                adaptiveOrderingPhase: adaptivePhase
             };
             const result = await this.runBaselineStage(level, budgetMs, merged);
             result.orderingPolicy = policyCfg.policyName || policy;
+            result.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: (policyCfg.policyName || policy), phase: adaptivePhase, dirOrderVariant: policyCfg.dirOrderVariant });
             return result;
         },
 
@@ -6400,6 +6417,8 @@
                 enableLowExpansionProbe: true
             });
             sanityResult.mode = 'sanity';
+            sanityResult.contradictionRecoveryActivated = !!opts.contradictionRecovery;
+            sanityResult.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: 'default', phase: 'objective-harvest', contradictionRecovery: !!opts.contradictionRecovery });
             return sanityResult;
         },
 
@@ -6414,6 +6433,7 @@
                 purpose: opts.purpose || 'solve'
             });
             enduranceResult.mode = 'endurance';
+            enduranceResult.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: 'endurance', phase: 'finish-compress', enduranceProfile: true });
             return enduranceResult;
         },
 
@@ -6898,6 +6918,7 @@
             const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
             const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
             const stagesTried = [];
+            const solveStartTime = Date.now();
             const controlPlane = this.createControlPlane(level.solverProfile || {});
             const lowComplexityLevel = (level.solverProfile?.objectiveCount || 0) <= 1
                 && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
@@ -6976,27 +6997,30 @@
                 });
 
                 if (!last.ok && last.status !== 'no-solution-proven') {
-                    const failureCategory = last.failureSummary?.category || 'unknownFailure';
-                    if (failureCategory === 'preExpansionFailure') {
+                    const failureTaxonomy = classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) });
+                    last.failureTaxonomy = failureTaxonomy;
+                    const failureCategory = failureTaxonomy?.category || 'low-expansion-collapse';
+                    if (failureCategory === 'pre-expansion-failure') {
                         last = await runStage({
                             stage: 2,
                             name: 'Stage 2',
-                            variant: 'sanity-mode',
+                            variant: 'contradiction-recovery',
                             budgetMs: sanityBudget,
                             run: () => this.runSanityMode(level, sanityBudget, {
                                 portalBiasMode: resolvedPortalBiasMode,
                                 phasePolicy: resolvedPhasePolicy,
-                                disabledPrunes: fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || []
+                                disabledPrunes: fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [],
+                                contradictionRecovery: true
                             })
                         });
-                    } else if (failureCategory === 'shallowCollapse') {
-                        const policies = this.buildOrderingPolicyListForFailure('shallowCollapse', { allowRandomizedExploration: false });
+                    } else if (failureCategory === 'low-expansion-collapse') {
+                        const policies = ['objectiveFirst', 'knotBuilder'];
                         for (const policy of policies) {
                             if (last.ok || last.status === 'no-solution-proven') break;
                             last = await runStage({
                                 stage: 2,
                                 name: 'Stage 2',
-                                variant: `baseline-retry-${policy}`,
+                                variant: 'expansion-recovery',
                                 budgetMs: recoveryBudget,
                                 run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
                                     orderingPolicy: policy,
@@ -7007,16 +7031,17 @@
                                     scoringMode: 'modern',
                                     structuralMode: true,
                                     enableLegacyRescue: true,
-                                    allowRandomizedExploration: (policy === 'shuffle' || policy === 'endurance'),
+                                    allowRandomizedExploration: false,
+                                    adaptiveOrderingPhase: policy === 'objectiveFirst' ? 'objective-harvest' : 'knot-build',
                                     purpose
                                 })
                             });
                         }
-                    } else if (failureCategory === 'deepTimeout') {
+                    } else if (failureCategory === 'healthy-expansion-timeout') {
                         last = await runStage({
                             stage: 3,
                             name: 'Stage 3',
-                            variant: 'endurance-mode',
+                            variant: 'late-search-endurance',
                             budgetMs: enduranceBudget,
                             run: () => this.runEnduranceMode(level, enduranceBudget, {
                                 portalBiasMode: resolvedPortalBiasMode,
@@ -7043,6 +7068,7 @@
             }
 
             const priorFailureSummary = !last.ok ? (last.failureSummary || classifyFailureCategory(last)) : null;
+            const priorFailureTaxonomy = !last.ok ? (last.failureTaxonomy || classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) })) : null;
             if (!last.ok && allowLegacyAdapter && last.status !== 'no-solution-proven') {
                 const legacyResult = await runStage({
                     stage: 11,
@@ -7056,9 +7082,24 @@
                     attempted: true,
                     rescued: !!legacyResult.ok,
                     priorFailureCategory: priorFailureSummary?.category || null,
+                    failureTaxonomy: priorFailureTaxonomy || null,
                     priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
                     priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null
                 };
+                if (legacyResult.ok) {
+                    const refereeDebug = last?.debug || {};
+                    legacyResult.stage11RescueDelta = compactDefined({
+                        failedByStage: Number.isFinite(last?.stage) ? last.stage : null,
+                        failureTaxonomy: priorFailureTaxonomy || null,
+                        refereeRootCandidatesGenerated: Number.isFinite(refereeDebug?.rootCandidatesGenerated) ? refereeDebug.rootCandidatesGenerated : null,
+                        refereeRootCandidatesExpanded: Number.isFinite(refereeDebug?.rootCandidatesExpanded) ? refereeDebug.rootCandidatesExpanded : null,
+                        refereeNodesExpanded: Number.isFinite(refereeDebug?.nodesExpanded) ? refereeDebug.nodesExpanded : null,
+                        refereeTotalSolveTimeMs: Math.max(0, Date.now() - solveStartTime),
+                        legacyAdapterSolveTimeMs: Number.isFinite(legacyResult?.elapsedMs) ? legacyResult.elapsedMs : null,
+                        finalSolvedBy: 'legacy',
+                        materiallyDifferentPathShape: null
+                    });
+                }
                 last = legacyResult;
             } else if (allowLegacyAdapter) {
                 last.legacyRescueSummary = {
@@ -7098,6 +7139,23 @@
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
             else attemptHistory[key] = { timesTried, lastStageReached: last.stage, lastStatus: last.status };
 
+            if (!last.failureTaxonomy) {
+                last.failureTaxonomy = classifySolveFailureTaxonomy(last, {
+                    level,
+                    goalReachable: isGoalReachableFromAnyGate(level),
+                    lastMeaningfulStage: last.stage,
+                    solvedBy: (last.engine === 'legacy-adapter' ? 'legacy-adapter' : 'referee-core'),
+                    solvedAfterRetry: !!(last.ok && (stagesTried || []).filter(st => st?.engine !== 'legacy-adapter').length > 1)
+                });
+            }
+            if (!last.failureSummary && !last.ok) last.failureSummary = classifyFailureCategory(last);
+            if (!last.routingDecision) {
+                const cat = last.failureTaxonomy?.category || null;
+                last.routingDecision = compactDefined({
+                    category: cat,
+                    mode: cat === 'pre-expansion-failure' ? 'prune-memo-sanity' : (cat === 'low-expansion-collapse' ? 'expansion-recovery' : (cat === 'healthy-expansion-timeout' ? 'late-search-endurance' : null))
+                });
+            }
             applyCanonicalSolutionShape(last);
             const usedLegacyAdapter = (stagesTried || []).some(st => st?.engine === 'legacy-adapter');
             last.executionPath = onlyLegacyAdapter ? 'legacy-only' : (usedLegacyAdapter ? 'referee-then-legacy' : 'referee-only');
@@ -7420,6 +7478,11 @@
                     zeroExpansionSummary: solverResult.zeroExpansionSummary || null,
                     rootSearchSummary: solverResult.rootSearchSummary || null,
                     failureSummary: solverResult.failureSummary || null,
+                    failureTaxonomy: solverResult.failureTaxonomy || null,
+                    contradictionRecoveryActivated: !!solverResult.contradictionRecoveryActivated,
+                    routingDecision: solverResult.routingDecision || null,
+                    orderingPolicySummary: solverResult.orderingPolicySummary || null,
+                    stage11RescueDelta: solverResult.stage11RescueDelta || null,
                     legacyRescueSummary: solverResult.legacyRescueSummary || null
                 }, compatAliases.executionPath, 'audit-normalizer');
             } catch (err) {
@@ -8173,7 +8236,7 @@
                     preExpansionAbortCode: preExpansionAbort?.code || null
                 };
             }
-            function classifyFailureCategory(result = {}) {
+            function classifySolveFailureTaxonomy(result = {}, context = {}) {
                 const status = `${result?.status || result?.rawStatus || result?.debug?.status || 'unknown'}`;
                 const debug = result?.debug || result?.stats?.debug || {};
                 const diagnostics = result?.diagnosticsSummary || buildSearchDiagnostics(debug, status);
@@ -8181,39 +8244,65 @@
                 const rootSummary = result?.rootSearchSummary || makeRootSearchSummary(debug, diagnostics);
                 const generated = Math.max(0, Number(rootSummary?.rootCandidatesGenerated ?? debug?.rootCandidatesGenerated) || 0);
                 const expanded = Math.max(0, Number(rootSummary?.rootCandidatesExpanded ?? debug?.rootCandidatesExpanded) || 0);
+                const nodesExpanded = Math.max(0, Number(diagnostics?.nodesExpanded ?? debug?.nodesExpanded) || 0);
                 const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
-                const zeroReason = zeroSummary?.reason || zeroSummary?.depthZeroReason || null;
                 const preExpansionSignals = !!zeroSummary
                     || generated === 0
                     || expanded === 0
+                    || nodesExpanded === 0
                     || returnedWithoutExpansion
                     || status === 'error'
                     || String(getPreExpansionAbort(debug)?.code || '').includes('before-expansion')
                     || String(getDepthZeroReason(debug, status) || '').includes('before-expansion');
 
-                let category = 'unknownFailure';
-                if (status === 'no-solution-proven') category = 'provenNoSolution';
-                else if (preExpansionSignals) category = 'preExpansionFailure';
-                else if (status === 'timeout') category = 'deepTimeout';
-                else {
-                    const lowExpansion = expanded <= Math.max(2, Math.ceil(generated * 0.2));
-                    const shallowNodes = (diagnostics?.nodesExpanded || 0) <= 60;
-                    const shallowDepth = (diagnostics?.depthReached || 0) <= 5;
-                    if (generated > 0 && lowExpansion && shallowNodes && shallowDepth) category = 'shallowCollapse';
+                let category = 'low-expansion-collapse';
+                if (result?.ok) {
+                    if (context?.solvedBy === 'legacy-adapter') category = 'legacy-only-rescue';
+                    else if (context?.solvedAfterRetry) category = 'solved-after-retry';
+                    else category = 'solved-direct';
+                } else if (preExpansionSignals && status !== 'no-solution-proven') {
+                    category = 'pre-expansion-failure';
+                } else {
+                    const lowExpansion = expanded <= Math.max(2, Math.ceil(generated * 0.25));
+                    const shallowNodes = nodesExpanded <= 80;
+                    const shallowDepth = (diagnostics?.depthReached || 0) <= 6;
+                    if (status === 'timeout' && !lowExpansion && nodesExpanded >= 120) category = 'healthy-expansion-timeout';
+                    else if (lowExpansion && shallowNodes && shallowDepth) category = 'low-expansion-collapse';
+                    else if (status === 'timeout') category = 'healthy-expansion-timeout';
                 }
 
                 return compactDefined({
                     category,
+                    status,
                     rootCandidatesGenerated: generated,
                     rootCandidatesExpanded: expanded,
-                    zeroExpansionReason: zeroReason,
+                    nodesExpanded,
                     returnedWithoutExpansion: returnedWithoutExpansion || null,
+                    contradictionSignal: !!(preExpansionSignals && !!context?.goalReachable),
                     likelyMemoIssue: rootSummary?.memoLikelyMergingDistinctRoots || null,
-                    likelyPruneIssue: rootSummary?.dominanceLikelyOverAggressive || null
+                    likelyPruneIssue: rootSummary?.dominanceLikelyOverAggressive || null,
+                    lastMeaningfulStage: Number.isFinite(context?.lastMeaningfulStage) ? context.lastMeaningfulStage : null,
+                    solvedBy: context?.solvedBy || null
+                });
+            }
+            function classifyFailureCategory(result = {}) {
+                const taxonomy = classifySolveFailureTaxonomy(result, {});
+                const map = {
+                    'pre-expansion-failure': 'preExpansionFailure',
+                    'low-expansion-collapse': 'shallowCollapse',
+                    'healthy-expansion-timeout': 'deepTimeout'
+                };
+                return compactDefined({
+                    category: map[taxonomy?.category] || 'unknownFailure',
+                    rootCandidatesGenerated: taxonomy?.rootCandidatesGenerated ?? null,
+                    rootCandidatesExpanded: taxonomy?.rootCandidatesExpanded ?? null,
+                    returnedWithoutExpansion: taxonomy?.returnedWithoutExpansion ?? null,
+                    likelyMemoIssue: taxonomy?.likelyMemoIssue ?? null,
+                    likelyPruneIssue: taxonomy?.likelyPruneIssue ?? null
                 });
             }
 
-            function withZeroExpansionSummary(entry = {}, statusPath = 'unknown', droppedBy = 'unknown') {
+                        function withZeroExpansionSummary(entry = {}, statusPath = 'unknown', droppedBy = 'unknown') {
                 if (!entry || typeof entry !== 'object') return entry;
                 const debug = entry?.debug || entry?.stats?.debug || {};
                 const status = entry?.status || entry?.rawStatus || 'unknown';
@@ -11691,11 +11780,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         const summarizeSearchSignal = (signal) => {
             if (!signal || typeof signal !== 'object') return null;
-            return {
-                status: signal.status || signal.result || null,
-                reason: signal.reason || signal.message || null,
-                expanded: Number.isFinite(signal.expanded) ? signal.expanded : null
-            };
+            return compactDefined({
+                status: signal.status || signal.result || signal.category || null,
+                reason: signal.reason || signal.message || signal.mode || null,
+                expanded: Number.isFinite(signal.expanded) ? signal.expanded : null,
+                category: signal.category || null,
+                mode: signal.mode || null
+            });
         };
         const summarizeErrorContext = (ctx = {}) => {
             const out = {};
@@ -11777,7 +11868,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, legacyRescueSummary: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, stage11RescueDelta: null, legacyRescueSummary: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -11925,6 +12016,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.zeroExpansionSummary = summarizeSearchSignal(finalAttempt?.zeroExpansionSummary);
             levelEntry.newHint.rootSearchSummary = summarizeSearchSignal(finalAttempt?.rootSearchSummary);
             levelEntry.newHint.failureSummary = summarizeSearchSignal(finalHintResult?.failureSummary || finalAttempt?.failureSummary || null);
+            levelEntry.newHint.failureTaxonomy = summarizeSearchSignal(finalHintResult?.failureTaxonomy || finalAttempt?.failureTaxonomy || null);
+            levelEntry.newHint.contradictionRecoveryActivated = !!(finalHintResult?.contradictionRecoveryActivated || finalAttempt?.contradictionRecoveryActivated);
+            levelEntry.newHint.routingDecision = summarizeSearchSignal(finalHintResult?.routingDecision || finalAttempt?.routingDecision || null);
+            levelEntry.newHint.orderingPolicySummary = summarizeSearchSignal(finalHintResult?.orderingPolicySummary || finalAttempt?.orderingPolicySummary || null);
+            levelEntry.newHint.stage11RescueDelta = summarizeSearchSignal(finalHintResult?.stage11RescueDelta || null);
             levelEntry.newHint.legacyRescueSummary = summarizeSearchSignal(finalHintResult?.legacyRescueSummary || null);
             levelEntry.newHint.rootCandidatesGenerated = Number.isFinite(finalAttempt?.rootCandidatesGenerated) ? finalAttempt.rootCandidatesGenerated : null;
             levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
