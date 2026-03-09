@@ -7808,31 +7808,14 @@
                     }
                 });
                 const refereeTimeMs = Math.round(performance.now() - refereeStart);
-                solverResult = createCanonicalSolveResult(solverResult || {});
-                applyCanonicalSolutionShape(solverResult);
-
-                const finalStatus = solverResult.rawStatus || solverResult.status || 'error';
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
-                const compatAliases = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], {
+                const telemetry = SolverService.processInteractiveSolveTelemetry({
+                    solverResult,
                     allowReferee,
-                    executionPath: solverResult.executionPath,
-                    totalSolveTimeMs,
-                    finalStatus,
-                    finalStage: solverResult.stage,
-                    finalSolved: !!solverResult.ok
-                });
-                const executionPath = compatAliases.executionPath;
-
-                solverResult.solverPath = compatAliases.solverPath;
-                validateSolveAttributionConsistency({
-                    finalStatus,
-                    finalSolvedBy: compatAliases.finalSolvedBy,
-                    winningEngine: compatAliases.winningEngine
-                }, {
+                    requestedSolverPath,
                     levelId,
                     purpose,
-                    allowReferee,
-                    stageCount: Array.isArray(solverResult.stagesTried) ? solverResult.stagesTried.length : 0,
+                    totalSolveTimeMs,
                     auditMode: !!opts.auditMode
                 });
                 console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
