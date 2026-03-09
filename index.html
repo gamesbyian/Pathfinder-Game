@@ -5012,7 +5012,7 @@
             return result;
         };
 
-        // Canonical solver status/result helpers used by all Referee engines (core + adapters).
+        // Canonical solver status/result helpers used by the unified Referee engine.
         const normalizeSolveStatus = (statusLike = 'error', ok = false) => {
             if (ok) return 'solved';
             const status = `${statusLike || ''}`.trim();
@@ -5046,7 +5046,7 @@
                 routingDecision: partial.routingDecision || null,
                 orderingPolicySummary: partial.orderingPolicySummary || null,
                 stage11RescueDelta: partial.stage11RescueDelta || null,
-                engine: partial.engine || null
+                engine: partial.engine || 'referee'
             };
         };
         const normalizeLegacySolverResult = (legacy, fallbackStatus = 'error', context = {}) => {
@@ -5057,11 +5057,11 @@
                 if (!debug.debug.startState && debug.startState) debug.debug.startState = debug.startState;
                 if (!debug.debug.startNeighborTrace && debug.startNeighborTrace) debug.debug.startNeighborTrace = debug.startNeighborTrace;
             }
-            recordDepthZeroHandoff(legacy?.debug || null, debug, context?.normalizedBy || 'legacy-adapter');
+            recordDepthZeroHandoff(legacy?.debug || null, debug, context?.normalizedBy || 'referee-compat-profile');
             const diagnostics = buildSearchDiagnostics(debug, fallbackStatus);
             if (diagnostics.preExpansionExit && !debug?.debug?.depthZeroReason) {
                 setDepthZeroReason(debug, fallbackStatus === 'error' ? 'status-error-before-expansion' : 'returned-without-expansion', {
-                    normalizedBy: context?.normalizedBy || 'legacy-adapter',
+                    normalizedBy: context?.normalizedBy || 'referee-compat-profile',
                     returnedBeforeExpansion: true
                 });
             }
@@ -5072,10 +5072,10 @@
                     phase: Number.isFinite(getStartStateDebug(debug)?.startNeighborsCount)
                         ? 'after-start-neighbor-enumeration-before-root-expansion'
                         : 'before-start-neighbor-enumeration',
-                    source: context?.normalizedBy || 'legacy-adapter',
+                    source: context?.normalizedBy || 'referee-compat-profile',
                     details: {
                         fallbackStatus: fallbackStatus || 'unknown',
-                        statusPath: context?.statusPath || 'legacy-adapter'
+                        statusPath: context?.statusPath || 'referee-compat-profile'
                     }
                 });
             }
@@ -5092,9 +5092,9 @@
                 solution: ok ? canonical : [],
                 message: ok ? '' : 'No solution found.',
                 debug,
-                engine: 'legacy-adapter',
+                engine: 'referee',
                 preExpansionAbort: getPreExpansionAbort(debug),
-                zeroExpansionSummary: makeZeroExpansionSummary({ statusPath: context?.statusPath || 'legacy-adapter', debug, diagnostics, droppedBy: context?.droppedBy || 'legacy-wrapper' })
+                zeroExpansionSummary: makeZeroExpansionSummary({ statusPath: context?.statusPath || 'referee-compat-profile', debug, diagnostics, droppedBy: context?.droppedBy || 'referee-wrapper' })
             });
         };
         const compactDefined = (obj = {}) => {
@@ -5161,7 +5161,7 @@
             stage: Number.isFinite(stage) ? stage : null,
             name: name || null,
             variant: variant || null,
-            engine: meta.engine || normalized.engine || 'referee-core',
+            engine: meta.engine || normalized.engine || 'referee',
             status: normalized.rawStatus || normalized.status || 'error',
             rawStatus: normalized.rawStatus || normalized.status || 'error',
             solved: !!normalized.ok,
@@ -5175,7 +5175,8 @@
             failureTaxonomy: normalized.failureTaxonomy || null,
             contradictionRecoveryActivated: !!normalized.contradictionRecoveryActivated,
             routingDecision: normalized.routingDecision || null,
-            orderingPolicySummary: normalized.orderingPolicySummary || null
+            orderingPolicySummary: normalized.orderingPolicySummary || null,
+            compatLegacyAlias: !!(meta.compatLegacyAlias || normalized.compatLegacyAlias)
         });
         const toCompactTriageStageSummary = (entry = {}) => compactDefined({
             stage: Number.isFinite(entry.stage) ? entry.stage : null,
@@ -5201,12 +5202,13 @@
         const deriveCompatibilityAliasesFromAttempts = (attemptsLike = [], options = {}) => {
             const attempts = Array.isArray(attemptsLike) ? attemptsLike : [];
             const allowReferee = options.allowReferee !== undefined ? !!options.allowReferee : true;
-            const legacyAttempts = attempts.filter(st => st?.engine === 'legacy-adapter' || `${st?.variant || ''}`.includes('legacy-archetype'));
+            // Migration note: "legacy fallback" aliases are now synthesized from referee profile attempts.
+            const legacyAttempts = attempts.filter(st => !!st?.compatLegacyAlias || `${st?.variant || ''}`.includes('endurance-longpath') || `${st?.variant || ''}`.includes('memo-relaxed'));
             const firstLegacy = legacyAttempts[0] || null;
             const solvedLegacy = legacyAttempts.find(st => st?.solved);
-            const solvedByReferee = attempts.find(st => st?.solved && !(`${st?.variant || ''}`.includes('legacy-archetype')));
+            const solvedByReferee = attempts.find(st => st?.solved && !st?.compatLegacyAlias);
             const executionPath = options.executionPath
-                || (!allowReferee ? 'legacy-compat-only' : (legacyAttempts.length > 0 ? 'referee-then-legacy-archetype' : 'referee-only'));
+                || (!allowReferee ? 'legacy-compat-only' : (legacyAttempts.length > 0 ? 'referee-with-compat-profiles' : 'referee-only'));
             const totalSolveTimeMs = Number.isFinite(options.totalSolveTimeMs) ? options.totalSolveTimeMs : 0;
             return {
                 solverPath: executionPath,
@@ -6372,7 +6374,8 @@
                 lengthHarvest: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'lengthHarvest' },
                 knotBuilder: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'knotBuilder' },
                 portalCommitted: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'portalCommitted' },
-                endurance: { dirOrderVariant: 'random', allowRandomizedExploration: true, policyName: 'endurance' }
+                endurance: { dirOrderVariant: 'random', allowRandomizedExploration: true, policyName: 'endurance' },
+                memoRelaxed: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'memoRelaxed' }
             };
             return byPolicy[policy] || byPolicy.default;
         },
@@ -6429,7 +6432,7 @@
                 orderingPolicy: 'endurance',
                 scoringMode: 'modern',
                 structuralMode: true,
-                enableLegacyRescue: true,
+                enableEnduranceLongpath: true,
                 allowRandomizedExploration: false,
                 purpose: opts.purpose || 'solve'
             });
@@ -6475,8 +6478,8 @@
                 ));
                 const structuralModernShare = Math.max(0.36, Math.min(0.68, 0.54 + complexityBias));
                 const structuralConservativeShare = Math.max(0.22, Math.min(0.44, 0.34 - (complexityBias * 0.45)));
-                const allowLegacyArchetype = opts.enableLegacyRescue !== undefined
-                    ? !!opts.enableLegacyRescue
+                const allowEnduranceLongpath = opts.enableEnduranceLongpath !== undefined
+                    ? !!opts.enableEnduranceLongpath
                     : ((opts.purpose === 'hint' ? false : true) && (portalCommitment > 0.2 || objectiveCount >= 3));
 
                 const modernBudget = Math.max(1, Math.floor(total * structuralModernShare));
@@ -6557,7 +6560,7 @@
                 }
                 attempts.push({
                     label: 'structural-conservative',
-                    budgetMs: Math.max(1, allowLegacyArchetype ? conservativeBudget : (conservativeBudget + remainingBudget)),
+                    budgetMs: Math.max(1, allowEnduranceLongpath ? conservativeBudget : (conservativeBudget + remainingBudget)),
                     scoringMode: 'modern',
                     portalBiasMode: 'off',
                     structuralMode: true,
@@ -6571,15 +6574,17 @@
                     policyProfile: 'conservative'
                 });
 
-                if (allowLegacyArchetype) {
+                if (allowEnduranceLongpath) {
                     attempts.push({
-                        label: 'legacy-archetype',
+                        // Migration note: this absorbs former legacy-adapter rescue behavior as a referee-native profile.
+                        label: 'endurance-longpath',
                         budgetMs: Math.max(1, total - attempts.reduce((sum, a) => sum + a.budgetMs, 0)),
                         scoringMode: 'legacy',
                         portalBiasMode: 'off',
                         structuralMode: true,
                         phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'corridor-commitment' }),
-                        policyProfile: 'legacy-archetype'
+                        policyProfile: 'endurance-longpath',
+                        compatLegacyAlias: true
                     });
                 }
                 return attempts;
@@ -6960,9 +6965,8 @@
                 && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
                 && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
-            // Unified architecture: one referee-core engine with policy personalities.
-            const allowLegacyAdapter = true; // compatibility flag retained; no separate engine path.
-            const onlyLegacyAdapter = false;
+            // Unified architecture: one referee engine with policy personalities.
+            // Migration note: all solving is now referee; historical legacy toggles are compatibility aliases only.
             const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result, meta = {}) => {
@@ -6984,18 +6988,19 @@
                 stagesTried.push(stageSummary);
             };
 
-            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee-core', run }) => {
+            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee', run, compatLegacyAlias = false }) => {
                 if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
                     return { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
                 }
                 if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: stageBudgetMs });
                 const startedAt = Date.now();
                 const result = await run();
-                markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine });
+                markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine, compatLegacyAlias });
                 const normalized = createCanonicalSolveResult(result || {});
                 normalized.stage = stage;
                 normalized.variant = variant;
                 normalized.engine = engine;
+                normalized.compatLegacyAlias = !!compatLegacyAlias;
                 normalized.message = normalized.ok ? `Solved (${variant}).` : `${variant} ${normalized.status || 'error'}.`;
                 normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
                 return normalized;
@@ -7067,7 +7072,7 @@
                                     controlPlane,
                                     scoringMode: 'modern',
                                     structuralMode: true,
-                                    enableLegacyRescue: true,
+                                    enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
                                     adaptiveOrderingPhase: policy === 'objectiveFirst' ? 'objective-harvest' : 'knot-build',
                                     purpose
@@ -7110,17 +7115,18 @@
                 const legacyProfileResult = await runStage({
                     stage: 5,
                     name: 'Stage 5',
-                    variant: 'legacy-archetype-profile',
+                    variant: 'memo-relaxed-profile',
                     budgetMs: recoveryBudget,
+                    compatLegacyAlias: true,
                     run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                        orderingPolicy: 'legacyArchetype',
+                        orderingPolicy: 'memoRelaxed',
                         portalBiasMode: 'off',
                         phasePolicy: null,
                         profile: level.solverProfile,
                         controlPlane,
                         scoringMode: 'legacy',
                         structuralMode: true,
-                        enableLegacyRescue: true,
+                        enableEnduranceLongpath: true,
                         allowRandomizedExploration: false,
                         purpose,
                         preferMacroSkeleton: true
@@ -7129,7 +7135,7 @@
                 legacyProfileResult.legacyRescueSummary = {
                     attempted: true,
                     rescued: !!legacyProfileResult.ok,
-                    mode: 'legacy-archetype-profile',
+                    mode: 'memo-relaxed-profile',
                     priorFailureCategory: priorFailureSummary?.category || null,
                     failureTaxonomy: priorFailureTaxonomy || null,
                     priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
@@ -7143,8 +7149,8 @@
                         refereeRootCandidatesExpanded: Number.isFinite((last?.debug || {})?.rootCandidatesExpanded) ? last.debug.rootCandidatesExpanded : null,
                         refereeNodesExpanded: Number.isFinite((last?.debug || {})?.nodesExpanded) ? last.debug.nodesExpanded : null,
                         refereeTotalSolveTimeMs: Math.max(0, Date.now() - solveStartTime),
-                        legacyAdapterSolveTimeMs: Number.isFinite(legacyProfileResult?.elapsedMs) ? legacyProfileResult.elapsedMs : null,
-                        finalSolvedBy: 'legacy-archetype',
+                        compatProfileSolveTimeMs: Number.isFinite(legacyProfileResult?.elapsedMs) ? legacyProfileResult.elapsedMs : null,
+                        finalSolvedBy: 'referee-compat-profile',
                         materiallyDifferentPathShape: null
                     });
                     last = legacyProfileResult;
@@ -7174,7 +7180,7 @@
                     budgetMs: 15000,
                     elapsedMs: Date.now() - t4,
                     normalized: createCanonicalSolveResult(last || {}),
-                    meta: { engine: 'referee-core' }
+                    meta: { engine: 'referee' }
                 }));
             }
 
@@ -7186,7 +7192,7 @@
                     level,
                     goalReachable: isGoalReachableFromAnyGate(level),
                     lastMeaningfulStage: last.stage,
-                    solvedBy: (`${last.variant || ''}`.includes('legacy-archetype') ? 'legacy-archetype' : 'referee-core'),
+                    solvedBy: (last.compatLegacyAlias ? 'referee-compat-profile' : 'referee'),
                     solvedAfterRetry: !!(last.ok && (stagesTried || []).length > 1)
                 });
             }
@@ -7199,8 +7205,9 @@
                 });
             }
             applyCanonicalSolutionShape(last);
-            const usedLegacyArchetype = (stagesTried || []).some(st => `${st?.variant || ''}`.includes('legacy-archetype'));
-            last.executionPath = usedLegacyArchetype ? 'referee-then-legacy-archetype' : 'referee-only';
+            const usedCompatProfile = (stagesTried || []).some(st => !!st?.compatLegacyAlias || `${st?.variant || ''}`.includes('memo-relaxed') || `${st?.variant || ''}`.includes('endurance-longpath'));
+            // Compatibility field synthesis: executionPath retains historical shape while all attempts are referee-native.
+            last.executionPath = usedCompatProfile ? 'referee-with-compat-profiles' : 'referee-only';
             last.retrySuggested = !last.ok && ['timeout', 'no-solution-inconclusive'].includes(last.status);
             last.escalationTier = escalationTier;
             last.usedEscalation = escalationTier > 0;
@@ -7569,7 +7576,7 @@
                     totalSolveTimeMs,
                     message: err?.message || 'Solver error',
                     debug: thrownDebug
-                }, defaultExecutionPath, 'legacy-wrapper');
+                }, defaultExecutionPath, 'referee-wrapper');
             } finally {
                 finishRun();
             }
@@ -8313,7 +8320,7 @@
 
                 let category = 'low-expansion-collapse';
                 if (result?.ok) {
-                    if (`${context?.solvedBy || ''}`.includes('legacy-archetype')) category = 'solved-via-legacy-archetype';
+                    if (`${context?.solvedBy || ''}`.includes('referee-compat-profile')) category = 'solved-via-compat-profile';
                     else if (context?.solvedAfterRetry) category = 'solved-after-retry';
                     else category = 'solved-direct';
                 } else if (preExpansionSignals && status !== 'no-solution-proven') {
