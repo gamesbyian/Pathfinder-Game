@@ -5432,6 +5432,15 @@
                 console.warn('[Solver attribution inconsistency] compatibility alias disagrees with winning stage', { summary, context });
             }
         };
+        // Backward-compat aliases: older audit hooks may invoke this validator using
+        // a lower-cased name and a historical misspelling (`consistenecy`).
+        const validatesolveattributionconsistency = validateSolveAttributionConsistency;
+        const validatesolveattributionconsistenecy = validateSolveAttributionConsistency;
+        if (typeof globalThis !== 'undefined') {
+            globalThis.validateSolveAttributionConsistency = validateSolveAttributionConsistency;
+            globalThis.validatesolveattributionconsistency = validateSolveAttributionConsistency;
+            globalThis.validatesolveattributionconsistenecy = validateSolveAttributionConsistency;
+        }
         // Compatibility aliases are outward-facing only and must be derived in this single function.
         const deriveCompatibilityAliasesFromAttempts = (attemptsLike = [], options = {}) => {
             const attempts = Array.isArray(attemptsLike) ? attemptsLike : [];
