@@ -1649,6 +1649,32 @@
         const SolverCore = {
                 topoVisited: new Uint8Array(65536),
                 topoQueue: new Uint32Array(65536),
+                SOLVER_POLICY_PROFILES: {
+                    default: { goalAttractionWeight: 1, objectiveAttractionWeight: 1, mustPassUrgencyWeight: 1, mustCrossUrgencyWeight: 1, intersectionSetupWeight: 1, lengthHarvestWeight: 1, perimeterBiasWeight: 1, centerBiasWeight: 1, antiTrapWeight: 1, antiDeadCorridorWeight: 1, revisitPenaltyWeight: 1, antiDitherWeight: 1, portalSetupWeight: 1, portalCommitmentWeight: 1, finishCommitmentWeight: 1, slackPreservationWeight: 1 },
+                    objectiveFirst: { goalAttractionWeight: 0.7, objectiveAttractionWeight: 1.65, mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8, intersectionSetupWeight: 1.2, lengthHarvestWeight: 1.1, perimeterBiasWeight: 1.1, centerBiasWeight: 0.9, antiTrapWeight: 1.05, antiDeadCorridorWeight: 1.1, revisitPenaltyWeight: 0.9, antiDitherWeight: 1, portalSetupWeight: 1.25, portalCommitmentWeight: 1.2, finishCommitmentWeight: 0.65, slackPreservationWeight: 0.85 },
+                    finishFirst: { goalAttractionWeight: 1.45, objectiveAttractionWeight: 0.85, mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1.05, intersectionSetupWeight: 0.8, lengthHarvestWeight: 0.7, perimeterBiasWeight: 0.75, centerBiasWeight: 1.15, antiTrapWeight: 1.2, antiDeadCorridorWeight: 1.25, revisitPenaltyWeight: 1.3, antiDitherWeight: 1.3, portalSetupWeight: 0.9, portalCommitmentWeight: 1, finishCommitmentWeight: 1.75, slackPreservationWeight: 1.5 },
+                    lengthHarvest: { goalAttractionWeight: 0.7, objectiveAttractionWeight: 0.95, mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1, intersectionSetupWeight: 1.05, lengthHarvestWeight: 1.85, perimeterBiasWeight: 1.45, centerBiasWeight: 0.8, antiTrapWeight: 1.2, antiDeadCorridorWeight: 1.15, revisitPenaltyWeight: 0.85, antiDitherWeight: 0.85, portalSetupWeight: 0.95, portalCommitmentWeight: 0.8, finishCommitmentWeight: 0.55, slackPreservationWeight: 1.35 },
+                    knotBuilder: { goalAttractionWeight: 0.8, objectiveAttractionWeight: 1, mustPassUrgencyWeight: 1.1, mustCrossUrgencyWeight: 1.35, intersectionSetupWeight: 1.9, lengthHarvestWeight: 1.2, perimeterBiasWeight: 1.1, centerBiasWeight: 0.95, antiTrapWeight: 1.1, antiDeadCorridorWeight: 1, revisitPenaltyWeight: 0.8, antiDitherWeight: 0.9, portalSetupWeight: 1, portalCommitmentWeight: 0.9, finishCommitmentWeight: 0.7, slackPreservationWeight: 1.1 },
+                    portalCommitted: { goalAttractionWeight: 0.95, objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.3, intersectionSetupWeight: 1, lengthHarvestWeight: 0.9, perimeterBiasWeight: 0.9, centerBiasWeight: 1.05, antiTrapWeight: 1.1, antiDeadCorridorWeight: 1.15, revisitPenaltyWeight: 1.1, antiDitherWeight: 1.25, portalSetupWeight: 1.95, portalCommitmentWeight: 2, finishCommitmentWeight: 1, slackPreservationWeight: 1.1 },
+                    endurance: { goalAttractionWeight: 0.85, objectiveAttractionWeight: 1.05, mustPassUrgencyWeight: 1, mustCrossUrgencyWeight: 1, intersectionSetupWeight: 1.15, lengthHarvestWeight: 1.2, perimeterBiasWeight: 1.1, centerBiasWeight: 0.9, antiTrapWeight: 0.95, antiDeadCorridorWeight: 0.9, revisitPenaltyWeight: 0.75, antiDitherWeight: 0.75, portalSetupWeight: 1.1, portalCommitmentWeight: 1.1, finishCommitmentWeight: 0.8, slackPreservationWeight: 1.2 }
+                },
+                SOLVER_POLICY_PHASE_MULTIPLIERS: {
+                    harvest: { objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, lengthHarvest: { lengthHarvestWeight: 1.15, perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 } },
+                    transition: { objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, lengthHarvest: { lengthHarvestWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 } },
+                    knot: { objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2, antiTrapWeight: 0.9 } },
+                    finish: { objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 } }
+                },
+                getPolicyProfile(policyName = 'default', phase = 'harvest') {
+                    const canonicalName = this.SOLVER_POLICY_PROFILES[policyName] ? policyName : 'default';
+                    const base = this.SOLVER_POLICY_PROFILES[canonicalName] || this.SOLVER_POLICY_PROFILES.default;
+                    const phaseMods = this.SOLVER_POLICY_PHASE_MULTIPLIERS?.[phase]?.[canonicalName] || null;
+                    if (!phaseMods) return { ...base };
+                    const merged = { ...base };
+                    Object.entries(phaseMods).forEach(([k, v]) => {
+                        merged[k] = Number((merged[k] * v).toFixed(4));
+                    });
+                    return merged;
+                },
                 _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet, options = {}) {
                     const armedFalseGoals = new Set(l?.falseGoalKeys || []);
                     return APP.LevelUtils.isValidMove(key, {
@@ -2916,6 +2942,8 @@
                             antiDither: (phaseProfileBase.antiDither || 1) * (templatePhaseOverrides.antiDither || 1)
                         }
                         : phaseProfileBase;
+                    const policyName = options?.orderingPolicy || 'default';
+                    const policyProfile = this.getPolicyProfile(policyName, activePhase);
                     const currentMustBound = hasMust ? getMustBound(k) : 0;
                     const currentCrossBound = crossNeed > 0 ? getCrossBound(k) : 0;
                     const currentObjectiveGap = (Number.isFinite(currentMustBound) ? currentMustBound : 9999) + (Number.isFinite(currentCrossBound) ? currentCrossBound : 9999);
@@ -2931,6 +2959,11 @@
                         const px = k & 0xFFFF;
                         const py = k >> 16;
                         let score = 0;
+                        const scoreDrivers = [];
+                        const pushDriver = (feature, value, contribution) => {
+                            if (depth !== 0 || !Number.isFinite(contribution) || contribution === 0) return;
+                            scoreDrivers.push({ feature, value: Number((value || 0).toFixed(3)), contribution: Number(contribution.toFixed(3)) });
+                        };
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
                         if (mustIdx !== undefined) {
                             const bit = 1n << BigInt(mustIdx);
@@ -3001,7 +3034,7 @@
                             if (crossNeed > 0) score += crossNeed * 2;
                             score += (distMap.get(nk) ?? 999);
                         } else {
-                            score += computePortalOpportunity(k, nk, rSteps);
+                            { const c = computePortalOpportunity(k, nk, rSteps) * Math.max(0.2, policyProfile.portalSetupWeight || 1) * Math.max(0.2, policyProfile.portalCommitmentWeight || 1); score += c; pushDriver('portalCommitment', c, c); }
 
                             const nx = nk & 0xFFFF;
                             const ny = nk >> 16;
@@ -3020,11 +3053,15 @@
                             const currentSlack = l.reqLen - nLen - activeDist;
 
                             // Penalty scales from 5 (high slack) up to 40 (low slack)
-                            const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1);
+                            const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.objectiveAttractionWeight || 1);
 
-                            score -= (mustBound === Infinity ? 100000 : mustBound * gravityMult);
-                            score -= (crossBound === Infinity ? 100000 : crossBound * gravityMult);
-                            if (crossNeed > 0) score += crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1));
+                            const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * Math.max(0.25, policyProfile.mustPassUrgencyWeight || 1));
+                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1));
+                            score += mustContribution;
+                            score += crossContribution;
+                            pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
+                            pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
+                            if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1)); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
 
                             if (activeObjectiveDistMap && activeObjectiveId >= 0) {
                                 const nextObjectiveDist = activeObjectiveDistMap.get(nk) ?? Infinity;
@@ -3061,18 +3098,18 @@
 
                             if (isTargetingWaypoint) {
                                 // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
-                                score -= activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1));
+                                { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * Math.max(0.25, policyProfile.goalAttractionWeight || 1))); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 score -= this._staticNeighborDegree(nk, l) * 2;
                             } else {
                                 const slack = rSteps - activeDist;
                                 if (slack > 0) {
                                     // SLACK MODE: Decaying Orbit + Wall Hugging
-                                    const targetSlack = Math.floor(rSteps / 2);
+                                    const targetSlack = Math.floor((rSteps / 2) * Math.max(0.5, policyProfile.slackPreservationWeight || 1));
                                     score -= Math.abs(slack - targetSlack) * 5;
-                                    score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1));
+                                    score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1) * Math.max(0.25, policyProfile.antiDeadCorridorWeight || 1));
                                 } else {
                                     // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
-                                    score -= activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1));
+                                    { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * Math.max(0.25, policyProfile.goalAttractionWeight || 1))); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 }
                             }
                         }
@@ -3088,13 +3125,13 @@
 
                             if (profile.perimeterBias > 0 && rRatio < 0.45) {
                                 const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
-                                if (edgeDist <= perimeterThreshold) score -= Math.round(profile.perimeterBias * perimeterWeight);
+                                if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * Math.max(0.25, policyProfile.perimeterBiasWeight || 1)); score += c; pushDriver('perimeterBias', edgeDist, c); }
                                 else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
                                 if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
                             }
 
                             if (intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
-                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1);
+                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * Math.max(0.25, policyProfile.intersectionSetupWeight || 1);
                                 const candidate = activeKnotTarget.candidate;
                                 const targetDist = candidate.distMap instanceof Map ? candidate.distMap.get(nk) : undefined;
                                 const currentTargetDist = candidate.distMap instanceof Map ? candidate.distMap.get(k) : undefined;
@@ -3279,7 +3316,7 @@
                             }
                         }
                         const earlySlack = rSteps - (nextGoalDist ?? 999);
-                        const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1);
+                        const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1) * Math.max(0.2, policyProfile.antiDitherWeight || 1);
 
                         // Anti-dither 1: discourage inward drift during early, high-slack harvest.
                         if ((activePhase === 'harvest' || activePhase === 'transition') && rRatio < 0.45 && earlySlack >= 6) {
@@ -3311,14 +3348,16 @@
                         // Anti-dither 3: avoid approaching near-goal basin too early when obligations remain.
                         if (remainsObligations && Number.isFinite(nextGoalDist) && nextGoalDist <= 2 && rSteps > Math.max(4, nextGoalDist + 2)) {
                             let earlyGoalPenalty = Math.round((18 + (rSteps - nextGoalDist) * 2) * antiDitherScale);
-                            if (activePhase === 'finish') earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.2);
+                            if (activePhase === 'finish') earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.2 * Math.max(0.25, 2 - (policyProfile.finishCommitmentWeight || 1)));
                             else if (productiveAmbiguity && objectiveImproved) earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.5);
                             score += earlyGoalPenalty;
                             if (debugStats) debugStats.earlyGoalApproachBlocked = (debugStats.earlyGoalApproachBlocked || 0) + 1;
                         }
 
-                    score += (usageFreq.get(nk) || 0);
-                    return { nk, score };
+                    const revisitContribution = (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
+                    score += revisitContribution;
+                    pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
+                    return { nk, score, scoreDrivers };
                 });
                     if (options?.dirOrderVariant === 'random') {
                         scored.sort(() => Math.random() - 0.5);
@@ -3350,14 +3389,24 @@
                         debugStats.rootMoveOrder = orderedNeighbors.slice(0, 20);
                         debugStats.rootCandidatesExpanded = orderedNeighbors.length;
                         if (shouldRecordRootSuppression) {
-                            debugStats.rootMoveScores = scored.slice(0, 20).map(item => ({ key: item.nk, score: item.score }));
+                            debugStats.rootMoveScores = scored.slice(0, 20).map(item => ({ key: item.nk, score: item.score, drivers: Array.isArray(item.scoreDrivers) ? item.scoreDrivers.slice(0, 3) : [] }));
+                        }
+                        if (scored.length > 0) {
+                            const rankedDrivers = (Array.isArray(scored[0].scoreDrivers) ? scored[0].scoreDrivers.slice() : []).sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+                            const policyFingerprint = scored.slice(0, 3).map(item => `${item.nk}:${Math.round(item.score)}`).join('|');
+                            debugStats.rootPolicySummary = {
+                                policyName,
+                                phaseArchetype: activePhase,
+                                topScoreDrivers: rankedDrivers.slice(0, 3),
+                                rootPolicyDistinctiveness: `${policyName}:${policyFingerprint}`
+                            };
                         }
                     }
                     if (stageTrace) {
                         stageTrace.afterOrdering = orderedNeighbors.slice();
                         stageTrace.finalNeighbors = orderedNeighbors.slice();
                         if (depth === 0 && shouldRecordRootSuppression) {
-                            stageTrace.rootMoveScores = scored.slice(0, 20).map(item => ({ key: item.nk, score: item.score }));
+                            stageTrace.rootMoveScores = scored.slice(0, 20).map(item => ({ key: item.nk, score: item.score, drivers: Array.isArray(item.scoreDrivers) ? item.scoreDrivers.slice(0, 3) : [] }));
                         }
                     }
                     if (stageTrace && depth === 0 && debugStats) debugStats.startNeighborTrace = stageTrace;
@@ -6299,24 +6348,26 @@
 
         getOrderingPolicyConfig(policy = 'default', opts = {}) {
             const allowShuffle = !!opts.allowShuffle;
-            const objectiveFirst = opts.objectiveFirst !== false;
-            const finishFirst = !!opts.finishFirst;
             const byPolicy = {
-                default: { dirOrderVariant: 'default', allowRandomizedExploration: !!opts.allowRandomizedExploration },
-                alt: { dirOrderVariant: 'alt', allowRandomizedExploration: false },
-                shuffle: { dirOrderVariant: allowShuffle ? 'random' : 'default', allowRandomizedExploration: allowShuffle },
-                objectiveFirst: { dirOrderVariant: objectiveFirst ? 'alt' : 'default', allowRandomizedExploration: false },
-                finishFirst: { dirOrderVariant: finishFirst ? 'default' : 'alt', allowRandomizedExploration: false }
+                default: { dirOrderVariant: 'default', allowRandomizedExploration: !!opts.allowRandomizedExploration, policyName: 'default' },
+                alt: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'default' },
+                shuffle: { dirOrderVariant: allowShuffle ? 'random' : 'default', allowRandomizedExploration: allowShuffle, policyName: 'default' },
+                objectiveFirst: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'objectiveFirst' },
+                finishFirst: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'finishFirst' },
+                lengthHarvest: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'lengthHarvest' },
+                knotBuilder: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'knotBuilder' },
+                portalCommitted: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'portalCommitted' },
+                endurance: { dirOrderVariant: 'random', allowRandomizedExploration: true, policyName: 'endurance' }
             };
             return byPolicy[policy] || byPolicy.default;
         },
 
         buildOrderingPolicyListForFailure(category, opts = {}) {
-            if (category === 'shallowCollapse') return ['alt', 'objectiveFirst'];
-            if (category === 'deepTimeout') return ['finishFirst'];
-            if (category === 'unknownFailure') return ['alt'];
+            if (category === 'shallowCollapse') return ['objectiveFirst', 'knotBuilder'];
+            if (category === 'deepTimeout') return ['endurance', 'lengthHarvest'];
+            if (category === 'unknownFailure') return ['finishFirst', 'portalCommitted'];
             const allowRandom = !!opts.allowRandomizedExploration;
-            return allowRandom ? ['shuffle'] : [];
+            return allowRandom ? ['shuffle'] : ['alt'];
         },
 
         async runBaselinePolicySweep(level, budgetMs, opts = {}) {
@@ -6331,10 +6382,10 @@
                 ...opts,
                 dirOrderVariant: policyCfg.dirOrderVariant,
                 allowRandomizedExploration: policyCfg.allowRandomizedExploration,
-                orderingPolicy: policy
+                orderingPolicy: policyCfg.policyName || policy
             };
             const result = await this.runBaselineStage(level, budgetMs, merged);
-            result.orderingPolicy = policy;
+            result.orderingPolicy = policyCfg.policyName || policy;
             return result;
         },
 
@@ -6355,7 +6406,7 @@
         async runEnduranceMode(level, budgetMs, opts = {}) {
             const enduranceResult = await this.runBaselinePolicySweep(level, budgetMs, {
                 ...opts,
-                orderingPolicy: 'finishFirst',
+                orderingPolicy: 'endurance',
                 scoringMode: 'modern',
                 structuralMode: true,
                 enableLegacyRescue: true,
@@ -6898,7 +6949,14 @@
             const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.35));
             const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
             const legacyBudget = Math.max(500, Math.floor(totalBudget * 0.4));
-            const defaultOrderingPolicy = complexityStrategy.directionPolicy?.fast === 'alt' ? 'alt' : 'default';
+            const profileSignals = level?.solverProfile || {};
+            const outstandingObligations = (Number(profileSignals?.objectiveCount) || 0) + (Number(profileSignals?.mustCrossCount) || 0);
+            const portalDependency = (Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0) > 0;
+            const knotSensitive = (Number(profileSignals?.mustCrossCount) || 0) >= 2 || (Number(profileSignals?.topology?.bridgeCount) || 0) >= 4;
+            const openBoard = (Number(profileSignals?.openness) || 0) >= 0.62;
+            const defaultOrderingPolicy = outstandingObligations >= 4
+                ? 'objectiveFirst'
+                : (portalDependency ? 'portalCommitted' : (openBoard ? 'lengthHarvest' : (knotSensitive ? 'knotBuilder' : 'default')));
 
             if (!onlyLegacyAdapter) {
                 last = await runStage({
@@ -6949,7 +7007,7 @@
                                     scoringMode: 'modern',
                                     structuralMode: true,
                                     enableLegacyRescue: true,
-                                    allowRandomizedExploration: policy === 'shuffle',
+                                    allowRandomizedExploration: (policy === 'shuffle' || policy === 'endurance'),
                                     purpose
                                 })
                             });
@@ -7909,6 +7967,7 @@
                     rootCandidatesExpanded: 0,
                     rootMoveOrder: [],
                     rootMoveScores: [],
+                    rootPolicySummary: null,
                     phaseTimeline: [],
                     phaseAttempts: [],
                     knotSelectionEvents: [],
@@ -8096,12 +8155,17 @@
                 const firstRootMoves = Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 8) : [];
                 const totalSuppressed = suppressedByMemo + suppressedByDominance;
                 const preExpansionAbort = getPreExpansionAbort(debug);
+                const policySummary = debug?.rootPolicySummary || null;
                 return {
                     rootCandidatesGenerated: generated,
                     rootCandidatesExpanded: expanded,
                     suppressedByMemo,
                     suppressedByDominance,
                     firstRootMoves,
+                    policyName: policySummary?.policyName || null,
+                    phaseArchetype: policySummary?.phaseArchetype || null,
+                    topScoreDrivers: Array.isArray(policySummary?.topScoreDrivers) ? policySummary.topScoreDrivers.slice(0, 3) : null,
+                    rootPolicyDistinctiveness: policySummary?.rootPolicyDistinctiveness || null,
                     hasRootSuppressionLog: Array.isArray(debug?.debug?.rootSuppressionLog) && debug.debug.rootSuppressionLog.length > 0,
                     dominanceLikelyOverAggressive: generated > 0 && suppressedByDominance >= Math.max(2, Math.ceil(generated * 0.7)) && expanded <= Math.ceil(generated * 0.2),
                     memoLikelyMergingDistinctRoots: generated > 0 && suppressedByMemo >= Math.max(2, Math.ceil(generated * 0.6)) && expanded <= Math.ceil(generated * 0.25),
