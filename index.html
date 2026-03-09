@@ -7979,6 +7979,91 @@
         // centralized canonical-result normalization + compatibility aliases.
         // ======================================================
         const SolverService = {
+            createSolveContext(options = {}) {
+                const purpose = options.purpose || 'solve';
+                const level = options.level || null;
+                const levelId = Number.isFinite(options.levelId)
+                    ? options.levelId
+                    : (Number.isFinite(level?.id) ? level.id + 1 : null);
+                return {
+                    purpose,
+                    allowReferee: options.allowReferee !== undefined ? !!options.allowReferee : true,
+                    requestedSolverPath: options.requestedSolverPath || 'referee',
+                    defaultExecutionPath: options.defaultExecutionPath || 'referee-only',
+                    levelId,
+                    baseReport: {
+                        levelId,
+                        purpose,
+                        requestedSolverPath: options.requestedSolverPath || 'referee'
+                    }
+                };
+            },
+            processInteractiveSolveTelemetry(options = {}) {
+                const normalized = SolverCanonical.normalizeSolveResult(options.solverResult || {}, {
+                    purpose: options.purpose || 'solve',
+                    engine: options.solverResult?.engine || 'referee'
+                });
+                const compatAliases = deriveCompatibilityAliasesFromAttempts(normalized.stagesTried || [], {
+                    allowReferee: options.allowReferee,
+                    totalSolveTimeMs: options.totalSolveTimeMs,
+                    finalStatus: normalized.finalStatus || normalized.rawStatus || normalized.status,
+                    finalStage: normalized.finalStage,
+                    finalSolved: normalized.ok,
+                    executionPath: normalized.executionPath || null
+                });
+                const finalStatus = normalized.finalStatus || normalized.rawStatus || normalized.status || 'error';
+                const executionPath = compatAliases.executionPath || normalized.executionPath || normalized.solverPath || 'referee-only';
+                return { normalized, compatAliases, finalStatus, executionPath };
+            },
+            finalizeSolveResult(options = {}) {
+                const telemetry = this.processInteractiveSolveTelemetry({
+                    solverResult: options.solverResult,
+                    allowReferee: options.allowReferee,
+                    requestedSolverPath: options.requestedSolverPath,
+                    levelId: options.levelId,
+                    purpose: options.purpose,
+                    totalSolveTimeMs: options.totalSolveTimeMs,
+                    auditMode: options.auditMode
+                });
+                return SolverCanonical.normalizeSolveResult({
+                    ...telemetry.normalized,
+                    ...options.baseReport,
+                    ...telemetry.compatAliases,
+                    finalStatus: options.finalStatus || telemetry.finalStatus,
+                    totalSolveTimeMs: Number.isFinite(options.totalSolveTimeMs)
+                        ? options.totalSolveTimeMs
+                        : (Number.isFinite(telemetry.compatAliases.totalSolveTimeMs) ? telemetry.compatAliases.totalSolveTimeMs : 0),
+                    refereeTimeMs: Number.isFinite(options.refereeTimeMs) ? options.refereeTimeMs : null,
+                    requestedSolverPath: options.requestedSolverPath || options.baseReport?.requestedSolverPath || 'referee',
+                    solverPath: telemetry.executionPath,
+                    executionPath: telemetry.executionPath
+                }, {
+                    purpose: options.purpose || options.baseReport?.purpose || 'solve',
+                    engine: options.solverResult?.engine || 'referee'
+                });
+            },
+            buildSolveFailureResult(options = {}) {
+                const fallbackResult = {
+                    ok: false,
+                    status: options.status || 'error',
+                    rawStatus: options.rawStatus || options.status || 'error',
+                    finalStatus: options.rawStatus || options.status || 'error',
+                    solution: [],
+                    solutions: [],
+                    stagesTried: [],
+                    solverPath: options.defaultExecutionPath || 'referee-only',
+                    executionPath: options.defaultExecutionPath || 'referee-only',
+                    totalSolveTimeMs: Number.isFinite(options.totalSolveTimeMs) ? options.totalSolveTimeMs : 0,
+                    droppedBy: options.droppedBy || null,
+                    debug: options.debug || null,
+                    message: options.message || null,
+                    ...options.baseReport
+                };
+                return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(fallbackResult, {
+                    purpose: options.baseReport?.purpose || 'solve',
+                    engine: 'referee'
+                }));
+            },
             deriveCompatibilityAliases(result = {}) {
                 const canonical = SolverCanonical.normalizeSolveResult(result, { purpose: result.purpose || 'solve', engine: result.engine || 'referee' });
                 canonical.solverPath = canonical.executionPath || canonical.solverPath || canonical.engine || 'referee';
