@@ -1614,7 +1614,7 @@
     // - Added SolverCanonical, SolverService, SolverPolicyRouter, SolverUiAdapter, SolverAuditRunner sections.
     // - Kept existing algorithms (PathfinderSolver/Referee) intact and delegated via wrappers.
     // - Unified solve/trap normalization + compatibility aliases behind service wrappers.
-    // Next TODO: move more solveLevel UI side effects into SolverUiAdapter and reduce wrapper complexity.
+    // Next TODO: split lifecycle controller from APP.Solver into a dedicated SolverController module.
     // ======================================================
     // I) APP.Solver
     // Purpose: async hint/solve orchestration and run lifecycle state.
@@ -8098,53 +8098,13 @@
             },
             async run(level, request = {}) {
                 const purpose = request.purpose || 'solve';
+                const raw = await solveLevel(level, request);
                 if (purpose === 'trap') return this.runTrapSearch(level, request);
-
-                // Domain-facing default path: call Referee directly and normalize once.
-                // UI/controller flows can still opt into compatibility wrapper execution.
-                if (request.uiMode) {
-                    const rawInteractive = await solveLevel(level, request);
-                    return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(rawInteractive, { purpose, engine: rawInteractive?.engine || 'referee' }));
-                }
-
-                const normalizedLevel = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                const raw = await Referee.solve(normalizedLevel, request);
                 return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(raw, { purpose, engine: raw?.engine || 'referee' }));
             },
             async runTrapSearch(level, request = {}) {
-                if (request.uiMode) {
-                    const rawTrapInteractive = await findTrapSpots(level, request);
-                    return SolverCanonical.createCanonicalTrapResult(rawTrapInteractive, { engine: 'pathfinder' });
-                }
-                const normalizedLevel = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                const timeLimit = getTrapSpotBudgetMs(normalizedLevel, request);
-                try {
-                    const rawTrap = await PathfinderSolver.findTrapSpots(normalizedLevel, {
-                        ...request,
-                        timeLimit,
-                        onProgress: request.onProgress || (() => {})
-                    });
-                    return SolverCanonical.createCanonicalTrapResult({
-                        ok: true,
-                        status: rawTrap?.timedOut ? 'timeout' : 'solved',
-                        spots: rawTrap?.spots || new Set(),
-                        timedOut: !!rawTrap?.timedOut,
-                        gatesProcessed: Number(rawTrap?.gatesProcessed) || 0,
-                        elapsedMs: Number(rawTrap?.elapsedMs) || 0,
-                        timeLimit
-                    }, { engine: 'pathfinder' });
-                } catch (err) {
-                    return SolverCanonical.createCanonicalTrapResult({
-                        ok: false,
-                        status: err?.name === 'AbortError' ? 'aborted' : 'error',
-                        spots: new Set(),
-                        timedOut: false,
-                        gatesProcessed: 0,
-                        elapsedMs: 0,
-                        timeLimit,
-                        error: err
-                    }, { engine: 'pathfinder' });
-                }
+                const rawTrap = await findTrapSpots(level, request);
+                return SolverCanonical.createCanonicalTrapResult(rawTrap, { engine: 'pathfinder' });
             }
         };
 
@@ -8187,6 +8147,28 @@
                 }
                 return solverResult;
             }
+        };
+
+        // ======================================================
+        // SolverAuditRunner
+        // Migration intent: audit should use the same public solve facade.
+        // Next TODO: further collapse audit-specific result shaping into this module.
+        // ======================================================
+        const SolverAuditRunner = {
+            run(level, request = {}) {
+                return SolverService.run(level, request);
+            },
+            runTrap(level, request = {}) {
+                return SolverService.runTrapSearch(level, { ...request, purpose: 'trap', auditMode: true });
+            }
+        };
+
+        const cancel = () => {
+            if (!APP.State.ENGINE.activeSolverController) return;
+            APP.State.ENGINE.solverAbortRequested = true;
+            APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
+            APP.UI.setButtonState('solverCloseBtn', { enabled: false });
+            APP.State.ENGINE.activeSolverController.abort();
         };
 
         // ======================================================
@@ -8496,7 +8478,7 @@
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
-                const solverResult = await SolverService.run(solveInputLevel, { purpose, escalationTier, allowReferee: true, uiMode: true });
+                const solverResult = await SolverService.run(solveInputLevel, { purpose, escalationTier, allowReferee: true });
                 console.info('[Solver] runGameSolver', {
                     purpose,
                     levelId: Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null,
@@ -8936,8 +8918,8 @@
 
         // Developer note: this pass intentionally preserves legacy public APIs (`solveLevel`,
         // `findTrapSpots`, `runGameSolver`) as compatibility facades over new wrappers.
-        // Next TODO: reduce remaining direct UI mutations inside solveLevel and route them via
-        // SolverUiAdapter/SolverController helpers where safe.
+        // Next TODO: move run lifecycle (startRun/finishRun/cancel/timer) into SolverController
+        // and reduce remaining direct UI mutations inside solveLevel.
 
         return {
             solveLevel,
@@ -8960,8 +8942,7 @@
             SolverService,
             SolverPolicyRouter,
             SolverUiAdapter,
-            SolverAuditRunner,
-            SolverController
+            SolverAuditRunner
         };
     })();
 
