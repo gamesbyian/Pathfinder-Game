@@ -1614,7 +1614,7 @@
     // - Added SolverCanonical, SolverService, SolverPolicyRouter, SolverUiAdapter, SolverAuditRunner sections.
     // - Kept existing algorithms (PathfinderSolver/Referee) intact and delegated via wrappers.
     // - Unified solve/trap normalization + compatibility aliases behind service wrappers.
-    // Next TODO: fully migrate interactive run lifecycle into SolverService.run and keep solveLevel as legacy alias only.
+    // Next TODO: split lifecycle controller from APP.Solver into a dedicated SolverController module.
     // ======================================================
     // I) APP.Solver
     // Purpose: async hint/solve orchestration and run lifecycle state.
@@ -7719,43 +7719,11 @@
             },
             getStatus() {
                 return { ...status, active: !!APP.State.ENGINE.activeSolverController };
-            },
-            setSearchLabel(text = '') {
-                APP.UI.setModalContent('searchLabel', text, 'text');
-            },
-            setTimerElapsedMs(elapsedMs = 0) {
-                APP.UI.setSolverTimerText((Math.max(0, Number(elapsedMs) || 0) / 1000).toFixed(1) + 's');
             }
         };
 
         const startRun = (...args) => SolverController.start(...args);
         const finishRun = (...args) => SolverController.finish(...args);
-
-
-        const attachSolveDepthZeroAudit = (payload, statusPath = 'solver-wrapper', droppedBy = 'unknown') => {
-            if (!payload || typeof payload !== 'object') return payload;
-            const dbg = payload.debug || payload.stats?.debug || null;
-            if (!dbg) return payload;
-            const existingDroppedBy = dbg?.debug?.depthZeroDroppedBy || null;
-            if (!existingDroppedBy && droppedBy) {
-                const dz = ensureDepthZeroDebug(dbg);
-                if (dz && dz.depthZeroCaptured && !hasDepthZeroPayload(dbg)) dz.depthZeroDroppedBy = droppedBy;
-            }
-            const diagnostics = buildSearchDiagnostics(dbg, payload.rawStatus || payload.status || 'unknown');
-            const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy: dbg?.debug?.depthZeroDroppedBy || droppedBy });
-            const preExpansionAbort = getPreExpansionAbort(dbg);
-            if (preExpansionAbort) payload.preExpansionAbort = preExpansionAbort;
-            if (summary) payload.zeroExpansionSummary = summary;
-            if ((payload.rawStatus === 'timeout' || payload.rawStatus === 'no-solution-inconclusive' || payload.status === 'timeout' || payload.status === 'no-solution-inconclusive') && !payload.rootSearchSummary) {
-                payload.rootSearchSummary = makeRootSearchSummary(dbg, diagnostics);
-            }
-            payload.failureProfile = classifySolveStructure(payload, {
-                finalSolvedBy: payload.finalSolvedBy || null,
-                winningStage: payload.winningStage || null,
-                winningEngine: payload.winningEngine || null
-            });
-            return payload;
-        };
 
         const applySolutionsToEngine = (solutionEntries, purpose = 'solve') => {
             const normalizedEntries = normalizeSolutionEntries(solutionEntries);
@@ -7778,7 +7746,128 @@
             APP.UI.showMessage(purpose === 'hint' ? 'Hint found.' : 'Solved.', 'text-emerald-600');
         };
 
-            const solveLevel = async (level, opts = {}) => SolverService.runInteractiveSolve(level, opts);
+            const solveLevel = async (level, opts = {}) => {
+                level = SavedHintArchitecture.toHintBlindSolverLevel(level);
+            const purpose = opts.purpose || 'solve';
+            const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
+            const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
+            const requestedEscalationTierRaw = Number(opts.escalationTier ?? opts.tier);
+            const requestedEscalationTier = Number.isFinite(requestedEscalationTierRaw) ? Math.max(0, Math.floor(requestedEscalationTierRaw)) : 0;
+            const levelId = Number.isFinite(level?.id) ? level.id + 1 : null;
+            const debug = opts.debug !== undefined ? !!opts.debug : true;
+            const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
+            const requestedSolverPath = allowReferee ? 'referee' : 'referee-legacy-compat';
+            const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-compat-only';
+                const solveContext = SolverService.createSolveContext({
+                purpose,
+                allowReferee,
+                requestedSolverPath,
+                defaultExecutionPath,
+                levelId,
+                debugLevel,
+                debug,
+                opts,
+                level
+                });
+                const baseReport = solveContext.baseReport;
+                const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
+            if (!controller) {
+                return {
+                    ok: false,
+                    status: 'error',
+                    rawStatus: 'already-running',
+                    solution: [],
+                    solutions: [],
+                    stagesTried: [],
+                    solverPath: defaultExecutionPath,
+                    ...baseReport,
+                    finalStatus: 'already-running',
+                    totalSolveTimeMs: 0
+                };
+            }
+
+            const solveStart = performance.now();
+            try {
+                const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
+                const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
+                const escalationTier = Math.max(requestedEscalationTier, autoTier);
+                SolverUiAdapter.announceSolveEscalation({ allowReferee, escalationTier });
+                const refereeStart = performance.now();
+                // Unified architecture: outer callers invoke Referee once and receive one normalized solve result.
+                let solverResult = await Referee.solve(level, {
+                    purpose,
+                    timeBudgetMs,
+                    tier: escalationTier,
+                    allowGemini: !!opts.allowGemini,
+                    allowRescueProfiles: !opts.disableLegacyFallback,
+                    onlyRescueProfiles: false,
+                    auditMode: !!opts.auditMode,
+                    onStage: ({ name, variant, budgetMs }) => {
+                        SolverUiAdapter.handleSolveStageTransition({ name, variant, budgetMs, refereeDebug: !!APP.State.ENGINE.flags?.refereeDebug });
+                        if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
+                    }
+                });
+                const refereeTimeMs = Math.round(performance.now() - refereeStart);
+                const totalSolveTimeMs = Math.round(performance.now() - solveStart);
+                const telemetry = SolverService.processInteractiveSolveTelemetry({
+                    solverResult,
+                    allowReferee,
+                    requestedSolverPath,
+                    levelId,
+                    purpose,
+                    totalSolveTimeMs,
+                    auditMode: !!opts.auditMode
+                });
+                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
+                if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
+                    console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
+                }
+                return SolverService.finalizeSolveResult({
+                    solverResult,
+                    finalStatus,
+                    compatAliases,
+                    requestedSolverPath,
+                    allowReferee,
+                    refereeTimeMs,
+                    totalSolveTimeMs,
+                    baseReport
+                });
+            } catch (err) {
+                const totalSolveTimeMs = Math.round(performance.now() - solveStart);
+                if (err?.name === 'AbortError') {
+                    return SolverService.buildSolveFailureResult({
+                        status: 'aborted',
+                        rawStatus: 'aborted',
+                        totalSolveTimeMs,
+                        defaultExecutionPath,
+                        baseReport
+                    });
+                }
+                console.error('Solver error:', err);
+                const thrownDebug = createSolverDebugStats(debugLevel);
+                setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: err?.message || 'solver error' });
+                setPreExpansionAbort(thrownDebug, {
+                    code: 'unexpected-exception',
+                    message: err?.message || 'solver error',
+                    phase: 'strategy-setup',
+                    source: 'APP.Solver.solveLevel',
+                    details: { name: err?.name || null }
+                });
+                finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
+                return SolverService.buildSolveFailureResult({
+                    status: 'error',
+                    rawStatus: 'error',
+                    totalSolveTimeMs,
+                    defaultExecutionPath,
+                    baseReport,
+                    message: err?.message || 'Solver error',
+                    debug: thrownDebug,
+                    droppedBy: 'referee-wrapper'
+                });
+            } finally {
+                finishRun();
+            }
+        };
 
 
         const megaSolve = async (levels, opts = {}) => {
@@ -7897,328 +7986,15 @@
                 canonical.finalSolvedBy = canonical.finalSolvedBy || (canonical.ok ? (canonical.engine || 'referee') : 'none');
                 return canonical;
             },
-            resolveEscalationTier(level, { purpose = 'solve', requestedEscalationTier = 0 } = {}) {
-                const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
-                const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
-                return Math.max(requestedEscalationTier, autoTier);
-            },
-            createSolveStageCallback({ uiMode = false, refereeDebug = false, externalOnStage = null } = {}) {
-                return ({ name, variant, budgetMs }) => {
-                    if (uiMode) SolverUiAdapter.handleSolveStageTransition({ name, variant, budgetMs, refereeDebug: !!refereeDebug });
-                    if (typeof externalOnStage === 'function') externalOnStage({ name, variant, budgetMs });
-                };
-            },
-
-            createSolveContext({ purpose = 'solve', allowReferee = true, requestedSolverPath = 'referee', defaultExecutionPath = 'referee-only', levelId = null, debugLevel = null, debug = true, opts = {}, level = null } = {}) {
-                return {
-                    purpose,
-                    allowReferee,
-                    requestedSolverPath,
-                    defaultExecutionPath,
-                    levelId,
-                    debugLevel,
-                    debug,
-                    opts,
-                    level,
-                    baseReport: {
-                        requestedSolverPath,
-                        refereeAttempted: allowReferee,
-                        refereeStatus: null,
-                        refereeSolved: false,
-                        refereeTimeMs: null,
-                        legacyFallbackTried: false,
-                        legacyFallbackStatus: null,
-                        legacyFallbackSolved: false,
-                        legacyFallbackTimeMs: null,
-                        finalStatus: 'error',
-                        finalSolvedBy: 'none',
-                        executionPath: defaultExecutionPath,
-                        totalSolveTimeMs: 0
-                    }
-                };
-            },
-
-            processInteractiveSolveTelemetry({ solverResult = {}, allowReferee = true, requestedSolverPath = 'referee', levelId = null, purpose = 'solve', totalSolveTimeMs = 0, auditMode = false } = {}) {
-                const canonicalResult = createCanonicalSolveResult(solverResult || {});
-                applyCanonicalSolutionShape(canonicalResult);
-                const finalStatus = canonicalResult.rawStatus || canonicalResult.status || 'error';
-                const compatAliases = deriveCompatibilityAliasesFromAttempts(canonicalResult.stagesTried || [], {
-                    allowReferee,
-                    executionPath: canonicalResult.executionPath,
-                    totalSolveTimeMs,
-                    finalStatus,
-                    finalStage: canonicalResult.stage,
-                    finalSolved: !!canonicalResult.ok
-                });
-                canonicalResult.solverPath = compatAliases.solverPath;
-                validateSolveAttributionConsistency({
-                    finalStatus,
-                    finalSolvedBy: compatAliases.finalSolvedBy,
-                    winningEngine: compatAliases.winningEngine
-                }, {
-                    levelId,
-                    purpose,
-                    allowReferee,
-                    stageCount: Array.isArray(canonicalResult.stagesTried) ? canonicalResult.stagesTried.length : 0,
-                    auditMode: !!auditMode
-                });
-                const executionPath = compatAliases.executionPath;
-                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
-                if (APP.State.ENGINE.flags?.refereeDebug && canonicalResult?.ok && canonicalResult.solution.length === 0) {
-                    console.warn('Solver marked ok but returned empty canonical solution.', { solverResult: canonicalResult, stagesTried: canonicalResult.stagesTried || [] });
-                }
-                return { solverResult: canonicalResult, finalStatus, compatAliases };
-            },
-
-            finalizeSolveResult({ solverResult, finalStatus = 'error', compatAliases = {}, requestedSolverPath = 'referee', allowReferee = true, refereeTimeMs = null, totalSolveTimeMs = 0, baseReport = {} } = {}) {
-                const solution = solverResult?.ok ? (solverResult.solution || []) : [];
-                const debugInfo = solverResult?.debug || solverResult?.stats?.debug || null;
-                return attachSolveDepthZeroAudit({
-                    ...baseReport,
-                    ok: !!solverResult?.ok,
-                    status: solverResult?.status || 'error',
-                    rawStatus: finalStatus,
-                    timedOut: finalStatus === 'timeout',
-                    duration: Number.isFinite(solverResult?.duration)
-                        ? solverResult.duration
-                        : (Number.isFinite(solverResult?.elapsedMs) ? solverResult.elapsedMs : (debugInfo?.elapsedMs || totalSolveTimeMs)),
-                    nodesVisited: Number.isFinite(solverResult?.nodesVisited)
-                        ? solverResult.nodesVisited
-                        : (Number.isFinite(debugInfo?.nodesVisited)
-                            ? debugInfo.nodesVisited
-                            : (Number.isFinite(debugInfo?.nodesExpanded) ? debugInfo.nodesExpanded : 0)),
-                    solution,
-                    solutions: solution,
-                    debug: debugInfo,
-                    stagesTried: solverResult?.stagesTried || [],
-                    stage: solverResult?.stage,
-                    solverPath: compatAliases.solverPath,
-                    requestedSolverPath,
-                    refereeAttempted: allowReferee,
-                    refereeStatus: finalStatus,
-                    refereeSolved: !!solverResult?.ok,
-                    refereeTimeMs,
-                    legacyFallbackTried: compatAliases.legacyFallbackTried,
-                    legacyFallbackStatus: compatAliases.legacyFallbackStatus,
-                    legacyFallbackSolved: compatAliases.legacyFallbackSolved,
-                    legacyFallbackTimeMs: compatAliases.legacyFallbackTimeMs,
-                    finalStatus,
-                    finalSolvedBy: compatAliases.finalSolvedBy,
-                    winningEngine: compatAliases.winningEngine,
-                    winningStage: compatAliases.winningStage,
-                    winningStageNumber: compatAliases.winningStageNumber,
-                    winningElapsedMs: compatAliases.winningElapsedMs,
-                    refereeAttemptCount: compatAliases.refereeAttemptCount,
-                    executionPath: compatAliases.executionPath,
-                    totalSolveTimeMs,
-                    message: solverResult?.message || '',
-                    diagnostics: solverResult?.diagnostics || null,
-                    preExpansionAbort: solverResult?.preExpansionAbort || getPreExpansionAbort(debugInfo) || null,
-                    zeroExpansionSummary: solverResult?.zeroExpansionSummary || null,
-                    rootSearchSummary: solverResult?.rootSearchSummary || null,
-                    failureSummary: solverResult?.failureSummary || null,
-                    failureTaxonomy: solverResult?.failureTaxonomy || null,
-                    failureProfile: solverResult?.failureProfile || null,
-                    contradictionRecoveryActivated: !!solverResult?.contradictionRecoveryActivated,
-                    routingDecision: solverResult?.routingDecision || null,
-                    orderingPolicySummary: solverResult?.orderingPolicySummary || null,
-                    enduranceRescueDelta: solverResult?.enduranceRescueDelta || null,
-                    rescueProfileSummary: solverResult?.rescueProfileSummary || null,
-                    stage11RescueDelta: solverResult?.enduranceRescueDelta || solverResult?.stage11RescueDelta || null,
-                    legacyRescueSummary: solverResult?.rescueProfileSummary || solverResult?.legacyRescueSummary || null
-                }, compatAliases.executionPath || baseReport.executionPath || 'referee-only', 'audit-normalizer');
-            },
-            buildSolveFailureResult({ status = 'error', rawStatus = null, totalSolveTimeMs = 0, defaultExecutionPath = 'referee-only', baseReport = {}, message = '', debug = null, droppedBy = 'solver-service' } = {}) {
-                return attachSolveDepthZeroAudit({
-                    ok: false,
-                    status,
-                    rawStatus: rawStatus || status,
-                    solution: [],
-                    solutions: [],
-                    stagesTried: [],
-                    solverPath: defaultExecutionPath,
-                    ...baseReport,
-                    finalStatus: rawStatus || status,
-                    executionPath: defaultExecutionPath,
-                    totalSolveTimeMs,
-                    message,
-                    debug
-                }, defaultExecutionPath, droppedBy);
-            },
-
-            async runInteractiveSolve(levelInput, opts = {}) {
-                const level = SavedHintArchitecture.toHintBlindSolverLevel(levelInput);
-                const purpose = opts.purpose || 'solve';
-                const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
-                const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
-                const requestedEscalationTierRaw = Number(opts.escalationTier ?? opts.tier);
-                const requestedEscalationTier = Number.isFinite(requestedEscalationTierRaw) ? Math.max(0, Math.floor(requestedEscalationTierRaw)) : 0;
-                const levelId = Number.isFinite(level?.id) ? level.id + 1 : null;
-                const debug = opts.debug !== undefined ? !!opts.debug : true;
-                const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
-                const requestedSolverPath = allowReferee ? 'referee' : 'referee-legacy-compat';
-                const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-compat-only';
-                const solveContext = this.createSolveContext({
-                    purpose,
-                    allowReferee,
-                    requestedSolverPath,
-                    defaultExecutionPath,
-                    levelId,
-                    debugLevel,
-                    debug,
-                    opts,
-                    level
-                });
-                const baseReport = solveContext.baseReport;
-                const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
-                if (!controller) {
-                    return {
-                        ok: false,
-                        status: 'error',
-                        rawStatus: 'already-running',
-                        solution: [],
-                        solutions: [],
-                        stagesTried: [],
-                        solverPath: defaultExecutionPath,
-                        ...baseReport,
-                        finalStatus: 'already-running',
-                        totalSolveTimeMs: 0
-                    };
-                }
-
-                const solveStart = performance.now();
-                try {
-                    const escalationTier = this.resolveEscalationTier(level, { purpose, requestedEscalationTier });
-                    SolverUiAdapter.announceSolveEscalation({ allowReferee, escalationTier });
-                    const refereeStart = performance.now();
-                    const solverResult = await Referee.solve(level, {
-                        purpose,
-                        timeBudgetMs,
-                        tier: escalationTier,
-                        allowGemini: !!opts.allowGemini,
-                        allowRescueProfiles: !opts.disableLegacyFallback,
-                        onlyRescueProfiles: false,
-                        auditMode: !!opts.auditMode,
-                        onStage: this.createSolveStageCallback({
-                            uiMode: true,
-                            refereeDebug: !!APP.State.ENGINE.flags?.refereeDebug,
-                            externalOnStage: opts.onStage
-                        })
-                    });
-                    const refereeTimeMs = Math.round(performance.now() - refereeStart);
-                    const totalSolveTimeMs = Math.round(performance.now() - solveStart);
-                    const telemetry = this.processInteractiveSolveTelemetry({
-                        solverResult,
-                        allowReferee,
-                        requestedSolverPath,
-                        levelId,
-                        purpose,
-                        totalSolveTimeMs,
-                        auditMode: !!opts.auditMode
-                    });
-                    return this.finalizeSolveResult({
-                        solverResult: telemetry.solverResult,
-                        finalStatus: telemetry.finalStatus,
-                        compatAliases: telemetry.compatAliases,
-                        requestedSolverPath,
-                        allowReferee,
-                        refereeTimeMs,
-                        totalSolveTimeMs,
-                        baseReport
-                    });
-                } catch (err) {
-                    const totalSolveTimeMs = Math.round(performance.now() - solveStart);
-                    if (err?.name === 'AbortError') {
-                        return this.buildSolveFailureResult({
-                            status: 'aborted',
-                            rawStatus: 'aborted',
-                            totalSolveTimeMs,
-                            defaultExecutionPath,
-                            baseReport
-                        });
-                    }
-                    console.error('Solver error:', err);
-                    const thrownDebug = createSolverDebugStats(debugLevel);
-                    setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: err?.message || 'solver error' });
-                    setPreExpansionAbort(thrownDebug, {
-                        code: 'unexpected-exception',
-                        message: err?.message || 'solver error',
-                        phase: 'strategy-setup',
-                        source: 'APP.Solver.solveLevel',
-                        details: { name: err?.name || null }
-                    });
-                    finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
-                    return this.buildSolveFailureResult({
-                        status: 'error',
-                        rawStatus: 'error',
-                        totalSolveTimeMs,
-                        defaultExecutionPath,
-                        baseReport,
-                        message: err?.message || 'Solver error',
-                        debug: thrownDebug,
-                        droppedBy: 'referee-wrapper'
-                    });
-                } finally {
-                    finishRun();
-                }
-            },
-
             async run(level, request = {}) {
                 const purpose = request.purpose || 'solve';
+                const raw = await solveLevel(level, request);
                 if (purpose === 'trap') return this.runTrapSearch(level, request);
-
-                // Domain-facing default path: call Referee directly and normalize once.
-                // UI/controller flows can still opt into compatibility wrapper execution.
-                if (request.uiMode) {
-                    const rawInteractive = await this.runInteractiveSolve(level, request);
-                    return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(rawInteractive, { purpose, engine: rawInteractive?.engine || 'referee' }));
-                }
-
-                const normalizedLevel = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                const raw = await Referee.solve(normalizedLevel, {
-                    ...request,
-                    onStage: this.createSolveStageCallback({
-                        uiMode: false,
-                        refereeDebug: !!APP.State.ENGINE.flags?.refereeDebug,
-                        externalOnStage: request.onStage
-                    })
-                });
                 return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(raw, { purpose, engine: raw?.engine || 'referee' }));
             },
             async runTrapSearch(level, request = {}) {
-                if (request.uiMode) {
-                    const rawTrapInteractive = await findTrapSpots(level, request);
-                    return SolverCanonical.createCanonicalTrapResult(rawTrapInteractive, { engine: 'pathfinder' });
-                }
-                const normalizedLevel = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                const timeLimit = getTrapSpotBudgetMs(normalizedLevel, request);
-                try {
-                    const rawTrap = await PathfinderSolver.findTrapSpots(normalizedLevel, {
-                        ...request,
-                        timeLimit,
-                        onProgress: request.onProgress || (() => {})
-                    });
-                    return SolverCanonical.createCanonicalTrapResult({
-                        ok: true,
-                        status: rawTrap?.timedOut ? 'timeout' : 'solved',
-                        spots: rawTrap?.spots || new Set(),
-                        timedOut: !!rawTrap?.timedOut,
-                        gatesProcessed: Number(rawTrap?.gatesProcessed) || 0,
-                        elapsedMs: Number(rawTrap?.elapsedMs) || 0,
-                        timeLimit
-                    }, { engine: 'pathfinder' });
-                } catch (err) {
-                    return SolverCanonical.createCanonicalTrapResult({
-                        ok: false,
-                        status: err?.name === 'AbortError' ? 'aborted' : 'error',
-                        spots: new Set(),
-                        timedOut: false,
-                        gatesProcessed: 0,
-                        elapsedMs: 0,
-                        timeLimit,
-                        error: err
-                    }, { engine: 'pathfinder' });
-                }
+                const rawTrap = await findTrapSpots(level, request);
+                return SolverCanonical.createCanonicalTrapResult(rawTrap, { engine: 'pathfinder' });
             }
         };
 
@@ -8260,23 +8036,29 @@
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }
                 return solverResult;
-            },
-            announceSolveEscalation({ allowReferee = true, escalationTier = 0 } = {}) {
-                if (allowReferee) {
-                    if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
-                    if (escalationTier >= 2) APP.UI.showMessage('Deep search on: extended search mode.', 'text-amber-700');
-                } else {
-                    APP.UI.showMessage('Solving…', 'text-sky-600');
-                }
-            },
-            handleSolveStageTransition({ name, variant, budgetMs, refereeDebug = false } = {}) {
-                SolverController.setSearchLabel(`${name} (${variant}, ${Math.round((Number(budgetMs) || 0) / 1000)}s)`);
-                if (refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
-            },
-            handleTrapProgressMessage(message = '') {
-                SolverController.setSearchLabel(message);
-                APP.UI.showMessage(message, 'text-white font-black');
             }
+        };
+
+        // ======================================================
+        // SolverAuditRunner
+        // Migration intent: audit should use the same public solve facade.
+        // Next TODO: further collapse audit-specific result shaping into this module.
+        // ======================================================
+        const SolverAuditRunner = {
+            run(level, request = {}) {
+                return SolverService.run(level, request);
+            },
+            runTrap(level, request = {}) {
+                return SolverService.runTrapSearch(level, { ...request, purpose: 'trap', auditMode: true });
+            }
+        };
+
+        const cancel = () => {
+            if (!APP.State.ENGINE.activeSolverController) return;
+            APP.State.ENGINE.solverAbortRequested = true;
+            APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
+            APP.UI.setButtonState('solverCloseBtn', { enabled: false });
+            APP.State.ENGINE.activeSolverController.abort();
         };
 
         // ======================================================
@@ -8586,7 +8368,7 @@
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
-                const solverResult = await SolverService.run(solveInputLevel, { purpose, escalationTier, allowReferee: true, uiMode: true });
+                const solverResult = await SolverService.run(solveInputLevel, { purpose, escalationTier, allowReferee: true });
                 console.info('[Solver] runGameSolver', {
                     purpose,
                     levelId: Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null,
@@ -9026,7 +8808,8 @@
 
         // Developer note: this pass intentionally preserves legacy public APIs (`solveLevel`,
         // `findTrapSpots`, `runGameSolver`) as compatibility facades over new wrappers.
-        // Next TODO: collapse solveLevel export to direct alias usage in remaining callsites and remove wrapper-only comments.
+        // Next TODO: move run lifecycle (startRun/finishRun/cancel/timer) into SolverController
+        // and reduce remaining direct UI mutations inside solveLevel.
 
         return {
             solveLevel,
@@ -9049,8 +8832,7 @@
             SolverService,
             SolverPolicyRouter,
             SolverUiAdapter,
-            SolverAuditRunner,
-            SolverController
+            SolverAuditRunner
         };
     })();
 
