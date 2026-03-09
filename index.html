@@ -5041,6 +5041,7 @@
                 rootSearchSummary: partial.rootSearchSummary || null,
                 failureSummary: partial.failureSummary || null,
                 failureTaxonomy: partial.failureTaxonomy || null,
+                failureProfile: partial.failureProfile || null,
                 rescueProfileSummary: partial.rescueProfileSummary || partial.legacyRescueSummary || null,
                 contradictionRecoveryActivated: !!partial.contradictionRecoveryActivated,
                 routingDecision: partial.routingDecision || null,
@@ -5105,6 +5106,130 @@
             });
             return out;
         };
+
+        const STRUCTURAL_CLASSIFIER_THRESHOLDS = {
+            lowExpansionNodesUpper: 80,
+            lowExpansionRootExpandedUpper: 2,
+            healthyExpansionNodesLower: 120,
+            healthyExpansionRootExpandedLower: 8,
+            healthyExpansionAttemptsLower: 2,
+            nearZeroNodesUpper: 2,
+            nearZeroRootExpandedUpper: 1
+        };
+        const collectAttemptMetric = (attempts = [], fn) => {
+            if (!Array.isArray(attempts) || attempts.length === 0) return null;
+            let max = null;
+            for (const attempt of attempts) {
+                const value = Number(fn(attempt));
+                if (!Number.isFinite(value)) continue;
+                max = (max === null) ? value : Math.max(max, value);
+            }
+            return max;
+        };
+        const classifySolveStructure = (result = {}, context = {}) => {
+            const status = `${result?.status || result?.rawStatus || result?.finalStatus || result?.debug?.status || 'unknown'}`;
+            const rawStatus = `${result?.rawStatus || result?.status || status}`;
+            const diagnostics = result?.diagnosticsSummary || result?.diagnostics || buildSearchDiagnostics(result?.debug || result?.stats?.debug || {}, status);
+            const rootSummary = result?.rootSearchSummary || makeRootSearchSummary(result?.debug || result?.stats?.debug || {}, diagnostics) || null;
+            const zeroSummary = result?.zeroExpansionSummary || null;
+            const attempts = Array.isArray(result?.stagesTried)
+                ? result.stagesTried
+                : (Array.isArray(context?.attemptHistory) ? context.attemptHistory : []);
+            const finalSolvedBy = `${context?.finalSolvedBy || result?.finalSolvedBy || ''}`;
+            const winningStage = `${context?.winningStage || result?.winningStage || ''}`;
+            const winningEngine = `${context?.winningEngine || result?.winningEngine || ''}`;
+            const attemptsCount = Number.isFinite(context?.attempts)
+                ? Math.max(0, Number(context.attempts))
+                : (Array.isArray(attempts) ? attempts.length : null);
+            const nodesExpanded = Math.max(0, Number(result?.nodesExpanded ?? diagnostics?.nodesExpanded ?? result?.debug?.nodesExpanded) || 0);
+            const candidateMovesConsidered = Math.max(0, Number(result?.candidateMovesConsidered ?? diagnostics?.candidateMovesConsidered ?? result?.debug?.branchesTried) || 0);
+            const rootCandidatesGenerated = Math.max(0, Number(result?.rootCandidatesGenerated ?? rootSummary?.rootCandidatesGenerated ?? result?.debug?.rootCandidatesGenerated) || 0);
+            const rootCandidatesExpanded = Math.max(0, Number(result?.rootCandidatesExpanded ?? rootSummary?.rootCandidatesExpanded ?? result?.debug?.rootCandidatesExpanded) || 0);
+            const memoHits = Math.max(0, Number(result?.memoHits ?? diagnostics?.memoHits ?? result?.debug?.memoHits) || 0);
+            const failedStateHits = Math.max(0, Number(result?.failedStateHits ?? diagnostics?.failedStateHits ?? result?.debug?.prune?.failedStateHit) || 0);
+            const totalSolveTimeMs = Number.isFinite(result?.totalSolveTimeMs)
+                ? result.totalSolveTimeMs
+                : (Number.isFinite(result?.elapsedMs) ? result.elapsedMs : (Number.isFinite(result?.duration) ? result.duration : null));
+            const maxAttemptNodes = collectAttemptMetric(attempts, (attempt) => attempt?.diagnosticsSummary?.nodesExpanded ?? attempt?.diagnostics?.nodesExpanded ?? attempt?.debug?.nodesExpanded);
+            const maxAttemptRootExpanded = collectAttemptMetric(attempts, (attempt) => attempt?.rootSearchSummary?.rootCandidatesExpanded ?? attempt?.debug?.rootCandidatesExpanded);
+            const effectiveNodesExpanded = Math.max(nodesExpanded, maxAttemptNodes || 0);
+            const effectiveRootExpanded = Math.max(rootCandidatesExpanded, maxAttemptRootExpanded || 0);
+            const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
+            const preExpansionAbortCode = `${result?.preExpansionAbort?.code || result?.debug?.preExpansionAbort?.code || ''}`;
+            const preExpansionSignals = !!zeroSummary
+                || returnedWithoutExpansion
+                || (effectiveNodesExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroNodesUpper && effectiveRootExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroRootExpandedUpper)
+                || rootCandidatesGenerated === 0
+                || preExpansionAbortCode.includes('before-expansion')
+                || status === 'error';
+            const reasons = [];
+            let family = 'other';
+            let confidence = 'low';
+            const solved = !!result?.ok || status === 'solved';
+            const legacyRescue = solved && (
+                finalSolvedBy === 'legacy'
+                || winningEngine === 'legacy'
+                || winningStage.includes('memo-relaxed')
+                || winningStage.includes('endurance-longpath')
+                || attempts.some(attempt => attempt?.compatLegacyOutputAlias && (attempt?.solved || `${attempt?.status || ''}` === 'solved'))
+            );
+
+            if (legacyRescue) {
+                family = 'legacy-only-rescue';
+                confidence = 'high';
+                reasons.push('winning-stage-compat-legacy-profile');
+            } else if (solved) {
+                family = 'solved';
+                confidence = 'high';
+                reasons.push('final-status-solved');
+            } else if (status === 'gemini-failed' || rawStatus === 'gemini-failed') {
+                family = 'gemini-failed';
+                confidence = 'high';
+                reasons.push('terminal-status-gemini-failed');
+            } else if (preExpansionSignals && status !== 'no-solution-proven') {
+                family = 'pre-expansion';
+                confidence = zeroSummary ? 'high' : 'medium';
+                if (zeroSummary) reasons.push('zero-expansion-summary');
+                if (returnedWithoutExpansion) reasons.push('returned-without-expansion');
+                if (rootCandidatesGenerated === 0) reasons.push('root-candidates-generated-0');
+                if (effectiveNodesExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroNodesUpper) reasons.push('nodes-expanded-near-zero');
+            } else {
+                const lowExpansion = effectiveNodesExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.lowExpansionNodesUpper
+                    && effectiveRootExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.lowExpansionRootExpandedUpper;
+                const healthyExpansion = effectiveNodesExpanded >= STRUCTURAL_CLASSIFIER_THRESHOLDS.healthyExpansionNodesLower
+                    || effectiveRootExpanded >= STRUCTURAL_CLASSIFIER_THRESHOLDS.healthyExpansionRootExpandedLower
+                    || (Number.isFinite(attemptsCount) && attemptsCount >= STRUCTURAL_CLASSIFIER_THRESHOLDS.healthyExpansionAttemptsLower && candidateMovesConsidered >= STRUCTURAL_CLASSIFIER_THRESHOLDS.healthyExpansionNodesLower);
+                const timedOutLike = status === 'timeout' || status === 'no-solution-inconclusive';
+                if (timedOutLike && healthyExpansion) {
+                    family = 'healthy-expansion-timeout';
+                    confidence = 'medium';
+                    reasons.push('timeout-after-material-expansion');
+                } else if (timedOutLike || lowExpansion) {
+                    family = 'low-expansion-collapse';
+                    confidence = lowExpansion ? 'high' : 'medium';
+                    if (lowExpansion) reasons.push('low-root-or-node-expansion');
+                    if (timedOutLike) reasons.push('inconclusive-terminal-status');
+                }
+            }
+
+            if (reasons.length === 0) reasons.push('fallback-other');
+
+            return {
+                family,
+                confidence,
+                reasons: reasons.slice(0, 6),
+                metrics: compactDefined({
+                    nodesExpanded,
+                    candidateMovesConsidered,
+                    rootCandidatesGenerated,
+                    rootCandidatesExpanded,
+                    memoHits,
+                    failedStateHits,
+                    totalSolveTimeMs,
+                    attempts: attemptsCount
+                })
+            };
+        };
         const toAuditAttemptSummary = (attempt = {}, options = {}) => {
             const debug = attempt?.debug || attempt?.stats?.debug || {};
             const summary = compactDefined({
@@ -5121,6 +5246,7 @@
                 rootSearchSummary: attempt?.rootSearchSummary || null,
                 failureSummary: attempt?.failureSummary || null,
                 failureTaxonomy: attempt?.failureTaxonomy || null,
+                failureProfile: attempt?.failureProfile || null,
                 contradictionRecoveryActivated: !!attempt?.contradictionRecoveryActivated,
                 routingDecision: attempt?.routingDecision || null,
                 orderingPolicySummary: attempt?.orderingPolicySummary || null,
@@ -5174,6 +5300,7 @@
             rootSearchSummary: normalized.rootSearchSummary || null,
             failureSummary: normalized.failureSummary || null,
             failureTaxonomy: normalized.failureTaxonomy || null,
+            failureProfile: normalized.failureProfile || null,
             contradictionRecoveryActivated: !!normalized.contradictionRecoveryActivated,
             routingDecision: normalized.routingDecision || null,
             orderingPolicySummary: normalized.orderingPolicySummary || null,
@@ -7251,6 +7378,11 @@
                 });
             }
             if (!last.failureSummary && !last.ok) last.failureSummary = classifyFailureCategory(last);
+            last.failureProfile = classifySolveStructure(last, {
+                finalSolvedBy: (last.compatLegacyOutputAlias ? 'legacy' : 'referee'),
+                winningStage: last.winningStage || null,
+                winningEngine: last.winningEngine || (last.compatLegacyOutputAlias ? 'legacy' : 'referee')
+            });
             if (!last.routingDecision) {
                 const cat = last.failureTaxonomy?.category || null;
                 last.routingDecision = compactDefined({
@@ -7461,6 +7593,11 @@
                     if ((payload.rawStatus === 'timeout' || payload.rawStatus === 'no-solution-inconclusive' || payload.status === 'timeout' || payload.status === 'no-solution-inconclusive') && !payload.rootSearchSummary) {
                         payload.rootSearchSummary = makeRootSearchSummary(dbg, diagnostics);
                     }
+                    payload.failureProfile = classifySolveStructure(payload, {
+                        finalSolvedBy: payload.finalSolvedBy || null,
+                        winningStage: payload.winningStage || null,
+                        winningEngine: payload.winningEngine || null
+                    });
                     return payload;
                 };
                 const baseReport = {
@@ -7601,6 +7738,7 @@
                     rootSearchSummary: solverResult.rootSearchSummary || null,
                     failureSummary: solverResult.failureSummary || null,
                     failureTaxonomy: solverResult.failureTaxonomy || null,
+                    failureProfile: solverResult.failureProfile || null,
                     contradictionRecoveryActivated: !!solverResult.contradictionRecoveryActivated,
                     routingDecision: solverResult.routingDecision || null,
                     orderingPolicySummary: solverResult.orderingPolicySummary || null,
@@ -11944,7 +12082,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const triageSummary = r.diagnostics?.inconclusiveTriageSummary
                 ? ` | triage ${r.diagnostics.inconclusiveTriageSummary.status || 'unknown'} (${r.diagnostics.inconclusiveTriageSummary.attempts || 0} tries)`
                 : '';
-            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} total=${r.newHint.totalSolveTimeMs || 0}ms | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            const structural = r.newHint.structuralProfile || null;
+            const structuralSummary = structural
+                ? ` | structural ${structural.family || 'other'}${structural.confidence ? `/${structural.confidence}` : ''}`
+                : '';
+            const attemptCount = Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : (r.newHint.refereeAttemptCount || 0);
+            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const hasAuditIssue = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -11972,7 +12115,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 attempts: Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : 0,
                 winningEngine: r.newHint.winningEngine || null,
                 winningStage: r.newHint.winningStage || null,
-                diagnosticsSummary: r.newHint.diagnosticsSummary || null
+                diagnosticsSummary: r.newHint.diagnosticsSummary || null,
+                structuralProfile: r.newHint.structuralProfile || null
             },
             bombs: { status: r.bombs.status, count: r.bombs.count },
             diagnostics: r.diagnostics,
@@ -12013,7 +12157,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -12171,6 +12315,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.rootSearchSummary = summarizeSearchSignal(finalAttempt?.rootSearchSummary);
             levelEntry.newHint.failureSummary = summarizeSearchSignal(finalHintResult?.failureSummary || finalAttempt?.failureSummary || null);
             levelEntry.newHint.failureTaxonomy = summarizeSearchSignal(finalHintResult?.failureTaxonomy || finalAttempt?.failureTaxonomy || null);
+            levelEntry.newHint.failureProfile = finalHintResult?.failureProfile || finalAttempt?.failureProfile || null;
+            levelEntry.newHint.structuralProfile = levelEntry.newHint.failureProfile
+                ? compactDefined({
+                    family: levelEntry.newHint.failureProfile.family || 'other',
+                    confidence: levelEntry.newHint.failureProfile.confidence || 'low',
+                    reasons: Array.isArray(levelEntry.newHint.failureProfile.reasons)
+                        ? levelEntry.newHint.failureProfile.reasons.slice(0, 4)
+                        : []
+                })
+                : null;
             levelEntry.newHint.contradictionRecoveryActivated = !!(finalHintResult?.contradictionRecoveryActivated || finalAttempt?.contradictionRecoveryActivated);
             levelEntry.newHint.routingDecision = summarizeSearchSignal(finalHintResult?.routingDecision || finalAttempt?.routingDecision || null);
             levelEntry.newHint.orderingPolicySummary = summarizeSearchSignal(finalHintResult?.orderingPolicySummary || finalAttempt?.orderingPolicySummary || null);
