@@ -7819,12 +7819,7 @@
                 const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
                 const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
                 const escalationTier = Math.max(requestedEscalationTier, autoTier);
-                if (allowReferee) {
-                    if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
-                    if (escalationTier >= 2) APP.UI.showMessage('Deep search on: extended search mode.', 'text-amber-700');
-                } else {
-                    APP.UI.showMessage('Solving…', 'text-sky-600');
-                }
+                SolverUiAdapter.announceSolveEscalation({ allowReferee, escalationTier });
                 const refereeStart = performance.now();
                 // Unified architecture: outer callers invoke Referee once and receive one normalized solve result.
                 let solverResult = await Referee.solve(level, {
@@ -7836,8 +7831,7 @@
                     onlyRescueProfiles: false,
                     auditMode: !!opts.auditMode,
                     onStage: ({ name, variant, budgetMs }) => {
-                        APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
-                        if (APP.State.ENGINE.flags?.refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
+                        SolverUiAdapter.handleSolveStageTransition({ name, variant, budgetMs, refereeDebug: !!APP.State.ENGINE.flags?.refereeDebug });
                         if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
                     }
                 });
@@ -8057,11 +8051,10 @@
                     timeLimit,
                     signal: controller.signal,
                     onStateUpdate: (msg) => {
-                        APP.UI.setModalContent('searchLabel', msg, 'text');
-                        APP.UI.showMessage(msg, 'text-white font-black');
+                        SolverUiAdapter.handleTrapProgressMessage(msg);
                     },
                     onProgress: (elapsedMs) => {
-                        APP.UI.setSolverTimerText((elapsedMs / 1000).toFixed(1) + 's');
+                        SolverController.setTimerElapsedMs(elapsedMs);
                     }
                 });
                 const timedOut = !!trapResult?.timedOut;
