@@ -11727,14 +11727,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }
                 }
             } catch (newHintErr) {
-                const failedAttempt = compactDefined({
+                const failedAttempt = {
                     attempt: `ERR-${levelEntry.newHint.attemptHistory.length + 1}`,
                     status: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
                     rawStatus: `${newHintErr?.message || ''}`.includes('timeout') ? 'timeout' : 'error',
                     elapsedMs: 0,
                     producedHintValid: false,
                     diagnosticsSummary: null
-                });
+                };
                 levelEntry.newHint.attemptHistory.push(failedAttempt);
                 finalAttempt = failedAttempt;
                 APP.Solver.cancel();
