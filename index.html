@@ -1651,6 +1651,9 @@
                 topoQueue: new Uint32Array(65536),
                 SOLVER_POLICY_PROFILES: {
                     default: { goalAttractionWeight: 1, objectiveAttractionWeight: 1, mustPassUrgencyWeight: 1, mustCrossUrgencyWeight: 1, intersectionSetupWeight: 1, lengthHarvestWeight: 1, perimeterBiasWeight: 1, centerBiasWeight: 1, antiTrapWeight: 1, antiDeadCorridorWeight: 1, revisitPenaltyWeight: 1, antiDitherWeight: 1, portalSetupWeight: 1, portalCommitmentWeight: 1, finishCommitmentWeight: 1, slackPreservationWeight: 1 },
+                    perimeterSweep: { goalAttractionWeight: 0.6, objectiveAttractionWeight: 0.95, mustPassUrgencyWeight: 1.1, mustCrossUrgencyWeight: 1.15, intersectionSetupWeight: 1.1, lengthHarvestWeight: 1.7, perimeterBiasWeight: 2.05, centerBiasWeight: 0.65, antiTrapWeight: 1.05, antiDeadCorridorWeight: 1.05, revisitPenaltyWeight: 0.65, antiDitherWeight: 0.55, portalSetupWeight: 1, portalCommitmentWeight: 0.95, finishCommitmentWeight: 0.45, slackPreservationWeight: 1.5 },
+                    harvestThenFinish: { goalAttractionWeight: 0.82, objectiveAttractionWeight: 1.35, mustPassUrgencyWeight: 1.35, mustCrossUrgencyWeight: 1.4, intersectionSetupWeight: 1.15, lengthHarvestWeight: 1.25, perimeterBiasWeight: 1.15, centerBiasWeight: 0.9, antiTrapWeight: 1.1, antiDeadCorridorWeight: 1.1, revisitPenaltyWeight: 0.85, antiDitherWeight: 0.85, portalSetupWeight: 1.2, portalCommitmentWeight: 1.2, finishCommitmentWeight: 0.72, slackPreservationWeight: 1.2 },
+                    portalFirstTransfer: { goalAttractionWeight: 0.72, objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1.35, intersectionSetupWeight: 1.05, lengthHarvestWeight: 1.05, perimeterBiasWeight: 0.85, centerBiasWeight: 1.1, antiTrapWeight: 1.05, antiDeadCorridorWeight: 1.1, revisitPenaltyWeight: 0.8, antiDitherWeight: 0.95, portalSetupWeight: 2.2, portalCommitmentWeight: 2.35, finishCommitmentWeight: 0.7, slackPreservationWeight: 1.28 },
                     objectiveFirst: { goalAttractionWeight: 0.7, objectiveAttractionWeight: 1.65, mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8, intersectionSetupWeight: 1.2, lengthHarvestWeight: 1.1, perimeterBiasWeight: 1.1, centerBiasWeight: 0.9, antiTrapWeight: 1.05, antiDeadCorridorWeight: 1.1, revisitPenaltyWeight: 0.9, antiDitherWeight: 1, portalSetupWeight: 1.25, portalCommitmentWeight: 1.2, finishCommitmentWeight: 0.65, slackPreservationWeight: 0.85 },
                     finishFirst: { goalAttractionWeight: 1.45, objectiveAttractionWeight: 0.85, mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1.05, intersectionSetupWeight: 0.8, lengthHarvestWeight: 0.7, perimeterBiasWeight: 0.75, centerBiasWeight: 1.15, antiTrapWeight: 1.2, antiDeadCorridorWeight: 1.25, revisitPenaltyWeight: 1.3, antiDitherWeight: 1.3, portalSetupWeight: 0.9, portalCommitmentWeight: 1, finishCommitmentWeight: 1.75, slackPreservationWeight: 1.5 },
                     lengthHarvest: { goalAttractionWeight: 0.7, objectiveAttractionWeight: 0.95, mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1, intersectionSetupWeight: 1.05, lengthHarvestWeight: 1.85, perimeterBiasWeight: 1.45, centerBiasWeight: 0.8, antiTrapWeight: 1.2, antiDeadCorridorWeight: 1.15, revisitPenaltyWeight: 0.85, antiDitherWeight: 0.85, portalSetupWeight: 0.95, portalCommitmentWeight: 0.8, finishCommitmentWeight: 0.55, slackPreservationWeight: 1.35 },
@@ -1659,10 +1662,10 @@
                     endurance: { goalAttractionWeight: 0.85, objectiveAttractionWeight: 1.05, mustPassUrgencyWeight: 1, mustCrossUrgencyWeight: 1, intersectionSetupWeight: 1.15, lengthHarvestWeight: 1.2, perimeterBiasWeight: 1.1, centerBiasWeight: 0.9, antiTrapWeight: 0.95, antiDeadCorridorWeight: 0.9, revisitPenaltyWeight: 0.75, antiDitherWeight: 0.75, portalSetupWeight: 1.1, portalCommitmentWeight: 1.1, finishCommitmentWeight: 0.8, slackPreservationWeight: 1.2 }
                 },
                 SOLVER_POLICY_PHASE_MULTIPLIERS: {
-                    harvest: { objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, lengthHarvest: { lengthHarvestWeight: 1.15, perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 } },
-                    transition: { objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, lengthHarvest: { lengthHarvestWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 } },
-                    knot: { objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2, antiTrapWeight: 0.9 } },
-                    finish: { objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 } }
+                    harvest: { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, lengthHarvest: { lengthHarvestWeight: 1.15, perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 } },
+                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, lengthHarvest: { lengthHarvestWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 } },
+                    knot: { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2, antiTrapWeight: 0.9 } },
+                    finish: { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 } }
                 },
                 getPolicyProfile(policyName = 'default', phase = 'harvest') {
                     const canonicalName = this.SOLVER_POLICY_PROFILES[policyName] ? policyName : 'default';
@@ -1900,6 +1903,25 @@
                     const portalSig = this._encodePortalReentries(state);
                     const posKey = state.path[state.path.length - 1];
                     const portalForced = this._portalForced(state, l);
+                    const commitmentSig = Number.isFinite(state.commitmentStepsLeft) ? state.commitmentStepsLeft : 0;
+                    const commitmentDirSig = Number.isFinite(state.commitmentDir) ? state.commitmentDir : -1;
+                    const commitmentAxisSig = Number.isFinite(state.commitmentAxis) ? state.commitmentAxis : -1;
+                    let knotSig = Number.isFinite(state.knotShapeProgress) ? state.knotShapeProgress : 0;
+                    if (!Number.isFinite(knotSig) || knotSig === 0) {
+                        const uniques = new Set(state.path || []);
+                        knotSig = Math.max(0, (state.ints || 0) * 31 + Math.min(127, uniques.size));
+                    }
+                    let perimeterSig = Number.isFinite(state.perimeterSpanSignature) ? state.perimeterSpanSignature : 0;
+                    if (!Number.isFinite(perimeterSig) || perimeterSig === 0) {
+                        let per = 0;
+                        for (let i = 0; i < state.path.length; i++) {
+                            const pk = state.path[i];
+                            const px = pk & 0xFFFF;
+                            const py = pk >> 16;
+                            if (px <= 0 || py <= 0 || px >= (l.grid.w - 1) || py >= (l.grid.h - 1)) per++;
+                        }
+                        perimeterSig = per;
+                    }
                     return [
                         base,
                         crossCounts,
@@ -1909,18 +1931,27 @@
                         Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1,
                         Number.isFinite(state.portalSelectedEntry) ? state.portalSelectedEntry : -1,
                         Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1,
-                        this._derivePortalLockState(state, options)
+                        this._derivePortalLockState(state, options),
+                        commitmentSig,
+                        commitmentDirSig,
+                        commitmentAxisSig,
+                        knotSig,
+                        perimeterSig,
+                        options?.orderingPolicy || 'default'
                     ].join('|');
                 },
                 _dominancePruneOrStore(map, key, candidate, stats = null) {
                     if (!map || key === null || key === undefined || !candidate) return false;
                     const prev = map.get(key);
+                    const strictness = Math.max(0.35, Math.min(1.8, Number(candidate?.dominanceStrictness) || 1));
+                    const stepSlack = Math.max(0, Math.round((strictness - 1) * 3));
+                    const intersectionSlack = strictness >= 1.25 ? 0 : 1;
                     if (prev) {
-                        if (candidate.intersections > prev.bestIntersections) {
+                        if (candidate.intersections > (prev.bestIntersections + intersectionSlack)) {
                             if (stats) stats.memoPrunes = (stats.memoPrunes || 0) + 1;
                             return true;
                         }
-                        if (candidate.intersections === prev.bestIntersections && candidate.stepsUsed >= prev.bestStepsUsed) {
+                        if (candidate.intersections === prev.bestIntersections && candidate.stepsUsed >= (prev.bestStepsUsed + stepSlack)) {
                             if (stats) stats.memoPrunes = (stats.memoPrunes || 0) + 1;
                             return true;
                         }
@@ -2366,7 +2397,7 @@
                     if (l.portalMap.has(key)) degree++;
                     return degree;
                 },
-                _phasePolicyFromArchetype(archetype = 'corridor-commitment') {
+                _phasePolicyFromArchetype(archetype = 'harvestThenFinish') {
                     const base = {
                         thresholds: {
                             transitionProgress: 0.34,
@@ -2378,42 +2409,40 @@
                             knotObjectivesRemainingMax: 2
                         },
                         profiles: {
-                            harvest: { perimeterBias: 1.2, objectivePull: 0.8, knotPull: 0.25, goalAttraction: 0.55, antiDither: 0.25 },
-                            transition: { perimeterBias: 0.9, objectivePull: 1.1, knotPull: 0.7, goalAttraction: 0.75, antiDither: 0.45 },
-                            knot: { perimeterBias: 0.45, objectivePull: 0.95, knotPull: 1.45, goalAttraction: 0.95, antiDither: 0.65 },
-                            finish: { perimeterBias: 0.15, objectivePull: 0.65, knotPull: 0.55, goalAttraction: 1.7, antiDither: 1.1 }
+                            harvest: { perimeterBias: 1.15, objectivePull: 0.85, knotPull: 0.3, goalAttraction: 0.6, antiDither: 0.32 },
+                            transition: { perimeterBias: 0.9, objectivePull: 1.1, knotPull: 0.72, goalAttraction: 0.75, antiDither: 0.45 },
+                            knot: { perimeterBias: 0.45, objectivePull: 1, knotPull: 1.45, goalAttraction: 0.95, antiDither: 0.68 },
+                            finish: { perimeterBias: 0.15, objectivePull: 0.7, knotPull: 0.55, goalAttraction: 1.7, antiDither: 1.08 }
                         }
                     };
-                    if (archetype === 'open-harvest') {
-                        base.thresholds.transitionProgress = 0.4;
-                        base.thresholds.knotProgress = 0.62;
-                        base.profiles.harvest.perimeterBias = 1.45;
-                        base.profiles.finish.goalAttraction = 1.55;
-                    } else if (archetype === 'portal-bridge') {
-                        base.thresholds.transitionProgress = 0.28;
-                        base.thresholds.knotProgress = 0.52;
-                        base.thresholds.finishProgress = 0.74;
-                        base.thresholds.finishGoalDist = 5;
-                        base.profiles.transition.objectivePull = 1.35;
-                        base.profiles.knot.knotPull = 1.2;
-                        base.profiles.finish.goalAttraction = 1.95;
-                    } else if (archetype === 'intersection-knot') {
-                        base.thresholds.transitionProgress = 0.32;
-                        base.thresholds.knotProgress = 0.5;
-                        base.thresholds.knotIntsRemainingMax = 3;
-                        base.profiles.knot.knotPull = 1.7;
-                        base.profiles.transition.knotPull = 0.85;
-                    } else if (archetype === 'objective-order') {
-                        base.thresholds.transitionProgress = 0.28;
-                        base.thresholds.knotProgress = 0.56;
-                        base.profiles.transition.objectivePull = 1.35;
-                        base.profiles.knot.objectivePull = 1.2;
-                    } else if (archetype === 'portal-long-route-hybrid') {
+                    if (archetype === 'perimeterSweep') {
+                        base.thresholds.transitionProgress = 0.44;
+                        base.thresholds.knotProgress = 0.64;
+                        base.thresholds.finishProgress = 0.88;
+                        base.profiles.harvest.perimeterBias = 1.65;
+                        base.profiles.harvest.goalAttraction = 0.45;
+                        base.profiles.harvest.antiDither = 0.2;
+                        base.profiles.finish.goalAttraction = 1.45;
+                    } else if (archetype === 'portalFirstTransfer') {
                         base.thresholds.transitionProgress = 0.26;
-                        base.thresholds.finishProgress = 0.78;
+                        base.thresholds.knotProgress = 0.54;
+                        base.thresholds.finishProgress = 0.76;
                         base.thresholds.finishGoalDist = 5;
+                        base.profiles.transition.objectivePull = 1.3;
+                        base.profiles.knot.knotPull = 1.25;
+                        base.profiles.finish.goalAttraction = 1.9;
+                    } else if (archetype === 'knotBuilder') {
+                        base.thresholds.transitionProgress = 0.3;
+                        base.thresholds.knotProgress = 0.48;
+                        base.thresholds.knotIntsRemainingMax = 3;
+                        base.profiles.knot.knotPull = 1.85;
+                        base.profiles.transition.knotPull = 0.9;
+                        base.profiles.finish.goalAttraction = 1.45;
+                    } else if (archetype === 'harvestThenFinish') {
+                        base.thresholds.transitionProgress = 0.3;
+                        base.thresholds.knotProgress = 0.57;
                         base.profiles.transition.objectivePull = 1.25;
-                        base.profiles.finish.goalAttraction = 1.85;
+                        base.profiles.knot.objectivePull = 1.15;
                     }
                     return base;
                 },
@@ -2423,7 +2452,7 @@
                         || hypothesis?.activeArchetype
                         || hypothesis?.primaryArchetype
                         || profile?.archetype
-                        || 'corridor-commitment';
+                        || 'harvestThenFinish';
                     const base = this._phasePolicyFromArchetype(archetype);
                     const topology = profile?.topology || {};
                     const objectiveModel = profile?.objectiveModel || {};
@@ -2944,6 +2973,12 @@
                         : phaseProfileBase;
                     const policyName = options?.orderingPolicy || 'default';
                     const policyProfile = this.getPolicyProfile(policyName, activePhase);
+                    const commitmentHorizon = Math.max(0, Number(state.commitmentHorizon) || 0);
+                    const commitmentWindow = commitmentHorizon > 0 && depth <= commitmentHorizon;
+                    const prevKey = state.path.length >= 2 ? state.path[state.path.length - 2] : -1;
+                    const curDx = prevKey >= 0 ? ((k & 0xFFFF) - (prevKey & 0xFFFF)) : 0;
+                    const curDy = prevKey >= 0 ? ((k >> 16) - (prevKey >> 16)) : 0;
+                    const curAxis = curDx !== 0 ? 0 : (curDy !== 0 ? 1 : -1);
                     const currentMustBound = hasMust ? getMustBound(k) : 0;
                     const currentCrossBound = crossNeed > 0 ? getCrossBound(k) : 0;
                     const currentObjectiveGap = (Number.isFinite(currentMustBound) ? currentMustBound : 9999) + (Number.isFinite(currentCrossBound) ? currentCrossBound : 9999);
@@ -3172,18 +3207,18 @@
                                 score -= profile.portalCommitment;
                             }
                             const startArchetype = state.startGateArchetype;
-                            if (startArchetype === 'perimeter-early') {
+                            if (startArchetype === 'perimeterSweep') {
                                 if (edgeDist <= perimeterThreshold + 1) score -= 22;
                                 else if (rRatio < 0.35) score += 10;
-                            } else if (startArchetype === 'objective-order') {
+                            } else if (startArchetype === 'harvestThenFinish') {
                                 if (objectivePriority && objectiveCount > 0) {
                                     const rank = objectivePriority.get(nk);
                                     if (rank !== undefined) score -= Math.round(Math.max(6, (objectiveCount - rank) * 6));
                                 }
-                            } else if (startArchetype === 'knot-access') {
+                            } else if (startArchetype === 'knotBuilder') {
                                 if (knotZone?.has(nk)) score -= 18;
                                 else if (intsRemaining > 0 && activePhase !== 'finish') score += 8;
-                            } else if (startArchetype === 'portal-symmetry') {
+                            } else if (startArchetype === 'portalFirstTransfer') {
                                 if (portalDest === nk && portalForced) score -= 20;
                                 if (symmetryCommitted) {
                                     if (symmetryModel.axis === 'vertical') {
@@ -3315,6 +3350,28 @@
                                 else score += sk.violationPenalty || 12;
                             }
                         }
+
+                        if (commitmentWindow && prevKey >= 0) {
+                            const ndx = (nk & 0xFFFF) - (k & 0xFFFF);
+                            const ndy = (nk >> 16) - (k >> 16);
+                            const nAxis = ndx !== 0 ? 0 : (ndy !== 0 ? 1 : -1);
+                            if (curAxis >= 0 && nAxis >= 0 && curAxis !== nAxis) score += 22;
+                            if (curDx !== 0 && ndx !== 0 && Math.sign(curDx) !== Math.sign(ndx)) score += 18;
+                            if (curDy !== 0 && ndy !== 0 && Math.sign(curDy) !== Math.sign(ndy)) score += 18;
+                            if (policyName === 'perimeterSweep') {
+                                const edgeNext = Math.min(nk & 0xFFFF, nk >> 16, (l.grid.w - 1) - (nk & 0xFFFF), (l.grid.h - 1) - (nk >> 16));
+                                if (edgeNext > perimeterThreshold + 1) score += 24;
+                            }
+                        }
+                        if (policyName === 'portalFirstTransfer' && !isP && committedFamily < 0 && (l.portalMap?.size || 0) > 0) {
+                            const nPortal = l.portalMap?.has(nk);
+                            if (!nPortal && depth < Math.max(8, Math.floor(l.reqLen * 0.45))) score += 16;
+                        }
+                        if (policyName === 'knotBuilder' && activePhase !== 'finish' && remainsObligations) {
+                            if (!projectedRevisit && nextInKnot) score -= 14;
+                            if (projectedRevisit && !nextInKnot) score += 14;
+                        }
+
                         const earlySlack = rSteps - (nextGoalDist ?? 999);
                         const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1) * Math.max(0.2, policyProfile.antiDitherWeight || 1);
 
@@ -3698,7 +3755,13 @@
                         objectiveTrackId: options?.objectiveTrack?.id || null,
                         objectiveTrackKeys: Array.isArray(options?.objectiveTrack?.keys) ? options.objectiveTrack.keys : [],
                         knotCrossBudget: Number.isFinite(options?.knotBudgetPolicy?.knotCrossBudget) ? options.knotBudgetPolicy.knotCrossBudget : Math.max(0, Math.ceil((l.reqInt || 0) * 0.7)),
-                        nonKnotCrossCap: Number.isFinite(options?.knotBudgetPolicy?.nonKnotCrossCap) ? options.knotBudgetPolicy.nonKnotCrossCap : Math.max(0, Math.floor((l.reqInt || 0) * 0.35))
+                        nonKnotCrossCap: Number.isFinite(options?.knotBudgetPolicy?.nonKnotCrossCap) ? options.knotBudgetPolicy.nonKnotCrossCap : Math.max(0, Math.floor((l.reqInt || 0) * 0.35)),
+                        commitmentHorizon: Math.max(0, Number(options?.commitmentPlan?.horizonSteps) || 0),
+                        commitmentStepsLeft: Math.max(0, Number(options?.commitmentPlan?.horizonSteps) || 0),
+                        commitmentDir: -1,
+                        commitmentAxis: -1,
+                        knotShapeProgress: 0,
+                        perimeterSpanSignature: 0
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -3936,7 +3999,7 @@
                             }
                         }
                         let stateSig = this._stateSignature(state, l, realLen, options);
-                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen }, debugStats)) {
+                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1 }, debugStats)) {
                             if (realLen <= 1 && debugStats) {
                                 debugStats.rootCandidatesSuppressedByDominance = (debugStats.rootCandidatesSuppressedByDominance || 0) + 1;
                                 const dbg = ensureDepthZeroDebug(debugStats);
@@ -5994,7 +6057,7 @@
                 objectiveModel: { features: objectiveFeatures, priorityMap: objectivePriority },
                 symmetryModel
             });
-            const archetype = hypothesisModel.primaryArchetype || (portalLoad > 0 ? 'portal-bridge' : (openness > 0.75 ? 'open-harvest' : 'corridor-commitment'));
+            const archetype = hypothesisModel.primaryArchetype || (portalLoad > 0 ? 'portalFirstTransfer' : (((level?.reqInt || 0) >= 2) ? 'knotBuilder' : (openness > 0.75 ? 'perimeterSweep' : 'harvestThenFinish')));
             const templateLibrary = this.buildTemplateLibrary();
             const templateCandidates = this.selectTemplateCandidates({
                 archetype,
@@ -6087,14 +6150,12 @@
             const symmetryConfidence = Math.max(0, Number(symmetryModel.confidence) || 0);
 
             const rawScores = {
-                'corridor-commitment': 0.22 + corridorRatio * 0.68 + articulationRatio * 0.28 + Math.max(0, routePressure - 0.6) * 0.35,
-                'open-harvest': 0.2 + openness * 0.72 + Math.max(0, 1 - corridorRatio) * 0.2,
-                'portal-bridge': 0.2 + mandatoryFamilies * 0.24 + bridgeRatio * 0.45 + (portalFamilyCount > 0 ? 0.2 : 0),
-                'intersection-knot': 0.18 + knotConfidence * 0.65 + articulationRatio * 0.4 + Math.max(0, objectiveCount - 1) * 0.03,
-                'objective-order': 0.16 + objectiveOrderComplexity * 0.62 + Math.max(0, routePressure - 0.55) * 0.22,
-                'portal-long-route-hybrid': 0.15 + (mandatoryFamilies > 0 ? 0.34 : 0) + Math.max(0, routePressure - 0.7) * 0.5 + bridgeRatio * 0.2
+                perimeterSweep: 0.2 + openness * 0.66 + Math.max(0, routePressure - 0.55) * 0.34 + Math.max(0, 1 - corridorRatio) * 0.18,
+                harvestThenFinish: 0.22 + corridorRatio * 0.54 + articulationRatio * 0.28 + objectiveOrderComplexity * 0.24,
+                portalFirstTransfer: 0.2 + mandatoryFamilies * 0.25 + bridgeRatio * 0.45 + (portalFamilyCount > 0 ? 0.2 : 0),
+                knotBuilder: 0.2 + knotConfidence * 0.74 + articulationRatio * 0.36 + Math.max(0, objectiveCount - 1) * 0.04
             };
-            if (symmetryConfidence > 0.72) rawScores['objective-order'] += 0.1;
+            if (symmetryConfidence > 0.72) rawScores.harvestThenFinish += 0.08;
             const entries = Object.entries(rawScores).map(([id, score]) => [id, Math.max(0.01, Number(score) || 0)]);
             const total = entries.reduce((sum, [, score]) => sum + score, 0) || 1;
             const archetypeScores = {};
@@ -6102,7 +6163,7 @@
                 archetypeScores[id] = Number((score / total).toFixed(4));
             });
             const ranked = entries.sort((a, b) => b[1] - a[1]).map(([id]) => id);
-            const primaryArchetype = ranked[0] || 'corridor-commitment';
+            const primaryArchetype = ranked[0] || 'harvestThenFinish';
             const secondaryArchetypes = ranked.slice(1, 4).map(id => ({ id, confidence: archetypeScores[id] || 0 }));
             return {
                 archetypeScores,
@@ -6125,7 +6186,7 @@
                 rankedHypotheses: ranked,
                 activeIndex: 0,
                 activeHypothesis: {
-                    archetype: baseHypothesis.primaryArchetype || (ranked[0]?.archetype || 'corridor-commitment'),
+                    archetype: baseHypothesis.primaryArchetype || (ranked[0]?.archetype || 'harvestThenFinish'),
                     confidence: Number(baseHypothesis.confidence) || Number(ranked[0]?.confidence) || 0,
                     switchReason: baseHypothesis.switchReason || 'initial',
                     attempts: 0
@@ -6257,9 +6318,9 @@
                 if (t.id === 'side-commitment') confidence += symmetryConfidence * 0.85 + Math.max(0, pressure - 0.5) * 0.2;
                 if (t.id === 'portal-bridge-first') confidence += (mandatoryFamilies > 0 ? 0.42 : 0) + Math.max(0, pressure - 0.45) * 0.25;
                 if (t.id === 'corner-harvest') confidence += Math.max(0, openness - 0.42) * 0.55 + knotConfidence * 0.4;
-                if (profile?.archetype === 'portal-bridge' && t.id === 'portal-bridge-first') confidence += 0.22;
-                if (profile?.archetype === 'open-harvest' && (t.id === 'corner-harvest' || t.id.startsWith('perimeter'))) confidence += 0.12;
-                if (profile?.archetype === 'corridor-commitment' && t.id === 'side-commitment') confidence += 0.14;
+                if (profile?.archetype === 'portalFirstTransfer' && t.id === 'portal-bridge-first') confidence += 0.22;
+                if (profile?.archetype === 'perimeterSweep' && (t.id === 'corner-harvest' || t.id.startsWith('perimeter'))) confidence += 0.12;
+                if (profile?.archetype === 'harvestThenFinish' && t.id === 'side-commitment') confidence += 0.14;
                 return { ...t, confidence: Math.max(0.05, Math.min(0.99, Number(confidence.toFixed(3)))) };
             });
             return base.sort((a, b) => b.confidence - a.confidence).slice(0, 3);
@@ -6358,7 +6419,7 @@
                     rotational90Agreement: Number.isFinite(symmetryModel.rotational90Agreement) ? symmetryModel.rotational90Agreement : 0,
                     transformScores: (symmetryModel.transformScores && typeof symmetryModel.transformScores === 'object') ? symmetryModel.transformScores : {}
                 },
-                archetype: safe.archetype || 'corridor-commitment',
+                archetype: safe.archetype || 'harvestThenFinish',
                 strategySubtype: safe.strategySubtype || 'corridor_commitment',
                 strategySubtypeSignals: (safe.strategySubtypeSignals && typeof safe.strategySubtypeSignals === 'object') ? safe.strategySubtypeSignals : {},
                 strategySubtypeRanked: Array.isArray(safe.strategySubtypeRanked) ? safe.strategySubtypeRanked : [],
@@ -6369,7 +6430,7 @@
                     ? safe.phasePolicy
                     : SolverCore.deriveDynamicPhasePolicy(safe, {
                         hypothesis: safe.hypothesisModel || null,
-                        activeArchetype: safe.hypothesisModel?.primaryArchetype || safe.archetype || 'corridor-commitment'
+                        activeArchetype: safe.hypothesisModel?.primaryArchetype || safe.archetype || 'harvestThenFinish'
                     }),
                 templateLibrary,
                 templateCandidates
@@ -6550,11 +6611,10 @@
                 default: { dirOrderVariant: 'default', allowRandomizedExploration: !!opts.allowRandomizedExploration, policyName: 'default' },
                 alt: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'default' },
                 shuffle: { dirOrderVariant: allowShuffle ? 'random' : 'default', allowRandomizedExploration: allowShuffle, policyName: 'default' },
-                objectiveFirst: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'objectiveFirst' },
-                finishFirst: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'finishFirst' },
-                lengthHarvest: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'lengthHarvest' },
+                perimeterSweep: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'perimeterSweep' },
+                harvestThenFinish: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'harvestThenFinish' },
+                portalFirstTransfer: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'portalFirstTransfer' },
                 knotBuilder: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'knotBuilder' },
-                portalCommitted: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'portalCommitted' },
                 endurance: { dirOrderVariant: 'random', allowRandomizedExploration: true, policyName: 'endurance' },
                 memoRelaxed: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'memoRelaxed' }
             };
@@ -6562,9 +6622,9 @@
         },
 
         buildOrderingPolicyListForFailure(category, opts = {}) {
-            if (category === 'shallowCollapse') return ['objectiveFirst', 'knotBuilder'];
-            if (category === 'deepTimeout') return ['endurance', 'lengthHarvest'];
-            if (category === 'unknownFailure') return ['finishFirst', 'portalCommitted'];
+            if (category === 'shallowCollapse') return ['harvestThenFinish', 'knotBuilder'];
+            if (category === 'deepTimeout') return ['endurance', 'perimeterSweep'];
+            if (category === 'unknownFailure') return ['portalFirstTransfer', 'harvestThenFinish'];
             const allowRandom = !!opts.allowRandomizedExploration;
             return allowRandom ? ['shuffle'] : ['alt'];
         },
@@ -6701,7 +6761,9 @@
                             macroSkeleton: macroSkeletons[idx % Math.max(1, macroSkeletons.length)] || defaultSkeleton,
                             regionCrossingModel,
                             templatePhase: 'warmup',
-                            policyProfile: 'objective-first'
+                            policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
+                            commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
+                            memoStrictness: 1.35
                         });
                     });
                     const reserve = Math.max(1, modernBudget - warmupTotal);
@@ -6720,7 +6782,9 @@
                         macroSkeleton: defaultSkeleton,
                         regionCrossingModel,
                         templatePhase: 'reallocated',
-                        policyProfile: 'objective-first'
+                        policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
+                            commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
+                            memoStrictness: 1.35
                     });
                 } else {
                     attempts.push({
@@ -6736,7 +6800,9 @@
                         knotBudgetPolicy: commonKnotBudgetPolicy,
                         macroSkeleton: defaultSkeleton,
                         regionCrossingModel,
-                        policyProfile: 'conservative'
+                        policyProfile: 'perimeterSweep',
+                        commitmentPlan: { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
+                        memoStrictness: 1.2
                     });
                 }
                 attempts.push({
@@ -6752,7 +6818,9 @@
                     knotBudgetPolicy: commonKnotBudgetPolicy,
                     macroSkeleton: defaultSkeleton,
                     regionCrossingModel,
-                    policyProfile: 'conservative'
+                    policyProfile: 'harvestThenFinish',
+                    commitmentPlan: { horizonSteps: Math.max(2, Math.floor(level.reqLen * 0.14)) },
+                    memoStrictness: 0.85
                 });
 
                 if (allowEnduranceLongpath) {
@@ -6763,8 +6831,10 @@
                         scoringMode: 'endurance',
                         portalBiasMode: 'off',
                         structuralMode: true,
-                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'corridor-commitment' }),
-                        policyProfile: 'endurance-longpath',
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
+                        policyProfile: 'knotBuilder',
+                        commitmentPlan: { horizonSteps: Math.max(5, Math.floor(level.reqLen * 0.26)) },
+                        memoStrictness: 1.55,
                         compatLegacyOutputAlias: true
                     });
                 }
@@ -6820,6 +6890,10 @@
                     knotBudgetPolicy: attemptOpts.knotBudgetPolicy || null,
                     macroSkeleton: attemptOpts.macroSkeleton || null,
                     regionCrossingModel: attemptOpts.regionCrossingModel || null,
+                    orderingPolicy: attemptOpts.policyProfile || opts.orderingPolicy || 'harvestThenFinish',
+                    startGateArchetype: attemptOpts.policyProfile || controlPlane?.activeHypothesis?.archetype || 'harvestThenFinish',
+                    commitmentPlan: attemptOpts.commitmentPlan || null,
+                    memoStrictness: Number(attemptOpts.memoStrictness) || 1,
                     controlPlane
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
@@ -7199,8 +7273,8 @@
             const knotSensitive = (Number(profileSignals?.mustCrossCount) || 0) >= 2 || (Number(profileSignals?.topology?.bridgeCount) || 0) >= 4;
             const openBoard = (Number(profileSignals?.openness) || 0) >= 0.62;
             const defaultOrderingPolicy = outstandingObligations >= 4
-                ? 'objectiveFirst'
-                : (portalDependency ? 'portalCommitted' : (openBoard ? 'lengthHarvest' : (knotSensitive ? 'knotBuilder' : 'default')));
+                ? 'harvestThenFinish'
+                : (portalDependency ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
 
             {
                 last = await runStage({
@@ -7237,7 +7311,7 @@
                             })
                         });
                     } else if (failureCategory === 'low-expansion-collapse') {
-                        const policies = ['objectiveFirst', 'knotBuilder'];
+                        const policies = ['harvestThenFinish', 'knotBuilder'];
                         for (const policy of policies) {
                             if (last.ok || last.status === 'no-solution-proven') break;
                             last = await runStage({
@@ -7255,7 +7329,7 @@
                                     structuralMode: true,
                                     enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
-                                    adaptiveOrderingPhase: policy === 'objectiveFirst' ? 'objective-harvest' : 'knot-build',
+                                    adaptiveOrderingPhase: policy === 'harvestThenFinish' ? 'objective-harvest' : 'knot-build',
                                     purpose
                                 })
                             });
