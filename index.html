@@ -8061,22 +8061,6 @@
             APP.State.ENGINE.activeSolverController.abort();
         };
 
-        // ======================================================
-        // SolverAuditRunner
-        // Migration intent: audit should use the same public solve facade.
-        // Next TODO: further collapse audit-specific result shaping into this module.
-        // ======================================================
-        const SolverAuditRunner = {
-            run(level, request = {}) {
-                return SolverService.run(level, request);
-            },
-            runTrap(level, request = {}) {
-                return SolverService.runTrapSearch(level, { ...request, purpose: 'trap', auditMode: true });
-            }
-        };
-
-        const cancel = () => SolverController.cancel();
-
 
 
             const attemptHistory = {};
