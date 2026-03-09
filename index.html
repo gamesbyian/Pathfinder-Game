@@ -8159,7 +8159,8 @@
             getHint: (tier = 0) => runGameSolver('hint', tier),
             startHintAnimation,
             stopHintAnimation,
-            validateCandidatePath
+            validateCandidatePath,
+            toAuditAttemptSummary
         };
     })();
 
@@ -11678,7 +11679,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
                     const attemptStatus = classifyHintStatus(hintRes, hintValidation);
-                    const attemptRecord = toAuditAttemptSummary(hintRes, {
+                    const attemptRecord = APP.Solver.toAuditAttemptSummary(hintRes, {
                         attemptLabel: attemptPlan.key,
                         status: attemptStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
@@ -11702,7 +11703,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
                     const geminiAttemptStatus = classifyHintStatus(hintRes, hintValidation);
-                    const geminiAttempt = toAuditAttemptSummary(hintRes, {
+                    const geminiAttempt = APP.Solver.toAuditAttemptSummary(hintRes, {
                         attemptLabel: 'D',
                         status: geminiAttemptStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
