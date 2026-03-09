@@ -5151,12 +5151,52 @@
             normalizeSolveStatus,
             createCanonicalSolveResult,
             normalizeSolveResult(rawResult = {}, context = {}) {
+                const purpose = context.purpose || rawResult.purpose || 'solve';
+                const engine = context.engine || rawResult.engine || 'referee';
+
                 const canonical = createCanonicalSolveResult({
                     ...rawResult,
-                    purpose: context.purpose || rawResult.purpose || 'solve',
-                    engine: context.engine || rawResult.engine || 'referee'
+                    purpose,
+                    engine
                 });
-                return { ...rawResult, ...canonical };
+
+                const normalized = {
+                    ...rawResult,
+                    ...canonical
+                };
+
+                if (!Array.isArray(normalized.solution)) {
+                    normalized.solution = [];
+                }
+                if (!Array.isArray(normalized.solutions)) {
+                    normalized.solutions = normalized.solution.length ? [{ path: normalized.solution }] : [];
+                }
+
+                if (!Array.isArray(normalized.stagesTried)) {
+                    normalized.stagesTried = [];
+                }
+
+                if (typeof normalized.ok !== 'boolean') {
+                    normalized.ok = !!(normalized.solution && normalized.solution.length);
+                }
+
+                if (!normalized.status) {
+                    normalized.status = normalized.ok ? 'solved' : 'no_solution';
+                }
+
+                if (!normalized.rawStatus) {
+                    normalized.rawStatus = normalized.status;
+                }
+
+                if (!normalized.engine) {
+                    normalized.engine = engine;
+                }
+
+                if (!normalized.purpose) {
+                    normalized.purpose = purpose;
+                }
+
+                return normalized;
             },
             createCanonicalTrapResult(partial = {}, context = {}) {
                 const status = `${partial.status || partial.rawStatus || 'error'}`;
@@ -7827,10 +7867,9 @@
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
-                return SolverService.finalizeSolveResult({
+                return SolverService.finalizeSolveResult(telemetry, {
                     solverResult,
                     finalStatus,
-                    compatAliases,
                     requestedSolverPath,
                     allowReferee,
                     refereeTimeMs,
@@ -8020,36 +8059,40 @@
                 const executionPath = compatAliases.executionPath || normalized.executionPath || normalized.solverPath || 'referee-only';
                 return { normalized, compatAliases, finalStatus, executionPath };
             },
-            finalizeSolveResult(options = {}) {
-                const telemetry = this.processInteractiveSolveTelemetry({
-                    solverResult: options.solverResult,
-                    allowReferee: options.allowReferee,
-                    requestedSolverPath: options.requestedSolverPath,
-                    levelId: options.levelId,
-                    purpose: options.purpose,
-                    totalSolveTimeMs: options.totalSolveTimeMs,
-                    auditMode: options.auditMode
-                });
+            finalizeSolveResult(telemetry = {}, options = {}) {
                 const merged = {
                     ...(telemetry.normalized || {}),
                     ...(options.baseReport || {}),
                     ...(telemetry.compatAliases || {}),
-                    finalStatus: options.finalStatus || telemetry.finalStatus,
+                    finalStatus: options.finalStatus || telemetry.finalStatus || null,
                     totalSolveTimeMs: Number.isFinite(options.totalSolveTimeMs)
                         ? options.totalSolveTimeMs
-                        : (Number.isFinite(telemetry.compatAliases.totalSolveTimeMs) ? telemetry.compatAliases.totalSolveTimeMs : 0),
+                        : (Number.isFinite(telemetry.totalSolveTimeMs) ? telemetry.totalSolveTimeMs : 0),
                     refereeTimeMs: Number.isFinite(options.refereeTimeMs) ? options.refereeTimeMs : null,
-                    requestedSolverPath: options.requestedSolverPath || options.baseReport?.requestedSolverPath || 'referee',
-                    solverPath: telemetry.executionPath,
-                    executionPath: telemetry.executionPath
+                    requestedSolverPath:
+                        options.requestedSolverPath ||
+                        (options.baseReport && options.baseReport.requestedSolverPath) ||
+                        'referee',
+                    solverPath: telemetry.executionPath || telemetry.solverPath || null,
+                    executionPath: telemetry.executionPath || telemetry.solverPath || null
                 };
-                return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(merged, {
-                    purpose: options.purpose || options.baseReport?.purpose || 'solve',
-                    engine: options.solverResult?.engine || 'referee'
-                }));
+
+                const normalized = SolverCanonical.normalizeSolveResult(merged, {
+                    purpose:
+                        options.purpose ||
+                        (options.baseReport && options.baseReport.purpose) ||
+                        'solve',
+                    engine:
+                        (options.solverResult && options.solverResult.engine) ||
+                        merged.engine ||
+                        'referee'
+                });
+
+                return this.deriveCompatibilityAliases(normalized);
             },
             buildSolveFailureResult(options = {}) {
                 const fallbackResult = {
+                    ...(options.baseReport || {}),
                     ok: false,
                     status: options.status || 'error',
                     rawStatus: options.rawStatus || options.status || 'error',
@@ -8062,13 +8105,18 @@
                     totalSolveTimeMs: Number.isFinite(options.totalSolveTimeMs) ? options.totalSolveTimeMs : 0,
                     droppedBy: options.droppedBy || null,
                     debug: options.debug || null,
-                    message: options.message || null,
-                    ...(options.baseReport || {})
+                    message: options.message || null
                 };
-                return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(fallbackResult, {
-                    purpose: options.baseReport?.purpose || 'solve',
-                    engine: 'referee'
-                }));
+
+                const normalized = SolverCanonical.normalizeSolveResult(fallbackResult, {
+                    purpose:
+                        options.purpose ||
+                        (options.baseReport && options.baseReport.purpose) ||
+                        'solve',
+                    engine: fallbackResult.engine || 'referee'
+                });
+
+                return this.deriveCompatibilityAliases(normalized);
             },
             deriveCompatibilityAliases(result = {}) {
                 const canonical = SolverCanonical.normalizeSolveResult(result, { purpose: result.purpose || 'solve', engine: result.engine || 'referee' });
@@ -8079,9 +8127,17 @@
             },
             async run(level, request = {}) {
                 const purpose = request.purpose || 'solve';
-                if (purpose === 'trap') return this.runTrapSearch(level, request);
+                if (purpose === 'trap') {
+                    return this.runTrapSearch(level, request);
+                }
+
                 const raw = await solveLevel(level, request);
-                return this.deriveCompatibilityAliases(SolverCanonical.normalizeSolveResult(raw, { purpose, engine: raw?.engine || 'referee' }));
+                const normalized = SolverCanonical.normalizeSolveResult(raw, {
+                    purpose,
+                    engine: raw && raw.engine ? raw.engine : 'referee'
+                });
+
+                return this.deriveCompatibilityAliases(normalized);
             },
             async runTrapSearch(level, request = {}) {
                 const rawTrap = await findTrapSpots(level, request);
@@ -8096,10 +8152,13 @@
         // ======================================================
         const SolverUiAdapter = {
             presentSolveResult(solverResult, purpose, activeLevel) {
-                const canonical = SolverCanonical.normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
-                solverResult.solution = canonical;
-                solverResult.solutions = canonical;
-                const normalizedEntries = solverResult.ok ? canonical : [];
+                const uiResult = solverResult || {};
+                const normalizedResult = SolverCanonical.normalizeSolveResult(uiResult, { purpose, engine: uiResult.engine || 'referee' });
+                const canonical = SolverCanonical.normalizeSolutionEntries(normalizedResult.solution ?? normalizedResult.solutions ?? []);
+                uiResult.solution = canonical;
+                uiResult.solutions = canonical;
+                uiResult.ok = normalizedResult.ok === true || canonical.length > 0;
+                const normalizedEntries = (uiResult.ok || canonical.length > 0) ? canonical : [];
                 const validationLevel = (APP.State.ENGINE.mode === APP.Core.PLAY && Number.isFinite(activeLevel?.id))
                     ? APP.LevelUtils.normalizeLevel(activeLevel.id)
                     : APP.LevelUtils.deepCloneLevel(activeLevel);
@@ -8109,18 +8168,18 @@
                     if (validation?.ok) validEntries.push({ path: validation.path });
                 });
                 const normalizedPaths = validEntries.map(sol => sol.path).filter(path => Array.isArray(path) && path.length > 0);
-                if (solverResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
+                if (uiResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
                     console.warn('Solver returned invalid or malformed solution entries.', { purpose, solution: canonical });
                     APP.UI.showMessage('Solver returned invalid solution data.', 'text-amber-600');
-                } else if (solverResult.ok && validEntries.length < normalizedEntries.length) {
+                } else if (uiResult.ok && validEntries.length < normalizedEntries.length) {
                     console.warn('Filtered invalid solver paths before applying hints.', { purpose, total: normalizedEntries.length, valid: validEntries.length });
                 }
                 if (normalizedPaths.length > 0) {
                     APP.Solver.applySolutionsToEngine(validEntries, purpose);
-                } else if (solverResult.rawStatus === 'no-solution-proven') {
+                } else if (uiResult.rawStatus === 'no-solution-proven') {
                     APP.UI.showMessage('No solution exists for this level.', 'text-amber-600');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                } else if (solverResult.status === 'aborted') {
+                } else if (uiResult.status === 'aborted') {
                     APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else {
@@ -8128,7 +8187,7 @@
                     else APP.UI.showMessage('No solution in 15s. Press Solve for 60s.', 'text-amber-600');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }
-                return solverResult;
+                return uiResult;
             }
         };
 
