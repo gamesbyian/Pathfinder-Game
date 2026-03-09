@@ -9934,7 +9934,9 @@
 
                 if (!Array.isArray(l.gateKeys) || l.gateKeys.length === 0) reasons.push("No gates");
                 if (l.goalKey === -1 || l.goalKey === undefined) reasons.push("Goal missing");
-                if (APP.State.ENGINE.editor.pendingPortal) reasons.push("Portal terminals incomplete");
+                const validatingEditorLevel = APP.State.ENGINE.mode === APP.Core.EDITOR
+                    && l === APP.State.ENGINE.editor.workingLevel;
+                if (validatingEditorLevel && APP.State.ENGINE.editor.pendingPortal) reasons.push("Portal terminals incomplete");
 
                 l.gateKeys.forEach(k => { if (!inGrid(k)) addOutOfBounds('gates', k); });
                 if (l.goalKey !== -1 && l.goalKey !== undefined && !inGrid(l.goalKey)) addOutOfBounds('goal', l.goalKey);
