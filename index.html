@@ -7758,46 +7758,18 @@
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
             const requestedSolverPath = allowReferee ? 'referee' : 'referee-legacy-compat';
             const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-compat-only';
-                const attachDepthZeroAudit = (payload, statusPath = 'solver-wrapper', droppedBy = 'unknown') => {
-                    if (!payload || typeof payload !== 'object') return payload;
-                    const dbg = payload.debug || payload.stats?.debug || null;
-                    if (!dbg) return payload;
-                    const existingDroppedBy = dbg?.debug?.depthZeroDroppedBy || null;
-                    if (!existingDroppedBy && droppedBy) {
-                        const dz = ensureDepthZeroDebug(dbg);
-                        if (dz && dz.depthZeroCaptured && !hasDepthZeroPayload(dbg)) dz.depthZeroDroppedBy = droppedBy;
-                    }
-                    const diagnostics = buildSearchDiagnostics(dbg, payload.rawStatus || payload.status || 'unknown');
-                    const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy: dbg?.debug?.depthZeroDroppedBy || droppedBy });
-                    const preExpansionAbort = getPreExpansionAbort(dbg);
-                    if (preExpansionAbort) payload.preExpansionAbort = preExpansionAbort;
-                    if (summary) payload.zeroExpansionSummary = summary;
-                    if ((payload.rawStatus === 'timeout' || payload.rawStatus === 'no-solution-inconclusive' || payload.status === 'timeout' || payload.status === 'no-solution-inconclusive') && !payload.rootSearchSummary) {
-                        payload.rootSearchSummary = makeRootSearchSummary(dbg, diagnostics);
-                    }
-                    payload.failureProfile = classifySolveStructure(payload, {
-                        finalSolvedBy: payload.finalSolvedBy || null,
-                        winningStage: payload.winningStage || null,
-                        winningEngine: payload.winningEngine || null
-                    });
-                    return payload;
-                };
-                const baseReport = {
+                const solveContext = SolverService.createSolveContext({
+                purpose,
+                allowReferee,
                 requestedSolverPath,
-                refereeAttempted: allowReferee,
-                refereeStatus: null,
-                refereeSolved: false,
-                refereeTimeMs: null,
-                // Legacy compatibility fields are now derived from unified Referee attempt history.
-                legacyFallbackTried: false,
-                legacyFallbackStatus: null,
-                legacyFallbackSolved: false,
-                legacyFallbackTimeMs: null,
-                finalStatus: 'error',
-                finalSolvedBy: 'none',
-                executionPath: defaultExecutionPath,
-                    totalSolveTimeMs: 0
-                };
+                defaultExecutionPath,
+                levelId,
+                debugLevel,
+                debug,
+                opts,
+                level
+                });
+                const baseReport = solveContext.baseReport;
                 const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
             if (!controller) {
                 return {
@@ -7867,79 +7839,26 @@
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
-                const solution = solverResult.ok ? solverResult.solution : [];
-                const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
-                return attachDepthZeroAudit({
-                    ok: !!solverResult.ok,
-                    status: solverResult.status || 'error',
-                    rawStatus: finalStatus,
-                    timedOut: finalStatus === 'timeout',
-                    duration: Number.isFinite(solverResult.duration)
-                        ? solverResult.duration
-                        : (Number.isFinite(solverResult.elapsedMs) ? solverResult.elapsedMs : (debugInfo?.elapsedMs || totalSolveTimeMs)),
-                    nodesVisited: Number.isFinite(solverResult.nodesVisited)
-                        ? solverResult.nodesVisited
-                        : (Number.isFinite(debugInfo?.nodesVisited)
-                            ? debugInfo.nodesVisited
-                            : (Number.isFinite(debugInfo?.nodesExpanded) ? debugInfo.nodesExpanded : 0)),
-                    solution,
-                    solutions: solution,
-                    debug: debugInfo,
-                    stagesTried: solverResult.stagesTried || [],
-                    stage: solverResult.stage,
-                    // Compatibility alias: final effective execution path, not the requested engine.
-                    solverPath: compatAliases.solverPath,
-                    requestedSolverPath,
-                    refereeAttempted: allowReferee,
-                    refereeStatus: finalStatus,
-                    refereeSolved: !!solverResult.ok,
-                    refereeTimeMs,
-                    legacyFallbackTried: compatAliases.legacyFallbackTried,
-                    legacyFallbackStatus: compatAliases.legacyFallbackStatus,
-                    legacyFallbackSolved: compatAliases.legacyFallbackSolved,
-                    legacyFallbackTimeMs: compatAliases.legacyFallbackTimeMs,
+                return SolverService.finalizeSolveResult({
+                    solverResult,
                     finalStatus,
-                    finalSolvedBy: compatAliases.finalSolvedBy,
-                    winningEngine: compatAliases.winningEngine,
-                    winningStage: compatAliases.winningStage,
-                    winningStageNumber: compatAliases.winningStageNumber,
-                    winningElapsedMs: compatAliases.winningElapsedMs,
-                    refereeAttemptCount: compatAliases.refereeAttemptCount,
-                    executionPath: compatAliases.executionPath,
+                    compatAliases,
+                    requestedSolverPath,
+                    allowReferee,
+                    refereeTimeMs,
                     totalSolveTimeMs,
-                    message: solverResult.message || '',
-                    diagnostics: solverResult.diagnostics || null,
-                    preExpansionAbort: solverResult.preExpansionAbort || getPreExpansionAbort(debugInfo) || null,
-                    zeroExpansionSummary: solverResult.zeroExpansionSummary || null,
-                    rootSearchSummary: solverResult.rootSearchSummary || null,
-                    failureSummary: solverResult.failureSummary || null,
-                    failureTaxonomy: solverResult.failureTaxonomy || null,
-                    failureProfile: solverResult.failureProfile || null,
-                    contradictionRecoveryActivated: !!solverResult.contradictionRecoveryActivated,
-                    routingDecision: solverResult.routingDecision || null,
-                    orderingPolicySummary: solverResult.orderingPolicySummary || null,
-                    enduranceRescueDelta: solverResult.enduranceRescueDelta || null,
-                    rescueProfileSummary: solverResult.rescueProfileSummary || null,
-                    // Compatibility aliases for audit/UI consumers.
-                    stage11RescueDelta: solverResult.enduranceRescueDelta || solverResult.stage11RescueDelta || null,
-                    legacyRescueSummary: solverResult.rescueProfileSummary || solverResult.legacyRescueSummary || null
-                }, compatAliases.executionPath, 'audit-normalizer');
+                    baseReport
+                });
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
                 if (err?.name === 'AbortError') {
-                    return {
-                        ok: false,
+                    return SolverService.buildSolveFailureResult({
                         status: 'aborted',
                         rawStatus: 'aborted',
-                        solution: [],
-                        solutions: [],
-                        stagesTried: [],
-                        solverPath: defaultExecutionPath,
-                        ...baseReport,
-                        finalStatus: 'aborted',
-                        executionPath: defaultExecutionPath,
-                        totalSolveTimeMs
-                    };
+                        totalSolveTimeMs,
+                        defaultExecutionPath,
+                        baseReport
+                    });
                 }
                 console.error('Solver error:', err);
                 const thrownDebug = createSolverDebugStats(debugLevel);
@@ -7952,21 +7871,16 @@
                     details: { name: err?.name || null }
                 });
                 finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
-                return attachDepthZeroAudit({
-                    ok: false,
+                return SolverService.buildSolveFailureResult({
                     status: 'error',
                     rawStatus: 'error',
-                    solution: [],
-                    solutions: [],
-                    stagesTried: [],
-                    solverPath: defaultExecutionPath,
-                    ...baseReport,
-                    finalStatus: 'error',
-                    executionPath: defaultExecutionPath,
                     totalSolveTimeMs,
+                    defaultExecutionPath,
+                    baseReport,
                     message: err?.message || 'Solver error',
-                    debug: thrownDebug
-                }, defaultExecutionPath, 'referee-wrapper');
+                    debug: thrownDebug,
+                    droppedBy: 'referee-wrapper'
+                });
             } finally {
                 finishRun();
             }
