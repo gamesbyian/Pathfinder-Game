@@ -5201,16 +5201,17 @@
         const deriveCompatibilityAliasesFromAttempts = (attemptsLike = [], options = {}) => {
             const attempts = Array.isArray(attemptsLike) ? attemptsLike : [];
             const allowReferee = options.allowReferee !== undefined ? !!options.allowReferee : true;
-            const legacyAttempts = attempts.filter(st => st?.engine === 'legacy-adapter');
+            const legacyAttempts = attempts.filter(st => st?.engine === 'legacy-adapter' || `${st?.variant || ''}`.includes('legacy-archetype'));
             const firstLegacy = legacyAttempts[0] || null;
             const solvedLegacy = legacyAttempts.find(st => st?.solved);
-            const solvedByReferee = attempts.find(st => st?.solved && st?.engine !== 'legacy-adapter');
+            const solvedByReferee = attempts.find(st => st?.solved && !(`${st?.variant || ''}`.includes('legacy-archetype')));
             const executionPath = options.executionPath
-                || (!allowReferee ? 'legacy-only' : (legacyAttempts.length > 0 ? 'referee-then-legacy' : 'referee-only'));
+                || (!allowReferee ? 'legacy-compat-only' : (legacyAttempts.length > 0 ? 'referee-then-legacy-archetype' : 'referee-only'));
             const totalSolveTimeMs = Number.isFinite(options.totalSolveTimeMs) ? options.totalSolveTimeMs : 0;
             return {
                 solverPath: executionPath,
                 executionPath,
+                // Compatibility aliases: kept for existing audit/UI readers.
                 legacyFallbackTried: legacyAttempts.length > 0,
                 legacyFallbackStatus: solvedLegacy?.status || firstLegacy?.status || null,
                 legacyFallbackSolved: !!solvedLegacy,
@@ -6437,6 +6438,25 @@
             return enduranceResult;
         },
 
+        buildContradictionGuard(level, debug = {}, diagnostics = {}, attemptOpts = {}) {
+            const goalReachable = isGoalReachableFromAnyGate(level);
+            const rootGenerated = Math.max(0, Number(debug?.rootCandidatesGenerated) || 0);
+            const rootExpanded = Math.max(0, Number(debug?.rootCandidatesExpanded) || 0);
+            const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
+            const noExpansion = returnedWithoutExpansion || (rootGenerated === 0 && rootExpanded === 0 && (Number(debug?.nodesExpanded) || 0) === 0);
+            const triggered = !!goalReachable && !!noExpansion;
+            const protectedPrunesDisabled = triggered
+                ? Array.from(new Set(['mustPassBound', 'mustCrossBound', 'connectivity', 'dominance', 'memo']))
+                : [];
+            return compactDefined({
+                triggered,
+                reason: triggered ? 'reachable-but-no-expansion' : null,
+                guardBudgetMs: triggered ? Math.max(800, Math.floor((Number(attemptOpts?.budgetMs) || 1200) * 0.55)) : null,
+                protectedPrunesDisabled,
+                rootSearchSummary: triggered ? compactDefined({ rootGenerated, rootExpanded, returnedWithoutExpansion }) : null
+            });
+        },
+
         async runBaselineStage(level, budgetMs, opts = {}) {
             const started = Date.now();
             const profile = opts.profile || level?.solverProfile || null;
@@ -6455,7 +6475,7 @@
                 ));
                 const structuralModernShare = Math.max(0.36, Math.min(0.68, 0.54 + complexityBias));
                 const structuralConservativeShare = Math.max(0.22, Math.min(0.44, 0.34 - (complexityBias * 0.45)));
-                const allowLegacyRescue = opts.enableLegacyRescue !== undefined
+                const allowLegacyArchetype = opts.enableLegacyRescue !== undefined
                     ? !!opts.enableLegacyRescue
                     : ((opts.purpose === 'hint' ? false : true) && (portalCommitment > 0.2 || objectiveCount >= 3));
 
@@ -6496,7 +6516,8 @@
                             knotBudgetPolicy: commonKnotBudgetPolicy,
                             macroSkeleton: macroSkeletons[idx % Math.max(1, macroSkeletons.length)] || defaultSkeleton,
                             regionCrossingModel,
-                            templatePhase: 'warmup'
+                            templatePhase: 'warmup',
+                            policyProfile: 'objective-first'
                         });
                     });
                     const reserve = Math.max(1, modernBudget - warmupTotal);
@@ -6514,7 +6535,8 @@
                         knotBudgetPolicy: commonKnotBudgetPolicy,
                         macroSkeleton: defaultSkeleton,
                         regionCrossingModel,
-                        templatePhase: 'reallocated'
+                        templatePhase: 'reallocated',
+                        policyProfile: 'objective-first'
                     });
                 } else {
                     attempts.push({
@@ -6529,12 +6551,13 @@
                         portalLockPolicy: commonPortalLockPolicy,
                         knotBudgetPolicy: commonKnotBudgetPolicy,
                         macroSkeleton: defaultSkeleton,
-                        regionCrossingModel
+                        regionCrossingModel,
+                        policyProfile: 'conservative'
                     });
                 }
                 attempts.push({
                     label: 'structural-conservative',
-                    budgetMs: Math.max(1, allowLegacyRescue ? conservativeBudget : (conservativeBudget + remainingBudget)),
+                    budgetMs: Math.max(1, allowLegacyArchetype ? conservativeBudget : (conservativeBudget + remainingBudget)),
                     scoringMode: 'modern',
                     portalBiasMode: 'off',
                     structuralMode: true,
@@ -6544,17 +6567,19 @@
                     portalLockPolicy: commonPortalLockPolicy,
                     knotBudgetPolicy: commonKnotBudgetPolicy,
                     macroSkeleton: defaultSkeleton,
-                    regionCrossingModel
+                    regionCrossingModel,
+                    policyProfile: 'conservative'
                 });
 
-                if (allowLegacyRescue) {
+                if (allowLegacyArchetype) {
                     attempts.push({
-                        label: 'legacy-rescue',
+                        label: 'legacy-archetype',
                         budgetMs: Math.max(1, total - attempts.reduce((sum, a) => sum + a.budgetMs, 0)),
                         scoringMode: 'legacy',
                         portalBiasMode: 'off',
-                        structuralMode: false,
-                        phasePolicy: null
+                        structuralMode: true,
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'corridor-commitment' }),
+                        policyProfile: 'legacy-archetype'
                     });
                 }
                 return attempts;
@@ -6625,6 +6650,45 @@
                 const status = r?.ok && solution.length > 0
                     ? 'solved'
                     : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error'));
+                const searchDiagnostics = buildSearchDiagnostics(debug, status);
+                const contradictionGuard = this.buildContradictionGuard(level, debug, searchDiagnostics, attemptOpts);
+                if (contradictionGuard.triggered) {
+                    debug.contradictionGuard = contradictionGuard;
+                    const guarded = await PathfinderSolver.solve(level, {
+                        timeLimit: contradictionGuard.guardBudgetMs,
+                        debug: true,
+                        debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
+                        disabledPrunes: contradictionGuard.protectedPrunesDisabled,
+                        portalBiasMode: 'off',
+                        scoringMode: attemptOpts.scoringMode || 'modern',
+                        structuralMode: !!attemptOpts.structuralMode,
+                        phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
+                        structuralTemplate: attemptOpts.structuralTemplate || null,
+                        objectiveTrack: attemptOpts.objectiveTrack || null,
+                        controlPlane
+                    });
+                    const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
+                    const guardedDebug = guarded?.debug || {};
+                    guardedDebug.contradictionGuard = contradictionGuard;
+                    const guardedStatus = guarded?.ok && guardedSolution.length > 0
+                        ? 'solved'
+                        : (guardedDebug.status === 'timeout' ? 'timeout' : (guardedDebug.status === 'no-solution' ? normalizeNoSolutionStatus(guardedDebug) : 'error'));
+                    if (guardedStatus === 'solved' || (guardedDebug.nodesExpanded || 0) > (debug.nodesExpanded || 0)) {
+                        return {
+                            ok: guarded?.ok && guardedSolution.length > 0,
+                            status: guardedStatus,
+                            solution: guardedSolution,
+                            debug: guardedDebug,
+                            scoringMode: attemptOpts.scoringMode || 'modern',
+                            portalBiasMode: 'off',
+                            structuralMode: !!attemptOpts.structuralMode,
+                            phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
+                            label: attemptOpts.label || null,
+                            structuralTemplate: attemptOpts.structuralTemplate || null,
+                            policyProfile: attemptOpts.policyProfile || 'standard'
+                        };
+                    }
+                }
                 return {
                     ok: r?.ok && solution.length > 0,
                     status,
@@ -6635,7 +6699,8 @@
                     structuralMode: !!attemptOpts.structuralMode,
                     phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
                     label: attemptOpts.label || null,
-                    structuralTemplate: attemptOpts.structuralTemplate || null
+                    structuralTemplate: attemptOpts.structuralTemplate || null,
+                    policyProfile: attemptOpts.policyProfile || 'standard'
                 };
             };
             const attempts = buildAttemptPlan();
@@ -6700,6 +6765,7 @@
                     portalBiasMode: attempt.portalBiasMode,
                     structuralMode: !!attempt.structuralMode,
                     phasePolicy: attempt.phasePolicy?.archetype || null,
+                    policyProfile: attempt.policyProfile || 'standard',
                     phaseTimeline: attemptResult?.debug?.phaseTimeline || [],
                     quality,
                     structuralTemplate: attempt.structuralTemplate ? { id: attempt.structuralTemplate.id, confidence: attempt.structuralTemplate.confidence || 0 } : null,
@@ -6721,7 +6787,10 @@
                         scoringMode: attempt.scoringMode,
                         attempts: attemptsUsed,
                         templateDiagnostics,
-                        controlPlane
+                        controlPlane,
+                        activeProfile: attempt.policyProfile || 'standard',
+                        adaptivePhaseSummary: summarizeAdaptivePhaseTimeline(attemptResult?.debug?.phaseTimeline || []),
+                        contradictionGuardTriggered: !!attemptResult?.debug?.contradictionGuard?.triggered
                     };
                 }
                 lastAttempt = attemptResult;
@@ -6740,7 +6809,10 @@
                 attempts: attemptsUsed,
                 scoringMode: lastAttempt ? lastAttempt.scoringMode : 'modern',
                 templateDiagnostics,
-                controlPlane
+                controlPlane,
+                activeProfile: lastAttempt?.policyProfile || 'standard',
+                adaptivePhaseSummary: summarizeAdaptivePhaseTimeline(lastAttempt?.debug?.phaseTimeline || []),
+                contradictionGuardTriggered: !!lastAttempt?.debug?.contradictionGuard?.triggered
             };
         },
 
@@ -6843,42 +6915,6 @@
         },
 
 
-        async runLegacyAdapterStage(level, budgetMs, opts = {}) {
-            const started = Date.now();
-            let legacy;
-            try {
-                legacy = await PathfinderSolver.solve(level, {
-                    timeLimit: budgetMs,
-                    debug: opts.debug !== undefined ? !!opts.debug : true,
-                    debugLevel: opts.debugLevel,
-                    signal: opts.signal,
-                    enableLowExpansionProbe: !!opts.enableLowExpansionProbe
-                });
-            } catch (legacyErr) {
-                const thrownDebug = createSolverDebugStats(opts.debugLevel);
-                setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: legacyErr?.message || 'legacy-throw' });
-                setPreExpansionAbort(thrownDebug, {
-                    code: 'unexpected-exception',
-                    message: legacyErr?.message || 'legacy-throw',
-                    phase: 'strategy-setup',
-                    source: 'Referee.runLegacyAdapterStage',
-                    details: { name: legacyErr?.name || null }
-                });
-                finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
-                legacy = { ok: false, solution: [], solutions: [], debug: thrownDebug, error: legacyErr };
-            }
-            const normalized = normalizeLegacySolverResult(legacy, 'error', {
-                stage: 11,
-                debugLevel: opts.debugLevel,
-                normalizedBy: 'referee-legacy-adapter',
-                statusPath: 'referee-stage-legacy-adapter',
-                droppedBy: 'legacy-wrapper'
-            });
-            normalized.elapsedMs = Date.now() - started;
-            normalized.engine = 'legacy-adapter';
-            return normalized;
-        },
-
         async solve(levelInput, opts = {}) {
             const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
@@ -6924,9 +6960,9 @@
                 && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
                 && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
-            // Referee is the single orchestrator; legacy pathfinder is invoked as an internal adapter stage.
-            const allowLegacyAdapter = opts.allowLegacyAdapter !== undefined ? !!opts.allowLegacyAdapter : true;
-            const onlyLegacyAdapter = !!opts.onlyLegacyAdapter;
+            // Unified architecture: one referee-core engine with policy personalities.
+            const allowLegacyAdapter = true; // compatibility flag retained; no separate engine path.
+            const onlyLegacyAdapter = false;
             const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result, meta = {}) => {
@@ -6958,6 +6994,8 @@
                 markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine });
                 const normalized = createCanonicalSolveResult(result || {});
                 normalized.stage = stage;
+                normalized.variant = variant;
+                normalized.engine = engine;
                 normalized.message = normalized.ok ? `Solved (${variant}).` : `${variant} ${normalized.status || 'error'}.`;
                 normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
                 return normalized;
@@ -6969,7 +7007,6 @@
             const recoveryBudget = Math.max(750, Math.floor(totalBudget * 0.25));
             const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.35));
             const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
-            const legacyBudget = Math.max(500, Math.floor(totalBudget * 0.4));
             const profileSignals = level?.solverProfile || {};
             const outstandingObligations = (Number(profileSignals?.objectiveCount) || 0) + (Number(profileSignals?.mustCrossCount) || 0);
             const portalDependency = (Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0) > 0;
@@ -6979,7 +7016,7 @@
                 ? 'objectiveFirst'
                 : (portalDependency ? 'portalCommitted' : (openBoard ? 'lengthHarvest' : (knotSensitive ? 'knotBuilder' : 'default')));
 
-            if (!onlyLegacyAdapter) {
+            {
                 last = await runStage({
                     stage: 0,
                     name: 'Stage 0',
@@ -7069,46 +7106,51 @@
 
             const priorFailureSummary = !last.ok ? (last.failureSummary || classifyFailureCategory(last)) : null;
             const priorFailureTaxonomy = !last.ok ? (last.failureTaxonomy || classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) })) : null;
-            if (!last.ok && allowLegacyAdapter && last.status !== 'no-solution-proven') {
-                const legacyResult = await runStage({
-                    stage: 11,
-                    name: 'Stage 11',
-                    variant: 'legacy-adapter',
-                    budgetMs: legacyBudget,
-                    engine: 'legacy-adapter',
-                    run: () => this.runLegacyAdapterStage(level, legacyBudget, { signal: APP.State.ENGINE.activeSolverController?.signal, debug: true, debugLevel: (typeof level?.id === 'number' ? level.id + 1 : null), enableLowExpansionProbe: !!opts.auditMode })
+            if (!last.ok && last.status !== 'no-solution-proven') {
+                const legacyProfileResult = await runStage({
+                    stage: 5,
+                    name: 'Stage 5',
+                    variant: 'legacy-archetype-profile',
+                    budgetMs: recoveryBudget,
+                    run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                        orderingPolicy: 'legacyArchetype',
+                        portalBiasMode: 'off',
+                        phasePolicy: null,
+                        profile: level.solverProfile,
+                        controlPlane,
+                        scoringMode: 'legacy',
+                        structuralMode: true,
+                        enableLegacyRescue: true,
+                        allowRandomizedExploration: false,
+                        purpose,
+                        preferMacroSkeleton: true
+                    })
                 });
-                legacyResult.legacyRescueSummary = {
+                legacyProfileResult.legacyRescueSummary = {
                     attempted: true,
-                    rescued: !!legacyResult.ok,
+                    rescued: !!legacyProfileResult.ok,
+                    mode: 'legacy-archetype-profile',
                     priorFailureCategory: priorFailureSummary?.category || null,
                     failureTaxonomy: priorFailureTaxonomy || null,
                     priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
                     priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null
                 };
-                if (legacyResult.ok) {
-                    const refereeDebug = last?.debug || {};
-                    legacyResult.stage11RescueDelta = compactDefined({
+                if (legacyProfileResult.ok) {
+                    legacyProfileResult.stage11RescueDelta = compactDefined({
                         failedByStage: Number.isFinite(last?.stage) ? last.stage : null,
                         failureTaxonomy: priorFailureTaxonomy || null,
-                        refereeRootCandidatesGenerated: Number.isFinite(refereeDebug?.rootCandidatesGenerated) ? refereeDebug.rootCandidatesGenerated : null,
-                        refereeRootCandidatesExpanded: Number.isFinite(refereeDebug?.rootCandidatesExpanded) ? refereeDebug.rootCandidatesExpanded : null,
-                        refereeNodesExpanded: Number.isFinite(refereeDebug?.nodesExpanded) ? refereeDebug.nodesExpanded : null,
+                        refereeRootCandidatesGenerated: Number.isFinite((last?.debug || {})?.rootCandidatesGenerated) ? last.debug.rootCandidatesGenerated : null,
+                        refereeRootCandidatesExpanded: Number.isFinite((last?.debug || {})?.rootCandidatesExpanded) ? last.debug.rootCandidatesExpanded : null,
+                        refereeNodesExpanded: Number.isFinite((last?.debug || {})?.nodesExpanded) ? last.debug.nodesExpanded : null,
                         refereeTotalSolveTimeMs: Math.max(0, Date.now() - solveStartTime),
-                        legacyAdapterSolveTimeMs: Number.isFinite(legacyResult?.elapsedMs) ? legacyResult.elapsedMs : null,
-                        finalSolvedBy: 'legacy',
+                        legacyAdapterSolveTimeMs: Number.isFinite(legacyProfileResult?.elapsedMs) ? legacyProfileResult.elapsedMs : null,
+                        finalSolvedBy: 'legacy-archetype',
                         materiallyDifferentPathShape: null
                     });
+                    last = legacyProfileResult;
+                } else {
+                    last.legacyRescueSummary = legacyProfileResult.legacyRescueSummary;
                 }
-                last = legacyResult;
-            } else if (allowLegacyAdapter) {
-                last.legacyRescueSummary = {
-                    attempted: false,
-                    rescued: false,
-                    priorFailureCategory: priorFailureSummary?.category || null,
-                    priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
-                    priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null
-                };
             }
 
             if (!last.ok && allowGemini && last.status !== 'no-solution-proven') {
@@ -7144,8 +7186,8 @@
                     level,
                     goalReachable: isGoalReachableFromAnyGate(level),
                     lastMeaningfulStage: last.stage,
-                    solvedBy: (last.engine === 'legacy-adapter' ? 'legacy-adapter' : 'referee-core'),
-                    solvedAfterRetry: !!(last.ok && (stagesTried || []).filter(st => st?.engine !== 'legacy-adapter').length > 1)
+                    solvedBy: (`${last.variant || ''}`.includes('legacy-archetype') ? 'legacy-archetype' : 'referee-core'),
+                    solvedAfterRetry: !!(last.ok && (stagesTried || []).length > 1)
                 });
             }
             if (!last.failureSummary && !last.ok) last.failureSummary = classifyFailureCategory(last);
@@ -7157,8 +7199,8 @@
                 });
             }
             applyCanonicalSolutionShape(last);
-            const usedLegacyAdapter = (stagesTried || []).some(st => st?.engine === 'legacy-adapter');
-            last.executionPath = onlyLegacyAdapter ? 'legacy-only' : (usedLegacyAdapter ? 'referee-then-legacy' : 'referee-only');
+            const usedLegacyArchetype = (stagesTried || []).some(st => `${st?.variant || ''}`.includes('legacy-archetype'));
+            last.executionPath = usedLegacyArchetype ? 'referee-then-legacy-archetype' : 'referee-only';
             last.retrySuggested = !last.ok && ['timeout', 'no-solution-inconclusive'].includes(last.status);
             last.escalationTier = escalationTier;
             last.usedEscalation = escalationTier > 0;
@@ -7339,8 +7381,8 @@
             const levelId = Number.isFinite(level?.id) ? level.id + 1 : null;
             const debug = opts.debug !== undefined ? !!opts.debug : true;
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
-            const requestedSolverPath = allowReferee ? 'referee' : 'legacy';
-            const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-only';
+            const requestedSolverPath = allowReferee ? 'referee' : 'referee-legacy-compat';
+            const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-compat-only';
                 const attachDepthZeroAudit = (payload, statusPath = 'solver-wrapper', droppedBy = 'unknown') => {
                     if (!payload || typeof payload !== 'object') return payload;
                     const dbg = payload.debug || payload.stats?.debug || null;
@@ -7411,7 +7453,7 @@
                     tier: escalationTier,
                     allowGemini: !!opts.allowGemini,
                     allowLegacyAdapter: !opts.disableLegacyFallback,
-                    onlyLegacyAdapter: !allowReferee,
+                    onlyLegacyAdapter: false,
                     auditMode: !!opts.auditMode,
                     onStage: ({ name, variant, budgetMs }) => {
                         APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
@@ -8236,6 +8278,20 @@
                     preExpansionAbortCode: preExpansionAbort?.code || null
                 };
             }
+            function summarizeAdaptivePhaseTimeline(timeline = []) {
+                const seq = Array.isArray(timeline) ? timeline : [];
+                if (seq.length === 0) return null;
+                const compressed = [];
+                for (const ev of seq) {
+                    const phase = ev?.phase || null;
+                    if (!phase) continue;
+                    if (compressed.length === 0 || compressed[compressed.length - 1].phase !== phase) {
+                        compressed.push({ phase, progress: Number((Number(ev?.progress) || 0).toFixed(2)), remainingObjectives: Number.isFinite(ev?.remainingObjectives) ? ev.remainingObjectives : null });
+                    }
+                }
+                return compressed.slice(0, 6);
+            }
+
             function classifySolveFailureTaxonomy(result = {}, context = {}) {
                 const status = `${result?.status || result?.rawStatus || result?.debug?.status || 'unknown'}`;
                 const debug = result?.debug || result?.stats?.debug || {};
@@ -8257,7 +8313,7 @@
 
                 let category = 'low-expansion-collapse';
                 if (result?.ok) {
-                    if (context?.solvedBy === 'legacy-adapter') category = 'legacy-only-rescue';
+                    if (`${context?.solvedBy || ''}`.includes('legacy-archetype')) category = 'solved-via-legacy-archetype';
                     else if (context?.solvedAfterRetry) category = 'solved-after-retry';
                     else category = 'solved-direct';
                 } else if (preExpansionSignals && status !== 'no-solution-proven') {
