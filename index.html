@@ -9324,6 +9324,35 @@
                 return allMustPass && allMustCross;
             }
 
+            function wouldCreateBlockedTIntersection(state, key, level) {
+                if (!state || !level || state.path.length === 0) return false;
+                const lastK = state.path[state.path.length - 1];
+                const from = APP.LevelUtils.UNPACK(lastK);
+                const to = APP.LevelUtils.UNPACK(key);
+                const axis = (to.y === from.y) ? APP.Core.H : APP.Core.V;
+                const usageAtTarget = state.cellUsage.get(key) || { h: false, v: false };
+                const revisitCount = state.visitedCounts.get(key) || 0;
+                const perpendicularUsed = axis === APP.Core.H ? usageAtTarget.v : usageAtTarget.h;
+                const currentAxisUsed = axis === APP.Core.H ? usageAtTarget.h : usageAtTarget.v;
+                if (revisitCount <= 0 || !perpendicularUsed || currentAxisUsed) return false;
+
+                const dirX = Math.sign(to.x - from.x);
+                const dirY = Math.sign(to.y - from.y);
+                const forwardX = to.x + dirX;
+                const forwardY = to.y + dirY;
+                if (!APP.LevelUtils.inBounds(forwardX, forwardY, level.grid.w, level.grid.h)) return true;
+
+                const forwardKey = APP.LevelUtils.PACK(forwardX, forwardY);
+                const simulatedAfterEnter = simulateTapRouteStep(state, key, level, { skipTIntersectionCheck: true });
+                if (!simulatedAfterEnter) return false;
+                const simulatedForward = simulateTapRouteStep(simulatedAfterEnter.state, forwardKey, level, { skipTIntersectionCheck: true });
+                if (!simulatedForward) return true;
+                if (simulatedForward.result === "goose") {
+                    return state.revealedGeese?.has(forwardKey) || false;
+                }
+                return false;
+            }
+
             function processStep(key) {
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
@@ -9343,6 +9372,8 @@
                 })) {
                     return null;
                 }
+
+                if (wouldCreateBlockedTIntersection(APP.State.ENGINE, key, activeLevel)) return null;
 
                 APP.State.ENGINE.isDirty = true;
                 if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.State.ENGINE.editor.isModified = true;
@@ -9463,7 +9494,7 @@
                 }
             };
 
-            function simulateTapRouteStep(baseState, key, level) {
+            function simulateTapRouteStep(baseState, key, level, options = {}) {
                 const nextState = cloneTapRouteState(baseState);
                 if (nextState.path.length > 1 && key === nextState.path[nextState.path.length - 2]) {
                     nextState.path.pop();
@@ -9483,6 +9514,7 @@
                     flipCount: nextState.flipCount,
                     crossedSet: nextState.crossedFlippingFilters
                 })) return null;
+                if (!options.skipTIntersectionCheck && wouldCreateBlockedTIntersection(nextState, key, level)) return null;
                 if (nextState.mode !== APP.Core.EDITOR && level.gooseSet.has(key)) return { state: nextState, result: "goose" };
                 pushTapRouteStep(nextState, key, false, level);
                 if (nextState.armedFalseGoals.has(key) && APP.Engine.areWinMetricsSatisfied(nextState, level)) return { state: nextState, result: "detonate" };
