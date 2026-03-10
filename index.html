@@ -9326,13 +9326,12 @@
 
             function processStep(key) {
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
                 if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) {
                     APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2);
-                    if (APP.State.ENGINE.logicState === APP.Core.HAZARD_TRIGGERED) APP.Engine.setLogicState(APP.Core.IDLE);
                     APP.Core.SOUND_BUS.play("E4", "32n");
                     return "valid";
                 }
-                if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
                 if (!APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
                     isStrict: true,
                     mode: APP.State.ENGINE.mode,
@@ -9352,9 +9351,6 @@
                     const gooseAlreadyRevealed = APP.State.ENGINE.revealedGeese.has(key);
                     APP.State.ENGINE.revealedGeese.add(key);
                     if (gooseAlreadyRevealed) return null;
-
-                    APP.State.ENGINE.undoStack.push(createSnapshot());
-                    if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift();
 
                     if (!APP.State.ENGINE.gooseEncounteredThisLevel) {
                         APP.State.ENGINE.gooseEncounteredThisLevel = true;
