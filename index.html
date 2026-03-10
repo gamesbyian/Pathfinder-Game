@@ -9324,7 +9324,16 @@
                 return allMustPass && allMustCross;
             }
 
-            function processStep(key) { const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null; if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); APP.Core.SOUND_BUS.play("E4", "32n"); return "valid"; } if (APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
+            function processStep(key) {
+                const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) {
+                    APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2);
+                    if (APP.State.ENGINE.logicState === APP.Core.HAZARD_TRIGGERED) APP.Engine.setLogicState(APP.Core.IDLE);
+                    APP.Core.SOUND_BUS.play("E4", "32n");
+                    return "valid";
+                }
+                if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
+                if (!APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
                     isStrict: true,
                     mode: APP.State.ENGINE.mode,
                     allowJump: true,
@@ -9332,7 +9341,55 @@
                     checkHazards: false,
                     checkFalseGoals: true,
                     armedFalseGoals: APP.State.ENGINE.armedFalseGoals
-                })) { APP.State.ENGINE.isDirty = true; if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.State.ENGINE.editor.isModified = true; if (APP.State.ENGINE.mode !== APP.Core.EDITOR && activeLevel.gooseSet.has(key)) { APP.State.ENGINE.revealedGeese.add(key); if (!APP.State.ENGINE.gooseEncounteredThisLevel) { APP.State.ENGINE.gooseEncounteredThisLevel = true; triggerJumpScare(); } APP.Engine.setLogicState(APP.Core.HAZARD_TRIGGERED); APP.Core.SOUND_BUS.play("C2", "8n"); return "goose"; } APP.State.ENGINE.undoStack.push(createSnapshot()); if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift(); APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false); if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) { triggerBombDetonation(key); return "detonate"; } const portal = APP.LevelUtils.resolvePortal(activeLevel, key); if (portal && portal.dest !== -1) { APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true); if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) { triggerBombDetonation(portal.dest); return "detonate"; } APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color}); APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color}); APP.Core.SOUND_BUS.play("A5", "16n"); APP.Engine.setLogicState(APP.Core.PORTAL_PAUSE); checkWinCondition(); return "portal"; } APP.Core.SOUND_BUS.play("G4", "32n"); checkWinCondition(); return "valid"; } return null; }
+                })) {
+                    return null;
+                }
+
+                APP.State.ENGINE.isDirty = true;
+                if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.State.ENGINE.editor.isModified = true;
+
+                if (APP.State.ENGINE.mode !== APP.Core.EDITOR && activeLevel.gooseSet.has(key)) {
+                    const gooseAlreadyRevealed = APP.State.ENGINE.revealedGeese.has(key);
+                    APP.State.ENGINE.revealedGeese.add(key);
+                    if (gooseAlreadyRevealed) return null;
+
+                    APP.State.ENGINE.undoStack.push(createSnapshot());
+                    if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift();
+
+                    if (!APP.State.ENGINE.gooseEncounteredThisLevel) {
+                        APP.State.ENGINE.gooseEncounteredThisLevel = true;
+                        triggerJumpScare();
+                    }
+                    APP.Engine.setLogicState(APP.Core.HAZARD_TRIGGERED);
+                    APP.Core.SOUND_BUS.play("C2", "8n");
+                    return "goose";
+                }
+
+                APP.State.ENGINE.undoStack.push(createSnapshot());
+                if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift();
+                APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, key, false);
+                if (APP.State.ENGINE.armedFalseGoals.has(key) && checkFalseGoalCondition()) {
+                    triggerBombDetonation(key);
+                    return "detonate";
+                }
+                const portal = APP.LevelUtils.resolvePortal(activeLevel, key);
+                if (portal && portal.dest !== -1) {
+                    APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, portal.dest, true);
+                    if (APP.State.ENGINE.armedFalseGoals.has(portal.dest) && checkFalseGoalCondition()) {
+                        triggerBombDetonation(portal.dest);
+                        return "detonate";
+                    }
+                    APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(key).x, y: APP.LevelUtils.UNPACK(key).y, startTime: Date.now(), color: portal.color});
+                    APP.State.ENGINE.ripples.push({x: APP.LevelUtils.UNPACK(portal.dest).x, y: APP.LevelUtils.UNPACK(portal.dest).y, startTime: Date.now(), color: portal.color});
+                    APP.Core.SOUND_BUS.play("A5", "16n");
+                    APP.Engine.setLogicState(APP.Core.PORTAL_PAUSE);
+                    checkWinCondition();
+                    return "portal";
+                }
+                APP.Core.SOUND_BUS.play("G4", "32n");
+                checkWinCondition();
+                return "valid";
+            }
 
 
             const buildStraightPathSteps = (headPos, target) => {
@@ -9476,7 +9533,7 @@
                 return null;
             }
 
-            function attemptMoveTo(target, opts = {}) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; let pathSteps = buildStraightPathSteps(headPos, target); if (opts.inputType === 'tap') { const tapRoute = findTapRoute(target); if (Array.isArray(tapRoute) && tapRoute.length > 0) pathSteps = tapRoute; } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
+            function attemptMoveTo(target, opts = {}) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; let pathSteps = buildStraightPathSteps(headPos, target); if (opts.inputType === 'tap') { const tapRoute = findTapRoute(target); if (Array.isArray(tapRoute) && tapRoute.length > 0) pathSteps = tapRoute; } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
 
             function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(APP.Core.RESOLVED); APP.UI.renderWinExportPanel({ solutionOutput: JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''), showExportArea: APP.State.ENGINE.isDevMode }); if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); APP.Core.SOUND_BUS.play("C5", "8n"); } }
 
@@ -9519,7 +9576,7 @@
 
             function createSnapshot() { return { path: [...APP.State.ENGINE.path], isPortalJump: new Set(APP.State.ENGINE.isPortalJump), activeGateKey: APP.State.ENGINE.activeGateKey, logicState: APP.State.ENGINE.logicState, detonatedFalseGoals: new Set(APP.State.ENGINE.detonatedFalseGoals) }; }
 
-            function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; APP.Engine.setLogicState(snap.logicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
+            function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; APP.Engine.setLogicState(snap.logicState === APP.Core.HAZARD_TRIGGERED ? APP.Core.IDLE : snap.logicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
 
             function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
@@ -9676,7 +9733,7 @@
                 },
                 truncateTo(state, targetIdx) {
                     if (targetIdx < -1 || targetIdx >= state.path.length - 1) return; state.path.splice(targetIdx + 1); const newJumps = new Set(); for (const j of state.isPortalJump) if (j <= targetIdx) newJumps.add(j); state.isPortalJump = newJumps;
-                    if (state.path.length === 0) { state.activeGateKey = null; if ([APP.Core.DRAGGING, APP.Core.PORTAL_PAUSE].includes(state.logicState)) { APP.Engine.setLogicState(APP.Core.IDLE); } } if (state.mode === APP.Core.EDITOR) state.editor.isModified = true; state.isDirty = true; rebuildDerivedPathState(state); assertStateConsistency(state);
+                    if (state.path.length === 0) { state.activeGateKey = null; } if ([APP.Core.DRAGGING, APP.Core.PORTAL_PAUSE, APP.Core.HAZARD_TRIGGERED].includes(state.logicState)) { APP.Engine.setLogicState(APP.Core.IDLE); } if (state.mode === APP.Core.EDITOR) state.editor.isModified = true; state.isDirty = true; rebuildDerivedPathState(state); assertStateConsistency(state);
                 },
                 clear(state) { state.path = []; state.isPortalJump.clear(); state.activeGateKey = null; if ([APP.Core.DRAGGING, APP.Core.PORTAL_PAUSE, APP.Core.HAZARD_TRIGGERED].includes(state.logicState)) { APP.Engine.setLogicState(APP.Core.IDLE); } if (state.mode === APP.Core.EDITOR) state.editor.isModified = true; state.isDirty = true; rebuildDerivedPathState(state); assertStateConsistency(state); }
             };
