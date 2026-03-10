@@ -9355,12 +9355,12 @@
 
             function processStep(key) {
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-                if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
                 if (APP.State.ENGINE.path.length > 1 && key === APP.State.ENGINE.path[APP.State.ENGINE.path.length - 2]) {
                     APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2);
                     APP.Core.SOUND_BUS.play("E4", "32n");
                     return "valid";
                 }
+                if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
                 if (!APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
                     isStrict: true,
                     mode: APP.State.ENGINE.mode,
@@ -11982,7 +11982,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const tapStart = APP.State.ENGINE.runtime.tapStartCoord;
             if (tapStart && (dragCoord.x !== tapStart.x || dragCoord.y !== tapStart.y)) APP.State.ENGINE.runtime.tapMoved = true;
             e.preventDefault();
-            if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.handlePrimaryGridInput(dragCoord, { inputType: 'drag' });
+            if ([APP.Core.DRAGGING, APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState)) APP.Engine.handlePrimaryGridInput(dragCoord, { inputType: 'drag' });
         });
         window.addEventListener('pointerup', e => { handleUp(e); if (APP.State.ENGINE.runtime.activePointerId !== null && APP.Renderer.getCanvas().hasPointerCapture(APP.State.ENGINE.runtime.activePointerId)) APP.Renderer.getCanvas().releasePointerCapture(APP.State.ENGINE.runtime.activePointerId); APP.State.ENGINE.runtime.activePointerId = null; APP.State.ENGINE.runtime.tapStartCoord = null; APP.State.ENGINE.runtime.tapMoved = false; });
 
