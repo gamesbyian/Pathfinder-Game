@@ -9464,6 +9464,7 @@
                         const sim = simulateTapRouteStep(cur.state, nk, level);
                         if (!sim || sim.result === "goose" || sim.result === "detonate") continue;
                         const newInputs = [...cur.inputs, nk];
+                        if (nk === targetKey) return newInputs;
                         const nextKey = sim.state.path[sim.state.path.length - 1];
                         if (nextKey === targetKey) return newInputs;
                         const sig = `${nextKey}|${sim.state.path.join('.')}`;
