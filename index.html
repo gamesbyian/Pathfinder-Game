@@ -12700,8 +12700,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const hasSaved = APP.State.ENGINE.level && APP.State.ENGINE.level.hints && APP.State.ENGINE.level.hints.length > 0;
             const mainLabel = document.getElementById('hintMainLabel');
             if (!APP.State.ENGINE.isDevMode) {
-                APP.UI.setTextContent(mainLabel, 'Saved Hint');
-                APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1');
+                APP.UI.setTextContent(mainLabel, 'Hint');
+                APP.UI.setInlineStyle(mainLabel, 'color', 'white');
                 return;
             }
             if (APP.State.ENGINE.runtime.isHintExpanded) {
