@@ -9612,7 +9612,7 @@
 
             function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; const restoredLogicState = snap.logicState === APP.Core.HAZARD_TRIGGERED ? APP.Core.IDLE : snap.logicState; APP.Engine.setLogicState(APP.Core.IDLE); if (restoredLogicState !== APP.Core.IDLE) APP.Engine.setLogicState(restoredLogicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
 
-            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
+            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('modeToggleBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
             function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.UI.setSolutionOutput(''); APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
@@ -12669,6 +12669,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
 
         const hintBtn = document.getElementById('hintBtn'); const hintTopHalf = document.getElementById('hintTopHalf');
+        const showSavedHint = () => {
+            if (APP.State.ENGINE.level?.hints?.length > 0) {
+                const levelForHints = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level);
+                const validSavedHints = APP.State.ENGINE.level.hints.filter(path => APP.Solver.validateCandidatePath(levelForHints, path)?.ok);
+                if (validSavedHints.length > 0) {
+                    APP.State.ENGINE.hinter.pathList = validSavedHints;
+                    APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0);
+                    APP.State.ENGINE.hinter.source = 'saved';
+                    APP.Solver.startHintAnimation();
+                } else APP.UI.showMessage("No valid saved hint.", "text-amber-600");
+            } else APP.UI.showMessage("No saved hint.", "text-white font-black");
+        };
         const toggleHint = () => {
             if (APP.State.ENGINE.runtime.isHintExpanded) {
                 APP.UI.setClassState(hintTopHalf, 'hidden', true);
@@ -12684,10 +12696,37 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             APP.State.ENGINE.runtime.isHintExpanded = !APP.State.ENGINE.runtime.isHintExpanded;
         };
-        const updateHintLabel = () => { const hasSaved = APP.State.ENGINE.level && APP.State.ENGINE.level.hints && APP.State.ENGINE.level.hints.length > 0; const mainLabel = document.getElementById('hintMainLabel'); if (APP.State.ENGINE.runtime.isHintExpanded) { APP.UI.setTextContent(mainLabel, 'Saved Hint'); APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1'); } else { APP.UI.setTextContent(mainLabel, 'Hint'); APP.UI.setInlineStyle(mainLabel, 'color', 'white'); } };
+        const updateHintLabel = () => {
+            const hasSaved = APP.State.ENGINE.level && APP.State.ENGINE.level.hints && APP.State.ENGINE.level.hints.length > 0;
+            const mainLabel = document.getElementById('hintMainLabel');
+            if (!APP.State.ENGINE.isDevMode) {
+                APP.UI.setTextContent(mainLabel, 'Saved Hint');
+                APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1');
+                return;
+            }
+            if (APP.State.ENGINE.runtime.isHintExpanded) {
+                APP.UI.setTextContent(mainLabel, 'Saved Hint');
+                APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1');
+            } else {
+                APP.UI.setTextContent(mainLabel, 'Hint');
+                APP.UI.setInlineStyle(mainLabel, 'color', 'white');
+            }
+        };
         hintBtn.onclick = async (e) => {
             APP.UI.closeAllModals();
             if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+            if (!APP.State.ENGINE.isDevMode) {
+                if (APP.State.ENGINE.runtime.isHintExpanded) {
+                    APP.State.ENGINE.runtime.isHintExpanded = false;
+                    APP.UI.setClassState(hintTopHalf, 'hidden', true);
+                    APP.UI.setClassState(hintTopHalf, 'flex', false);
+                    APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem');
+                    APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
+                }
+                updateHintLabel();
+                showSavedHint();
+                return;
+            }
             if (!APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); } else {
                 const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
                 if (isTopHalf) {
@@ -12706,7 +12745,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
                         APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                     }
-                } else { if (APP.State.ENGINE.level?.hints?.length > 0) { const levelForHints = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); const validSavedHints = APP.State.ENGINE.level.hints.filter(path => APP.Solver.validateCandidatePath(levelForHints, path)?.ok); if (validSavedHints.length > 0) { APP.State.ENGINE.hinter.pathList = validSavedHints; APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0); APP.State.ENGINE.hinter.source = 'saved'; APP.Solver.startHintAnimation(); } else APP.UI.showMessage("No valid saved hint.", "text-amber-600"); } else APP.UI.showMessage("No saved hint.", "text-white font-black"); }
+                } else showSavedHint();
                 if (APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); }
             }
         };
@@ -12793,7 +12832,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         document.getElementById('backToThemeSelectBtn').onclick = closeEditor;
         document.getElementById('doneThemeEditBtn').onclick = closeEditor;
-        document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); if (!APP.State.ENGINE.isDevMode) { auditModalOpen = false; APP.UI.closeModal('auditModal'); } APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
+        document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); if (!APP.State.ENGINE.isDevMode) { auditModalOpen = false; APP.UI.closeModal('auditModal'); if (APP.State.ENGINE.runtime.isHintExpanded) { APP.State.ENGINE.runtime.isHintExpanded = false; APP.UI.setClassState(hintTopHalf, 'hidden', true); APP.UI.setClassState(hintTopHalf, 'flex', false); APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem'); APP.UI.setInlineStyle(hintBtn, 'marginTop', '0'); } } updateHintLabel(); APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
         APP.UI.bindAll('.editor-input', 'input', () => {
             APP.Editor.markEditorInputsDirty();
             APP.Editor.applyMetricsFromUI();
