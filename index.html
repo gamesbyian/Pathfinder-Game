@@ -11855,7 +11855,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
 
         const handleDown = (e) => {
-            if (APP.State.ENGINE.activeSolverController || [APP.Core.RESOLVED, APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) || [APP.Core.HINT_ANIMATING, APP.Core.FALSE_GOAL_ANIMATING, APP.Core.SOLVER_RUNNING].includes(APP.State.ENGINE.overlayState)) return;
+            if (APP.State.ENGINE.activeSolverController || APP.State.ENGINE.logicState === APP.Core.RESOLVED || [APP.Core.HINT_ANIMATING, APP.Core.FALSE_GOAL_ANIMATING, APP.Core.GOOSE_OVERLAY, APP.Core.SOLVER_RUNNING].includes(APP.State.ENGINE.overlayState)) return;
             const pathBeforeMove = APP.State.ENGINE.path.join(',');
             const p = APP.LevelUtils.getGridCoord(e); const k = APP.LevelUtils.PACK(p.x, p.y); const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
             APP.State.ENGINE.resetStreak = 0;
