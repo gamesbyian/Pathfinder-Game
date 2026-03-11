@@ -9379,6 +9379,8 @@
                 if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.State.ENGINE.editor.isModified = true;
 
                 if (APP.State.ENGINE.mode !== APP.Core.EDITOR && activeLevel.gooseSet.has(key)) {
+                    APP.State.ENGINE.undoStack.push(createSnapshot());
+                    if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift();
                     const headKey = APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1];
                     const headVisitCount = headKey === undefined ? 0 : (APP.State.ENGINE.visitedCounts.get(headKey) || 0);
                     const justCreatedIntersection = APP.State.ENGINE.path.length > 1 && headVisitCount > 1;
@@ -9388,11 +9390,7 @@
                     const gooseAlreadyRevealed = APP.State.ENGINE.revealedGeese.has(key);
                     APP.State.ENGINE.revealedGeese.add(key);
                     if (gooseAlreadyRevealed) return null;
-
-                    if (!APP.State.ENGINE.gooseEncounteredThisLevel) {
-                        APP.State.ENGINE.gooseEncounteredThisLevel = true;
-                        triggerJumpScare();
-                    }
+                    triggerJumpScare();
                     APP.Engine.setLogicState(APP.Core.HAZARD_TRIGGERED);
                     APP.Core.SOUND_BUS.play("C2", "8n");
                     return "goose";
@@ -9567,7 +9565,7 @@
                 return null;
             }
 
-            function attemptMoveTo(target, opts = {}) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; let pathSteps = buildStraightPathSteps(headPos, target); if (opts.inputType === 'tap') { const tapRoute = findTapRoute(target); if (Array.isArray(tapRoute) && tapRoute.length > 0) pathSteps = tapRoute; } for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
+            function attemptMoveTo(target, opts = {}) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const pathSteps = buildStraightPathSteps(headPos, target); for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
 
             function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(APP.Core.RESOLVED); APP.UI.renderWinExportPanel({ solutionOutput: JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''), showExportArea: APP.State.ENGINE.isDevMode }); if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); APP.Core.SOUND_BUS.play("C5", "8n"); } }
 
@@ -11917,8 +11915,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     if (shouldReverse) { APP.State.ENGINE.path.reverse(); const newJumps = new Set(); APP.State.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(APP.State.ENGINE.path.length - jIdx)); APP.State.ENGINE.isPortalJump = newJumps; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); }
                 }
                 const lastIdx = APP.State.ENGINE.path.lastIndexOf(k);
+                const headKey = APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1];
+                const headPos = APP.LevelUtils.UNPACK(headKey);
+                const isOrthWithHead = p.x === headPos.x || p.y === headPos.y;
+                const pathSegment = lastIdx === -1 ? [] : APP.State.ENGINE.path.slice(lastIdx, APP.State.ENGINE.path.length);
+                const isContiguousOrthBacktrack = isOrthWithHead && pathSegment.length > 1 && pathSegment.every(segmentKey => {
+                    const segmentPos = APP.LevelUtils.UNPACK(segmentKey);
+                    return segmentPos.x === headPos.x || segmentPos.y === headPos.y;
+                });
                 const shouldTapBacktrack = lastIdx !== -1
                     && lastIdx < APP.State.ENGINE.path.length - 1
+                    && isContiguousOrthBacktrack
                     && !activeLevel.mustCrossKeys.includes(k);
                 if (shouldTapBacktrack) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, lastIdx); APP.Engine.setLogicState(APP.Core.DRAGGING); return; }
                 APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' });
