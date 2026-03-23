@@ -3034,6 +3034,7 @@
                         rawCandidateCount: candidates.length,
                         afterBoundsCount: candidates.length,
                         afterPortalRuleCount: candidates.length,
+                        portalAutomatonActive: false,
                         illegalMoveRejected: 0,
                         hazardRejected: 0,
                         falseGoalRejected: 0,
@@ -3096,8 +3097,18 @@
                                 return false;
                             }
                         }
+                        const levelHasPortalFamilies = Number.isFinite(l?.portalFamilyCount) && l.portalFamilyCount > 0;
+                        const hasMandatoryPortalObligation = typeof state.portalRequiredCoverageMask === 'bigint' && state.portalRequiredCoverageMask !== 0n;
+                        const hasCommittedPortalContinuation = (Number.isFinite(state?.portalSelectedFamily) && state.portalSelectedFamily >= 0)
+                            && (
+                                (Number.isFinite(state?.portalCommittedRegion) && state.portalCommittedRegion >= 0)
+                                || this._derivePortalLockState(state, options) !== 'uncommitted'
+                            );
+                        const portalAutomatonActive = levelHasPortalFamilies && (hasMandatoryPortalObligation || hasCommittedPortalContinuation);
+                        const portalAutomatonLowerBoundActive = portalAutomatonActive && hasMandatoryPortalObligation;
+                        if (startFilterBreakdown) startFilterBreakdown.portalAutomatonActive = portalAutomatonActive;
                         const isPortalJump = (portalDest === nk && portalForced);
-                        const portalTransition = isPortalJump
+                        const portalTransition = (portalAutomatonActive && isPortalJump)
                             ? this._portalProgressTransitionFeasible(k, nk, state, l, options)
                             : {
                                 feasible: true,
@@ -3105,7 +3116,7 @@
                                 nextReentryBudget: Number.isFinite(state.portalReentryBudget) ? state.portalReentryBudget : 0,
                                 nextOscillationBudget: Number.isFinite(state.portalOscillationBudget) ? state.portalOscillationBudget : 0
                             };
-                        if (!portalTransition.feasible) {
+                        if (portalAutomatonActive && !portalTransition.feasible) {
                             if (debugStats) {
                                 debugStats.prune.portalAutomatonRejected = (debugStats.prune.portalAutomatonRejected || 0) + 1;
                                 if (depth === 0) {
@@ -3127,20 +3138,22 @@
                             portalReentryBudget: portalTransition.nextReentryBudget,
                             portalOscillationBudget: portalTransition.nextOscillationBudget
                         };
-                        const portalAwareBound = this._portalAwareLowerBound(nk, projectedState, l);
-                        if (!Number.isFinite(portalAwareBound) || portalAwareBound > rSteps) {
-                            if (debugStats) {
-                                debugStats.prune.portalAutomatonRejected = (debugStats.prune.portalAutomatonRejected || 0) + 1;
-                                if (depth === 0) {
-                                    const dbg = ensureDepthZeroDebug(debugStats);
-                                    if (dbg && dbg.rootSuppressionLog.length < 20) {
-                                        dbg.rootSuppressionLog.push({ type: 'portal-automaton', key: nk, depth: 1, reason: `lower-bound:${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'}>${rSteps}` });
+                        if (portalAutomatonLowerBoundActive) {
+                            const portalAwareBound = this._portalAwareLowerBound(nk, projectedState, l);
+                            if (!Number.isFinite(portalAwareBound) || portalAwareBound > rSteps) {
+                                if (debugStats) {
+                                    debugStats.prune.portalAutomatonRejected = (debugStats.prune.portalAutomatonRejected || 0) + 1;
+                                    if (depth === 0) {
+                                        const dbg = ensureDepthZeroDebug(debugStats);
+                                        if (dbg && dbg.rootSuppressionLog.length < 20) {
+                                            dbg.rootSuppressionLog.push({ type: 'portal-automaton', key: nk, depth: 1, reason: `lower-bound:${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'}>${rSteps}` });
+                                        }
                                     }
                                 }
+                                if (startFilterBreakdown) startFilterBreakdown.portalAutomatonRejected++;
+                                if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'portalAutomatonRejected', `portalAwareBound=${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'} rSteps=${rSteps}`);
+                                return false;
                             }
-                            if (startFilterBreakdown) startFilterBreakdown.portalAutomatonRejected++;
-                            if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'portalAutomatonRejected', `portalAwareBound=${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'} rSteps=${rSteps}`);
-                            return false;
                         }
                         if (stageTrace) stageTrace.afterDirectionality.push(nk);
                         if (stageTrace) stageTrace.afterObjectiveHeuristics.push(nk);
@@ -4240,6 +4253,7 @@
                             portalRequiredCoverageMask: typeof state.portalRequiredCoverageMask === 'bigint' ? state.portalRequiredCoverageMask.toString() : '0',
                             portalReentryBudget: Number.isFinite(state.portalReentryBudget) ? state.portalReentryBudget : 0,
                             portalOscillationBudget: Number.isFinite(state.portalOscillationBudget) ? state.portalOscillationBudget : 0,
+                            portalAutomatonActive: !!debugStats?.startNeighborTrace?.filterBreakdown?.portalAutomatonActive,
                             disabledPrunes: Array.from(disabledPruneSet),
                             portalBiasMode: options?.portalBiasMode || 'adaptiveMustCross',
                             phasePolicyArchetype: state.phasePolicy?.archetype || options?.phasePolicy?.archetype || null
