@@ -8341,10 +8341,10 @@
             const resolvedPhasePolicy = opts.phasePolicy || level.solverProfile?.phasePolicy || null;
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
             const key = getLevelAttemptKey(level, purpose);
-            const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null };
+            const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null, attempts: [] };
             const timesTried = prev.timesTried + 1;
             const requestedTier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
-            const autoEscalate = timesTried > 1 && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus);
+            const autoEscalate = timesTried > 1 && !prev.guardrailStop && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus);
             const escalationTier = Math.max(requestedTier, autoEscalate ? 1 : 0);
             const requestedBudget = opts.timeBudgetMs || defaultBudget;
             const tierMinBudget = escalationTier >= 2
@@ -8425,6 +8425,77 @@
                 const frontierImproved = Number(current.frontierQuality) > (Number(prior.frontierQuality) + 0.015);
                 return !(nodesPerSecondImproved || frontierImproved);
             };
+            const extractAttemptQualityMetrics = (attemptLike = {}) => {
+                const debug = attemptLike?.debug || attemptLike?.stats?.debug || {};
+                const timeline = Array.isArray(debug?.phaseTimeline) ? debug.phaseTimeline : [];
+                const progressReached = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
+                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
+                const depthReached = Math.max(0, Number(debug?.maxDepth) || 0);
+                const rootCandidatesExpanded = Math.max(0, Number(debug?.rootCandidatesExpanded) || 0);
+                const rootMoveOrder = Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder : [];
+                const uniqueRootMoves = new Set(rootMoveOrder.map(entry => JSON.stringify(entry))).size;
+                const rootDiversity = Math.max(rootCandidatesExpanded, uniqueRootMoves);
+                return {
+                    progressReached: Number(progressReached.toFixed(3)),
+                    nodesExpanded,
+                    depthReached,
+                    rootDiversity
+                };
+            };
+            const computeAttemptDeltaMetrics = (current = {}, previous = null) => {
+                if (!previous) {
+                    return {
+                        hasBaseline: false,
+                        progressDelta: null,
+                        nodesExpandedDelta: null,
+                        depthReachedDelta: null,
+                        rootDiversityDelta: null,
+                        qualityImproved: null,
+                        flatOrNegative: null
+                    };
+                }
+                const progressDelta = Number((Number(current.progressReached || 0) - Number(previous.progressReached || 0)).toFixed(3));
+                const nodesExpandedDelta = Number(current.nodesExpanded || 0) - Number(previous.nodesExpanded || 0);
+                const depthReachedDelta = Number(current.depthReached || 0) - Number(previous.depthReached || 0);
+                const rootDiversityDelta = Number(current.rootDiversity || 0) - Number(previous.rootDiversity || 0);
+                const qualityImproved = progressDelta > 0.01 || nodesExpandedDelta > 20 || depthReachedDelta > 1 || rootDiversityDelta > 0;
+                const flatOrNegative = progressDelta <= 0.01 && nodesExpandedDelta <= 20 && depthReachedDelta <= 1 && rootDiversityDelta <= 0;
+                return {
+                    hasBaseline: true,
+                    progressDelta,
+                    nodesExpandedDelta,
+                    depthReachedDelta,
+                    rootDiversityDelta,
+                    qualityImproved,
+                    flatOrNegative
+                };
+            };
+            const deriveStrategySignature = (strategy = {}) => JSON.stringify({
+                orderingPolicy: strategy?.orderingPolicy || null,
+                portalBiasMode: strategy?.portalBiasMode || null,
+                rootSeedMode: strategy?.rootSeedMode || null,
+                rescueMode: strategy?.rescueMode || null
+            });
+            const attemptPairNearIdentical = (first = null, second = null) => {
+                if (!first || !second) return false;
+                const metricsA = first.metrics || {};
+                const metricsB = second.metrics || {};
+                const progressGap = Math.abs((metricsB.progressReached || 0) - (metricsA.progressReached || 0));
+                const nodesGap = Math.abs((metricsB.nodesExpanded || 0) - (metricsA.nodesExpanded || 0));
+                const depthGap = Math.abs((metricsB.depthReached || 0) - (metricsA.depthReached || 0));
+                const rootGap = Math.abs((metricsB.rootDiversity || 0) - (metricsA.rootDiversity || 0));
+                const sameStrategy = deriveStrategySignature(first.strategy) === deriveStrategySignature(second.strategy);
+                return sameStrategy && progressGap <= 0.01 && nodesGap <= 20 && depthGap <= 1 && rootGap <= 0;
+            };
+            const pickPivotOrderingPolicy = (basePolicy, previousPolicy) => {
+                const ordered = ['harvestThenFinish', 'knotBuilder', 'objectiveFirst', 'perimeterSweep', 'portalFirstTransfer'];
+                const baseIndex = Math.max(0, ordered.indexOf(basePolicy));
+                for (let i = 1; i <= ordered.length; i++) {
+                    const candidate = ordered[(baseIndex + i) % ordered.length];
+                    if (candidate !== previousPolicy) return candidate;
+                }
+                return basePolicy;
+            };
 
             let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
             const totalBudget = Math.max(1500, budgetMs);
@@ -8444,6 +8515,59 @@
             const defaultOrderingPolicy = outstandingObligations >= 4
                 ? 'harvestThenFinish'
                 : (portalDependency ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
+            const previousAttempts = Array.isArray(prev.attempts) ? prev.attempts : [];
+            const previousAttempt = previousAttempts[previousAttempts.length - 1] || null;
+            const prePreviousAttempt = previousAttempts[previousAttempts.length - 2] || null;
+            const shouldForcePivot = !!(previousAttempt?.delta?.flatOrNegative);
+            const pivotOrderingPolicy = shouldForcePivot
+                ? pickPivotOrderingPolicy(defaultOrderingPolicy, previousAttempt?.strategy?.orderingPolicy || null)
+                : defaultOrderingPolicy;
+            const strategyMetadata = compactDefined({
+                attemptOrdinal: timesTried,
+                forcedPivot: shouldForcePivot,
+                pivotTrigger: shouldForcePivot ? 'flat-or-negative-delta' : null,
+                orderingPolicy: pivotOrderingPolicy,
+                portalBiasMode: shouldForcePivot ? 'off' : resolvedPortalBiasMode,
+                rootSeedMode: shouldForcePivot ? 'broader-candidate-seed-set' : (enableDiversifiedRootPass ? 'diversified' : 'default'),
+                rescueMode: shouldForcePivot ? 'alternate-rescue' : 'default',
+                previousDelta: previousAttempt?.delta || null
+            });
+            const guardrailStopThirdAttempt = timesTried >= 3
+                && attemptPairNearIdentical(prePreviousAttempt, previousAttempt)
+                && previousAttempt?.delta?.qualityImproved === false;
+
+            if (guardrailStopThirdAttempt) {
+                const blocked = {
+                    ok: false,
+                    status: 'no-solution-inconclusive',
+                    stage: previousAttempt?.stage ?? -1,
+                    message: 'Retry guardrail: skipped wasteful third attempt.',
+                    stagesTried,
+                    retrySuggested: false,
+                    escalationTier,
+                    usedEscalation: escalationTier > 0,
+                    budgetMs,
+                    strategyMetadata: { ...strategyMetadata, guardrailStopThirdAttempt: true }
+                };
+                const blockedMetrics = { progressReached: 0, nodesExpanded: 0, depthReached: 0, rootDiversity: 0 };
+                const blockedDelta = computeAttemptDeltaMetrics(blockedMetrics, previousAttempt?.metrics || null);
+                attemptHistory[key] = {
+                    timesTried,
+                    lastStageReached: blocked.stage,
+                    lastStatus: blocked.status,
+                    guardrailStop: true,
+                    attempts: previousAttempts.concat([{
+                        attempt: timesTried,
+                        status: blocked.status,
+                        stage: blocked.stage,
+                        metrics: blockedMetrics,
+                        delta: blockedDelta,
+                        strategy: blocked.strategyMetadata,
+                        skippedByGuardrail: true
+                    }]).slice(-6)
+                };
+                return blocked;
+            }
 
             {
                 last = await runStage({
@@ -8452,12 +8576,12 @@
                     variant: 'baseline-core',
                     budgetMs: baselineBudget,
                     run: () => this.runBaselinePolicySweep(level, baselineBudget, {
-                        orderingPolicy: defaultOrderingPolicy,
-                        portalBiasMode: resolvedPortalBiasMode,
+                        orderingPolicy: strategyMetadata.orderingPolicy,
+                        portalBiasMode: strategyMetadata.portalBiasMode,
                         phasePolicy: resolvedPhasePolicy,
                         profile: level.solverProfile,
                         controlPlane,
-                        refereeRootDiversification: enableDiversifiedRootPass,
+                        refereeRootDiversification: strategyMetadata.rootSeedMode !== 'default' || enableDiversifiedRootPass,
                         allowRandomizedExploration: allowRandomizedExploration || complexityStrategy.directionPolicy?.allowRandomized,
                         purpose
                     })
@@ -8604,7 +8728,9 @@
                         allowRandomizedExploration: false,
                         purpose,
                         preferMacroSkeleton: true,
-                        rootCandidateGeneratorVariant: activatePreExpansionRescue ? 'interaction-fallback' : 'default'
+                        rootCandidateGeneratorVariant: (activatePreExpansionRescue || strategyMetadata.rescueMode === 'alternate-rescue')
+                            ? 'interaction-fallback'
+                            : 'default'
                     })
                 });
                 rescueProfileResult.rescueProfileSummary = {
@@ -8637,8 +8763,23 @@
                 }
             }
 
+            const attemptMetrics = extractAttemptQualityMetrics(last);
+            const attemptDelta = computeAttemptDeltaMetrics(attemptMetrics, previousAttempt?.metrics || null);
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
-            else attemptHistory[key] = { timesTried, lastStageReached: last.stage, lastStatus: last.status };
+            else attemptHistory[key] = {
+                timesTried,
+                lastStageReached: last.stage,
+                lastStatus: last.status,
+                guardrailStop: false,
+                attempts: previousAttempts.concat([{
+                    attempt: timesTried,
+                    status: last.status,
+                    stage: last.stage,
+                    metrics: attemptMetrics,
+                    delta: attemptDelta,
+                    strategy: strategyMetadata
+                }]).slice(-6)
+            };
 
             if (!last.failureTaxonomy) {
                 last.failureTaxonomy = classifySolveFailureTaxonomy(last, {
@@ -8672,6 +8813,8 @@
             last.escalationTier = escalationTier;
             last.usedEscalation = escalationTier > 0;
             last.budgetMs = budgetMs;
+            last.strategyMetadata = strategyMetadata;
+            last.attemptDeltaMetrics = attemptDelta;
             last.primaryArchetype = level.solverProfile?.hypothesisModel?.primaryArchetype || level.solverProfile?.archetype || null;
             last.archetypeScores = level.solverProfile?.hypothesisModel?.archetypeScores || null;
             last.controlPlane = controlPlane;
@@ -8898,8 +9041,8 @@
 
             const solveStart = performance.now();
             try {
-                const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null };
-                const autoTier = (hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
+                const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null, guardrailStop: false };
+                const autoTier = (!hist.guardrailStop && hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
                 const escalationTier = Math.max(requestedEscalationTier, autoTier);
                 if (allowReferee) {
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
