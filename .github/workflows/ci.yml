@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  solver-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Solver static no-undef check
+        run: npm run lint:solver
+
+      - name: Solver runtime smoke test
+        run: npm run test:solver-smoke
+
+      - name: Audit output guard (unexpected-exception)
+        run: |
+          npm run test:solver-smoke > audit-output.log
+          npm run check:audit-output -- audit-output.log
