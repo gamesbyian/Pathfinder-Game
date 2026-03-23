@@ -329,7 +329,6 @@
                             <div class="rounded-xl border p-2 border-[var(--theme-mega-primary-border)]/40"><button id="megaRetry60Btn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Standard Retry</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">60s per failed level. Same strategy.</p></div>
                             <div class="rounded-xl border p-2 border-[var(--theme-mega-primary-border)]/40"><button id="megaRetry120Btn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Deep Retry</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">120s per failed level for stubborn puzzles.</p></div>
                             <div class="rounded-xl border p-2 border-[var(--theme-mega-secondary-border)]/40"><button id="megaRetryAltBtn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Alternate Order</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">60s with a different stage order.</p></div>
-                            <div class="sm:col-span-2 rounded-xl border p-2 border-[var(--theme-mega-gemini-border)]/40"><button id="megaGeminiRetryBtn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Ask Gemini + Validate</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">Gemini suggests paths only for unresolved levels, then Pathfinder verifies puzzle legality.</p></div>
                         </div>
                     </div>
                 </div>
@@ -1102,7 +1101,7 @@
             getEl('orientationToggleBtn').style.color = t.text.shellBtn || t.text.megaPrimary || '#ffffff';
             getEl('orientationToggleBtn').style.borderColor = t.grid;
 
-            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('hintBtn').style.backgroundColor = t.btns.hint || t.btns.guide || t.headerRight || '#cf6b17'; ['resetBtn','undoBtn','whoaBtn','guideBtn','megaSolverBtn','modeToggleBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editModeToggleBtn','editCopyMetrics','hintBtn'].forEach(id=>{const el=getEl(id); if(el) el.style.color=t.text.actionBtn;}); getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.text.utilityBtn; getEl('editCopyBtn').style.color = t.text.utilityBtn; getEl('devGenBtn').style.color = t.text.utilityBtnGen; getEl('editGenBtn').style.color = t.text.utilityBtnGen; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary'],['megaGeminiRetryBtn','gemini']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
+            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('hintBtn').style.backgroundColor = t.btns.hint || t.btns.guide || t.headerRight || '#cf6b17'; ['resetBtn','undoBtn','whoaBtn','guideBtn','megaSolverBtn','modeToggleBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editModeToggleBtn','editCopyMetrics','hintBtn'].forEach(id=>{const el=getEl(id); if(el) el.style.color=t.text.actionBtn;}); getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.text.utilityBtn; getEl('editCopyBtn').style.color = t.text.utilityBtn; getEl('devGenBtn').style.color = t.text.utilityBtnGen; getEl('editGenBtn').style.color = t.text.utilityBtnGen; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
             const gArea = getEl('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
             const panel = getEl('editorLineGridPanel'); if (panel) { panel.style.borderTopColor = t.layout.editorPanelBorder; panel.style.borderRightColor = t.layout.editorPanelBorder; }
             const dragGhost = getEl('dragGhost'); if (dragGhost) dragGhost.style.borderColor = t.layout.mainBorder;
@@ -5891,10 +5890,6 @@
                 family = 'solved';
                 confidence = 'high';
                 reasons.push('final-status-solved');
-            } else if (status === 'gemini-failed' || rawStatus === 'gemini-failed') {
-                family = 'gemini-failed';
-                confidence = 'high';
-                reasons.push('terminal-status-gemini-failed');
             } else if (preExpansionSignals && status !== 'no-solution-proven') {
                 family = 'pre-expansion';
                 confidence = zeroSummary ? 'high' : 'medium';
@@ -6055,10 +6050,9 @@
                 : solvedAttempts.slice().reverse().find(st => Number.isFinite(st?.stage) && st.stage === finalStage);
             const winningAttempt = matchByStage || solvedAttempts[solvedAttempts.length - 1] || null;
             const inferredLegacy = isCompatLegacyStageAttempt(winningAttempt || {});
-            const inferredGemini = `${winningAttempt?.variant || ''}` === 'gemini' || `${winningAttempt?.engine || ''}` === 'gemini';
             const winningEngine = !solvedRun
                 ? 'none'
-                : (inferredGemini ? 'gemini' : (inferredLegacy ? 'legacy' : 'referee'));
+                : (inferredLegacy ? 'legacy' : 'referee');
             return {
                 solved: solvedRun,
                 winningAttempt,
@@ -6112,7 +6106,7 @@
                 legacyFallbackStatus: solvedCompatAliasAttempt?.status || firstCompatAliasAttempt?.status || null,
                 legacyFallbackSolved: !!solvedCompatAliasAttempt,
                 legacyFallbackTimeMs: Number.isFinite(firstCompatAliasAttempt?.elapsedMs) ? firstCompatAliasAttempt.elapsedMs : null,
-                finalSolvedByProfile: winning.winningEngine === 'legacy' ? 'compat-rescue-profile' : (winning.winningEngine === 'gemini' ? 'gemini' : (winning.winningEngine === 'referee' ? 'referee-core' : 'none')),
+                finalSolvedByProfile: winning.winningEngine === 'legacy' ? 'compat-rescue-profile' : (winning.winningEngine === 'referee' ? 'referee-core' : 'none'),
                 finalSolvedBy: winning.winningEngine,
                 winningEngine: winning.winningEngine,
                 winningStage: winning.winningStage,
@@ -7991,7 +7985,6 @@
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
             // Unified architecture: one referee engine with policy personalities.
             // Migration note: all solving is now referee; historical legacy toggles are compatibility aliases only.
-            const allowGemini = !!opts.allowGemini;
 
             const markStage = (stage, name, variant, budget, startedAt, result, meta = {}) => {
                 const normalized = createCanonicalSolveResult(result || {});
@@ -8199,31 +8192,6 @@
                 }
             }
 
-            if (!last.ok && allowGemini && last.status !== 'no-solution-proven') {
-                if (opts.onStage) opts.onStage({ stage: 6, name: 'Stage 6', variant: 'gemini', budgetMs: 15000 });
-                const t4 = Date.now();
-                const gem = await requestGeminiSolverSuggestion(level, purpose, timesTried, 15000);
-                if (gem.ok) {
-                    const validation = validateCandidatePath(level, gem.candidate);
-                    if (validation.ok) {
-                        last = { ok: true, status: 'solved', stage: 6, solution: [{ path: validation.path }], solutions: [{ path: validation.path }], stats: { notes: gem.notes || '' }, message: 'Solved (Gemini + validator).', stagesTried };
-                    } else {
-                        last = { ok: false, status: 'gemini-invalid', stage: 6, stats: { reason: validation.reason }, message: `Gemini candidate failed validation: ${validation.reason}`, stagesTried };
-                    }
-                } else {
-                    last = { ok: false, status: 'gemini-failed', stage: 6, stats: { reason: gem.reason, details: gem.details || null }, message: `Gemini failed: ${gem.reason}`, stagesTried };
-                }
-                stagesTried.push(toStageAttemptSummary({
-                    stage: 6,
-                    name: 'Stage 6',
-                    variant: 'gemini',
-                    budgetMs: 15000,
-                    elapsedMs: Date.now() - t4,
-                    normalized: createCanonicalSolveResult(last || {}),
-                    meta: { engine: 'referee' }
-                }));
-            }
-
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
             else attemptHistory[key] = { timesTried, lastStageReached: last.stage, lastStatus: last.status };
 
@@ -8294,7 +8262,7 @@
             const timeout = values.filter(v => v.status === 'timeout').length;
             const inconclusive = values.filter(v => v.status === 'no-solution-inconclusive').length;
             const proven = values.filter(v => v.status === 'no-solution-proven').length;
-            const errors = values.filter(v => ['error', 'cancelled', 'gemini-invalid', 'gemini-failed'].includes(v.status)).length;
+            const errors = values.filter(v => ['error', 'cancelled'].includes(v.status)).length;
             APP.UI.setModalContent('megaSummary', `Solved: ${solved} | Timeout: ${timeout} | Inconclusive: ${inconclusive} | Proven Unsat: ${proven} | Error: ${errors}`, 'text');
         },
         appendOutput(line) { APP.UI.appendMegaOutputLine(line); },
@@ -8307,8 +8275,8 @@
             APP.UI.closeModal('megaStatus');
             APP.UI.setModalContent('megaStatus', '', 'text');
         },
-        async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, variant: 'default', allowGemini: false }); },
-        async runTargets({ targets = null, timeLimitMs = 15000, variant = 'default', allowGemini = false }) {
+        async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, variant: 'default' }); },
+        async runTargets({ targets = null, timeLimitMs = 15000, variant = 'default' }) {
             if (this.active || APP.Solver.isRunning()) return;
             const levels = APP.LevelUtils.getRawLevels();
             if (!targets) { this.results = {}; this.meta = {}; APP.UI.setMegaOutput(''); }
@@ -8318,7 +8286,7 @@
                 return;
             }
             this.active = true;
-            APP.UI.showMessage(allowGemini ? 'Mega Gemini attempt started…' : (targets ? `Mega retry started (${Math.round(timeLimitMs / 1000)}s)…` : 'Mega solver started…'), 'text-sky-600');
+            APP.UI.showMessage(targets ? `Mega retry started (${Math.round(timeLimitMs / 1000)}s)…` : 'Mega solver started…', 'text-sky-600');
             const orig = document.getElementById('megaSolverBtn')?.innerText || 'Mega Solver';
             APP.UI.setButtonState('megaSolverBtn', { enabled: false });
 
@@ -8327,7 +8295,6 @@
                     targets: toRun,
                     timeLimitMs,
                     variant,
-                    allowGemini,
                     results: this.results,
                     meta: this.meta,
                     onProgress: ({ index, total, lvlNum, attempt }) => {
@@ -8340,9 +8307,6 @@
                         if (res.ok) this.appendOutput(JSON.stringify(this.results[lvlNum]));
                         else {
                             this.appendOutput(`FAIL: ${res.message}${res.stats?.reason ? ` (${res.stats.reason})` : ''}`);
-                            if (res.status === 'gemini-failed' && res.stats?.details) {
-                                this.appendOutput(`FAIL_DETAIL: ${JSON.stringify(res.stats.details)}`);
-                            }
                         }
                         this.appendOutput('');
                         this.updateSummary();
@@ -8364,15 +8328,7 @@
                 APP.UI.showMessage('Mega retry: no failed levels.', 'text-emerald-600');
                 return;
             }
-            return this.runTargets({ targets: failed, timeLimitMs, variant, allowGemini: false });
-        },
-        async askGeminiForFailed() {
-            const failed = this.getFailedLevels();
-            if (!failed.length) {
-                APP.UI.showMessage('No failed lvls for Gemini (only unsat).', 'text-emerald-600');
-                return;
-            }
-            return this.runTargets({ targets: failed, timeLimitMs: 15000, variant: 'default', allowGemini: true });
+            return this.runTargets({ targets: failed, timeLimitMs, variant });
         },
         showReport() { this.updateSummary(); APP.UI.openModal('megaModal'); }
     };
@@ -8508,7 +8464,6 @@
                     purpose,
                     timeBudgetMs,
                     tier: escalationTier,
-                    allowGemini: !!opts.allowGemini,
                     forcePreExpansionRescue: !!opts.forcePreExpansionRescue,
                     fallbackDisabledPrunes: Array.isArray(opts.fallbackDisabledPrunes) ? opts.fallbackDisabledPrunes.slice() : null,
                     allowRescueProfiles: !opts.disableLegacyFallback,
@@ -8664,7 +8619,6 @@
             if (!controller) return { cancelled: true };
             const toRun = opts.targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
             const timeLimitMs = opts.timeLimitMs ?? 15000;
-            const allowGemini = !!opts.allowGemini;
             const variant = opts.variant || 'default';
             const results = opts.results || {};
             const meta = opts.meta || {};
@@ -8682,8 +8636,7 @@
                     const res = await Referee.solve(l, {
                         purpose: 'mega',
                         timeBudgetMs: timeLimitMs,
-                        allowGemini,
-                        variant,
+                            variant,
                         onStage: ({ name, variant: stageVariant, budgetMs }) => {
                             APP.UI.setModalContent('searchLabel', `${name} (${stageVariant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
                             if (APP.State.ENGINE.solverAbortRequested) APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
@@ -8800,8 +8753,6 @@
                 if (status === 'timeout') return 'timeout';
                 if (status === 'no-solution-proven') return 'no-solution-proven';
                 if (status === 'no-solution-inconclusive') return 'inconclusive';
-                if (status === 'gemini-invalid') return 'inconclusive';
-                if (status === 'gemini-failed') return 'error';
                 return 'inconclusive';
             }
 
@@ -8907,7 +8858,6 @@
                     }
                     const startedAt = Date.now();
                     const res = await Referee.solve(level, {
-                        allowGemini: false,
                         escalationTier: 2,
                         timeBudgetMs: 60000,
                         portalBiasMode: 'adaptiveMustCross'
@@ -8994,64 +8944,6 @@
                 runPortalValidatorDiagnostics();
             }, 0);
 
-
-            async function requestGeminiSolverSuggestion(level, purpose, attempt = 1, timeoutMs = 15000) {
-                const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), timeoutMs);
-                const startedAt = Date.now();
-                const payloadLevel = APP.LevelUtils.denormalizeLevel(level);
-                if (!payloadLevel?.goal || !Array.isArray(payloadLevel.gates) || payloadLevel.gates.length === 0) {
-                    return { ok: false, reason: 'Gemini request blocked: level is missing gate or goal data.', details: { code: 'invalid-level', hasGoal: !!payloadLevel?.goal, gateCount: payloadLevel?.gates?.length || 0 } };
-                }
-                try {
-                    const payload = {
-                        model: 'gemini-2.5-flash',
-                        level: payloadLevel,
-                        attempt,
-                        purpose
-                    };
-                    const resp = await fetch('./api/gemini_solver_suggest.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
-                        signal: controller.signal
-                    });
-                    const data = await resp.json();
-                    if (!data?.ok) {
-                        return {
-                            ok: false,
-                            reason: data?.error || 'Gemini request failed.',
-                            details: {
-                                code: data?.error || 'unknown',
-                                httpStatus: data?.status || resp.status || 0,
-                                upstream: data?.details || '',
-                                elapsedMs: Date.now() - startedAt
-                            }
-                        };
-                    }
-                    const candidates = [];
-                    if (typeof data.text === 'string' && data.text.trim()) {
-                        candidates.push(data.text.trim());
-                        const m = data.text.match(/```(?:json)?\s*([\s\S]*?)```/i);
-                        if (m?.[1]) candidates.push(m[1].trim());
-                    }
-                    let parsed = null;
-                    for (const c of candidates) {
-                        try { parsed = JSON.parse(c); break; } catch {}
-                    }
-                    if (!parsed || !Array.isArray(parsed.path)) {
-                        return { ok: false, reason: 'Gemini did not return valid path JSON.', details: { code: 'invalid-json-shape', elapsedMs: Date.now() - startedAt } };
-                    }
-                    return { ok: true, candidate: parsed.path, notes: parsed.notes || '', elapsedMs: Date.now() - startedAt };
-                } catch (err) {
-                    const isAbort = err?.name === 'AbortError';
-                    return {
-                        ok: false,
-                        reason: isAbort ? 'Gemini request timed out.' : `Gemini error: ${err?.message || 'Unknown error'}`,
-                        details: { code: isAbort ? 'timeout' : 'fetch-error', elapsedMs: Date.now() - startedAt, errorName: err?.name || 'Error' }
-                    };
-                } finally { clearTimeout(timer); }
-            }
 
             async function runGameSolver(purpose = 'solve', escalationTier = 0) {
                 if (APP.Solver.isRunning()) {
@@ -13185,9 +13077,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     : []
             );
             const hintAttempts = [
-                { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
+                { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
             let finalHintResult = null;
@@ -13242,7 +13134,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         purpose: 'hint',
                         timeBudgetMs: 12000,
                         tier: 2,
-                        allowGemini: false,
                         allowReferee: true,
                         disableLegacyFallback: getAuditDisableLegacyFallback(),
                         forcePreExpansionRescue: true,
@@ -13263,30 +13154,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     });
                     levelEntry.newHint.attemptHistory.push(rescueAttempt);
                     finalAttempt = rescueAttempt;
-                }
-
-                if (finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution-proven') {
-                    if (!(await waitForSolverIdle(2000))) {
-                        APP.Solver.cancel();
-                        await waitForSolverIdle(2000);
-                    }
-                    const attemptStart = performance.now();
-                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), { purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowGemini: true, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() });
-                    finalHintResult = hintRes || null;
-                    const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
-                    const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
-                    const geminiAttemptStatus = classifyHintStatus(hintRes, hintValidation);
-                    const geminiAttempt = APP.Solver.toAuditAttemptSummary(hintRes, {
-                        attemptLabel: 'D',
-                        variant: 'gemini',
-                        status: geminiAttemptStatus,
-                        elapsedMs: Math.round(performance.now() - attemptStart),
-                        producedHintValid: !!hintValidation?.ok,
-                        validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
-                        diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics)
-                    });
-                    levelEntry.newHint.attemptHistory.push(geminiAttempt);
-                    finalAttempt = geminiAttempt;
                 }
 
                 if (finalAttempt?.rawStatus === 'no-solution-inconclusive') {
@@ -13658,7 +13525,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
         document.getElementById('megaRetry120Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
         document.getElementById('megaRetryAltBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'altOrder' }); };
-        document.getElementById('megaGeminiRetryBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.askGeminiForFailed(); };
 
         const tModal = document.getElementById('themeModal');
         document.getElementById('openThemeModalBtn').onclick = () => {
