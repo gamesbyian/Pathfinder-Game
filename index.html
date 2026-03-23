@@ -1956,66 +1956,121 @@
                 },
                 _estimatePortalMandatoryFamilyBoundFrom(key, coverageMask, l) {
                     const automaton = l?.portalTransitionAutomaton;
-                    if (!automaton || !automaton.ready) return 0;
+                    if (!automaton || !automaton.ready) {
+                        return { bound: 0, toObjective: 0, portalCommitment: 0, toGoal: 0, familyCount: 0 };
+                    }
                     let mask = typeof coverageMask === 'bigint' ? coverageMask : 0n;
-                    if (mask === 0n) return 0;
+                    if (mask === 0n) {
+                        return { bound: 0, toObjective: 0, portalCommitment: 0, toGoal: 0, familyCount: 0 };
+                    }
                     const outstanding = [];
                     for (let i = 0; i < automaton.familyCount; i++) {
                         const bit = 1n << BigInt(i);
                         if ((mask & bit) !== 0n) outstanding.push(i);
                     }
-                    if (outstanding.length === 0) return 0;
+                    if (outstanding.length === 0) {
+                        return { bound: 0, toObjective: 0, portalCommitment: 0, toGoal: 0, familyCount: 0 };
+                    }
                     const nearestFromKey = new Array(outstanding.length).fill(Infinity);
                     for (let i = 0; i < outstanding.length; i++) {
                         const famIdx = outstanding[i];
                         const d = automaton.familyDistMaps?.[famIdx]?.get(key);
                         nearestFromKey[i] = Number.isFinite(d) ? d : Infinity;
                     }
-                    const nodeCount = outstanding.length + 2; // start + families + goal
-                    const minEdge = new Array(nodeCount).fill(Infinity);
-                    const used = new Array(nodeCount).fill(false);
-                    minEdge[0] = 0;
-                    const edgeWeight = (a, b) => {
-                        if (a === b) return 0;
-                        if (a === 0) return nearestFromKey[b - 1];
-                        if (b === 0) return nearestFromKey[a - 1];
-                        if (a === nodeCount - 1) return automaton.familyToGoalDist?.[outstanding[b - 1]] ?? Infinity;
-                        if (b === nodeCount - 1) return automaton.familyToGoalDist?.[outstanding[a - 1]] ?? Infinity;
-                        return automaton.familyPairDist?.[outstanding[a - 1]]?.[outstanding[b - 1]] ?? Infinity;
-                    };
-                    let mst = 0;
-                    for (let iter = 0; iter < nodeCount; iter++) {
-                        let pick = -1;
-                        for (let i = 0; i < nodeCount; i++) {
-                            if (used[i]) continue;
-                            if (pick < 0 || minEdge[i] < minEdge[pick]) pick = i;
-                        }
-                        if (pick < 0 || !Number.isFinite(minEdge[pick])) return Infinity;
-                        used[pick] = true;
-                        mst += minEdge[pick];
-                        for (let to = 0; to < nodeCount; to++) {
-                            if (used[to]) continue;
-                            const w = edgeWeight(pick, to);
-                            if (w < minEdge[to]) minEdge[to] = w;
+                    let toObjective = Infinity;
+                    for (let i = 0; i < nearestFromKey.length; i++) {
+                        if (nearestFromKey[i] < toObjective) toObjective = nearestFromKey[i];
+                    }
+                    let toGoal = Infinity;
+                    for (let i = 0; i < outstanding.length; i++) {
+                        const famToGoal = automaton.familyToGoalDist?.[outstanding[i]];
+                        if (Number.isFinite(famToGoal) && famToGoal < toGoal) toGoal = famToGoal;
+                    }
+                    let portalCommitment = 0;
+                    if (outstanding.length > 1) {
+                        const used = new Array(outstanding.length).fill(false);
+                        const minEdge = new Array(outstanding.length).fill(Infinity);
+                        minEdge[0] = 0;
+                        for (let iter = 0; iter < outstanding.length; iter++) {
+                            let pick = -1;
+                            for (let i = 0; i < outstanding.length; i++) {
+                                if (used[i]) continue;
+                                if (pick < 0 || minEdge[i] < minEdge[pick]) pick = i;
+                            }
+                            if (pick < 0 || !Number.isFinite(minEdge[pick])) {
+                                return { bound: Infinity, toObjective, portalCommitment: Infinity, toGoal, familyCount: outstanding.length };
+                            }
+                            used[pick] = true;
+                            portalCommitment += minEdge[pick];
+                            for (let to = 0; to < outstanding.length; to++) {
+                                if (used[to]) continue;
+                                const w = automaton.familyPairDist?.[outstanding[pick]]?.[outstanding[to]] ?? Infinity;
+                                if (w < minEdge[to]) minEdge[to] = w;
+                            }
                         }
                     }
-                    return mst;
+                    if (!Number.isFinite(toObjective) || !Number.isFinite(toGoal) || !Number.isFinite(portalCommitment)) {
+                        return { bound: Infinity, toObjective, portalCommitment, toGoal, familyCount: outstanding.length };
+                    }
+                    // Avoid double-counting shared route segments by not chaining objective and goal legs additively.
+                    const bound = Math.max(toObjective + portalCommitment, toGoal);
+                    return { bound, toObjective, portalCommitment, toGoal, familyCount: outstanding.length };
                 },
-                _portalAwareLowerBound(key, state, l) {
+                _portalAwareLowerBound(key, state, l, opts = {}) {
                     const goalDist = l?.distMapForSolver?.get(key);
                     const mustBound = state?.mustMask !== 0n ? this._estimateMustPassBoundFrom(key, state, l) : 0;
                     const crossNeed = this._crossNeeds(state);
                     const crossBound = crossNeed > 0 ? this._estimateMustCrossBoundFrom(key, state, l) : 0;
+                    const { extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state?.mustCrossMask || 0n, crossNeed, l);
                     const coverageMask = typeof state?.portalRequiredCoverageMask === 'bigint' ? state.portalRequiredCoverageMask : 0n;
-                    const portalBound = this._estimatePortalMandatoryFamilyBoundFrom(key, coverageMask, l);
+                    const portalDetail = this._estimatePortalMandatoryFamilyBoundFrom(key, coverageMask, l);
+                    const portalBound = portalDetail.bound;
                     const components = [goalDist ?? Infinity, mustBound, crossBound, portalBound];
                     let best = 0;
                     for (let i = 0; i < components.length; i++) {
                         const val = components[i];
-                        if (!Number.isFinite(val)) return Infinity;
+                        if (!Number.isFinite(val)) {
+                            if (!opts?.returnComponents) return Infinity;
+                            return {
+                                bound: Infinity,
+                                optimisticFallback: goalDist ?? Infinity,
+                                capped: false,
+                                components: {
+                                    toObjective: portalDetail.toObjective,
+                                    portalCommitment: portalDetail.portalCommitment,
+                                    toGoal: portalDetail.toGoal,
+                                    extraVisits: extraVisitsLB,
+                                    goalDist: goalDist ?? Infinity,
+                                    mustBound,
+                                    crossBound,
+                                    portalBound
+                                }
+                            };
+                        }
                         if (val > best) best = val;
                     }
-                    return best;
+                    const optimisticFallback = goalDist ?? Infinity;
+                    let capped = false;
+                    if (opts?.contradictionRecoveryCap && Number.isFinite(optimisticFallback) && best > optimisticFallback) {
+                        best = optimisticFallback;
+                        capped = true;
+                    }
+                    if (!opts?.returnComponents) return best;
+                    return {
+                        bound: best,
+                        optimisticFallback,
+                        capped,
+                        components: {
+                            toObjective: portalDetail.toObjective,
+                            portalCommitment: portalDetail.portalCommitment,
+                            toGoal: portalDetail.toGoal,
+                            extraVisits: extraVisitsLB,
+                            goalDist: goalDist ?? Infinity,
+                            mustBound,
+                            crossBound,
+                            portalBound
+                        }
+                    };
                 },
                 _portalProgressTransitionFeasible(fromKey, toKey, state, l, options = {}) {
                     const automaton = l?.portalTransitionAutomaton;
@@ -3046,6 +3101,7 @@
                         topologyRejected: 0
                     } : null;
 
+                    const startNeighborBoundSanity = depth === 0 ? { legalBranches: 0, satisfiedBranches: 0 } : null;
                     const valid = candidates.filter(nk => {
                         if (debugStats) debugStats.branchesTried++;
                         if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) {
@@ -3064,6 +3120,7 @@
                         const isP = (portalDest === nk && portalForced);
                         const nLen = curLen + (isP ? 0 : 1);
                         const rSteps = l.reqLen - nLen;
+                        if (startNeighborBoundSanity) startNeighborBoundSanity.legalBranches++;
                         if (!disableDistanceBound) {
                             const d = distMap.get(nk);
                             if (d === undefined || d > rSteps) {
@@ -3139,7 +3196,14 @@
                             portalOscillationBudget: portalTransition.nextOscillationBudget
                         };
                         if (portalAutomatonLowerBoundActive) {
-                            const portalAwareBound = this._portalAwareLowerBound(nk, projectedState, l);
+                            const portalAwareInfo = this._portalAwareLowerBound(nk, projectedState, l, {
+                                returnComponents: true,
+                                contradictionRecoveryCap: !!contradictionRecoveryMode
+                            });
+                            const portalAwareBound = portalAwareInfo?.bound;
+                            if (startNeighborBoundSanity && Number.isFinite(portalAwareBound) && portalAwareBound <= rSteps) {
+                                startNeighborBoundSanity.satisfiedBranches++;
+                            }
                             if (!Number.isFinite(portalAwareBound) || portalAwareBound > rSteps) {
                                 if (debugStats) {
                                     debugStats.prune.portalAutomatonRejected = (debugStats.prune.portalAutomatonRejected || 0) + 1;
@@ -3151,7 +3215,11 @@
                                     }
                                 }
                                 if (startFilterBreakdown) startFilterBreakdown.portalAutomatonRejected++;
-                                if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'portalAutomatonRejected', `portalAwareBound=${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'} rSteps=${rSteps}`);
+                                if (state.path.length === 1) {
+                                    const c = portalAwareInfo?.components || {};
+                                    const capNote = portalAwareInfo?.capped ? ` optimisticCap=${portalAwareInfo.optimisticFallback}` : '';
+                                    this._recordDepth0Prune(debugStats, 'portalAutomatonRejected', `portalAwareBound=${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'} rSteps=${rSteps} toObjective=${Number.isFinite(c.toObjective) ? c.toObjective : 'inf'} portalCommitment=${Number.isFinite(c.portalCommitment) ? c.portalCommitment : 'inf'} toGoal=${Number.isFinite(c.toGoal) ? c.toGoal : 'inf'} extraVisits=${Number.isFinite(c.extraVisits) ? c.extraVisits : 'na'}${capNote}`);
+                                }
                                 return false;
                             }
                         }
@@ -3168,9 +3236,18 @@
                             startFilterBreakdown.finalCandidateCount = valid.length;
                         }
                         stageTrace.filterBreakdown = startFilterBreakdown;
+                        if (startNeighborBoundSanity) stageTrace.portalBoundSanity = { ...startNeighborBoundSanity };
                     } else if (stageTrace && debugStats) {
                         if (!Array.isArray(debugStats.neighborTrace)) debugStats.neighborTrace = [];
                         if (debugStats.neighborTrace.length < 8) debugStats.neighborTrace.push(stageTrace);
+                    }
+                    if (assertKnownSolvableBounds && depth === 0 && l?.id === 0 && startNeighborBoundSanity && startNeighborBoundSanity.legalBranches > 0) {
+                        const ok = startNeighborBoundSanity.satisfiedBranches > 0;
+                        if (!ok) {
+                            const msg = `[PortalBoundAssert] Level 1 start-neighbor sanity failed: no legal branch satisfied portal-aware bound. legal=${startNeighborBoundSanity.legalBranches}`;
+                            if (APP.State?.ENGINE?.isDevMode) throw new Error(msg);
+                            console.warn(msg);
+                        }
                     }
                     const scoringProfile = (options?.scoringMode === 'legacy' || options?.scoringMode === 'endurance') ? 'endurance' : 'modern';
                     const shouldRecordRootSuppression = depth === 0 && !!debugStats && (!!options?.enableLowExpansionProbe || !!APP?.State?.ENGINE?.isDevMode || !!APP?.State?.ENGINE?.flags?.refereeDebug || !!APP?.State?.ENGINE?.flags?.debugSolver);
@@ -4780,7 +4857,9 @@
                         controlPlane = null,
                         gateBeamTopK = 0,
                         debugGateVariant = false,
-                        enableLowExpansionProbe = false
+                        enableLowExpansionProbe = false,
+                        contradictionRecoveryMode = false,
+                        assertKnownSolvableBounds = false
                     } = options;
                     if (APP.State?.ENGINE?.isDevMode) {
                         const undefinedModes = [
@@ -5036,7 +5115,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -5366,7 +5445,7 @@
                         return [];
                     }
 
-                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode }) => {
+                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
                         if (debugStats) {
@@ -5404,7 +5483,9 @@
                             knotBudgetPolicy,
                             controlPlane,
                             gateBeamTopK,
-                            debugGateVariant
+                            debugGateVariant,
+                            contradictionRecoveryMode: !!passContradictionRecoveryMode,
+                            assertKnownSolvableBounds: !!assertKnownSolvableBounds
                         });
                         const out = await SearchFramework.runSearch({
                             level,
@@ -7571,7 +7652,9 @@
                     startGateArchetype: attemptOpts.policyProfile || controlPlane?.activeHypothesis?.archetype || 'harvestThenFinish',
                     commitmentPlan: attemptOpts.commitmentPlan || null,
                     memoStrictness: Number(attemptOpts.memoStrictness) || 1,
-                    controlPlane
+                    controlPlane,
+                    contradictionRecoveryMode: !!opts.contradictionRecovery,
+                    assertKnownSolvableBounds: true
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -7602,7 +7685,9 @@
                         phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
                         structuralTemplate: attemptOpts.structuralTemplate || null,
                         objectiveTrack: attemptOpts.objectiveTrack || null,
-                        controlPlane
+                        controlPlane,
+                        contradictionRecoveryMode: !!opts.contradictionRecovery,
+                        assertKnownSolvableBounds: true
                     });
                     const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
                     const guardedDebug = guarded?.debug || {};
@@ -7763,7 +7848,9 @@
                     disabledPrunes: runOpts.disabledPrunes || disabledPrunes,
                     portalBiasMode: runOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
                     phasePolicy: runOpts.phasePolicy !== undefined ? runOpts.phasePolicy : (opts.phasePolicy || null),
-                    enableLowExpansionProbe: !!opts.enableLowExpansionProbe
+                    enableLowExpansionProbe: !!opts.enableLowExpansionProbe,
+                    contradictionRecoveryMode: !!opts.contradictionRecovery,
+                    assertKnownSolvableBounds: true
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 if (r?.ok && solution.length > 0) {
