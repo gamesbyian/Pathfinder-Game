@@ -2843,6 +2843,10 @@
                     const rSteps = Math.max(0, l.reqLen - realLen);
                     const slack = Number.isFinite(goalDist) ? (rSteps - goalDist) : -Infinity;
                     const remainingObjectives = this._objectiveRemainingCount(state, l);
+                    const remainingMustPass = (typeof state.mustMask === 'bigint' && state.mustMask !== 0n)
+                        ? (l?._popcountMask ? l._popcountMask(state.mustMask) : 1)
+                        : 0;
+                    const remainingMustCross = Math.max(0, this._crossNeeds(state));
                     const remainingIntersections = Math.max(0, l.reqInt - state.ints);
                     const t = state.phasePolicy?.thresholds || {};
 
@@ -2856,7 +2860,7 @@
                     else if (progressRatio >= (t.transitionProgress ?? 0.34)
                         || remainingObjectives <= Math.max(2, Math.floor((l.mustPassKeys.length + l.mustCrossKeys.length) * 0.5))) phase = 'transition';
 
-                    return { phase, realLen, progressRatio, goalDist, rSteps, slack, remainingObjectives, remainingIntersections };
+                    return { phase, realLen, progressRatio, goalDist, rSteps, slack, remainingObjectives, remainingMustPass, remainingMustCross, remainingIntersections };
                 },
                 _updateSolverPhase(state, key, l, distMap, debugStats = null) {
                     const derived = this._deriveSolverPhase(state, key, l, distMap);
@@ -2867,6 +2871,8 @@
                             atLen: derived.realLen,
                             progress: Number(derived.progressRatio.toFixed(3)),
                             remainingObjectives: derived.remainingObjectives,
+                            remainingMustPass: derived.remainingMustPass,
+                            remainingMustCross: derived.remainingMustCross,
                             remainingIntersections: derived.remainingIntersections,
                             goalDist: Number.isFinite(derived.goalDist) ? derived.goalDist : null,
                             slack: Number.isFinite(derived.slack) ? derived.slack : null,
@@ -4177,6 +4183,8 @@
                     const adaptationState = {
                         startedObjectives: Math.max(0, this._objectiveRemainingCount(state, l)),
                         lastNodes: 0,
+                        lastTelemetryAtMs: Date.now(),
+                        lastProgress: 0,
                         lastBranchFactor: null,
                         currentProfile: {
                             memoStrictness: Number(options?.memoStrictness) || 1,
@@ -4207,13 +4215,17 @@
                         const nodesExpanded = Math.max(0, Number(debugStats?.nodesExpanded) || 0);
                         if (nodesExpanded < 24) return;
                         if ((nodesExpanded - adaptationState.lastNodes) < 64) return;
-                        const branchesTried = Math.max(0, Number(debugStats?.branchesGenerated) || 0);
+                        const branchesTried = Math.max(0, Number(debugStats?.branchesTried ?? debugStats?.branchesGenerated) || 0);
                         const branchFactor = nodesExpanded > 0 ? (branchesTried / nodesExpanded) : 0;
                         const branchFactorTrend = adaptationState.lastBranchFactor === null ? 0 : (branchFactor - adaptationState.lastBranchFactor);
                         const memoChecks = Math.max(1, (Number(debugStats?.failMemoChecks) || 0) + (Number(debugStats?.dominanceMemoChecks) || 0));
                         const memoHitSaturation = Math.max(0, Math.min(1, ((Number(debugStats?.memoHits) || 0) + (Number(debugStats?.dominanceMemoHits) || 0)) / memoChecks));
                         const phaseDerived = phaseInfo || this._deriveSolverPhase(state, state.path[state.path.length - 1], l, distMap);
                         const progress = Math.max(0, Math.min(1, Number(phaseDerived?.progressRatio) || 0));
+                        const nowMs = Date.now();
+                        const telemetryDtMs = Math.max(1, nowMs - (adaptationState.lastTelemetryAtMs || nowMs));
+                        const expansionVelocity = Math.max(0, (nodesExpanded - (adaptationState.lastNodes || 0)) / telemetryDtMs);
+                        const progressDelta = Math.max(0, progress - (adaptationState.lastProgress || 0));
                         const remainingObjectives = Math.max(0, Number(phaseDerived?.remainingObjectives) || 0);
                         const objectiveReductionRate = (adaptationState.startedObjectives - remainingObjectives) / Math.max(1, nodesExpanded);
                         const portalOscillation = Math.max(0, Number(state.portalOscillationCount) || 0);
@@ -4236,7 +4248,8 @@
                         const triggerMemoOverfit = memoHitSaturation > 0.72 && objectiveReductionRate < 0.0008;
                         const triggerPortalThrash = portalLockStability < 0.45;
                         const triggerSwitchOrdering = branchFactor < 0.32 && branchFactorTrend < -0.06;
-                        if (triggerLowExpansion || triggerMemoOverfit || triggerPortalThrash || triggerSwitchOrdering) {
+                        const triggerHighVelocityPlateau = expansionVelocity > 0.08 && progressDelta < 0.012 && progress > 0.35;
+                        if (triggerLowExpansion || triggerMemoOverfit || triggerPortalThrash || triggerSwitchOrdering || triggerHighVelocityPlateau) {
                             const prevProfile = {
                                 memoStrictness: adaptationState.currentProfile.memoStrictness,
                                 disabledPrunes: adaptationState.currentProfile.disabledPrunes.slice(),
@@ -4251,6 +4264,11 @@
                             };
                             if (triggerLowExpansion && !nextProfile.disabledPrunes.includes('connectivity')) nextProfile.disabledPrunes.push('connectivity');
                             if (triggerMemoOverfit && !nextProfile.disabledPrunes.includes('mustPassBound')) nextProfile.disabledPrunes.push('mustPassBound');
+                            if (triggerHighVelocityPlateau) {
+                                if (nextProfile.disabledPrunes.includes('mustPassBound')) nextProfile.disabledPrunes = nextProfile.disabledPrunes.filter(p => p !== 'mustPassBound');
+                                if (nextProfile.disabledPrunes.includes('mustCrossBound')) nextProfile.disabledPrunes = nextProfile.disabledPrunes.filter(p => p !== 'mustCrossBound');
+                                nextProfile.memoStrictness = Math.min(2.1, Math.max(nextProfile.memoStrictness, prevProfile.memoStrictness * 1.12));
+                            }
                             if (triggerSwitchOrdering && nextProfile.dirOrderVariant === 'default') nextProfile.dirOrderVariant = 'alt';
                             else if (triggerSwitchOrdering && nextProfile.dirOrderVariant === 'alt') nextProfile.dirOrderVariant = 'random';
                             if (triggerPortalThrash) nextProfile.portalBiasMode = 'off';
@@ -4264,13 +4282,17 @@
                             syncAdaptiveProfileToOptions();
                             pushAdaptationEvent({
                                 type: 'policy-toggle',
-                                reason: triggerMemoOverfit ? 'memo-saturation' : (triggerPortalThrash ? 'portal-lock-instability' : (triggerSwitchOrdering ? 'ordering-collapse' : 'branch-collapse')),
+                                reason: triggerHighVelocityPlateau
+                                    ? 'high-velocity-progress-plateau'
+                                    : (triggerMemoOverfit ? 'memo-saturation' : (triggerPortalThrash ? 'portal-lock-instability' : (triggerSwitchOrdering ? 'ordering-collapse' : 'branch-collapse'))),
                                 telemetry: {
                                     branchFactor: Number(branchFactor.toFixed(3)),
                                     branchFactorTrend: Number(branchFactorTrend.toFixed(3)),
                                     memoHitSaturation: Number(memoHitSaturation.toFixed(3)),
                                     objectiveReductionRate: Number(objectiveReductionRate.toFixed(5)),
-                                    portalLockStability: Number(portalLockStability.toFixed(3))
+                                    portalLockStability: Number(portalLockStability.toFixed(3)),
+                                    expansionVelocity: Number(expansionVelocity.toFixed(4)),
+                                    progressDelta: Number(progressDelta.toFixed(4))
                                 },
                                 profile: nextProfile
                             });
@@ -4285,7 +4307,9 @@
                                     branchFactorTrend: Number(branchFactorTrend.toFixed(3)),
                                     memoHitSaturation: Number(memoHitSaturation.toFixed(3)),
                                     objectiveReductionRate: Number(objectiveReductionRate.toFixed(5)),
-                                    portalLockStability: Number(portalLockStability.toFixed(3))
+                                    portalLockStability: Number(portalLockStability.toFixed(3)),
+                                    expansionVelocity: Number(expansionVelocity.toFixed(4)),
+                                    progressDelta: Number(progressDelta.toFixed(4))
                                 }
                             });
                         }
@@ -4307,9 +4331,11 @@
                                     revertedProfile: adaptationState.currentProfile
                                 });
                             }
-                            adaptationState.pendingGuardrail = null;
+                        adaptationState.pendingGuardrail = null;
                         }
                         adaptationState.lastNodes = nodesExpanded;
+                        adaptationState.lastTelemetryAtMs = nowMs;
+                        adaptationState.lastProgress = progress;
                         adaptationState.lastBranchFactor = branchFactor;
                     };
                     this._updateSolverPhase(state, startKey, l, distMap, debugStats);
@@ -5962,6 +5988,7 @@
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
                 rootCandidatesSuppressedByDominance: Number.isFinite(debug?.rootCandidatesSuppressedByDominance) ? debug.rootCandidatesSuppressedByDominance : null,
                 rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
+                attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
                 rootMoveOrder: Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 20) : null,
                 rootMoveScores: Array.isArray(debug?.rootMoveScores) ? debug.rootMoveScores.slice(0, 20) : null,
                 rootSuppressionLog: Array.isArray(debug?.debug?.rootSuppressionLog) ? debug.debug.rootSuppressionLog.slice(0, 20) : null,
@@ -7602,19 +7629,105 @@
                 const nodesExpanded = Math.max(0, Number(debug.nodesExpanded) || 0);
                 const branchesTried = Math.max(0, Number(debug.branchesTried) || 0);
                 const branchFactor = nodesExpanded > 0 ? (branchesTried / nodesExpanded) : 0;
+                const elapsedMs = Math.max(1, Number(attemptResult?.elapsedMs ?? debug?.elapsedMs) || 1);
+                const nodesPerSecond = (nodesExpanded * 1000) / elapsedMs;
                 const timeline = Array.isArray(debug.phaseTimeline) ? debug.phaseTimeline : [];
                 const maxProgress = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
                 const minObjectives = timeline.reduce((m, ev) => Math.min(m, Number.isFinite(ev?.remainingObjectives) ? ev.remainingObjectives : m), Infinity);
                 const finalObjectives = Number.isFinite(minObjectives) ? minObjectives : null;
+                const finalTimeline = timeline.length > 0 ? timeline[timeline.length - 1] : null;
+                const remainingMustPass = Math.max(0, Number(finalTimeline?.remainingMustPass) || 0);
+                const remainingMustCross = Math.max(0, Number(finalTimeline?.remainingMustCross) || 0);
+                const constraintDeficit = remainingMustPass + remainingMustCross;
                 const reachedTransition = timeline.some(ev => ev?.phase === 'transition' || ev?.phase === 'knot' || ev?.phase === 'finish');
                 const branchingCollapse = nodesExpanded >= 80 && branchFactor <= 0.18;
+                const frontierQuality = Math.max(0, Math.min(1, (maxProgress * 0.58) + (reachedTransition ? 0.14 : 0) + (Math.max(0, 1 - (constraintDeficit / 4)) * 0.2) + (Math.max(0, 1 - Math.min(1, Math.abs(branchFactor - 0.55))) * 0.08)));
                 return {
                     branchFactor,
                     branchingCollapse,
                     maxProgress,
+                    nodesPerSecond,
+                    frontierQuality,
                     targetProgressGood: maxProgress >= 0.62 || reachedTransition || (finalObjectives !== null && finalObjectives <= 1),
-                    finalObjectives
+                    finalObjectives,
+                    remainingMustPass,
+                    remainingMustCross,
+                    constraintDeficit
                 };
+            };
+            const buildAttemptInstrumentation = (attemptResult = {}, quality = {}) => {
+                const debug = attemptResult?.debug || {};
+                const adaptationTimeline = Array.isArray(debug?.adaptationTimeline) ? debug.adaptationTimeline : [];
+                const telemetryPoints = adaptationTimeline
+                    .filter(ev => ev?.telemetry && Number.isFinite(ev?.telemetry?.branchFactor))
+                    .map(ev => ({
+                        atNodes: Number(ev?.atNodes) || 0,
+                        branchFactor: Number(ev.telemetry.branchFactor),
+                        expansionVelocity: Number(ev.telemetry.expansionVelocity) || null,
+                        progressDelta: Number(ev.telemetry.progressDelta) || null
+                    }));
+                const pickSnapshot = (idx) => telemetryPoints.length > 0 ? telemetryPoints[Math.max(0, Math.min(telemetryPoints.length - 1, idx))] : null;
+                const early = pickSnapshot(0);
+                const mid = pickSnapshot(Math.floor((telemetryPoints.length - 1) / 2));
+                const late = pickSnapshot(telemetryPoints.length - 1);
+                const prune = debug?.prune || {};
+                const branchesTried = Math.max(0, Number(debug?.branchesTried) || 0);
+                const totalPruneHits = Object.values(prune).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
+                const pruneDenominator = Math.max(1, branchesTried + totalPruneHits);
+                const memoSize = Math.max(0, Number(debug?.memoSize) || 0);
+                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
+                return compactDefined({
+                    branchingFactorSnapshots: compactDefined({
+                        early: early ? Number(early.branchFactor.toFixed(3)) : null,
+                        mid: mid ? Number(mid.branchFactor.toFixed(3)) : null,
+                        late: late ? Number(late.branchFactor.toFixed(3)) : null
+                    }),
+                    pruningHitRates: compactDefined({
+                        total: Number((totalPruneHits / pruneDenominator).toFixed(4)),
+                        mustPassBound: Number((Math.max(0, Number(prune?.mustPassBound) || 0) / pruneDenominator).toFixed(4)),
+                        mustCrossBound: Number((Math.max(0, Number(prune?.mustCrossBound) || 0) / pruneDenominator).toFixed(4)),
+                        portalAutomatonRejected: Number((Math.max(0, Number(prune?.portalAutomatonRejected) || 0) / pruneDenominator).toFixed(4)),
+                        failedStateHit: Number((Math.max(0, Number(prune?.failedStateHit) || 0) / pruneDenominator).toFixed(4))
+                    }),
+                    uniqueStateGrowthRate: Number((memoSize / Math.max(1, nodesExpanded)).toFixed(5)),
+                    nodesPerSecond: Number((quality?.nodesPerSecond || 0).toFixed(3)),
+                    frontierQuality: Number((quality?.frontierQuality || 0).toFixed(4)),
+                    unresolvedDeficit: compactDefined({
+                        mustPass: Number.isFinite(quality?.remainingMustPass) ? quality.remainingMustPass : null,
+                        mustCross: Number.isFinite(quality?.remainingMustCross) ? quality.remainingMustCross : null
+                    })
+                });
+            };
+            const switchAttemptStrategyFamily = (nextAttempt = {}, context = {}) => {
+                if (!nextAttempt || typeof nextAttempt !== 'object') return null;
+                const original = {
+                    policyProfile: nextAttempt.policyProfile || null,
+                    portalBiasMode: nextAttempt.portalBiasMode || null,
+                    scoringMode: nextAttempt.scoringMode || null
+                };
+                const deficit = Math.max(0, Number(context?.constraintDeficit) || 0);
+                if (deficit > 0) {
+                    nextAttempt.policyProfile = 'objectiveFirst';
+                    nextAttempt.portalBiasMode = 'adaptiveMustCross';
+                    nextAttempt.scoringMode = 'modern';
+                    nextAttempt.phasePolicy = SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' });
+                    nextAttempt.orderingTweaks = compactDefined({
+                        stage: 'timeout-rescue-second-stage',
+                        mode: 'constraint-deficit-priority',
+                        remainingMustPass: Number(context?.remainingMustPass) || 0,
+                        remainingMustCross: Number(context?.remainingMustCross) || 0
+                    });
+                    return compactDefined({ switched: true, family: 'objectiveFirst', reason: 'constraint-deficit-priority', from: original, to: { policyProfile: nextAttempt.policyProfile, portalBiasMode: nextAttempt.portalBiasMode, scoringMode: nextAttempt.scoringMode } });
+                }
+                nextAttempt.policyProfile = nextAttempt.policyProfile === 'knotBuilder' ? 'portalFirstTransfer' : 'knotBuilder';
+                nextAttempt.portalBiasMode = nextAttempt.portalBiasMode === 'off' ? 'adaptiveMustCross' : 'off';
+                nextAttempt.scoringMode = nextAttempt.scoringMode === 'endurance' ? 'modern' : 'endurance';
+                nextAttempt.orderingTweaks = compactDefined({
+                    stage: 'timeout-rescue-second-stage',
+                    mode: 'strategy-family-switch',
+                    reason: context?.reason || 'stagnation'
+                });
+                return compactDefined({ switched: true, family: nextAttempt.policyProfile, reason: context?.reason || 'stagnation', from: original, to: { policyProfile: nextAttempt.policyProfile, portalBiasMode: nextAttempt.portalBiasMode, scoringMode: nextAttempt.scoringMode } });
             };
 
             const shouldStopAfterAttempt = (attemptResult, quality, attemptIndex, totalAttempts) => {
@@ -7699,6 +7812,7 @@
                             status: guardedStatus,
                             solution: guardedSolution,
                             debug: guardedDebug,
+                            elapsedMs: Number.isFinite(guardedDebug?.elapsedMs) ? guardedDebug.elapsedMs : null,
                             scoringMode: attemptOpts.scoringMode || 'modern',
                             portalBiasMode: 'off',
                             structuralMode: !!attemptOpts.structuralMode,
@@ -7714,6 +7828,7 @@
                     status,
                     solution,
                     debug,
+                    elapsedMs: Number.isFinite(debug?.elapsedMs) ? debug.elapsedMs : null,
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
                     structuralMode: !!attemptOpts.structuralMode,
@@ -7727,6 +7842,7 @@
 
             let attemptsUsed = [];
             let lastAttempt = null;
+            let previousTelemetry = null;
             let bestTemplate = null;
             let bestTemplateScore = -Infinity;
             const templatePerfScore = (quality, result) => {
@@ -7747,6 +7863,7 @@
                 }
                 const attemptResult = await runAttempt(attempt.budgetMs, attempt);
                 const quality = getSearchQuality(attemptResult);
+                const attemptInstrumentation = buildAttemptInstrumentation(attemptResult, quality);
                 const templateScore = templatePerfScore(quality, attemptResult);
                 this.updateHypothesisConfidence(controlPlane, {
                     phaseProgress: quality.maxProgress,
@@ -7788,6 +7905,8 @@
                     policyProfile: attempt.policyProfile || 'standard',
                     phaseTimeline: attemptResult?.debug?.phaseTimeline || [],
                     quality,
+                    attemptInstrumentation,
+                    retryEscalation: attempt.orderingTweaks || null,
                     structuralTemplate: attempt.structuralTemplate ? { id: attempt.structuralTemplate.id, confidence: attempt.structuralTemplate.confidence || 0 } : null,
                     hypothesis: controlPlane?.activeHypothesis ? { ...controlPlane.activeHypothesis } : null
                 });
@@ -7814,6 +7933,38 @@
                     };
                 }
                 lastAttempt = attemptResult;
+                if (i + 1 < attempts.length) {
+                    const nextAttempt = attempts[i + 1];
+                    const timeoutProne = ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status);
+                    if (timeoutProne && quality.constraintDeficit > 0) {
+                        switchAttemptStrategyFamily(nextAttempt, {
+                            constraintDeficit: quality.constraintDeficit,
+                            remainingMustPass: quality.remainingMustPass,
+                            remainingMustCross: quality.remainingMustCross,
+                            reason: 'constraint-deficit-priority'
+                        });
+                    }
+                    if (previousTelemetry) {
+                        const nodesPerSecondImproved = quality.nodesPerSecond > (previousTelemetry.nodesPerSecond * 1.03);
+                        const frontierImproved = quality.frontierQuality > (previousTelemetry.frontierQuality + 0.015);
+                        if (!nodesPerSecondImproved && !frontierImproved) {
+                            const switched = switchAttemptStrategyFamily(nextAttempt, {
+                                constraintDeficit: quality.constraintDeficit,
+                                remainingMustPass: quality.remainingMustPass,
+                                remainingMustCross: quality.remainingMustCross,
+                                reason: 'telemetry-delta-stagnation'
+                            });
+                            if (switched && APP.State.ENGINE.flags?.refereeDebug) {
+                                const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
+                                console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] telemetry stagnation -> switched next strategy family`, switched);
+                            }
+                        }
+                    }
+                    previousTelemetry = {
+                        nodesPerSecond: quality.nodesPerSecond,
+                        frontierQuality: quality.frontierQuality
+                    };
+                }
                 if (!attemptResult.ok && quality.maxProgress < 0.22) {
                     this.maybeSwitchHypothesis(controlPlane, 'low-progress');
                 }
@@ -8022,6 +8173,27 @@
                 normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
                 return normalized;
             };
+            const extractStageTelemetry = (attemptLike = {}) => {
+                const debug = attemptLike?.debug || attemptLike?.stats?.debug || {};
+                const elapsedMs = Math.max(1, Number(attemptLike?.elapsedMs ?? debug?.elapsedMs) || 1);
+                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
+                const branchesTried = Math.max(0, Number(debug?.branchesTried) || 0);
+                const timeline = Array.isArray(debug?.phaseTimeline) ? debug.phaseTimeline : [];
+                const maxProgress = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
+                const remainingObjectives = timeline.length > 0 ? Math.max(0, Number(timeline[timeline.length - 1]?.remainingObjectives) || 0) : 0;
+                const unresolvedConstraintPenalty = Math.max(0, remainingObjectives / 5);
+                const frontierQuality = Math.max(0, Math.min(1, (maxProgress * 0.7) + (Math.max(0, 1 - unresolvedConstraintPenalty) * 0.2) + (Math.max(0, 1 - Math.min(1, Math.abs((branchesTried / Math.max(1, nodesExpanded)) - 0.55))) * 0.1)));
+                return {
+                    nodesPerSecond: (nodesExpanded * 1000) / elapsedMs,
+                    frontierQuality
+                };
+            };
+            const shouldSwitchFamilyByTelemetryDelta = (current = {}, prior = {}) => {
+                if (!current || !prior) return false;
+                const nodesPerSecondImproved = Number(current.nodesPerSecond) > (Number(prior.nodesPerSecond) * 1.03);
+                const frontierImproved = Number(current.frontierQuality) > (Number(prior.frontierQuality) + 0.015);
+                return !(nodesPerSecondImproved || frontierImproved);
+            };
 
             let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
             const totalBudget = Math.max(1500, budgetMs);
@@ -8103,7 +8275,8 @@
                             });
                         }
                     } else if (failureCategory === 'healthy-expansion-timeout') {
-                        last = await runStage({
+                        const stage0Telemetry = extractStageTelemetry(last);
+                        const enduranceAttempt = await runStage({
                             stage: 3,
                             name: 'Stage 3',
                             variant: 'late-search-endurance',
@@ -8116,6 +8289,36 @@
                                 purpose
                             })
                         });
+                        const enduranceTelemetry = extractStageTelemetry(enduranceAttempt);
+                        if (!enduranceAttempt.ok && shouldSwitchFamilyByTelemetryDelta(enduranceTelemetry, stage0Telemetry)) {
+                            const switchedAttempt = await runStage({
+                                stage: 4,
+                                name: 'Stage 4',
+                                variant: 'telemetry-family-switch',
+                                budgetMs: recoveryBudget,
+                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                                    orderingPolicy: 'objectiveFirst',
+                                    portalBiasMode: 'adaptiveMustCross',
+                                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(level?.solverProfile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }),
+                                    profile: level.solverProfile,
+                                    controlPlane,
+                                    scoringMode: 'modern',
+                                    structuralMode: true,
+                                    enableEnduranceLongpath: true,
+                                    allowRandomizedExploration: false,
+                                    adaptiveOrderingPhase: 'objective-harvest',
+                                    purpose
+                                })
+                            });
+                            switchedAttempt.routingDecision = compactDefined({
+                                category: 'healthy-expansion-timeout',
+                                mode: 'telemetry-family-switch',
+                                trigger: 'no-delta-vs-prior-attempt'
+                            });
+                            last = switchedAttempt;
+                        } else {
+                            last = enduranceAttempt;
+                        }
                     } else if (failureCategory === 'unknownFailure') {
                         last = await runStage({
                             stage: 4,
@@ -9202,6 +9405,23 @@
                 if (!debugStats) return;
                 debugStats.status = status;
                 debugStats.elapsedMs = Math.round(performance.now() - startPerf);
+                const nodesExpanded = Math.max(0, Number(debugStats?.nodesExpanded) || 0);
+                const elapsedMs = Math.max(1, Number(debugStats?.elapsedMs) || 1);
+                const branchesTried = Math.max(0, Number(debugStats?.branchesTried) || 0);
+                const prune = debugStats?.prune || {};
+                const totalPruneHits = Object.values(prune).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
+                const totalPruneDenom = Math.max(1, branchesTried + totalPruneHits);
+                debugStats.attemptTelemetry = compactDefined({
+                    nodesPerSecond: Number(((nodesExpanded * 1000) / elapsedMs).toFixed(3)),
+                    uniqueStateGrowthRate: Number((Math.max(0, Number(debugStats?.memoSize) || 0) / Math.max(1, nodesExpanded)).toFixed(5)),
+                    pruningHitRates: compactDefined({
+                        total: Number((totalPruneHits / totalPruneDenom).toFixed(4)),
+                        mustPassBound: Number((Math.max(0, Number(prune.mustPassBound) || 0) / totalPruneDenom).toFixed(4)),
+                        mustCrossBound: Number((Math.max(0, Number(prune.mustCrossBound) || 0) / totalPruneDenom).toFixed(4)),
+                        portalAutomatonRejected: Number((Math.max(0, Number(prune.portalAutomatonRejected) || 0) / totalPruneDenom).toFixed(4)),
+                        failedStateHit: Number((Math.max(0, Number(prune.failedStateHit) || 0) / totalPruneDenom).toFixed(4))
+                    })
+                });
             }
 
             function buildSearchDiagnostics(debug = {}, status = 'unknown') {
