@@ -7060,9 +7060,115 @@
                 orderingPolicy: policyCfg.policyName || policy,
                 adaptiveOrderingPhase: adaptivePhase
             };
-            const result = await this.runBaselineStage(level, budgetMs, merged);
+            const profile = opts.profile || level?.solverProfile || {};
+            const boardArea = Number(profile?.boardArea) || (Number(level?.grid?.w) || 0) * (Number(level?.grid?.h) || 0);
+            const mustCrossCount = Number(profile?.mustCrossCount) || Number(level?.mustCrossKeys?.length) || 0;
+            const mandatoryPortalFamilyCount = Array.isArray(profile?.portalHints?.mandatoryFamilies) ? profile.portalHints.mandatoryFamilies.length : 0;
+            const objectiveCount = Number(profile?.objectiveCount) || (Array.isArray(profile?.objectiveModel?.features) ? profile.objectiveModel.features.length : 0);
+            const openness = Number(profile?.openness) || 0;
+            const triggerProfile = compactDefined({
+                boardArea,
+                mustCrossCount,
+                mandatoryPortalFamilyCount,
+                objectiveCount,
+                openness,
+                triggered: boardArea >= 100 && mustCrossCount >= 2 && mandatoryPortalFamilyCount > 0
+            });
+
+            const diversifiedPassRequested = !!opts.enableDiversifiedRootPass || !!opts.refereeRootDiversification;
+            const shouldDiversifyRootPass = !!triggerProfile?.triggered && diversifiedPassRequested;
+            if (!shouldDiversifyRootPass) {
+                const result = await this.runBaselineStage(level, budgetMs, merged);
+                result.orderingPolicy = policyCfg.policyName || policy;
+                result.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: (policyCfg.policyName || policy), phase: adaptivePhase, dirOrderVariant: policyCfg.dirOrderVariant, triggerProfile });
+                return result;
+            }
+
+            const rootFamilies = [
+                { id: 'objective-first', policy: 'harvestThenFinish', score: (objectiveCount * 2.2) + (mustCrossCount * 1.4) + Math.max(0, 1 - openness) },
+                { id: 'portal-first', policy: 'portalFirstTransfer', score: (mandatoryPortalFamilyCount * 3.2) + (mustCrossCount * 0.8) + (objectiveCount * 0.4) },
+                { id: 'perimeter-first', policy: 'perimeterSweep', score: (openness * 4.5) + (boardArea >= 132 ? 1.8 : 0) + (mustCrossCount * 0.5) }
+            ].sort((a, b) => b.score - a.score);
+            const rootFamilyTopK = Math.max(2, Math.min(rootFamilies.length, Number.isFinite(opts.rootFamilyTopK) ? Math.floor(opts.rootFamilyTopK) : 3));
+            const selectedFamilies = rootFamilies.slice(0, rootFamilyTopK);
+            const totalBudget = Math.max(1, Math.floor(budgetMs || 1));
+            const diversifiedBudgetPool = Math.max(1, Math.floor(totalBudget * 0.78));
+            const perRootBudget = Math.max(250, Math.floor(diversifiedBudgetPool / Math.max(1, selectedFamilies.length)));
+            const rootBudgetsRemaining = new Map(selectedFamilies.map(f => [f.id, perRootBudget]));
+            const quantumMs = Math.max(180, Math.min(900, Math.floor(perRootBudget / 3)));
+            const rootSummaries = [];
+            let bestResult = null;
+            let solvedResult = null;
+            let consumedBudget = 0;
+
+            while (consumedBudget < diversifiedBudgetPool && !solvedResult) {
+                let progressed = false;
+                for (const family of selectedFamilies) {
+                    const remain = rootBudgetsRemaining.get(family.id) || 0;
+                    if (remain <= 0 || solvedResult) continue;
+                    const sliceBudget = Math.max(1, Math.min(quantumMs, remain, diversifiedBudgetPool - consumedBudget));
+                    if (sliceBudget <= 0) continue;
+                    progressed = true;
+                    const sliceResult = await this.runBaselineStage(level, sliceBudget, {
+                        ...merged,
+                        orderingPolicy: family.policy,
+                        adaptiveOrderingPhase: adaptivePhase,
+                        rootDiversificationFamily: family.id,
+                        rootDiversificationPass: true,
+                        useRootLocalMemoOverlay: true
+                    });
+                    consumedBudget += sliceBudget;
+                    rootBudgetsRemaining.set(family.id, Math.max(0, remain - sliceBudget));
+                    const debug = sliceResult?.debug || {};
+                    const rootSummary = compactDefined({
+                        family: family.id,
+                        policy: family.policy,
+                        score: Number((family.score || 0).toFixed(3)),
+                        sliceBudgetMs: sliceBudget,
+                        status: sliceResult?.status || null,
+                        expansions: Number(debug.nodesExpanded) || 0,
+                        solutions: Array.isArray(sliceResult?.solutions) ? sliceResult.solutions.length : (sliceResult?.ok ? 1 : 0),
+                        rootCandidatesGenerated: Number(debug.rootCandidatesGenerated) || 0,
+                        rootCandidatesExpanded: Number(debug.rootCandidatesExpanded) || 0
+                    });
+                    rootSummaries.push(rootSummary);
+                    if (!bestResult || (Number(debug.nodesExpanded) || 0) > (Number(bestResult?.debug?.nodesExpanded) || 0) || (!!sliceResult?.ok && !bestResult?.ok)) {
+                        bestResult = sliceResult;
+                    }
+                    if (sliceResult?.ok) solvedResult = sliceResult;
+                    if (consumedBudget >= diversifiedBudgetPool) break;
+                }
+                if (!progressed) break;
+            }
+
+            const reserveBudget = Math.max(1, totalBudget - consumedBudget);
+            const reserveResult = solvedResult || await this.runBaselineStage(level, reserveBudget, merged);
+            const result = reserveResult || bestResult || { ok: false, status: 'error', solution: [], solutions: [], debug: {} };
+            const rootMoveScores = rootSummaries.map(s => ({ key: s.family, score: s.score, drivers: [{ label: s.policy, contribution: s.expansions || 0 }] }));
+            result.rootMoveScores = Array.isArray(result.rootMoveScores) ? [...result.rootMoveScores, ...rootMoveScores].slice(0, 30) : rootMoveScores.slice(0, 30);
+            result.rootSearchSummary = compactDefined({
+                ...(result.rootSearchSummary || makeRootSearchSummary(result?.debug || {}, buildSearchDiagnostics(result?.debug || {}, result?.status || 'unknown')) || {}),
+                diversifiedRootPass: {
+                    triggered: true,
+                    topK: rootFamilyTopK,
+                    roundRobin: true,
+                    triggerProfile,
+                    allocatedPerRootBudgetMs: perRootBudget,
+                    quantumMs,
+                    consumedBudgetMs: consumedBudget,
+                    reserveBudgetMs: reserveBudget,
+                    roots: rootSummaries
+                }
+            });
             result.orderingPolicy = policyCfg.policyName || policy;
-            result.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: (policyCfg.policyName || policy), phase: adaptivePhase, dirOrderVariant: policyCfg.dirOrderVariant });
+            result.orderingPolicySummary = compactDefined({
+                layer: 'adaptive-ordering',
+                policy: (policyCfg.policyName || policy),
+                phase: adaptivePhase,
+                dirOrderVariant: policyCfg.dirOrderVariant,
+                diversifiedRootPass: true,
+                triggerProfile
+            });
             return result;
         },
 
@@ -7687,6 +7793,10 @@
             const portalDependency = (Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0) > 0;
             const knotSensitive = (Number(profileSignals?.mustCrossCount) || 0) >= 2 || (Number(profileSignals?.topology?.bridgeCount) || 0) >= 4;
             const openBoard = (Number(profileSignals?.openness) || 0) >= 0.62;
+            const boardArea = Number(profileSignals?.boardArea) || ((Number(level?.grid?.w) || 0) * (Number(level?.grid?.h) || 0));
+            const mustCrossCount = Number(profileSignals?.mustCrossCount) || 0;
+            const mandatoryPortalFamilyCount = Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0;
+            const enableDiversifiedRootPass = boardArea >= 100 && mustCrossCount >= 2 && mandatoryPortalFamilyCount > 0;
             const defaultOrderingPolicy = outstandingObligations >= 4
                 ? 'harvestThenFinish'
                 : (portalDependency ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
@@ -7703,6 +7813,7 @@
                         phasePolicy: resolvedPhasePolicy,
                         profile: level.solverProfile,
                         controlPlane,
+                        refereeRootDiversification: enableDiversifiedRootPass,
                         allowRandomizedExploration: allowRandomizedExploration || complexityStrategy.directionPolicy?.allowRandomized,
                         purpose
                     })
@@ -7740,6 +7851,7 @@
                                     phasePolicy: resolvedPhasePolicy,
                                     profile: level.solverProfile,
                                     controlPlane,
+                                    refereeRootDiversification: enableDiversifiedRootPass,
                                     scoringMode: 'modern',
                                     structuralMode: true,
                                     enableEnduranceLongpath: true,
@@ -7794,6 +7906,7 @@
                         phasePolicy: null,
                         profile: level.solverProfile,
                         controlPlane,
+                        refereeRootDiversification: enableDiversifiedRootPass,
                         scoringMode: 'endurance',
                         structuralMode: true,
                         enableEnduranceLongpath: true,
