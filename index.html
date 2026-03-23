@@ -1630,6 +1630,58 @@
             attemptOrdinal
         });
     };
+    const HEURISTIC_FEATURE_FLAGS_SAFE_DEFAULTS = Object.freeze({
+        hasGeese: false,
+        hasFlippingFilters: false,
+        hasFalseGoals: false,
+        highReqInt: false,
+        reqInt: 0,
+        highReqIntThreshold: 3
+    });
+    let heuristicFeatureFlagsResolverAuditLogged = false;
+    const logHeuristicFeatureFlagsResolverAuditErrorOnce = (code, detail = {}) => {
+        if (heuristicFeatureFlagsResolverAuditLogged) return;
+        heuristicFeatureFlagsResolverAuditLogged = true;
+        console.error('[audit][solver] heuristic feature flag helper degraded', {
+            code,
+            helperName: 'deriveHeuristicFeatureFlags',
+            degradedTelemetry: true,
+            fallback: 'safe-default-flags',
+            detail: compactDefined(detail)
+        });
+    };
+    const buildSafeHeuristicFeatureFlags = (context = {}) => {
+        const attemptOrdinalRaw = Number(context?.attemptOrdinal);
+        const attemptOrdinal = Number.isFinite(attemptOrdinalRaw) ? Math.max(1, Math.floor(attemptOrdinalRaw)) : null;
+        const thresholdRaw = Number(context?.highReqIntThreshold);
+        const highReqIntThreshold = Number.isFinite(thresholdRaw) ? Math.max(3, Math.floor(thresholdRaw)) : HEURISTIC_FEATURE_FLAGS_SAFE_DEFAULTS.highReqIntThreshold;
+        return compactDefined({
+            ...HEURISTIC_FEATURE_FLAGS_SAFE_DEFAULTS,
+            highReqIntThreshold,
+            attemptOrdinal
+        });
+    };
+    const resolveHeuristicFeatureFlagsHelper = () => {
+        const helper = deriveHeuristicFeatureFlags;
+        if (typeof helper === 'function') return helper;
+        logHeuristicFeatureFlagsResolverAuditErrorOnce('helper-not-callable', {
+            expectedType: 'function',
+            actualType: typeof helper
+        });
+        return null;
+    };
+    const deriveHeuristicFeatureFlagsSafely = (level = {}, context = {}) => {
+        const helper = resolveHeuristicFeatureFlagsHelper();
+        if (!helper) return buildSafeHeuristicFeatureFlags(context);
+        try {
+            return helper(level, context);
+        } catch (err) {
+            logHeuristicFeatureFlagsResolverAuditErrorOnce('helper-threw', {
+                message: err?.message || String(err)
+            });
+            return buildSafeHeuristicFeatureFlags(context);
+        }
+    };
     const toHeuristicFeatureSignature = (flags = {}) => {
         const hasGeese = !!flags?.hasGeese;
         const hasFlippingFilters = !!flags?.hasFlippingFilters;
@@ -7534,7 +7586,7 @@
                 adaptiveOrderingPhase: adaptivePhase
             };
             const profile = opts.profile || level?.solverProfile || {};
-            const featureFlags = deriveHeuristicFeatureFlags(level, { attemptOrdinal: 1 });
+            const featureFlags = deriveHeuristicFeatureFlagsSafely(level, { attemptOrdinal: 1 });
             const featureSignature = toHeuristicFeatureSignature(featureFlags);
             const boardArea = Number(profile?.boardArea) || (Number(level?.grid?.w) || 0) * (Number(level?.grid?.h) || 0);
             const mustCrossCount = Number(profile?.mustCrossCount) || Number(level?.mustCrossKeys?.length) || 0;
@@ -7956,7 +8008,7 @@
             };
 
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
-                const heuristicFeatureFlags = deriveHeuristicFeatureFlags(level, {
+                const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
                     attemptOrdinal: attemptOpts?.attemptOrdinal,
                     highReqIntThreshold: attemptOpts?.highReqIntThreshold
                 });
@@ -13719,7 +13771,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             ];
             let finalAttempt = null;
             let finalHintResult = null;
-            const levelFeatureFlags = deriveHeuristicFeatureFlags(normalized, { attemptOrdinal: 1 });
+            const levelFeatureFlags = deriveHeuristicFeatureFlagsSafely(normalized, { attemptOrdinal: 1 });
             const levelFeatureSignature = toHeuristicFeatureSignature(levelFeatureFlags);
             levelEntry.newHint.featureFlags = levelFeatureFlags;
             levelEntry.newHint.featureSignature = levelFeatureSignature;
