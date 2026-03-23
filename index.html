@@ -2954,6 +2954,7 @@
                     const disableDistanceBound = disabledPruneSet.has('distance') || disabledPruneSet.has('minRemOverflow');
                     const disableMustPassBound = disabledPruneSet.has('mustPassBound');
                     const disableMustCrossBound = disabledPruneSet.has('mustCrossBound');
+                    const disablePortalAutomaton = disabledPruneSet.has('portalAutomaton');
                     const candidates = [];
                     const portal = APP.LevelUtils.resolvePortal(l, k);
                     const portalForced = portal && !state.isJump.has(state.path.length - 1);
@@ -3161,7 +3162,7 @@
                                 (Number.isFinite(state?.portalCommittedRegion) && state.portalCommittedRegion >= 0)
                                 || this._derivePortalLockState(state, options) !== 'uncommitted'
                             );
-                        const portalAutomatonActive = levelHasPortalFamilies && (hasMandatoryPortalObligation || hasCommittedPortalContinuation);
+                        const portalAutomatonActive = !disablePortalAutomaton && levelHasPortalFamilies && (hasMandatoryPortalObligation || hasCommittedPortalContinuation);
                         const portalAutomatonLowerBoundActive = portalAutomatonActive && hasMandatoryPortalObligation;
                         if (startFilterBreakdown) startFilterBreakdown.portalAutomatonActive = portalAutomatonActive;
                         const isPortalJump = (portalDest === nk && portalForced);
@@ -5940,6 +5941,7 @@
             const debug = attempt?.debug || attempt?.stats?.debug || {};
             const summary = compactDefined({
                 attempt: options.attemptLabel || null,
+                variant: options.variant || null,
                 stage: Number.isFinite(attempt?.stage) ? attempt.stage : null,
                 status: options.status || attempt?.status || null,
                 rawStatus: attempt?.rawStatus || attempt?.status || null,
@@ -7977,6 +7979,7 @@
             const allowRandomizedExploration = !!opts.allowRandomizedExploration;
             const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
             const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
+            const forcePreExpansionRescue = !!opts.forcePreExpansionRescue;
             const stagesTried = [];
             const solveStartTime = Date.now();
             const controlPlane = this.createControlPlane(level.solverProfile || {});
@@ -8137,16 +8140,23 @@
             const priorFailureSummary = !last.ok ? (last.failureSummary || classifyFailureCategory(last)) : null;
             const priorFailureTaxonomy = !last.ok ? (last.failureTaxonomy || classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) })) : null;
             if (!last.ok && last.status !== 'no-solution-proven') {
+                const preExpansionAbortCode = `${last?.preExpansionAbort?.code || last?.debug?.preExpansionAbort?.code || ''}`;
+                const activatePreExpansionRescue = forcePreExpansionRescue || preExpansionAbortCode === 'no-legal-start-neighbors';
+                const rescueDisabledPrunes = Array.from(new Set([
+                    ...(Array.isArray(fallbackDisabledPrunes) ? fallbackDisabledPrunes : (complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [])),
+                    ...(activatePreExpansionRescue ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton'] : [])
+                ]));
                 const rescueProfileResult = await runStage({
                     stage: 5,
                     name: 'Stage 5',
-                    variant: 'memo-relaxed-profile',
+                    variant: activatePreExpansionRescue ? 'pre-expansion-rescue' : 'memo-relaxed-profile',
                     budgetMs: recoveryBudget,
                     compatLegacyOutputAlias: true,
                     run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
                         orderingPolicy: 'memoRelaxed',
                         portalBiasMode: 'off',
                         phasePolicy: null,
+                        disabledPrunes: rescueDisabledPrunes,
                         profile: level.solverProfile,
                         controlPlane,
                         refereeRootDiversification: enableDiversifiedRootPass,
@@ -8161,11 +8171,13 @@
                 rescueProfileResult.rescueProfileSummary = {
                     attempted: true,
                     rescued: !!rescueProfileResult.ok,
-                    mode: 'memo-relaxed-profile',
+                    mode: activatePreExpansionRescue ? 'pre-expansion-rescue' : 'memo-relaxed-profile',
                     priorFailureCategory: priorFailureSummary?.category || null,
                     failureTaxonomy: priorFailureTaxonomy || null,
                     priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
-                    priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null
+                    priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null,
+                    preExpansionAbortCode: preExpansionAbortCode || null,
+                    disabledPrunes: rescueDisabledPrunes
                 };
                 if (rescueProfileResult.ok) {
                     rescueProfileResult.enduranceRescueDelta = compactDefined({
@@ -8495,6 +8507,8 @@
                     timeBudgetMs,
                     tier: escalationTier,
                     allowGemini: !!opts.allowGemini,
+                    forcePreExpansionRescue: !!opts.forcePreExpansionRescue,
+                    fallbackDisabledPrunes: Array.isArray(opts.fallbackDisabledPrunes) ? opts.fallbackDisabledPrunes.slice() : null,
                     allowRescueProfiles: !opts.disableLegacyFallback,
                     onlyRescueProfiles: false,
                     auditMode: !!opts.auditMode,
@@ -13162,6 +13176,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 return 'error';
             };
             const isRetryableInconclusive = (attemptStatus, rawStatus) => ['timeout', 'no-solution-inconclusive'].includes(rawStatus || attemptStatus);
+            const getPreExpansionAbortCode = (attemptLike) => `${attemptLike?.preExpansionAbort?.code || attemptLike?.debug?.preExpansionAbort?.code || ''}`.trim();
+            const getStageConfigSignature = (attemptRecord) => JSON.stringify(
+                Array.isArray(attemptRecord?.refereeAttempts)
+                    ? attemptRecord.refereeAttempts.map(st => `${Number.isFinite(st?.stage) ? st.stage : 'na'}:${st?.variant || 'unknown'}`)
+                    : []
+            );
             const hintAttempts = [
                 { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
                 { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowGemini: false, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
@@ -13169,6 +13189,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             ];
             let finalAttempt = null;
             let finalHintResult = null;
+            const abortSignatureCounts = new Map();
+            let runPreExpansionRescuePass = false;
             try {
                 for (let attemptIdx = 0; attemptIdx < hintAttempts.length; attemptIdx++) {
                     const attemptPlan = hintAttempts[attemptIdx];
@@ -13185,6 +13207,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const attemptStatus = classifyHintStatus(hintRes, hintValidation);
                     const attemptRecord = APP.Solver.toAuditAttemptSummary(hintRes, {
                         attemptLabel: attemptPlan.key,
+                        variant: 'default',
                         status: attemptStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
@@ -13193,7 +13216,51 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     });
                     levelEntry.newHint.attemptHistory.push(attemptRecord);
                     finalAttempt = attemptRecord;
+                    const abortCode = getPreExpansionAbortCode(attemptRecord);
+                    const stageSignature = getStageConfigSignature(attemptRecord);
+                    if (abortCode) {
+                        const signatureKey = `${abortCode}::${stageSignature}`;
+                        const seenCount = (abortSignatureCounts.get(signatureKey) || 0) + 1;
+                        abortSignatureCounts.set(signatureKey, seenCount);
+                        if (seenCount >= 2 && abortCode === 'no-legal-start-neighbors') {
+                            runPreExpansionRescuePass = true;
+                            break;
+                        }
+                    }
                     if (attemptRecord.status === 'success' || attemptRecord.status === 'no-solution-proven') break;
+                }
+
+                if (runPreExpansionRescuePass && finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution-proven') {
+                    if (!(await waitForSolverIdle(2000))) {
+                        APP.Solver.cancel();
+                        await waitForSolverIdle(2000);
+                    }
+                    const attemptStart = performance.now();
+                    const rescueHintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), {
+                        purpose: 'hint',
+                        timeBudgetMs: 12000,
+                        tier: 2,
+                        allowGemini: false,
+                        allowReferee: true,
+                        disableLegacyFallback: getAuditDisableLegacyFallback(),
+                        forcePreExpansionRescue: true,
+                        fallbackDisabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton']
+                    });
+                    finalHintResult = rescueHintRes || null;
+                    const producedPath = rescueHintRes?.solution?.[0]?.path || rescueHintRes?.solutions?.[0]?.path || null;
+                    const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
+                    const rescueStatus = classifyHintStatus(rescueHintRes, hintValidation);
+                    const rescueAttempt = APP.Solver.toAuditAttemptSummary(rescueHintRes, {
+                        attemptLabel: 'R',
+                        variant: 'pre-expansion-rescue',
+                        status: rescueStatus,
+                        elapsedMs: Math.round(performance.now() - attemptStart),
+                        producedHintValid: !!hintValidation?.ok,
+                        validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                        diagnosticsSummary: summarizeDiagnostics(rescueHintRes?.diagnostics)
+                    });
+                    levelEntry.newHint.attemptHistory.push(rescueAttempt);
+                    finalAttempt = rescueAttempt;
                 }
 
                 if (finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution-proven') {
@@ -13209,6 +13276,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const geminiAttemptStatus = classifyHintStatus(hintRes, hintValidation);
                     const geminiAttempt = APP.Solver.toAuditAttemptSummary(hintRes, {
                         attemptLabel: 'D',
+                        variant: 'gemini',
                         status: geminiAttemptStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
