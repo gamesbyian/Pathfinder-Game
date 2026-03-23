@@ -3,6 +3,58 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const helperToken = 'const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {';
+const helperStart = html.indexOf(helperToken);
+if (helperStart < 0) {
+  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper in index.html');
+}
+
+const helperArrowBody = html.indexOf('=> {', helperStart);
+const helperOpenBrace = helperArrowBody >= 0 ? helperArrowBody + 3 : -1;
+if (helperOpenBrace < 0) {
+  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper body in index.html');
+}
+
+let helperDepth = 0;
+let helperEnd = -1;
+for (let i = helperOpenBrace; i < html.length; i += 1) {
+  const ch = html[i];
+  if (ch === '{') helperDepth += 1;
+  else if (ch === '}') {
+    helperDepth -= 1;
+    if (helperDepth === 0) { helperEnd = i + 1; break; }
+  }
+}
+if (helperEnd < 0) {
+  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper end in index.html');
+}
+
+const compactDefinedToken = 'const compactDefined = (obj = {}) => {';
+const compactDefinedStart = html.indexOf(compactDefinedToken);
+if (compactDefinedStart < 0) {
+  throw new Error('Unable to locate compactDefined helper in index.html');
+}
+const compactDefinedArrowBody = html.indexOf('=> {', compactDefinedStart);
+const compactDefinedOpenBrace = compactDefinedArrowBody >= 0 ? compactDefinedArrowBody + 3 : -1;
+if (compactDefinedOpenBrace < 0) {
+  throw new Error('Unable to locate compactDefined helper body in index.html');
+}
+let compactDefinedDepth = 0;
+let compactDefinedEnd = -1;
+for (let i = compactDefinedOpenBrace; i < html.length; i += 1) {
+  const ch = html[i];
+  if (ch === '{') compactDefinedDepth += 1;
+  else if (ch === '}') {
+    compactDefinedDepth -= 1;
+    if (compactDefinedDepth === 0) { compactDefinedEnd = i + 1; break; }
+  }
+}
+if (compactDefinedEnd < 0) {
+  throw new Error('Unable to locate compactDefined helper end in index.html');
+}
+
+const compactDefinedSource = html.slice(compactDefinedStart, compactDefinedEnd) + ';';
+const helperSource = html.slice(helperStart, helperEnd) + ';';
 const startToken = 'const solveLevel = async (level, opts = {}) => {';
 const start = html.indexOf(startToken);
 if (start < 0) {
@@ -102,6 +154,8 @@ const context = {
 };
 
 vm.createContext(context);
+vm.runInContext(`${compactDefinedSource} ${helperSource}; globalThis.__deriveHeuristicFeatureFlags = deriveHeuristicFeatureFlags;`, context, { filename: 'heuristic-helper-slice.js' });
+assert.equal(typeof context.__deriveHeuristicFeatureFlags, 'function', 'deriveHeuristicFeatureFlags must be callable before smoke test level iteration.');
 vm.runInContext(`${solveLevelSource}; globalThis.__solveLevel = solveLevel;`, context, { filename: 'solver-slice.js' });
 
 const levelOne = { id: 0, grid: { w: 8, h: 8 }, gates: [{ x: 1, y: 1 }], goal: { x: 8, y: 8 } };
