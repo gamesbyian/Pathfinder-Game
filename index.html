@@ -3442,6 +3442,13 @@
                         : phaseProfileBase;
                     const policyName = options?.orderingPolicy || 'default';
                     const policyProfile = this.getPolicyProfile(policyName, activePhase);
+                    const heuristicFeatureFlags = compactDefined({
+                        ...(options?.heuristicFeatureFlags || {}),
+                        hasGeese: (options?.heuristicFeatureFlags?.hasGeese !== undefined) ? !!options.heuristicFeatureFlags.hasGeese : ((l.gooseSet?.size || 0) > 0),
+                        hasFlippingFilters: (options?.heuristicFeatureFlags?.hasFlippingFilters !== undefined) ? !!options.heuristicFeatureFlags.hasFlippingFilters : ((l.flippingFilterMap?.size || 0) > 0),
+                        hasFalseGoals: (options?.heuristicFeatureFlags?.hasFalseGoals !== undefined) ? !!options.heuristicFeatureFlags.hasFalseGoals : ((l.falseGoalKeys?.size || 0) > 0),
+                        highReqInt: (options?.heuristicFeatureFlags?.highReqInt !== undefined) ? !!options.heuristicFeatureFlags.highReqInt : ((Number(l.reqInt) || 0) >= 3)
+                    });
                     const commitmentHorizon = Math.max(0, Number(state.commitmentHorizon) || 0);
                     const commitmentWindow = commitmentHorizon > 0 && depth <= commitmentHorizon;
                     const prevKey = state.path.length >= 2 ? state.path[state.path.length - 2] : -1;
@@ -3713,6 +3720,7 @@
                         }
 
                         const nextGoalDist = distMap.get(nk) ?? Infinity;
+                        const hardConstraintImproved = nextObjectiveGap < currentObjectiveGap;
                         const objectiveImproved = nextObjectiveGap < currentObjectiveGap;
                         const goalAggressive = Number.isFinite(currentGoalDist) && Number.isFinite(nextGoalDist) && nextGoalDist < currentGoalDist;
                         const knotImproved = !!(activeKnotTarget?.candidate?.distMap instanceof Map) &&
@@ -3839,6 +3847,68 @@
                         if (policyName === 'knotBuilder' && activePhase !== 'finish' && remainsObligations) {
                             if (!projectedRevisit && nextInKnot) score -= 14;
                             if (projectedRevisit && !nextInKnot) score += 14;
+                        }
+
+                        // Targeted cohort heuristic: penalize trajectories that tighten goose hazard conflict unless they help hard constraints.
+                        if (heuristicFeatureFlags.hasGeese && l.gooseSet?.size > 0) {
+                            const nearestGooseDist = (key) => {
+                                const kx = key & 0xFFFF;
+                                const ky = key >> 16;
+                                let best = Infinity;
+                                for (const gooseKey of l.gooseSet) {
+                                    const gx = gooseKey & 0xFFFF;
+                                    const gy = gooseKey >> 16;
+                                    const d = Math.abs(kx - gx) + Math.abs(ky - gy);
+                                    if (d < best) best = d;
+                                }
+                                return best;
+                            };
+                            const gooseNow = nearestGooseDist(k);
+                            const gooseNext = nearestGooseDist(nk);
+                            if (Number.isFinite(gooseNext)) {
+                                let hazardPenalty = 0;
+                                if (gooseNext <= 2) hazardPenalty += (gooseNext === 0 ? 44 : (gooseNext === 1 ? 30 : 16));
+                                if (Number.isFinite(gooseNow) && gooseNext < gooseNow) hazardPenalty += 12 + ((gooseNow - gooseNext) * 4);
+                                if (hardConstraintImproved) hazardPenalty = Math.floor(hazardPenalty * 0.45);
+                                score += hazardPenalty;
+                                pushDriver('gooseRisk', gooseNext, hazardPenalty);
+                            }
+                        }
+
+                        // Targeted cohort heuristic: postpone reversible filter churn unless it unlocks hard constraints.
+                        if (heuristicFeatureFlags.hasFlippingFilters && l.flippingFilterMap?.has(nk) && !state.crossedFlippers?.has(nk)) {
+                            let flipperPenalty = 14;
+                            if (activePhase === 'harvest' || activePhase === 'transition') flipperPenalty += 10;
+                            if (!hardConstraintImproved) flipperPenalty += 14;
+                            else flipperPenalty = Math.floor(flipperPenalty * 0.5);
+                            score += flipperPenalty;
+                            pushDriver('flipperChurn', 1, flipperPenalty);
+                        }
+
+                        // Targeted cohort heuristic: reduce ambiguity near false goals unless hard constraints get better.
+                        if (heuristicFeatureFlags.hasFalseGoals && l.falseGoalKeys?.size > 0) {
+                            const nearestFalseGoalDist = (key) => {
+                                const kx = key & 0xFFFF;
+                                const ky = key >> 16;
+                                let best = Infinity;
+                                for (const fgKey of l.falseGoalKeys) {
+                                    const fx = fgKey & 0xFFFF;
+                                    const fy = fgKey >> 16;
+                                    const d = Math.abs(kx - fx) + Math.abs(ky - fy);
+                                    if (d < best) best = d;
+                                }
+                                return best;
+                            };
+                            const falseNow = nearestFalseGoalDist(k);
+                            const falseNext = nearestFalseGoalDist(nk);
+                            if (Number.isFinite(falseNext)) {
+                                let ambiguityPenalty = 0;
+                                if (falseNext <= 2) ambiguityPenalty += (falseNext === 0 ? 36 : (falseNext === 1 ? 22 : 12));
+                                if (Number.isFinite(falseNow) && falseNext < falseNow) ambiguityPenalty += 8;
+                                if (hardConstraintImproved) ambiguityPenalty = Math.floor(ambiguityPenalty * 0.35);
+                                score += ambiguityPenalty;
+                                pushDriver('falseGoalAmbiguity', falseNext, ambiguityPenalty);
+                            }
                         }
 
                         const earlySlack = rSteps - (nextGoalDist ?? 999);
@@ -5941,6 +6011,28 @@
             });
             return out;
         };
+        const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {
+            const reqInt = Math.max(0, Number(level?.reqInt) || 0);
+            const highReqIntThreshold = Math.max(3, Number(context?.highReqIntThreshold) || 3);
+            const attemptOrdinalRaw = Number(context?.attemptOrdinal);
+            const attemptOrdinal = Number.isFinite(attemptOrdinalRaw) ? Math.max(1, Math.floor(attemptOrdinalRaw)) : null;
+            return compactDefined({
+                hasGeese: (level?.gooseSet?.size || 0) > 0,
+                hasFlippingFilters: (level?.flippingFilterMap?.size || 0) > 0,
+                hasFalseGoals: (level?.falseGoalKeys?.size || 0) > 0,
+                highReqInt: reqInt >= highReqIntThreshold,
+                reqInt,
+                highReqIntThreshold,
+                attemptOrdinal
+            });
+        };
+        const toHeuristicFeatureSignature = (flags = {}) => {
+            const hasGeese = !!flags?.hasGeese;
+            const hasFlippingFilters = !!flags?.hasFlippingFilters;
+            const hasFalseGoals = !!flags?.hasFalseGoals;
+            const highReqInt = !!flags?.highReqInt;
+            return `G${hasGeese ? 1 : 0}|F${hasFlippingFilters ? 1 : 0}|X${hasFalseGoals ? 1 : 0}|I${highReqInt ? 1 : 0}`;
+        };
 
         const STRUCTURAL_CLASSIFIER_THRESHOLDS = {
             lowExpansionNodesUpper: 80,
@@ -6082,6 +6174,8 @@
             const summary = compactDefined({
                 attempt: options.attemptLabel || null,
                 variant: options.variant || null,
+                featureFlags: attempt?.heuristicFeatureFlags || options?.heuristicFeatureFlags || null,
+                featureSignature: attempt?.featureSignature || options?.featureSignature || null,
                 stage: Number.isFinite(attempt?.stage) ? attempt.stage : null,
                 status: options.status || attempt?.status || null,
                 rawStatus: attempt?.rawStatus || attempt?.status || null,
@@ -7440,6 +7534,8 @@
                 adaptiveOrderingPhase: adaptivePhase
             };
             const profile = opts.profile || level?.solverProfile || {};
+            const featureFlags = deriveHeuristicFeatureFlags(level, { attemptOrdinal: 1 });
+            const featureSignature = toHeuristicFeatureSignature(featureFlags);
             const boardArea = Number(profile?.boardArea) || (Number(level?.grid?.w) || 0) * (Number(level?.grid?.h) || 0);
             const mustCrossCount = Number(profile?.mustCrossCount) || Number(level?.mustCrossKeys?.length) || 0;
             const mandatoryPortalFamilyCount = Array.isArray(profile?.portalHints?.mandatoryFamilies) ? profile.portalHints.mandatoryFamilies.length : 0;
@@ -7459,7 +7555,7 @@
             if (!shouldDiversifyRootPass) {
                 const result = await this.runBaselineStage(level, budgetMs, merged);
                 result.orderingPolicy = policyCfg.policyName || policy;
-                result.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: (policyCfg.policyName || policy), phase: adaptivePhase, dirOrderVariant: policyCfg.dirOrderVariant, triggerProfile });
+                result.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: (policyCfg.policyName || policy), phase: adaptivePhase, dirOrderVariant: policyCfg.dirOrderVariant, triggerProfile, featureFlags, featureSignature });
                 return result;
             }
 
@@ -7523,7 +7619,7 @@
             const reserveBudget = Math.max(1, totalBudget - consumedBudget);
             const reserveResult = solvedResult || await this.runBaselineStage(level, reserveBudget, merged);
             const result = reserveResult || bestResult || { ok: false, status: 'error', solution: [], solutions: [], debug: {} };
-            const rootMoveScores = rootSummaries.map(s => ({ key: s.family, score: s.score, drivers: [{ label: s.policy, contribution: s.expansions || 0 }] }));
+            const rootMoveScores = rootSummaries.map(s => ({ key: s.family, score: s.score, drivers: [{ label: s.policy, contribution: s.expansions || 0 }, { label: `features:${featureSignature}`, contribution: Number((s.score || 0).toFixed(3)) }] }));
             result.rootMoveScores = Array.isArray(result.rootMoveScores) ? [...result.rootMoveScores, ...rootMoveScores].slice(0, 30) : rootMoveScores.slice(0, 30);
             result.rootSearchSummary = compactDefined({
                 ...(result.rootSearchSummary || makeRootSearchSummary(result?.debug || {}, buildSearchDiagnostics(result?.debug || {}, result?.status || 'unknown')) || {}),
@@ -7546,7 +7642,9 @@
                 phase: adaptivePhase,
                 dirOrderVariant: policyCfg.dirOrderVariant,
                 diversifiedRootPass: true,
-                triggerProfile
+                triggerProfile,
+                featureFlags,
+                featureSignature
             });
             return result;
         },
@@ -7858,6 +7956,11 @@
             };
 
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
+                const heuristicFeatureFlags = deriveHeuristicFeatureFlags(level, {
+                    attemptOrdinal: attemptOpts?.attemptOrdinal,
+                    highReqIntThreshold: attemptOpts?.highReqIntThreshold
+                });
+                const featureSignature = toHeuristicFeatureSignature(heuristicFeatureFlags);
                 const r = await PathfinderSolver.solve(level, {
                     timeLimit: attemptBudgetMs,
                     debug: true,
@@ -7880,6 +7983,8 @@
                     startGateArchetype: attemptOpts.policyProfile || controlPlane?.activeHypothesis?.archetype || 'harvestThenFinish',
                     commitmentPlan: attemptOpts.commitmentPlan || null,
                     memoStrictness: Number(attemptOpts.memoStrictness) || 1,
+                    heuristicFeatureFlags,
+                    featureSignature,
                     controlPlane,
                     contradictionRecoveryMode: !!opts.contradictionRecovery,
                     assertKnownSolvableBounds: true
@@ -7895,6 +8000,8 @@
                 debug.regionCrossingModel = attemptOpts.regionCrossingModel || null;
                 debug.strategySubtype = profile?.strategySubtype || null;
                 debug.strategySubtypeSignals = profile?.strategySubtypeSignals || null;
+                debug.heuristicFeatureFlags = heuristicFeatureFlags;
+                debug.featureSignature = featureSignature;
                 const status = r?.ok && solution.length > 0
                     ? 'solved'
                     : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error'));
@@ -7936,7 +8043,9 @@
                             phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
                             label: attemptOpts.label || null,
                             structuralTemplate: attemptOpts.structuralTemplate || null,
-                            policyProfile: attemptOpts.policyProfile || 'standard'
+                            policyProfile: attemptOpts.policyProfile || 'standard',
+                            heuristicFeatureFlags,
+                            featureSignature
                         };
                     }
                 }
@@ -7952,7 +8061,9 @@
                     phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
                     label: attemptOpts.label || null,
                     structuralTemplate: attemptOpts.structuralTemplate || null,
-                    policyProfile: attemptOpts.policyProfile || 'standard'
+                    policyProfile: attemptOpts.policyProfile || 'standard',
+                    heuristicFeatureFlags,
+                    featureSignature
                 };
             };
             const attempts = buildAttemptPlan();
@@ -7969,6 +8080,7 @@
             };
             for (let i = 0; i < attempts.length; i++) {
                 const attempt = attempts[i];
+                attempt.attemptOrdinal = i + 1;
                 if (attempt.label === 'template-best-focus') {
                     if (!bestTemplate || bestTemplateScore < 0.2) {
                         templateDiagnostics.reallocatedBudgetMs += attempt.budgetMs;
@@ -8013,6 +8125,8 @@
                 }
                 attemptsUsed.push({
                     label: attempt.label || null,
+                    featureFlags: attemptResult?.heuristicFeatureFlags || null,
+                    featureSignature: attemptResult?.featureSignature || null,
                     status: attemptResult.status,
                     budgetMs: attempt.budgetMs,
                     scoringMode: attempt.scoringMode,
@@ -13406,7 +13520,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -13462,6 +13576,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             ];
             let finalAttempt = null;
             let finalHintResult = null;
+            const levelFeatureFlags = deriveHeuristicFeatureFlags(normalized, { attemptOrdinal: 1 });
+            const levelFeatureSignature = toHeuristicFeatureSignature(levelFeatureFlags);
+            levelEntry.newHint.featureFlags = levelFeatureFlags;
+            levelEntry.newHint.featureSignature = levelFeatureSignature;
             const abortSignatureCounts = new Map();
             let runPreExpansionRescuePass = false;
             try {
@@ -13625,6 +13743,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             levelEntry.newHint.timeMs = Math.round(performance.now() - t0);
             if (levelEntry.newHint.status === 'success') progress.newHint.success++; else progress.newHint.failure++;
+            if (!progress.newHint.byFeatureSignature) progress.newHint.byFeatureSignature = {};
+            const bucket = progress.newHint.byFeatureSignature[levelFeatureSignature] || { featureFlags: levelFeatureFlags, success: 0, failure: 0, total: 0 };
+            bucket.total++;
+            if (levelEntry.newHint.status === 'success') bucket.success++; else bucket.failure++;
+            progress.newHint.byFeatureSignature[levelFeatureSignature] = bucket;
         };
 
         const runBombSearchCheck = async (normalized, levelEntry, progress) => {
@@ -13673,7 +13796,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             auditLastRunType = runType;
             auditReport = [];
             const rawLevels = APP.LevelUtils.getRawLevels();
-            auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0 }, bombs: { success: 0, noneFound: 0, error: 0 }, disableLegacyFallback: getAuditDisableLegacyFallback() };
+            auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0, byFeatureSignature: {} }, bombs: { success: 0, noneFound: 0, error: 0 }, disableLegacyFallback: getAuditDisableLegacyFallback() };
             renderAuditReport();
 
             const stateSnap = {
