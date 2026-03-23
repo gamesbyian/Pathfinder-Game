@@ -1823,44 +1823,11 @@
                     if (nodes.length === 0) return { bound: l.distMapForSolver.get(key) ?? Infinity, method: 'goalOnly', k: 0 };
                     return { bound: this._mstBoundFromNodes(nodes, l.mustPassPairDist, l.mustPassToGoalDist, nearest), method: 'mst', k: nodes.length };
                 },
-                _encodeMustCrossCounts(state) {
+                _encodeMustCrossCountsCompact(state) {
                     if (!state.mustCrossCounts || state.mustCrossCounts.length === 0) return 0n;
                     let code = 0n;
-                    for (let i = 0; i < state.mustCrossCounts.length; i++) {
-                        code = code * 3n + BigInt(state.mustCrossCounts[i]);
-                    }
+                    for (let i = 0; i < state.mustCrossCounts.length; i++) code = code * 3n + BigInt(state.mustCrossCounts[i]);
                     return code;
-                },
-                _encodeCounts(state) {
-                    if (!state?.counts || state.counts.size === 0) return '';
-                    const entries = [];
-                    state.counts.forEach((count, key) => {
-                        if (count > 0) entries.push([key, count]);
-                    });
-                    entries.sort((a, b) => a[0] - b[0]);
-                    return entries.map(([key, count]) => `${key}:${count}`).join(',');
-                },
-                _encodeUsage(state) {
-                    if (!state?.usage || state.usage.size === 0) return '';
-                    const entries = [];
-                    state.usage.forEach((usage, key) => {
-                        if (!usage) return;
-                        const h = usage.h ? 1 : 0;
-                        const v = usage.v ? 1 : 0;
-                        const encoded = h + (v << 1);
-                        if (encoded > 0) entries.push([key, encoded]);
-                    });
-                    entries.sort((a, b) => a[0] - b[0]);
-                    return entries.map(([key, usage]) => `${key}:${usage}`).join(',');
-                },
-                _encodePortalReentries(state) {
-                    if (!state?.portalReentryCounts || state.portalReentryCounts.length === 0) return '';
-                    const out = [];
-                    for (let i = 0; i < state.portalReentryCounts.length; i++) {
-                        const c = state.portalReentryCounts[i] || 0;
-                        if (c > 0) out.push(`${i}:${c}`);
-                    }
-                    return out.join(',');
                 },
                 _portalForced(state, l) {
                     const k = state.path[state.path.length - 1];
@@ -1884,6 +1851,91 @@
                     if (reentries >= probationReentries) return 'probation';
                     return 'uncommitted';
                 },
+                _derivePortalLockCode(state, options = {}) {
+                    const lockState = this._derivePortalLockState(state, options);
+                    if (lockState === 'locked') return 2;
+                    if (lockState === 'probation') return 1;
+                    return 0;
+                },
+                _mixHash32(seed, value) {
+                    let h = (seed ^ (value >>> 0)) >>> 0;
+                    h = Math.imul(h ^ (h >>> 16), 0x85ebca6b) >>> 0;
+                    h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35) >>> 0;
+                    return (h ^ (h >>> 16)) >>> 0;
+                },
+                _mixHashBigInt(seed, value) {
+                    if (typeof value !== 'bigint') return this._mixHash32(seed, Number(value) | 0);
+                    let h = seed >>> 0;
+                    let v = value;
+                    while (v !== 0n) {
+                        h = this._mixHash32(h, Number(v & 0xFFFFFFFFn));
+                        v >>= 32n;
+                    }
+                    return this._mixHash32(h, Number((value >> 61n) & 0x7n));
+                },
+                _buildStateHashTuple(state, l, realLen, options = {}) {
+                    const headKey = state.path[state.path.length - 1] | 0;
+                    const portalFamily = Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1;
+                    const portalLockCode = this._derivePortalLockCode(state, options);
+                    const mustCrossCompact = this._encodeMustCrossCountsCompact(state);
+                    let h0 = 0x811c9dc5;
+                    let h1 = 0x9e3779b9;
+                    h0 = this._mixHash32(h0, headKey);
+                    h1 = this._mixHash32(h1, realLen | 0);
+                    h0 = this._mixHash32(h0, state.ints | 0);
+                    h1 = this._mixHash32(h1, this._portalForced(state, l) ? 1 : 0);
+                    h0 = this._mixHashBigInt(h0, state.mustMask);
+                    h1 = this._mixHashBigInt(h1, state.mustCrossMask);
+                    h0 = this._mixHashBigInt(h0, mustCrossCompact);
+                    h1 = this._mixHash32(h1, portalFamily | 0);
+                    h0 = this._mixHash32(h0, portalLockCode);
+                    h1 = this._mixHash32(h1, Number.isFinite(state.flipParity) ? state.flipParity : 0);
+                    h0 = this._mixHashBigInt(h0, state.flipperCrossMask);
+                    h1 = this._mixHashBigInt(h1, state.flipperParityAtCrossMask);
+                    return [h0 >>> 0, h1 >>> 0];
+                },
+                _buildStrictStateSignature(state, l, realLen, options = {}) {
+                    const base = StateSignature.makeKey(state, { level: l, stepsUsed: realLen, falseGoalPolicy: options.falseGoalPolicy || '' }) || '';
+                    return [
+                        base,
+                        Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1,
+                        Number.isFinite(state.portalSelectedEntry) ? state.portalSelectedEntry : -1,
+                        Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1,
+                        this._derivePortalLockState(state, options),
+                        options?.orderingPolicy || 'default'
+                    ].join('|');
+                },
+                _refreshStateHashState(state, l, realLen, options = {}, debugStats = null) {
+                    const perfNow = () => (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
+                    const t0 = perfNow();
+                    const [h0, h1] = this._buildStateHashTuple(state, l, realLen, options);
+                    const dtHash = perfNow() - t0;
+                    state.memoHash0 = h0;
+                    state.memoHash1 = h1;
+                    state.memoHashKey = `${h0.toString(16).padStart(8, '0')}:${h1.toString(16).padStart(8, '0')}`;
+                    if (debugStats) {
+                        debugStats.signatureBuildCount = (debugStats.signatureBuildCount || 0) + 1;
+                        debugStats.signatureBuildMs = (debugStats.signatureBuildMs || 0) + dtHash;
+                    }
+                    const strictMode = !!(options?.debugStrictMemoKey || window.__PF_SOLVER_STRICT_MEMO_KEY__);
+                    if (strictMode) {
+                        const tStrict0 = perfNow();
+                        const strictKey = this._buildStrictStateSignature(state, l, realLen, options);
+                        const dtStrict = perfNow() - tStrict0;
+                        state.memoStrictKey = strictKey;
+                        if (debugStats) {
+                            debugStats.signatureStrictBuildCount = (debugStats.signatureStrictBuildCount || 0) + 1;
+                            debugStats.signatureStrictBuildMs = (debugStats.signatureStrictBuildMs || 0) + dtStrict;
+                            if (!debugStats._strictMemoKeyMap) debugStats._strictMemoKeyMap = new Map();
+                            const prev = debugStats._strictMemoKeyMap.get(state.memoHashKey);
+                            if (prev && prev !== strictKey) debugStats.memoStrictCollisions = (debugStats.memoStrictCollisions || 0) + 1;
+                            else if (!prev) debugStats._strictMemoKeyMap.set(state.memoHashKey, strictKey);
+                        }
+                    } else {
+                        state.memoStrictKey = '';
+                    }
+                    return state.memoHashKey;
+                },
                 _portalTransitionContext(fromKey, toKey, state, l) {
                     const family = l.portalFamilyByEntry ? l.portalFamilyByEntry.get(fromKey) : undefined;
                     if (family === undefined || family === null || !Number.isFinite(family)) return null;
@@ -1895,58 +1947,15 @@
                         progressBefore: this._portalProgressValue(state)
                     };
                 },
-                _stateSignature(state, l, realLen, options = {}) {
-                    const base = StateSignature.makeKey(state, { level: l, stepsUsed: realLen, falseGoalPolicy: options.falseGoalPolicy || '' }) || '';
-                    const crossCounts = this._encodeMustCrossCounts(state).toString();
-                    const countsSig = this._encodeCounts(state);
-                    const usageSig = this._encodeUsage(state);
-                    const portalSig = this._encodePortalReentries(state);
-                    const posKey = state.path[state.path.length - 1];
-                    const portalForced = this._portalForced(state, l);
-                    const commitmentSig = Number.isFinite(state.commitmentStepsLeft) ? state.commitmentStepsLeft : 0;
-                    const commitmentDirSig = Number.isFinite(state.commitmentDir) ? state.commitmentDir : -1;
-                    const commitmentAxisSig = Number.isFinite(state.commitmentAxis) ? state.commitmentAxis : -1;
-                    let knotSig = Number.isFinite(state.knotShapeProgress) ? state.knotShapeProgress : 0;
-                    if (!Number.isFinite(knotSig) || knotSig === 0) {
-                        const uniques = new Set(state.path || []);
-                        knotSig = Math.max(0, (state.ints || 0) * 31 + Math.min(127, uniques.size));
-                    }
-                    let perimeterSig = Number.isFinite(state.perimeterSpanSignature) ? state.perimeterSpanSignature : 0;
-                    if (!Number.isFinite(perimeterSig) || perimeterSig === 0) {
-                        let per = 0;
-                        for (let i = 0; i < state.path.length; i++) {
-                            const pk = state.path[i];
-                            const px = pk & 0xFFFF;
-                            const py = pk >> 16;
-                            if (px <= 0 || py <= 0 || px >= (l.grid.w - 1) || py >= (l.grid.h - 1)) per++;
-                        }
-                        perimeterSig = per;
-                    }
-                    return [
-                        base,
-                        crossCounts,
-                        countsSig,
-                        usageSig,
-                        portalSig,
-                        Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1,
-                        Number.isFinite(state.portalSelectedEntry) ? state.portalSelectedEntry : -1,
-                        Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1,
-                        this._derivePortalLockState(state, options),
-                        commitmentSig,
-                        commitmentDirSig,
-                        commitmentAxisSig,
-                        knotSig,
-                        perimeterSig,
-                        options?.orderingPolicy || 'default'
-                    ].join('|');
-                },
                 _dominancePruneOrStore(map, key, candidate, stats = null) {
                     if (!map || key === null || key === undefined || !candidate) return false;
+                    if (stats) stats.dominanceMemoChecks = (stats.dominanceMemoChecks || 0) + 1;
                     const prev = map.get(key);
                     const strictness = Math.max(0.35, Math.min(1.8, Number(candidate?.dominanceStrictness) || 1));
                     const stepSlack = Math.max(0, Math.round((strictness - 1) * 3));
                     const intersectionSlack = strictness >= 1.25 ? 0 : 1;
                     if (prev) {
+                        if (stats) stats.dominanceMemoHits = (stats.dominanceMemoHits || 0) + 1;
                         if (candidate.intersections > (prev.bestIntersections + intersectionSlack)) {
                             if (stats) stats.memoPrunes = (stats.memoPrunes || 0) + 1;
                             return true;
@@ -2132,7 +2141,7 @@
                     state.undoLog[c + 2] = prev;
                     state.logCursor = c + 3;
                 },
-                _pushStateZeroAlloc(s, k, isJump, l) {
+                _pushStateZeroAlloc(s, k, isJump, l, options = null, debugStats = null) {
                     const LOG_COUNTS = 1;
                     const LOG_USAGE = 2;
                     const LOG_INTS = 3;
@@ -2258,9 +2267,11 @@
                         s.flipCount++;
                         s.flipParity = s.flipCount % 2;
                     }
+                    const realLen = s.path.length - 1 - s.jumpCount;
+                    this._refreshStateHashState(s, l, realLen, options || {}, debugStats);
                     return startLogCursor;
                 },
-                _popStateZeroAlloc(s, logMark) {
+                _popStateZeroAlloc(s, logMark, l = null, options = null, debugStats = null) {
                     const LOG_COUNTS = 1;
                     const LOG_USAGE = 2;
                     const LOG_INTS = 3;
@@ -2315,6 +2326,10 @@
                         else if (arrayId === LOG_PORTAL_LAST_PROGRESS) s.portalLastProgressValue = prev;
                         else if (arrayId === LOG_PORTAL_LAST_FAMILY) s.portalLastFamily = prev;
                         else if (arrayId === LOG_PORTAL_LAST_REGION) s.portalLastRegion = prev;
+                    }
+                    if (l) {
+                        const realLen = s.path.length - 1 - s.jumpCount;
+                        this._refreshStateHashState(s, l, realLen, options || {}, debugStats);
                     }
                 },
                 _mustCrossExtraVisitsLowerBound(mask, crossNeed, l) {
@@ -3761,7 +3776,11 @@
                         commitmentDir: -1,
                         commitmentAxis: -1,
                         knotShapeProgress: 0,
-                        perimeterSpanSignature: 0
+                        perimeterSpanSignature: 0,
+                        memoHash0: 0,
+                        memoHash1: 0,
+                        memoHashKey: '',
+                        memoStrictKey: ''
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -3782,6 +3801,7 @@
                         state.flipCount++;
                         state.flipParity = state.flipCount % 2;
                     }
+                    this._refreshStateHashState(state, l, 0, options, debugStats);
                     const failMemo = useFailMemo ? new Map() : null;
                     const dominanceMemo = new Map();
                     const recordPhaseAttempt = (status) => {
@@ -3799,7 +3819,7 @@
                             gateKey: startKey,
                             startNeighborsCount: startNeighbors.length,
                             startNeighborKeys: startNeighbors.slice(0, 12),
-                            startStateSig: this._stateSignature(state, l, 0, options),
+                            startStateSig: state.memoHashKey,
                             forcedPortalAtStart: startPortalForced,
                             startOnPortal: !!startPortal,
                             startOnFlipper: !!l.flippingFilterMap.has(startKey),
@@ -3855,7 +3875,7 @@
                             }
                         });
                     }
-                    const startSig = this._stateSignature(state, l, 0, options);
+                    const startSig = state.memoHashKey;
                     this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0 }, debugStats);
                     const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig }];
                     let steps = 0;
@@ -3882,7 +3902,7 @@
                         if (top.neighbors.length === 0) {
                             if (debugStats) debugStats.prune.deadEnd++;
                             if (useFailMemo) failMemo.set(top.sig, true);
-                            this._popStateZeroAlloc(state, top.log);
+                            this._popStateZeroAlloc(state, top.log, l, options, debugStats);
                             stack.pop();
                             continue;
                         }
@@ -3890,11 +3910,11 @@
                         if (debugStats) debugStats.nodesExpanded++;
                         const topPortal = APP.LevelUtils.resolvePortal(l, top.k);
                         const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
-                        const transLog = this._pushStateZeroAlloc(state, nextKey, isP, l);
+                        const transLog = this._pushStateZeroAlloc(state, nextKey, isP, l, options, debugStats);
                         const lastK = state.path[state.path.length - 1];
                         const hazard = this._hazardDecisionForKey(nextKey, state, l, options);
                         if (!hazard.allowed) {
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         const realLen = state.path.length - 1 - state.isJump.size;
@@ -3902,12 +3922,12 @@
                         if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
                         if (realLen > l.reqLen) {
                             if (debugStats) debugStats.prune.lenOverflow++;
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         if (state.ints > l.reqInt) {
                             if (debugStats) debugStats.prune.intsOverflow++;
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         if (state.ints < l.reqInt && state.mustCrossCounts) {
@@ -3920,7 +3940,7 @@
                             }
                             if (state.ints + guaranteedInts > l.reqInt) {
                                 if (debugStats) debugStats.prune.intsOverflow++;
-                                this._popStateZeroAlloc(state, transLog);
+                                this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                                 continue;
                             }
                         }
@@ -3929,14 +3949,14 @@
                         const maxFutureInts = l.portalMap.size > 0 ? rSteps * 2 : rSteps;
                         if ((l.reqInt - state.ints) > maxFutureInts) {
                             if (debugStats) debugStats.prune.intsOverflow++;
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         const crossNeeds = this._crossNeeds(state);
                         if (crossNeeds > rSteps) {
                             if (debugStats) debugStats.prune.mustCrossBound++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustCrossNeed', `crossNeeds=${crossNeeds} rSteps=${rSteps}`);
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         if (!disableMustPassBound && state.mustMask !== 0n) {
@@ -3945,7 +3965,7 @@
                             if (mustBound === Infinity || mustBound > rSteps) {
                                 if (debugStats) debugStats.prune.mustPassBound++;
                                 if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${mustBound} rSteps=${rSteps} k=${mustDetails.k} method=${mustDetails.method}`);
-                                this._popStateZeroAlloc(state, transLog);
+                                this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                                 continue;
                             }
                         }
@@ -3957,7 +3977,7 @@
                                     const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeeds, l);
                                     this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound === Infinity ? 'inf' : crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeeds} outstandingNodes=${outstandingNodes}`);
                                 }
-                                this._popStateZeroAlloc(state, transLog);
+                                this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                                 continue;
                             }
                         }
@@ -3968,14 +3988,14 @@
                                     return { path: state.path.slice(), len: realLen };
                                 }
                             }
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         const minRem = distMap.get(lastK) || Infinity;
                         if (!disabledPruneSet.has('distance') && !disabledPruneSet.has('minRemOverflow') && realLen + minRem > l.reqLen) {
                             if (debugStats) debugStats.prune.minRemOverflow++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'minRemOverflow', `minRem=${minRem} realLen=${realLen} reqLen=${l.reqLen}`);
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         const parityCurrent = ((lastK & 0xFFFF) + (lastK >> 16)) % 2;
@@ -3994,22 +4014,28 @@
                             }
                             if (!canBreak) {
                                 if (debugStats) debugStats.prune.parity++;
-                                this._popStateZeroAlloc(state, transLog);
+                                this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                                 continue;
                             }
                         }
-                        let stateSig = this._stateSignature(state, l, realLen, options);
+                        const stateSig = state.memoHashKey;
                         if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1 }, debugStats)) {
                             if (realLen <= 1 && debugStats) {
                                 debugStats.rootCandidatesSuppressedByDominance = (debugStats.rootCandidatesSuppressedByDominance || 0) + 1;
                                 const dbg = ensureDepthZeroDebug(debugStats);
                                 if (dbg && dbg.rootSuppressionLog.length < 20) dbg.rootSuppressionLog.push({ type: 'dominance', key: nextKey, depth: realLen, reason: 'dominance-prune' });
                             }
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
+                        if (useFailMemo) {
+                            if (debugStats) debugStats.failMemoChecks = (debugStats.failMemoChecks || 0) + 1;
+                        }
                         if (useFailMemo && failMemo.has(stateSig)) {
-                            if (debugStats) debugStats.memoHits = (debugStats.memoHits || 0) + 1;
+                            if (debugStats) {
+                                debugStats.memoHits = (debugStats.memoHits || 0) + 1;
+                                debugStats.failMemoHits = (debugStats.failMemoHits || 0) + 1;
+                            }
                             if (debugStats) {
                                 debugStats.prune.failedStateHit++;
                                 debugStats.prune.failedStateHitSignature = (debugStats.prune.failedStateHitSignature || 0) + 1;
@@ -4019,31 +4045,39 @@
                                     if (dbg && dbg.rootSuppressionLog.length < 20) dbg.rootSuppressionLog.push({ type: 'memo', key: nextKey, depth: realLen, reason: 'failed-state-hit' });
                                 }
                             }
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         if (hazard.terminal) {
                             if (debugStats) debugStats.prune.deadEnd++;
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         const shouldRunConnectivityPrune = !disabledPruneSet.has('connectivity') && l.mustCrossKeys.length === 0;
                         if (shouldRunConnectivityPrune) {
                             if (!this._checkTopology(state, lastK, rSteps, l)) {
                                 if (debugStats) debugStats.prune.topology = (debugStats.prune.topology || 0) + 1;
-                                this._popStateZeroAlloc(state, transLog);
+                                this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                                 continue;
                             }
                         }
                         if (!disabledPruneSet.has('connectivity') && !this._floodFillReachable(lastK, state, l)) {
                             if (debugStats) debugStats.prune.deadEnd++;
-                            this._popStateZeroAlloc(state, transLog);
+                            this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
                         const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
                         stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig });
                     }
-                    if (debugStats) debugStats.memoSize = useFailMemo ? failMemo.size : 0;
+                    if (debugStats) {
+                        debugStats.memoSize = useFailMemo ? failMemo.size : 0;
+                        const domChecks = debugStats.dominanceMemoChecks || 0;
+                        const domHits = debugStats.dominanceMemoHits || 0;
+                        const failChecks = debugStats.failMemoChecks || 0;
+                        const failHits = debugStats.failMemoHits || 0;
+                        debugStats.dominanceMemoHitRate = domChecks > 0 ? domHits / domChecks : 0;
+                        debugStats.failMemoHitRate = failChecks > 0 ? failHits / failChecks : 0;
+                    }
                     if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
                         setDepthZeroReason(debugStats, startNeighbors.length === 0 ? 'no-start-neighbors' : 'returned-without-expansion', {
                             emptyStartNeighbors: startNeighbors.length === 0,
@@ -8374,6 +8408,17 @@
                     rootCandidatesSuppressedByMemo: 0,
                     rootCandidatesSuppressedByDominance: 0,
                     rootCandidatesExpanded: 0,
+                    signatureBuildCount: 0,
+                    signatureBuildMs: 0,
+                    signatureStrictBuildCount: 0,
+                    signatureStrictBuildMs: 0,
+                    memoStrictCollisions: 0,
+                    failMemoChecks: 0,
+                    failMemoHits: 0,
+                    dominanceMemoChecks: 0,
+                    dominanceMemoHits: 0,
+                    failMemoHitRate: 0,
+                    dominanceMemoHitRate: 0,
                     rootMoveOrder: [],
                     rootMoveScores: [],
                     rootPolicySummary: null,
@@ -8715,7 +8760,8 @@
                 const prune = debug?.prune || {};
                 const lines = [
                     `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
-                    `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
+                    `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} failMemoHitRate=${((debug?.failMemoHitRate || 0) * 100).toFixed(1)}% dominanceHitRate=${((debug?.dominanceMemoHitRate || 0) * 100).toFixed(1)}% disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
+                    `sigBuild: hash=${debug?.signatureBuildCount || 0} calls/${(debug?.signatureBuildMs || 0).toFixed(2)}ms strict=${debug?.signatureStrictBuildCount || 0} calls/${(debug?.signatureStrictBuildMs || 0).toFixed(2)}ms collisions=${debug?.memoStrictCollisions || 0}`,
                     `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`,
                     `antiDither: ditherPenaltyHits=${debug?.ditherPenaltyHits || 0} earlyGoalApproachBlocked=${debug?.earlyGoalApproachBlocked || 0}`
                 ];
