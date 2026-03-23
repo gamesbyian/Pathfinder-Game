@@ -2948,6 +2948,7 @@
                     const { w, h } = l.grid;
                     const p = APP.LevelUtils.UNPACK(k);
                     const depth = Math.max(0, state.path.length - 1);
+                    const assertKnownSolvableBounds = !!options?.assertKnownSolvableBounds;
                     const debugNeighborTraceEnabled = !!debugStats
                         && (depth <= 1 || !!options?.enableLowExpansionProbe);
                     const disabledPruneSet = new Set(options?.disabledPrunes || []);
@@ -3246,7 +3247,8 @@
                         const ok = startNeighborBoundSanity.satisfiedBranches > 0;
                         if (!ok) {
                             const msg = `[PortalBoundAssert] Level 1 start-neighbor sanity failed: no legal branch satisfied portal-aware bound. legal=${startNeighborBoundSanity.legalBranches}`;
-                            if (APP.State?.ENGINE?.isDevMode) throw new Error(msg);
+                            const shouldThrow = !!APP.State?.ENGINE?.isDevMode && !options?.auditMode;
+                            if (shouldThrow) throw new Error(msg);
                             console.warn(msg);
                         }
                     }
