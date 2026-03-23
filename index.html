@@ -3978,9 +3978,8 @@
                     options.hazardPolicy = options.hazardPolicy || 'forbid';
                     const disabledPruneSet = new Set(options.disabledPrunes || []);
                     if (window.__PF_DEBUG_BYPASS_CONNECTIVITY_PRUNE__) disabledPruneSet.add('connectivity');
+                    options.disabledPrunes = Array.from(disabledPruneSet);
                     const useFailMemo = options.useFailMemo !== false && disabledPruneSet.size === 0;
-                    const disableMustPassBound = disabledPruneSet.has('mustPassBound');
-                    const disableMustCrossBound = disabledPruneSet.has('mustCrossBound');
                     const idxToKey = new Int32Array(keyCount);
                     for (let y = 0; y < l.grid.h; y++) {
                         const rowBase = y * cols;
@@ -4083,7 +4082,146 @@
                         if (!Array.isArray(debugStats.phaseAttempts)) debugStats.phaseAttempts = [];
                         debugStats.phaseAttempts.push({ gateKey: startKey, status, timeline: (state.phaseTimeline || []).slice() });
                     };
+                    const adaptationState = {
+                        startedObjectives: Math.max(0, this._objectiveRemainingCount(state, l)),
+                        lastNodes: 0,
+                        lastBranchFactor: null,
+                        currentProfile: {
+                            memoStrictness: Number(options?.memoStrictness) || 1,
+                            disabledPrunes: Array.isArray(options?.disabledPrunes) ? options.disabledPrunes.slice() : [],
+                            dirOrderVariant: options?.dirOrderVariant || 'default',
+                            portalBiasMode: options?.portalBiasMode || 'adaptiveMustCross'
+                        },
+                        pendingGuardrail: null
+                    };
+                    const pushAdaptationEvent = (event = {}) => {
+                        if (!debugStats) return;
+                        if (!Array.isArray(debugStats.adaptationTimeline)) debugStats.adaptationTimeline = [];
+                        debugStats.adaptationTimeline.push({
+                            atNodes: Number(debugStats.nodesExpanded) || 0,
+                            atLen: Math.max(0, state.path.length - 1 - state.jumpCount),
+                            ...event
+                        });
+                    };
+                    const syncAdaptiveProfileToOptions = () => {
+                        options.memoStrictness = adaptationState.currentProfile.memoStrictness;
+                        options.disabledPrunes = adaptationState.currentProfile.disabledPrunes.slice();
+                        options.dirOrderVariant = adaptationState.currentProfile.dirOrderVariant;
+                        options.portalBiasMode = adaptationState.currentProfile.portalBiasMode;
+                    };
+                    const maybeEmitAdaptiveTelemetry = (phaseInfo = null) => {
+                        const cp = options?.controlPlane;
+                        if (!cp) return;
+                        const nodesExpanded = Math.max(0, Number(debugStats?.nodesExpanded) || 0);
+                        if (nodesExpanded < 24) return;
+                        if ((nodesExpanded - adaptationState.lastNodes) < 64) return;
+                        const branchesTried = Math.max(0, Number(debugStats?.branchesGenerated) || 0);
+                        const branchFactor = nodesExpanded > 0 ? (branchesTried / nodesExpanded) : 0;
+                        const branchFactorTrend = adaptationState.lastBranchFactor === null ? 0 : (branchFactor - adaptationState.lastBranchFactor);
+                        const memoChecks = Math.max(1, (Number(debugStats?.failMemoChecks) || 0) + (Number(debugStats?.dominanceMemoChecks) || 0));
+                        const memoHitSaturation = Math.max(0, Math.min(1, ((Number(debugStats?.memoHits) || 0) + (Number(debugStats?.dominanceMemoHits) || 0)) / memoChecks));
+                        const phaseDerived = phaseInfo || this._deriveSolverPhase(state, state.path[state.path.length - 1], l, distMap);
+                        const progress = Math.max(0, Math.min(1, Number(phaseDerived?.progressRatio) || 0));
+                        const remainingObjectives = Math.max(0, Number(phaseDerived?.remainingObjectives) || 0);
+                        const objectiveReductionRate = (adaptationState.startedObjectives - remainingObjectives) / Math.max(1, nodesExpanded);
+                        const portalOscillation = Math.max(0, Number(state.portalOscillationCount) || 0);
+                        const portalLockStability = Math.max(0, Math.min(1, 1 - (portalOscillation / Math.max(1, (Number(state.portalOscillationBudget) || 1) + 1))));
+                        const telemetry = {
+                            phaseProgress: progress,
+                            objectiveReduction: Math.max(0, Math.min(1, objectiveReductionRate * 32)),
+                            portalLockStability,
+                            knotZoneUtilization: phaseDerived?.phase === 'knot' ? 0.85 : (phaseDerived?.phase === 'transition' ? 0.55 : 0.3),
+                            status: 'in-progress',
+                            branchFactorTrend,
+                            memoHitSaturation,
+                            objectiveReductionRate,
+                            portalLockStabilityRaw: portalLockStability
+                        };
+                        if (typeof Referee?.updateHypothesisConfidence === 'function') {
+                            Referee.updateHypothesisConfidence(cp, telemetry);
+                        }
+                        const triggerLowExpansion = branchFactorTrend < -0.12 && objectiveReductionRate < 0.0009;
+                        const triggerMemoOverfit = memoHitSaturation > 0.72 && objectiveReductionRate < 0.0008;
+                        const triggerPortalThrash = portalLockStability < 0.45;
+                        const triggerSwitchOrdering = branchFactor < 0.32 && branchFactorTrend < -0.06;
+                        if (triggerLowExpansion || triggerMemoOverfit || triggerPortalThrash || triggerSwitchOrdering) {
+                            const prevProfile = {
+                                memoStrictness: adaptationState.currentProfile.memoStrictness,
+                                disabledPrunes: adaptationState.currentProfile.disabledPrunes.slice(),
+                                dirOrderVariant: adaptationState.currentProfile.dirOrderVariant,
+                                portalBiasMode: adaptationState.currentProfile.portalBiasMode
+                            };
+                            const nextProfile = {
+                                memoStrictness: Math.max(0.6, prevProfile.memoStrictness * (triggerMemoOverfit ? 0.78 : 0.9)),
+                                disabledPrunes: prevProfile.disabledPrunes.slice(),
+                                dirOrderVariant: prevProfile.dirOrderVariant,
+                                portalBiasMode: prevProfile.portalBiasMode
+                            };
+                            if (triggerLowExpansion && !nextProfile.disabledPrunes.includes('connectivity')) nextProfile.disabledPrunes.push('connectivity');
+                            if (triggerMemoOverfit && !nextProfile.disabledPrunes.includes('mustPassBound')) nextProfile.disabledPrunes.push('mustPassBound');
+                            if (triggerSwitchOrdering && nextProfile.dirOrderVariant === 'default') nextProfile.dirOrderVariant = 'alt';
+                            else if (triggerSwitchOrdering && nextProfile.dirOrderVariant === 'alt') nextProfile.dirOrderVariant = 'random';
+                            if (triggerPortalThrash) nextProfile.portalBiasMode = 'off';
+                            adaptationState.currentProfile = nextProfile;
+                            adaptationState.pendingGuardrail = {
+                                from: prevProfile,
+                                to: nextProfile,
+                                checkAtNodes: nodesExpanded + 120,
+                                baselineProgress: progress
+                            };
+                            syncAdaptiveProfileToOptions();
+                            pushAdaptationEvent({
+                                type: 'policy-toggle',
+                                reason: triggerMemoOverfit ? 'memo-saturation' : (triggerPortalThrash ? 'portal-lock-instability' : (triggerSwitchOrdering ? 'ordering-collapse' : 'branch-collapse')),
+                                telemetry: {
+                                    branchFactor: Number(branchFactor.toFixed(3)),
+                                    branchFactorTrend: Number(branchFactorTrend.toFixed(3)),
+                                    memoHitSaturation: Number(memoHitSaturation.toFixed(3)),
+                                    objectiveReductionRate: Number(objectiveReductionRate.toFixed(5)),
+                                    portalLockStability: Number(portalLockStability.toFixed(3))
+                                },
+                                profile: nextProfile
+                            });
+                            if (typeof Referee?.maybeSwitchHypothesis === 'function') {
+                                Referee.maybeSwitchHypothesis(cp, 'mid-run-adaptation');
+                            }
+                        } else {
+                            pushAdaptationEvent({
+                                type: 'telemetry-snapshot',
+                                telemetry: {
+                                    branchFactor: Number(branchFactor.toFixed(3)),
+                                    branchFactorTrend: Number(branchFactorTrend.toFixed(3)),
+                                    memoHitSaturation: Number(memoHitSaturation.toFixed(3)),
+                                    objectiveReductionRate: Number(objectiveReductionRate.toFixed(5)),
+                                    portalLockStability: Number(portalLockStability.toFixed(3))
+                                }
+                            });
+                        }
+                        if (adaptationState.pendingGuardrail && nodesExpanded >= adaptationState.pendingGuardrail.checkAtNodes) {
+                            const degraded = progress + 0.02 < adaptationState.pendingGuardrail.baselineProgress;
+                            if (degraded) {
+                                adaptationState.currentProfile = {
+                                    memoStrictness: adaptationState.pendingGuardrail.from.memoStrictness,
+                                    disabledPrunes: adaptationState.pendingGuardrail.from.disabledPrunes.slice(),
+                                    dirOrderVariant: adaptationState.pendingGuardrail.from.dirOrderVariant,
+                                    portalBiasMode: adaptationState.pendingGuardrail.from.portalBiasMode
+                                };
+                                syncAdaptiveProfileToOptions();
+                                pushAdaptationEvent({
+                                    type: 'guardrail-revert',
+                                    reason: 'progress-regression',
+                                    baselineProgress: Number(adaptationState.pendingGuardrail.baselineProgress.toFixed(3)),
+                                    currentProgress: Number(progress.toFixed(3)),
+                                    revertedProfile: adaptationState.currentProfile
+                                });
+                            }
+                            adaptationState.pendingGuardrail = null;
+                        }
+                        adaptationState.lastNodes = nodesExpanded;
+                        adaptationState.lastBranchFactor = branchFactor;
+                    };
                     this._updateSolverPhase(state, startKey, l, distMap, debugStats);
+                    maybeEmitAdaptiveTelemetry(this._deriveSolverPhase(state, startKey, l, distMap));
                     const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
                     const startPortal = APP.LevelUtils.resolvePortal(l, startKey);
                     const startPortalForced = !!(startPortal && !state.isJump.has(state.path.length - 1));
@@ -4195,7 +4333,8 @@
                             continue;
                         }
                         const realLen = state.path.length - 1 - state.isJump.size;
-                        this._updateSolverPhase(state, lastK, l, distMap, debugStats);
+                        const phaseDerived = this._updateSolverPhase(state, lastK, l, distMap, debugStats);
+                        maybeEmitAdaptiveTelemetry(phaseDerived);
                         if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
                         if (realLen > l.reqLen) {
                             if (debugStats) debugStats.prune.lenOverflow++;
@@ -4221,6 +4360,9 @@
                                 continue;
                             }
                         }
+                        const runtimeDisabledPrunes = new Set(options?.disabledPrunes || []);
+                        const disableMustPassBoundNow = runtimeDisabledPrunes.has('mustPassBound');
+                        const disableMustCrossBoundNow = runtimeDisabledPrunes.has('mustCrossBound');
                         const rSteps = l.reqLen - realLen;
                         state.remainingSteps = rSteps;
                         const maxFutureInts = l.portalMap.size > 0 ? rSteps * 2 : rSteps;
@@ -4236,7 +4378,7 @@
                             this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
-                        if (!disableMustPassBound && state.mustMask !== 0n) {
+                        if (!disableMustPassBoundNow && state.mustMask !== 0n) {
                             const mustDetails = this._estimateMustPassBoundDetailed(lastK, state, l);
                             const mustBound = mustDetails.bound;
                             if (mustBound === Infinity || mustBound > rSteps) {
@@ -4246,7 +4388,7 @@
                                 continue;
                             }
                         }
-                        if (!disableMustCrossBound && state.mustCrossMask !== 0n) {
+                        if (!disableMustCrossBoundNow && state.mustCrossMask !== 0n) {
                             const crossBound = this._estimateMustCrossBoundFrom(lastK, state, l);
                             if (crossBound === Infinity || crossBound > rSteps) {
                                 if (debugStats) debugStats.prune.mustCrossBound++;
@@ -4270,7 +4412,7 @@
                             continue;
                         }
                         const minRem = distMap.get(lastK) || Infinity;
-                        if (!disabledPruneSet.has('distance') && !disabledPruneSet.has('minRemOverflow') && realLen + minRem > l.reqLen) {
+                        if (!runtimeDisabledPrunes.has('distance') && !runtimeDisabledPrunes.has('minRemOverflow') && realLen + minRem > l.reqLen) {
                             if (debugStats) debugStats.prune.minRemOverflow++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'minRemOverflow', `minRem=${minRem} realLen=${realLen} reqLen=${l.reqLen}`);
                             this._popStateZeroAlloc(state, transLog, l, options, debugStats);
@@ -4280,7 +4422,7 @@
                         const parityGoal = ((l.goalKey & 0xFFFF) + (l.goalKey >> 16)) % 2;
                         const parityMatch = (parityCurrent === parityGoal);
                         const stepsEven = (rSteps % 2 === 0);
-                        if (!disabledPruneSet.has('parity') && parityMatch !== stepsEven) {
+                        if (!runtimeDisabledPrunes.has('parity') && parityMatch !== stepsEven) {
                             let canBreak = false;
                             if (l.hasParityBreaker && l.parityBreakers) {
                                 for (let i = 0; i < l.parityBreakers.length; i++) {
@@ -4331,7 +4473,7 @@
                             this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
                         }
-                        const shouldRunConnectivityPrune = !disabledPruneSet.has('connectivity') && l.mustCrossKeys.length === 0;
+                        const shouldRunConnectivityPrune = !runtimeDisabledPrunes.has('connectivity') && l.mustCrossKeys.length === 0;
                         if (shouldRunConnectivityPrune) {
                             if (!this._checkTopology(state, lastK, rSteps, l)) {
                                 if (debugStats) debugStats.prune.topology = (debugStats.prune.topology || 0) + 1;
@@ -4339,7 +4481,7 @@
                                 continue;
                             }
                         }
-                        if (!disabledPruneSet.has('connectivity') && !this._floodFillReachable(lastK, state, l)) {
+                        if (!runtimeDisabledPrunes.has('connectivity') && !this._floodFillReachable(lastK, state, l)) {
                             if (debugStats) debugStats.prune.deadEnd++;
                             this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
