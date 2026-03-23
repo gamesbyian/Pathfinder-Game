@@ -2337,6 +2337,98 @@
                     const extraVisitsLB = Math.max(0, crossNeed - outstandingNodes);
                     return { outstandingNodes, extraVisitsLB };
                 },
+                _mustCrossTransitDistByKey(fromKey, toKey, l) {
+                    if (!l?.mustCrossTransit?.distMapsByKey || toKey === undefined || toKey === null) return Infinity;
+                    const map = l.mustCrossTransit.distMapsByKey.get(toKey);
+                    if (!map) return Infinity;
+                    const d = map.get(fromKey);
+                    return Number.isFinite(d) ? d : Infinity;
+                },
+                _mustCrossRepeatVisitDetourLowerBound(crossIdx, l) {
+                    const transit = l?.mustCrossTransit;
+                    if (!transit || !Array.isArray(transit.keys) || !Array.isArray(transit.matrix)) return Infinity;
+                    const key = l.mustCrossKeys?.[crossIdx];
+                    if (key === undefined) return Infinity;
+                    const fromIdx = transit.keyToIdx.get(key);
+                    if (!Number.isFinite(fromIdx)) return Infinity;
+                    let best = Infinity;
+                    for (let i = 0; i < transit.keys.length; i++) {
+                        if (i === fromIdx) continue;
+                        const d = transit.matrix[fromIdx]?.[i];
+                        if (Number.isFinite(d) && d < best) best = d;
+                    }
+                    return best;
+                },
+                _estimateMustCrossDemandFlowBoundFrom(key, state, l) {
+                    if (!l?.mustCrossTransit?.ready || !Array.isArray(l.mustCrossKeys) || l.mustCrossKeys.length === 0) return null;
+                    const remainingDemand = [];
+                    const demandedNodes = [];
+                    for (let i = 0; i < l.mustCrossKeys.length; i++) {
+                        const have = Number(state?.mustCrossCounts?.[i] || 0);
+                        const need = Math.max(0, 2 - have);
+                        remainingDemand.push(need);
+                        if (need > 0) demandedNodes.push(i);
+                    }
+                    if (demandedNodes.length === 0) {
+                        const goalOnly = l.distMapForSolver?.get(key) ?? Infinity;
+                        return Number.isFinite(goalOnly) ? goalOnly : Infinity;
+                    }
+                    let nearestHead = Infinity;
+                    let connectGoal = Infinity;
+                    for (let i = 0; i < demandedNodes.length; i++) {
+                        const crossIdx = demandedNodes[i];
+                        const crossKey = l.mustCrossKeys[crossIdx];
+                        const dHead = this._mustCrossTransitDistByKey(key, crossKey, l);
+                        if (dHead < nearestHead) nearestHead = dHead;
+                        const dGoal = this._mustCrossTransitDistByKey(crossKey, l.goalKey, l);
+                        if (dGoal < connectGoal) connectGoal = dGoal;
+                    }
+                    if (!Number.isFinite(nearestHead) || !Number.isFinite(connectGoal)) return null;
+                    let mst = 0;
+                    if (demandedNodes.length > 1) {
+                        const visited = new Set();
+                        const minEdge = new Map();
+                        const seed = demandedNodes[0];
+                        visited.add(seed);
+                        for (let i = 1; i < demandedNodes.length; i++) {
+                            const node = demandedNodes[i];
+                            const d = l.mustCrossPairDist?.[seed]?.[node];
+                            minEdge.set(node, Number.isFinite(d) ? d : Infinity);
+                        }
+                        while (visited.size < demandedNodes.length) {
+                            let pick = -1;
+                            let best = Infinity;
+                            for (const [node, d] of minEdge.entries()) {
+                                if (visited.has(node)) continue;
+                                if (d < best) {
+                                    best = d;
+                                    pick = node;
+                                }
+                            }
+                            if (!Number.isFinite(best) || pick < 0) return null;
+                            visited.add(pick);
+                            mst += best;
+                            for (let i = 0; i < demandedNodes.length; i++) {
+                                const node = demandedNodes[i];
+                                if (visited.has(node)) continue;
+                                const cand = l.mustCrossPairDist?.[pick]?.[node];
+                                if (!Number.isFinite(cand)) continue;
+                                const prev = minEdge.get(node);
+                                if (!Number.isFinite(prev) || cand < prev) minEdge.set(node, cand);
+                            }
+                        }
+                    }
+                    let extraRepeatTravel = 0;
+                    for (let i = 0; i < demandedNodes.length; i++) {
+                        const crossIdx = demandedNodes[i];
+                        const need = remainingDemand[crossIdx];
+                        if (need <= 1) continue;
+                        const revisitDetour = this._mustCrossRepeatVisitDetourLowerBound(crossIdx, l);
+                        if (!Number.isFinite(revisitDetour)) return null;
+                        extraRepeatTravel += revisitDetour * (need - 1);
+                    }
+                    return nearestHead + mst + connectGoal + extraRepeatTravel;
+                },
                 _nearestOutstandingMustCrossDist(key, state, l) {
                     if (!state.mustCrossMask || state.mustCrossMask === 0n) return Infinity;
                     let best = Infinity;
@@ -2386,8 +2478,11 @@
                         baseBound = this._mstBoundFromNodes(nodes, l.mustCrossPairDist, l.mustCrossToGoalDist, nearest);
                     }
                     if (baseBound === Infinity) return Infinity;
-                    const extraVisitsLB = this._mustCrossExtraVisitsLowerBound(mask, crossNeed, l).extraVisitsLB;
-                    return baseBound + extraVisitsLB;
+                    const legacyExtraVisitsLB = this._mustCrossExtraVisitsLowerBound(mask, crossNeed, l).extraVisitsLB;
+                    const legacyBound = baseBound + legacyExtraVisitsLB;
+                    const demandFlowBound = this._estimateMustCrossDemandFlowBoundFrom(key, state, l);
+                    if (!Number.isFinite(demandFlowBound)) return legacyBound;
+                    return Math.max(legacyBound, demandFlowBound);
                 },
                 _hazardDecisionForKey(key, state, l, options = {}) {
                     if (!l.gooseSet.has(key)) return { allowed: true, terminal: false };
@@ -3975,7 +4070,8 @@
                                 if (debugStats) debugStats.prune.mustCrossBound++;
                                 if (state.path.length === 2) {
                                     const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeeds, l);
-                                    this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound === Infinity ? 'inf' : crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeeds} outstandingNodes=${outstandingNodes}`);
+                                    const demandFlowBound = this._estimateMustCrossDemandFlowBoundFrom(lastK, state, l);
+                                    this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound === Infinity ? 'inf' : crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} demandFlowBound=${Number.isFinite(demandFlowBound) ? demandFlowBound : 'na'} crossNeed=${crossNeeds} outstandingNodes=${outstandingNodes}`);
                                 }
                                 this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                                 continue;
@@ -4686,6 +4782,7 @@
                     level.mustCrossToGoalDist = [];
                     level.mustCrossPairDist = [];
                     level.mustCrossKeyMaskCache = new Map();
+                    level.mustCrossTransit = { ready: false, keys: [], keyToIdx: new Map(), matrix: [], distMapsByKey: new Map() };
                     level.mustCrossDpMode = 'none';
                     level.mustCrossDp = () => Infinity;
                     if (level.mustCrossKeys.length > 0) {
@@ -4729,6 +4826,38 @@
                                 return best;
                             };
                         }
+                        const transitKeys = [];
+                        const seenTransit = new Set();
+                        const pushTransit = (k) => {
+                            if (!Number.isFinite(k) || seenTransit.has(k)) return;
+                            seenTransit.add(k);
+                            transitKeys.push(k);
+                        };
+                        level.mustCrossKeys.forEach(pushTransit);
+                        pushTransit(level.goalKey);
+                        if (level.portalMap instanceof Map) {
+                            level.portalMap.forEach((_, portalKey) => pushTransit(portalKey));
+                        }
+                        const transitDistMaps = transitKeys.map(k => SolverCore._buildOptimisticDistMap(level, [k]));
+                        const transitKeyToIdx = new Map();
+                        for (let i = 0; i < transitKeys.length; i++) transitKeyToIdx.set(transitKeys[i], i);
+                        const transitMatrix = Array.from({ length: transitKeys.length }, () => Array(transitKeys.length).fill(Infinity));
+                        for (let i = 0; i < transitKeys.length; i++) {
+                            transitMatrix[i][i] = 0;
+                            for (let j = i + 1; j < transitKeys.length; j++) {
+                                const d = transitDistMaps[i].get(transitKeys[j]);
+                                const val = Number.isFinite(d) ? d : Infinity;
+                                transitMatrix[i][j] = val;
+                                transitMatrix[j][i] = val;
+                            }
+                        }
+                        level.mustCrossTransit = {
+                            ready: transitKeys.length > 0,
+                            keys: transitKeys,
+                            keyToIdx: transitKeyToIdx,
+                            matrix: transitMatrix,
+                            distMapsByKey: new Map(transitKeys.map((k, i) => [k, transitDistMaps[i]]))
+                        };
                     }
 
                     const portalHints = level?.solverProfile?.portalHints || null;
@@ -4994,6 +5123,8 @@
                             debugStats.notes.push("SANITY OVERRIDE: Solution found only after disabling memo/bounds. Original pruning/memo likely incorrect.");
                             debugStats.notes.push(`LIKELY CULPRIT: mustPassBound and/or failMemo (primary prunes: mustPassBound=${primaryPruneSnapshot.mustPassBound} mustCrossBound=${primaryPruneSnapshot.mustCrossBound} failedStateHit=${primaryPruneSnapshot.failedStateHit} minRemOverflow=${primaryPruneSnapshot.minRemOverflow} deadEnd=${primaryPruneSnapshot.deadEnd})`);
                         } else {
+                            const sanityPrune = sanityRun?.debug?.prune || {};
+                            debugStats.notes.push(`SANITY PRUNE COMPARISON: primary mustCrossBound=${primaryPruneSnapshot.mustCrossBound}, sanity mustCrossBound=${sanityPrune.mustCrossBound || 0}, primary mustPassBound=${primaryPruneSnapshot.mustPassBound}, sanity mustPassBound=${sanityPrune.mustPassBound || 0}.`);
                             debugStats.notes.push("SANITY CONFIRMED: Reachable but still no strict solution under relaxed pruning; likely truly unsat given constraints.");
                         }
                     }
