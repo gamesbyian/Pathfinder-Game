@@ -1607,6 +1607,37 @@
         return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, showSolverAlreadyRunning, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
     })();
 
+    const compactDefined = (obj = {}) => {
+        const out = {};
+        Object.entries(obj).forEach(([key, value]) => {
+            if (value === undefined || value === null) return;
+            out[key] = value;
+        });
+        return out;
+    };
+    const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {
+        const reqInt = Math.max(0, Number(level?.reqInt) || 0);
+        const highReqIntThreshold = Math.max(3, Number(context?.highReqIntThreshold) || 3);
+        const attemptOrdinalRaw = Number(context?.attemptOrdinal);
+        const attemptOrdinal = Number.isFinite(attemptOrdinalRaw) ? Math.max(1, Math.floor(attemptOrdinalRaw)) : null;
+        return compactDefined({
+            hasGeese: (level?.gooseSet?.size || 0) > 0,
+            hasFlippingFilters: (level?.flippingFilterMap?.size || 0) > 0,
+            hasFalseGoals: (level?.falseGoalKeys?.size || 0) > 0,
+            highReqInt: reqInt >= highReqIntThreshold,
+            reqInt,
+            highReqIntThreshold,
+            attemptOrdinal
+        });
+    };
+    const toHeuristicFeatureSignature = (flags = {}) => {
+        const hasGeese = !!flags?.hasGeese;
+        const hasFlippingFilters = !!flags?.hasFlippingFilters;
+        const hasFalseGoals = !!flags?.hasFalseGoals;
+        const highReqInt = !!flags?.highReqInt;
+        return `G${hasGeese ? 1 : 0}|F${hasFlippingFilters ? 1 : 0}|X${hasFalseGoals ? 1 : 0}|I${highReqInt ? 1 : 0}`;
+    };
+
     // ======================================================
     // I) APP.Solver
     // Purpose: async hint/solve orchestration and run lifecycle state.
@@ -6003,37 +6034,6 @@
                 zeroExpansionSummary: makeZeroExpansionSummary({ statusPath: context?.statusPath || 'referee-compat-profile', debug, diagnostics, droppedBy: context?.droppedBy || 'referee-wrapper' })
             });
         };
-        const compactDefined = (obj = {}) => {
-            const out = {};
-            Object.entries(obj).forEach(([key, value]) => {
-                if (value === undefined || value === null) return;
-                out[key] = value;
-            });
-            return out;
-        };
-        const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {
-            const reqInt = Math.max(0, Number(level?.reqInt) || 0);
-            const highReqIntThreshold = Math.max(3, Number(context?.highReqIntThreshold) || 3);
-            const attemptOrdinalRaw = Number(context?.attemptOrdinal);
-            const attemptOrdinal = Number.isFinite(attemptOrdinalRaw) ? Math.max(1, Math.floor(attemptOrdinalRaw)) : null;
-            return compactDefined({
-                hasGeese: (level?.gooseSet?.size || 0) > 0,
-                hasFlippingFilters: (level?.flippingFilterMap?.size || 0) > 0,
-                hasFalseGoals: (level?.falseGoalKeys?.size || 0) > 0,
-                highReqInt: reqInt >= highReqIntThreshold,
-                reqInt,
-                highReqIntThreshold,
-                attemptOrdinal
-            });
-        };
-        const toHeuristicFeatureSignature = (flags = {}) => {
-            const hasGeese = !!flags?.hasGeese;
-            const hasFlippingFilters = !!flags?.hasFlippingFilters;
-            const hasFalseGoals = !!flags?.hasFalseGoals;
-            const highReqInt = !!flags?.highReqInt;
-            return `G${hasGeese ? 1 : 0}|F${hasFlippingFilters ? 1 : 0}|X${hasFalseGoals ? 1 : 0}|I${highReqInt ? 1 : 0}`;
-        };
-
         const STRUCTURAL_CLASSIFIER_THRESHOLDS = {
             lowExpansionNodesUpper: 80,
             lowExpansionRootExpandedUpper: 2,
