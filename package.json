@@ -1,0 +1,11 @@
+{
+  "name": "pathfinder-game",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint:solver": "node scripts/lint-solver-no-undef.mjs",
+    "test:solver-smoke": "node scripts/solver-smoke-test.mjs",
+    "check:audit-output": "node scripts/check-audit-output.mjs",
+    "ci": "npm run lint:solver && npm run test:solver-smoke"
+  }
+}
