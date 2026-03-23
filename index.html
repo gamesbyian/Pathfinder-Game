@@ -1695,6 +1695,54 @@
                         hazardPolicy: options.hazardPolicy || 'forbid'
                     });
                 },
+                _diagnoseMoveInvalidReason(targetKey, path, counts, usage, jumpSet, l, flipCount, crossedSet) {
+                    if (!l || !Array.isArray(path) || path.length === 0) return 'invalid-unknown';
+                    const lastK = path[path.length - 1];
+                    const lastP = APP.LevelUtils.UNPACK(lastK);
+                    const targetP = APP.LevelUtils.UNPACK(targetKey);
+                    const portal = APP.LevelUtils.resolvePortal(l, lastK);
+                    const portalForced = !!(portal && !jumpSet.has(path.length - 1));
+                    const isPortalJumpCandidate = portalForced && portal?.dest === targetKey;
+                    if (portalForced && !isPortalJumpCandidate) return 'invalid-portal-legality';
+                    if (!isPortalJumpCandidate && Math.abs(targetP.x - lastP.x) + Math.abs(targetP.y - lastP.y) !== 1) return 'invalid-adjacency';
+                    const axis = (targetP.y === lastP.y) ? APP.Core.H : APP.Core.V;
+                    if (!isPortalJumpCandidate) {
+                        const u = usage.get(targetKey);
+                        if (u && ((axis === APP.Core.H && u.h) || (axis === APP.Core.V && u.v))) return 'invalid-by-filter-axis';
+                        const uLast = usage.get(lastK);
+                        if (uLast) {
+                            let entryAxis = APP.Core.NONE;
+                            if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+                                const prevP = APP.LevelUtils.UNPACK(path[path.length - 2]);
+                                entryAxis = (prevP.y === lastP.y) ? APP.Core.H : APP.Core.V;
+                            }
+                            if (axis !== entryAxis) {
+                                if ((axis === APP.Core.H && uLast.h) || (axis === APP.Core.V && uLast.v)) return 'invalid-by-filter-axis';
+                            }
+                        }
+                        let filterLast = l.filterMap.get(lastK);
+                        if (filterLast === undefined && l.flippingFilterMap.has(lastK)) {
+                            const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+                            filterLast = (relevantFlipCount % 2 !== 0)
+                                ? (l.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H)
+                                : l.flippingFilterMap.get(lastK);
+                        }
+                        if (filterLast && filterLast !== axis) return 'invalid-by-filter-axis';
+                        let filterTarget = l.filterMap.get(targetKey);
+                        if (filterTarget === undefined && l.flippingFilterMap.has(targetKey)) {
+                            const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
+                            const baseAxis = l.flippingFilterMap.get(targetKey);
+                            filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
+                        }
+                        if (filterTarget && filterTarget !== axis) return 'invalid-by-filter-axis';
+                    }
+                    if (l.goalKey === targetKey) {
+                        const mustPassOk = l.mustPassKeys.every(k => (counts.get(k) || 0) > 0 || k === targetKey);
+                        const mustCrossOk = l.mustCrossKeys.every(k => ((counts.get(k) || 0) + (k === targetKey ? 1 : 0)) >= 2);
+                        if (!mustPassOk || !mustCrossOk) return 'invalid-must-cross-impossibility';
+                    }
+                    return 'invalid-unknown';
+                },
                 _buildOptimisticDistMap(l, sourceKeys) {
                     const { w, h } = l.grid;
                     const map = new Map();
@@ -2957,6 +3005,11 @@
                     const debugNeighborTraceEnabled = !!debugStats
                         && (depth <= 1 || !!options?.enableLowExpansionProbe);
                     const disabledPruneSet = new Set(options?.disabledPrunes || []);
+                    const hasFilterFlipInteraction = (l.filterMap?.size || 0) > 0 && (l.flippingFilterMap?.size || 0) > 0;
+                    const hasPortalObjectiveInteraction = (l.portalMap?.size || 0) > 0 && (((l.mustPassKeys?.length || 0) > 0) || ((l.mustCrossKeys?.length || 0) > 0));
+                    const interactionCandidateFallbackEnabled = depth === 0
+                        && options?.rootCandidateGeneratorVariant === 'interaction-fallback'
+                        && (hasFilterFlipInteraction || hasPortalObjectiveInteraction);
                     const disableDistanceBound = disabledPruneSet.has('distance') || disabledPruneSet.has('minRemOverflow');
                     const disableMustPassBound = disabledPruneSet.has('mustPassBound');
                     const disableMustCrossBound = disabledPruneSet.has('mustCrossBound');
@@ -3100,6 +3153,10 @@
                         illegalMoveRejected: 0,
                         hazardRejected: 0,
                         falseGoalRejected: 0,
+                        filterAxisRejected: 0,
+                        portalLegalityRejected: 0,
+                        mustCrossImpossibleRejected: 0,
+                        adjacencyRejected: 0,
                         mustPassRejected: 0,
                         mustCrossRejected: 0,
                         portalAutomatonRejected: 0,
@@ -3113,6 +3170,13 @@
                         if (debugStats) debugStats.branchesTried++;
                         if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) {
                             if (debugStats) debugStats.prune.illegalMove++;
+                            if (startFilterBreakdown && depth === 0) {
+                                const reason = this._diagnoseMoveInvalidReason(nk, state.path, state.counts, state.usage, state.isJump, l, state.flipCount, state.crossedFlippers);
+                                if (reason === 'invalid-by-filter-axis') startFilterBreakdown.filterAxisRejected++;
+                                else if (reason === 'invalid-portal-legality') startFilterBreakdown.portalLegalityRejected++;
+                                else if (reason === 'invalid-must-cross-impossibility') startFilterBreakdown.mustCrossImpossibleRejected++;
+                                else if (reason === 'invalid-adjacency') startFilterBreakdown.adjacencyRejected++;
+                            }
                             if (startFilterBreakdown) startFilterBreakdown.illegalMoveRejected++;
                             return false;
                         }
@@ -3234,6 +3298,31 @@
                         if (stageTrace) stageTrace.afterObjectiveHeuristics.push(nk);
                         return true;
                     });
+                    if (interactionCandidateFallbackEnabled && valid.length <= 1 && candidates.length > 0) {
+                        const fallbackRecovered = [];
+                        for (const nk of candidates) {
+                            if (valid.includes(nk)) continue;
+                            const basicLegal = this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options);
+                            if (!basicLegal) continue;
+                            const hazardDecision = this._hazardDecisionForKey(nk, state, l, options);
+                            if (!hazardDecision.allowed) continue;
+                            fallbackRecovered.push(nk);
+                        }
+                        if (fallbackRecovered.length > 0) {
+                            valid.push(...fallbackRecovered);
+                            if (startFilterBreakdown) {
+                                startFilterBreakdown.candidateGeneratorFallbackApplied = true;
+                                startFilterBreakdown.candidateGeneratorFallbackRecovered = fallbackRecovered.length;
+                            }
+                            if (debugStats) {
+                                if (!Array.isArray(debugStats.notes)) debugStats.notes = [];
+                                debugStats.notes.push(`ROOT-FALLBACK: interaction-fallback recovered ${fallbackRecovered.length} root candidate(s)`);
+                            }
+                        } else if (startFilterBreakdown) {
+                            startFilterBreakdown.candidateGeneratorFallbackApplied = true;
+                            startFilterBreakdown.candidateGeneratorFallbackRecovered = 0;
+                        }
+                    }
                     if (stageTrace && depth === 0) {
                         if (startFilterBreakdown) {
                             startFilterBreakdown.afterIllegalMoveCount = stageTrace.afterIllegalMove.length;
@@ -3241,6 +3330,7 @@
                             startFilterBreakdown.afterDirectionalityCount = stageTrace.afterDirectionality.length;
                             startFilterBreakdown.afterObjectiveHeuristicsCount = stageTrace.afterObjectiveHeuristics.length;
                             startFilterBreakdown.finalCandidateCount = valid.length;
+                            startFilterBreakdown.interactionCandidateFallbackEnabled = interactionCandidateFallbackEnabled;
                         }
                         stageTrace.filterBreakdown = startFilterBreakdown;
                         if (startNeighborBoundSanity) stageTrace.portalBoundSanity = { ...startNeighborBoundSanity };
@@ -4379,6 +4469,17 @@
                     if (startNeighbors.length === 0 && debugStats) {
                         const trace = debugStats.startNeighborTrace || null;
                         const fb = trace?.filterBreakdown || null;
+                        const preExpansionAbortCode = (() => {
+                            if (!fb) return 'no-legal-start-neighbors';
+                            const reasonCounts = [
+                                ['invalid-by-filter-axis', fb.filterAxisRejected || 0],
+                                ['invalid-portal-legality', fb.portalLegalityRejected || 0],
+                                ['invalid-must-cross-impossibility', fb.mustCrossImpossibleRejected || 0],
+                                ['invalid-adjacency', fb.adjacencyRejected || 0],
+                                ['portal-automaton-rejected', fb.portalAutomatonRejected || 0]
+                            ].sort((a, b) => b[1] - a[1]);
+                            return reasonCounts[0][1] > 0 ? reasonCounts[0][0] : 'no-legal-start-neighbors';
+                        })();
                         const detailParts = [];
                         if (fb) {
                             detailParts.push(`raw=${fb.rawCandidateCount ?? 0}`);
@@ -4398,7 +4499,7 @@
                             returnedBeforeExpansion: true
                         });
                         setPreExpansionAbort(debugStats, {
-                            code: 'no-legal-start-neighbors',
+                            code: preExpansionAbortCode,
                             message: `No legal start neighbors from gate ${startKey}.`,
                             phase: 'after-start-neighbor-enumeration-before-root-expansion',
                             source: 'SolverPolicies.makeHintPolicy/_solveInstance',
@@ -5860,7 +5961,7 @@
             }
             return max;
         };
-        const classifySolveStructure = (result = {}, context = {}) => {
+            const classifySolveStructure = (result = {}, context = {}) => {
             const status = `${result?.status || result?.rawStatus || result?.finalStatus || result?.debug?.status || 'unknown'}`;
             const rawStatus = `${result?.rawStatus || result?.status || status}`;
             const diagnostics = result?.diagnosticsSummary || result?.diagnostics || buildSearchDiagnostics(result?.debug || result?.stats?.debug || {}, status);
@@ -5917,8 +6018,24 @@
                 confidence = 'high';
                 reasons.push('final-status-solved');
             } else if (preExpansionSignals && status !== 'no-solution-proven') {
-                family = 'pre-expansion';
-                confidence = zeroSummary ? 'high' : 'medium';
+                const goalReachable = context?.goalReachable;
+                const interactionComplex = hasRootInteractionComplexity(context?.level || null);
+                const likelyGeneratorCollapse = interactionComplex
+                    && rootCandidatesGenerated <= 1
+                    && effectiveRootExpanded <= 1
+                    && effectiveNodesExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroNodesUpper;
+                if (goalReachable === false) {
+                    family = 'true-contradiction';
+                    confidence = 'high';
+                    reasons.push('goal-unreachable-from-any-gate');
+                } else if (likelyGeneratorCollapse) {
+                    family = 'candidate-generator-collapse';
+                    confidence = 'high';
+                    reasons.push('interaction-root-collapse');
+                } else {
+                    family = 'pre-expansion';
+                    confidence = zeroSummary ? 'high' : 'medium';
+                }
                 if (zeroSummary) reasons.push('zero-expansion-summary');
                 if (returnedWithoutExpansion) reasons.push('returned-without-expansion');
                 if (rootCandidatesGenerated === 0) reasons.push('root-candidates-generated-0');
@@ -8339,7 +8456,16 @@
             const priorFailureTaxonomy = !last.ok ? (last.failureTaxonomy || classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) })) : null;
             if (!last.ok && last.status !== 'no-solution-proven') {
                 const preExpansionAbortCode = `${last?.preExpansionAbort?.code || last?.debug?.preExpansionAbort?.code || ''}`;
-                const activatePreExpansionRescue = forcePreExpansionRescue || preExpansionAbortCode === 'no-legal-start-neighbors';
+                const fallbackActivation = shouldActivateInteractionRootFallback({
+                    force: !!forcePreExpansionRescue,
+                    baselineResult: last,
+                    level
+                });
+                const activatePreExpansionRescue = fallbackActivation.activate
+                    || preExpansionAbortCode === 'no-legal-start-neighbors'
+                    || preExpansionAbortCode === 'invalid-by-filter-axis'
+                    || preExpansionAbortCode === 'invalid-portal-legality'
+                    || preExpansionAbortCode === 'invalid-must-cross-impossibility';
                 const rescueDisabledPrunes = Array.from(new Set([
                     ...(Array.isArray(fallbackDisabledPrunes) ? fallbackDisabledPrunes : (complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [])),
                     ...(activatePreExpansionRescue ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton'] : [])
@@ -8363,7 +8489,8 @@
                         enableEnduranceLongpath: true,
                         allowRandomizedExploration: false,
                         purpose,
-                        preferMacroSkeleton: true
+                        preferMacroSkeleton: true,
+                        rootCandidateGeneratorVariant: activatePreExpansionRescue ? 'interaction-fallback' : 'default'
                     })
                 });
                 rescueProfileResult.rescueProfileSummary = {
@@ -8375,7 +8502,8 @@
                     priorRootCandidatesGenerated: Number.isFinite(priorFailureSummary?.rootCandidatesGenerated) ? priorFailureSummary.rootCandidatesGenerated : null,
                     priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null,
                     preExpansionAbortCode: preExpansionAbortCode || null,
-                    disabledPrunes: rescueDisabledPrunes
+                    disabledPrunes: rescueDisabledPrunes,
+                    interactionRootFallbackActivation: fallbackActivation
                 };
                 if (rescueProfileResult.ok) {
                     rescueProfileResult.enduranceRescueDelta = compactDefined({
@@ -8411,7 +8539,9 @@
             last.failureProfile = classifySolveStructure(last, {
                 finalSolvedBy: (last.compatLegacyOutputAlias ? 'legacy' : 'referee'),
                 winningStage: last.winningStage || null,
-                winningEngine: last.winningEngine || (last.compatLegacyOutputAlias ? 'legacy' : 'referee')
+                winningEngine: last.winningEngine || (last.compatLegacyOutputAlias ? 'legacy' : 'referee'),
+                goalReachable: isGoalReachableFromAnyGate(level),
+                level
             });
             if (!last.routingDecision) {
                 const cat = last.failureTaxonomy?.category || null;
@@ -8614,7 +8744,9 @@
                     payload.failureProfile = classifySolveStructure(payload, {
                         finalSolvedBy: payload.finalSolvedBy || null,
                         winningStage: payload.winningStage || null,
-                        winningEngine: payload.winningEngine || null
+                        winningEngine: payload.winningEngine || null,
+                        goalReachable: isGoalReachableFromAnyGate(level),
+                        level
                     });
                     return payload;
                 };
@@ -9564,6 +9696,33 @@
                     likelyPruneIssue: taxonomy?.likelyPruneIssue ?? null
                 });
             }
+            const hasRootInteractionComplexity = (level = null) => {
+                const hasFilterFlipMix = ((level?.filterMap?.size || 0) > 0) && ((level?.flippingFilterMap?.size || 0) > 0);
+                const hasPortalConstraintMix = ((level?.portalMap?.size || 0) > 0)
+                    && (((level?.mustPassKeys?.length || 0) > 0) || ((level?.mustCrossKeys?.length || 0) > 0));
+                return hasFilterFlipMix || hasPortalConstraintMix;
+            };
+            const shouldActivateInteractionRootFallback = ({ force = false, baselineResult = null, level = null } = {}) => {
+                const debug = baselineResult?.debug || baselineResult?.stats?.debug || {};
+                const diagnostics = baselineResult?.diagnosticsSummary || baselineResult?.diagnostics || buildSearchDiagnostics(debug, baselineResult?.status || baselineResult?.rawStatus || 'unknown');
+                const rootSummary = baselineResult?.rootSearchSummary || makeRootSearchSummary(debug, diagnostics) || {};
+                const generated = Math.max(0, Number(rootSummary?.rootCandidatesGenerated ?? debug?.rootCandidatesGenerated) || 0);
+                const expanded = Math.max(0, Number(rootSummary?.rootCandidatesExpanded ?? debug?.rootCandidatesExpanded) || 0);
+                const nodesExpanded = Math.max(0, Number(diagnostics?.nodesExpanded ?? debug?.nodesExpanded) || 0);
+                const tooFewRoots = expanded <= 1 || generated <= 1;
+                const collapsedAtRoot = !!diagnostics?.returnedWithoutExpansion || nodesExpanded <= 2;
+                const interactionComplex = hasRootInteractionComplexity(level);
+                const activate = !!force || (interactionComplex && tooFewRoots && collapsedAtRoot);
+                return {
+                    activate,
+                    interactionComplex,
+                    tooFewRoots,
+                    collapsedAtRoot,
+                    generated,
+                    expanded,
+                    nodesExpanded
+                };
+            };
 
                         function withZeroExpansionSummary(entry = {}, statusPath = 'unknown', droppedBy = 'unknown') {
                 if (!entry || typeof entry !== 'object') return entry;
