@@ -6070,6 +6070,29 @@
                         ZH_LO[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
                     }
                     const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null, restartIndex = 0, sharedFailMemo = null, sharedDominanceMemo = null }) => {
+                        const pushPassAttemptReport = (outcome = 'exhausted') => {
+                            if (!debugStats) return;
+                            if (!Array.isArray(debugStats.passAttemptReports)) debugStats.passAttemptReports = [];
+                            const memoChecks = Math.max(0, (Number(debugStats?.failMemoChecks) || 0) + (Number(debugStats?.dominanceMemoChecks) || 0));
+                            const memoHitsTotal = Math.max(0, (Number(debugStats?.memoHits) || 0) + (Number(debugStats?.dominanceMemoHits) || 0));
+                            const memoSize = Math.max(0, Number(debugStats?.memoSize) || 0);
+                            const nodesExpanded = Math.max(0, Number(debugStats?.nodesExpanded) || 0);
+                            const previous = debugStats.passAttemptReports[debugStats.passAttemptReports.length - 1] || null;
+                            const memoGrowth = previous ? (memoSize - (Number(previous.memoSize) || 0)) : memoSize;
+                            debugStats.passAttemptReports.push(compactDefined({
+                                pass: passName || null,
+                                restartIndex: Number.isFinite(restartIndex) ? restartIndex : 0,
+                                jitterActive: (Number(restartIndex) || 0) > 0,
+                                nodeBudget: Number.isFinite(localTimeLimit) ? localTimeLimit : null,
+                                nodesExpanded,
+                                outcome,
+                                memoSize,
+                                memoGrowth,
+                                memoChecks,
+                                memoHits: memoHitsTotal,
+                                memoHitRate: memoChecks > 0 ? Number((memoHitsTotal / memoChecks).toFixed(4)) : 0
+                            }));
+                        };
                         const passSolutions = [];
                         passSolutions.timedOut = false;
                         if (debugStats) {
@@ -6129,6 +6152,7 @@
                             policy
                         });
                         if (out.aborted) {
+                            pushPassAttemptReport('aborted');
                             if (debugStats) {
                                 finalizeSolverDebugStats(debugStats, "aborted", perfStart);
                                 return { kind: "aborted", solutions: null };
@@ -6137,6 +6161,7 @@
                         }
                         if (out.timedOut) {
                             passSolutions.timedOut = true;
+                            pushPassAttemptReport('timed-out');
                             if (debugStats) {
                                 finalizeSolverDebugStats(debugStats, "timeout", perfStart);
                                 return { kind: "timeout", solutions: null };
@@ -6144,6 +6169,7 @@
                             return { kind: "ok", solutions: passSolutions };
                         }
                         passSolutions.push(...(out.solutions || []));
+                        pushPassAttemptReport((out.solutions || []).length > 0 ? 'solved' : 'exhausted');
                         return { kind: "ok", solutions: passSolutions };
                     };
 
@@ -6716,6 +6742,21 @@
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
                 rootCandidatesSuppressedByDominance: Number.isFinite(debug?.rootCandidatesSuppressedByDominance) ? debug.rootCandidatesSuppressedByDominance : null,
                 rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
+                fallbackAttemptReports: Array.isArray(debug?.passAttemptReports)
+                    ? debug.passAttemptReports.map((entry) => compactDefined({
+                        pass: entry?.pass || null,
+                        restartIndex: Number.isFinite(entry?.restartIndex) ? entry.restartIndex : 0,
+                        jitterActive: !!entry?.jitterActive,
+                        nodeBudget: Number.isFinite(entry?.nodeBudget) ? entry.nodeBudget : null,
+                        nodesExpanded: Number.isFinite(entry?.nodesExpanded) ? entry.nodesExpanded : null,
+                        outcome: entry?.outcome || null,
+                        memoSize: Number.isFinite(entry?.memoSize) ? entry.memoSize : null,
+                        memoGrowth: Number.isFinite(entry?.memoGrowth) ? entry.memoGrowth : null,
+                        memoChecks: Number.isFinite(entry?.memoChecks) ? entry.memoChecks : null,
+                        memoHits: Number.isFinite(entry?.memoHits) ? entry.memoHits : null,
+                        memoHitRate: Number.isFinite(entry?.memoHitRate) ? entry.memoHitRate : null
+                    }))
+                    : [],
                 attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
                 rootMoveOrder: Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 20) : null,
                 rootMoveScores: Array.isArray(debug?.rootMoveScores) ? debug.rootMoveScores.slice(0, 20) : null,
@@ -6740,6 +6781,7 @@
             if (Array.isArray(summary.rootMoveOrder) && summary.rootMoveOrder.length === 0) delete summary.rootMoveOrder;
             if (Array.isArray(summary.rootMoveScores) && summary.rootMoveScores.length === 0) delete summary.rootMoveScores;
             if (Array.isArray(summary.rootSuppressionLog) && summary.rootSuppressionLog.length === 0) delete summary.rootSuppressionLog;
+            if (Array.isArray(summary.fallbackAttemptReports) && summary.fallbackAttemptReports.length === 0) delete summary.fallbackAttemptReports;
             if (Array.isArray(summary.refereeAttempts) && summary.refereeAttempts.length === 0) delete summary.refereeAttempts;
             return summary;
         };
@@ -14374,8 +14416,24 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const structuralSummary = structural
                 ? ` | structural ${structural.family || 'other'}${structural.confidence ? `/${structural.confidence}` : ''}`
                 : '';
+            const fallbackAttemptSummary = (() => {
+                const attempts = Array.isArray(r?.newHint?.fallbackAttemptReports) ? r.newHint.fallbackAttemptReports : [];
+                if (attempts.length === 0) return '';
+                const chunks = attempts.slice(0, 4).map((entry) => {
+                    const idx = Number.isFinite(entry?.restartIndex) ? entry.restartIndex : 0;
+                    const budget = Number.isFinite(entry?.nodeBudget) ? `${entry.nodeBudget}ms` : '-';
+                    const nodes = Number.isFinite(entry?.nodesExpanded) ? entry.nodesExpanded : 0;
+                    const outcome = entry?.outcome || 'unknown';
+                    const memoGrowth = Number.isFinite(entry?.memoGrowth) ? entry.memoGrowth : 0;
+                    const memoRate = Number.isFinite(entry?.memoHitRate) ? `${(entry.memoHitRate * 100).toFixed(1)}%` : '0.0%';
+                    const jitter = entry?.jitterActive ? 'jitter' : 'nojitter';
+                    return `r${idx}:${outcome}@${budget}/n${nodes}/m+${memoGrowth}/mh${memoRate}/${jitter}`;
+                });
+                if (attempts.length > 4) chunks.push(`+${attempts.length - 4} more`);
+                return ` | fallback ${chunks.join(' ; ')}`;
+            })();
             const attemptCount = Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : (r.newHint.refereeAttemptCount || 0);
-            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} first=${r.newHint.firstPressOutcome || 'not-run'} eventual=${r.newHint.eventualOutcome || r.newHint.status || 'not-run'}<=${r.newHint.eventualOutcomeWithinPresses || 0} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} first=${r.newHint.firstPressOutcome || 'not-run'} eventual=${r.newHint.eventualOutcome || r.newHint.status || 'not-run'}<=${r.newHint.eventualOutcomeWithinPresses || 0} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${fallbackAttemptSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const hasAuditIssue = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -14526,6 +14584,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 candidateMovesConsidered: Number.isFinite(metrics.candidateMovesConsidered) ? metrics.candidateMovesConsidered : null,
                 rootCandidatesGenerated: Number.isFinite(r?.newHint?.rootCandidatesGenerated) ? r.newHint.rootCandidatesGenerated : null,
                 rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
+                fallbackAttemptReports: Array.isArray(r?.newHint?.fallbackAttemptReports) ? r.newHint.fallbackAttemptReports : [],
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
                 error: r?.error?.message || null
             };
@@ -14572,7 +14631,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, fallbackAttemptReports: [], attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -14802,6 +14861,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.rootMoveOrder = Array.isArray(finalAttempt?.rootMoveOrder) ? finalAttempt.rootMoveOrder : null;
             levelEntry.newHint.rootMoveScores = Array.isArray(finalAttempt?.rootMoveScores) ? finalAttempt.rootMoveScores : null;
             levelEntry.newHint.rootSuppressionLog = Array.isArray(finalAttempt?.rootSuppressionLog) ? finalAttempt.rootSuppressionLog : null;
+            levelEntry.newHint.fallbackAttemptReports = Array.isArray(finalAttempt?.fallbackAttemptReports) ? finalAttempt.fallbackAttemptReports : [];
             levelEntry.newHint.diagnosticsSummary = finalAttempt?.diagnosticsSummary || null;
             if (levelEntry.newHint.status !== 'success' && !levelEntry.error?.message) {
                 const detail = [finalAttempt?.status, finalAttempt?.rawStatus].filter(Boolean).join(' | ');
