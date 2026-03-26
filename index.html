@@ -8185,7 +8185,7 @@
                         knotBudgetPolicy: modernStructuralGuidanceNotNeeded ? null : commonKnotBudgetPolicy,
                         macroSkeleton: modernStructuralGuidanceNotNeeded ? null : defaultSkeleton,
                         regionCrossingModel: modernStructuralGuidanceNotNeeded ? null : regionCrossingModel,
-                        policyProfile: modernStructuralGuidanceNotNeeded ? 'harvestThenFinish' : 'perimeterSweep',
+                        policyProfile: modernStructuralGuidanceNotNeeded ? null : 'perimeterSweep',
                         orderingPolicy: modernStructuralGuidanceNotNeeded ? 'default' : null,
                         startGateArchetype: null,
                         commitmentPlan: modernStructuralGuidanceNotNeeded ? null : { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
@@ -8745,10 +8745,7 @@
             const tierMinBudget = escalationTier >= 2
                 ? (purpose === 'hint' ? 60000 : 180000)
                 : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
-            const callerSpecifiedBudget = Number.isFinite(opts.timeBudgetMs)
-                && opts.timeBudgetMs >= 3000
-                && escalationTier === requestedTier;
-            const budgetMs = callerSpecifiedBudget ? requestedBudget : Math.max(requestedBudget, tierMinBudget);
+            const budgetMs = Math.max(requestedBudget, tierMinBudget);
             const tierBudgets = purpose === 'hint'
                 ? [5000, 15000, 60000]
                 : [15000, 60000, 180000];
@@ -14271,10 +14268,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     : []
             );
             const hintAttempts = [
-                { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'B', purpose: 'hint', timeBudgetMs: 15000, tier: 1, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'D', purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
+                { key: 'A', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'B', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'C', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'D', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
             let finalHintResult = null;
@@ -14331,8 +14328,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const attemptStart = performance.now();
                     const rescueHintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), {
                         purpose: 'hint',
-                        timeBudgetMs: 12000,
-                        tier: 2,
                         allowReferee: true,
                         disableLegacyFallback: getAuditDisableLegacyFallback(),
                         forcePreExpansionRescue: true,
