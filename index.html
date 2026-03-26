@@ -2054,6 +2054,8 @@
                     h1 = this._mixHash32(h1, Number.isFinite(state.flipParity) ? state.flipParity : 0);
                     h0 = this._mixHashBigInt(h0, state.flipperCrossMask);
                     h1 = this._mixHashBigInt(h1, state.flipperParityAtCrossMask);
+                    h0 = this._mixHash32(h0, state.zhHi | 0);
+                    h1 = this._mixHash32(h1, state.zhLo | 0);
                     if ((l?.filterMap?.size || 0) > 0 || (l?.flippingFilterMap?.size || 0) > 0) {
                         h0 = this._mixHash32(h0, state.nonZeroUsage | 0);
                     }
@@ -2499,6 +2501,8 @@
                     const LOG_PORTAL_REQUIRED_MASK = 21;
                     const LOG_PORTAL_REENTRY_BUDGET = 22;
                     const LOG_PORTAL_OSC_BUDGET = 23;
+                    const LOG_ZH_HI = 24;
+                    const LOG_ZH_LO = 25;
                     const startLogCursor = s.logCursor;
                     const prevKey = s.path[s.path.length - 1];
                     const prevPathLen = s.path.length;
@@ -2600,6 +2604,16 @@
                                 s.portalOscillationBudget = s.portalOscillationBudget - 1;
                             }
                         }
+                    } else {
+                        const zTablesHi = options?.ZH_HI;
+                        const zTablesLo = options?.ZH_LO;
+                        if (zTablesHi && zTablesLo && zTablesHi[idx] && zTablesLo[idx]) {
+                            const axis = (((k >> 16) === (prevKey >> 16)) ? 0 : 1);
+                            this._undoLogWrite(s, LOG_ZH_HI, 0, s.zhHi | 0);
+                            this._undoLogWrite(s, LOG_ZH_LO, 0, s.zhLo | 0);
+                            s.zhHi = (s.zhHi ^ zTablesHi[idx][axis]) | 0;
+                            s.zhLo = (s.zhLo ^ zTablesLo[idx][axis]) | 0;
+                        }
                     }
                     if (l.flippingFilterMap.has(k) && s.crossedFlippersAt[idx] < 0) {
                         this._undoLogWrite(s, LOG_CROSSED, idx, s.crossedFlippersAt[idx]);
@@ -2646,6 +2660,8 @@
                     const LOG_PORTAL_REQUIRED_MASK = 21;
                     const LOG_PORTAL_REENTRY_BUDGET = 22;
                     const LOG_PORTAL_OSC_BUDGET = 23;
+                    const LOG_ZH_HI = 24;
+                    const LOG_ZH_LO = 25;
                     s.path.pop();
                     while (s.logCursor > logMark) {
                         s.logCursor -= 3;
@@ -2683,6 +2699,8 @@
                         else if (arrayId === LOG_PORTAL_REQUIRED_MASK) s.portalRequiredCoverageMask = BigInt(prev);
                         else if (arrayId === LOG_PORTAL_REENTRY_BUDGET) s.portalReentryBudget = prev;
                         else if (arrayId === LOG_PORTAL_OSC_BUDGET) s.portalOscillationBudget = prev;
+                        else if (arrayId === LOG_ZH_HI) s.zhHi = prev;
+                        else if (arrayId === LOG_ZH_LO) s.zhLo = prev;
                     }
                     if (l) s.hashDirty = true;
                 },
@@ -3148,6 +3166,9 @@
                     const disabledPruneSet = new Set(options?.disabledPrunes || []);
                     const hasFilterFlipInteraction = (l.filterMap?.size || 0) > 0 && (l.flippingFilterMap?.size || 0) > 0;
                     const hasPortalObjectiveInteraction = (l.portalMap?.size || 0) > 0 && (((l.mustPassKeys?.length || 0) > 0) || ((l.mustCrossKeys?.length || 0) > 0));
+                    const restartIndex = options?.restartIndex || 0;
+                    const JITTER_SCALE = Number.isFinite(options?.jitterScale) ? options.jitterScale : 8;
+                    const jitter = restartIndex > 0 ? (() => (Math.random() - 0.5) * JITTER_SCALE) : (() => 0);
                     const interactionCandidateFallbackEnabled = depth === 0
                         && options?.rootCandidateGeneratorVariant === 'interaction-fallback'
                         && (hasFilterFlipInteraction || hasPortalObjectiveInteraction);
@@ -4178,6 +4199,7 @@
 
                     const revisitContribution = suppressAntiDither ? 0 : (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
                     score += revisitContribution;
+                    score += jitter();
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
                     return { nk, score, scoreDrivers };
                 });
@@ -4556,6 +4578,8 @@
                         commitmentAxis: -1,
                         knotShapeProgress: 0,
                         perimeterSpanSignature: 0,
+                        zhHi: 0,
+                        zhLo: 0,
                         memoHash0: 0,
                         memoHash1: 0,
                         memoHashKey: '',
@@ -4582,8 +4606,8 @@
                         state.flipParity = state.flipCount % 2;
                     }
                     state.hashDirty = true;
-                    const failMemo = useFailMemo ? new Map() : null;
-                    const dominanceMemo = new Map();
+                    const failMemo = useFailMemo ? (options.sharedFailMemo || new Map()) : null;
+                    const dominanceMemo = options.sharedDominanceMemo || new Map();
                     const recordPhaseAttempt = (status) => {
                         if (!debugStats) return;
                         if (!Array.isArray(debugStats.phaseAttempts)) debugStats.phaseAttempts = [];
@@ -5313,7 +5337,13 @@
                         assertKnownSolvableBounds = false,
                         forcePhaseArchetype = null,
                         antiDriftEdgeLock = false,
-                        forcedPolicyProfile = null
+                        forcedPolicyProfile = null,
+                        restartIndex = 0,
+                        sharedFailMemo = null,
+                        sharedDominanceMemo = null,
+                        ZH_HI = null,
+                        ZH_LO = null,
+                        jitterScale = 8
                     } = options;
                     if (APP.State?.ENGINE?.isDevMode) {
                         const undefinedModes = [
@@ -5476,6 +5506,12 @@
                                 startGateArchetype: state?.startGateArchetype || null,
                                 forcePhaseArchetype,
                                 antiDriftEdgeLock,
+                                restartIndex,
+                                sharedFailMemo,
+                                sharedDominanceMemo,
+                                ZH_HI,
+                                ZH_LO,
+                                jitterScale,
                                 ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
@@ -5573,6 +5609,10 @@
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
                     const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false } = options;
+                    const FALLBACK_MAX_RESTARTS = 6;
+                    const FALLBACK_GEOMETRIC_RATIO = 2.0;
+                    const FALLBACK_INITIAL_DIVISOR = 8;
+                    const JITTER_SCALE = 8;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -5961,6 +6001,15 @@
                         }
                         return true;
                     });
+                    const gridCellCount = level.grid.w * level.grid.h;
+                    const ZH_HI = Array.from({ length: gridCellCount }, () => new Int32Array(2));
+                    const ZH_LO = Array.from({ length: gridCellCount }, () => new Int32Array(2));
+                    for (let zi = 0; zi < gridCellCount; zi++) {
+                        ZH_HI[zi][0] = (Math.random() * 0xFFFFFFFF) | 0;
+                        ZH_HI[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
+                        ZH_LO[zi][0] = (Math.random() * 0xFFFFFFFF) | 0;
+                        ZH_LO[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
+                    }
                     if (hasRootInteractionComplexity(level) && validGates.length >= 2) {
                         const gateNeighborRichness = (gateKey) => {
                             const p = APP.LevelUtils.UNPACK(gateKey);
@@ -6008,7 +6057,7 @@
                         return [];
                     }
 
-                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null }) => {
+                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null, restartIndex = 0, sharedFailMemo = null, sharedDominanceMemo = null, ZH_HI = null, ZH_LO = null }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
                         if (debugStats) {
@@ -6051,7 +6100,13 @@
                             assertKnownSolvableBounds: !!assertKnownSolvableBounds,
                             forcePhaseArchetype,
                             antiDriftEdgeLock,
-                            forcedPolicyProfile
+                            forcedPolicyProfile,
+                            restartIndex,
+                            sharedFailMemo,
+                            sharedDominanceMemo,
+                            ZH_HI,
+                            ZH_LO,
+                            jitterScale: JITTER_SCALE
                         });
                         const out = await SearchFramework.runSearch({
                             level,
@@ -6141,6 +6196,56 @@
                         const localBudget = (i === stagedHintPasses.length - 1)
                             ? rem
                             : Math.max(1, Math.min(rem, Math.floor(timeLimit * pass.ratio)));
+                        if (pass.passName === 'pass-3-fallback') {
+                            const sharedFailMemo = new Map();
+                            const sharedDominanceMemo = new Map();
+                            let attemptBudget = Math.max(1, Math.floor(remainingBudget() / FALLBACK_INITIAL_DIVISOR));
+                            for (let attempt = 0; attempt < FALLBACK_MAX_RESTARTS; attempt++) {
+                                const remForAttempt = remainingBudget();
+                                if (remForAttempt <= 0) break;
+                                const isFinalAttempt = attempt === FALLBACK_MAX_RESTARTS - 1;
+                                const localBudget = isFinalAttempt
+                                    ? remForAttempt
+                                    : Math.max(1, Math.min(remForAttempt, attemptBudget));
+                                const passRun = await runSolvePass({
+                                    passName: pass.passName,
+                                    localTimeLimit: localBudget,
+                                    disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...((pass.disabledPrunes || []))])),
+                                    useFailMemo: pass.useFailMemo ?? true,
+                                    statusLabel: attempt === 0
+                                        ? pass.statusLabel
+                                        : `Solving (fallback restart ${attempt + 1}/${FALLBACK_MAX_RESTARTS})...`,
+                                    passVariant: pass.variant,
+                                    enableForcedMoves: true,
+                                    gateBeamTopK: pass.beamTopK || 0,
+                                    debugGateVariant: !!pass.debugVariant,
+                                    passScoringMode: scoringMode,
+                                    passPortalBiasMode: pass.passPortalBiasMode ?? portalBiasMode,
+                                    passStructuralMode: structuralMode,
+                                    forcePhaseArchetype: pass.forcePhaseArchetype || null,
+                                    antiDriftEdgeLock: !!pass.antiDriftEdgeLock,
+                                    forcedPolicyProfile: pass.forcedPolicyProfile || null,
+                                    restartIndex: attempt,
+                                    sharedFailMemo,
+                                    sharedDominanceMemo,
+                                    ZH_HI,
+                                    ZH_LO
+                                });
+                                if (passRun.kind !== 'ok') {
+                                    primaryRun = passRun;
+                                    break;
+                                }
+                                if ((passRun.solutions || []).length > 0 || passRun.solutions?.timedOut) {
+                                    primaryRun = passRun;
+                                    break;
+                                }
+                                if (!isFinalAttempt) {
+                                    attemptBudget = Math.max(1, Math.floor(attemptBudget * FALLBACK_GEOMETRIC_RATIO));
+                                }
+                                primaryRun = passRun;
+                            }
+                            break;
+                        }
                         const passRun = await runSolvePass({
                             passName: pass.passName,
                             localTimeLimit: localBudget,
@@ -6156,7 +6261,10 @@
                             passStructuralMode: structuralMode,
                             forcePhaseArchetype: pass.forcePhaseArchetype || null,
                             antiDriftEdgeLock: !!pass.antiDriftEdgeLock,
-                            forcedPolicyProfile: pass.forcedPolicyProfile || null
+                            forcedPolicyProfile: pass.forcedPolicyProfile || null,
+                            restartIndex: 0,
+                            ZH_HI,
+                            ZH_LO
                         });
                         if (passRun.kind !== 'ok') {
                             primaryRun = passRun;
@@ -6185,7 +6293,9 @@
                             disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
                             useFailMemo: false,
                             passVariant: 'random',
-                            passPortalBiasMode: 'off'
+                            passPortalBiasMode: 'off',
+                            ZH_HI,
+                            ZH_LO
                         });
 
                         if ((recoveryRun.solutions || []).length > 0) {
@@ -6219,7 +6329,9 @@
                             statusLabel: `Sanity pass (${validGates.length} viable gates)...`,
                             passScoringMode: scoringMode,
                             passPortalBiasMode: portalBiasMode,
-                            passStructuralMode: structuralMode
+                            passStructuralMode: structuralMode,
+                            ZH_HI,
+                            ZH_LO
                         });
                         if (sanityRun.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
                         if (sanityRun.kind === "timeout") return { ok: false, solution: null, debug: debugStats };
