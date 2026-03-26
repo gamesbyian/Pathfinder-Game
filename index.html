@@ -3507,7 +3507,7 @@
                     const scoringProfile = (options?.scoringMode === 'legacy' || options?.scoringMode === 'endurance') ? 'endurance' : 'modern';
                     const shouldRecordRootSuppression = depth === 0 && !!debugStats && (!!options?.enableLowExpansionProbe || !!APP?.State?.ENGINE?.isDevMode || !!APP?.State?.ENGINE?.flags?.refereeDebug || !!APP?.State?.ENGINE?.flags?.debugSolver);
                     const structuralMode = !!options?.structuralMode;
-                    const profile = structuralMode ? (l.solverProfile || null) : null;
+                    const profile = l.solverProfile || null;
                     const symmetryModel = profile?.symmetryModel || null;
                     const symmetryCommitted = !!(symmetryModel && symmetryModel.committed && (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal'));
                     const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
@@ -3573,7 +3573,7 @@
                         ? profile.objectivePriority
                         : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
                     const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
-                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : null;
+                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : new Set();
                     const perimeterThreshold = options?.antiDriftEdgeLock ? 1 : (profile?.perimeterThreshold || 1);
                     const macroSkeleton = options?.macroSkeleton || null;
                     const regionCrossingModel = options?.regionCrossingModel || null;
@@ -3717,6 +3717,22 @@
 
                             const nx = nk & 0xFFFF;
                             const ny = nk >> 16;
+                            // Local intersection opportunity: reward moves to cells adjacent to 2+ already-visited cells
+                            // when intersections are still needed. Runs unconditionally; guard prevents firing when
+                            // reqInt is already satisfied.
+                            if ((l.reqInt || 0) > 0 && state.ints < l.reqInt) {
+                                let visitedNeighborCount = 0;
+                                const w = l.grid.w, h = l.grid.h;
+                                if (nx > 0     && (state.countsArr[state.keyToIdx(((ny)     << 16) | (nx - 1))] || 0) > 0) visitedNeighborCount++;
+                                if (nx < w - 1 && (state.countsArr[state.keyToIdx(((ny)     << 16) | (nx + 1))] || 0) > 0) visitedNeighborCount++;
+                                if (ny > 0     && (state.countsArr[state.keyToIdx(((ny - 1) << 16) | nx)]        || 0) > 0) visitedNeighborCount++;
+                                if (ny < h - 1 && (state.countsArr[state.keyToIdx(((ny + 1) << 16) | nx)]        || 0) > 0) visitedNeighborCount++;
+                                if (visitedNeighborCount >= 2) {
+                                    const c = -(visitedNeighborCount * 14);
+                                    score += c;
+                                    pushDriver('localIntersectionOpportunity', visitedNeighborCount, c);
+                                }
+                            }
                             const currentParity = (nx + ny) % 2;
                             const gx = l.goalKey & 0xFFFF;
                             const gy = l.goalKey >> 16;
@@ -5574,7 +5590,17 @@
                             });
                             appendReachabilitySanityNote(level, debugStats, "invalid");
                             finalizeSolverDebugStats(debugStats, "invalid", perfStart);
+                            if (debugStats) {
+                                debugStats.preExpansionAbort = debugStats.preExpansionAbort || 'invalid-start-state';
+                                debugStats.nodesExpanded = debugStats.nodesExpanded ?? 0;
+                                debugStats.rootCandidatesGenerated = debugStats.rootCandidatesGenerated ?? 0;
+                            }
                             return { ok: false, solution: null, debug: debugStats };
+                        }
+                        if (debugStats) {
+                            debugStats.preExpansionAbort = debugStats.preExpansionAbort || 'invalid-start-state';
+                            debugStats.nodesExpanded = debugStats.nodesExpanded ?? 0;
+                            debugStats.rootCandidatesGenerated = debugStats.rootCandidatesGenerated ?? 0;
                         }
                         return [];
                     }
@@ -5949,7 +5975,17 @@
                             });
                             appendReachabilitySanityNote(level, debugStats, "no-solution");
                             finalizeSolverDebugStats(debugStats, "no-solution", perfStart);
+                            if (debugStats) {
+                                debugStats.preExpansionAbort = debugStats.preExpansionAbort || 'no-viable-gates';
+                                debugStats.nodesExpanded = debugStats.nodesExpanded ?? 0;
+                                debugStats.rootCandidatesGenerated = debugStats.rootCandidatesGenerated ?? 0;
+                            }
                             return { ok: false, solution: null, debug: debugStats };
+                        }
+                        if (debugStats) {
+                            debugStats.preExpansionAbort = debugStats.preExpansionAbort || 'no-viable-gates';
+                            debugStats.nodesExpanded = debugStats.nodesExpanded ?? 0;
+                            debugStats.rootCandidatesGenerated = debugStats.rootCandidatesGenerated ?? 0;
                         }
                         return [];
                     }
@@ -6059,6 +6095,18 @@
                         ...(hasFilterFlipMix || (level?.filterMap?.size || 0) > 0 || (level?.flippingFilterMap?.size || 0) > 0
                             ? [{ passName: 'pass-4-filter-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'default', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'distance'], statusLabel: `Solving (${validGates.length} viable gates, filter-relaxed)...` }]
                             : []),
+                        ...((level?.filterMap?.size || 0) > 0
+                            ? [{
+                                passName: 'pass-4c-filter-axis-relaxed',
+                                ratio: isLargeGrid ? 0.12 : 0.08,
+                                variant: 'random',
+                                beamTopK: 0,
+                                debugVariant: false,
+                                disabledPrunes: ['filterAxisStrict'],
+                                useFailMemo: false,
+                                statusLabel: `Solving (${validGates.length} viable gates, filter-axis-relaxed)...`
+                              }]
+                            : []),
                         ...((level?.flippingFilterMap?.size || 0) > 0
                             ? [{ passName: 'pass-4-flipper-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'random', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'portalAutomaton'], passPortalBiasMode: 'off', statusLabel: `Solving (${validGates.length} viable gates, flipper-relaxed)...` }]
                             : []),
@@ -6079,7 +6127,7 @@
                             passName: pass.passName,
                             localTimeLimit: localBudget,
                             disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...((pass.disabledPrunes || []))])),
-                            useFailMemo: !(Array.isArray(disabledPrunes) && disabledPrunes.length > 0),
+                            useFailMemo: pass.useFailMemo ?? !(Array.isArray(disabledPrunes) && disabledPrunes.length > 0),
                             statusLabel: pass.statusLabel,
                             passVariant: pass.variant,
                             enableForcedMoves: true,
@@ -12021,7 +12069,9 @@
                         const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
                         filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
                     }
-                    if (filterLast && filterLast !== axis) return false;
+                    if (!options?.disabledPrunes?.includes('filterAxisStrict')) {
+                        if (filterLast && filterLast !== axis) return false;
+                    }
 
                     let filterTarget = level.filterMap.get(targetKey);
                     if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
@@ -12029,7 +12079,9 @@
                         const baseAxis = level.flippingFilterMap.get(targetKey);
                         filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
                     }
-                    if (filterTarget && filterTarget !== axis) return false;
+                    if (!options?.disabledPrunes?.includes('filterAxisStrict')) {
+                        if (filterTarget && filterTarget !== axis) return false;
+                    }
                 }
 
                 if (checkHazards && mode !== APP.Core.EDITOR && level.gooseSet.has(targetKey)) return false;
