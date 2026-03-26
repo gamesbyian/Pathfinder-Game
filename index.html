@@ -3496,10 +3496,10 @@
                         if (!Array.isArray(debugStats.neighborTrace)) debugStats.neighborTrace = [];
                         if (debugStats.neighborTrace.length < 8) debugStats.neighborTrace.push(stageTrace);
                     }
-                    if (assertKnownSolvableBounds && depth === 0 && l?.id === 0 && startNeighborBoundSanity && startNeighborBoundSanity.legalBranches > 0) {
+                    if (assertKnownSolvableBounds && depth === 0 && startNeighborBoundSanity && startNeighborBoundSanity.legalBranches > 0) {
                         const ok = startNeighborBoundSanity.satisfiedBranches > 0;
                         if (!ok) {
-                            const msg = `[PortalBoundAssert] Level 1 start-neighbor sanity failed: no legal branch satisfied portal-aware bound. legal=${startNeighborBoundSanity.legalBranches}`;
+                            const msg = `[PortalBoundAssert] Level ${(Number.isFinite(l?.id) ? l.id + 1 : '?')} start-neighbor sanity failed: no legal branch satisfied portal-aware bound. legal=${startNeighborBoundSanity.legalBranches}`;
                             const shouldThrow = !!APP.State?.ENGINE?.isDevMode && !options?.auditMode;
                             if (shouldThrow) throw new Error(msg);
                             console.warn(msg);
@@ -8342,6 +8342,7 @@
             };
 
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
+                const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
                     attemptOrdinal: attemptOpts?.attemptOrdinal,
                     highReqIntThreshold: attemptOpts?.highReqIntThreshold
@@ -8373,7 +8374,7 @@
                     featureSignature,
                     controlPlane,
                     contradictionRecoveryMode: !!opts.contradictionRecovery,
-                    assertKnownSolvableBounds: true
+                    assertKnownSolvableBounds: hasPortalBounds
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -8408,7 +8409,7 @@
                         objectiveTrack: attemptOpts.objectiveTrack || null,
                         controlPlane,
                         contradictionRecoveryMode: !!opts.contradictionRecovery,
-                        assertKnownSolvableBounds: true
+                        assertKnownSolvableBounds: hasPortalBounds
                     });
                     const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
                     const guardedDebug = guarded?.debug || {};
@@ -8607,6 +8608,7 @@
         async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity'], opts = {}) {
             const started = Date.now();
                 const resolveRun = async (runBudgetMs, runOpts = {}) => {
+                const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const r = await PathfinderSolver.solve(level, {
                     timeLimit: runBudgetMs,
                     debug: true,
@@ -8616,7 +8618,7 @@
                     phasePolicy: runOpts.phasePolicy !== undefined ? runOpts.phasePolicy : (opts.phasePolicy || null),
                     enableLowExpansionProbe: !!opts.enableLowExpansionProbe,
                     contradictionRecoveryMode: !!opts.contradictionRecovery,
-                    assertKnownSolvableBounds: true
+                    assertKnownSolvableBounds: hasPortalBounds
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 if (r?.ok && solution.length > 0) {
@@ -8888,9 +8890,9 @@
 
             let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
             const totalBudget = Math.max(1500, budgetMs);
-            const baselineBudget = Math.max(750, Math.floor(totalBudget * 0.5));
-            const recoveryBudget = Math.max(750, Math.floor(totalBudget * 0.25));
-            const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.35));
+            const baselineBudget = Math.max(750, Math.floor(totalBudget * 0.75));
+            const recoveryBudget = Math.max(750, Math.floor(totalBudget * 0.2));
+            const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.25));
             const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
             const profileSignals = level?.solverProfile || {};
             const outstandingObligations = (Number(profileSignals?.objectiveCount) || 0) + (Number(profileSignals?.mustCrossCount) || 0);
@@ -8923,7 +8925,8 @@
             });
             const guardrailStopThirdAttempt = timesTried >= 3
                 && attemptPairNearIdentical(prePreviousAttempt, previousAttempt)
-                && previousAttempt?.delta?.qualityImproved === false;
+                && previousAttempt?.delta?.qualityImproved === false
+                && (previousAttempt?.metrics?.nodesExpanded || 0) > 0;
 
             if (guardrailStopThirdAttempt) {
                 const blocked = {
@@ -9860,7 +9863,12 @@
                     const firstPath = solutions[0]?.path || null;
                     const validation = firstPath ? validateCandidatePath(level, firstPath) : { ok: false, reason: 'no-solution' };
                     const portalJumps = firstPath ? countPortalTransitions(level, firstPath) : 0;
-                    const portalRequiredLevel = levelNum === 21 || levelNum === 117;
+                    const portalRequiredLevel = (level?.portalMap?.size || 0) > 0
+                        && (
+                            (level?.mustCrossKeys?.length || 0) > 0
+                            || (Array.isArray(level?.solverProfile?.portalHints?.mandatoryFamilies)
+                                && level.solverProfile.portalHints.mandatoryFamilies.length > 0)
+                        );
                     const portalUsageExpected = !validation.ok ? null : (portalRequiredLevel ? portalJumps > 0 : true);
                     report.push({
                         level: levelNum,
