@@ -1775,7 +1775,8 @@
                     }, l, {
                         isStrict: false,
                         checkFalseGoals: options.falseGoalPolicy !== 'ignore',
-                        hazardPolicy: options.hazardPolicy || 'forbid'
+                        hazardPolicy: options.hazardPolicy || 'forbid',
+                        disabledPrunes: options?.disabledPrunes
                     });
                 },
                 _diagnoseMoveInvalidReason(targetKey, path, counts, usage, jumpSet, l, flipCount, crossedSet) {
@@ -12013,7 +12014,8 @@
                     crossedSet = state?.crossedSet || state?.crossedFlippingFilters || new Map(),
                     checkHazards = isStrict,
                     checkFalseGoals = isStrict,
-                    checkWinMetrics = isStrict
+                    checkWinMetrics = isStrict,
+                    disabledPrunes = []
                 } = options;
                 if (!level) return false;
                 const path = state?.path || [];
@@ -12069,7 +12071,7 @@
                         const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
                         filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
                     }
-                    if (!options?.disabledPrunes?.includes('filterAxisStrict')) {
+                    if (!disabledPrunes.includes('filterAxisStrict')) {
                         if (filterLast && filterLast !== axis) return false;
                     }
 
@@ -12079,7 +12081,7 @@
                         const baseAxis = level.flippingFilterMap.get(targetKey);
                         filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
                     }
-                    if (!options?.disabledPrunes?.includes('filterAxisStrict')) {
+                    if (!disabledPrunes.includes('filterAxisStrict')) {
                         if (filterTarget && filterTarget !== axis) return false;
                     }
                 }
