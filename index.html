@@ -2053,6 +2053,9 @@
                     h1 = this._mixHash32(h1, Number.isFinite(state.flipParity) ? state.flipParity : 0);
                     h0 = this._mixHashBigInt(h0, state.flipperCrossMask);
                     h1 = this._mixHashBigInt(h1, state.flipperParityAtCrossMask);
+                    if ((l?.filterMap?.size || 0) > 0 || (l?.flippingFilterMap?.size || 0) > 0) {
+                        h0 = this._mixHash32(h0, state.nonZeroUsage | 0);
+                    }
                     return [h0 >>> 0, h1 >>> 0];
                 },
                 _buildStrictStateSignature(state, l, realLen, options = {}) {
@@ -3307,6 +3310,10 @@
 
                     const startNeighborBoundSanity = depth === 0 ? { legalBranches: 0, satisfiedBranches: 0 } : null;
                     const gateToGateRejected = [];
+                    const originalGateSet = l.gateSet;
+                    if (depth === 0 && l.gateSet?.size > 1) {
+                        l.gateSet = new Set([state.path[0]]);
+                    }
                     const valid = candidates.filter(nk => {
                         if (debugStats) debugStats.branchesTried++;
                         if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) {
@@ -3446,6 +3453,7 @@
                         if (stageTrace) stageTrace.afterObjectiveHeuristics.push(nk);
                         return true;
                     });
+                    l.gateSet = originalGateSet;
                     const gateAdjacencyOnlyRejected = candidates.length > 0
                         && valid.length === 0
                         && gateToGateRejected.length > 0
@@ -3569,7 +3577,7 @@
                         : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
                     const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
                     const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : null;
-                    const perimeterThreshold = options?.antiDriftEdgeLock ? 0 : (profile?.perimeterThreshold || 1);
+                    const perimeterThreshold = options?.antiDriftEdgeLock ? 1 : (profile?.perimeterThreshold || 1);
                     const macroSkeleton = options?.macroSkeleton || null;
                     const regionCrossingModel = options?.regionCrossingModel || null;
                     const activePhase = state.phase || 'harvest';
