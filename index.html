@@ -2278,7 +2278,8 @@
                     const scopedKey = `${key}|mc:${mustCrossCompact}${filterAxisKey}${flipKey}`;
                     const prev = map.get(scopedKey);
                     const strictness = Math.max(0.35, Math.min(1.8, Number(candidate?.dominanceStrictness) || 1));
-                    const stepSlack = Math.max(0, Math.round((strictness - 1) * 3));
+                    const hasFlippers = (l?.flippingFilterMap?.size || 0) > 0;
+                    const stepSlack = Math.max(0, Math.round((strictness - 1) * 3)) + (hasFlippers ? 1 : 0);
                     const intersectionSlack = strictness >= 1.25 ? 0 : 1;
                     if (prev) {
                         if (stats) stats.dominanceMemoHits = (stats.dominanceMemoHits || 0) + 1;
@@ -3617,6 +3618,16 @@
                     const templateCommitDepthRatio = Number.isFinite(templateCommitment?.depthRatio) ? templateCommitment.depthRatio : 0.38;
                     const inTemplateCommitWindow = !!(structuralTemplate && (l.reqLen > 0) && ((curLen / l.reqLen) <= templateCommitDepthRatio));
                     const objectiveTrackStrictness = Number.isFinite(options?.objectiveTrack?.strictness) ? options.objectiveTrack.strictness : 0.72;
+                    const multiGateFalseGoalProximity = l.gateKeys.length >= 2 && l.falseGoalKeys?.size > 0
+                        && l.gateKeys.some(gk => {
+                            const gp = APP.LevelUtils.UNPACK(gk);
+                            for (const fgk of l.falseGoalKeys) {
+                                const fp = APP.LevelUtils.UNPACK(fgk);
+                                if (Math.abs(gp.x - fp.x) + Math.abs(gp.y - fp.y) <= 2) return true;
+                            }
+                            return false;
+                        });
+                    const falseGoalPenaltyScale = multiGateFalseGoalProximity ? 0.5 : 1.0;
                     const scored = valid.map(nk => {
                         const px = k & 0xFFFF;
                         const py = k >> 16;
@@ -3737,6 +3748,31 @@
                                     && (rSteps - lateViableDist) > Math.max(12, Math.floor(l.reqLen * 0.45))
                                     && (rSteps / l.reqLen) > 0.2) {
                                     mustPassUrgencyWeight = Math.min(mustPassUrgencyWeight, 0.45);
+                                    // When deferring mustPass urgency, redirect attention toward portals
+                                    // that would bring us closer to an outstanding mustPass cell
+                                    if (l.portalMap?.size > 0 && l.mustPassDistMaps && l.portalFamilyByEntry) {
+                                        let bestPortalMustImprovement = 0;
+                                        l.portalMap.forEach((dest, portalKey) => {
+                                            if (portalKey === nk || dest.dest === -1) return;
+                                            const portalDist = distMap.get(portalKey) ?? Infinity;
+                                            const curDist = distMap.get(k) ?? Infinity;
+                                            if (!Number.isFinite(portalDist) || portalDist >= curDist) return;
+                                            for (let i = 0; i < l.mustPassKeys.length; i++) {
+                                                const bit = 1n << BigInt(i);
+                                                if ((state.mustMask & bit) === 0n) continue;
+                                                const mpDistFromPortalDest = l.mustPassDistMaps[i]?.get(dest.dest);
+                                                const mpDistFromCurrent = l.mustPassDistMaps[i]?.get(k);
+                                                if (!Number.isFinite(mpDistFromPortalDest) || !Number.isFinite(mpDistFromCurrent)) continue;
+                                                const improvement = mpDistFromCurrent - mpDistFromPortalDest;
+                                                if (improvement > bestPortalMustImprovement) bestPortalMustImprovement = improvement;
+                                            }
+                                        });
+                                        if (bestPortalMustImprovement > 0) {
+                                            const portalApproachBonus = Math.round(bestPortalMustImprovement * gravityMult * 0.3);
+                                            const nkIsPortalEntry = l.portalFamilyByEntry.has(nk);
+                                            if (nkIsPortalEntry) score -= portalApproachBonus;
+                                        }
+                                    }
                                 }
                             }
                             const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
@@ -4071,8 +4107,8 @@
                             const falseNext = l.falseGoalDistMap?.get(nk) ?? Infinity;
                             if (Number.isFinite(falseNext)) {
                                 let ambiguityPenalty = 0;
-                                if (falseNext <= 2) ambiguityPenalty += (falseNext === 0 ? 36 : (falseNext === 1 ? 22 : 12));
-                                if (Number.isFinite(falseNow) && falseNext < falseNow) ambiguityPenalty += 8;
+                                if (falseNext <= 2) ambiguityPenalty += Math.round((falseNext === 0 ? 36 : (falseNext === 1 ? 22 : 12)) * falseGoalPenaltyScale);
+                                if (Number.isFinite(falseNow) && falseNext < falseNow) ambiguityPenalty += Math.round(8 * falseGoalPenaltyScale);
                                 if (hardConstraintImproved) ambiguityPenalty = Math.floor(ambiguityPenalty * 0.35);
                                 score += ambiguityPenalty;
                                 pushDriver('falseGoalAmbiguity', falseNext, ambiguityPenalty);
@@ -4091,7 +4127,7 @@
                             const edgeNow = Math.min(px, py, (l.grid.w - 1) - px, (l.grid.h - 1) - py);
                             const edgeNext = Math.min(skx, sky, (l.grid.w - 1) - skx, (l.grid.h - 1) - sky);
                             if (edgeNext > edgeNow) {
-                                let inwardPenalty = Math.round((10 + (edgeNext - edgeNow) * 12) * antiDitherScale * (options?.antiDriftEdgeLock ? 3 : 1));
+                                let inwardPenalty = Math.round((10 + (edgeNext - edgeNow) * 12) * antiDitherScale * (options?.antiDriftEdgeLock ? 2 : 1));
                                 if (productiveAmbiguity) inwardPenalty = Math.floor(inwardPenalty * 0.4);
                                 else if (goalAggressive && !objectiveImproved) inwardPenalty += 8;
                                 score += inwardPenalty;
@@ -5995,7 +6031,7 @@
                     const isPerimeterSpineCandidate = (
                         level.grid.w * level.grid.h > 100 &&
                         level.mustPassKeys.length >= 2 &&
-                        level.reqLen >= (level.grid.w + level.grid.h) * 1.8 &&
+                        level.reqLen >= (level.grid.w + level.grid.h) * 1.5 &&
                         level.mustPassKeys.every(k => {
                             const p = APP.LevelUtils.UNPACK(k);
                             return Math.min(p.x, p.y, (level.grid.w - 1) - p.x, (level.grid.h - 1) - p.y) <= 1;
@@ -6015,7 +6051,12 @@
                             antiDriftEdgeLock: true
                         }] : []),
                         { passName: 'pass-2-ranked', ratio: isLargeGrid ? 0.25 : 0.35, variant: 'default', beamTopK: 0, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates, full ranked queue)...` },
-                        ...(hasFilterFlipMix ? [{ passName: 'pass-4-filter-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'default', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound'], statusLabel: `Solving (${validGates.length} viable gates, filter-relaxed)...` }] : []),
+                        ...(hasFilterFlipMix || (level?.filterMap?.size || 0) > 0 || (level?.flippingFilterMap?.size || 0) > 0
+                            ? [{ passName: 'pass-4-filter-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'default', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'distance'], statusLabel: `Solving (${validGates.length} viable gates, filter-relaxed)...` }]
+                            : []),
+                        ...((level?.flippingFilterMap?.size || 0) > 0
+                            ? [{ passName: 'pass-4-flipper-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'random', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'portalAutomaton'], passPortalBiasMode: 'off', statusLabel: `Solving (${validGates.length} viable gates, flipper-relaxed)...` }]
+                            : []),
                         { passName: 'pass-3-fallback', ratio: 1, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
                     let primaryRun = { kind: 'ok', solutions: [] };
@@ -6040,7 +6081,7 @@
                             gateBeamTopK: pass.beamTopK || 0,
                             debugGateVariant: !!pass.debugVariant,
                             passScoringMode: scoringMode,
-                            passPortalBiasMode: portalBiasMode,
+                            passPortalBiasMode: pass.passPortalBiasMode ?? portalBiasMode,
                             passStructuralMode: structuralMode,
                             forcePhaseArchetype: pass.forcePhaseArchetype || null,
                             antiDriftEdgeLock: !!pass.antiDriftEdgeLock,
@@ -6069,7 +6110,7 @@
                     if (!primarySolved && !foundSolutions.timedOut && remainingBudget() > 1500) {
                         const recoveryRun = await runSolvePass({
                             passName: 'pass-4-bound-relaxed',
-                            localTimeLimit: Math.min(remainingBudget(), Math.max(4000, Math.floor(timeLimit * 0.25))),
+                            localTimeLimit: Math.min(remainingBudget(), Math.max(6000, Math.floor(timeLimit * 0.30))),
                             disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
                             useFailMemo: false,
                             passVariant: 'random',
