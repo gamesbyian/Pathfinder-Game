@@ -2832,10 +2832,7 @@
                     }
                     if (baseBound === Infinity) return Infinity;
                     const legacyExtraVisitsLB = this._mustCrossExtraVisitsLowerBound(mask, crossNeed, l).extraVisitsLB;
-                    const legacyBound = baseBound + legacyExtraVisitsLB;
-                    const demandFlowBound = this._estimateMustCrossDemandFlowBoundFrom(key, state, l);
-                    if (!Number.isFinite(demandFlowBound)) return legacyBound;
-                    return Math.max(legacyBound, demandFlowBound);
+                    return baseBound + legacyExtraVisitsLB;
                 },
                 _hazardDecisionForKey(key, state, l, options = {}) {
                     if (!l.gooseSet.has(key)) return { allowed: true, terminal: false };
@@ -6444,7 +6441,7 @@
                 family = 'solved';
                 confidence = 'high';
                 reasons.push('final-status-solved');
-            } else if (preExpansionSignals && status !== 'no-solution-proven') {
+            } else if (preExpansionSignals && status !== 'no-solution-proven' && status !== 'timeout' && status !== 'no-solution-inconclusive') {
                 const goalReachable = context?.goalReachable;
                 const interactionComplex = hasRootInteractionComplexity(context?.level || null);
                 const likelyGeneratorCollapse = interactionComplex
@@ -10254,7 +10251,7 @@
                     if (`${context?.solvedBy || ''}`.includes('referee-compat-profile')) category = 'solved-via-compat-profile';
                     else if (context?.solvedAfterRetry) category = 'solved-after-retry';
                     else category = 'solved-direct';
-                } else if (preExpansionSignals && status !== 'no-solution-proven') {
+                } else if (preExpansionSignals && status !== 'no-solution-proven' && status !== 'timeout' && status !== 'no-solution-inconclusive') {
                     category = 'pre-expansion-failure';
                 } else {
                     const lowExpansion = expanded <= Math.max(2, Math.ceil(generated * 0.25));
