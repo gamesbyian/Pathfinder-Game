@@ -2341,6 +2341,7 @@
                     const prevTarget = Number.isFinite(state.activeObjectiveId) ? state.activeObjectiveId : -1;
                     const portalFrontierChanged = (state.activeObjectivePortalForced ?? -1) !== (portalForced ? 1 : 0);
                     const scoreObjective = (objectiveId) => {
+                        const node = l.objectiveNodes[objectiveId];
                         const dMap = l.objectiveDistMaps?.[objectiveId];
                         const detour = dMap?.get(currentKey) ?? Infinity;
                         const toGoal = l.objectiveToGoalDist?.[objectiveId] ?? Infinity;
@@ -2355,7 +2356,7 @@
                         const ambiguityPenalty = Number.isFinite(nearestPeer) ? Math.max(0, 6 - nearestPeer) : 6;
                         const ambiguityFuture = Number.isFinite(nearestPeer) ? nearestPeer : 0;
                         const detourCost = Number.isFinite(detour) ? detour : 10000;
-                        const objectiveVisited = state.countsArr && state.countsArr[state.keyToIdx(node.key)] > 0;
+                        const objectiveVisited = node && state.countsArr && state.countsArr[state.keyToIdx(node.key)] > 0;
                         const detourMultiplier = objectiveVisited ? 6 : 14;
                         const goalCost = Number.isFinite(toGoal) ? toGoal : 10000;
                         const gateCost = Number.isFinite(gateMin) ? gateMin : 0;
