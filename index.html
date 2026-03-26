@@ -3872,14 +3872,14 @@
                             const intsRemaining = Math.max(0, l.reqInt - state.ints);
                             const goalDist = distMap.get(nk) ?? 999;
 
-                            if (profile.perimeterBias > 0 && rRatio < 0.45) {
+                            if (profile.perimeterBias > 0 && profile.routePressure > 0.4 && rRatio < 0.45) {
                                 const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
                                 if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * Math.max(0.25, policyProfile.perimeterBiasWeight || 1)); score += c; pushDriver('perimeterBias', edgeDist, c); }
                                 else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
                                 if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
                             }
 
-                            if (intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
+                            if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
                                 const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * Math.max(0.25, policyProfile.intersectionSetupWeight || 1);
                                 const candidate = activeKnotTarget.candidate;
                                 const targetDist = candidate.distMap instanceof Map ? candidate.distMap.get(nk) : undefined;
@@ -7846,7 +7846,10 @@
                     directionPolicy: { fast: 'default', alt: 'alt', allowRandomized: false }
                 }
             };
-            const base = strategyByClass[complexityClass] || strategyByClass.standard;
+            const fallbackStrategy = strategyByClass.standard;
+            const base = (strategyByClass[complexityClass] && typeof strategyByClass[complexityClass] === 'object')
+                ? strategyByClass[complexityClass]
+                : fallbackStrategy;
             const subtypeOverrides = {
                 macro_sweep: { stageOrder: ['fast', 'macroSkeleton', 'strict', 'retained', 'switch', 'fallback'], budgetSplit: { fast: 0.1, macroSkeleton: 0.2, strict: 0.21, retained: 0.16, switch: 0.15, fallback: 0.18 }, directionPolicy: { ...base.directionPolicy, allowRandomized: false } },
                 portal_macro_hybrid: { stageOrder: ['fast', 'portalSweep', 'macroSkeleton', 'strict', 'switch', 'fallback'], budgetSplit: { fast: 0.1, portalSweep: 0.19, macroSkeleton: 0.19, strict: 0.18, switch: 0.14, fallback: 0.2 }, portalBiasMode: 'aggressive' },
@@ -7855,7 +7858,9 @@
                 filter_commitment: { stageOrder: ['fast', 'strict', 'alt', 'retained', 'switch', 'fallback'], budgetSplit: { fast: 0.13, strict: 0.22, alt: 0.14, retained: 0.18, switch: 0.14, fallback: 0.19 } },
                 symmetric_split: { stageOrder: ['fast', 'strict', 'switch', 'retained', 'alt', 'fallback'], budgetSplit: { fast: 0.12, strict: 0.23, switch: 0.18, retained: 0.17, alt: 0.11, fallback: 0.19 } }
             };
-            return { ...base, ...(subtypeOverrides[strategySubtype] || {}) };
+            const resolved = { ...base, ...(subtypeOverrides[strategySubtype] || {}) };
+            if (!resolved || typeof resolved !== 'object') return { ...fallbackStrategy };
+            return resolved;
         },
 
         allocateStageBudgets(totalMs, profile = null) {
@@ -8717,7 +8722,10 @@
             const purpose = opts.purpose || 'solve';
             const complexityClass = level.solverProfile?.complexityClass || 'standard';
             const strategySubtype = level.solverProfile?.strategySubtype || 'corridor_commitment';
-            const complexityStrategy = this.getComplexityStrategy(complexityClass, strategySubtype);
+            const complexityStrategyCandidate = this.getComplexityStrategy(complexityClass, strategySubtype);
+            const complexityStrategy = (complexityStrategyCandidate && typeof complexityStrategyCandidate === 'object')
+                ? complexityStrategyCandidate
+                : this.getComplexityStrategy('standard', 'corridor_commitment');
             const resolvedPortalBiasMode = opts.portalBiasMode || complexityStrategy.portalBiasMode || 'adaptiveMustCross';
             const resolvedPhasePolicy = opts.phasePolicy || level.solverProfile?.phasePolicy || null;
             const defaultBudget = purpose === 'hint' ? 5000 : 15000;
@@ -9561,6 +9569,7 @@
                         totalSolveTimeMs
                     };
                 }
+                console.error('[SOLVER CRASH]', err);
                 console.error('Solver error:', err);
                 const thrownDebug = createSolverDebugStats(debugLevel);
                 setDepthZeroReason(thrownDebug, 'thrown-before-expansion', { message: err?.message || 'solver error' });
