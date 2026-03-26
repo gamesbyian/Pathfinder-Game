@@ -3418,7 +3418,7 @@
                         if (portalAutomatonLowerBoundActive) {
                             const portalAwareInfo = this._portalAwareLowerBound(nk, projectedState, l, {
                                 returnComponents: true,
-                                contradictionRecoveryCap: !!contradictionRecoveryMode
+                                contradictionRecoveryCap: !!options?.contradictionRecoveryMode
                             });
                             const portalAwareBound = portalAwareInfo?.bound;
                             if (startNeighborBoundSanity && Number.isFinite(portalAwareBound) && portalAwareBound <= rSteps) {
@@ -3872,7 +3872,7 @@
                             const intsRemaining = Math.max(0, l.reqInt - state.ints);
                             const goalDist = distMap.get(nk) ?? 999;
 
-                            if (profile.perimeterBias > 0 && profile.routePressure > 0.4 && rRatio < 0.45) {
+                            if (profile.perimeterBias > 0 && rRatio < 0.45) {
                                 const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
                                 if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * Math.max(0.25, policyProfile.perimeterBiasWeight || 1)); score += c; pushDriver('perimeterBias', edgeDist, c); }
                                 else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
@@ -9466,7 +9466,12 @@
                 const isTinyBoard = gridSize <= 64;
                 const exhaustedQuickly = !solverResult.timedOut && totalSolveTimeMs < 100;
 
-                if (isTinyBoard && exhaustedQuickly && !solverResult.ok) {
+                if (
+                    isTinyBoard
+                    && exhaustedQuickly
+                    && !solverResult.ok
+                    && isNoSolutionTrulyProven(solverResult?.debug)
+                ) {
                     finalStatus = 'no-solution-proven';
                 }
                 const compatAliases = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], {
