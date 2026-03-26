@@ -6482,11 +6482,14 @@
             const effectiveRootExpanded = Math.max(rootCandidatesExpanded, maxAttemptRootExpanded || 0);
             const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
             const preExpansionAbortCode = `${result?.preExpansionAbort?.code || result?.debug?.preExpansionAbort?.code || ''}`;
-            const preExpansionSignals = !!zeroSummary
+            const explicitPreExpansionSignals = !!zeroSummary
                 || returnedWithoutExpansion
-                || (effectiveNodesExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroNodesUpper && effectiveRootExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroRootExpandedUpper)
                 || rootCandidatesGenerated === 0
-                || preExpansionAbortCode.includes('before-expansion')
+                || preExpansionAbortCode.includes('before-expansion');
+            const nearZeroPreExpansionSignals = effectiveNodesExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroNodesUpper
+                && effectiveRootExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroRootExpandedUpper;
+            const preExpansionSignals = explicitPreExpansionSignals
+                || nearZeroPreExpansionSignals
                 || status === 'error';
             const reasons = [];
             let family = 'other';
@@ -6508,7 +6511,12 @@
                 family = 'solved';
                 confidence = 'high';
                 reasons.push('final-status-solved');
-            } else if (preExpansionSignals && status !== 'no-solution-proven' && status !== 'timeout' && status !== 'no-solution-inconclusive') {
+            } else if (
+                preExpansionSignals
+                && status !== 'no-solution-proven'
+                && status !== 'timeout'
+                && (status !== 'no-solution-inconclusive' || explicitPreExpansionSignals)
+            ) {
                 const goalReachable = context?.goalReachable;
                 const interactionComplex = hasRootInteractionComplexity(context?.level || null);
                 const likelyGeneratorCollapse = interactionComplex
@@ -6530,7 +6538,7 @@
                 if (zeroSummary) reasons.push('zero-expansion-summary');
                 if (returnedWithoutExpansion) reasons.push('returned-without-expansion');
                 if (rootCandidatesGenerated === 0) reasons.push('root-candidates-generated-0');
-                if (effectiveNodesExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.nearZeroNodesUpper) reasons.push('nodes-expanded-near-zero');
+                if (nearZeroPreExpansionSignals) reasons.push('nodes-expanded-near-zero');
             } else {
                 const lowExpansion = effectiveNodesExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.lowExpansionNodesUpper
                     && effectiveRootExpanded <= STRUCTURAL_CLASSIFIER_THRESHOLDS.lowExpansionRootExpandedUpper;
@@ -10499,21 +10507,29 @@
                 const expanded = Math.max(0, Number(rootSummary?.rootCandidatesExpanded ?? debug?.rootCandidatesExpanded) || 0);
                 const nodesExpanded = Math.max(0, Number(diagnostics?.nodesExpanded ?? debug?.nodesExpanded) || 0);
                 const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
-                const preExpansionSignals = !!zeroSummary
+                const explicitPreExpansionSignals = !!zeroSummary
                     || generated === 0
                     || expanded === 0
                     || nodesExpanded === 0
                     || returnedWithoutExpansion
-                    || status === 'error'
                     || String(getPreExpansionAbort(debug)?.code || '').includes('before-expansion')
                     || String(getDepthZeroReason(debug, status) || '').includes('before-expansion');
+                const nearZeroPreExpansionSignals = nodesExpanded <= 2 && expanded <= 1;
+                const preExpansionSignals = explicitPreExpansionSignals
+                    || nearZeroPreExpansionSignals
+                    || status === 'error';
 
                 let category = 'low-expansion-collapse';
                 if (result?.ok) {
                     if (`${context?.solvedBy || ''}`.includes('referee-compat-profile')) category = 'solved-via-compat-profile';
                     else if (context?.solvedAfterRetry) category = 'solved-after-retry';
                     else category = 'solved-direct';
-                } else if (preExpansionSignals && status !== 'no-solution-proven' && status !== 'timeout' && status !== 'no-solution-inconclusive') {
+                } else if (
+                    preExpansionSignals
+                    && status !== 'no-solution-proven'
+                    && status !== 'timeout'
+                    && (status !== 'no-solution-inconclusive' || explicitPreExpansionSignals || nearZeroPreExpansionSignals)
+                ) {
                     category = 'pre-expansion-failure';
                 } else {
                     const lowExpansion = expanded <= Math.max(2, Math.ceil(generated * 0.25));
