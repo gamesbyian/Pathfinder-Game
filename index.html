@@ -13934,13 +13934,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         const formatAuditSummary = (p) => {
             if (!p) return 'No run yet.';
-            return [
-                `levels ${p.levelsProcessed}/${p.levelsTotal}`,
-                `saved hints valid ${p.validHints}/${Math.max(1, p.validHints + p.invalidHints)} (invalid ${p.invalidHints})`,
-                `new hint success ${p.newHint.success} fail ${p.newHint.failure}`,
-                `bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`,
-                `fallback ${p.disableLegacyFallback ? 'referee-only' : 'referee+profiles'}`
-            ].join(' | ');
+            const runType = auditLastRunType;
+            const parts = [`levels ${p.levelsProcessed}/${p.levelsTotal}`];
+            if (runType === AUDIT_RUN_TYPES.hints) {
+                parts.push(`saved hints valid ${p.validHints}/${Math.max(1, p.validHints + p.invalidHints)} (invalid ${p.invalidHints})`);
+            } else if (runType === AUDIT_RUN_TYPES.newHint) {
+                parts.push(`new hint success ${p.newHint.success} fail ${p.newHint.failure}`);
+                parts.push(`fallback ${p.disableLegacyFallback ? 'referee-only' : 'referee+profiles'}`);
+            } else if (runType === AUDIT_RUN_TYPES.bombs) {
+                parts.push(`bombs success ${p.bombs.success} none ${p.bombs.noneFound} error ${p.bombs.error}`);
+            }
+            return parts.join(' | ');
         };
         const summarizeTriage = (triage) => {
             if (!triage) return null;
@@ -13978,16 +13982,23 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             return out;
         };
         const formatAuditLine = (r) => {
+            const runType = auditLastRunType;
             const errSummary = r.error?.message || '';
             const triageSummary = r.diagnostics?.inconclusiveTriageSummary
                 ? ` | triage ${r.diagnostics.inconclusiveTriageSummary.status || 'unknown'} (${r.diagnostics.inconclusiveTriageSummary.attempts || 0} tries)`
                 : '';
+            if (runType === AUDIT_RUN_TYPES.hints) {
+                return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid})${errSummary ? ` | ${errSummary}` : ''}`;
+            }
+            if (runType === AUDIT_RUN_TYPES.bombs) {
+                return `L${r.level}: bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            }
             const structural = r.newHint.structuralProfile || null;
             const structuralSummary = structural
                 ? ` | structural ${structural.family || 'other'}${structural.confidence ? `/${structural.confidence}` : ''}`
                 : '';
             const attemptCount = Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : (r.newHint.refereeAttemptCount || 0);
-            return `L${r.level}: hints ${r.savedHints.valid}/${r.savedHints.total} (bad ${r.savedHints.invalid}) | new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary} | bombs ${r.bombs.status} (${r.bombs.count})${triageSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const hasAuditIssue = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -14002,26 +14013,40 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             return false;
         };
         const getAuditExportMode = () => document.getElementById('auditExportMode')?.value || 'issues';
-        const createAuditSummaryLevel = (r) => ({
-            level: r.level,
-            savedHints: { total: r.savedHints.total, valid: r.savedHints.valid, invalid: r.savedHints.invalid },
-            newHint: {
-                status: r.newHint.status,
-                rawStatus: r.newHint.rawStatus,
-                finalStatus: r.newHint.finalStatus,
-                finalSolvedBy: r.newHint.finalSolvedBy,
-                timeMs: r.newHint.timeMs,
-                totalSolveTimeMs: r.newHint.totalSolveTimeMs,
-                attempts: Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : 0,
-                winningEngine: r.newHint.winningEngine || null,
-                winningStage: r.newHint.winningStage || null,
-                diagnosticsSummary: r.newHint.diagnosticsSummary || null,
-                structuralProfile: r.newHint.structuralProfile || null
-            },
-            bombs: { status: r.bombs.status, count: r.bombs.count },
-            diagnostics: r.diagnostics,
-            error: r.error
-        });
+        const createAuditSummaryLevel = (r) => {
+            if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
+                return {
+                    level: r.level,
+                    savedHints: { total: r.savedHints.total, valid: r.savedHints.valid, invalid: r.savedHints.invalid },
+                    error: r.error
+                };
+            }
+            if (auditLastRunType === AUDIT_RUN_TYPES.bombs) {
+                return {
+                    level: r.level,
+                    bombs: { status: r.bombs.status, count: r.bombs.count },
+                    diagnostics: r.diagnostics,
+                    error: r.error
+                };
+            }
+            return {
+                level: r.level,
+                newHint: {
+                    status: r.newHint.status,
+                    rawStatus: r.newHint.rawStatus,
+                    finalStatus: r.newHint.finalStatus,
+                    finalSolvedBy: r.newHint.finalSolvedBy,
+                    timeMs: r.newHint.timeMs,
+                    totalSolveTimeMs: r.newHint.totalSolveTimeMs,
+                    attempts: Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : 0,
+                    winningEngine: r.newHint.winningEngine || null,
+                    winningStage: r.newHint.winningStage || null,
+                    diagnosticsSummary: r.newHint.diagnosticsSummary || null,
+                    structuralProfile: r.newHint.structuralProfile || null
+                },
+                error: r.error
+            };
+        };
         const compactFeatureSignatureStats = (byFeatureSignature) => {
             if (!byFeatureSignature || typeof byFeatureSignature !== 'object') return {};
             const out = {};
@@ -14084,6 +14109,25 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             };
         };
         const createAuditCompactLevel = (r) => {
+            if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
+                return {
+                    level: r.level,
+                    totalHints: r?.savedHints?.total || 0,
+                    validHints: r?.savedHints?.valid || 0,
+                    invalidHints: r?.savedHints?.invalid || 0,
+                    invalidReasons: Array.isArray(r?.savedHints?.invalidReasons) ? r.savedHints.invalidReasons : [],
+                    error: r?.error?.message || null
+                };
+            }
+            if (auditLastRunType === AUDIT_RUN_TYPES.bombs) {
+                return {
+                    level: r.level,
+                    status: r?.bombs?.status || 'unknown',
+                    bombCount: Number.isFinite(r?.bombs?.count) ? r.bombs.count : 0,
+                    triage: r?.diagnostics?.inconclusiveTriageSummary || null,
+                    error: r?.error?.message || null
+                };
+            }
             const metrics = r?.newHint?.failureProfile?.metrics || {};
             return {
                 level: r.level,
