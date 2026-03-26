@@ -2279,7 +2279,8 @@
                     const flipKey = (l?.flippingFilterMap?.size || 0) > 0
                         ? `|fp:${state?.flipParity || 0}|fcm:${(state?.flipperCrossMask || 0n).toString(16)}`
                         : '';
-                    const scopedKey = `${key}|mc:${mustCrossCompact}${filterAxisKey}${flipKey}`;
+                    const mustPassKey = `|mm:${(state?.mustMask || 0n).toString()}`;
+                    const scopedKey = `${key}${mustPassKey}|mc:${mustCrossCompact}${filterAxisKey}${flipKey}`;
                     const prev = map.get(scopedKey);
                     const strictness = Math.max(0.35, Math.min(1.8, Number(candidate?.dominanceStrictness) || 1));
                     const hasFlippers = (l?.flippingFilterMap?.size || 0) > 0;
@@ -11884,17 +11885,8 @@
                     const left = APP.LevelUtils.PACK(p.x-1,p.y), right = APP.LevelUtils.PACK(p.x+1,p.y), up = APP.LevelUtils.PACK(p.x,p.y-1), down = APP.LevelUtils.PACK(p.x,p.y+1);
                     if ([left, right].some(nk => l.filterMap.get(nk) === APP.Core.V || l.flippingFilterMap.get(nk) === APP.Core.V)) reasons.push(`Vertical Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
                     if ([up, down].some(nk => l.filterMap.get(nk) === APP.Core.H || l.flippingFilterMap.get(nk) === APP.Core.H)) reasons.push(`Horizontal Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
-                    if (diags.some(nk => l.filterMap.has(nk) || l.flippingFilterMap.has(nk))) reasons.push(`Filter diag to MustCross at (${p.x + 1},${p.y + 1})`);
                 }
 
-                l.filterMap.forEach((f, k) => {
-                    const p = APP.LevelUtils.UNPACK(k);
-                    const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
-                    for (const nk of neighbors) {
-                        const nf = l.filterMap.get(nk);
-                        if (nf && nf !== f) reasons.push(`Opposing filters adjacent at (${p.x + 1},${p.y + 1})`);
-                    }
-                });
 
                 const barrier = (k) => l.blockSet.has(k);
                 const reachableFrom = (startKey) => {
