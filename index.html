@@ -6575,6 +6575,8 @@
                 featureFlags: attempt?.heuristicFeatureFlags || options?.heuristicFeatureFlags || null,
                 featureSignature: attempt?.featureSignature || options?.featureSignature || null,
                 stage: Number.isFinite(attempt?.stage) ? attempt.stage : null,
+                escalationTierRequested: Number.isFinite(options.escalationTierRequested) ? options.escalationTierRequested : null,
+                escalationTierEffective: Number.isFinite(attempt?.escalationTier) ? attempt.escalationTier : null,
                 status: options.status || attempt?.status || null,
                 rawStatus: attempt?.rawStatus || attempt?.status || null,
                 solved: !!attempt?.ok,
@@ -14256,7 +14258,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ? ` | structural ${structural.family || 'other'}${structural.confidence ? `/${structural.confidence}` : ''}`
                 : '';
             const attemptCount = Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : (r.newHint.refereeAttemptCount || 0);
-            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} first=${r.newHint.firstPressOutcome || 'not-run'} eventual=${r.newHint.eventualOutcome || r.newHint.status || 'not-run'}<=${r.newHint.eventualOutcomeWithinPresses || 0} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const hasAuditIssue = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -14297,6 +14299,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     timeMs: r.newHint.timeMs,
                     totalSolveTimeMs: r.newHint.totalSolveTimeMs,
                     attempts: Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : 0,
+                    firstPressOutcome: r.newHint.firstPressOutcome || 'not-run',
+                    eventualOutcome: r.newHint.eventualOutcome || r.newHint.status || 'not-run',
+                    eventualOutcomeWithinPresses: Number.isFinite(r.newHint.eventualOutcomeWithinPresses) ? r.newHint.eventualOutcomeWithinPresses : 0,
                     winningEngine: r.newHint.winningEngine || null,
                     winningStage: r.newHint.winningStage || null,
                     diagnosticsSummary: r.newHint.diagnosticsSummary || null,
@@ -14450,7 +14455,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -14500,12 +14505,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     : []
             );
             const hintAttempts = [
-                { key: 'A', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'B', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'C', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'D', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'E', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'F', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
+                { key: 'A', purpose: 'hint', escalationTier: 0, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'B', purpose: 'hint', escalationTier: 1, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'C', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'D', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'E', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'F', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
             let finalHintResult = null;
@@ -14532,6 +14537,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const attemptRecord = APP.Solver.toAuditAttemptSummary(hintRes, {
                         attemptLabel: attemptPlan.key,
                         variant: 'default',
+                        escalationTierRequested: attemptPlan.escalationTier,
                         status: attemptStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
@@ -14574,6 +14580,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const rescueAttempt = APP.Solver.toAuditAttemptSummary(rescueHintRes, {
                         attemptLabel: 'R',
                         variant: 'pre-expansion-rescue',
+                        escalationTierRequested: 2,
                         status: rescueStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
@@ -14614,6 +14621,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.status = finalAttempt?.status || 'error';
             levelEntry.newHint.rawStatus = finalHintResult?.rawStatus || finalAttempt?.rawStatus || 'error';
             levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
+            const attemptHistory = Array.isArray(levelEntry.newHint.attemptHistory) ? levelEntry.newHint.attemptHistory : [];
+            const firstPressAttempt = attemptHistory.find((entry) => entry?.attempt === 'A') || attemptHistory[0] || null;
+            levelEntry.newHint.firstPressOutcome = firstPressAttempt?.status || firstPressAttempt?.rawStatus || 'not-run';
+            levelEntry.newHint.eventualOutcome = finalAttempt?.status || finalAttempt?.rawStatus || 'not-run';
+            levelEntry.newHint.eventualOutcomeWithinPresses = attemptHistory.reduce((max, entry) => {
+                const label = `${entry?.attempt || ''}`.trim();
+                if (!/^[A-F]$/.test(label)) return max;
+                const idx = 'ABCDEF'.indexOf(label);
+                if (idx < 0) return max;
+                return Math.max(max, idx + 1);
+            }, 0);
             levelEntry.newHint.solverPath = finalHintResult?.solverPath || 'unknown';
             levelEntry.newHint.requestedSolverPath = finalHintResult?.requestedSolverPath || 'unknown';
             levelEntry.newHint.executionPath = finalHintResult?.executionPath || finalHintResult?.solverPath || 'unknown';
