@@ -8936,6 +8936,14 @@
             };
 
             let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
+            let rapidCollapseRecoveryDiagnostics = {
+                attempted: false,
+                activated: false,
+                selectedBy: [],
+                trigger: null,
+                prior: null,
+                recovery: null
+            };
             const totalBudget = Math.max(1500, budgetMs);
             const profileSignalsForBudget = level?.solverProfile || {};
             const simpleLevel = (Number(profileSignalsForBudget.routePressure) || 0) < 0.4
@@ -9051,8 +9059,67 @@
                 if (!last.ok && last.status !== 'no-solution-proven') {
                     const failureTaxonomy = classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) });
                     last.failureTaxonomy = failureTaxonomy;
+                    const rapidCollapseSignature = detectRapidCollapseSignature({ baselineResult: last });
+                    if (rapidCollapseSignature.rapidCollapse) {
+                        const recoveryDisabledPrunes = Array.from(new Set([
+                            ...(Array.isArray(fallbackDisabledPrunes) ? fallbackDisabledPrunes : (complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [])),
+                            'mustPassBound',
+                            'mustCrossBound',
+                            'connectivity',
+                            'portalAutomaton'
+                        ]));
+                        rapidCollapseRecoveryDiagnostics = {
+                            attempted: true,
+                            activated: true,
+                            selectedBy: rapidCollapseSignature.reason.slice(),
+                            trigger: 'stage0-rapid-collapse-signature',
+                            prior: rapidCollapseSignature,
+                            recovery: {
+                                disabledPrunes: recoveryDisabledPrunes,
+                                rootCandidateGeneratorVariant: 'interaction-fallback',
+                                orderingPolicy: 'memoRelaxed'
+                            }
+                        };
+                        last = await runStage({
+                            stage: 1,
+                            name: 'Stage 1',
+                            variant: 'rapid-collapse-recovery',
+                            budgetMs: recoveryBudget,
+                            run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                                orderingPolicy: 'memoRelaxed',
+                                portalBiasMode: 'off',
+                                phasePolicy: null,
+                                disabledPrunes: recoveryDisabledPrunes,
+                                profile: level.solverProfile,
+                                controlPlane,
+                                refereeRootDiversification: true,
+                                scoringMode: 'endurance',
+                                structuralMode: true,
+                                enableEnduranceLongpath: true,
+                                allowRandomizedExploration: false,
+                                purpose,
+                                preferMacroSkeleton: true,
+                                rootCandidateGeneratorVariant: 'interaction-fallback'
+                            })
+                        });
+                        if (!last.ok) {
+                            last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
+                        }
+                    } else {
+                        rapidCollapseRecoveryDiagnostics = {
+                            attempted: true,
+                            activated: false,
+                            selectedBy: [],
+                            trigger: 'stage0-no-rapid-collapse-signature',
+                            prior: rapidCollapseSignature,
+                            recovery: null
+                        };
+                    }
+                    if (last.ok || last.status === 'no-solution-proven') {
+                        last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
+                    }
                     const failureCategory = failureTaxonomy?.category || 'low-expansion-collapse';
-                    if (failureCategory === 'pre-expansion-failure') {
+                    if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'pre-expansion-failure') {
                         last = await runStage({
                             stage: 2,
                             name: 'Stage 2',
@@ -9065,7 +9132,7 @@
                                 contradictionRecovery: true
                             })
                         });
-                    } else if (failureCategory === 'low-expansion-collapse') {
+                    } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'low-expansion-collapse') {
                         const policies = ['harvestThenFinish', 'knotBuilder'];
                         for (const policy of policies) {
                             if (last.ok || last.status === 'no-solution-proven') break;
@@ -9090,7 +9157,7 @@
                                 })
                             });
                         }
-                    } else if (failureCategory === 'healthy-expansion-timeout') {
+                    } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'healthy-expansion-timeout') {
                         const stage0Telemetry = extractStageTelemetry(last);
                         const enduranceAttempt = await runStage({
                             stage: 3,
@@ -9135,7 +9202,7 @@
                         } else {
                             last = enduranceAttempt;
                         }
-                    } else if (failureCategory === 'unknownFailure') {
+                    } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'unknownFailure') {
                         last = await runStage({
                             stage: 4,
                             name: 'Stage 4',
@@ -9148,6 +9215,7 @@
                             })
                         });
                     }
+                    if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                 }
             }
 
@@ -9204,7 +9272,8 @@
                     priorRootCandidatesExpanded: Number.isFinite(priorFailureSummary?.rootCandidatesExpanded) ? priorFailureSummary.rootCandidatesExpanded : null,
                     preExpansionAbortCode: preExpansionAbortCode || null,
                     disabledPrunes: rescueDisabledPrunes,
-                    interactionRootFallbackActivation: fallbackActivation
+                    interactionRootFallbackActivation: fallbackActivation,
+                    rapidCollapseRecovery: rapidCollapseRecoveryDiagnostics
                 };
                 if (rescueProfileResult.ok) {
                     rescueProfileResult.enduranceRescueDelta = compactDefined({
@@ -9223,6 +9292,17 @@
                     last.rescueProfileSummary = rescueProfileResult.rescueProfileSummary;
                 }
             }
+            if (!last.ok && purpose === 'hint' && !rapidCollapseRecoveryDiagnostics.attempted) {
+                rapidCollapseRecoveryDiagnostics = {
+                    attempted: true,
+                    activated: false,
+                    selectedBy: ['hint-mode-postcheck'],
+                    trigger: 'hint-mode-recovery-required-before-final-status',
+                    prior: null,
+                    recovery: null
+                };
+            }
+            if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
             if (!last.ok && last.status !== 'no-solution-proven' && strategyMetadata.hardHintFallbackStage) {
                 const hardFallbackBudget = Math.max(1500, Math.floor(Math.max(budgetMs, tierBudgets[Math.min(2, policyTier)] || budgetMs) * 0.55));
                 const hardFallbackAttempt = await runStage({
@@ -10471,23 +10551,54 @@
                     likelyPruneIssue: taxonomy?.likelyPruneIssue ?? null
                 });
             }
-            const hasRootInteractionComplexity = (level = null) => {
-                const hasFilterFlipMix = ((level?.filterMap?.size || 0) > 0) && ((level?.flippingFilterMap?.size || 0) > 0);
-                const hasPortalConstraintMix = ((level?.portalMap?.size || 0) > 0)
-                    && (((level?.mustPassKeys?.length || 0) > 0) || ((level?.mustCrossKeys?.length || 0) > 0));
-                return hasFilterFlipMix || hasPortalConstraintMix;
-            };
-            const shouldActivateInteractionRootFallback = ({ force = false, baselineResult = null, level = null } = {}) => {
+            const detectRapidCollapseSignature = ({ baselineResult = null } = {}) => {
                 const debug = baselineResult?.debug || baselineResult?.stats?.debug || {};
                 const diagnostics = baselineResult?.diagnosticsSummary || baselineResult?.diagnostics || buildSearchDiagnostics(debug, baselineResult?.status || baselineResult?.rawStatus || 'unknown');
                 const rootSummary = baselineResult?.rootSearchSummary || makeRootSearchSummary(debug, diagnostics) || {};
                 const generated = Math.max(0, Number(rootSummary?.rootCandidatesGenerated ?? debug?.rootCandidatesGenerated) || 0);
                 const expanded = Math.max(0, Number(rootSummary?.rootCandidatesExpanded ?? debug?.rootCandidatesExpanded) || 0);
                 const nodesExpanded = Math.max(0, Number(diagnostics?.nodesExpanded ?? debug?.nodesExpanded) || 0);
+                const preExpansionAbort = getPreExpansionAbort(debug);
+                const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
+                const reason = [];
+                if (preExpansionAbort?.code) reason.push(`pre-expansion-abort:${preExpansionAbort.code}`);
+                if (nodesExpanded <= 3) reason.push(`nodes<=3:${nodesExpanded}`);
+                if (expanded <= 1) reason.push(`root-expanded<=1:${expanded}`);
+                if (generated <= 1 && expanded <= 1) reason.push(`root-generated<=1:${generated}`);
+                if (returnedWithoutExpansion) reason.push('returned-without-expansion');
+                const rapidCollapse = reason.length > 0;
+                return {
+                    rapidCollapse,
+                    reason,
+                    nodesExpanded,
+                    rootCandidatesGenerated: generated,
+                    rootCandidatesExpanded: expanded,
+                    preExpansionAbortCode: preExpansionAbort?.code || null,
+                    returnedWithoutExpansion
+                };
+            };
+            const hasRootInteractionComplexity = (level = null) => {
+                const filterCount = (level?.filterMap?.size || 0);
+                const flippingFilterCount = (level?.flippingFilterMap?.size || 0);
+                const mustPassCount = (level?.mustPassKeys?.length || 0);
+                const mustCrossCount = (level?.mustCrossKeys?.length || 0);
+                const gooseCount = (level?.gooseSet?.size || 0);
+                const hasAnyFilterPressure = filterCount > 0 || flippingFilterCount > 0;
+                const hasFilterFlipMix = filterCount > 0 && flippingFilterCount > 0;
+                const hasPortalConstraintMix = ((level?.portalMap?.size || 0) > 0)
+                    && (mustPassCount > 0 || mustCrossCount > 0);
+                const hasGooseMustCrossMix = gooseCount > 0 && mustCrossCount > 0;
+                return hasFilterFlipMix || hasPortalConstraintMix || hasAnyFilterPressure || hasGooseMustCrossMix;
+            };
+            const shouldActivateInteractionRootFallback = ({ force = false, baselineResult = null, level = null } = {}) => {
+                const rapidCollapse = detectRapidCollapseSignature({ baselineResult });
+                const generated = rapidCollapse.rootCandidatesGenerated;
+                const expanded = rapidCollapse.rootCandidatesExpanded;
+                const nodesExpanded = rapidCollapse.nodesExpanded;
                 const tooFewRoots = expanded <= 1 || generated <= 1;
-                const collapsedAtRoot = !!diagnostics?.returnedWithoutExpansion || nodesExpanded <= 2;
+                const collapsedAtRoot = !!rapidCollapse.returnedWithoutExpansion || nodesExpanded <= 3;
                 const interactionComplex = hasRootInteractionComplexity(level);
-                const activate = !!force || (interactionComplex && tooFewRoots && collapsedAtRoot);
+                const activate = !!force || rapidCollapse.rapidCollapse || (interactionComplex && tooFewRoots && collapsedAtRoot);
                 return {
                     activate,
                     interactionComplex,
@@ -10495,7 +10606,8 @@
                     collapsedAtRoot,
                     generated,
                     expanded,
-                    nodesExpanded
+                    nodesExpanded,
+                    rapidCollapse
                 };
             };
 
