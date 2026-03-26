@@ -8188,6 +8188,7 @@
                         policyProfile: modernStructuralGuidanceNotNeeded ? null : 'perimeterSweep',
                         orderingPolicy: modernStructuralGuidanceNotNeeded ? 'default' : null,
                         startGateArchetype: null,
+                        useControlPlaneArchetype: modernStructuralGuidanceNotNeeded ? false : true,
                         commitmentPlan: modernStructuralGuidanceNotNeeded ? null : { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
                         memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2
                     });
@@ -8351,7 +8352,13 @@
                 });
                 const featureSignature = toHeuristicFeatureSignature(heuristicFeatureFlags);
                 const orderingPolicy = attemptOpts.orderingPolicy || attemptOpts.policyProfile || opts.orderingPolicy || 'harvestThenFinish';
-                const startGateArchetype = attemptOpts.startGateArchetype || attemptOpts.policyProfile || controlPlane?.activeHypothesis?.archetype || 'harvestThenFinish';
+                const startGateArchetype = (attemptOpts.startGateArchetype !== undefined && attemptOpts.startGateArchetype !== null)
+                    ? attemptOpts.startGateArchetype
+                    : (attemptOpts.policyProfile !== undefined && attemptOpts.policyProfile !== null)
+                        ? attemptOpts.policyProfile
+                        : (attemptOpts.useControlPlaneArchetype !== false
+                            ? (controlPlane?.activeHypothesis?.archetype || 'harvestThenFinish')
+                            : null);
                 const r = await PathfinderSolver.solve(level, {
                     timeLimit: attemptBudgetMs,
                     debug: true,
@@ -8894,7 +8901,13 @@
 
             let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
             const totalBudget = Math.max(1500, budgetMs);
-            const baselineBudget = Math.max(750, Math.floor(totalBudget * 0.75));
+            const profileSignalsForBudget = level?.solverProfile || {};
+            const simpleLevel = (Number(profileSignalsForBudget.routePressure) || 0) < 0.4
+                && (Number(profileSignalsForBudget.objectiveCount) || 0) <= 1
+                && (Number(profileSignalsForBudget.portalCommitment) || 0) === 0;
+            const baselineBudget = simpleLevel
+                ? Math.max(750, totalBudget)
+                : Math.max(750, Math.floor(totalBudget * 0.75));
             const recoveryBudget = Math.max(750, Math.floor(totalBudget * 0.2));
             const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.25));
             const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
@@ -9998,9 +10011,9 @@
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else {
                     if (purpose === 'hint') {
-                        APP.UI.showMessage('No hint in 5s. Tap New Hint for deep 15s.', 'text-amber-600');
+                        APP.UI.showMessage('No hint found. Tap again to search deeper.', 'text-amber-600');
                     } else {
-                        APP.UI.showMessage('No solution in 15s. Press Solve for 60s.', 'text-amber-600');
+                        APP.UI.showMessage('No solution found. Press Solve for an extended search.', 'text-amber-600');
                     }
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }
