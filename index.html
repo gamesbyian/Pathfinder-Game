@@ -8185,9 +8185,9 @@
                         knotBudgetPolicy: commonKnotBudgetPolicy,
                         macroSkeleton: defaultSkeleton,
                         regionCrossingModel,
-                        policyProfile: 'perimeterSweep',
+                        policyProfile: modernStructuralGuidanceNotNeeded ? 'harvestThenFinish' : 'perimeterSweep',
                         commitmentPlan: { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
-                        memoStrictness: 1.2
+                        memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2
                     });
                 }
                 attempts.push({
