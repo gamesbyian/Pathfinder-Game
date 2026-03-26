@@ -11982,16 +11982,17 @@
                 const lastK = path[path.length - 1];
                 if (lastK === undefined) return true;
 
+                const lastP = UNPACK(lastK);
+                const isPortalJumpCandidate = allowJump && level.portalMap.has(lastK) && resolvePortal(level, lastK).dest === targetKey;
+
                 if (mode !== APP.Core.EDITOR) {
                     if (lastK === level.goalKey) return false;
                     if (checkFalseGoals && armedFalseGoals?.has(lastK)) return false;
-                    if (level.gateKeys.includes(targetKey)) return false;
+                    if (!isPortalJumpCandidate && level.gateKeys.includes(targetKey)) return false;
                 } else if (path.length > 1 && level.gateKeys.includes(lastK)) {
                     return false;
                 }
 
-                const lastP = UNPACK(lastK);
-                const isPortalJumpCandidate = allowJump && level.portalMap.has(lastK) && resolvePortal(level, lastK).dest === targetKey;
                 if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1) && !isPortalJumpCandidate) return false;
                 if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
 
