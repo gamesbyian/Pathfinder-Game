@@ -13967,14 +13967,105 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             diagnostics: r.diagnostics,
             error: r.error
         });
+        const compactFeatureSignatureStats = (byFeatureSignature) => {
+            if (!byFeatureSignature || typeof byFeatureSignature !== 'object') return {};
+            const out = {};
+            Object.entries(byFeatureSignature).forEach(([signature, bucket]) => {
+                out[signature] = {
+                    success: Number.isFinite(bucket?.success) ? bucket.success : 0,
+                    failure: Number.isFinite(bucket?.failure) ? bucket.failure : 0,
+                    total: Number.isFinite(bucket?.total) ? bucket.total : 0
+                };
+            });
+            return out;
+        };
+        const compactProgressForExport = (progress, runType) => {
+            if (!progress || typeof progress !== 'object') return null;
+            const summary = {
+                levelsProcessed: Number.isFinite(progress.levelsProcessed) ? progress.levelsProcessed : 0,
+                levelsTotal: Number.isFinite(progress.levelsTotal) ? progress.levelsTotal : 0,
+                validHints: Number.isFinite(progress.validHints) ? progress.validHints : 0,
+                invalidHints: Number.isFinite(progress.invalidHints) ? progress.invalidHints : 0,
+                disableLegacyFallback: !!progress.disableLegacyFallback
+            };
+            if (runType === AUDIT_RUN_TYPES.newHint || progress.newHint) {
+                summary.newHint = {
+                    success: Number.isFinite(progress?.newHint?.success) ? progress.newHint.success : 0,
+                    failure: Number.isFinite(progress?.newHint?.failure) ? progress.newHint.failure : 0,
+                    byFeatureSignature: compactFeatureSignatureStats(progress?.newHint?.byFeatureSignature)
+                };
+            }
+            if (runType === AUDIT_RUN_TYPES.bombs || progress.bombs) {
+                summary.bombs = {
+                    success: Number.isFinite(progress?.bombs?.success) ? progress.bombs.success : 0,
+                    noneFound: Number.isFinite(progress?.bombs?.noneFound) ? progress.bombs.noneFound : 0,
+                    error: Number.isFinite(progress?.bombs?.error) ? progress.bombs.error : 0
+                };
+            }
+            return summary;
+        };
+        const compactAbortReason = (abortLike) => {
+            if (!abortLike) return null;
+            if (typeof abortLike === 'string') return abortLike;
+            return abortLike.code || abortLike.reason || abortLike.message || null;
+        };
+        const compactRootMoveDriver = (driver) => {
+            if (!driver || typeof driver !== 'object') return null;
+            const contribution = Number.isFinite(driver.contribution) ? Math.round(driver.contribution * 100) / 100 : null;
+            if (!driver.feature || contribution === null) return null;
+            return [driver.feature, contribution];
+        };
+        const compactTopRootMove = (rootMoveScores) => {
+            if (!Array.isArray(rootMoveScores) || !rootMoveScores.length) return null;
+            const top = rootMoveScores[0];
+            const score = Number.isFinite(top?.score) ? Math.round(top.score * 100) / 100 : null;
+            const drivers = Array.isArray(top?.drivers)
+                ? top.drivers.map(compactRootMoveDriver).filter(Boolean).slice(0, 2)
+                : [];
+            return {
+                key: Number.isFinite(top?.key) ? top.key : null,
+                score,
+                drivers
+            };
+        };
+        const createAuditCompactLevel = (r) => {
+            const metrics = r?.newHint?.failureProfile?.metrics || {};
+            return {
+                level: r.level,
+                featureSignature: r?.newHint?.featureSignature || null,
+                status: r?.newHint?.status || 'unknown',
+                rawStatus: r?.newHint?.rawStatus || 'unknown',
+                finalStatus: r?.newHint?.finalStatus || r?.newHint?.rawStatus || r?.newHint?.status || 'unknown',
+                finalSolvedBy: r?.newHint?.finalSolvedBy || null,
+                producedHintValid: !!r?.newHint?.producedHintValid,
+                timeMs: Number.isFinite(r?.newHint?.timeMs) ? r.newHint.timeMs : null,
+                totalSolveTimeMs: Number.isFinite(r?.newHint?.totalSolveTimeMs) ? r.newHint.totalSolveTimeMs : null,
+                failureCategory: r?.newHint?.failureTaxonomy?.category || null,
+                contradictionRecoveryActivated: !!r?.newHint?.contradictionRecoveryActivated,
+                preExpansionAbort: compactAbortReason(r?.newHint?.preExpansionAbort),
+                nodesExpanded: Number.isFinite(metrics.nodesExpanded) ? metrics.nodesExpanded : null,
+                candidateMovesConsidered: Number.isFinite(metrics.candidateMovesConsidered) ? metrics.candidateMovesConsidered : null,
+                rootCandidatesGenerated: Number.isFinite(r?.newHint?.rootCandidatesGenerated) ? r.newHint.rootCandidatesGenerated : null,
+                rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
+                topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
+                error: r?.error?.message || null
+            };
+        };
         const buildAuditExportPayload = (mode = 'issues') => {
             const selectedMode = ['summary', 'issues', 'full'].includes(mode) ? mode : 'issues';
             const sourceLevels = selectedMode === 'issues' ? auditReport.filter(hasAuditIssue) : auditReport;
-            const levels = selectedMode === 'summary' ? sourceLevels.map(createAuditSummaryLevel) : sourceLevels;
+            const levels = selectedMode === 'summary'
+                ? sourceLevels.map(createAuditSummaryLevel)
+                : selectedMode === 'full'
+                    ? sourceLevels.map(createAuditCompactLevel)
+                    : sourceLevels;
+            const progressPayload = selectedMode === 'full'
+                ? compactProgressForExport(auditProgress, auditLastRunType)
+                : auditProgress;
             return {
                 exportMode: selectedMode,
                 runType: auditLastRunType,
-                progress: auditProgress,
+                progress: progressPayload,
                 levelCount: levels.length,
                 levels
             };
