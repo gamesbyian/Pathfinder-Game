@@ -2355,9 +2355,11 @@
                         const ambiguityPenalty = Number.isFinite(nearestPeer) ? Math.max(0, 6 - nearestPeer) : 6;
                         const ambiguityFuture = Number.isFinite(nearestPeer) ? nearestPeer : 0;
                         const detourCost = Number.isFinite(detour) ? detour : 10000;
+                        const objectiveVisited = state.countsArr && state.countsArr[state.keyToIdx(node.key)] > 0;
+                        const detourMultiplier = objectiveVisited ? 6 : 14;
                         const goalCost = Number.isFinite(toGoal) ? toGoal : 10000;
                         const gateCost = Number.isFinite(gateMin) ? gateMin : 0;
-                        return detourCost * 14 + ambiguityPenalty * 30 + ambiguityFuture * 2 + goalCost * 2 + gateCost;
+                        return detourCost * detourMultiplier + ambiguityPenalty * 30 + ambiguityFuture * 2 + goalCost * 2 + gateCost;
                     };
                     let bestId = remaining[0];
                     let bestScore = scoreObjective(bestId);
@@ -2902,7 +2904,7 @@
                     }
                     return base;
                 },
-                deriveDynamicPhasePolicy(profile = {}, runtimeState = {}) {
+                deriveDynamicPhasePolicy(profile = {}, runtimeState = {}, levelHints = {}) {
                     const hypothesis = runtimeState?.hypothesis || profile?.hypothesisModel || {};
                     const archetype = runtimeState?.activeArchetype
                         || hypothesis?.activeArchetype
@@ -2957,8 +2959,10 @@
                         + (knotConfidence > 0.72 ? 1 : 0)
                     ));
 
-                    if ((profile?.reqInt || 0) >= 6) {
-                        const intDensity = (profile.reqInt || 0) / Math.max(1, profile.reqLen || 0);
+                    const reqInt = profile?.reqInt ?? levelHints?.reqInt ?? 0;
+                    const reqLen = profile?.reqLen ?? levelHints?.reqLen ?? 1;
+                    const intDensity = reqInt / Math.max(1, reqLen);
+                    if (reqInt >= 4) {
                         thresholds.transitionProgress = Math.max(0.12, thresholds.transitionProgress - intDensity * 0.8);
                         thresholds.knotProgress = Math.max(0.25, thresholds.knotProgress - intDensity * 1.2);
                     }
@@ -2987,7 +2991,12 @@
                 _resolvePhasePolicy(l, options = {}) {
                     const dynamic = this.deriveDynamicPhasePolicy(l?.solverProfile || {}, {
                         hypothesis: options?.controlPlane?.activeHypothesis || l?.solverProfile?.hypothesisModel || null,
-                        activeArchetype: options?.controlPlane?.activeHypothesis?.archetype || null
+                        activeArchetype: options?.forcePhaseArchetype
+                            || options?.controlPlane?.activeHypothesis?.archetype
+                            || null
+                    }, {
+                        reqInt: l?.reqInt || 0,
+                        reqLen: l?.reqLen || 0
                     });
                     const override = options?.phasePolicy;
                     if (!override || typeof override !== 'object') return dynamic;
@@ -3023,11 +3032,13 @@
                     const remainingMustCross = Math.max(0, this._crossNeeds(state));
                     const remainingIntersections = Math.max(0, l.reqInt - state.ints);
                     const t = state.phasePolicy?.thresholds || {};
+                    const finishReady = state.ints >= l.reqInt && state.mustMask === 0n && state.mustCrossMask === 0n;
 
                     let phase = 'harvest';
+                    if (finishReady) phase = 'finish';
                     const inFinishWindow = progressRatio >= (t.finishProgress ?? 0.82)
                         || (Number.isFinite(goalDist) && goalDist <= (t.finishGoalDist ?? 4) && slack <= (t.finishSlackMax ?? 2));
-                    if (inFinishWindow && remainingObjectives <= 1 && remainingIntersections <= 1) phase = 'finish';
+                    if (!finishReady && inFinishWindow && remainingObjectives <= 1 && remainingIntersections <= 1) phase = 'finish';
                     else if (progressRatio >= (t.knotProgress ?? 0.58)
                         && remainingIntersections <= (t.knotIntsRemainingMax ?? 2)
                         && remainingObjectives <= (t.knotObjectivesRemainingMax ?? 2)) phase = 'knot';
@@ -3292,6 +3303,7 @@
                     } : null;
 
                     const startNeighborBoundSanity = depth === 0 ? { legalBranches: 0, satisfiedBranches: 0 } : null;
+                    const gateToGateRejected = [];
                     const valid = candidates.filter(nk => {
                         if (debugStats) debugStats.branchesTried++;
                         if (!this._isMoveValid(nk, state.path, state.counts, state.usage, state.ints, state.isJump, l, state.flipCount, state.crossedFlippers, options)) {
@@ -3301,7 +3313,10 @@
                                 if (reason === 'invalid-by-filter-axis') startFilterBreakdown.filterAxisRejected++;
                                 else if (reason === 'invalid-portal-legality') startFilterBreakdown.portalLegalityRejected++;
                                 else if (reason === 'invalid-must-cross-impossibility') startFilterBreakdown.mustCrossImpossibleRejected++;
-                                else if (reason === 'invalid-adjacency') startFilterBreakdown.adjacencyRejected++;
+                                else if (reason === 'invalid-adjacency') {
+                                    startFilterBreakdown.adjacencyRejected++;
+                                    if (l.gateSet?.has(nk)) gateToGateRejected.push(nk);
+                                }
                             }
                             if (startFilterBreakdown) startFilterBreakdown.illegalMoveRejected++;
                             return false;
@@ -3428,7 +3443,11 @@
                         if (stageTrace) stageTrace.afterObjectiveHeuristics.push(nk);
                         return true;
                     });
-                    if (interactionCandidateFallbackEnabled && valid.length <= 1 && candidates.length > 0) {
+                    const gateAdjacencyOnlyRejected = candidates.length > 0
+                        && valid.length === 0
+                        && gateToGateRejected.length > 0
+                        && gateToGateRejected.length === candidates.length;
+                    if (interactionCandidateFallbackEnabled && valid.length === 0 && candidates.length > 0 && !gateAdjacencyOnlyRejected) {
                         const fallbackRecovered = [];
                         for (const nk of candidates) {
                             if (valid.includes(nk)) continue;
@@ -3547,7 +3566,7 @@
                         : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
                     const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
                     const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : null;
-                    const perimeterThreshold = profile?.perimeterThreshold || 1;
+                    const perimeterThreshold = options?.antiDriftEdgeLock ? 0 : (profile?.perimeterThreshold || 1);
                     const macroSkeleton = options?.macroSkeleton || null;
                     const regionCrossingModel = options?.regionCrossingModel || null;
                     const activePhase = state.phase || 'harvest';
@@ -3600,6 +3619,7 @@
                         const px = k & 0xFFFF;
                         const py = k >> 16;
                         let score = 0;
+                        let suppressAntiDither = false;
                         const scoreDrivers = [];
                         const pushDriver = (feature, value, contribution) => {
                             if (depth !== 0 || !Number.isFinite(contribution) || contribution === 0) return;
@@ -3696,12 +3716,36 @@
                             // Penalty scales from 5 (high slack) up to 40 (low slack)
                             const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.objectiveAttractionWeight || 1);
 
-                            const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * Math.max(0.25, policyProfile.mustPassUrgencyWeight || 1));
+                            let mustPassUrgencyWeight = Math.max(0.25, policyProfile.mustPassUrgencyWeight || 1);
+                            const mustPassLateCompatible = hasMust && l.reqLen > 0 && (rSteps / l.reqLen) > 0.25;
+                            if (mustPassLateCompatible) {
+                                let lateViableDist = undefined;
+                                for (let i = 0; i < l.mustPassKeys.length; i++) {
+                                    const mpKey = l.mustPassKeys[i];
+                                    const bit = 1n << BigInt(i);
+                                    if ((state.mustMask & bit) === 0n) continue;
+                                    const distToMust = l.mustPassDistMaps?.[i]?.get(k);
+                                    const mustToGoal = distMap.get(mpKey);
+                                    if (distToMust === undefined || mustToGoal === undefined) continue;
+                                    const combined = distToMust + mustToGoal;
+                                    if (lateViableDist === undefined || combined < lateViableDist) lateViableDist = combined;
+                                }
+                                if (lateViableDist !== undefined
+                                    && lateViableDist <= rSteps
+                                    && (rSteps - lateViableDist) > Math.floor(l.reqLen * 0.35)
+                                    && (rSteps / l.reqLen) > 0.2) {
+                                    mustPassUrgencyWeight = Math.min(mustPassUrgencyWeight, 0.45);
+                                }
+                            }
+                            const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
                             const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1));
                             score += mustContribution;
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
                             pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
+                            if (state.ints < l.reqInt && l.mustPassIndex?.has(nk) && (state.countsArr[state.keyToIdx(nk)] || 0) > 0) {
+                                score -= Math.round(gravityMult * 0.6);
+                            }
                             if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1)); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
 
                             if (activeObjectiveDistMap && activeObjectiveId >= 0) {
@@ -3743,14 +3787,18 @@
                                 score -= this._staticNeighborDegree(nk, l) * 2;
                             } else {
                                 const slack = rSteps - activeDist;
-                                if (slack > 0) {
+                                const remainsObligationsNow = hasMust || crossNeed > 0 || Math.max(0, l.reqInt - state.ints) > 0;
+                                const finalApproach = slack >= 0 && slack <= 3 && !remainsObligationsNow;
+                                suppressAntiDither = finalApproach || slack <= 0;
+                                if (slack > 0 && !finalApproach) {
                                     // SLACK MODE: Decaying Orbit + Wall Hugging
                                     const targetSlack = Math.floor((rSteps / 2) * Math.max(0.5, policyProfile.slackPreservationWeight || 1));
                                     score -= Math.abs(slack - targetSlack) * 5;
                                     score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1) * Math.max(0.25, policyProfile.antiDeadCorridorWeight || 1));
                                 } else {
                                     // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
-                                    { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * Math.max(0.25, policyProfile.goalAttractionWeight || 1))); score += c; pushDriver('goalAttraction', activeDist, c); }
+                                    const ramp = finalApproach ? (1 + (3 - slack) * 0.4) : 1;
+                                    { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * Math.max(0.25, policyProfile.goalAttractionWeight || 1) * ramp)); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 }
                             }
                         }
@@ -4033,7 +4081,7 @@
                         const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1) * Math.max(0.2, policyProfile.antiDitherWeight || 1);
 
                         // Anti-dither 1: discourage inward drift during early, high-slack harvest.
-                        if ((activePhase === 'harvest' || activePhase === 'transition') && rRatio < 0.45 && earlySlack >= 6) {
+                        if (!suppressAntiDither && (activePhase === 'harvest' || activePhase === 'transition') && rRatio < 0.45 && earlySlack >= 6) {
                             const nx = nk & 0xFFFF;
                             const ny = nk >> 16;
                             const skx = nk & 0xFFFF;
@@ -4041,7 +4089,7 @@
                             const edgeNow = Math.min(px, py, (l.grid.w - 1) - px, (l.grid.h - 1) - py);
                             const edgeNext = Math.min(skx, sky, (l.grid.w - 1) - skx, (l.grid.h - 1) - sky);
                             if (edgeNext > edgeNow) {
-                                let inwardPenalty = Math.round((10 + (edgeNext - edgeNow) * 12) * antiDitherScale);
+                                let inwardPenalty = Math.round((10 + (edgeNext - edgeNow) * 12) * antiDitherScale * (options?.antiDriftEdgeLock ? 3 : 1));
                                 if (productiveAmbiguity) inwardPenalty = Math.floor(inwardPenalty * 0.4);
                                 else if (goalAggressive && !objectiveImproved) inwardPenalty += 8;
                                 score += inwardPenalty;
@@ -4051,7 +4099,7 @@
 
                         // Anti-dither 2: penalize local oscillation in open regions.
                         const nodeDegree = this._staticNeighborDegree(nk, l);
-                        if (nodeDegree >= 3 && recentWindow >= 3 && (recentTurnbackCount >= 1 || state.recentMoveEntropy < 1.2)) {
+                        if (!suppressAntiDither && nodeDegree >= 3 && recentWindow >= 3 && (recentTurnbackCount >= 1 || state.recentMoveEntropy < 1.2)) {
                             let oscPenalty = Math.round((recentTurnbackCount * 22 + Math.max(0, 3 - dirRepeat) * 4) * antiDitherScale);
                             if (productiveAmbiguity) oscPenalty = Math.floor(oscPenalty * 0.45);
                             if (activePhase === 'finish') oscPenalty = Math.floor(oscPenalty * 0.35);
@@ -4060,7 +4108,7 @@
                         }
 
                         // Anti-dither 3: avoid approaching near-goal basin too early when obligations remain.
-                        if (remainsObligations && Number.isFinite(nextGoalDist) && nextGoalDist <= 2 && rSteps > Math.max(4, nextGoalDist + 2)) {
+                        if (!suppressAntiDither && remainsObligations && Number.isFinite(nextGoalDist) && nextGoalDist <= 2 && rSteps > Math.max(4, nextGoalDist + 2)) {
                             let earlyGoalPenalty = Math.round((18 + (rSteps - nextGoalDist) * 2) * antiDitherScale);
                             if (activePhase === 'finish') earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.2 * Math.max(0.25, 2 - (policyProfile.finishCommitmentWeight || 1)));
                             else if (productiveAmbiguity && objectiveImproved) earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.5);
@@ -4068,7 +4116,7 @@
                             if (debugStats) debugStats.earlyGoalApproachBlocked = (debugStats.earlyGoalApproachBlocked || 0) + 1;
                         }
 
-                    const revisitContribution = (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
+                    const revisitContribution = suppressAntiDither ? 0 : (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
                     return { nk, score, scoreDrivers };
@@ -4437,9 +4485,11 @@
                         knotCrossBudget: Number.isFinite(options?.knotBudgetPolicy?.knotCrossBudget) ? options.knotBudgetPolicy.knotCrossBudget : Math.max(0, Math.ceil((l.reqInt || 0) * 0.7)),
                         nonKnotCrossCap: Number.isFinite(options?.knotBudgetPolicy?.nonKnotCrossCap)
                             ? options.knotBudgetPolicy.nonKnotCrossCap
-                            : (intDensity > 0.12
-                                ? Math.max(0, Math.round((l.reqInt || 0) * 0.55))
-                                : Math.max(0, Math.floor((l.reqInt || 0) * 0.35))),
+                            : (options?.structuralMode
+                                ? (intDensity > 0.12
+                                    ? Math.max(0, Math.round((l.reqInt || 0) * 0.55))
+                                    : Math.max(0, Math.floor((l.reqInt || 0) * 0.35)))
+                                : (l.reqInt || 0)),
                         commitmentHorizon: Math.max(0, Number(options?.commitmentPlan?.horizonSteps) || 0),
                         commitmentStepsLeft: Math.max(0, Number(options?.commitmentPlan?.horizonSteps) || 0),
                         commitmentDir: -1,
@@ -5200,7 +5250,10 @@
                         debugGateVariant = false,
                         enableLowExpansionProbe = false,
                         contradictionRecoveryMode = false,
-                        assertKnownSolvableBounds = false
+                        assertKnownSolvableBounds = false,
+                        forcePhaseArchetype = null,
+                        antiDriftEdgeLock = false,
+                        forcedPolicyProfile = null
                     } = options;
                     if (APP.State?.ENGINE?.isDevMode) {
                         const undefinedModes = [
@@ -5360,7 +5413,10 @@
                                 knotBudgetPolicy,
                                 controlPlane,
                                 enableLowExpansionProbe,
-                                startGateArchetype: state?.startGateArchetype || null
+                                startGateArchetype: state?.startGateArchetype || null,
+                                forcePhaseArchetype,
+                                antiDriftEdgeLock,
+                                ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
                             if (result === SOLVER_ABORTED) return { kind: 'aborted' };
@@ -5776,7 +5832,7 @@
                             }
                         }
                     }
-                    const validGates = level.gateKeys.filter(gk => {
+                    let validGates = level.gateKeys.filter(gk => {
                         const gateReasons = [];
                         const d = distMap.get(gk);
                         if (d === undefined || d > level.reqLen) gateReasons.push(`distance:${d === undefined ? 'inf' : d}>${level.reqLen}`);
@@ -5798,15 +5854,14 @@
                             }
                         }
 
-                        if (level.mustPassKeys.length > 0 && level.gooseSet?.size > 0) {
-                            for (const mpKey of level.mustPassKeys) {
-                                const mpDist = level.mustPassDistMaps?.[level.mustPassIndex?.get(mpKey)]?.get(gk);
-                                if (mpDist === undefined) continue;
-
-                                const goalDistFromMp = level.distMapForSolver?.get(mpKey) ?? Infinity;
-
-                                if (mpDist + goalDistFromMp > level.reqLen) {
+                        if (level.gooseSet?.size > 0 && level.mustPassKeys.length > 0) {
+                            for (let i = 0; i < level.mustPassKeys.length; i++) {
+                                const mpKey = level.mustPassKeys[i];
+                                const mpDistFromGate = level.mustPassDistMaps?.[i]?.get(gk);
+                                const mpDistToGoal = level.distMapForSolver?.get(mpKey) ?? Infinity;
+                                if (mpDistFromGate === undefined || (mpDistFromGate + mpDistToGoal > level.reqLen)) {
                                     gateReasons.push(`mustPassUnreachable:${mpKey}`);
+                                    break;
                                 }
                             }
                         }
@@ -5817,6 +5872,24 @@
                         }
                         return true;
                     });
+                    if (hasRootInteractionComplexity(level) && validGates.length >= 2) {
+                        const gateNeighborRichness = (gateKey) => {
+                            const p = APP.LevelUtils.UNPACK(gateKey);
+                            let count = 0;
+                            [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                                const nx = p.x + dx, ny = p.y + dy;
+                                if (!APP.LevelUtils.inBounds(nx, ny, level.grid.w, level.grid.h)) return;
+                                const nk = APP.LevelUtils.PACK(nx, ny);
+                                if (!level.blockSet.has(nk) && !level.gateSet.has(nk)) count++;
+                            });
+                            return count;
+                        };
+                        validGates = validGates.slice().sort((a, b) => {
+                            const richnessDelta = gateNeighborRichness(b) - gateNeighborRichness(a);
+                            if (richnessDelta !== 0) return richnessDelta;
+                            return a - b;
+                        });
+                    }
                     if (validGates.length === 0) {
                         if (debugStats) {
                             debugStats.prune.other++;
@@ -5836,7 +5909,7 @@
                         return [];
                     }
 
-                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode }) => {
+                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
                         if (debugStats) {
@@ -5876,7 +5949,10 @@
                             gateBeamTopK,
                             debugGateVariant,
                             contradictionRecoveryMode: !!passContradictionRecoveryMode,
-                            assertKnownSolvableBounds: !!assertKnownSolvableBounds
+                            assertKnownSolvableBounds: !!assertKnownSolvableBounds,
+                            forcePhaseArchetype,
+                            antiDriftEdgeLock,
+                            forcedPolicyProfile
                         });
                         const out = await SearchFramework.runSearch({
                             level,
@@ -5912,8 +5988,28 @@
                     const gridSize = level.grid.w * level.grid.h;
                     const isLargeGrid = gridSize > 100;
                     const hasFilterFlipMix = ((level?.filterMap?.size || 0) > 0) && ((level?.flippingFilterMap?.size || 0) > 0);
+                    const isPerimeterSpineCandidate = (
+                        level.grid.w * level.grid.h > 100 &&
+                        level.mustPassKeys.length >= 2 &&
+                        level.reqLen >= (level.grid.w + level.grid.h) * 1.8 &&
+                        level.mustPassKeys.every(k => {
+                            const p = APP.LevelUtils.UNPACK(k);
+                            return Math.min(p.x, p.y, (level.grid.w - 1) - p.x, (level.grid.h - 1) - p.y) <= 1;
+                        })
+                    );
                     const stagedHintPasses = [
                         { passName: 'pass-1-fast', ratio: isLargeGrid ? 0.25 : 0.45, variant: 'default', beamTopK: gateBeamTopK, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates)...` },
+                        ...(isPerimeterSpineCandidate ? [{
+                            passName: 'pass-spine',
+                            ratio: isLargeGrid ? 0.35 : 0.2,
+                            variant: 'default',
+                            beamTopK: 0,
+                            debugVariant: false,
+                            statusLabel: `Solving (${validGates.length} viable gates, perimeter spine)...`,
+                            forcePhaseArchetype: 'perimeterSweep',
+                            forcedPolicyProfile: 'perimeterSweep',
+                            antiDriftEdgeLock: true
+                        }] : []),
                         { passName: 'pass-2-ranked', ratio: isLargeGrid ? 0.25 : 0.35, variant: 'default', beamTopK: 0, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates, full ranked queue)...` },
                         ...(hasFilterFlipMix ? [{ passName: 'pass-4-filter-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'default', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound'], statusLabel: `Solving (${validGates.length} viable gates, filter-relaxed)...` }] : []),
                         { passName: 'pass-3-fallback', ratio: 1, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
@@ -5941,7 +6037,10 @@
                             debugGateVariant: !!pass.debugVariant,
                             passScoringMode: scoringMode,
                             passPortalBiasMode: portalBiasMode,
-                            passStructuralMode: structuralMode
+                            passStructuralMode: structuralMode,
+                            forcePhaseArchetype: pass.forcePhaseArchetype || null,
+                            antiDriftEdgeLock: !!pass.antiDriftEdgeLock,
+                            forcedPolicyProfile: pass.forcedPolicyProfile || null
                         });
                         if (passRun.kind !== 'ok') {
                             primaryRun = passRun;
@@ -5963,10 +6062,10 @@
                     let primarySolved = foundSolutions.length > 0;
                     let primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
 
-                    if (!primarySolved && !foundSolutions.timedOut && remainingBudget() > 500) {
+                    if (!primarySolved && !foundSolutions.timedOut && remainingBudget() > 1500) {
                         const recoveryRun = await runSolvePass({
                             passName: 'pass-4-bound-relaxed',
-                            localTimeLimit: Math.min(remainingBudget(), Math.max(2000, Math.floor(timeLimit * 0.15))),
+                            localTimeLimit: Math.min(remainingBudget(), Math.max(4000, Math.floor(timeLimit * 0.25))),
                             disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
                             useFailMemo: false,
                             passVariant: 'random',
