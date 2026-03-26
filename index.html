@@ -5818,6 +5818,8 @@
                     });
                     const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
 
+                    level.gateSet = new Set(level.gateKeys || []);
+
                     const gatePruneReasons = [];
                     const mandatoryPortalFamilies = Array.isArray(level?.solverProfile?.portalHints?.mandatoryFamilies)
                         ? level.solverProfile.portalHints.mandatoryFamilies
