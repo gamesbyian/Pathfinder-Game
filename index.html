@@ -8742,7 +8742,9 @@
             const tierMinBudget = escalationTier >= 2
                 ? (purpose === 'hint' ? 60000 : 180000)
                 : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
-            const callerSpecifiedBudget = Number.isFinite(opts.timeBudgetMs) && opts.timeBudgetMs >= 3000;
+            const callerSpecifiedBudget = Number.isFinite(opts.timeBudgetMs)
+                && opts.timeBudgetMs >= 3000
+                && escalationTier === requestedTier;
             const budgetMs = callerSpecifiedBudget ? requestedBudget : Math.max(requestedBudget, tierMinBudget);
             const tierBudgets = purpose === 'hint'
                 ? [5000, 15000, 60000]
