@@ -2265,11 +2265,17 @@
                         nextOscillationBudget
                     };
                 },
-                _dominancePruneOrStore(map, key, candidate, stats = null) {
+                _dominancePruneOrStore(map, key, candidate, stats = null, l = null, state = null) {
                     if (!map || key === null || key === undefined || !candidate) return false;
                     if (stats) stats.dominanceMemoChecks = (stats.dominanceMemoChecks || 0) + 1;
                     const mustCrossCompact = (typeof candidate.mustCrossCompact === 'bigint' ? candidate.mustCrossCompact : BigInt(candidate.mustCrossCompact || 0)).toString();
-                    const scopedKey = `${key}|mc:${mustCrossCompact}`;
+                    const filterAxisKey = (l?.filterMap?.size || 0) > 0
+                        ? `|ua:${state?.usageBits ? state.usageBits[state.keyToIdx(key)] ?? 0 : 0}`
+                        : '';
+                    const flipKey = (l?.flippingFilterMap?.size || 0) > 0
+                        ? `|fp:${state?.flipParity || 0}|fcm:${(state?.flipperCrossMask || 0n).toString(16)}`
+                        : '';
+                    const scopedKey = `${key}|mc:${mustCrossCompact}${filterAxisKey}${flipKey}`;
                     const prev = map.get(scopedKey);
                     const strictness = Math.max(0.35, Math.min(1.8, Number(candidate?.dominanceStrictness) || 1));
                     const stepSlack = Math.max(0, Math.round((strictness - 1) * 3));
@@ -2951,6 +2957,12 @@
                         + (knotConfidence > 0.72 ? 1 : 0)
                     ));
 
+                    if ((profile?.reqInt || 0) >= 6) {
+                        const intDensity = (profile.reqInt || 0) / Math.max(1, profile.reqLen || 0);
+                        thresholds.transitionProgress = Math.max(0.12, thresholds.transitionProgress - intDensity * 0.8);
+                        thresholds.knotProgress = Math.max(0.25, thresholds.knotProgress - intDensity * 1.2);
+                    }
+
                     return {
                         archetype,
                         thresholds,
@@ -3389,13 +3401,17 @@
                             if (startNeighborBoundSanity && Number.isFinite(portalAwareBound) && portalAwareBound <= rSteps) {
                                 startNeighborBoundSanity.satisfiedBranches++;
                             }
-                            if (!Number.isFinite(portalAwareBound) || portalAwareBound > rSteps) {
+                            const boundThreshold = (depth === 0 && state.path.length === 1)
+                                ? rSteps + Math.ceil(rSteps * 0.05)
+                                : rSteps;
+
+                            if (!Number.isFinite(portalAwareBound) || portalAwareBound > boundThreshold) {
                                 if (debugStats) {
                                     debugStats.prune.portalAutomatonRejected = (debugStats.prune.portalAutomatonRejected || 0) + 1;
                                     if (depth === 0) {
                                         const dbg = ensureDepthZeroDebug(debugStats);
                                         if (dbg && dbg.rootSuppressionLog.length < 20) {
-                                            dbg.rootSuppressionLog.push({ type: 'portal-automaton', key: nk, depth: 1, reason: `lower-bound:${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'}>${rSteps}` });
+                                            dbg.rootSuppressionLog.push({ type: 'portal-automaton', key: nk, depth: 1, reason: `lower-bound:${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'}>${boundThreshold}` });
                                         }
                                     }
                                 }
@@ -3403,7 +3419,7 @@
                                 if (state.path.length === 1) {
                                     const c = portalAwareInfo?.components || {};
                                     const capNote = portalAwareInfo?.capped ? ` optimisticCap=${portalAwareInfo.optimisticFallback}` : '';
-                                    this._recordDepth0Prune(debugStats, 'portalAutomatonRejected', `portalAwareBound=${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'} rSteps=${rSteps} toObjective=${Number.isFinite(c.toObjective) ? c.toObjective : 'inf'} portalCommitment=${Number.isFinite(c.portalCommitment) ? c.portalCommitment : 'inf'} toGoal=${Number.isFinite(c.toGoal) ? c.toGoal : 'inf'} extraVisits=${Number.isFinite(c.extraVisits) ? c.extraVisits : 'na'}${capNote}`);
+                                    this._recordDepth0Prune(debugStats, 'portalAutomatonRejected', `portalAwareBound=${Number.isFinite(portalAwareBound) ? portalAwareBound : 'inf'} boundThreshold=${boundThreshold} rSteps=${rSteps} toObjective=${Number.isFinite(c.toObjective) ? c.toObjective : 'inf'} portalCommitment=${Number.isFinite(c.portalCommitment) ? c.portalCommitment : 'inf'} toGoal=${Number.isFinite(c.toGoal) ? c.toGoal : 'inf'} extraVisits=${Number.isFinite(c.extraVisits) ? c.extraVisits : 'na'}${capNote}`);
                                 }
                                 return false;
                             }
@@ -3895,7 +3911,13 @@
                         const inLateKnotPhases = activePhase === 'knot' || activePhase === 'finish';
                         const projectedIntersections = state.ints + (projectedRevisit ? 1 : 0);
                         const projectedNonKnotIntersections = Math.max(0, projectedIntersections - Math.max(0, state.knotCrossBudget || 0));
-                        if (inLateKnotPhases && projectedNonKnot && projectedNonKnotIntersections > Math.max(0, state.nonKnotCrossCap || 0)) {
+                        const shouldEnforceNonKnotCap = inLateKnotPhases
+                            && projectedNonKnot
+                            && (state.nonKnotCrossCap > 0)
+                            && (activeKnotTarget !== null)
+                            && !l.mustCrossKeys.length;
+
+                        if (shouldEnforceNonKnotCap && projectedNonKnotIntersections > state.nonKnotCrossCap) {
                             if (debugStats) debugStats.knotBudgetRejects = (debugStats.knotBudgetRejects || 0) + 1;
                             return { nk, score: 1000000 };
                         }
@@ -3979,16 +4001,22 @@
 
                         // Targeted cohort heuristic: postpone reversible filter churn unless it unlocks hard constraints.
                         if (heuristicFeatureFlags.hasFlippingFilters && l.flippingFilterMap?.has(nk) && !state.crossedFlippers?.has(nk)) {
-                            let flipperPenalty = 14;
-                            if (activePhase === 'harvest' || activePhase === 'transition') flipperPenalty += 10;
-                            if (!hardConstraintImproved) flipperPenalty += 14;
-                            else flipperPenalty = Math.floor(flipperPenalty * 0.5);
-                            score += flipperPenalty;
-                            pushDriver('flipperChurn', 1, flipperPenalty);
+                            const flipperDistToGoal = distMap.get(nk) ?? Infinity;
+                            const currentDistToGoal = distMap.get(k) ?? Infinity;
+                            const isOnCriticalPath = flipperDistToGoal < currentDistToGoal;
+
+                            if (!isOnCriticalPath) {
+                                let flipperPenalty = 10;
+                                if (activePhase === 'harvest') flipperPenalty += 6;
+                                if (!hardConstraintImproved) flipperPenalty += 8;
+                                else flipperPenalty = Math.floor(flipperPenalty * 0.4);
+                                score += flipperPenalty;
+                                pushDriver('flipperChurn', 1, flipperPenalty);
+                            }
                         }
 
                         // Targeted cohort heuristic: reduce ambiguity near false goals unless hard constraints get better.
-                        if (heuristicFeatureFlags.hasFalseGoals && l.falseGoalKeys?.size > 0) {
+                        if (heuristicFeatureFlags.hasFalseGoals && l.falseGoalKeys?.size > 0 && depth >= 3) {
                             const falseNow = l.falseGoalDistMap?.get(k) ?? Infinity;
                             const falseNext = l.falseGoalDistMap?.get(nk) ?? Infinity;
                             if (Number.isFinite(falseNext)) {
@@ -4356,6 +4384,7 @@
                     const portalReentryCap = Number.isFinite(portalLockPolicy?.lockReentries) ? portalLockPolicy.lockReentries : 2;
                     const portalOscillationCap = Number.isFinite(portalLockPolicy?.lockOscillationMax) ? portalLockPolicy.lockOscillationMax : 1;
                     const portalAutomaton = l?.portalTransitionAutomaton || null;
+                    const intDensity = (l.reqInt || 0) / Math.max(1, l.reqLen);
                     const state = {
                         path: [startKey],
                         countsArr: new Uint16Array(keyCount),
@@ -4406,7 +4435,11 @@
                         objectiveTrackId: options?.objectiveTrack?.id || null,
                         objectiveTrackKeys: Array.isArray(options?.objectiveTrack?.keys) ? options.objectiveTrack.keys : [],
                         knotCrossBudget: Number.isFinite(options?.knotBudgetPolicy?.knotCrossBudget) ? options.knotBudgetPolicy.knotCrossBudget : Math.max(0, Math.ceil((l.reqInt || 0) * 0.7)),
-                        nonKnotCrossCap: Number.isFinite(options?.knotBudgetPolicy?.nonKnotCrossCap) ? options.knotBudgetPolicy.nonKnotCrossCap : Math.max(0, Math.floor((l.reqInt || 0) * 0.35)),
+                        nonKnotCrossCap: Number.isFinite(options?.knotBudgetPolicy?.nonKnotCrossCap)
+                            ? options.knotBudgetPolicy.nonKnotCrossCap
+                            : (intDensity > 0.12
+                                ? Math.max(0, Math.round((l.reqInt || 0) * 0.55))
+                                : Math.max(0, Math.floor((l.reqInt || 0) * 0.35))),
                         commitmentHorizon: Math.max(0, Number(options?.commitmentPlan?.horizonSteps) || 0),
                         commitmentStepsLeft: Math.max(0, Number(options?.commitmentPlan?.horizonSteps) || 0),
                         commitmentDir: -1,
@@ -4688,7 +4721,7 @@
                         });
                     }
                     const startSig = this._ensureStateHashState(state, l, 0, options, debugStats);
-                    this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats);
+                    this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state);
                     const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig }];
                     let steps = 0;
                     while (stack.length > 0) {
@@ -4836,7 +4869,7 @@
                             }
                         }
                         const stateSig = this._ensureStateHashState(state, l, realLen, options, debugStats);
-                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats)) {
+                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state)) {
                             if (realLen <= 1 && debugStats) {
                                 debugStats.rootCandidatesSuppressedByDominance = (debugStats.rootCandidatesSuppressedByDominance || 0) + 1;
                                 const dbg = ensureDepthZeroDebug(debugStats);
@@ -5730,10 +5763,54 @@
                     const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
 
                     const gatePruneReasons = [];
+                    const mandatoryPortalFamilies = Array.isArray(level?.solverProfile?.portalHints?.mandatoryFamilies)
+                        ? level.solverProfile.portalHints.mandatoryFamilies
+                        : [];
+                    const mandatoryPortalEntryDistMaps = new Map();
+                    for (const famIdx of mandatoryPortalFamilies) {
+                        const family = level?.solverProfile?.portalHints?.families?.[famIdx];
+                        const entries = Array.isArray(family?.entries) ? family.entries : [];
+                        for (const entryKey of entries) {
+                            if (!mandatoryPortalEntryDistMaps.has(entryKey)) {
+                                mandatoryPortalEntryDistMaps.set(entryKey, SolverCore._buildOptimisticDistMap(level, [entryKey]));
+                            }
+                        }
+                    }
                     const validGates = level.gateKeys.filter(gk => {
                         const gateReasons = [];
                         const d = distMap.get(gk);
                         if (d === undefined || d > level.reqLen) gateReasons.push(`distance:${d === undefined ? 'inf' : d}>${level.reqLen}`);
+
+                        if (mandatoryPortalFamilies.length > 0) {
+                            for (const famIdx of mandatoryPortalFamilies) {
+                                const family = level?.solverProfile?.portalHints?.families?.[famIdx];
+                                const entries = Array.isArray(family?.entries) ? family.entries : [];
+                                let famReachable = false;
+                                for (const entryKey of entries) {
+                                    const entryDist = level.distMapForSolver?.get(entryKey) ?? Infinity;
+                                    const gateToEntry = mandatoryPortalEntryDistMaps.get(entryKey)?.get(gk) ?? Infinity;
+                                    if (Number.isFinite(gateToEntry) && Number.isFinite(entryDist) && (gateToEntry + entryDist <= level.reqLen)) {
+                                        famReachable = true;
+                                        break;
+                                    }
+                                }
+                                if (!famReachable) gateReasons.push(`mandatoryPortalUnreachable:f${famIdx}`);
+                            }
+                        }
+
+                        if (level.mustPassKeys.length > 0 && level.gooseSet?.size > 0) {
+                            for (const mpKey of level.mustPassKeys) {
+                                const mpDist = level.mustPassDistMaps?.[level.mustPassIndex?.get(mpKey)]?.get(gk);
+                                if (mpDist === undefined) continue;
+
+                                const goalDistFromMp = level.distMapForSolver?.get(mpKey) ?? Infinity;
+
+                                if (mpDist + goalDistFromMp > level.reqLen) {
+                                    gateReasons.push(`mustPassUnreachable:${mpKey}`);
+                                }
+                            }
+                        }
+
                         if (gateReasons.length > 0) {
                             gatePruneReasons.push(`${gk}=>${gateReasons.join(',')}`);
                             return false;
@@ -5832,9 +5909,13 @@
                     const remainingBudget = () => Math.max(0, timeLimit - (Date.now() - startTime));
                     const gateBeamTopK = validGates.length >= 12 ? Math.min(8, Math.max(4, Math.floor(validGates.length * 0.35))) : 0;
                     const debugGateVariant = !!window.__PF_DEBUG_HINT_GATE_VARIANTS__;
+                    const gridSize = level.grid.w * level.grid.h;
+                    const isLargeGrid = gridSize > 100;
+                    const hasFilterFlipMix = ((level?.filterMap?.size || 0) > 0) && ((level?.flippingFilterMap?.size || 0) > 0);
                     const stagedHintPasses = [
-                        { passName: 'pass-1-fast', ratio: 0.45, variant: 'default', beamTopK: gateBeamTopK, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates)...` },
-                        { passName: 'pass-2-ranked', ratio: 0.35, variant: 'default', beamTopK: 0, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates, full ranked queue)...` },
+                        { passName: 'pass-1-fast', ratio: isLargeGrid ? 0.25 : 0.45, variant: 'default', beamTopK: gateBeamTopK, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates)...` },
+                        { passName: 'pass-2-ranked', ratio: isLargeGrid ? 0.25 : 0.35, variant: 'default', beamTopK: 0, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates, full ranked queue)...` },
+                        ...(hasFilterFlipMix ? [{ passName: 'pass-4-filter-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'default', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound'], statusLabel: `Solving (${validGates.length} viable gates, filter-relaxed)...` }] : []),
                         { passName: 'pass-3-fallback', ratio: 1, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
                     let primaryRun = { kind: 'ok', solutions: [] };
@@ -5851,7 +5932,7 @@
                         const passRun = await runSolvePass({
                             passName: pass.passName,
                             localTimeLimit: localBudget,
-                            disabledPrunes: disabledPrunes || [],
+                            disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...((pass.disabledPrunes || []))])),
                             useFailMemo: !(Array.isArray(disabledPrunes) && disabledPrunes.length > 0),
                             statusLabel: pass.statusLabel,
                             passVariant: pass.variant,
@@ -5879,8 +5960,26 @@
                     foundSolutions.timedOut = !!primaryRun.solutions?.timedOut;
 
                     const goalReachable = isGoalReachableFromAnyGate(level);
-                    const primarySolved = foundSolutions.length > 0;
-                    const primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
+                    let primarySolved = foundSolutions.length > 0;
+                    let primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
+
+                    if (!primarySolved && !foundSolutions.timedOut && remainingBudget() > 500) {
+                        const recoveryRun = await runSolvePass({
+                            passName: 'pass-4-bound-relaxed',
+                            localTimeLimit: Math.min(remainingBudget(), Math.max(2000, Math.floor(timeLimit * 0.15))),
+                            disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
+                            useFailMemo: false,
+                            passVariant: 'random',
+                            passPortalBiasMode: 'off'
+                        });
+
+                        if ((recoveryRun.solutions || []).length > 0) {
+                            foundSolutions.push(...recoveryRun.solutions);
+                        }
+
+                        primarySolved = foundSolutions.length > 0;
+                        primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
+                    }
 
                     if (debugStats && !primarySolved && primaryStatus === "no-solution") {
                         appendReachabilitySanityNote(level, debugStats, primaryStatus, goalReachable);
@@ -9155,8 +9254,15 @@
                 solverResult = createCanonicalSolveResult(solverResult || {});
                 applyCanonicalSolutionShape(solverResult);
 
-                const finalStatus = solverResult.rawStatus || solverResult.status || 'error';
+                let finalStatus = solverResult.rawStatus || solverResult.status || 'error';
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
+                const gridSize = level.grid.w * level.grid.h;
+                const isTinyBoard = gridSize <= 64;
+                const exhaustedQuickly = !solverResult.timedOut && totalSolveTimeMs < 100;
+
+                if (isTinyBoard && exhaustedQuickly && !solverResult.ok) {
+                    finalStatus = 'no-solution-proven';
+                }
                 const compatAliases = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], {
                     allowReferee,
                     executionPath: solverResult.executionPath,
