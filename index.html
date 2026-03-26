@@ -8186,6 +8186,8 @@
                         macroSkeleton: defaultSkeleton,
                         regionCrossingModel,
                         policyProfile: modernStructuralGuidanceNotNeeded ? 'harvestThenFinish' : 'perimeterSweep',
+                        orderingPolicy: modernStructuralGuidanceNotNeeded ? 'default' : null,
+                        startGateArchetype: modernStructuralGuidanceNotNeeded ? 'default' : null,
                         commitmentPlan: { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
                         memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2
                     });
@@ -8348,6 +8350,8 @@
                     highReqIntThreshold: attemptOpts?.highReqIntThreshold
                 });
                 const featureSignature = toHeuristicFeatureSignature(heuristicFeatureFlags);
+                const orderingPolicy = attemptOpts.orderingPolicy || attemptOpts.policyProfile || opts.orderingPolicy || 'harvestThenFinish';
+                const startGateArchetype = attemptOpts.startGateArchetype || attemptOpts.policyProfile || controlPlane?.activeHypothesis?.archetype || 'harvestThenFinish';
                 const r = await PathfinderSolver.solve(level, {
                     timeLimit: attemptBudgetMs,
                     debug: true,
@@ -8366,8 +8370,8 @@
                     knotBudgetPolicy: attemptOpts.knotBudgetPolicy || null,
                     macroSkeleton: attemptOpts.macroSkeleton || null,
                     regionCrossingModel: attemptOpts.regionCrossingModel || null,
-                    orderingPolicy: attemptOpts.policyProfile || opts.orderingPolicy || 'harvestThenFinish',
-                    startGateArchetype: attemptOpts.policyProfile || controlPlane?.activeHypothesis?.archetype || 'harvestThenFinish',
+                    orderingPolicy,
+                    startGateArchetype,
                     commitmentPlan: attemptOpts.commitmentPlan || null,
                     memoStrictness: Number(attemptOpts.memoStrictness) || 1,
                     heuristicFeatureFlags,
