@@ -2061,6 +2061,14 @@
                     }
                     return [h0 >>> 0, h1 >>> 0];
                 },
+                // _buildStrictStateSignature is a DEBUG-ONLY ground-truth key, separate from
+                // the primary _buildStateHashTuple. It produces a human-readable pipe-delimited
+                // string (via StateSignature.makeKey) that encodes every memoisation-relevant
+                // field exactly, with no hash collisions possible. It is only called when strict
+                // mode is active (options.debugStrictMemoKey or window.__PF_SOLVER_STRICT_MEMO_KEY__)
+                // and is used exclusively by _refreshStateHashState to detect false collisions in
+                // the Zobrist/FNV hash pair. It is not redundant: the tuple hash is fast and used
+                // at runtime; the strict signature is slow but exact and used only for validation.
                 _buildStrictStateSignature(state, l, realLen, options = {}) {
                     const base = StateSignature.makeKey(state, { level: l, stepsUsed: realLen, falseGoalPolicy: options.falseGoalPolicy || '' }) || '';
                     return [
@@ -5383,6 +5391,25 @@
                     if (shouldApplyDebugVariant && dirOrderVariant === 'alt') rankedQueue = rankedQueue.slice().reverse();
                     else if (shouldApplyDebugVariant && dirOrderVariant === 'random') rankedQueue = rankedQueue.slice().sort(() => Math.random() - 0.5);
 
+                    // Gate queue diversification across restarts. Attempt 0 uses the ranked order.
+                    // Attempts 1+ alternate between reversing and rotating so that levels with
+                    // 2-3 gates where the top-ranked gate consistently dead-ends will try a
+                    // different starting gate on every restart. Pattern:
+                    //   attempt 1 → reverse
+                    //   attempt 2 → rotate by 1
+                    //   attempt 3 → reverse + rotate by 1
+                    //   attempt 4 → rotate by 2  …and so on
+                    // This is distinct from jitter (which only perturbs mid-DFS move scores) and
+                    // is much more impactful for low-gate-count levels.
+                    if (restartIndex > 0 && rankedQueue.length > 1) {
+                        const n = rankedQueue.length;
+                        const shouldReverse = (restartIndex % 2) === 1;
+                        const rotateBy = Math.floor(restartIndex / 2) % n;
+                        let q = shouldReverse ? rankedQueue.slice().reverse() : rankedQueue.slice();
+                        if (rotateBy > 0) q = [...q.slice(rotateBy), ...q.slice(0, rotateBy)];
+                        rankedQueue = q;
+                    }
+
                     const passCellUsageFreq = SavedHintArchitecture.makePassCellUsageSeed();
                     const seenSolutions = new Set();
                     const isHintCandidateValid = (path) => {
@@ -5484,10 +5511,20 @@
             };
 
         function _solverPolicySelfCheck() {
+                // Verifies that both policies expose the callbacks consumed by the inline
+                // gate-loop in PathfinderSolver.solve (runSolvePass). The loop calls:
+                //   policy.initOutput()
+                //   policy.getStartStates()
+                //   policy.applyMove(startState, gateKey, out)
+                //   policy.isAcceptState(candidate, out)
+                //   policy.onAcceptState(candidate, out)
+                // Note: expandMoves and getStateKey were part of the old SearchFramework
+                // interface and are no longer invoked by the loop; they remain defined on
+                // the policy objects but are not checked here.
                 try {
                     const hintPolicy = SolverPolicies.makeHintPolicy({ gateKeys: [], falseGoalKeys: new Set() }, { validGates: [], distMap: new Map(), flipperDistMap: new Map(), startTime: Date.now(), localTimeLimit: 1 });
                     const trapPolicy = SolverPolicies.makeTrapPolicy({ gateKeys: [] }, { startTime: Date.now() });
-                    const requiredKeys = ['getStartStates', 'isAcceptState', 'onAcceptState', 'expandMoves', 'applyMove', 'getStateKey'];
+                    const requiredKeys = ['initOutput', 'getStartStates', 'applyMove', 'isAcceptState', 'onAcceptState'];
                     const hasAll = (policy) => requiredKeys.every(k => typeof policy[k] === 'function');
                     if (!hasAll(hintPolicy) || !hasAll(trapPolicy)) console.warn('Solver policy self-check: missing callbacks.');
                 } catch (err) {
@@ -7967,6 +8004,19 @@
                 triggered: boardArea >= 100 && mustCrossCount >= 2 && mandatoryPortalFamilyCount > 0
             });
 
+            // Diversified root pass: tries multiple ordering policies in round-robin slices
+            // before falling back to the reserve budget. Triggered only when BOTH the level
+            // complexity profile qualifies (boardArea >= 100, mustCrossCount >= 2, at least
+            // one mandatory portal family) AND the caller explicitly opts in via
+            // opts.enableDiversifiedRootPass or opts.refereeRootDiversification.
+            //
+            // Review note: this subsystem has limited isolated test coverage. The three
+            // policy families (harvestThenFinish, portalFirstTransfer, perimeterSweep) and
+            // their relative scoring weights have not been systematically validated against
+            // the portal-heavy levels they target. The stageOrder/complexity strategy that
+            // originally motivated this approach is now partially retired. Before extending
+            // or relying on this path, validate it with a controlled level set that triggers
+            // the condition and confirm it outperforms the single-pass baseline.
             const diversifiedPassRequested = !!opts.enableDiversifiedRootPass || !!opts.refereeRootDiversification;
             const shouldDiversifyRootPass = !!triggerProfile?.triggered && diversifiedPassRequested;
             if (!shouldDiversifyRootPass) {
