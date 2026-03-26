@@ -8174,7 +8174,7 @@
                 } else {
                     attempts.push({
                         label: 'structural-modern',
-                        budgetMs: modernBudget,
+                        budgetMs: modernStructuralGuidanceNotNeeded ? total : modernBudget,
                         scoringMode: 'modern',
                         portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
                         structuralMode: !modernStructuralGuidanceNotNeeded,
@@ -8193,23 +8193,25 @@
                         memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2
                     });
                 }
-                attempts.push({
-                    label: 'structural-conservative',
-                    budgetMs: Math.max(1, allowEnduranceLongpath ? conservativeBudget : (conservativeBudget + remainingBudget)),
-                    scoringMode: 'modern',
-                    portalBiasMode: 'off',
-                    structuralMode: true,
-                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                    objectiveTrack: defaultTrack,
-                    templateCommitment: commonTemplateCommitment,
-                    portalLockPolicy: commonPortalLockPolicy,
-                    knotBudgetPolicy: commonKnotBudgetPolicy,
-                    macroSkeleton: defaultSkeleton,
-                    regionCrossingModel,
-                    policyProfile: 'harvestThenFinish',
-                    commitmentPlan: { horizonSteps: Math.max(2, Math.floor(level.reqLen * 0.14)) },
-                    memoStrictness: 0.85
-                });
+                if (!modernStructuralGuidanceNotNeeded) {
+                    attempts.push({
+                        label: 'structural-conservative',
+                        budgetMs: Math.max(1, allowEnduranceLongpath ? conservativeBudget : (conservativeBudget + remainingBudget)),
+                        scoringMode: 'modern',
+                        portalBiasMode: 'off',
+                        structuralMode: true,
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
+                        objectiveTrack: defaultTrack,
+                        templateCommitment: commonTemplateCommitment,
+                        portalLockPolicy: commonPortalLockPolicy,
+                        knotBudgetPolicy: commonKnotBudgetPolicy,
+                        macroSkeleton: defaultSkeleton,
+                        regionCrossingModel,
+                        policyProfile: 'harvestThenFinish',
+                        commitmentPlan: { horizonSteps: Math.max(2, Math.floor(level.reqLen * 0.14)) },
+                        memoStrictness: 0.85
+                    });
+                }
 
                 if (allowEnduranceLongpath) {
                     attempts.push({
