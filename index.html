@@ -8742,7 +8742,8 @@
             const tierMinBudget = escalationTier >= 2
                 ? (purpose === 'hint' ? 60000 : 180000)
                 : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
-            const budgetMs = Math.max(requestedBudget, tierMinBudget);
+            const callerSpecifiedBudget = Number.isFinite(opts.timeBudgetMs) && opts.timeBudgetMs >= 3000;
+            const budgetMs = callerSpecifiedBudget ? requestedBudget : Math.max(requestedBudget, tierMinBudget);
             const tierBudgets = purpose === 'hint'
                 ? [5000, 15000, 60000]
                 : [15000, 60000, 180000];
@@ -14267,7 +14268,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const hintAttempts = [
                 { key: 'A', purpose: 'hint', timeBudgetMs: 1000, tier: 0, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
                 { key: 'B', purpose: 'hint', timeBudgetMs: 4000, tier: 1, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
+                { key: 'C', purpose: 'hint', timeBudgetMs: 9000, tier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'D', purpose: 'hint', timeBudgetMs: 12000, tier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
             let finalHintResult = null;
