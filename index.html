@@ -5930,13 +5930,15 @@
                         return true;
                     });
                     const gridCellCount = level.grid.w * level.grid.h;
-                    const ZH_HI = Array.from({ length: gridCellCount }, () => new Int32Array(2));
-                    const ZH_LO = Array.from({ length: gridCellCount }, () => new Int32Array(2));
+                    const ZH_HI = Array.from({ length: gridCellCount }, () => new Int32Array(3));
+                    const ZH_LO = Array.from({ length: gridCellCount }, () => new Int32Array(3));
                     for (let zi = 0; zi < gridCellCount; zi++) {
                         ZH_HI[zi][0] = (Math.random() * 0xFFFFFFFF) | 0;
                         ZH_HI[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
+                        ZH_HI[zi][2] = (Math.random() * 0xFFFFFFFF) | 0;
                         ZH_LO[zi][0] = (Math.random() * 0xFFFFFFFF) | 0;
                         ZH_LO[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
+                        ZH_LO[zi][2] = (Math.random() * 0xFFFFFFFF) | 0;
                     }
                     if (hasRootInteractionComplexity(level) && validGates.length >= 2) {
                         const gateNeighborRichness = (gateKey) => {
