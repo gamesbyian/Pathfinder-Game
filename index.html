@@ -8768,9 +8768,23 @@
             const autoEscalate = timesTried > 1 && !prev.guardrailStop && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus);
             const escalationTier = Math.max(requestedTier, autoEscalate ? 1 : 0);
             const requestedBudget = opts.timeBudgetMs || defaultBudget;
-            const tierMinBudget = escalationTier >= 2
-                ? (purpose === 'hint' ? 60000 : 180000)
-                : (escalationTier === 1 ? (purpose === 'hint' ? 15000 : 60000) : (purpose === 'hint' ? 5000 : 15000));
+            const policyLadderByPurpose = {
+                hint: [
+                    { tier: 0, key: 'hint-tier-0', minBudgetMs: 5000, orderingPolicy: 'profile-default', rootSeedMode: 'default', portalBiasMode: 'profile-default', rescueMode: 'default' },
+                    { tier: 1, key: 'hint-tier-1', minBudgetMs: 15000, orderingPolicy: 'knotBuilder', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off', rescueMode: 'alternate-rescue' },
+                    { tier: 2, key: 'hint-tier-2', minBudgetMs: 60000, orderingPolicy: 'objectiveFirst', rootSeedMode: 'diversified', portalBiasMode: 'adaptiveMustCross', rescueMode: 'alternate-rescue' }
+                ],
+                solve: [
+                    { tier: 0, key: 'solve-tier-0', minBudgetMs: 15000, orderingPolicy: 'profile-default', rootSeedMode: 'default', portalBiasMode: 'profile-default', rescueMode: 'default' },
+                    { tier: 1, key: 'solve-tier-1', minBudgetMs: 60000, orderingPolicy: 'harvestThenFinish', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off', rescueMode: 'alternate-rescue' },
+                    { tier: 2, key: 'solve-tier-2', minBudgetMs: 180000, orderingPolicy: 'objectiveFirst', rootSeedMode: 'diversified', portalBiasMode: 'adaptiveMustCross', rescueMode: 'alternate-rescue' }
+                ]
+            };
+            const activePolicyLadder = policyLadderByPurpose[purpose] || policyLadderByPurpose.solve;
+            const maxTier = activePolicyLadder.length - 1;
+            const policyTier = Math.max(0, Math.min(maxTier, escalationTier));
+            const activeTierPolicy = activePolicyLadder[policyTier] || activePolicyLadder[0];
+            const tierMinBudget = Number(activeTierPolicy?.minBudgetMs) || defaultBudget;
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
             const tierBudgets = purpose === 'hint'
                 ? [5000, 15000, 60000]
@@ -8892,10 +8906,13 @@
                 };
             };
             const deriveStrategySignature = (strategy = {}) => JSON.stringify({
+                policyKey: strategy?.policyKey || null,
                 orderingPolicy: strategy?.orderingPolicy || null,
                 portalBiasMode: strategy?.portalBiasMode || null,
                 rootSeedMode: strategy?.rootSeedMode || null,
-                rescueMode: strategy?.rescueMode || null
+                rescueMode: strategy?.rescueMode || null,
+                hardHintFallbackStage: !!strategy?.hardHintFallbackStage,
+                budgetMs: Number(strategy?.budgetMs) || 0
             });
             const attemptPairNearIdentical = (first = null, second = null) => {
                 if (!first || !second) return false;
@@ -8949,14 +8966,30 @@
             const pivotOrderingPolicy = shouldForcePivot
                 ? pickPivotOrderingPolicy(defaultOrderingPolicy, previousAttempt?.strategy?.orderingPolicy || null)
                 : defaultOrderingPolicy;
+            const basePolicyOrdering = activeTierPolicy?.orderingPolicy === 'profile-default'
+                ? pivotOrderingPolicy
+                : activeTierPolicy?.orderingPolicy;
+            const basePolicyPortalBias = activeTierPolicy?.portalBiasMode === 'profile-default'
+                ? (shouldForcePivot ? 'off' : resolvedPortalBiasMode)
+                : (activeTierPolicy?.portalBiasMode || resolvedPortalBiasMode);
+            const basePolicyRootSeed = activeTierPolicy?.rootSeedMode || (shouldForcePivot ? 'broader-candidate-seed-set' : (enableDiversifiedRootPass ? 'diversified' : 'default'));
+            const basePolicyRescueMode = activeTierPolicy?.rescueMode || (shouldForcePivot ? 'alternate-rescue' : 'default');
+            const hardHintFallbackStage = purpose === 'hint'
+                && timesTried >= 4
+                && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus || '')
+                && escalationTier >= 2;
             const strategyMetadata = compactDefined({
                 attemptOrdinal: timesTried,
+                policyKey: hardHintFallbackStage ? `${activeTierPolicy?.key || 'policy'}-hard` : (activeTierPolicy?.key || null),
+                policyTier,
                 forcedPivot: shouldForcePivot,
                 pivotTrigger: shouldForcePivot ? 'flat-or-negative-delta' : null,
-                orderingPolicy: pivotOrderingPolicy,
-                portalBiasMode: shouldForcePivot ? 'off' : resolvedPortalBiasMode,
-                rootSeedMode: shouldForcePivot ? 'broader-candidate-seed-set' : (enableDiversifiedRootPass ? 'diversified' : 'default'),
-                rescueMode: shouldForcePivot ? 'alternate-rescue' : 'default',
+                orderingPolicy: hardHintFallbackStage ? 'portalFirstTransfer' : basePolicyOrdering,
+                portalBiasMode: hardHintFallbackStage ? 'off' : basePolicyPortalBias,
+                rootSeedMode: hardHintFallbackStage ? 'diversified-aggressive' : basePolicyRootSeed,
+                rescueMode: hardHintFallbackStage ? 'alternate-rescue' : basePolicyRescueMode,
+                hardHintFallbackStage,
+                budgetMs,
                 previousDelta: previousAttempt?.delta || null
             });
             const guardrailStopThirdAttempt = timesTried >= 3
@@ -9189,6 +9222,37 @@
                 } else {
                     last.rescueProfileSummary = rescueProfileResult.rescueProfileSummary;
                 }
+            }
+            if (!last.ok && last.status !== 'no-solution-proven' && strategyMetadata.hardHintFallbackStage) {
+                const hardFallbackBudget = Math.max(1500, Math.floor(Math.max(budgetMs, tierBudgets[Math.min(2, policyTier)] || budgetMs) * 0.55));
+                const hardFallbackAttempt = await runStage({
+                    stage: 6,
+                    name: 'Stage 6',
+                    variant: 'hint-hard-diversified-fallback',
+                    budgetMs: hardFallbackBudget,
+                    run: () => this.runBaselinePolicySweep(level, hardFallbackBudget, {
+                        orderingPolicy: 'portalFirstTransfer',
+                        portalBiasMode: 'off',
+                        phasePolicy: null,
+                        profile: level.solverProfile,
+                        controlPlane,
+                        refereeRootDiversification: true,
+                        scoringMode: 'endurance',
+                        structuralMode: true,
+                        enableEnduranceLongpath: true,
+                        allowRandomizedExploration: false,
+                        adaptiveOrderingPhase: 'portal-transfer',
+                        purpose,
+                        rootCandidateGeneratorVariant: 'interaction-fallback',
+                        preferMacroSkeleton: true
+                    })
+                });
+                hardFallbackAttempt.routingDecision = compactDefined({
+                    category: hardFallbackAttempt.failureTaxonomy?.category || 'hint-hard-fallback',
+                    mode: 'hard-diversified-fallback',
+                    trigger: 'repeated-inconclusive-hint-presses'
+                });
+                last = hardFallbackAttempt;
             }
 
             const attemptMetrics = extractAttemptQualityMetrics(last);
@@ -9470,11 +9534,13 @@
             const solveStart = performance.now();
             try {
                 const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null, guardrailStop: false };
-                const autoTier = (!hist.guardrailStop && hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus)) ? 1 : 0;
+                const autoTier = (!hist.guardrailStop && hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus))
+                    ? (purpose === 'hint' ? Math.min(2, hist.timesTried) : 1)
+                    : 0;
                 const escalationTier = Math.max(requestedEscalationTier, autoTier);
                 if (allowReferee) {
                     if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
-                    if (escalationTier >= 2) APP.UI.showMessage('Deep search on: extended search mode.', 'text-amber-700');
+                    if (escalationTier >= 2) APP.UI.showMessage(purpose === 'hint' ? 'Deep hint search: diversified policy ladder active.' : 'Deep search on: extended search mode.', 'text-amber-700');
                 } else {
                     APP.UI.showMessage('Solving…', 'text-sky-600');
                 }
@@ -9991,7 +10057,13 @@
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
-                const solverResult = await APP.Solver.solveLevel(solveInputLevel, { purpose, escalationTier, allowReferee: true });
+                let requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
+                if (purpose === 'hint') {
+                    const hintHist = attemptHistory[getLevelAttemptKey(solveInputLevel, 'hint')] || { timesTried: 0, lastStatus: null };
+                    const pressDrivenTier = Math.min(2, Math.max(0, Number(hintHist.timesTried) || 0));
+                    requestedTier = Math.max(requestedTier, pressDrivenTier);
+                }
+                const solverResult = await APP.Solver.solveLevel(solveInputLevel, { purpose, escalationTier: requestedTier, allowReferee: true });
                 console.info('[Solver] runGameSolver', {
                     purpose,
                     levelId: Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null,
@@ -10000,7 +10072,7 @@
                     finalStatus: solverResult?.finalStatus || solverResult?.rawStatus || solverResult?.status || 'unknown',
                     finalSolvedBy: solverResult?.finalSolvedBy || 'none',
                     allowRefereeRequested: true,
-                    escalationTierUsed: escalationTier
+                    escalationTierUsed: requestedTier
                 });
                 const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 solverResult.solution = canonical;
