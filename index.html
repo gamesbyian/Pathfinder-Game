@@ -4677,6 +4677,7 @@
                         if (typeof Referee?.updateHypothesisConfidence === 'function') {
                             Referee.updateHypothesisConfidence(cp, telemetry);
                         }
+                        return;
                         const triggerLowExpansion = branchFactorTrend < -0.12 && objectiveReductionRate < 0.0009;
                         const triggerMemoOverfit = memoHitSaturation > 0.72 && objectiveReductionRate < 0.0008;
                         const triggerPortalThrash = portalLockStability < 0.45;
@@ -5206,85 +5207,6 @@
                 }
             };
 
-        const SearchFramework = {
-                async runSearch({
-                    level,
-                    purpose = 'search',
-                    timeLimit,
-                    signal,
-                    onProgress = () => {},
-                    onStateUpdate = () => {},
-                    policy,
-                    getStartStates,
-                    isAcceptState,
-                    onAcceptState,
-                    expandMoves,
-                    applyMove,
-                    getStateKey,
-                    dominates,
-                    recordBest,
-                    initOutput,
-                    initialOutput
-                }) {
-                    const resolvedGetStartStates = getStartStates || policy?.getStartStates;
-                    const resolvedIsAcceptState = isAcceptState || policy?.isAcceptState;
-                    const resolvedOnAcceptState = onAcceptState || policy?.onAcceptState;
-                    const resolvedExpandMoves = expandMoves || policy?.expandMoves;
-                    const resolvedApplyMove = applyMove || policy?.applyMove;
-                    const resolvedGetStateKey = getStateKey || policy?.getStateKey;
-                    const resolvedDominates = dominates || policy?.dominates;
-                    const resolvedRecordBest = recordBest || policy?.recordBest;
-                    const resolvedInitOutput = initOutput || policy?.initOutput;
-                    const resolvedInitialOutput = initialOutput || policy?.initialOutput;
-
-                    const out = (typeof resolvedInitOutput === 'function') ? (resolvedInitOutput() || {}) : (resolvedInitialOutput || {});
-                    const bestMap = new Map();
-                    const startStates = (typeof resolvedGetStartStates === 'function') ? (resolvedGetStartStates() || []) : [];
-                    for (const startState of startStates) {
-                        if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                        const key = resolvedGetStateKey ? resolvedGetStateKey(startState) : null;
-                        if (key !== null && key !== undefined) {
-                            const prevBest = bestMap.get(key);
-                            if (prevBest !== undefined) {
-                                if (!resolvedDominates || resolvedDominates(prevBest, startState)) continue;
-                            }
-                            if (resolvedRecordBest) resolvedRecordBest(bestMap, key, startState);
-                            else bestMap.set(key, startState);
-                        }
-                        const moves = resolvedExpandMoves ? (resolvedExpandMoves(startState, out) || []) : [null];
-                        for (const move of moves) {
-                            if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                            const candidate = await resolvedApplyMove(startState, move, out);
-                            if (candidate?.kind === 'aborted') {
-                                out.aborted = true;
-                                out.stop = true;
-                                break;
-                            }
-                            if (candidate?.kind === 'timeout') {
-                                out.timedOut = true;
-                                out.stop = true;
-                                break;
-                            }
-                            if (resolvedIsAcceptState && resolvedIsAcceptState(candidate, out)) {
-                                resolvedOnAcceptState?.(candidate, out);
-                            }
-                            if (candidate?.timedOutAfterAccept) {
-                                out.timedOut = true;
-                                out.stop = true;
-                                break;
-                            }
-                            if (timeLimit && out.startTime && (Date.now() - out.startTime > timeLimit)) {
-                                out.timedOut = true;
-                                break;
-                            }
-                        }
-                        if (out.stop || out.timedOut) break;
-                        onProgress?.(Date.now() - (out.startTime || Date.now()));
-                    }
-                    return out;
-                }
-            };
-
         const SavedHintArchitecture = {
                 // Architectural contract:
                 // - Saved hints (level.hints) are UI-only playback data.
@@ -5549,48 +5471,6 @@
                     };
                 }
             };
-
-        function runTrapTimeoutBoundaryDiagnostics() {
-                if (!APP.State?.ENGINE?.isDevMode) return { skipped: true, reason: 'dev-only' };
-
-                const budgetMs = 100;
-                const gateCosts = [20, 70, 15];
-
-                const simulateLegacy = () => {
-                    let elapsed = 0;
-                    let gatesProcessed = 0;
-                    let timedOut = false;
-                    for (const cost of gateCosts) {
-                        if (elapsed > budgetMs) { timedOut = true; break; }
-                        elapsed += cost;
-                        gatesProcessed++;
-                        if (elapsed > budgetMs) { timedOut = true; break; }
-                    }
-                    return { timedOut, gatesProcessed };
-                };
-
-                const simulateCurrent = () => {
-                    let elapsed = 0;
-                    let gatesProcessed = 0;
-                    let timedOut = false;
-                    for (const cost of gateCosts) {
-                        if (elapsed > budgetMs) { timedOut = true; break; }
-                        elapsed += cost;
-                        gatesProcessed++;
-                        if (elapsed > budgetMs) { timedOut = true; break; }
-                    }
-                    return { timedOut, gatesProcessed };
-                };
-
-                const legacy = simulateLegacy();
-                const current = simulateCurrent();
-                const pass = legacy.timedOut === current.timedOut && legacy.gatesProcessed === current.gatesProcessed;
-                const report = { pass, budgetMs, gateCosts, legacy, current };
-                if (!pass) throw new Error(`[Trap Timeout Boundary] Regression: ${JSON.stringify(report)}`);
-                console.log('[Trap Timeout Boundary] diagnostics:', report);
-                return report;
-            }
-            APP.Debug.register('runTrapTimeoutBoundaryDiagnostics', runTrapTimeoutBoundaryDiagnostics);
 
         function _solverPolicySelfCheck() {
                 try {
@@ -6108,15 +5988,16 @@
                             ZH_LO,
                             jitterScale: JITTER_SCALE
                         });
-                        const out = await SearchFramework.runSearch({
-                            level,
-                            purpose: 'hint',
-                            timeLimit: localTimeLimit,
-                            signal,
-                            onProgress,
-                            onStateUpdate,
-                            policy
-                        });
+                        const out = policy.initOutput();
+                        const startStates = policy.getStartStates();
+                        for (const startState of startStates) {
+                            if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                            const candidate = await policy.applyMove(startState, startState.gateKey, out);
+                            if (candidate?.kind === 'aborted') { out.aborted = true; break; }
+                            if (candidate?.kind === 'timeout') { out.timedOut = true; break; }
+                            if (policy.isAcceptState(candidate, out)) policy.onAcceptState(candidate, out);
+                            if (out.stop || out.timedOut) break;
+                        }
                         if (out.aborted) {
                             if (debugStats) {
                                 finalizeSolverDebugStats(debugStats, "aborted", perfStart);
@@ -6380,15 +6261,19 @@
                             console.warn('[TrapSpots] policyStageA missing callbacks', policyStageA);
                         }
                     }
-                    const outA = await SearchFramework.runSearch({
-                        level,
-                        purpose: 'trap',
-                        timeLimit: stageABudget,
-                        signal,
-                        onProgress,
-                        onStateUpdate,
-                        policy: policyStageA
-                    });
+                    const outA = policyStageA.initOutput();
+                    {
+                        const startStatesA = policyStageA.getStartStates();
+                        for (const startState of startStatesA) {
+                            if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                            const candidate = await policyStageA.applyMove(startState, startState.gateKey, outA);
+                            if (candidate?.kind === 'aborted') { outA.aborted = true; break; }
+                            if (candidate?.kind === 'timeout') { outA.timedOut = true; break; }
+                            if (policyStageA.isAcceptState(candidate, outA)) policyStageA.onAcceptState(candidate, outA);
+                            if (candidate?.timedOutAfterAccept) { outA.timedOut = true; break; }
+                            if (outA.stop || outA.timedOut) break;
+                        }
+                    }
                     const spots = new Set(outA.spots || []);
                     const stageBStart = Date.now();
                     const remaining = Math.max(0, timeLimit - (stageBStart - startTime));
@@ -6409,15 +6294,19 @@
                                 console.warn('[TrapSpots] policyStageB missing callbacks', policyStageB);
                             }
                         }
-                        outB = await SearchFramework.runSearch({
-                            level,
-                            purpose: 'trap',
-                            timeLimit: remaining,
-                            signal,
-                            onProgress,
-                            onStateUpdate,
-                            policy: policyStageB
-                        });
+                        outB = policyStageB.initOutput();
+                        {
+                            const startStatesB = policyStageB.getStartStates();
+                            for (const startState of startStatesB) {
+                                if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
+                                const candidate = await policyStageB.applyMove(startState, startState.gateKey, outB);
+                                if (candidate?.kind === 'aborted') { outB.aborted = true; break; }
+                                if (candidate?.kind === 'timeout') { outB.timedOut = true; break; }
+                                if (policyStageB.isAcceptState(candidate, outB)) policyStageB.onAcceptState(candidate, outB);
+                                if (candidate?.timedOutAfterAccept) { outB.timedOut = true; break; }
+                                if (outB.stop || outB.timedOut) break;
+                            }
+                        }
                     }
                     for (const key of (outB.spots || [])) spots.add(key);
                     const out = {
@@ -9508,8 +9397,6 @@
             last.complexityStrategy = {
                 portalBiasMode: resolvedPortalBiasMode,
                 pruneTogglesByTier: complexityStrategy.pruneTogglesByTier || [],
-                stageOrder: complexityStrategy.stageOrder || [],
-                budgetSplit: complexityStrategy.budgetSplit || {},
                 directionPolicy: complexityStrategy.directionPolicy || {}
             };
             return last;
@@ -9518,7 +9405,7 @@
         async getHint(levelInput, opts = {}) {
             const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
-            console.log('Referee starting tier:', tier);
+            if (APP.State?.ENGINE?.isDevMode) console.log('Referee starting tier:', tier);
             return this.solve(levelInput, { ...opts, purpose: 'hint', escalationTier: Number(opts.escalationTier ?? opts.tier) });
         }
     };
