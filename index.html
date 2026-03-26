@@ -2054,6 +2054,8 @@
                     h1 = this._mixHash32(h1, Number.isFinite(state.flipParity) ? state.flipParity : 0);
                     h0 = this._mixHashBigInt(h0, state.flipperCrossMask);
                     h1 = this._mixHashBigInt(h1, state.flipperParityAtCrossMask);
+                    h0 = this._mixHash32(h0, state.zhHi | 0);
+                    h1 = this._mixHash32(h1, state.zhLo | 0);
                     if ((l?.filterMap?.size || 0) > 0 || (l?.flippingFilterMap?.size || 0) > 0) {
                         h0 = this._mixHash32(h0, state.nonZeroUsage | 0);
                     }
@@ -2499,6 +2501,8 @@
                     const LOG_PORTAL_REQUIRED_MASK = 21;
                     const LOG_PORTAL_REENTRY_BUDGET = 22;
                     const LOG_PORTAL_OSC_BUDGET = 23;
+                    const LOG_ZH_HI = 24;
+                    const LOG_ZH_LO = 25;
                     const startLogCursor = s.logCursor;
                     const prevKey = s.path[s.path.length - 1];
                     const prevPathLen = s.path.length;
@@ -2555,6 +2559,22 @@
                         }
                     }
                     s.path.push(k);
+                    if (!isJump) {
+                        const prevIdxForAxis = s.keyToIdx(prevKey);
+                        const prevX = prevKey & 0xFFFF;
+                        const prevY = prevKey >> 16;
+                        const curX = k & 0xFFFF;
+                        const curY = k >> 16;
+                        const axis = (curY === prevY) ? 0 : 1;
+                        const zTablesHi = options?.ZH_HI;
+                        const zTablesLo = options?.ZH_LO;
+                        if (zTablesHi && zTablesLo && zTablesHi[prevIdxForAxis] && zTablesHi[idx] && zTablesLo[prevIdxForAxis] && zTablesLo[idx]) {
+                            this._undoLogWrite(s, LOG_ZH_HI, 0, s.zhHi | 0);
+                            this._undoLogWrite(s, LOG_ZH_LO, 0, s.zhLo | 0);
+                            s.zhHi = (s.zhHi ^ zTablesHi[prevIdxForAxis][axis] ^ zTablesHi[idx][axis]) | 0;
+                            s.zhLo = (s.zhLo ^ zTablesLo[prevIdxForAxis][axis] ^ zTablesLo[idx][axis]) | 0;
+                        }
+                    }
                     if (isJump) {
                         this._undoLogWrite(s, LOG_JUMP, prevPathLen, s.jumpMarks[prevPathLen]);
                         this._undoLogWrite(s, LOG_JUMP, -1, s.jumpCount);
@@ -2646,6 +2666,8 @@
                     const LOG_PORTAL_REQUIRED_MASK = 21;
                     const LOG_PORTAL_REENTRY_BUDGET = 22;
                     const LOG_PORTAL_OSC_BUDGET = 23;
+                    const LOG_ZH_HI = 24;
+                    const LOG_ZH_LO = 25;
                     s.path.pop();
                     while (s.logCursor > logMark) {
                         s.logCursor -= 3;
@@ -2683,6 +2705,8 @@
                         else if (arrayId === LOG_PORTAL_REQUIRED_MASK) s.portalRequiredCoverageMask = BigInt(prev);
                         else if (arrayId === LOG_PORTAL_REENTRY_BUDGET) s.portalReentryBudget = prev;
                         else if (arrayId === LOG_PORTAL_OSC_BUDGET) s.portalOscillationBudget = prev;
+                        else if (arrayId === LOG_ZH_HI) s.zhHi = prev;
+                        else if (arrayId === LOG_ZH_LO) s.zhLo = prev;
                     }
                     if (l) s.hashDirty = true;
                 },
@@ -3140,6 +3164,9 @@
                 },
                 _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats = null) {
                     const { w, h } = l.grid;
+                    const JITTER_SCALE = 8;
+                    const restartIndex = options?.restartIndex || 0;
+                    const jitter = restartIndex > 0 ? (() => (Math.random() - 0.5) * JITTER_SCALE) : (() => 0);
                     const p = APP.LevelUtils.UNPACK(k);
                     const depth = Math.max(0, state.path.length - 1);
                     const assertKnownSolvableBounds = !!options?.assertKnownSolvableBounds;
@@ -4179,6 +4206,7 @@
                     const revisitContribution = suppressAntiDither ? 0 : (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
+                    score += jitter();
                     return { nk, score, scoreDrivers };
                 });
                     if (options?.dirOrderVariant === 'random') {
@@ -4474,6 +4502,18 @@
                     const cols = l.grid.w;
                     const keyCount = l.grid.w * l.grid.h;
                     options = options || {};
+                    const ZH_HI = options.ZH_HI || Array.from({ length: keyCount }, () => new Int32Array(2));
+                    const ZH_LO = options.ZH_LO || Array.from({ length: keyCount }, () => new Int32Array(2));
+                    if (!options.ZH_HI || !options.ZH_LO) {
+                        for (let zi = 0; zi < keyCount; zi++) {
+                            ZH_HI[zi][0] = (Math.random() * 0xFFFFFFFF) | 0;
+                            ZH_HI[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
+                            ZH_LO[zi][0] = (Math.random() * 0xFFFFFFFF) | 0;
+                            ZH_LO[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
+                        }
+                    }
+                    options.ZH_HI = ZH_HI;
+                    options.ZH_LO = ZH_LO;
                     options.hazardPolicy = options.hazardPolicy || 'forbid';
                     const disabledPruneSet = new Set(options.disabledPrunes || []);
                     if (window.__PF_DEBUG_BYPASS_CONNECTIVITY_PRUNE__) disabledPruneSet.add('connectivity');
@@ -4556,6 +4596,8 @@
                         commitmentAxis: -1,
                         knotShapeProgress: 0,
                         perimeterSpanSignature: 0,
+                        zhHi: 0,
+                        zhLo: 0,
                         memoHash0: 0,
                         memoHash1: 0,
                         memoHashKey: '',
@@ -4582,8 +4624,8 @@
                         state.flipParity = state.flipCount % 2;
                     }
                     state.hashDirty = true;
-                    const failMemo = useFailMemo ? new Map() : null;
-                    const dominanceMemo = new Map();
+                    const failMemo = useFailMemo ? (options.sharedFailMemo || new Map()) : null;
+                    const dominanceMemo = options.sharedDominanceMemo || new Map();
                     const recordPhaseAttempt = (status) => {
                         if (!debugStats) return;
                         if (!Array.isArray(debugStats.phaseAttempts)) debugStats.phaseAttempts = [];
@@ -5313,7 +5355,12 @@
                         assertKnownSolvableBounds = false,
                         forcePhaseArchetype = null,
                         antiDriftEdgeLock = false,
-                        forcedPolicyProfile = null
+                        forcedPolicyProfile = null,
+                        restartIndex = 0,
+                        sharedFailMemo = null,
+                        sharedDominanceMemo = null,
+                        ZH_HI = null,
+                        ZH_LO = null
                     } = options;
                     if (APP.State?.ENGINE?.isDevMode) {
                         const undefinedModes = [
@@ -5476,6 +5523,11 @@
                                 startGateArchetype: state?.startGateArchetype || null,
                                 forcePhaseArchetype,
                                 antiDriftEdgeLock,
+                                restartIndex,
+                                sharedFailMemo,
+                                sharedDominanceMemo,
+                                ZH_HI,
+                                ZH_LO,
                                 ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
@@ -6008,7 +6060,16 @@
                         return [];
                     }
 
-                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null }) => {
+                    const solveKeyCount = level.grid.w * level.grid.h;
+                    const ZH_HI = Array.from({ length: solveKeyCount }, () => new Int32Array(2));
+                    const ZH_LO = Array.from({ length: solveKeyCount }, () => new Int32Array(2));
+                    for (let zi = 0; zi < solveKeyCount; zi++) {
+                        ZH_HI[zi][0] = (Math.random() * 0xFFFFFFFF) | 0;
+                        ZH_HI[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
+                        ZH_LO[zi][0] = (Math.random() * 0xFFFFFFFF) | 0;
+                        ZH_LO[zi][1] = (Math.random() * 0xFFFFFFFF) | 0;
+                    }
+                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null, restartIndex = 0, sharedFailMemo = null, sharedDominanceMemo = null }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
                         if (debugStats) {
@@ -6051,7 +6112,12 @@
                             assertKnownSolvableBounds: !!assertKnownSolvableBounds,
                             forcePhaseArchetype,
                             antiDriftEdgeLock,
-                            forcedPolicyProfile
+                            forcedPolicyProfile,
+                            restartIndex,
+                            sharedFailMemo,
+                            sharedDominanceMemo,
+                            ZH_HI,
+                            ZH_LO
                         });
                         const out = await SearchFramework.runSearch({
                             level,
@@ -6130,6 +6196,9 @@
                             : []),
                         { passName: 'pass-3-fallback', ratio: 1, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
+                    const FALLBACK_MAX_RESTARTS = 6;
+                    const FALLBACK_GEOMETRIC_RATIO = 2.0;
+                    const FALLBACK_INITIAL_DIVISOR = 8;
                     let primaryRun = { kind: 'ok', solutions: [] };
                     for (let i = 0; i < stagedHintPasses.length; i++) {
                         const pass = stagedHintPasses[i];
@@ -6137,6 +6206,54 @@
                         if (rem <= 0) {
                             primaryRun = { kind: 'ok', solutions: Object.assign([], { timedOut: true }) };
                             break;
+                        }
+                        if (pass.passName === 'pass-3-fallback') {
+                            const sharedFailMemo = new Map();
+                            const sharedDominanceMemo = new Map();
+                            let attemptBudget = Math.max(1, Math.floor(rem / FALLBACK_INITIAL_DIVISOR));
+                            let fallbackRun = { kind: 'ok', solutions: [] };
+                            for (let attempt = 0; attempt < FALLBACK_MAX_RESTARTS; attempt++) {
+                                const remForAttempt = remainingBudget();
+                                if (remForAttempt <= 0) {
+                                    fallbackRun = { kind: 'ok', solutions: Object.assign([], { timedOut: true }) };
+                                    break;
+                                }
+                                const isFinalAttempt = attempt === (FALLBACK_MAX_RESTARTS - 1);
+                                const localBudget = isFinalAttempt
+                                    ? remForAttempt
+                                    : Math.max(1, Math.min(remForAttempt, attemptBudget));
+                                const attemptStatus = attempt === 0
+                                    ? pass.statusLabel
+                                    : `Solving (${validGates.length} viable gates, fallback restart ${attempt + 1}/${FALLBACK_MAX_RESTARTS})...`;
+                                const passRun = await runSolvePass({
+                                    passName: pass.passName,
+                                    localTimeLimit: localBudget,
+                                    disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...((pass.disabledPrunes || []))])),
+                                    useFailMemo: pass.useFailMemo ?? !(Array.isArray(disabledPrunes) && disabledPrunes.length > 0),
+                                    statusLabel: attemptStatus,
+                                    passVariant: pass.variant,
+                                    enableForcedMoves: true,
+                                    gateBeamTopK: pass.beamTopK || 0,
+                                    debugGateVariant: !!pass.debugVariant,
+                                    passScoringMode: scoringMode,
+                                    passPortalBiasMode: pass.passPortalBiasMode ?? portalBiasMode,
+                                    passStructuralMode: structuralMode,
+                                    forcePhaseArchetype: pass.forcePhaseArchetype || null,
+                                    antiDriftEdgeLock: !!pass.antiDriftEdgeLock,
+                                    forcedPolicyProfile: pass.forcedPolicyProfile || null,
+                                    restartIndex: attempt,
+                                    sharedFailMemo,
+                                    sharedDominanceMemo
+                                });
+                                fallbackRun = passRun;
+                                if (passRun.kind !== 'ok' || (passRun.solutions || []).length > 0 || passRun.solutions?.timedOut) break;
+                                if (!isFinalAttempt) {
+                                    attemptBudget = Math.max(1, Math.floor(attemptBudget * FALLBACK_GEOMETRIC_RATIO));
+                                }
+                            }
+                            primaryRun = fallbackRun;
+                            if (primaryRun.kind !== 'ok' || (primaryRun.solutions || []).length > 0) break;
+                            continue;
                         }
                         const localBudget = (i === stagedHintPasses.length - 1)
                             ? rem
