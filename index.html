@@ -1827,28 +1827,55 @@
                     return 'invalid-unknown';
                 },
                 _buildOptimisticDistMap(l, sourceKeys) {
+                    class Deque {
+                        constructor(initialCapacity = 32) {
+                            this.buf = new Array(Math.max(4, initialCapacity | 0));
+                            this.head = 0;
+                            this.tail = 0;
+                            this.size = 0;
+                        }
+                        _grow() {
+                            const next = new Array(this.buf.length * 2);
+                            for (let i = 0; i < this.size; i++) next[i] = this.buf[(this.head + i) % this.buf.length];
+                            this.buf = next;
+                            this.head = 0;
+                            this.tail = this.size;
+                        }
+                        pushFront(value) {
+                            if (this.size >= this.buf.length) this._grow();
+                            this.head = (this.head - 1 + this.buf.length) % this.buf.length;
+                            this.buf[this.head] = value;
+                            this.size++;
+                        }
+                        pushBack(value) {
+                            if (this.size >= this.buf.length) this._grow();
+                            this.buf[this.tail] = value;
+                            this.tail = (this.tail + 1) % this.buf.length;
+                            this.size++;
+                        }
+                        popFront() {
+                            if (this.size === 0) return null;
+                            const value = this.buf[this.head];
+                            this.head = (this.head + 1) % this.buf.length;
+                            this.size--;
+                            return value;
+                        }
+                        isEmpty() {
+                            return this.size === 0;
+                        }
+                    }
                     const { w, h } = l.grid;
                     const map = new Map();
-                    const left = [];
-                    const right = [];
-                    const pushFront = (item) => left.push(item);
-                    const pushBack = (item) => right.push(item);
-                    const popFront = () => {
-                        if (left.length > 0) return left.pop();
-                        if (right.length === 0) return null;
-                        while (right.length > 0) left.push(right.pop());
-                        return left.pop();
-                    };
+                    const deque = new Deque(Math.max(32, sourceKeys?.length || 0));
                     for (const k of sourceKeys) {
                         if (k === -1 || k === undefined || l.blockSet.has(k)) continue;
                         if (!map.has(k) || 0 < map.get(k)) {
                             map.set(k, 0);
-                            pushBack(k);
+                            deque.pushBack(k);
                         }
                     }
-                    while (true) {
-                        const k = popFront();
-                        if (k === null) break;
+                    while (!deque.isEmpty()) {
+                        const k = deque.popFront();
                         const d = map.get(k);
                         const p = APP.LevelUtils.UNPACK(k);
                         const portal = APP.LevelUtils.resolvePortal(l, k);
@@ -1856,7 +1883,7 @@
                             const pd = map.get(portal.dest);
                             if (pd === undefined || d < pd) {
                                 map.set(portal.dest, d);
-                                pushFront(portal.dest);
+                                deque.pushFront(portal.dest);
                             }
                         }
                         [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
@@ -1868,7 +1895,7 @@
                             const prev = map.get(nk);
                             if (prev === undefined || nd < prev) {
                                 map.set(nk, nd);
-                                pushBack(nk);
+                                deque.pushBack(nk);
                             }
                         });
                     }
@@ -2043,6 +2070,7 @@
                     ].join('|');
                 },
                 _refreshStateHashState(state, l, realLen, options = {}, debugStats = null) {
+                    if (!state?.hashDirty) return state.memoHashKey;
                     const perfNow = () => (typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now();
                     const t0 = perfNow();
                     const [h0, h1] = this._buildStateHashTuple(state, l, realLen, options);
@@ -2071,7 +2099,12 @@
                     } else {
                         state.memoStrictKey = '';
                     }
+                    state.hashDirty = false;
                     return state.memoHashKey;
+                },
+                _ensureStateHashState(state, l, realLen, options = {}, debugStats = null) {
+                    if (state?.hashDirty) return this._refreshStateHashState(state, l, realLen, options, debugStats);
+                    return state?.memoHashKey || '';
                 },
                 _portalTransitionContext(fromKey, toKey, state, l) {
                     const family = l.portalFamilyByEntry ? l.portalFamilyByEntry.get(fromKey) : undefined;
@@ -2235,7 +2268,9 @@
                 _dominancePruneOrStore(map, key, candidate, stats = null) {
                     if (!map || key === null || key === undefined || !candidate) return false;
                     if (stats) stats.dominanceMemoChecks = (stats.dominanceMemoChecks || 0) + 1;
-                    const prev = map.get(key);
+                    const mustCrossCompact = (typeof candidate.mustCrossCompact === 'bigint' ? candidate.mustCrossCompact : BigInt(candidate.mustCrossCompact || 0)).toString();
+                    const scopedKey = `${key}|mc:${mustCrossCompact}`;
+                    const prev = map.get(scopedKey);
                     const strictness = Math.max(0.35, Math.min(1.8, Number(candidate?.dominanceStrictness) || 1));
                     const stepSlack = Math.max(0, Math.round((strictness - 1) * 3));
                     const intersectionSlack = strictness >= 1.25 ? 0 : 1;
@@ -2254,7 +2289,7 @@
                         if (stats) stats.memoStores = (stats.memoStores || 0) + 1;
                         return false;
                     }
-                    map.set(key, { bestIntersections: candidate.intersections, bestStepsUsed: candidate.stepsUsed });
+                    map.set(scopedKey, { bestIntersections: candidate.intersections, bestStepsUsed: candidate.stepsUsed });
                     if (stats) stats.memoStores = (stats.memoStores || 0) + 1;
                     return false;
                 },
@@ -2570,8 +2605,7 @@
                         s.flipCount++;
                         s.flipParity = s.flipCount % 2;
                     }
-                    const realLen = s.path.length - 1 - s.jumpCount;
-                    this._refreshStateHashState(s, l, realLen, options || {}, debugStats);
+                    s.hashDirty = true;
                     return startLogCursor;
                 },
                 _popStateZeroAlloc(s, logMark, l = null, options = null, debugStats = null) {
@@ -2636,10 +2670,7 @@
                         else if (arrayId === LOG_PORTAL_REENTRY_BUDGET) s.portalReentryBudget = prev;
                         else if (arrayId === LOG_PORTAL_OSC_BUDGET) s.portalOscillationBudget = prev;
                     }
-                    if (l) {
-                        const realLen = s.path.length - 1 - s.jumpCount;
-                        this._refreshStateHashState(s, l, realLen, options || {}, debugStats);
-                    }
+                    if (l) s.hashDirty = true;
                 },
                 _mustCrossExtraVisitsLowerBound(mask, crossNeed, l) {
                     const outstandingNodes = mask ? l._popcountMask(mask) : 0;
@@ -3934,20 +3965,8 @@
 
                         // Targeted cohort heuristic: penalize trajectories that tighten goose hazard conflict unless they help hard constraints.
                         if (heuristicFeatureFlags.hasGeese && l.gooseSet?.size > 0) {
-                            const nearestGooseDist = (key) => {
-                                const kx = key & 0xFFFF;
-                                const ky = key >> 16;
-                                let best = Infinity;
-                                for (const gooseKey of l.gooseSet) {
-                                    const gx = gooseKey & 0xFFFF;
-                                    const gy = gooseKey >> 16;
-                                    const d = Math.abs(kx - gx) + Math.abs(ky - gy);
-                                    if (d < best) best = d;
-                                }
-                                return best;
-                            };
-                            const gooseNow = nearestGooseDist(k);
-                            const gooseNext = nearestGooseDist(nk);
+                            const gooseNow = l.gooseDistMap?.get(k) ?? Infinity;
+                            const gooseNext = l.gooseDistMap?.get(nk) ?? Infinity;
                             if (Number.isFinite(gooseNext)) {
                                 let hazardPenalty = 0;
                                 if (gooseNext <= 2) hazardPenalty += (gooseNext === 0 ? 44 : (gooseNext === 1 ? 30 : 16));
@@ -3970,20 +3989,8 @@
 
                         // Targeted cohort heuristic: reduce ambiguity near false goals unless hard constraints get better.
                         if (heuristicFeatureFlags.hasFalseGoals && l.falseGoalKeys?.size > 0) {
-                            const nearestFalseGoalDist = (key) => {
-                                const kx = key & 0xFFFF;
-                                const ky = key >> 16;
-                                let best = Infinity;
-                                for (const fgKey of l.falseGoalKeys) {
-                                    const fx = fgKey & 0xFFFF;
-                                    const fy = fgKey >> 16;
-                                    const d = Math.abs(kx - fx) + Math.abs(ky - fy);
-                                    if (d < best) best = d;
-                                }
-                                return best;
-                            };
-                            const falseNow = nearestFalseGoalDist(k);
-                            const falseNext = nearestFalseGoalDist(nk);
+                            const falseNow = l.falseGoalDistMap?.get(k) ?? Infinity;
+                            const falseNext = l.falseGoalDistMap?.get(nk) ?? Infinity;
                             if (Number.isFinite(falseNext)) {
                                 let ambiguityPenalty = 0;
                                 if (falseNext <= 2) ambiguityPenalty += (falseNext === 0 ? 36 : (falseNext === 1 ? 22 : 12));
@@ -4041,7 +4048,7 @@
                     if (options?.dirOrderVariant === 'random') {
                         scored.sort(() => Math.random() - 0.5);
                     } else {
-                        scored.sort((a, b) => {
+                        const compareScored = (a, b) => {
                             if (a.score !== b.score) return a.score - b.score;
                             if (structuralMode && symmetryCommitted) {
                                 const axis = symmetryModel.axis;
@@ -4060,7 +4067,16 @@
                                 if (sideOrder !== 0) return sideOrder;
                             }
                             return options?.dirOrderVariant === 'alt' ? (a.nk - b.nk) : (b.nk - a.nk);
-                        });
+                        };
+                        for (let i = 1; i < scored.length; i++) {
+                            const item = scored[i];
+                            let j = i - 1;
+                            while (j >= 0 && compareScored(item, scored[j]) < 0) {
+                                scored[j + 1] = scored[j];
+                                j--;
+                            }
+                            scored[j + 1] = item;
+                        }
                     }
                     const orderedNeighbors = scored.map(item => item.nk);
                     if (depth === 0 && debugStats) {
@@ -4309,6 +4325,12 @@
                     }
                     return !needGoal && needMust === 0 && needCross === 0;
                 },
+                _shouldRunConnectivityCheck(state, l, depth, stride = 6, nearEndThreshold = 20) {
+                    const d = Math.max(0, Number(depth) || 0);
+                    if (d % stride === 0) return true;
+                    const remainingUnvisited = Math.max(0, (Number(state?.keyCount) || 0) - (Number(state?.nonZeroCounts) || 0));
+                    return remainingUnvisited < nearEndThreshold;
+                },
                 async _solveInstance(startKey, distMap, flipperDistMap, usageFreq, l, options, debugStats = null) {
                     try {
                     const mustCount = l.mustPassKeys.length;
@@ -4394,7 +4416,8 @@
                         memoHash0: 0,
                         memoHash1: 0,
                         memoHashKey: '',
-                        memoStrictKey: ''
+                        memoStrictKey: '',
+                        hashDirty: true
                     };
                     state.crossedFlippersAt.fill(-1);
                     this._makeTypedStateViews(state);
@@ -4415,7 +4438,7 @@
                         state.flipCount++;
                         state.flipParity = state.flipCount % 2;
                     }
-                    this._refreshStateHashState(state, l, 0, options, debugStats);
+                    state.hashDirty = true;
                     const failMemo = useFailMemo ? new Map() : null;
                     const dominanceMemo = new Map();
                     const recordPhaseAttempt = (status) => {
@@ -4587,12 +4610,13 @@
                     const startPortal = APP.LevelUtils.resolvePortal(l, startKey);
                     const startPortalForced = !!(startPortal && !state.isJump.has(state.path.length - 1));
                     if (debugStats) {
+                        const startStateSig = this._ensureStateHashState(state, l, 0, options, debugStats);
                         const depthZeroDebug = ensureDepthZeroDebug(debugStats);
                         debugStats.startState = {
                             gateKey: startKey,
                             startNeighborsCount: startNeighbors.length,
                             startNeighborKeys: startNeighbors.slice(0, 12),
-                            startStateSig: state.memoHashKey,
+                            startStateSig,
                             forcedPortalAtStart: startPortalForced,
                             startOnPortal: !!startPortal,
                             startOnFlipper: !!l.flippingFilterMap.has(startKey),
@@ -4663,8 +4687,8 @@
                             }
                         });
                     }
-                    const startSig = state.memoHashKey;
-                    this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0 }, debugStats);
+                    const startSig = this._ensureStateHashState(state, l, 0, options, debugStats);
+                    this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats);
                     const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig }];
                     let steps = 0;
                     while (stack.length > 0) {
@@ -4811,8 +4835,8 @@
                                 continue;
                             }
                         }
-                        const stateSig = state.memoHashKey;
-                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1 }, debugStats)) {
+                        const stateSig = this._ensureStateHashState(state, l, realLen, options, debugStats);
+                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats)) {
                             if (realLen <= 1 && debugStats) {
                                 debugStats.rootCandidatesSuppressedByDominance = (debugStats.rootCandidatesSuppressedByDominance || 0) + 1;
                                 const dbg = ensureDepthZeroDebug(debugStats);
@@ -4854,7 +4878,9 @@
                                 continue;
                             }
                         }
-                        if (!runtimeDisabledPrunes.has('connectivity') && !this._floodFillReachable(lastK, state, l)) {
+                        const shouldRunConnectivityCheck = !runtimeDisabledPrunes.has('connectivity')
+                            && this._shouldRunConnectivityCheck(state, l, realLen, 6, 20);
+                        if (shouldRunConnectivityCheck && !this._floodFillReachable(lastK, state, l)) {
                             if (debugStats) debugStats.prune.deadEnd++;
                             this._popStateZeroAlloc(state, transLog, l, options, debugStats);
                             continue;
@@ -5425,6 +5451,12 @@
 
                     const distMap = SolverCore._buildDistMap(level);
                     level.distMapForSolver = distMap;
+                    level.gooseDistMap = (level.gooseSet && level.gooseSet.size > 0)
+                        ? SolverCore._buildOptimisticDistMap(level, Array.from(level.gooseSet))
+                        : new Map();
+                    level.falseGoalDistMap = (level.falseGoalKeys && level.falseGoalKeys.size > 0)
+                        ? SolverCore._buildOptimisticDistMap(level, Array.from(level.falseGoalKeys))
+                        : new Map();
                     level.mustPassIndex = new Map();
                     level.mustPassDistMaps = [];
                     level.mustPassToGoalDist = [];
