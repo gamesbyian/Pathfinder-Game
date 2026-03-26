@@ -2281,7 +2281,8 @@
                     const flipKey = (l?.flippingFilterMap?.size || 0) > 0
                         ? `|fp:${state?.flipParity || 0}|fcm:${(state?.flipperCrossMask || 0n).toString(16)}`
                         : '';
-                    const scopedKey = `${key}|mc:${mustCrossCompact}${filterAxisKey}${flipKey}`;
+                    const mustMaskKey = typeof state?.mustMask === 'bigint' ? `|mm:${state.mustMask.toString(16)}` : '';
+                    const scopedKey = `${key}|mc:${mustCrossCompact}${mustMaskKey}${filterAxisKey}${flipKey}`;
                     const prev = map.get(scopedKey);
                     const strictness = Math.max(0.35, Math.min(1.8, Number(candidate?.dominanceStrictness) || 1));
                     const hasFlippers = (l?.flippingFilterMap?.size || 0) > 0;
@@ -3072,6 +3073,16 @@
                 _updateSolverPhase(state, key, l, distMap, debugStats = null) {
                     const derived = this._deriveSolverPhase(state, key, l, distMap);
                     if (!state.phase || state.phase !== derived.phase) {
+                        const newPhase = derived.phase;
+                        if (APP.State?.ENGINE?.isDevMode) {
+                            if (newPhase === 'finish' && state.mustMask !== 0n) {
+                                console.warn('[PhaseAssertion] Entered finish phase with outstanding mustPass obligations', {
+                                    mustMask: state.mustMask.toString(16),
+                                    pathLen: state.path.length,
+                                    level: l?.id
+                                });
+                            }
+                        }
                         state.phase = derived.phase;
                         const event = {
                             phase: derived.phase,
@@ -8746,7 +8757,9 @@
             console.log('Referee starting tier:', tier);
             const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
-            level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
+            if (!level.solverProfile || !level.solverProfile.complexityClass) {
+                level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
+            }
             if (APP?.State?.ENGINE?.isDevMode || opts?.auditMode) {
                 console.log('[Referee strategy]', {
                     complexityClass: level.solverProfile?.complexityClass || 'standard',
@@ -9340,8 +9353,9 @@
 
             const attemptMetrics = extractAttemptQualityMetrics(last);
             const attemptDelta = computeAttemptDeltaMetrics(attemptMetrics, previousAttempt?.metrics || null);
+            const meaningfulAttempt = !(last.status === 'timeout' && (last.nodesExpanded ?? last.debug?.nodesExpanded ?? 999) < 150);
             if (last.ok || last.status === 'no-solution-proven') delete attemptHistory[key];
-            else attemptHistory[key] = {
+            else if (meaningfulAttempt) attemptHistory[key] = {
                 timesTried,
                 lastStageReached: last.stage,
                 lastStatus: last.status,
@@ -10137,6 +10151,9 @@
                 }
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                if (!activeLevel.solverProfile || !activeLevel.solverProfile.complexityClass) {
+                    activeLevel.solverProfile = Referee.normalizeSolverProfile(Referee.buildLevelProfile(activeLevel));
+                }
                 const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
                 let requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
                 if (purpose === 'hint') {
@@ -10737,7 +10754,10 @@
             startHintAnimation,
             stopHintAnimation,
             validateCandidatePath,
-            toAuditAttemptSummary
+            toAuditAttemptSummary,
+            clearAttemptHistory() {
+                Object.keys(attemptHistory).forEach(k => delete attemptHistory[k]);
+            }
         };
     })();
 
@@ -13851,6 +13871,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Engine.loadLevel = (...args) => {
                 const result = originalLoadLevel(...args);
                 resetSearchEscalation();
+                if (APP.State.ENGINE.level) APP.State.ENGINE.level.solverProfile = null;
                 return result;
             };
         const tryNavigate = (actionFn) => { if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isModified) { APP.State.ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
@@ -14504,12 +14525,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     : []
             );
             const hintAttempts = [
-                { key: 'A', purpose: 'hint', escalationTier: 0, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'B', purpose: 'hint', escalationTier: 1, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'C', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'D', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'E', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'F', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
+                { key: 'A', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'B', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'C', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'D', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'E', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'F', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
             let finalHintResult = null;
@@ -14517,6 +14538,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const levelFeatureSignature = toHeuristicFeatureSignature(levelFeatureFlags);
             levelEntry.newHint.featureFlags = levelFeatureFlags;
             levelEntry.newHint.featureSignature = levelFeatureSignature;
+            if (!normalized.solverProfile || !normalized.solverProfile.complexityClass) {
+                normalized.solverProfile = APP.Solver.Referee.normalizeSolverProfile(APP.Solver.Referee.buildLevelProfile(normalized));
+            }
             const abortSignatureCounts = new Map();
             let runPreExpansionRescuePass = false;
             try {
@@ -14759,6 +14783,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 currentTheme: APP.State.ENGINE.runtime.currentTheme
             };
 
+            APP.Solver.clearAttemptHistory();
             try {
                 for (let i = 0; i < rawLevels.length; i++) {
                     if (auditCancelRequested) break;
