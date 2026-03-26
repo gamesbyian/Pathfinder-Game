@@ -5576,7 +5576,7 @@
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
-                    const validity = APP.Editor.validateLevelDetailed(level);
+                    const validity = APP.Editor.validateLevelDetailed(level, { allowGateLess: true });
                     const debugStats = debug ? createSolverDebugStats(debugLevel ?? ((typeof level.id === "number") ? level.id + 1 : null)) : null;
                     foundSolutions.timedOut = false;
                     if (!validity.ok) {
@@ -5904,7 +5904,24 @@
                             }
                         }
                     }
-                    let validGates = level.gateKeys.filter(gk => {
+                    const candidateStartNodes = (Array.isArray(level.gateKeys) && level.gateKeys.length > 0)
+                        ? level.gateKeys.slice()
+                        : (() => {
+                            const starts = [];
+                            const w = Number(level?.grid?.w) || 0;
+                            const h = Number(level?.grid?.h) || 0;
+                            const goalKey = level?.goalKey;
+                            for (let y = 0; y < h; y++) {
+                                for (let x = 0; x < w; x++) {
+                                    const k = APP.LevelUtils.PACK(x, y);
+                                    if (k === goalKey) continue;
+                                    if (level.blockSet?.has(k)) continue;
+                                    starts.push(k);
+                                }
+                            }
+                            return starts;
+                        })();
+                    let validGates = candidateStartNodes.filter(gk => {
                         const gateReasons = [];
                         const d = distMap.get(gk);
                         if (d === undefined || d > level.reqLen) gateReasons.push(`distance:${d === undefined ? 'inf' : d}>${level.reqLen}`);
@@ -5969,7 +5986,7 @@
                             if (!debugStats.depth0) debugStats.depth0 = { reason: "noViableGate", details: `all gates pruned by safe bounds${suffix}` };
                             setPreExpansionAbort(debugStats, {
                                 code: 'no-start-node',
-                                message: `All gates pruned by safe bounds${suffix}`,
+                                message: `All start nodes pruned by safe bounds${suffix}`,
                                 phase: 'start-state-selection',
                                 source: 'PathfinderSolver.solve',
                                 details: { gatePruneReasons: gatePruneReasons.slice(0, 30) }
@@ -10443,7 +10460,22 @@
             function isGoalReachableFromAnyGate(level) {
                 if (!level) return false;
                 const goalDistMap = SolverCore._buildDistMap(level);
-                return Array.isArray(level.gateKeys) && level.gateKeys.some(gk => {
+                const gateKeys = Array.isArray(level.gateKeys) ? level.gateKeys : [];
+                if (gateKeys.length === 0) {
+                    const w = Number(level?.grid?.w) || 0;
+                    const h = Number(level?.grid?.h) || 0;
+                    for (let y = 0; y < h; y++) {
+                        for (let x = 0; x < w; x++) {
+                            const k = APP.LevelUtils.PACK(x, y);
+                            if (k === level.goalKey) continue;
+                            if (level?.blockSet?.has(k)) continue;
+                            const d = goalDistMap.get(k);
+                            if (d !== undefined && d !== Infinity) return true;
+                        }
+                    }
+                    return false;
+                }
+                return gateKeys.some(gk => {
                     const d = goalDistMap.get(gk);
                     return d !== undefined && d !== Infinity;
                 });
@@ -11623,9 +11655,10 @@
             function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { APP.UI.showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return APP.UI.showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, APP.Core.H); break; case 'filterV': l.filterMap.set(k, APP.Core.V); break; case 'flipH': l.flippingFilterMap.set(k, APP.Core.H); break; case 'flipV': l.flippingFilterMap.set(k, APP.Core.V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1, color: (getComputedStyle(document.documentElement).getPropertyValue('--theme-portal-pending').trim() || '#999999') }); APP.UI.showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; const color = APP.State.ENGINE.editor.paletteColors[l.portalVisuals.length % 5]; l.portalMap.set(k1, { dest: k, color }); l.portalMap.set(k, { dest: k1, color }); l.portalVisuals.push({ k1, k2: k, color }); APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
 
 
-            function validateLevelDetailed(l) {
+            function validateLevelDetailed(l, opts = {}) {
                 const reasons = [];
                 if (!l) return { ok: false, reasons: ["Level missing"] };
+                const allowGateLess = !!opts.allowGateLess;
                 const { w, h } = l.grid;
                 const inGrid = (k) => {
                     const p = APP.LevelUtils.UNPACK(k);
@@ -11636,7 +11669,7 @@
                     reasons.push(`Out of bounds item: ${label} (${p.x + 1},${p.y + 1})`);
                 };
 
-                if (!Array.isArray(l.gateKeys) || l.gateKeys.length === 0) reasons.push("No gates");
+                if (!allowGateLess && (!Array.isArray(l.gateKeys) || l.gateKeys.length === 0)) reasons.push("No gates");
                 if (l.goalKey === -1 || l.goalKey === undefined) reasons.push("Goal missing");
                 if (APP.State.ENGINE.editor.pendingPortal) reasons.push("Portal terminals incomplete");
 
@@ -14286,7 +14319,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 { key: 'A', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
                 { key: 'B', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
                 { key: 'C', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'D', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
+                { key: 'D', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'E', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'F', purpose: 'hint', allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
             let finalHintResult = null;
