@@ -8338,7 +8338,6 @@
                 const isLast = attemptIndex >= totalAttempts - 1;
                 if (isLast) return true;
                 if (quality.branchingCollapse && !quality.targetProgressGood) return true;
-                if (attemptResult.status === 'no-solution-inconclusive' && !quality.targetProgressGood && quality.maxProgress < 0.28) return true;
                 return false;
             };
 
