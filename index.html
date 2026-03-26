@@ -2356,7 +2356,7 @@
                         const ambiguityPenalty = Number.isFinite(nearestPeer) ? Math.max(0, 6 - nearestPeer) : 6;
                         const ambiguityFuture = Number.isFinite(nearestPeer) ? nearestPeer : 0;
                         const detourCost = Number.isFinite(detour) ? detour : 10000;
-                        const objectiveVisited = node && state.countsArr && state.countsArr[state.keyToIdx(node.key)] > 0;
+                        const objectiveVisited = node && node.type === 'mustPass' && state.countsArr && state.countsArr[state.keyToIdx(node.key)] > 0;
                         const detourMultiplier = objectiveVisited ? 6 : 14;
                         const goalCost = Number.isFinite(toGoal) ? toGoal : 10000;
                         const gateCost = Number.isFinite(gateMin) ? gateMin : 0;
@@ -3033,7 +3033,8 @@
                     const remainingMustCross = Math.max(0, this._crossNeeds(state));
                     const remainingIntersections = Math.max(0, l.reqInt - state.ints);
                     const t = state.phasePolicy?.thresholds || {};
-                    const finishReady = state.ints >= l.reqInt && state.mustMask === 0n && state.mustCrossMask === 0n;
+                    const hasHardConstraints = l.reqInt > 0 || l.mustPassKeys.length > 0 || l.mustCrossKeys.length > 0;
+                    const finishReady = hasHardConstraints && state.ints >= l.reqInt && state.mustMask === 0n && state.mustCrossMask === 0n;
 
                     let phase = 'harvest';
                     if (finishReady) phase = 'finish';
@@ -3733,7 +3734,7 @@
                                 }
                                 if (lateViableDist !== undefined
                                     && lateViableDist <= rSteps
-                                    && (rSteps - lateViableDist) > Math.floor(l.reqLen * 0.35)
+                                    && (rSteps - lateViableDist) > Math.max(12, Math.floor(l.reqLen * 0.45))
                                     && (rSteps / l.reqLen) > 0.2) {
                                     mustPassUrgencyWeight = Math.min(mustPassUrgencyWeight, 0.45);
                                 }
