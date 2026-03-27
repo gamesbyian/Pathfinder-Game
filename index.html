@@ -4128,6 +4128,7 @@
 
                         // Anti-dither 2: penalize local oscillation in open regions.
                         const nodeDegree = this._staticNeighborDegree(nk, l);
+                        const intersectionsStillNeeded = (l.reqInt || 0) > state.ints;
                         if (!suppressAntiDither && !intersectionsStillNeeded && nodeDegree >= 3 && recentWindow >= 3 && (recentTurnbackCount >= 1 || state.recentMoveEntropy < 1.2)) {
                             let oscPenalty = Math.round((recentTurnbackCount * 22 + Math.max(0, 3 - dirRepeat) * 4) * antiDitherScale);
                             if (productiveAmbiguity) oscPenalty = Math.floor(oscPenalty * 0.45);
@@ -4145,7 +4146,6 @@
                             if (debugStats) debugStats.earlyGoalApproachBlocked = (debugStats.earlyGoalApproachBlocked || 0) + 1;
                         }
 
-                    const intersectionsStillNeeded = (l.reqInt || 0) > state.ints;
                     const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
