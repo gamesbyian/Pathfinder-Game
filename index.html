@@ -10719,8 +10719,7 @@
                 const hasPortalConstraintMix = ((level?.portalMap?.size || 0) > 0)
                     && (mustPassCount > 0 || mustCrossCount > 0);
                 const hasGooseMustCrossMix = gooseCount > 0 && mustCrossCount > 0;
-                const hasGooseFalseGoalMix = gooseCount > 0 && (level?.falseGoalKeys?.size || 0) > 0;
-                return hasFilterFlipMix || hasPortalConstraintMix || hasAnyFilterPressure || hasGooseMustCrossMix || hasGooseFalseGoalMix;
+                return hasFilterFlipMix || hasPortalConstraintMix || hasAnyFilterPressure || hasGooseMustCrossMix;
             };
             const shouldActivateInteractionRootFallback = ({ force = false, baselineResult = null, level = null } = {}) => {
                 const rapidCollapse = detectRapidCollapseSignature({ baselineResult });
