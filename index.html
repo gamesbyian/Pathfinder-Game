@@ -8741,7 +8741,7 @@
                     { tier: 0, key: 'hint-tier-0', minBudgetMs: 5000,  orderingPolicy: 'profile-default',   rootSeedMode: 'default',                    portalBiasMode: 'profile-default',    rescueMode: 'default' },
                     { tier: 1, key: 'hint-tier-1', minBudgetMs: 15000, orderingPolicy: 'knotBuilder',        rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off',                rescueMode: 'alternate-rescue' },
                     { tier: 2, key: 'hint-tier-2', minBudgetMs: 60000, orderingPolicy: 'objectiveFirst',     rootSeedMode: 'diversified',                portalBiasMode: 'adaptiveMustCross',  rescueMode: 'alternate-rescue' },
-                    { tier: 3, key: 'hint-tier-3', minBudgetMs: 60000, orderingPolicy: 'portalFirstTransfer', rootSeedMode: 'diversified-aggressive',     portalBiasMode: 'adaptiveMustCross',  rescueMode: 'alternate-rescue' }
+                    { tier: 3, key: 'hint-tier-3', minBudgetMs: 60000, orderingPolicy: 'profile-default', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'profile-default', rescueMode: 'alternate-rescue' }
                 ],
                 solve: [
                     { tier: 0, key: 'solve-tier-0', minBudgetMs: 15000, orderingPolicy: 'profile-default', rootSeedMode: 'default', portalBiasMode: 'profile-default', rescueMode: 'default' },
@@ -8921,7 +8921,7 @@
             const baselineBudget = simpleLevel
                 ? Math.max(750, totalBudget)
                 : Math.max(750, Math.floor(totalBudget * 0.75));
-            const recoveryBudget = Math.max(750, Math.floor(totalBudget * 0.2));
+            const recoveryBudget = Math.max(1500, Math.floor(totalBudget * 0.3));
             const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.25));
             const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
             const profileSignals = level?.solverProfile || {};
@@ -9176,7 +9176,7 @@
                         }
                         if (!last.ok && last.status !== 'no-solution-proven'
                             && (topDriverLabel === 'mustPassUrgency'
-                                || (topDriverLabel === 'mustCrossUrgency' && !knotSensitive))) {
+                                || topDriverLabel === 'mustCrossUrgency')) {
                             last = await runStage({
                                 stage: 3,
                                 name: 'Stage 3',
@@ -9188,6 +9188,31 @@
                                     phasePolicy: SolverCore.deriveDynamicPhasePolicy(
                                         level?.solverProfile || {},
                                         { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }
+                                    ),
+                                    profile: level.solverProfile,
+                                    controlPlane,
+                                    scoringMode: 'modern',
+                                    structuralMode: true,
+                                    enableEnduranceLongpath: true,
+                                    allowRandomizedExploration: false,
+                                    adaptiveOrderingPhase: 'objective-harvest',
+                                    purpose
+                                })
+                            });
+                        }
+                        if (!last.ok && last.status !== 'no-solution-proven'
+                            && topDriverLabel === 'goalAttraction') {
+                            last = await runStage({
+                                stage: 3,
+                                name: 'Stage 3',
+                                variant: 'goal-suppression-recovery',
+                                budgetMs: recoveryBudget,
+                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                                    orderingPolicy: 'finishFirst',
+                                    portalBiasMode: 'off',
+                                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(
+                                        level?.solverProfile || {},
+                                        { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'finishFirst' }
                                     ),
                                     profile: level.solverProfile,
                                     controlPlane,
