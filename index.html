@@ -10868,7 +10868,8 @@
             startHintAnimation,
             stopHintAnimation,
             validateCandidatePath,
-            toAuditAttemptSummary
+            toAuditAttemptSummary,
+            clearAttemptHistory: () => { for (const k in attemptHistory) delete attemptHistory[k]; }
         };
     })();
 
@@ -14865,6 +14866,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             auditCancelRequested = false;
             auditLastRunType = runType;
             auditReport = [];
+            APP.Solver.clearAttemptHistory();
             const rawLevels = APP.LevelUtils.getRawLevels();
             auditProgress = { levelsProcessed: 0, levelsTotal: rawLevels.length, validHints: 0, invalidHints: 0, newHint: { success: 0, failure: 0, byFeatureSignature: {} }, bombs: { success: 0, noneFound: 0, error: 0 }, disableLegacyFallback: getAuditDisableLegacyFallback() };
             renderAuditReport();
