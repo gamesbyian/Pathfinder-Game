@@ -3799,11 +3799,7 @@
                                 }
                             }
                             const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
-                            // Cap mustCrossUrgency magnitude at 60. On complex portal+mustCross levels
-                            // the low-slack gravityMult (up to 40) can push the raw urgency past 90,
-                            // collapsing search breadth and causing healthy-expansion timeouts (levels 63, 92).
-                            const rawCrossUrgency = crossBound === Infinity ? 100000 : crossBound * gravityMult * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1);
-                            const crossContribution = -(rawCrossUrgency > 60 && crossBound !== Infinity ? 60 : rawCrossUrgency);
+                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1));
                             score += mustContribution;
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
@@ -8095,13 +8091,10 @@
             const rootGenerated = Math.max(0, Number(debug?.rootCandidatesGenerated) || 0);
             const rootExpanded = Math.max(0, Number(debug?.rootCandidatesExpanded) || 0);
             const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
-            // Treat null expansion data (fields never populated, e.g. silent pre-solver failure)
-            // the same as zero expansion — the guard should still attempt a relaxed rescue.
-            const nullExpansionData = debug?.nodesExpanded == null && debug?.rootCandidatesGenerated == null;
-            const noExpansion = nullExpansionData || returnedWithoutExpansion || (rootGenerated === 0 && rootExpanded === 0 && (Number(debug?.nodesExpanded) || 0) === 0);
+            const noExpansion = returnedWithoutExpansion || (rootGenerated === 0 && rootExpanded === 0 && (Number(debug?.nodesExpanded) || 0) === 0);
             const triggered = !!goalReachable && !!noExpansion;
             const protectedPrunesDisabled = triggered
-                ? Array.from(new Set(['mustPassBound', 'mustCrossBound', 'connectivity', 'dominance', 'memo', 'parity']))
+                ? Array.from(new Set(['mustPassBound', 'mustCrossBound', 'connectivity', 'dominance', 'memo']))
                 : [];
             return compactDefined({
                 triggered,
@@ -8457,11 +8450,7 @@
                     const guardedStatus = guarded?.ok && guardedSolution.length > 0
                         ? 'solved'
                         : (guardedDebug.status === 'timeout' ? 'timeout' : (guardedDebug.status === 'no-solution' ? normalizeNoSolutionStatus(guardedDebug) : 'error'));
-                    // Also prefer the guarded result when the original returned no expansion data at all
-                    // (null fields = silent pre-solver failure), as long as the guarded attempt is not a
-                    // plain error — even another inconclusive with disabled prunes is more useful.
-                    const originalWasNullExpansion = debug?.nodesExpanded == null && debug?.rootCandidatesGenerated == null;
-                    if (guardedStatus === 'solved' || (guardedDebug.nodesExpanded || 0) > (debug.nodesExpanded || 0) || (originalWasNullExpansion && guardedStatus !== 'error')) {
+                    if (guardedStatus === 'solved' || (guardedDebug.nodesExpanded || 0) > (debug.nodesExpanded || 0)) {
                         return {
                             ok: guarded?.ok && guardedSolution.length > 0,
                             status: guardedStatus,
@@ -14523,7 +14512,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.featureSignature = levelFeatureSignature;
             const abortSignatureCounts = new Map();
             let runPreExpansionRescuePass = false;
-            let nullExpansionDataCount = 0;
             try {
                 for (let attemptIdx = 0; attemptIdx < hintAttempts.length; attemptIdx++) {
                     const attemptPlan = hintAttempts[attemptIdx];
@@ -14557,18 +14545,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         const seenCount = (abortSignatureCounts.get(signatureKey) || 0) + 1;
                         abortSignatureCounts.set(signatureKey, seenCount);
                         if (seenCount >= 2 && abortCode === 'no-legal-start-neighbors') {
-                            runPreExpansionRescuePass = true;
-                            break;
-                        }
-                    }
-                    // Detect silent pre-solver failures where the solver returns no expansion
-                    // data at all (null fields, no abort code). Seen with flippingFilter levels
-                    // (F1 feature signature) where the internal guard retry also fails to expand.
-                    // After 2 such attempts, escalate to the pre-expansion rescue pass which
-                    // disables all aggressive prunes including parity.
-                    if (!abortCode && attemptRecord.nodesExpanded == null && attemptRecord.rootCandidatesGenerated == null) {
-                        nullExpansionDataCount++;
-                        if (nullExpansionDataCount >= 2) {
                             runPreExpansionRescuePass = true;
                             break;
                         }
