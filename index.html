@@ -3866,11 +3866,13 @@
                             const intsRemaining = Math.max(0, l.reqInt - state.ints);
                             const goalDist = distMap.get(nk) ?? 999;
 
-                            if (profile.perimeterBias > 0 && rRatio < 0.45) {
-                                const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
-                                if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * Math.max(0.25, policyProfile.perimeterBiasWeight || 1)); score += c; pushDriver('perimeterBias', edgeDist, c); }
-                                else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
-                                if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
+                            if (!options?.suppressPerimeterBias) {
+                                if (profile.perimeterBias > 0 && rRatio < 0.45) {
+                                    const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
+                                    if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * Math.max(0.25, policyProfile.perimeterBiasWeight || 1)); score += c; pushDriver('perimeterBias', edgeDist, c); }
+                                    else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
+                                    if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
+                                }
                             }
 
                             if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
@@ -5280,7 +5282,8 @@
                         assertKnownSolvableBounds = false,
                         forcePhaseArchetype = null,
                         antiDriftEdgeLock = false,
-                        forcedPolicyProfile = null
+                        forcedPolicyProfile = null,
+                        suppressPerimeterBias = false
                     } = options;
                     if (APP.State?.ENGINE?.isDevMode) {
                         const undefinedModes = [
@@ -5443,6 +5446,7 @@
                                 startGateArchetype: state?.startGateArchetype || null,
                                 forcePhaseArchetype,
                                 antiDriftEdgeLock,
+                                suppressPerimeterBias,
                                 ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
@@ -5539,7 +5543,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -6017,7 +6021,8 @@
                             assertKnownSolvableBounds: !!assertKnownSolvableBounds,
                             forcePhaseArchetype,
                             antiDriftEdgeLock,
-                            forcedPolicyProfile
+                            forcedPolicyProfile,
+                            suppressPerimeterBias
                         });
                         const out = await SearchFramework.runSearch({
                             level,
@@ -8372,7 +8377,8 @@
                     featureSignature,
                     controlPlane,
                     contradictionRecoveryMode: !!opts.contradictionRecovery,
-                    assertKnownSolvableBounds: hasPortalBounds
+                    assertKnownSolvableBounds: hasPortalBounds,
+                    suppressPerimeterBias: !!opts.suppressPerimeterBias
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -8712,6 +8718,24 @@
             const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
             level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
+            const objectivesAreInteriorDominant = (() => {
+                try {
+                    const allObjKeys = [
+                        ...(level.mustPassKeys || []),
+                        ...(level.mustCrossKeys || []),
+                    ];
+                    if (allObjKeys.length === 0) return false;
+                    const w = level.grid?.w || 1;
+                    const h = level.grid?.h || 1;
+                    let interiorCount = 0;
+                    for (const k of allObjKeys) {
+                        const x = (k & 0xFFFF) + 1;
+                        const y = (k >> 16) + 1;
+                        if (x > 1 && x < w && y > 1 && y < h) interiorCount++;
+                    }
+                    return interiorCount / allObjKeys.length >= 0.6;
+                } catch (e) { return false; }
+            })();
             if (APP?.State?.ENGINE?.isDevMode || opts?.auditMode) {
                 console.log('[Referee strategy]', {
                     complexityClass: level.solverProfile?.complexityClass || 'standard',
@@ -9025,6 +9049,7 @@
                         controlPlane,
                         refereeRootDiversification: strategyMetadata.rootSeedMode !== 'default' || enableDiversifiedRootPass,
                         allowRandomizedExploration: allowRandomizedExploration || complexityStrategy.directionPolicy?.allowRandomized,
+                        suppressPerimeterBias: objectivesAreInteriorDominant,
                         purpose
                     })
                 });
