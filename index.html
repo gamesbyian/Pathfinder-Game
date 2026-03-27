@@ -8734,7 +8734,8 @@
                     const routePressure = Number(level.solverProfile?.routePressure) || 0;
                     // Trigger if objectives are interior-dominant OR if goal is interior AND route pressure is high
                     if (allObjKeys.length === 0) {
-                        return goalIsInterior && routePressure >= 0.65;
+                        const reqInt = Number(level?.reqInt) || 0;
+                        return (goalIsInterior && routePressure >= 0.65) || reqInt >= 2;
                     }
                     let interiorCount = 0;
                     for (const k of allObjKeys) {
@@ -9239,19 +9240,17 @@
                             });
                         }
                         if (!last.ok && last.status !== 'no-solution-proven'
-                            && topDriverLabel === 'goalAttraction') {
+                            && (portalDependency || inferredPortalDependency)
+                            && topDriverLabel === 'mustPassUrgency') {
                             last = await runStage({
                                 stage: 3,
                                 name: 'Stage 3',
-                                variant: 'goal-suppression-recovery',
+                                variant: 'portal-mustpass-recovery',
                                 budgetMs: recoveryBudget,
                                 run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                                    orderingPolicy: 'finishFirst',
-                                    portalBiasMode: 'off',
-                                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(
-                                        level?.solverProfile || {},
-                                        { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'finishFirst' }
-                                    ),
+                                    orderingPolicy: 'portalFirstTransfer',
+                                    portalBiasMode: 'aggressive',
+                                    phasePolicy: resolvedPhasePolicy,
                                     profile: level.solverProfile,
                                     controlPlane,
                                     scoringMode: 'modern',
@@ -9259,6 +9258,32 @@
                                     enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
                                     adaptiveOrderingPhase: 'objective-harvest',
+                                    suppressPerimeterBias: objectivesAreInteriorDominant,
+                                    purpose
+                                })
+                            });
+                        }
+                        if (!last.ok && last.status !== 'no-solution-proven'
+                            && topDriverLabel === 'goalAttraction') {
+                            last = await runStage({
+                                stage: 3,
+                                name: 'Stage 3',
+                                variant: 'goal-suppression-recovery',
+                                budgetMs: recoveryBudget,
+                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                                    orderingPolicy: 'lengthHarvest',
+                                    portalBiasMode: 'off',
+                                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(
+                                        level?.solverProfile || {},
+                                        { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'lengthHarvest' }
+                                    ),
+                                    profile: level.solverProfile,
+                                    controlPlane,
+                                    scoringMode: 'modern',
+                                    structuralMode: true,
+                                    enableEnduranceLongpath: true,
+                                    allowRandomizedExploration: false,
+                                    adaptiveOrderingPhase: 'harvest',
                                     suppressPerimeterBias: objectivesAreInteriorDominant,
                                     purpose
                                 })
