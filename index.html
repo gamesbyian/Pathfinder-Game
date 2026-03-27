@@ -8724,9 +8724,18 @@
                         ...(level.mustPassKeys || []),
                         ...(level.mustCrossKeys || []),
                     ];
-                    if (allObjKeys.length === 0) return false;
                     const w = level.grid?.w || 1;
                     const h = level.grid?.h || 1;
+                    // Also consider goal position and route pressure
+                    const goalKey = level.goalKey;
+                    const goalX = goalKey !== undefined && goalKey !== -1 ? (goalKey & 0xFFFF) + 1 : null;
+                    const goalY = goalKey !== undefined && goalKey !== -1 ? (goalKey >> 16) + 1 : null;
+                    const goalIsInterior = goalX !== null && goalX > 1 && goalX < w && goalY > 1 && goalY < h;
+                    const routePressure = Number(level.solverProfile?.routePressure) || 0;
+                    // Trigger if objectives are interior-dominant OR if goal is interior AND route pressure is high
+                    if (allObjKeys.length === 0) {
+                        return goalIsInterior && routePressure >= 0.65;
+                    }
                     let interiorCount = 0;
                     for (const k of allObjKeys) {
                         const x = (k & 0xFFFF) + 1;
@@ -9098,6 +9107,7 @@
                                 structuralMode: true,
                                 enableEnduranceLongpath: true,
                                 allowRandomizedExploration: false,
+                                suppressPerimeterBias: objectivesAreInteriorDominant,
                                 purpose,
                                 preferMacroSkeleton: true,
                                 rootCandidateGeneratorVariant: 'interaction-fallback'
@@ -9154,6 +9164,7 @@
                                     enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
                                     adaptiveOrderingPhase: policy === 'harvestThenFinish' ? 'objective-harvest' : 'knot-build',
+                                    suppressPerimeterBias: objectivesAreInteriorDominant,
                                     purpose
                                 })
                             });
@@ -9168,7 +9179,8 @@
                                     ['mustPassBound', 'mustCrossBound', 'connectivity'], {
                                     portalBiasMode: resolvedPortalBiasMode,
                                     phasePolicy: resolvedPhasePolicy,
-                                    enableLowExpansionProbe: true
+                                    enableLowExpansionProbe: true,
+                                    suppressPerimeterBias: objectivesAreInteriorDominant
                                 })
                             });
                         }
@@ -9195,6 +9207,7 @@
                                     enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
                                     adaptiveOrderingPhase: 'knot-build',
+                                    suppressPerimeterBias: objectivesAreInteriorDominant,
                                     purpose
                                 })
                             });
@@ -9221,6 +9234,7 @@
                                     enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
                                     adaptiveOrderingPhase: 'objective-harvest',
+                                    suppressPerimeterBias: objectivesAreInteriorDominant,
                                     purpose
                                 })
                             });
@@ -9246,6 +9260,7 @@
                                     enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
                                     adaptiveOrderingPhase: 'objective-harvest',
+                                    suppressPerimeterBias: objectivesAreInteriorDominant,
                                     purpose
                                 })
                             });
@@ -9262,6 +9277,7 @@
                                     phasePolicy: resolvedPhasePolicy,
                                     profile: level.solverProfile,
                                     controlPlane,
+                                    suppressPerimeterBias: objectivesAreInteriorDominant,
                                     purpose
                                 })
                             });
@@ -9283,6 +9299,7 @@
                                         enableEnduranceLongpath: true,
                                         allowRandomizedExploration: false,
                                         adaptiveOrderingPhase: 'objective-harvest',
+                                        suppressPerimeterBias: objectivesAreInteriorDominant,
                                         purpose
                                     })
                                 });
@@ -9305,7 +9322,8 @@
                             run: () => this.runStage2Fallback(level, recoveryBudget, fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || ['mustPassBound', 'mustCrossBound', 'connectivity'], {
                                 portalBiasMode: resolvedPortalBiasMode,
                                 phasePolicy: resolvedPhasePolicy,
-                                enableLowExpansionProbe: true
+                                enableLowExpansionProbe: true,
+                                suppressPerimeterBias: objectivesAreInteriorDominant
                             })
                         });
                     }
@@ -9350,6 +9368,7 @@
                         structuralMode: true,
                         enableEnduranceLongpath: true,
                         allowRandomizedExploration: false,
+                        suppressPerimeterBias: objectivesAreInteriorDominant,
                         purpose,
                         preferMacroSkeleton: true,
                         rootCandidateGeneratorVariant: (activatePreExpansionRescue || strategyMetadata.rescueMode === 'alternate-rescue')
@@ -9419,7 +9438,8 @@
                         adaptiveOrderingPhase: 'portal-transfer',
                         purpose,
                         rootCandidateGeneratorVariant: 'interaction-fallback',
-                        preferMacroSkeleton: true
+                        preferMacroSkeleton: true,
+                        suppressPerimeterBias: objectivesAreInteriorDominant
                     })
                 });
                 hardFallbackAttempt.routingDecision = compactDefined({
