@@ -3625,16 +3625,6 @@
                     const templateCommitDepthRatio = Number.isFinite(templateCommitment?.depthRatio) ? templateCommitment.depthRatio : 0.38;
                     const inTemplateCommitWindow = !!(structuralTemplate && (l.reqLen > 0) && ((curLen / l.reqLen) <= templateCommitDepthRatio));
                     const objectiveTrackStrictness = Number.isFinite(options?.objectiveTrack?.strictness) ? options.objectiveTrack.strictness : 0.72;
-                    const multiGateFalseGoalProximity = l.gateKeys.length >= 2 && l.falseGoalKeys?.size > 0
-                        && l.gateKeys.some(gk => {
-                            const gp = APP.LevelUtils.UNPACK(gk);
-                            for (const fgk of l.falseGoalKeys) {
-                                const fp = APP.LevelUtils.UNPACK(fgk);
-                                if (Math.abs(gp.x - fp.x) + Math.abs(gp.y - fp.y) <= 2) return true;
-                            }
-                            return false;
-                        });
-                    const falseGoalPenaltyScale = multiGateFalseGoalProximity ? 0.5 : 1.0;
                     const scored = valid.map(nk => {
                         const px = k & 0xFFFF;
                         const py = k >> 16;
@@ -4127,19 +4117,6 @@
                             }
                         }
 
-                        // Targeted cohort heuristic: reduce ambiguity near false goals unless hard constraints get better.
-                        if (heuristicFeatureFlags.hasFalseGoals && l.falseGoalKeys?.size > 0 && depth >= 3 && !disabledPruneSet.has('falseGoal')) {
-                            const falseNow = l.falseGoalDistMap?.get(k) ?? Infinity;
-                            const falseNext = l.falseGoalDistMap?.get(nk) ?? Infinity;
-                            if (Number.isFinite(falseNext)) {
-                                let ambiguityPenalty = 0;
-                                if (falseNext <= 2) ambiguityPenalty += Math.round((falseNext === 0 ? 36 : (falseNext === 1 ? 22 : 12)) * falseGoalPenaltyScale);
-                                if (Number.isFinite(falseNow) && falseNext < falseNow) ambiguityPenalty += Math.round(8 * falseGoalPenaltyScale);
-                                if (hardConstraintImproved) ambiguityPenalty = Math.floor(ambiguityPenalty * 0.35);
-                                score += ambiguityPenalty;
-                                pushDriver('falseGoalAmbiguity', falseNext, ambiguityPenalty);
-                            }
-                        }
 
                         const earlySlack = rSteps - (nextGoalDist ?? 999);
                         const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1) * Math.max(0.2, policyProfile.antiDitherWeight || 1);
@@ -5614,11 +5591,12 @@
 
                     const distMap = SolverCore._buildDistMap(level);
                     level.distMapForSolver = distMap;
+                    if (level.falseGoalKeys?.size > 0) {
+                        level.blockSet = new Set(level.blockSet);
+                        level.falseGoalKeys.forEach(k => level.blockSet.add(k));
+                    }
                     level.gooseDistMap = (level.gooseSet && level.gooseSet.size > 0)
                         ? SolverCore._buildOptimisticDistMap(level, Array.from(level.gooseSet))
-                        : new Map();
-                    level.falseGoalDistMap = (level.falseGoalKeys && level.falseGoalKeys.size > 0)
-                        ? SolverCore._buildOptimisticDistMap(level, Array.from(level.falseGoalKeys))
                         : new Map();
                     level.mustPassIndex = new Map();
                     level.mustPassDistMaps = [];
@@ -9271,11 +9249,9 @@
                     || preExpansionAbortCode === 'invalid-by-filter-axis'
                     || preExpansionAbortCode === 'invalid-portal-legality'
                     || preExpansionAbortCode === 'invalid-must-cross-impossibility';
-                const hasFalseGoalHighReqInt = (level?.falseGoalKeys?.size || 0) > 0 && (Number(level?.reqInt) || 0) >= 4;
                 const rescueDisabledPrunes = Array.from(new Set([
                     ...(Array.isArray(fallbackDisabledPrunes) ? fallbackDisabledPrunes : (complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [])),
                     ...(activatePreExpansionRescue ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton'] : []),
-                    ...(hasFalseGoalHighReqInt ? ['falseGoal'] : [])
                 ]));
                 const rescueProfileResult = await runStage({
                     stage: 5,
