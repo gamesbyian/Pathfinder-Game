@@ -1805,16 +1805,16 @@
                             }
                         }
                         let filterLast = l.filterMap.get(lastK);
-                        if (filterLast === undefined && l.flippingFilterMap.has(lastK)) {
-                            const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+                        if (filterLast === undefined && l.flippingFilterMap.has(lastK) && crossedSet.has(lastK)) {
+                            const relevantFlipCount = crossedSet.get(lastK);
                             filterLast = (relevantFlipCount % 2 !== 0)
                                 ? (l.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H)
                                 : l.flippingFilterMap.get(lastK);
                         }
                         if (filterLast && filterLast !== axis) return 'invalid-by-filter-axis';
                         let filterTarget = l.filterMap.get(targetKey);
-                        if (filterTarget === undefined && l.flippingFilterMap.has(targetKey)) {
-                            const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
+                        if (filterTarget === undefined && l.flippingFilterMap.has(targetKey) && crossedSet.has(targetKey)) {
+                            const relevantFlipCount = crossedSet.get(targetKey);
                             const baseAxis = l.flippingFilterMap.get(targetKey);
                             filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
                         }
@@ -3753,6 +3753,9 @@
                             const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.objectiveAttractionWeight || 1);
 
                             let mustPassUrgencyWeight = Math.max(0.25, policyProfile.mustPassUrgencyWeight || 1);
+                            if (depth === 0 && valid.length <= 2) {
+                                mustPassUrgencyWeight = Math.min(mustPassUrgencyWeight, 0.35);
+                            }
                             const mustPassLateCompatible = hasMust && l.reqLen > 0 && (rSteps / l.reqLen) > 0.25;
                             if (mustPassLateCompatible) {
                                 let lateViableDist = undefined;
@@ -4125,7 +4128,7 @@
                         }
 
                         // Targeted cohort heuristic: reduce ambiguity near false goals unless hard constraints get better.
-                        if (heuristicFeatureFlags.hasFalseGoals && l.falseGoalKeys?.size > 0 && depth >= 3) {
+                        if (heuristicFeatureFlags.hasFalseGoals && l.falseGoalKeys?.size > 0 && depth >= 3 && !disabledPruneSet.has('falseGoal')) {
                             const falseNow = l.falseGoalDistMap?.get(k) ?? Infinity;
                             const falseNext = l.falseGoalDistMap?.get(nk) ?? Infinity;
                             if (Number.isFinite(falseNext)) {
@@ -5887,6 +5890,7 @@
                         }
                         else flipperSet.add(k);
                     });
+                    level.flippingFilterMap.forEach((_, k) => flipperSet.add(k));
                     const flipperDistMap = SolverCore._buildFlipperDistMap(level, flipperSet);
 
                     level.gateSet = new Set(level.gateKeys || []);
@@ -8967,9 +8971,12 @@
             const mustCrossCount = Number(profileSignals?.mustCrossCount) || 0;
             const mandatoryPortalFamilyCount = Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0;
             const enableDiversifiedRootPass = boardArea >= 100 && mustCrossCount >= 2 && mandatoryPortalFamilyCount > 0;
+            const hasPortals = (level?.portalMap?.size || 0) > 0;
+            const mustPassCountForPortal = level?.mustPassKeys?.length || 0;
+            const inferredPortalDependency = hasPortals && (mustPassCountForPortal + mustCrossCount) >= 2;
             const defaultOrderingPolicy = outstandingObligations >= 4
                 ? 'harvestThenFinish'
-                : (portalDependency ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
+                : ((portalDependency || inferredPortalDependency) ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
             const previousAttempts = Array.isArray(prev.attempts) ? prev.attempts : [];
             const previousAttempt = previousAttempts[previousAttempts.length - 1] || null;
             const prePreviousAttempt = previousAttempts[previousAttempts.length - 2] || null;
@@ -9161,49 +9168,77 @@
                             });
                         }
                     } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'healthy-expansion-timeout') {
-                        const stage0Telemetry = extractStageTelemetry(last);
-                        const enduranceAttempt = await runStage({
-                            stage: 3,
-                            name: 'Stage 3',
-                            variant: 'late-search-endurance',
-                            budgetMs: enduranceBudget,
-                            run: () => this.runEnduranceMode(level, enduranceBudget, {
-                                portalBiasMode: resolvedPortalBiasMode,
-                                phasePolicy: resolvedPhasePolicy,
-                                profile: level.solverProfile,
-                                controlPlane,
-                                purpose
-                            })
-                        });
-                        const enduranceTelemetry = extractStageTelemetry(enduranceAttempt);
-                        if (!enduranceAttempt.ok && shouldSwitchFamilyByTelemetryDelta(enduranceTelemetry, stage0Telemetry)) {
-                            const switchedAttempt = await runStage({
-                                stage: 4,
-                                name: 'Stage 4',
-                                variant: 'telemetry-family-switch',
+                        const stage0Debug = last?.debug || last?.stats?.debug || {};
+                        const topScoreDrivers = Array.isArray(stage0Debug?.rootPolicySummary?.topScoreDrivers) ? stage0Debug.rootPolicySummary.topScoreDrivers : [];
+                        const rankedByMag = topScoreDrivers.slice().sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+                        const topDriverLabel = rankedByMag.length > 0 ? rankedByMag[0].feature : null;
+                        const reqIntLevel = Number(level?.reqInt) || 0;
+                        if (topDriverLabel === 'mustCrossUrgency' && knotSensitive && reqIntLevel >= 4) {
+                            last = await runStage({
+                                stage: 3,
+                                name: 'Stage 3',
+                                variant: 'mustcross-knot-recovery',
                                 budgetMs: recoveryBudget,
                                 run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                                    orderingPolicy: 'objectiveFirst',
-                                    portalBiasMode: 'adaptiveMustCross',
-                                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(level?.solverProfile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }),
+                                    orderingPolicy: 'knotBuilder',
+                                    portalBiasMode: resolvedPortalBiasMode,
+                                    phasePolicy: resolvedPhasePolicy,
                                     profile: level.solverProfile,
                                     controlPlane,
                                     scoringMode: 'modern',
                                     structuralMode: true,
                                     enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
-                                    adaptiveOrderingPhase: 'objective-harvest',
+                                    adaptiveOrderingPhase: 'knot-build',
                                     purpose
                                 })
                             });
-                            switchedAttempt.routingDecision = compactDefined({
-                                category: 'healthy-expansion-timeout',
-                                mode: 'telemetry-family-switch',
-                                trigger: 'no-delta-vs-prior-attempt'
+                        }
+                        if (!last.ok && last.status !== 'no-solution-proven') {
+                            const stage0Telemetry = extractStageTelemetry(last);
+                            const enduranceAttempt = await runStage({
+                                stage: 4,
+                                name: 'Stage 4',
+                                variant: 'late-search-endurance',
+                                budgetMs: enduranceBudget,
+                                run: () => this.runEnduranceMode(level, enduranceBudget, {
+                                    portalBiasMode: resolvedPortalBiasMode,
+                                    phasePolicy: resolvedPhasePolicy,
+                                    profile: level.solverProfile,
+                                    controlPlane,
+                                    purpose
+                                })
                             });
-                            last = switchedAttempt;
-                        } else {
-                            last = enduranceAttempt;
+                            const enduranceTelemetry = extractStageTelemetry(enduranceAttempt);
+                            if (!enduranceAttempt.ok && shouldSwitchFamilyByTelemetryDelta(enduranceTelemetry, stage0Telemetry)) {
+                                const switchedAttempt = await runStage({
+                                    stage: 5,
+                                    name: 'Stage 5',
+                                    variant: 'telemetry-family-switch',
+                                    budgetMs: recoveryBudget,
+                                    run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                                        orderingPolicy: 'objectiveFirst',
+                                        portalBiasMode: 'adaptiveMustCross',
+                                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(level?.solverProfile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }),
+                                        profile: level.solverProfile,
+                                        controlPlane,
+                                        scoringMode: 'modern',
+                                        structuralMode: true,
+                                        enableEnduranceLongpath: true,
+                                        allowRandomizedExploration: false,
+                                        adaptiveOrderingPhase: 'objective-harvest',
+                                        purpose
+                                    })
+                                });
+                                switchedAttempt.routingDecision = compactDefined({
+                                    category: 'healthy-expansion-timeout',
+                                    mode: 'telemetry-family-switch',
+                                    trigger: 'no-delta-vs-prior-attempt'
+                                });
+                                last = switchedAttempt;
+                            } else {
+                                last = enduranceAttempt;
+                            }
                         }
                     } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'unknownFailure') {
                         last = await runStage({
@@ -9236,9 +9271,11 @@
                     || preExpansionAbortCode === 'invalid-by-filter-axis'
                     || preExpansionAbortCode === 'invalid-portal-legality'
                     || preExpansionAbortCode === 'invalid-must-cross-impossibility';
+                const hasFalseGoalHighReqInt = (level?.falseGoalKeys?.size || 0) > 0 && (Number(level?.reqInt) || 0) >= 4;
                 const rescueDisabledPrunes = Array.from(new Set([
                     ...(Array.isArray(fallbackDisabledPrunes) ? fallbackDisabledPrunes : (complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [])),
-                    ...(activatePreExpansionRescue ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton'] : [])
+                    ...(activatePreExpansionRescue ? ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton'] : []),
+                    ...(hasFalseGoalHighReqInt ? ['falseGoal'] : [])
                 ]));
                 const rescueProfileResult = await runStage({
                     stage: 5,
@@ -10591,14 +10628,15 @@
                 const hasPortalConstraintMix = ((level?.portalMap?.size || 0) > 0)
                     && (mustPassCount > 0 || mustCrossCount > 0);
                 const hasGooseMustCrossMix = gooseCount > 0 && mustCrossCount > 0;
-                return hasFilterFlipMix || hasPortalConstraintMix || hasAnyFilterPressure || hasGooseMustCrossMix;
+                const hasGooseFalseGoalMix = gooseCount > 0 && (level?.falseGoalKeys?.size || 0) > 0;
+                return hasFilterFlipMix || hasPortalConstraintMix || hasAnyFilterPressure || hasGooseMustCrossMix || hasGooseFalseGoalMix;
             };
             const shouldActivateInteractionRootFallback = ({ force = false, baselineResult = null, level = null } = {}) => {
                 const rapidCollapse = detectRapidCollapseSignature({ baselineResult });
                 const generated = rapidCollapse.rootCandidatesGenerated;
                 const expanded = rapidCollapse.rootCandidatesExpanded;
                 const nodesExpanded = rapidCollapse.nodesExpanded;
-                const tooFewRoots = expanded <= 1 || generated <= 1;
+                const tooFewRoots = generated <= 1 || (expanded < generated && expanded <= 2);
                 const collapsedAtRoot = !!rapidCollapse.returnedWithoutExpansion || nodesExpanded <= 3;
                 const interactionComplex = hasRootInteractionComplexity(level);
                 const activate = !!force || rapidCollapse.rapidCollapse || (interactionComplex && tooFewRoots && collapsedAtRoot);
@@ -12319,8 +12357,8 @@
 
                 if (!isPortalJumpCandidate) {
                     let filterLast = level.filterMap.get(lastK);
-                    if (filterLast === undefined && level.flippingFilterMap.has(lastK)) {
-                        const relevantFlipCount = crossedSet.has(lastK) ? crossedSet.get(lastK) : flipCount;
+                    if (filterLast === undefined && level.flippingFilterMap.has(lastK) && crossedSet.has(lastK)) {
+                        const relevantFlipCount = crossedSet.get(lastK);
                         filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
                     }
                     if (!disabledPrunes.includes('filterAxisStrict')) {
@@ -12328,8 +12366,8 @@
                     }
 
                     let filterTarget = level.filterMap.get(targetKey);
-                    if (filterTarget === undefined && level.flippingFilterMap.has(targetKey)) {
-                        const relevantFlipCount = crossedSet.has(targetKey) ? crossedSet.get(targetKey) : flipCount;
+                    if (filterTarget === undefined && level.flippingFilterMap.has(targetKey) && crossedSet.has(targetKey)) {
+                        const relevantFlipCount = crossedSet.get(targetKey);
                         const baseAxis = level.flippingFilterMap.get(targetKey);
                         filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
                     }
