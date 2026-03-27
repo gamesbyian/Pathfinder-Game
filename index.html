@@ -4128,7 +4128,7 @@
 
                         // Anti-dither 2: penalize local oscillation in open regions.
                         const nodeDegree = this._staticNeighborDegree(nk, l);
-                        if (!suppressAntiDither && nodeDegree >= 3 && recentWindow >= 3 && (recentTurnbackCount >= 1 || state.recentMoveEntropy < 1.2)) {
+                        if (!suppressAntiDither && !intersectionsStillNeeded && nodeDegree >= 3 && recentWindow >= 3 && (recentTurnbackCount >= 1 || state.recentMoveEntropy < 1.2)) {
                             let oscPenalty = Math.round((recentTurnbackCount * 22 + Math.max(0, 3 - dirRepeat) * 4) * antiDitherScale);
                             if (productiveAmbiguity) oscPenalty = Math.floor(oscPenalty * 0.45);
                             if (activePhase === 'finish') oscPenalty = Math.floor(oscPenalty * 0.35);
@@ -4145,7 +4145,8 @@
                             if (debugStats) debugStats.earlyGoalApproachBlocked = (debugStats.earlyGoalApproachBlocked || 0) + 1;
                         }
 
-                    const revisitContribution = suppressAntiDither ? 0 : (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
+                    const intersectionsStillNeeded = (l.reqInt || 0) > state.ints;
+                    const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
                     return { nk, score, scoreDrivers };
@@ -5895,6 +5896,19 @@
                         const gateReasons = [];
                         const d = distMap.get(gk);
                         if (d === undefined || d > level.reqLen) gateReasons.push(`distance:${d === undefined ? 'inf' : d}>${level.reqLen}`);
+
+                        if (!level.hasParityBreaker) {
+                            const gx = (gk & 0xFFFF);
+                            const gy = (gk >> 16);
+                            const goalX = (level.goalKey & 0xFFFF);
+                            const goalY = (level.goalKey >> 16);
+                            const gateParity = (gx + gy) % 2;
+                            const goalParity = (goalX + goalY) % 2;
+                            const requiredEndParity = (gateParity + (level.reqLen % 2)) % 2;
+                            if (requiredEndParity !== goalParity) {
+                                gateReasons.push('parityMismatch');
+                            }
+                        }
 
                         if (mandatoryPortalFamilies.length > 0) {
                             for (const famIdx of mandatoryPortalFamilies) {
@@ -8968,7 +8982,10 @@
             const enableDiversifiedRootPass = boardArea >= 100 && mustCrossCount >= 2 && mandatoryPortalFamilyCount > 0;
             const hasPortals = (level?.portalMap?.size || 0) > 0;
             const mustPassCountForPortal = level?.mustPassKeys?.length || 0;
-            const inferredPortalDependency = hasPortals && (mustPassCountForPortal + mustCrossCount) >= 2;
+            const inferredPortalDependency = hasPortals
+                && (mustPassCountForPortal + mustCrossCount) >= 2
+                && Array.isArray(profileSignals?.portalHints?.mandatoryFamilies)
+                && profileSignals.portalHints.mandatoryFamilies.length > 0;
             const defaultOrderingPolicy = outstandingObligations >= 4
                 ? 'harvestThenFinish'
                 : ((portalDependency || inferredPortalDependency) ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
