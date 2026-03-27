@@ -8738,9 +8738,10 @@
             const requestedBudget = opts.timeBudgetMs || defaultBudget;
             const policyLadderByPurpose = {
                 hint: [
-                    { tier: 0, key: 'hint-tier-0', minBudgetMs: 5000, orderingPolicy: 'profile-default', rootSeedMode: 'default', portalBiasMode: 'profile-default', rescueMode: 'default' },
-                    { tier: 1, key: 'hint-tier-1', minBudgetMs: 15000, orderingPolicy: 'knotBuilder', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off', rescueMode: 'alternate-rescue' },
-                    { tier: 2, key: 'hint-tier-2', minBudgetMs: 60000, orderingPolicy: 'objectiveFirst', rootSeedMode: 'diversified', portalBiasMode: 'adaptiveMustCross', rescueMode: 'alternate-rescue' }
+                    { tier: 0, key: 'hint-tier-0', minBudgetMs: 5000,  orderingPolicy: 'profile-default',   rootSeedMode: 'default',                    portalBiasMode: 'profile-default',    rescueMode: 'default' },
+                    { tier: 1, key: 'hint-tier-1', minBudgetMs: 15000, orderingPolicy: 'knotBuilder',        rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off',                rescueMode: 'alternate-rescue' },
+                    { tier: 2, key: 'hint-tier-2', minBudgetMs: 60000, orderingPolicy: 'objectiveFirst',     rootSeedMode: 'diversified',                portalBiasMode: 'adaptiveMustCross',  rescueMode: 'alternate-rescue' },
+                    { tier: 3, key: 'hint-tier-3', minBudgetMs: 60000, orderingPolicy: 'perimeterSweep',     rootSeedMode: 'diversified-aggressive',     portalBiasMode: 'off',                rescueMode: 'alternate-rescue' }
                 ],
                 solve: [
                     { tier: 0, key: 'solve-tier-0', minBudgetMs: 15000, orderingPolicy: 'profile-default', rootSeedMode: 'default', portalBiasMode: 'profile-default', rescueMode: 'default' },
@@ -9009,6 +9010,7 @@
                 return blocked;
             }
 
+            let stage0ZeroExpansion = false;
             {
                 last = await runStage({
                     stage: 0,
@@ -9026,6 +9028,9 @@
                         purpose
                     })
                 });
+                stage0ZeroExpansion = !last.ok
+                    && (last?.debug?.nodesExpanded ?? last?.nodesExpanded ?? 1) === 0
+                    && (Date.now() - solveStartTime) < 150;
 
                 if (!last.ok && last.status !== 'no-solution-proven') {
                     const failureTaxonomy = classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) });
@@ -9128,13 +9133,27 @@
                                 })
                             });
                         }
+                        if (!last.ok && last.status !== 'no-solution-proven') {
+                            last = await runStage({
+                                stage: 3,
+                                name: 'Stage 3',
+                                variant: 'root-diversity-recovery',
+                                budgetMs: recoveryBudget,
+                                run: () => this.runStage2Fallback(level, recoveryBudget,
+                                    ['mustPassBound', 'mustCrossBound', 'connectivity'], {
+                                    portalBiasMode: resolvedPortalBiasMode,
+                                    phasePolicy: resolvedPhasePolicy,
+                                    enableLowExpansionProbe: true
+                                })
+                            });
+                        }
                     } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'healthy-expansion-timeout') {
                         const stage0Debug = last?.debug || last?.stats?.debug || {};
                         const topScoreDrivers = Array.isArray(stage0Debug?.rootPolicySummary?.topScoreDrivers) ? stage0Debug.rootPolicySummary.topScoreDrivers : [];
                         const rankedByMag = topScoreDrivers.slice().sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
                         const topDriverLabel = rankedByMag.length > 0 ? rankedByMag[0].feature : null;
                         const reqIntLevel = Number(level?.reqInt) || 0;
-                        if (topDriverLabel === 'mustCrossUrgency' && knotSensitive && reqIntLevel >= 4) {
+                        if (topDriverLabel === 'mustCrossUrgency' && knotSensitive && reqIntLevel >= 3) {
                             last = await runStage({
                                 stage: 3,
                                 name: 'Stage 3',
@@ -9151,6 +9170,32 @@
                                     enableEnduranceLongpath: true,
                                     allowRandomizedExploration: false,
                                     adaptiveOrderingPhase: 'knot-build',
+                                    purpose
+                                })
+                            });
+                        }
+                        if (!last.ok && last.status !== 'no-solution-proven'
+                            && (topDriverLabel === 'mustPassUrgency'
+                                || (topDriverLabel === 'mustCrossUrgency' && !knotSensitive))) {
+                            last = await runStage({
+                                stage: 3,
+                                name: 'Stage 3',
+                                variant: 'objective-ordering-recovery',
+                                budgetMs: recoveryBudget,
+                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                                    orderingPolicy: 'objectiveFirst',
+                                    portalBiasMode: resolvedPortalBiasMode,
+                                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(
+                                        level?.solverProfile || {},
+                                        { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }
+                                    ),
+                                    profile: level.solverProfile,
+                                    controlPlane,
+                                    scoringMode: 'modern',
+                                    structuralMode: true,
+                                    enableEnduranceLongpath: true,
+                                    allowRandomizedExploration: false,
+                                    adaptiveOrderingPhase: 'objective-harvest',
                                     purpose
                                 })
                             });
@@ -9228,6 +9273,7 @@
                     level
                 });
                 const activatePreExpansionRescue = fallbackActivation.activate
+                    || stage0ZeroExpansion
                     || preExpansionAbortCode === 'no-legal-start-neighbors'
                     || preExpansionAbortCode === 'invalid-by-filter-axis'
                     || preExpansionAbortCode === 'invalid-portal-legality'
@@ -14497,9 +14543,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 { key: 'A', purpose: 'hint', escalationTier: 0, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
                 { key: 'B', purpose: 'hint', escalationTier: 1, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
                 { key: 'C', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'D', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'E', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'F', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
+                { key: 'D', purpose: 'hint', escalationTier: 3, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'E', purpose: 'hint', escalationTier: 3, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
+                { key: 'F', purpose: 'hint', escalationTier: 3, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
             ];
             let finalAttempt = null;
             let finalHintResult = null;
