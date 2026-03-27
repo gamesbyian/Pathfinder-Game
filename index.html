@@ -1875,10 +1875,10 @@
                             deque.pushBack(k);
                         }
                     }
-                    // Static passability mask: WALL, GOOSE, FALSE_GOAL, and ALL gates are
-                    // non-traversable from the heuristic's perspective (gates are spawn
-                    // points, not paths; geese and false goals terminate/corrupt traversal).
-                    const _dmGateSet = l.gateSet || new Set(l.gateKeys || []);
+                    // Static passability mask: WALL, GOOSE, and FALSE_GOAL are
+                    // non-traversable from the heuristic's perspective (geese and false
+                    // goals terminate/corrupt traversal). Gates must remain passable so
+                    // the BFS can correctly measure distances across gate boundaries.
                     while (!deque.isEmpty()) {
                         const k = deque.popFront();
                         const d = map.get(k);
@@ -1887,8 +1887,7 @@
                         if (portal && portal.dest !== -1
                                 && !l.blockSet.has(portal.dest)
                                 && !l.gooseSet?.has(portal.dest)
-                                && !l.falseGoalKeys?.has(portal.dest)
-                                && !_dmGateSet.has(portal.dest)) {
+                                && !l.falseGoalKeys?.has(portal.dest)) {
                             const pd = map.get(portal.dest);
                             if (pd === undefined || d < pd) {
                                 map.set(portal.dest, d);
@@ -1902,7 +1901,6 @@
                             if (l.blockSet.has(nk)) return;
                             if (l.gooseSet?.has(nk)) return;
                             if (l.falseGoalKeys?.has(nk)) return;
-                            if (_dmGateSet.has(nk)) return;
                             const nd = d + 1;
                             const prev = map.get(nk);
                             if (prev === undefined || nd < prev) {
