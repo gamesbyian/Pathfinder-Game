@@ -4087,20 +4087,6 @@
                             if (projectedRevisit && !nextInKnot) score += 14;
                         }
 
-                        // Targeted cohort heuristic: penalize trajectories that tighten goose hazard conflict unless they help hard constraints.
-                        if (heuristicFeatureFlags.hasGeese && l.gooseSet?.size > 0) {
-                            const gooseNow = l.gooseDistMap?.get(k) ?? Infinity;
-                            const gooseNext = l.gooseDistMap?.get(nk) ?? Infinity;
-                            if (Number.isFinite(gooseNext)) {
-                                let hazardPenalty = 0;
-                                if (gooseNext <= 2) hazardPenalty += (gooseNext === 0 ? 44 : (gooseNext === 1 ? 30 : 16));
-                                if (Number.isFinite(gooseNow) && gooseNext < gooseNow) hazardPenalty += 12 + ((gooseNow - gooseNext) * 4);
-                                if (hardConstraintImproved) hazardPenalty = Math.floor(hazardPenalty * 0.45);
-                                score += hazardPenalty;
-                                pushDriver('gooseRisk', gooseNext, hazardPenalty);
-                            }
-                        }
-
                         // Targeted cohort heuristic: postpone reversible filter churn unless it unlocks hard constraints.
                         if (heuristicFeatureFlags.hasFlippingFilters && l.flippingFilterMap?.has(nk) && !state.crossedFlippers?.has(nk)) {
                             const flipperDistToGoal = distMap.get(nk) ?? Infinity;
@@ -5595,9 +5581,6 @@
                         level.blockSet = new Set(level.blockSet);
                         level.falseGoalKeys.forEach(k => level.blockSet.add(k));
                     }
-                    level.gooseDistMap = (level.gooseSet && level.gooseSet.size > 0)
-                        ? SolverCore._buildOptimisticDistMap(level, Array.from(level.gooseSet))
-                        : new Map();
                     level.mustPassIndex = new Map();
                     level.mustPassDistMaps = [];
                     level.mustPassToGoalDist = [];
