@@ -1,0 +1,58 @@
+name: Audit Export
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'audits/metrics/**'
+
+permissions:
+  contents: write
+
+jobs:
+  new-hint-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run full New Hint audit export
+        run: npm run audit:newhint:full
+
+      - name: Guard audit output
+        run: npm run check:audit-output -- audits/raw/latest.json
+
+      - name: Upload full audit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fullaudit-${{ github.sha }}
+          path: |
+            audits/raw/latest.json
+            audits/raw/*.json
+          retention-days: 30
+
+      - name: Commit metrics history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add audits/metrics
+          if git diff --cached --quiet; then
+            echo "No metrics changes to commit."
+            exit 0
+          fi
+          git commit -m "chore(audit): update metrics for ${GITHUB_SHA::12} [skip ci]"
+          git push
