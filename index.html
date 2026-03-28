@@ -1791,10 +1791,33 @@
                     knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 } },
                     finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 } }
                 },
-                getPolicyProfile(policyName = 'default', phase = 'harvest') {
+                getPolicyProfile(policyName = 'default', phase = 'harvest', urgencyScalar = null) {
                     const canonicalName = this.SOLVER_POLICY_PROFILES[policyName] ? policyName : 'default';
                     const def = this.SOLVER_POLICY_PROFILES[canonicalName] || this.SOLVER_POLICY_PROFILES.default;
                     const base = { ...def.direction, ...def.coverage, ...def.urgency, ...def.pathology };
+                    if (urgencyScalar !== null && Number.isFinite(urgencyScalar)) {
+                        // Continuous interpolation across 4 phase multiplier sets.
+                        // urgency 0→0.33 = harvest→transition, 0.33→0.67 = transition→knot, 0.67→1.0 = knot→finish.
+                        const phaseSeq = ['harvest', 'transition', 'knot', 'finish'];
+                        const u = Math.max(0, Math.min(1, urgencyScalar));
+                        const rawIdx = u * 3;
+                        const lo = Math.min(3, Math.floor(rawIdx));
+                        const hi = Math.min(3, lo + 1);
+                        const frac = rawIdx - lo;
+                        const loMods = this.SOLVER_POLICY_PHASE_MULTIPLIERS[phaseSeq[lo]]?.[canonicalName] || {};
+                        const hiMods = this.SOLVER_POLICY_PHASE_MULTIPLIERS[phaseSeq[hi]]?.[canonicalName] || {};
+                        const allKeys = new Set([...Object.keys(loMods), ...Object.keys(hiMods)]);
+                        if (!allKeys.size) return base;
+                        const merged = { ...base };
+                        for (const k of allKeys) {
+                            if (!(k in merged)) continue;
+                            const loV = loMods[k] ?? 1;
+                            const hiV = hiMods[k] ?? 1;
+                            merged[k] = Number((merged[k] * (loV + frac * (hiV - loV))).toFixed(4));
+                        }
+                        return merged;
+                    }
+                    // Fallback: discrete phase lookup (preserves behavior when urgencyScalar unavailable).
                     const phaseMods = this.SOLVER_POLICY_PHASE_MULTIPLIERS?.[phase]?.[canonicalName] || null;
                     if (!phaseMods) return base;
                     const merged = { ...base };
@@ -3071,10 +3094,26 @@
                     else if (progressRatio >= (t.transitionProgress ?? 0.34)
                         || remainingObjectives <= Math.max(2, Math.floor((l.mustPassKeys.length + l.mustCrossKeys.length) * 0.5))) phase = 'transition';
 
-                    return { phase, realLen, progressRatio, goalDist, rSteps, slack, remainingObjectives, remainingMustPass, remainingMustCross, remainingIntersections };
+                    // Continuous urgency scalar: 0 = search start (harvest), 1 = search end (finish).
+                    // Normalized through the actual phase thresholds so phase boundaries align with
+                    // u=0 (harvest start), u=0.33 (transition start), u=0.67 (knot start), u=1.0 (finish).
+                    // This lets getPolicyProfile interpolate multipliers smoothly across the range.
+                    const tp = t.transitionProgress ?? 0.34;
+                    const kp = t.knotProgress ?? 0.58;
+                    const fp = t.finishProgress ?? 0.82;
+                    const urgencyScalar = progressRatio <= tp
+                        ? (progressRatio / Math.max(1e-6, tp)) * 0.33
+                        : progressRatio <= kp
+                            ? 0.33 + ((progressRatio - tp) / Math.max(1e-6, kp - tp)) * 0.34
+                            : progressRatio <= fp
+                                ? 0.67 + ((progressRatio - kp) / Math.max(1e-6, fp - kp)) * 0.33
+                                : 1.0;
+
+                    return { phase, realLen, progressRatio, goalDist, rSteps, slack, remainingObjectives, remainingMustPass, remainingMustCross, remainingIntersections, urgencyScalar };
                 },
                 _updateSolverPhase(state, key, l, distMap, debugStats = null) {
                     const derived = this._deriveSolverPhase(state, key, l, distMap);
+                    state.urgencyScalar = derived.urgencyScalar;
                     if (!state.phase || state.phase !== derived.phase) {
                         state.phase = derived.phase;
                         const event = {
@@ -3655,7 +3694,7 @@
                         }
                         : phaseProfileBase;
                     const policyName = options?.orderingPolicy || 'default';
-                    const policyProfile = this.getPolicyProfile(policyName, activePhase);
+                    const policyProfile = this.getPolicyProfile(policyName, activePhase, state.urgencyScalar ?? null);
                     const heuristicFeatureFlags = compactDefined({
                         ...(options?.heuristicFeatureFlags || {}),
                         hasGeese: (options?.heuristicFeatureFlags?.hasGeese !== undefined) ? !!options.heuristicFeatureFlags.hasGeese : ((l.gooseSet?.size || 0) > 0),
@@ -4431,6 +4470,7 @@
                         floodQueue: new Int32Array(keyCount),
                         remainingSteps: 0,
                         phase: 'harvest',
+                        urgencyScalar: 0,
                         phasePolicy,
                         phaseTimeline: [],
                         activeObjectiveId: -1,
