@@ -8826,9 +8826,22 @@
             const contradictionPrunes = Math.max(0, Number(debug?.prune?.mustPassBound) || 0) + Math.max(0, Number(debug?.prune?.mustCrossBound) || 0);
             const noExpansion = returnedWithoutExpansion || (rootGenerated === 0 && rootExpanded === 0 && nodesExpanded === 0);
             const shallowCollapsed = nodesExpanded <= 4 && rootExpanded <= 1;
-            const contradictionPressure = contradictionPrunes >= Math.max(10, Math.floor((Number(debug?.branchesTried) || 0) * 0.45));
-            const stagnatedConstraintPressure = nodesExpanded >= 30 && branchFactor <= 0.16 && contradictionPressure;
-            const triggered = !!goalReachable && !!(noExpansion || shallowCollapsed || stagnatedConstraintPressure);
+            const contradictionPressureThreshold = Math.max(8, Math.floor((Number(debug?.branchesTried) || 0) * 0.38));
+            const contradictionPressure = contradictionPrunes >= contradictionPressureThreshold;
+            const stagnatedConstraintPressure = nodesExpanded >= 24 && branchFactor <= 0.19 && contradictionPressure;
+            const predicates = {
+                goalReachable: !!goalReachable,
+                noExpansion: !!noExpansion,
+                shallowCollapsed: !!shallowCollapsed,
+                stagnatedConstraintPressure: !!stagnatedConstraintPressure,
+                contradictionPressure: !!contradictionPressure
+            };
+            const triggered = predicates.goalReachable && (predicates.noExpansion || predicates.shallowCollapsed || predicates.stagnatedConstraintPressure);
+            const whyNotTriggered = [];
+            if (!predicates.goalReachable) whyNotTriggered.push('goal-not-reachable');
+            if (predicates.goalReachable && !predicates.noExpansion && !predicates.shallowCollapsed && !predicates.stagnatedConstraintPressure) {
+                whyNotTriggered.push('no-collapse-signature');
+            }
             const protectedPrunesDisabled = triggered
                 ? Array.from(new Set(['mustPassBound', 'mustCrossBound', 'connectivity', 'dominance', 'memo']))
                 : [];
@@ -8838,8 +8851,18 @@
                     ? (noExpansion ? 'reachable-but-no-expansion' : (stagnatedConstraintPressure ? 'constraint-stagnation' : 'reachable-shallow-collapse'))
                     : null,
                 guardBudgetMs: triggered ? Math.max(800, Math.floor((Number(attemptOpts?.budgetMs) || 1200) * 0.55)) : null,
+                predicates,
+                whyNotTriggered,
                 protectedPrunesDisabled,
-                rootSearchSummary: triggered ? compactDefined({ rootGenerated, rootExpanded, returnedWithoutExpansion, nodesExpanded, contradictionPressure }) : null
+                rootSearchSummary: compactDefined({
+                    rootGenerated,
+                    rootExpanded,
+                    returnedWithoutExpansion,
+                    nodesExpanded,
+                    contradictionPressure,
+                    contradictionPrunes,
+                    contradictionPressureThreshold
+                })
             });
         },
 
@@ -10585,6 +10608,8 @@
                             attempted: true,
                             activated: true,
                             selectedBy: rapidCollapseSignature.reason.slice(),
+                            notSelectedBy: rapidCollapseSignature.whyNotTriggered || [],
+                            activationPredicates: rapidCollapseSignature.predicates || {},
                             trigger: 'stage0-rapid-collapse-signature',
                             prior: rapidCollapseSignature,
                             recovery: {
@@ -10623,6 +10648,8 @@
                             attempted: true,
                             activated: false,
                             selectedBy: [],
+                            notSelectedBy: rapidCollapseSignature.whyNotTriggered || ['rapid-collapse-not-detected'],
+                            activationPredicates: rapidCollapseSignature.predicates || {},
                             trigger: 'stage0-no-rapid-collapse-signature',
                             prior: rapidCollapseSignature,
                             recovery: null
@@ -12189,8 +12216,24 @@
                 if (generated === 0) reason.push('root-generated==0');
                 else if (generated <= 1 && expanded <= 1) reason.push(`root-generated<=1:${generated}`);
                 if (returnedBeforeExpansionSignal) reason.push('returned-before-expansion');
-                const nearZeroRootFrontier = generated <= 2 && expanded <= 1;
-                const rapidCollapse = reason.length > 0 || nearZeroRootFrontier;
+                const timeoutLike = status === 'timeout' || status === 'no-solution-inconclusive';
+                const healthyExpansionTimeout = timeoutLike && nodesExpanded >= 120 && !returnedBeforeExpansionSignal;
+                const nearZeroRootFrontierThreshold = healthyExpansionTimeout ? { generatedMax: 1, expandedMax: 0 } : { generatedMax: 3, expandedMax: 1 };
+                const nearZeroRootFrontier = generated <= nearZeroRootFrontierThreshold.generatedMax && expanded <= nearZeroRootFrontierThreshold.expandedMax;
+                const predicates = {
+                    timeoutLike,
+                    healthyExpansionTimeout,
+                    preExpansionAbort: !!preExpansionAbort?.code,
+                    nodesNearZero: nodesExpanded <= 2,
+                    rootExpandedNearZero: expanded <= 1,
+                    rootGeneratedNearZero: generated <= 1,
+                    returnedBeforeExpansionSignal: !!returnedBeforeExpansionSignal,
+                    nearZeroRootFrontier
+                };
+                const rapidCollapse = !healthyExpansionTimeout && (reason.length > 0 || nearZeroRootFrontier);
+                const whyNotTriggered = [];
+                if (healthyExpansionTimeout) whyNotTriggered.push('healthy-expansion-timeout-guard');
+                if (!healthyExpansionTimeout && !rapidCollapse) whyNotTriggered.push('no-rapid-collapse-predicate');
                 return {
                     rapidCollapse,
                     reason,
@@ -12200,7 +12243,10 @@
                     preExpansionAbortCode: preExpansionAbort?.code || null,
                     returnedWithoutExpansion,
                     returnedBeforeExpansionSignal,
-                    nearZeroRootFrontier
+                    nearZeroRootFrontier,
+                    nearZeroRootFrontierThreshold,
+                    predicates,
+                    whyNotTriggered
                 };
             };
             const hasRootInteractionComplexity = (level = null) => {
@@ -12241,7 +12287,8 @@
                 const collapsedAtRoot = !!rapidCollapse.returnedBeforeExpansionSignal || !!rapidCollapse.returnedWithoutExpansion || nodesExpanded <= 2;
                 const interactionComplex = hasRootInteractionComplexity(level);
                 const genericZeroExpansion = nodesExpanded === 0 || expanded === 0 || generated === 0;
-                const activate = !!force || rapidCollapse.rapidCollapse || genericZeroExpansion || (tooFewRoots && collapsedAtRoot);
+                const healthyExpansionTimeout = !!rapidCollapse?.predicates?.healthyExpansionTimeout;
+                const activate = !healthyExpansionTimeout && (!!force || rapidCollapse.rapidCollapse || genericZeroExpansion || (tooFewRoots && collapsedAtRoot));
                 const rootExpansionFloorCount = (interactionComplex || genericZeroExpansion) ? 6 : 4;
                 const forceRootExpansionFloor = activate && (interactionComplex || genericZeroExpansion);
                 const relaxRootSuppressionFirstLayer = forceRootExpansionFloor;
@@ -12251,6 +12298,9 @@
                     tooFewRoots,
                     collapsedAtRoot,
                     genericZeroExpansion,
+                    healthyExpansionTimeout,
+                    activationPredicates: rapidCollapse.predicates || {},
+                    whyNotTriggered: (!activate ? (rapidCollapse.whyNotTriggered || ['interaction-fallback-not-required']) : []),
                     generated,
                     expanded,
                     nodesExpanded,
