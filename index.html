@@ -9195,12 +9195,11 @@
 
         async _runRescueProfileStage({
             last,
-            runStage,
             solveContext,
-            rapidCollapseRecoveryDiagnostics,
-            stage0ZeroExpansion = false,
-            enableDiversifiedRootPass = false
+            stageHelpers,
+            overrides = {}
         }) {
+            const { runStage } = stageHelpers;
             const {
                 level,
                 purpose,
@@ -9208,6 +9207,18 @@
                 controlPlane,
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
+            const {
+                rapidCollapseRecoveryDiagnostics = {
+                    attempted: false,
+                    activated: false,
+                    selectedBy: [],
+                    trigger: null,
+                    prior: null,
+                    recovery: null
+                },
+                stage0ZeroExpansion = false,
+                enableDiversifiedRootPass = false
+            } = overrides;
             const priorFailureSummary = !last.ok ? (last.failureSummary || classifyFailureCategory(last)) : null;
             const priorFailureTaxonomy = !last.ok ? (last.failureTaxonomy || classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) })) : null;
             if (!last.ok && last.status !== 'no-solution-proven') {
@@ -9286,19 +9297,22 @@
 
         async _runHardHintFallbackStage({
             last,
-            runStage,
-            solveContext
+            solveContext,
+            stageHelpers
         }) {
+            const { runStage } = stageHelpers;
             const {
                 level,
                 purpose,
                 controlPlane,
                 budgets: { budgetMs, tierBudgets },
-                strategy: { policyTier, strategyMetadata },
+                policyTier,
+                strategy: { strategyMetadata },
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
+            const resolvedPolicyTier = Number.isFinite(policyTier) ? policyTier : (Number(solveContext?.strategy?.policyTier) || 0);
             if (!last.ok && last.status !== 'no-solution-proven' && strategyMetadata.hardHintFallbackStage) {
-                const hardFallbackBudget = Math.max(1500, Math.floor(Math.max(budgetMs, tierBudgets[Math.min(2, policyTier)] || budgetMs) * 0.55));
+                const hardFallbackBudget = Math.max(1500, Math.floor(Math.max(budgetMs, tierBudgets[Math.min(2, resolvedPolicyTier)] || budgetMs) * 0.55));
                 const hardFallbackAttempt = await runStage({
                     stage: 6,
                     name: 'Stage 6',
@@ -9392,7 +9406,8 @@
             return last;
         },
 
-        async _runPreExpansionFailureCategory({ last, runStage, solveContext }) {
+        async _runPreExpansionFailureCategory({ last, solveContext, stageHelpers }) {
+            const { runStage } = stageHelpers;
             const {
                 level,
                 strategy: { sanityBudget, resolvedPortalBiasMode, resolvedPhasePolicy, fallbackDisabledPrunes, complexityStrategy, escalationTier }
@@ -9412,7 +9427,8 @@
             });
         },
 
-        async _runLowExpansionCollapseCategory({ last, runStage, solveContext, enableDiversifiedRootPass = false }) {
+        async _runLowExpansionCollapseCategory({ last, solveContext, stageHelpers, overrides = {} }) {
+            const { runStage } = stageHelpers;
             const {
                 level,
                 purpose,
@@ -9420,6 +9436,7 @@
                 strategy: { recoveryBudget, resolvedPortalBiasMode, resolvedPhasePolicy },
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
+            const { enableDiversifiedRootPass = false } = overrides;
             if (last.ok || last.status === 'no-solution-proven') return last;
             const policies = ['harvestThenFinish', 'knotBuilder'];
             let next = last;
@@ -9467,11 +9484,10 @@
 
         async _runHealthyExpansionTimeoutCategory({
             last,
-            runStage,
             solveContext,
-            extractStageTelemetry,
-            shouldSwitchFamilyByTelemetryDelta
+            stageHelpers
         }) {
+            const { runStage, extractStageTelemetry, shouldSwitchFamilyByTelemetryDelta } = stageHelpers;
             const {
                 level,
                 purpose,
@@ -9612,7 +9628,8 @@
             return next;
         },
 
-        async _runUnknownFailureCategory({ last, runStage, solveContext }) {
+        async _runUnknownFailureCategory({ last, solveContext, stageHelpers }) {
+            const { runStage } = stageHelpers;
             const {
                 level,
                 strategy: { recoveryBudget, fallbackDisabledPrunes, complexityStrategy, escalationTier, resolvedPortalBiasMode, resolvedPhasePolicy },
@@ -9643,29 +9660,25 @@
         async _runFailureCategoryRecovery({
             failureCategory,
             last,
-            runStage,
             solveContext,
-            enableDiversifiedRootPass = false,
-            extractStageTelemetry,
-            shouldSwitchFamilyByTelemetryDelta
+            stageHelpers,
+            overrides = {}
         }) {
             const normalizedCategory = this._normalizeFailureRecoveryCategory(failureCategory);
             if (normalizedCategory === 'pre-expansion-failure') {
-                return this._runPreExpansionFailureCategory({ last, runStage, solveContext });
+                return this._runPreExpansionFailureCategory({ last, solveContext, stageHelpers });
             }
             if (normalizedCategory === 'low-expansion-collapse') {
-                return this._runLowExpansionCollapseCategory({ last, runStage, solveContext, enableDiversifiedRootPass });
+                return this._runLowExpansionCollapseCategory({ last, solveContext, stageHelpers, overrides });
             }
             if (normalizedCategory === 'healthy-expansion-timeout') {
                 return this._runHealthyExpansionTimeoutCategory({
                     last,
-                    runStage,
                     solveContext,
-                    extractStageTelemetry,
-                    shouldSwitchFamilyByTelemetryDelta
+                    stageHelpers
                 });
             }
-            return this._runUnknownFailureCategory({ last, runStage, solveContext });
+            return this._runUnknownFailureCategory({ last, solveContext, stageHelpers });
         },
 
         async _runSolveCascade(context = {}) {
@@ -9676,6 +9689,11 @@
                 extractStageTelemetry,
                 shouldSwitchFamilyByTelemetryDelta
             } = context;
+            const stageHelpers = {
+                runStage,
+                extractStageTelemetry,
+                shouldSwitchFamilyByTelemetryDelta
+            };
             const {
                 level,
                 purpose,
@@ -9835,11 +9853,9 @@
                     last = await this._runFailureCategoryRecovery({
                         failureCategory,
                         last,
-                        runStage,
                         solveContext,
-                        enableDiversifiedRootPass,
-                        extractStageTelemetry,
-                        shouldSwitchFamilyByTelemetryDelta
+                        stageHelpers,
+                        overrides: { enableDiversifiedRootPass }
                     });
                     if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                 }
@@ -9847,11 +9863,13 @@
 
             last = await this._runRescueProfileStage({
                 last,
-                rapidCollapseRecoveryDiagnostics,
-                runStage,
                 solveContext,
-                stage0ZeroExpansion,
-                enableDiversifiedRootPass
+                stageHelpers,
+                overrides: {
+                    rapidCollapseRecoveryDiagnostics,
+                    stage0ZeroExpansion,
+                    enableDiversifiedRootPass
+                }
             });
             if (!last.ok && purpose === 'hint' && !rapidCollapseRecoveryDiagnostics.attempted) {
                 rapidCollapseRecoveryDiagnostics = {
@@ -9866,8 +9884,8 @@
             if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
             last = await this._runHardHintFallbackStage({
                 last,
-                runStage,
-                solveContext
+                solveContext,
+                stageHelpers
             });
 
             return { last, stagesTried, previousAttempt, previousAttempts, strategyMetadata };
@@ -10030,6 +10048,7 @@
             const solveContext = {
                 level,
                 profile: level?.solverProfile || {},
+                policyTier,
                 purpose,
                 controlPlane,
                 complexity: {
