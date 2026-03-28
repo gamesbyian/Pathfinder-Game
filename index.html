@@ -3290,13 +3290,13 @@
                         disableDistanceBound, disableMustPassBound, disableMustCrossBound, disablePortalAutomaton,
                         interactionCandidateFallbackEnabled, assertKnownSolvableBounds, debugNeighborTraceEnabled
                     };
-                    const { valid, stageTrace, startNeighborBoundSanity } =
+                    const { valid, stageTrace, startNeighborBoundSanity, candidatesCount } =
                         this._filterCandidates(candidates, state, l, options, filterCtx, debugStats);
                     return this._scoreCandidates(valid, state, l, options, {
                         k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
                         portalForced, portalDest, distMap, flipperDistMap, usageFreq,
                         stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
-                        computePortalOpportunity
+                        computePortalOpportunity, candidatesCount
                     }, debugStats);
                 },
                 _filterCandidates(candidates, state, l, options, ctx, debugStats) {
@@ -3539,14 +3539,14 @@
                             console.warn(msg);
                         }
                     }
-                    return { valid, stageTrace, startNeighborBoundSanity };
+                    return { valid, stageTrace, startNeighborBoundSanity, candidatesCount: candidates.length };
                 },
                 _scoreCandidates(valid, state, l, options, ctx, debugStats) {
                     const {
                         k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
                         portalForced, portalDest, distMap, flipperDistMap, usageFreq,
                         stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
-                        computePortalOpportunity
+                        computePortalOpportunity, candidatesCount
                     } = ctx;
                     const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
                     const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, !!(portalForced && portalBiasMode !== 'off'));
@@ -4232,7 +4232,7 @@
                     }
                     const orderedNeighbors = scored.map(item => item.nk);
                     if (depth === 0 && debugStats) {
-                        debugStats.rootCandidatesGenerated = candidates.length;
+                        debugStats.rootCandidatesGenerated = candidatesCount ?? valid.length;
                         debugStats.rootMoveOrder = orderedNeighbors.slice(0, 20);
                         debugStats.rootCandidatesExpanded = orderedNeighbors.length;
                         if (shouldRecordRootSuppression) {
