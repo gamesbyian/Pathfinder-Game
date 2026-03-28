@@ -3732,6 +3732,7 @@
                             if (depth !== 0 || !Number.isFinite(contribution) || contribution === 0) return;
                             scoreDrivers.push({ feature, value: Number((value || 0).toFixed(3)), contribution: Number(contribution.toFixed(3)) });
                         };
+                        const pw = (key, floor = 0.25) => Math.max(floor, policyProfile[key] || 1);
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
                         if (mustIdx !== undefined) {
                             const bit = 1n << BigInt(mustIdx);
@@ -3802,7 +3803,7 @@
                             if (crossNeed > 0) score += crossNeed * 2;
                             score += (distMap.get(nk) ?? 999);
                         } else {
-                            { const c = computePortalOpportunity(k, nk, rSteps) * Math.max(0.2, policyProfile.portalSetupWeight || 1) * Math.max(0.2, policyProfile.portalCommitmentWeight || 1); score += c; pushDriver('portalCommitment', c, c); }
+                            { const c = computePortalOpportunity(k, nk, rSteps) * pw('portalSetupWeight', 0.2) * pw('portalCommitmentWeight', 0.2); score += c; pushDriver('portalCommitment', c, c); }
 
                             const nx = nk & 0xFFFF;
                             const ny = nk >> 16;
@@ -3837,9 +3838,9 @@
                             const currentSlack = l.reqLen - nLen - activeDist;
 
                             // Penalty scales from 5 (high slack) up to 40 (low slack)
-                            const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.objectiveAttractionWeight || 1);
+                            const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1) * pw('objectiveAttractionWeight');
 
-                            let mustPassUrgencyWeight = Math.max(0.25, policyProfile.mustPassUrgencyWeight || 1);
+                            let mustPassUrgencyWeight = pw('mustPassUrgencyWeight');
                             if (depth === 0 && valid.length <= 2) {
                                 mustPassUrgencyWeight = Math.min(mustPassUrgencyWeight, 0.35);
                             }
@@ -3889,7 +3890,7 @@
                                 }
                             }
                             const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
-                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1));
+                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * pw('mustCrossUrgencyWeight'));
                             score += mustContribution;
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
@@ -3897,7 +3898,7 @@
                             if (state.ints < l.reqInt && l.mustPassIndex?.has(nk) && (state.countsArr[state.keyToIdx(nk)] || 0) > 0) {
                                 score -= Math.round(gravityMult * 0.6);
                             }
-                            if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1)); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
+                            if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * pw('mustCrossUrgencyWeight')); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
 
                             if (activeObjectiveDistMap && activeObjectiveId >= 0) {
                                 const nextObjectiveDist = activeObjectiveDistMap.get(nk) ?? Infinity;
@@ -3934,7 +3935,7 @@
 
                             if (isTargetingWaypoint) {
                                 // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
-                                { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * Math.max(0.25, policyProfile.goalAttractionWeight || 1))); score += c; pushDriver('goalAttraction', activeDist, c); }
+                                { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * pw('goalAttractionWeight'))); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 score -= this._staticNeighborDegree(nk, l) * 2;
                             } else {
                                 const slack = rSteps - activeDist;
@@ -3943,13 +3944,13 @@
                                 suppressAntiDither = finalApproach || slack <= 0;
                                 if (slack > 0 && !finalApproach) {
                                     // SLACK MODE: Decaying Orbit + Wall Hugging
-                                    const targetSlack = Math.floor((rSteps / 2) * Math.max(0.5, policyProfile.slackPreservationWeight || 1));
+                                    const targetSlack = Math.floor((rSteps / 2) * pw('slackPreservationWeight', 0.5));
                                     score -= Math.abs(slack - targetSlack) * 5;
-                                    score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1) * Math.max(0.25, policyProfile.antiDeadCorridorWeight || 1));
+                                    score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1) * pw('antiDeadCorridorWeight'));
                                 } else {
                                     // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
                                     const ramp = finalApproach ? (1 + (3 - slack) * 0.4) : 1;
-                                    { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * Math.max(0.25, policyProfile.goalAttractionWeight || 1) * ramp)); score += c; pushDriver('goalAttraction', activeDist, c); }
+                                    { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * pw('goalAttractionWeight') * ramp)); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 }
                             }
                         }
@@ -3966,14 +3967,14 @@
                             if (!options?.suppressPerimeterBias) {
                                 if (profile.perimeterBias > 0 && rRatio < 0.45) {
                                     const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
-                                    if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * Math.max(0.25, policyProfile.perimeterBiasWeight || 1)); score += c; pushDriver('perimeterBias', edgeDist, c); }
+                                    if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * pw('perimeterBiasWeight')); score += c; pushDriver('perimeterBias', edgeDist, c); }
                                     else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
                                     if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
                                 }
                             }
 
                             if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
-                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * Math.max(0.25, policyProfile.intersectionSetupWeight || 1);
+                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * pw('intersectionSetupWeight');
                                 const candidate = activeKnotTarget.candidate;
                                 const targetDist = candidate.distMap instanceof Map ? candidate.distMap.get(nk) : undefined;
                                 const currentTargetDist = candidate.distMap instanceof Map ? candidate.distMap.get(k) : undefined;
@@ -4204,7 +4205,7 @@
 
 
                         const earlySlack = rSteps - (nextGoalDist ?? 999);
-                        const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1) * Math.max(0.2, policyProfile.antiDitherWeight || 1);
+                        const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1) * pw('antiDitherWeight', 0.2);
 
                         // Anti-dither 1: discourage inward drift during early, high-slack harvest.
                         if (!suppressAntiDither && (activePhase === 'harvest' || activePhase === 'transition') && rRatio < 0.45 && earlySlack >= 6) {
@@ -4237,13 +4238,13 @@
                         // Anti-dither 3: avoid approaching near-goal basin too early when obligations remain.
                         if (!suppressAntiDither && remainsObligations && Number.isFinite(nextGoalDist) && nextGoalDist <= 2 && rSteps > Math.max(4, nextGoalDist + 2)) {
                             let earlyGoalPenalty = Math.round((18 + (rSteps - nextGoalDist) * 2) * antiDitherScale);
-                            if (activePhase === 'finish') earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.2 * Math.max(0.25, 2 - (policyProfile.finishCommitmentWeight || 1)));
+                            if (activePhase === 'finish') earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.2 * Math.max(0.25, 2 - (pw('finishCommitmentWeight', 0))));
                             else if (productiveAmbiguity && objectiveImproved) earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.5);
                             score += earlyGoalPenalty;
                             if (debugStats) debugStats.earlyGoalApproachBlocked = (debugStats.earlyGoalApproachBlocked || 0) + 1;
                         }
 
-                    const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
+                    const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * pw('revisitPenaltyWeight');
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
                     return { nk, score, scoreDrivers };
@@ -6768,21 +6769,9 @@
         };
 
         const Referee = {
-        buildLevelProfile(level) {
+        _computeTopology(level) {
             const w = level?.grid?.w || 0;
             const h = level?.grid?.h || 0;
-            const totalCells = Math.max(1, w * h);
-            const blocks = level?.blockSet?.size || 0;
-            const freeCells = Math.max(1, totalCells - blocks);
-            const routePressure = (Math.max(0, level?.reqLen || 0) / freeCells) + ((level?.reqInt || 0) * 0.35);
-            const portalLoad = level?.portalMap?.size || 0;
-            const mustPassCount = level?.mustPassKeys?.length || 0;
-            const mustCrossCount = level?.mustCrossKeys?.length || 0;
-            const falseGoalCount = level?.falseGoalKeys?.size || 0;
-            const objectiveSignalCount = mustPassCount + mustCrossCount + falseGoalCount;
-            const objectiveDensity = objectiveSignalCount / freeCells;
-            const perimeterThreshold = (w >= 9 || h >= 9) ? 1 : 0;
-
             const walkableKeys = [];
             const walkableSet = new Set();
             for (let y = 0; y < h; y++) {
@@ -6801,7 +6790,8 @@
                 const p = APP.LevelUtils.UNPACK(key);
                 const neighbors = [];
                 [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
-                    const nx = p.x + dx, ny = p.y + dy;
+                    const nx = p.x + dx;
+                    const ny = p.y + dy;
                     if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
                     const nk = APP.LevelUtils.PACK(nx, ny);
                     if (walkableSet.has(nk)) neighbors.push(nk);
@@ -6842,7 +6832,8 @@
                 for (const key of region) {
                     const p = APP.LevelUtils.UNPACK(key);
                     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
-                        const nx = p.x + dx, ny = p.y + dy;
+                        const nx = p.x + dx;
+                        const ny = p.y + dy;
                         if (!APP.LevelUtils.inBounds(nx, ny, w, h)) {
                             perimeter++;
                             return;
@@ -6885,8 +6876,8 @@
                     }
                 }
             };
-            for (const k of walkableKeys) {
-                if (!disc.has(k)) tarjanDfs(k);
+            for (const key of walkableKeys) {
+                if (!disc.has(key)) tarjanDfs(key);
             }
 
             const corridorDepthMap = new Map();
@@ -6901,7 +6892,7 @@
                 while (true) {
                     corridorNodes.add(cur);
                     corridorDepthMap.set(cur, Math.max(corridorDepthMap.get(cur) || 0, depth));
-                    const nextChoices = (adjacency.get(cur) || []).filter(n => n !== prev);
+                    const nextChoices = (adjacency.get(cur) || []).filter((n) => n !== prev);
                     if (nextChoices.length === 0) break;
                     const next = nextChoices[0];
                     const eid = edgeId(cur, next);
@@ -6950,10 +6941,34 @@
                 + ((1 - Math.max(0, Math.min(1, corridorRatio))) * 0.2)
             ));
 
+            return {
+                walkableKeys,
+                walkableSet,
+                adjacency,
+                degreeMap,
+                degreeHistogram,
+                connectedRegions,
+                regionByKey,
+                compactnessPerRegion,
+                articulationSet,
+                bridgeEdges,
+                corridorDepthMap,
+                corridorNodes,
+                chokeScoreMap,
+                meanDegree,
+                degreeVariance,
+                corridorRatio,
+                openness,
+                maxCorridorDepth: Math.max(0, ...Array.from(corridorDepthMap.values(), (v) => v || 0))
+            };
+        },
+
+        _computeObjectiveModel(level, topology = {}) {
             const objectiveNodes = [];
             for (const key of (level?.mustPassKeys || [])) objectiveNodes.push({ key, type: 'mustPass' });
             for (const key of (level?.mustCrossKeys || [])) objectiveNodes.push({ key, type: 'mustCross' });
             const gateKeys = level?.gateKeys || [];
+            const chokeScoreMap = topology.chokeScoreMap || new Map();
             const objectiveFeatures = objectiveNodes.map((node) => {
                 const objMap = SolverCore._buildOptimisticDistMap(level, [node.key]);
                 let gateToObjective = Infinity;
@@ -6986,7 +7001,22 @@
             });
             const objectivePriority = new Map();
             objectiveFeatures.forEach((n, i) => objectivePriority.set(n.key, i));
+            return {
+                features: objectiveFeatures,
+                priorityMap: objectivePriority,
+                seedMode: 'gate-objective-goal-cost'
+            };
+        },
 
+        _findKnotCandidates(level, topology = {}, objectiveModel = {}) {
+            const walkableSet = topology.walkableSet || new Set();
+            const walkableKeys = topology.walkableKeys || [];
+            const adjacency = topology.adjacency || new Map();
+            const chokeScoreMap = topology.chokeScoreMap || new Map();
+            const degreeMap = topology.degreeMap || new Map();
+            const corridorDepthMap = topology.corridorDepthMap || new Map();
+            const objectiveFeatures = Array.isArray(objectiveModel.features) ? objectiveModel.features : [];
+            const mustCrossSet = new Set(level?.mustCrossKeys || []);
             const knotCandidates = [];
             const makeZoneCells = (seedKeys, maxCells = 12) => {
                 const zone = new Set();
@@ -7015,7 +7045,6 @@
                 return zone;
             };
 
-            const mustCrossSet = new Set(level?.mustCrossKeys || []);
             const visitedCross = new Set();
             for (const start of mustCrossSet) {
                 if (visitedCross.has(start)) continue;
@@ -7085,7 +7114,7 @@
             const enrichedKnotCandidates = knotCandidates.map((candidate, idx) => {
                 const cells = candidate.cells instanceof Set ? candidate.cells : new Set();
                 const cellList = Array.from(cells);
-                const mustCrossHits = cellList.filter(key => mustCrossSet.has(key)).length;
+                const mustCrossHits = cellList.filter((key) => mustCrossSet.has(key)).length;
                 const chokeAvg = cellList.length > 0
                     ? cellList.reduce((acc, key) => acc + (chokeScoreMap.get(key) || 0), 0) / cellList.length
                     : 0;
@@ -7097,7 +7126,7 @@
                     : 0;
                 const portalAdjacency = cellList.reduce((acc, key) => {
                     if (level.portalMap?.has(key)) return acc + 1;
-                    const nearPortal = (adjacency.get(key) || []).some(nb => level.portalMap?.has(nb));
+                    const nearPortal = (adjacency.get(key) || []).some((nb) => level.portalMap?.has(nb));
                     return acc + (nearPortal ? 1 : 0);
                 }, 0);
                 const portalAdjNorm = cellList.length > 0 ? portalAdjacency / cellList.length : 0;
@@ -7148,6 +7177,12 @@
                 if (knotZone.size >= 24) break;
             }
 
+            return { knotCandidates: rankedKnotCandidates, knotZone };
+        },
+
+        _detectSymmetry(level) {
+            const w = level?.grid?.w || 0;
+            const h = level?.grid?.h || 0;
             const symmetryCommitmentThreshold = 0.82;
             const levelFeatureSets = {
                 blocks: new Set(level?.blockSet || []),
@@ -7155,7 +7190,7 @@
                 mustObjectives: new Set([...(level?.mustPassKeys || []), ...(level?.mustCrossKeys || [])]),
                 portalFilterPlacements: new Set([
                     ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.keys()) : []),
-                    ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.values()).map(v => v?.dest).filter(Number.isFinite) : []),
+                    ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.values()).map((v) => v?.dest).filter(Number.isFinite) : []),
                     ...(level?.filterMap instanceof Map ? Array.from(level.filterMap.keys()) : []),
                     ...(level?.flippingFilterMap instanceof Map ? Array.from(level.flippingFilterMap.keys()) : [])
                 ]),
@@ -7265,7 +7300,7 @@
             const symmetryAxis = confidence >= symmetryCommitmentThreshold ? bestPlanarAxis : null;
             const preferredBreak = preferredBreakForAxis(bestPlanarAxis);
 
-            const symmetryModel = {
+            return {
                 axis: symmetryAxis,
                 dominantAxis: bestPlanarAxis,
                 confidence,
@@ -7278,7 +7313,12 @@
                 rotational90Agreement: transformScores.rotational90?.score || 0,
                 transformScores
             };
+        },
 
+        _buildPortalHintModel(level, topology = {}, objectiveModel = {}) {
+            const regionByKey = topology.regionByKey || new Map();
+            const degreeMap = topology.degreeMap || new Map();
+            const objectiveFeatures = Array.isArray(objectiveModel.features) ? objectiveModel.features : [];
             const portalFamilies = [];
             const portalBridgeHints = [];
             const seenPortalPair = new Set();
@@ -7300,7 +7340,7 @@
                     });
                     const fromDeg = degreeMap.get(fromKey) || 0;
                     const toDeg = degreeMap.get(toKey) || 0;
-                    const objectiveNear = objectiveFeatures.some(obj => {
+                    const objectiveNear = objectiveFeatures.some((obj) => {
                         const pObj = APP.LevelUtils.UNPACK(obj.key);
                         const pFrom = APP.LevelUtils.UNPACK(fromKey);
                         const pTo = APP.LevelUtils.UNPACK(toKey);
@@ -7321,54 +7361,94 @@
                     }
                 });
             }
-            const portalHintModel = {
+            return {
                 families: portalFamilies,
                 regionByKey,
                 bridgeHints: portalBridgeHints,
-                mandatoryFamilies: portalBridgeHints.filter(h => h.mandatoryLike).map(h => h.familyId)
+                mandatoryFamilies: portalBridgeHints.filter((h) => h.mandatoryLike).map((h) => h.familyId)
             };
+        },
 
-            const topology = {
-                walkableCellCount: walkableKeys.length,
-                degreeHistogram,
-                averageDegree: meanDegree,
-                degreeVariance,
-                articulationPointCount: articulationSet.size,
-                bridgeCount: bridgeEdges.length,
-                corridorRatio,
-                maxCorridorDepth: Math.max(0, ...Array.from(corridorDepthMap.values(), v => v || 0)),
-                connectedRegionCount: connectedRegions.length,
-                connectedRegionCompactness: compactnessPerRegion,
-                meanRegionCompactness: compactnessPerRegion.length > 0
-                    ? compactnessPerRegion.reduce((a, b) => a + b, 0) / compactnessPerRegion.length
-                    : 0,
-                largestRegionRatio: connectedRegions.length > 0
-                    ? Math.max(...connectedRegions.map(r => r.length)) / Math.max(1, walkableKeys.length)
-                    : 0,
-                chokeScoreMap
-            };
+        buildLevelProfile(level) {
+            const w = level?.grid?.w || 0;
+            const h = level?.grid?.h || 0;
+            const totalCells = Math.max(1, w * h);
+            const blocks = level?.blockSet?.size || 0;
+            const freeCells = Math.max(1, totalCells - blocks);
+            const routePressure = (Math.max(0, level?.reqLen || 0) / freeCells) + ((level?.reqInt || 0) * 0.35);
+            const portalLoad = level?.portalMap?.size || 0;
+            const mustPassCount = level?.mustPassKeys?.length || 0;
+            const mustCrossCount = level?.mustCrossKeys?.length || 0;
+            const falseGoalCount = level?.falseGoalKeys?.size || 0;
+            const objectiveSignalCount = mustPassCount + mustCrossCount + falseGoalCount;
+            const objectiveDensity = objectiveSignalCount / freeCells;
+            const perimeterThreshold = (w >= 9 || h >= 9) ? 1 : 0;
+
+            const topology = this._computeTopology(level);
+            const objectiveModel = this._computeObjectiveModel(level, topology);
+            const knotAnalysis = this._findKnotCandidates(level, topology, objectiveModel);
+            const symmetryModel = this._detectSymmetry(level);
+            const portalHintModel = this._buildPortalHintModel(level, topology, objectiveModel);
+
             const hypothesisModel = this.buildHypothesisModel({
                 routePressure,
-                openness,
-                objectiveCount: objectiveFeatures.length,
-                topology,
+                openness: topology.openness,
+                objectiveCount: objectiveModel.features.length,
+                topology: {
+                    walkableCellCount: topology.walkableKeys.length,
+                    degreeHistogram: topology.degreeHistogram,
+                    averageDegree: topology.meanDegree,
+                    degreeVariance: topology.degreeVariance,
+                    articulationPointCount: topology.articulationSet.size,
+                    bridgeCount: topology.bridgeEdges.length,
+                    corridorRatio: topology.corridorRatio,
+                    maxCorridorDepth: topology.maxCorridorDepth,
+                    connectedRegionCount: topology.connectedRegions.length,
+                    connectedRegionCompactness: topology.compactnessPerRegion,
+                    meanRegionCompactness: topology.compactnessPerRegion.length > 0
+                        ? topology.compactnessPerRegion.reduce((a, b) => a + b, 0) / topology.compactnessPerRegion.length
+                        : 0,
+                    largestRegionRatio: topology.connectedRegions.length > 0
+                        ? Math.max(...topology.connectedRegions.map((r) => r.length)) / Math.max(1, topology.walkableKeys.length)
+                        : 0,
+                    chokeScoreMap: topology.chokeScoreMap
+                },
                 portalHints: portalHintModel,
-                knotCandidates: rankedKnotCandidates,
-                objectiveModel: { features: objectiveFeatures, priorityMap: objectivePriority },
+                knotCandidates: knotAnalysis.knotCandidates,
+                objectiveModel,
                 symmetryModel
             });
-            const archetype = hypothesisModel.primaryArchetype || (portalLoad > 0 ? 'portalFirstTransfer' : (((level?.reqInt || 0) >= 2) ? 'knotBuilder' : (openness > 0.75 ? 'perimeterSweep' : 'harvestThenFinish')));
+            const archetype = hypothesisModel.primaryArchetype || (portalLoad > 0 ? 'portalFirstTransfer' : (((level?.reqInt || 0) >= 2) ? 'knotBuilder' : (topology.openness > 0.75 ? 'perimeterSweep' : 'harvestThenFinish')));
             const templateLibrary = this.buildTemplateLibrary();
+            const topologySummary = {
+                walkableCellCount: topology.walkableKeys.length,
+                degreeHistogram: topology.degreeHistogram,
+                averageDegree: topology.meanDegree,
+                degreeVariance: topology.degreeVariance,
+                articulationPointCount: topology.articulationSet.size,
+                bridgeCount: topology.bridgeEdges.length,
+                corridorRatio: topology.corridorRatio,
+                maxCorridorDepth: topology.maxCorridorDepth,
+                connectedRegionCount: topology.connectedRegions.length,
+                connectedRegionCompactness: topology.compactnessPerRegion,
+                meanRegionCompactness: topology.compactnessPerRegion.length > 0
+                    ? topology.compactnessPerRegion.reduce((a, b) => a + b, 0) / topology.compactnessPerRegion.length
+                    : 0,
+                largestRegionRatio: topology.connectedRegions.length > 0
+                    ? Math.max(...topology.connectedRegions.map((r) => r.length)) / Math.max(1, topology.walkableKeys.length)
+                    : 0,
+                chokeScoreMap: topology.chokeScoreMap
+            };
             const templateCandidates = this.selectTemplateCandidates({
                 archetype,
                 routePressure,
-                openness,
-                objectiveCount: objectiveFeatures.length,
+                openness: topology.openness,
+                objectiveCount: objectiveModel.features.length,
                 perimeterThreshold,
-                topology,
+                topology: topologySummary,
                 portalHints: portalHintModel,
                 symmetryModel,
-                knotCandidates: rankedKnotCandidates,
+                knotCandidates: knotAnalysis.knotCandidates,
                 hypothesisModel
             }, templateLibrary);
             const complexitySignals = {
@@ -7379,24 +7459,24 @@
                 objectiveDensity
             };
             const complexityClass = this.classifyComplexityProfile(complexitySignals);
-            const filterPressure = ((level?.filterMap?.size || 0) + (level?.flippingFilterMap?.size || 0)) / Math.max(1, walkableKeys.length);
+            const filterPressure = ((level?.filterMap?.size || 0) + (level?.flippingFilterMap?.size || 0)) / Math.max(1, topology.walkableKeys.length);
             const strategySubtypeInfo = this.deriveStrategySubtype({
                 routePressure,
-                openness,
-                objectiveCount: objectiveFeatures.length,
+                openness: topology.openness,
+                objectiveCount: objectiveModel.features.length,
                 mustCrossCount,
                 boardArea: (w * h),
                 filterPressure,
-                topology,
+                topology: topologySummary,
                 portalHints: portalHintModel,
                 symmetryModel,
-                objectiveModel: { features: objectiveFeatures, priorityMap: objectivePriority }
+                objectiveModel
             });
 
             return {
                 routePressure,
-                openness,
-                objectiveCount: objectiveFeatures.length,
+                openness: topology.openness,
+                objectiveCount: objectiveModel.features.length,
                 objectiveSignalCount,
                 objectiveDensity,
                 mustCrossCount,
@@ -7408,20 +7488,16 @@
                 strategySubtypeSignals: strategySubtypeInfo.keySignals,
                 strategySubtypeRanked: strategySubtypeInfo.ranked,
                 perimeterThreshold,
-                perimeterBias: routePressure > 0.8 || openness > 0.72 ? 40 : 0,
+                perimeterBias: routePressure > 0.8 || topology.openness > 0.72 ? 40 : 0,
                 knotBias: (level?.reqInt || 0) > 0 ? 34 : 0,
                 portalCommitment: portalLoad > 0 ? 55 : 0,
-                objectivePriority,
-                knotZone,
-                symmetryAxis,
-                topology,
+                objectivePriority: objectiveModel.priorityMap,
+                knotZone: knotAnalysis.knotZone,
+                symmetryAxis: symmetryModel.axis,
+                topology: topologySummary,
                 portalHints: portalHintModel,
-                objectiveModel: {
-                    features: objectiveFeatures,
-                    priorityMap: objectivePriority,
-                    seedMode: 'gate-objective-goal-cost'
-                },
-                knotCandidates: rankedKnotCandidates,
+                objectiveModel,
+                knotCandidates: knotAnalysis.knotCandidates,
                 symmetryModel,
                 archetype,
                 hypothesisModel,
@@ -8116,151 +8192,186 @@
             });
         },
 
+
+        _buildAttemptPlan({ level, budgetMs, profile, opts = {}, controlPlane }) {
+            const total = Math.max(1, Math.floor(budgetMs || 1));
+            const routePressure = Math.max(0, profile?.routePressure || 0);
+            const objectiveCount = Math.max(0, profile?.objectiveCount || 0);
+            const portalCommitment = Math.max(0, Math.min(1, profile?.portalCommitment || 0));
+            const modernStructuralGuidanceNotNeeded = routePressure < 0.4 && objectiveCount <= 1 && portalCommitment === 0;
+            const complexityBias = Math.max(0, Math.min(0.18,
+                Math.max(0, (routePressure - 0.95) * 0.08)
+                + Math.min(0.06, objectiveCount * 0.008)
+                + Math.min(0.04, portalCommitment * 0.05)
+            ));
+            const structuralModernShare = Math.max(0.36, Math.min(0.68, 0.54 + complexityBias));
+            const structuralConservativeShare = Math.max(0.22, Math.min(0.44, 0.34 - (complexityBias * 0.45)));
+            const allowEnduranceLongpath = opts.enableEnduranceLongpath !== undefined
+                ? !!opts.enableEnduranceLongpath
+                : ((opts.purpose === 'hint' ? false : true) && (portalCommitment > 0.2 || objectiveCount >= 3));
+
+            const modernBudget = Math.max(1, Math.floor(total * structuralModernShare));
+            const conservativeBudget = Math.max(1, Math.floor(total * structuralConservativeShare));
+            const remainingBudget = Math.max(1, total - modernBudget - conservativeBudget);
+            const attempts = [];
+            const objectiveTracks = this.buildObjectiveOrderBundles(profile || {});
+            const defaultTrack = objectiveTracks[0] || null;
+            const macroSkeletons = this.buildMacroSkeletonHypotheses(profile || {});
+            const defaultSkeleton = opts.preferMacroSkeleton ? (macroSkeletons[0] || null) : (macroSkeletons[0] || null);
+            const regionCrossingModel = this.buildRegionAwareCrossingModel(level, profile || {});
+            const commonTemplateCommitment = { depthRatio: 0.4 };
+            const commonPortalLockPolicy = { probationReentries: 1, lockReentries: 2, lockOscillationMax: 1 };
+            const commonKnotBudgetPolicy = {
+                knotCrossBudget: Math.max(0, Math.ceil((level.reqInt || 0) * 0.72)),
+                nonKnotCrossCap: Math.max(0, Math.floor((level.reqInt || 0) * 0.3))
+            };
+            if (opts.structuralMode && Array.isArray(profile?.templateCandidates) && profile.templateCandidates.length > 0) {
+                const templates = profile.templateCandidates.slice(0, 3);
+                const warmupTotal = Math.max(1, Math.floor(modernBudget * 0.58));
+                const perTemplate = Math.max(1, Math.floor(warmupTotal / templates.length));
+                let allocated = 0;
+                templates.forEach((template, idx) => {
+                    const budgetForTemplate = idx === templates.length - 1 ? Math.max(1, warmupTotal - allocated) : perTemplate;
+                    allocated += budgetForTemplate;
+                    attempts.push({
+                        label: `template-${template.id}`,
+                        budgetMs: budgetForTemplate,
+                        scoringMode: 'modern',
+                        portalBiasMode: template?.weightOverrides?.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                        structuralMode: true,
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
+                        structuralTemplate: template,
+                        objectiveTrack: objectiveTracks[idx % Math.max(1, objectiveTracks.length)] || defaultTrack,
+                        templateCommitment: commonTemplateCommitment,
+                        portalLockPolicy: commonPortalLockPolicy,
+                        knotBudgetPolicy: commonKnotBudgetPolicy,
+                        macroSkeleton: macroSkeletons[idx % Math.max(1, macroSkeletons.length)] || defaultSkeleton,
+                        regionCrossingModel,
+                        templatePhase: 'warmup',
+                        policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
+                        commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
+                        memoStrictness: 1.35
+                    });
+                });
+                const reserve = Math.max(1, modernBudget - warmupTotal);
+                attempts.push({
+                    label: 'template-best-focus',
+                    budgetMs: reserve,
+                    scoringMode: 'modern',
+                    portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
+                    structuralMode: true,
+                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
+                    structuralTemplate: null,
+                    objectiveTrack: defaultTrack,
+                    templateCommitment: commonTemplateCommitment,
+                    portalLockPolicy: commonPortalLockPolicy,
+                    knotBudgetPolicy: commonKnotBudgetPolicy,
+                    macroSkeleton: defaultSkeleton,
+                    regionCrossingModel,
+                    templatePhase: 'reallocated',
+                    policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
+                    commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
+                    memoStrictness: 1.35
+                });
+            } else {
+                attempts.push({
+                    label: 'structural-modern',
+                    budgetMs: modernStructuralGuidanceNotNeeded ? total : modernBudget,
+                    scoringMode: 'modern',
+                    portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
+                    structuralMode: !modernStructuralGuidanceNotNeeded,
+                    phasePolicy: modernStructuralGuidanceNotNeeded ? null : SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
+                    objectiveTrack: defaultTrack,
+                    templateCommitment: modernStructuralGuidanceNotNeeded ? null : commonTemplateCommitment,
+                    portalLockPolicy: modernStructuralGuidanceNotNeeded ? null : commonPortalLockPolicy,
+                    knotBudgetPolicy: modernStructuralGuidanceNotNeeded ? null : commonKnotBudgetPolicy,
+                    macroSkeleton: modernStructuralGuidanceNotNeeded ? null : defaultSkeleton,
+                    regionCrossingModel: modernStructuralGuidanceNotNeeded ? null : regionCrossingModel,
+                    policyProfile: modernStructuralGuidanceNotNeeded ? null : 'perimeterSweep',
+                    orderingPolicy: modernStructuralGuidanceNotNeeded ? 'default' : null,
+                    startGateArchetype: null,
+                    useControlPlaneArchetype: modernStructuralGuidanceNotNeeded ? false : true,
+                    commitmentPlan: modernStructuralGuidanceNotNeeded ? null : { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
+                    memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2
+                });
+            }
+            if (!modernStructuralGuidanceNotNeeded) {
+                attempts.push({
+                    label: 'structural-conservative',
+                    budgetMs: Math.max(1, allowEnduranceLongpath ? conservativeBudget : (conservativeBudget + remainingBudget)),
+                    scoringMode: 'modern',
+                    portalBiasMode: 'off',
+                    structuralMode: true,
+                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
+                    objectiveTrack: defaultTrack,
+                    templateCommitment: commonTemplateCommitment,
+                    portalLockPolicy: commonPortalLockPolicy,
+                    knotBudgetPolicy: commonKnotBudgetPolicy,
+                    macroSkeleton: defaultSkeleton,
+                    regionCrossingModel,
+                    policyProfile: 'harvestThenFinish',
+                    commitmentPlan: { horizonSteps: Math.max(2, Math.floor(level.reqLen * 0.14)) },
+                    memoStrictness: 0.85
+                });
+            }
+
+            if (allowEnduranceLongpath) {
+                attempts.push({
+                    // Migration note: this absorbs former legacy-adapter rescue behavior as a referee-native profile.
+                    label: 'endurance-longpath',
+                    budgetMs: Math.max(1, total - attempts.reduce((sum, a) => sum + a.budgetMs, 0)),
+                    scoringMode: 'endurance',
+                    portalBiasMode: 'off',
+                    structuralMode: true,
+                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
+                    policyProfile: 'knotBuilder',
+                    commitmentPlan: { horizonSteps: Math.max(5, Math.floor(level.reqLen * 0.26)) },
+                    memoStrictness: 1.55,
+                    compatLegacyOutputAlias: true
+                });
+            }
+            return attempts;
+        },
+
+        _switchAttemptStrategyFamily(nextAttempt = {}, context = {}, profile = {}, controlPlane = null) {
+            if (!nextAttempt || typeof nextAttempt !== 'object') return null;
+            const original = {
+                policyProfile: nextAttempt.policyProfile || null,
+                portalBiasMode: nextAttempt.portalBiasMode || null,
+                scoringMode: nextAttempt.scoringMode || null
+            };
+            const deficit = Math.max(0, Number(context?.constraintDeficit) || 0);
+            if (deficit > 0) {
+                nextAttempt.policyProfile = 'objectiveFirst';
+                nextAttempt.portalBiasMode = 'adaptiveMustCross';
+                nextAttempt.scoringMode = 'modern';
+                nextAttempt.phasePolicy = SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane?.activeHypothesis, activeArchetype: 'objectiveFirst' });
+                nextAttempt.orderingTweaks = compactDefined({
+                    stage: 'timeout-rescue-second-stage',
+                    mode: 'constraint-deficit-priority',
+                    remainingMustPass: Number(context?.remainingMustPass) || 0,
+                    remainingMustCross: Number(context?.remainingMustCross) || 0
+                });
+                return compactDefined({ switched: true, family: 'objectiveFirst', reason: 'constraint-deficit-priority', from: original, to: { policyProfile: nextAttempt.policyProfile, portalBiasMode: nextAttempt.portalBiasMode, scoringMode: nextAttempt.scoringMode } });
+            }
+            nextAttempt.policyProfile = nextAttempt.policyProfile === 'knotBuilder' ? 'portalFirstTransfer' : 'knotBuilder';
+            nextAttempt.portalBiasMode = nextAttempt.portalBiasMode === 'off' ? 'adaptiveMustCross' : 'off';
+            nextAttempt.scoringMode = nextAttempt.scoringMode === 'endurance' ? 'modern' : 'endurance';
+            nextAttempt.orderingTweaks = compactDefined({
+                stage: 'timeout-rescue-second-stage',
+                mode: 'strategy-family-switch',
+                reason: context?.reason || 'stagnation'
+            });
+            return compactDefined({ switched: true, family: nextAttempt.policyProfile, reason: context?.reason || 'stagnation', from: original, to: { policyProfile: nextAttempt.policyProfile, portalBiasMode: nextAttempt.portalBiasMode, scoringMode: nextAttempt.scoringMode } });
+        },
+
         async runBaselineStage(level, budgetMs, opts = {}) {
             const started = Date.now();
             const profile = opts.profile || level?.solverProfile || null;
             const controlPlane = opts.controlPlane || this.createControlPlane(profile || {});
             const randomExplorationEnabled = !!opts.allowRandomizedExploration;
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
-            const buildAttemptPlan = () => {
-                const total = Math.max(1, Math.floor(budgetMs || 1));
-                const routePressure = Math.max(0, profile?.routePressure || 0);
-                const objectiveCount = Math.max(0, profile?.objectiveCount || 0);
-                const portalCommitment = Math.max(0, Math.min(1, profile?.portalCommitment || 0));
-                const modernStructuralGuidanceNotNeeded = routePressure < 0.4 && objectiveCount <= 1 && portalCommitment === 0;
-                const complexityBias = Math.max(0, Math.min(0.18,
-                    Math.max(0, (routePressure - 0.95) * 0.08)
-                    + Math.min(0.06, objectiveCount * 0.008)
-                    + Math.min(0.04, portalCommitment * 0.05)
-                ));
-                const structuralModernShare = Math.max(0.36, Math.min(0.68, 0.54 + complexityBias));
-                const structuralConservativeShare = Math.max(0.22, Math.min(0.44, 0.34 - (complexityBias * 0.45)));
-                const allowEnduranceLongpath = opts.enableEnduranceLongpath !== undefined
-                    ? !!opts.enableEnduranceLongpath
-                    : ((opts.purpose === 'hint' ? false : true) && (portalCommitment > 0.2 || objectiveCount >= 3));
-
-                const modernBudget = Math.max(1, Math.floor(total * structuralModernShare));
-                const conservativeBudget = Math.max(1, Math.floor(total * structuralConservativeShare));
-                const remainingBudget = Math.max(1, total - modernBudget - conservativeBudget);
-                const attempts = [];
-                const objectiveTracks = this.buildObjectiveOrderBundles(profile || {});
-                const defaultTrack = objectiveTracks[0] || null;
-                const macroSkeletons = this.buildMacroSkeletonHypotheses(profile || {});
-                const defaultSkeleton = opts.preferMacroSkeleton ? (macroSkeletons[0] || null) : (macroSkeletons[0] || null);
-                const regionCrossingModel = this.buildRegionAwareCrossingModel(level, profile || {});
-                const commonTemplateCommitment = { depthRatio: 0.4 };
-                const commonPortalLockPolicy = { probationReentries: 1, lockReentries: 2, lockOscillationMax: 1 };
-                const commonKnotBudgetPolicy = {
-                    knotCrossBudget: Math.max(0, Math.ceil((level.reqInt || 0) * 0.72)),
-                    nonKnotCrossCap: Math.max(0, Math.floor((level.reqInt || 0) * 0.3))
-                };
-                if (opts.structuralMode && Array.isArray(profile?.templateCandidates) && profile.templateCandidates.length > 0) {
-                    const templates = profile.templateCandidates.slice(0, 3);
-                    const warmupTotal = Math.max(1, Math.floor(modernBudget * 0.58));
-                    const perTemplate = Math.max(1, Math.floor(warmupTotal / templates.length));
-                    let allocated = 0;
-                    templates.forEach((template, idx) => {
-                        const budgetForTemplate = idx === templates.length - 1 ? Math.max(1, warmupTotal - allocated) : perTemplate;
-                        allocated += budgetForTemplate;
-                        attempts.push({
-                            label: `template-${template.id}`,
-                            budgetMs: budgetForTemplate,
-                            scoringMode: 'modern',
-                            portalBiasMode: template?.weightOverrides?.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
-                            structuralMode: true,
-                            phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                            structuralTemplate: template,
-                            objectiveTrack: objectiveTracks[idx % Math.max(1, objectiveTracks.length)] || defaultTrack,
-                            templateCommitment: commonTemplateCommitment,
-                            portalLockPolicy: commonPortalLockPolicy,
-                            knotBudgetPolicy: commonKnotBudgetPolicy,
-                            macroSkeleton: macroSkeletons[idx % Math.max(1, macroSkeletons.length)] || defaultSkeleton,
-                            regionCrossingModel,
-                            templatePhase: 'warmup',
-                            policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
-                            commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
-                            memoStrictness: 1.35
-                        });
-                    });
-                    const reserve = Math.max(1, modernBudget - warmupTotal);
-                    attempts.push({
-                        label: 'template-best-focus',
-                        budgetMs: reserve,
-                        scoringMode: 'modern',
-                        portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
-                        structuralMode: true,
-                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                        structuralTemplate: null,
-                        objectiveTrack: defaultTrack,
-                        templateCommitment: commonTemplateCommitment,
-                        portalLockPolicy: commonPortalLockPolicy,
-                        knotBudgetPolicy: commonKnotBudgetPolicy,
-                        macroSkeleton: defaultSkeleton,
-                        regionCrossingModel,
-                        templatePhase: 'reallocated',
-                        policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
-                            commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
-                            memoStrictness: 1.35
-                    });
-                } else {
-                    attempts.push({
-                        label: 'structural-modern',
-                        budgetMs: modernStructuralGuidanceNotNeeded ? total : modernBudget,
-                        scoringMode: 'modern',
-                        portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
-                        structuralMode: !modernStructuralGuidanceNotNeeded,
-                        phasePolicy: modernStructuralGuidanceNotNeeded ? null : SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                        objectiveTrack: defaultTrack,
-                        templateCommitment: modernStructuralGuidanceNotNeeded ? null : commonTemplateCommitment,
-                        portalLockPolicy: modernStructuralGuidanceNotNeeded ? null : commonPortalLockPolicy,
-                        knotBudgetPolicy: modernStructuralGuidanceNotNeeded ? null : commonKnotBudgetPolicy,
-                        macroSkeleton: modernStructuralGuidanceNotNeeded ? null : defaultSkeleton,
-                        regionCrossingModel: modernStructuralGuidanceNotNeeded ? null : regionCrossingModel,
-                        policyProfile: modernStructuralGuidanceNotNeeded ? null : 'perimeterSweep',
-                        orderingPolicy: modernStructuralGuidanceNotNeeded ? 'default' : null,
-                        startGateArchetype: null,
-                        useControlPlaneArchetype: modernStructuralGuidanceNotNeeded ? false : true,
-                        commitmentPlan: modernStructuralGuidanceNotNeeded ? null : { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
-                        memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2
-                    });
-                }
-                if (!modernStructuralGuidanceNotNeeded) {
-                    attempts.push({
-                        label: 'structural-conservative',
-                        budgetMs: Math.max(1, allowEnduranceLongpath ? conservativeBudget : (conservativeBudget + remainingBudget)),
-                        scoringMode: 'modern',
-                        portalBiasMode: 'off',
-                        structuralMode: true,
-                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                        objectiveTrack: defaultTrack,
-                        templateCommitment: commonTemplateCommitment,
-                        portalLockPolicy: commonPortalLockPolicy,
-                        knotBudgetPolicy: commonKnotBudgetPolicy,
-                        macroSkeleton: defaultSkeleton,
-                        regionCrossingModel,
-                        policyProfile: 'harvestThenFinish',
-                        commitmentPlan: { horizonSteps: Math.max(2, Math.floor(level.reqLen * 0.14)) },
-                        memoStrictness: 0.85
-                    });
-                }
-
-                if (allowEnduranceLongpath) {
-                    attempts.push({
-                        // Migration note: this absorbs former legacy-adapter rescue behavior as a referee-native profile.
-                        label: 'endurance-longpath',
-                        budgetMs: Math.max(1, total - attempts.reduce((sum, a) => sum + a.budgetMs, 0)),
-                        scoringMode: 'endurance',
-                        portalBiasMode: 'off',
-                        structuralMode: true,
-                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
-                        policyProfile: 'knotBuilder',
-                        commitmentPlan: { horizonSteps: Math.max(5, Math.floor(level.reqLen * 0.26)) },
-                        memoStrictness: 1.55,
-                        compatLegacyOutputAlias: true
-                    });
-                }
-                return attempts;
-            };
+            const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts, controlPlane });
 
             const getSearchQuality = (attemptResult) => {
                 const debug = attemptResult?.debug || {};
@@ -8336,38 +8447,6 @@
                     })
                 });
             };
-            const switchAttemptStrategyFamily = (nextAttempt = {}, context = {}) => {
-                if (!nextAttempt || typeof nextAttempt !== 'object') return null;
-                const original = {
-                    policyProfile: nextAttempt.policyProfile || null,
-                    portalBiasMode: nextAttempt.portalBiasMode || null,
-                    scoringMode: nextAttempt.scoringMode || null
-                };
-                const deficit = Math.max(0, Number(context?.constraintDeficit) || 0);
-                if (deficit > 0) {
-                    nextAttempt.policyProfile = 'objectiveFirst';
-                    nextAttempt.portalBiasMode = 'adaptiveMustCross';
-                    nextAttempt.scoringMode = 'modern';
-                    nextAttempt.phasePolicy = SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' });
-                    nextAttempt.orderingTweaks = compactDefined({
-                        stage: 'timeout-rescue-second-stage',
-                        mode: 'constraint-deficit-priority',
-                        remainingMustPass: Number(context?.remainingMustPass) || 0,
-                        remainingMustCross: Number(context?.remainingMustCross) || 0
-                    });
-                    return compactDefined({ switched: true, family: 'objectiveFirst', reason: 'constraint-deficit-priority', from: original, to: { policyProfile: nextAttempt.policyProfile, portalBiasMode: nextAttempt.portalBiasMode, scoringMode: nextAttempt.scoringMode } });
-                }
-                nextAttempt.policyProfile = nextAttempt.policyProfile === 'knotBuilder' ? 'portalFirstTransfer' : 'knotBuilder';
-                nextAttempt.portalBiasMode = nextAttempt.portalBiasMode === 'off' ? 'adaptiveMustCross' : 'off';
-                nextAttempt.scoringMode = nextAttempt.scoringMode === 'endurance' ? 'modern' : 'endurance';
-                nextAttempt.orderingTweaks = compactDefined({
-                    stage: 'timeout-rescue-second-stage',
-                    mode: 'strategy-family-switch',
-                    reason: context?.reason || 'stagnation'
-                });
-                return compactDefined({ switched: true, family: nextAttempt.policyProfile, reason: context?.reason || 'stagnation', from: original, to: { policyProfile: nextAttempt.policyProfile, portalBiasMode: nextAttempt.portalBiasMode, scoringMode: nextAttempt.scoringMode } });
-            };
-
             const shouldStopAfterAttempt = (attemptResult, quality, attemptIndex, totalAttempts) => {
                 if (!attemptResult || attemptResult.ok) return true;
                 if (attemptResult.status === 'timeout' || attemptResult.status === 'no-solution-proven') return true;
@@ -8498,8 +8577,6 @@
                     featureSignature
                 };
             };
-            const attempts = buildAttemptPlan();
-
             let attemptsUsed = [];
             let lastAttempt = null;
             let previousTelemetry = null;
@@ -8600,23 +8677,23 @@
                     const nextAttempt = attempts[i + 1];
                     const timeoutProne = ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status);
                     if (timeoutProne && quality.constraintDeficit > 0) {
-                        switchAttemptStrategyFamily(nextAttempt, {
+                        this._switchAttemptStrategyFamily(nextAttempt, {
                             constraintDeficit: quality.constraintDeficit,
                             remainingMustPass: quality.remainingMustPass,
                             remainingMustCross: quality.remainingMustCross,
                             reason: 'constraint-deficit-priority'
-                        });
+                        }, profile, controlPlane);
                     }
                     if (previousTelemetry) {
                         const nodesPerSecondImproved = quality.nodesPerSecond > (previousTelemetry.nodesPerSecond * 1.03);
                         const frontierImproved = quality.frontierQuality > (previousTelemetry.frontierQuality + 0.015);
                         if (!nodesPerSecondImproved && !frontierImproved) {
-                            const switched = switchAttemptStrategyFamily(nextAttempt, {
+                            const switched = this._switchAttemptStrategyFamily(nextAttempt, {
                                 constraintDeficit: quality.constraintDeficit,
                                 remainingMustPass: quality.remainingMustPass,
                                 remainingMustCross: quality.remainingMustCross,
                                 reason: 'telemetry-delta-stagnation'
-                            });
+                            }, profile, controlPlane);
                             if (switched && APP.State.ENGINE.flags?.refereeDebug) {
                                 const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
                                 console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] telemetry stagnation -> switched next strategy family`, switched);
@@ -8752,7 +8829,7 @@
         },
 
 
-        async solve(levelInput, opts = {}) {
+        _prepareSolveContext(levelInput, opts = {}) {
             const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             console.log('Referee starting tier:', tier);
@@ -8767,13 +8844,11 @@
                     ];
                     const w = level.grid?.w || 1;
                     const h = level.grid?.h || 1;
-                    // Also consider goal position and route pressure
                     const goalKey = level.goalKey;
                     const goalX = goalKey !== undefined && goalKey !== -1 ? (goalKey & 0xFFFF) + 1 : null;
                     const goalY = goalKey !== undefined && goalKey !== -1 ? (goalKey >> 16) + 1 : null;
                     const goalIsInterior = goalX !== null && goalX > 1 && goalX < w && goalY > 1 && goalY < h;
                     const routePressure = Number(level.solverProfile?.routePressure) || 0;
-                    // Trigger if objectives are interior-dominant OR if goal is interior AND route pressure is high
                     if (allObjKeys.length === 0) {
                         return goalIsInterior && routePressure >= 0.65;
                     }
@@ -8836,13 +8911,228 @@
             const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
             const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
             const forcePreExpansionRescue = !!opts.forcePreExpansionRescue;
-            const stagesTried = [];
             const solveStartTime = Date.now();
             const controlPlane = this.createControlPlane(level.solverProfile || {});
             const lowComplexityLevel = (level.solverProfile?.objectiveCount || 0) <= 1
                 && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
                 && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
+            return {
+                requestedTierRaw,
+                tier,
+                level,
+                objectivesAreInteriorDominant,
+                purpose,
+                complexityClass,
+                strategySubtype,
+                complexityStrategy,
+                resolvedPortalBiasMode,
+                resolvedPhasePolicy,
+                defaultBudget,
+                key,
+                prev,
+                timesTried,
+                requestedTier,
+                autoEscalate,
+                escalationTier,
+                requestedBudget,
+                policyLadderByPurpose,
+                activePolicyLadder,
+                maxTier,
+                policyTier,
+                activeTierPolicy,
+                tierMinBudget,
+                budgetMs,
+                tierBudgets,
+                allowRandomizedExploration,
+                allowRandomizedExplorationOnExpensiveTiers,
+                fallbackDisabledPrunes,
+                forcePreExpansionRescue,
+                solveStartTime,
+                controlPlane,
+                lowComplexityLevel
+            };
+        },
+
+        _deriveSolveCascadeSetup({
+            level,
+            budgetMs,
+            purpose,
+            prev,
+            timesTried,
+            activeTierPolicy,
+            policyTier,
+            escalationTier,
+            resolvedPortalBiasMode
+        }) {
+            const stagesTried = [];
+            const last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
+            const rapidCollapseRecoveryDiagnostics = {
+                attempted: false,
+                activated: false,
+                selectedBy: [],
+                trigger: null,
+                prior: null,
+                recovery: null
+            };
+            const totalBudget = Math.max(1500, budgetMs);
+            const profileSignalsForBudget = level?.solverProfile || {};
+            const simpleLevel = (Number(profileSignalsForBudget.routePressure) || 0) < 0.4
+                && (Number(profileSignalsForBudget.objectiveCount) || 0) <= 1
+                && (Number(profileSignalsForBudget.portalCommitment) || 0) === 0;
+            const baselineBudget = simpleLevel
+                ? Math.max(750, totalBudget)
+                : Math.max(750, Math.floor(totalBudget * 0.75));
+            const recoveryBudget = Math.max(1500, Math.floor(totalBudget * 0.3));
+            const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.25));
+            const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
+            const profileSignals = level?.solverProfile || {};
+            const outstandingObligations = (Number(profileSignals?.objectiveCount) || 0) + (Number(profileSignals?.mustCrossCount) || 0);
+            const portalDependency = (Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0) > 0;
+            const knotSensitive = (Number(profileSignals?.mustCrossCount) || 0) >= 2 || (Number(profileSignals?.topology?.bridgeCount) || 0) >= 4;
+            const openBoard = (Number(profileSignals?.openness) || 0) >= 0.62;
+            const boardArea = Number(profileSignals?.boardArea) || ((Number(level?.grid?.w) || 0) * (Number(level?.grid?.h) || 0));
+            const mustCrossCount = Number(profileSignals?.mustCrossCount) || 0;
+            const mandatoryPortalFamilyCount = Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0;
+            const enableDiversifiedRootPass = boardArea >= 100 && mustCrossCount >= 2 && mandatoryPortalFamilyCount > 0;
+            const hasPortals = (level?.portalMap?.size || 0) > 0;
+            const mustPassCountForPortal = level?.mustPassKeys?.length || 0;
+            const inferredPortalDependency = hasPortals
+                && (mustPassCountForPortal + mustCrossCount) >= 2
+                && Array.isArray(profileSignals?.portalHints?.mandatoryFamilies)
+                && profileSignals.portalHints.mandatoryFamilies.length > 0;
+            const defaultOrderingPolicy = outstandingObligations >= 4
+                ? 'harvestThenFinish'
+                : ((portalDependency || inferredPortalDependency) ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
+            const previousAttempts = Array.isArray(prev.attempts) ? prev.attempts : [];
+            const previousAttempt = previousAttempts[previousAttempts.length - 1] || null;
+            const prePreviousAttempt = previousAttempts[previousAttempts.length - 2] || null;
+            const shouldForcePivot = !!(previousAttempt?.delta?.flatOrNegative);
+            const pivotOrderingPolicy = shouldForcePivot
+                ? this.pickPivotOrderingPolicy(defaultOrderingPolicy, previousAttempt?.strategy?.orderingPolicy || null)
+                : defaultOrderingPolicy;
+            const basePolicyOrdering = activeTierPolicy?.orderingPolicy === 'profile-default'
+                ? pivotOrderingPolicy
+                : activeTierPolicy?.orderingPolicy;
+            const basePolicyPortalBias = activeTierPolicy?.portalBiasMode === 'profile-default'
+                ? (shouldForcePivot ? 'off' : resolvedPortalBiasMode)
+                : (activeTierPolicy?.portalBiasMode || resolvedPortalBiasMode);
+            const basePolicyRootSeed = activeTierPolicy?.rootSeedMode || (shouldForcePivot ? 'broader-candidate-seed-set' : (enableDiversifiedRootPass ? 'diversified' : 'default'));
+            const basePolicyRescueMode = activeTierPolicy?.rescueMode || (shouldForcePivot ? 'alternate-rescue' : 'default');
+            const hardHintFallbackStage = purpose === 'hint'
+                && timesTried >= 4
+                && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus || '')
+                && escalationTier >= 2;
+            const strategyMetadata = compactDefined({
+                attemptOrdinal: timesTried,
+                policyKey: hardHintFallbackStage ? `${activeTierPolicy?.key || 'policy'}-hard` : (activeTierPolicy?.key || null),
+                policyTier,
+                forcedPivot: shouldForcePivot,
+                pivotTrigger: shouldForcePivot ? 'flat-or-negative-delta' : null,
+                orderingPolicy: hardHintFallbackStage ? 'portalFirstTransfer' : basePolicyOrdering,
+                portalBiasMode: hardHintFallbackStage ? 'off' : basePolicyPortalBias,
+                rootSeedMode: hardHintFallbackStage ? 'diversified-aggressive' : basePolicyRootSeed,
+                rescueMode: hardHintFallbackStage ? 'alternate-rescue' : basePolicyRescueMode,
+                hardHintFallbackStage,
+                budgetMs,
+                previousDelta: previousAttempt?.delta || null
+            });
+            const guardrailStopThirdAttempt = timesTried >= 3
+                && this.attemptPairNearIdentical(prePreviousAttempt, previousAttempt)
+                && previousAttempt?.delta?.qualityImproved === false
+                && (previousAttempt?.metrics?.nodesExpanded || 0) > 0;
+            return {
+                stagesTried,
+                last,
+                rapidCollapseRecoveryDiagnostics,
+                baselineBudget,
+                recoveryBudget,
+                enduranceBudget,
+                sanityBudget,
+                profileSignals,
+                knotSensitive,
+                enableDiversifiedRootPass,
+                previousAttempts,
+                previousAttempt,
+                strategyMetadata,
+                guardrailStopThirdAttempt
+            };
+        },
+
+        pickPivotOrderingPolicy(basePolicy, previousPolicy) {
+            const ordered = ['harvestThenFinish', 'knotBuilder', 'objectiveFirst', 'perimeterSweep', 'portalFirstTransfer'];
+            const baseIndex = Math.max(0, ordered.indexOf(basePolicy));
+            for (let i = 1; i <= ordered.length; i++) {
+                const candidate = ordered[(baseIndex + i) % ordered.length];
+                if (candidate !== previousPolicy) return candidate;
+            }
+            return basePolicy;
+        },
+
+        attemptPairNearIdentical(first = null, second = null) {
+            if (!first || !second) return false;
+            const metricsA = first.metrics || {};
+            const metricsB = second.metrics || {};
+            const progressGap = Math.abs((metricsB.progressReached || 0) - (metricsA.progressReached || 0));
+            const nodesGap = Math.abs((metricsB.nodesExpanded || 0) - (metricsA.nodesExpanded || 0));
+            const depthGap = Math.abs((metricsB.depthReached || 0) - (metricsA.depthReached || 0));
+            const rootGap = Math.abs((metricsB.rootDiversity || 0) - (metricsA.rootDiversity || 0));
+            const sameStrategy = JSON.stringify({
+                policyKey: first?.strategy?.policyKey || null,
+                orderingPolicy: first?.strategy?.orderingPolicy || null,
+                portalBiasMode: first?.strategy?.portalBiasMode || null,
+                rootSeedMode: first?.strategy?.rootSeedMode || null,
+                rescueMode: first?.strategy?.rescueMode || null,
+                hardHintFallbackStage: !!first?.strategy?.hardHintFallbackStage,
+                budgetMs: Number(first?.strategy?.budgetMs) || 0
+            }) === JSON.stringify({
+                policyKey: second?.strategy?.policyKey || null,
+                orderingPolicy: second?.strategy?.orderingPolicy || null,
+                portalBiasMode: second?.strategy?.portalBiasMode || null,
+                rootSeedMode: second?.strategy?.rootSeedMode || null,
+                rescueMode: second?.strategy?.rescueMode || null,
+                hardHintFallbackStage: !!second?.strategy?.hardHintFallbackStage,
+                budgetMs: Number(second?.strategy?.budgetMs) || 0
+            });
+            return sameStrategy && progressGap <= 0.01 && nodesGap <= 20 && depthGap <= 1 && rootGap <= 0;
+        },
+
+        async solve(levelInput, opts = {}) {
+            const {
+                requestedTierRaw,
+                tier,
+                level,
+                objectivesAreInteriorDominant,
+                purpose,
+                complexityClass,
+                strategySubtype,
+                complexityStrategy,
+                resolvedPortalBiasMode,
+                resolvedPhasePolicy,
+                defaultBudget,
+                key,
+                prev,
+                timesTried,
+                requestedTier,
+                autoEscalate,
+                escalationTier,
+                requestedBudget,
+                policyLadderByPurpose,
+                activePolicyLadder,
+                maxTier,
+                policyTier,
+                activeTierPolicy,
+                tierMinBudget,
+                budgetMs,
+                tierBudgets,
+                allowRandomizedExploration,
+                allowRandomizedExplorationOnExpensiveTiers,
+                fallbackDisabledPrunes,
+                forcePreExpansionRescue,
+                solveStartTime,
+                controlPlane,
+                lowComplexityLevel
+            } = this._prepareSolveContext(levelInput, opts);
             // Unified architecture: one referee engine with policy personalities.
             // Migration note: all solving is now referee; historical legacy toggles are compatibility aliases only.
 
@@ -8948,111 +9238,32 @@
                     flatOrNegative
                 };
             };
-            const deriveStrategySignature = (strategy = {}) => JSON.stringify({
-                policyKey: strategy?.policyKey || null,
-                orderingPolicy: strategy?.orderingPolicy || null,
-                portalBiasMode: strategy?.portalBiasMode || null,
-                rootSeedMode: strategy?.rootSeedMode || null,
-                rescueMode: strategy?.rescueMode || null,
-                hardHintFallbackStage: !!strategy?.hardHintFallbackStage,
-                budgetMs: Number(strategy?.budgetMs) || 0
-            });
-            const attemptPairNearIdentical = (first = null, second = null) => {
-                if (!first || !second) return false;
-                const metricsA = first.metrics || {};
-                const metricsB = second.metrics || {};
-                const progressGap = Math.abs((metricsB.progressReached || 0) - (metricsA.progressReached || 0));
-                const nodesGap = Math.abs((metricsB.nodesExpanded || 0) - (metricsA.nodesExpanded || 0));
-                const depthGap = Math.abs((metricsB.depthReached || 0) - (metricsA.depthReached || 0));
-                const rootGap = Math.abs((metricsB.rootDiversity || 0) - (metricsA.rootDiversity || 0));
-                const sameStrategy = deriveStrategySignature(first.strategy) === deriveStrategySignature(second.strategy);
-                return sameStrategy && progressGap <= 0.01 && nodesGap <= 20 && depthGap <= 1 && rootGap <= 0;
-            };
-            const pickPivotOrderingPolicy = (basePolicy, previousPolicy) => {
-                const ordered = ['harvestThenFinish', 'knotBuilder', 'objectiveFirst', 'perimeterSweep', 'portalFirstTransfer'];
-                const baseIndex = Math.max(0, ordered.indexOf(basePolicy));
-                for (let i = 1; i <= ordered.length; i++) {
-                    const candidate = ordered[(baseIndex + i) % ordered.length];
-                    if (candidate !== previousPolicy) return candidate;
-                }
-                return basePolicy;
-            };
-
-            let last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
-            let rapidCollapseRecoveryDiagnostics = {
-                attempted: false,
-                activated: false,
-                selectedBy: [],
-                trigger: null,
-                prior: null,
-                recovery: null
-            };
-            const totalBudget = Math.max(1500, budgetMs);
-            const profileSignalsForBudget = level?.solverProfile || {};
-            const simpleLevel = (Number(profileSignalsForBudget.routePressure) || 0) < 0.4
-                && (Number(profileSignalsForBudget.objectiveCount) || 0) <= 1
-                && (Number(profileSignalsForBudget.portalCommitment) || 0) === 0;
-            const baselineBudget = simpleLevel
-                ? Math.max(750, totalBudget)
-                : Math.max(750, Math.floor(totalBudget * 0.75));
-            const recoveryBudget = Math.max(1500, Math.floor(totalBudget * 0.3));
-            const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.25));
-            const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
-            const profileSignals = level?.solverProfile || {};
-            const outstandingObligations = (Number(profileSignals?.objectiveCount) || 0) + (Number(profileSignals?.mustCrossCount) || 0);
-            const portalDependency = (Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0) > 0;
-            const knotSensitive = (Number(profileSignals?.mustCrossCount) || 0) >= 2 || (Number(profileSignals?.topology?.bridgeCount) || 0) >= 4;
-            const openBoard = (Number(profileSignals?.openness) || 0) >= 0.62;
-            const boardArea = Number(profileSignals?.boardArea) || ((Number(level?.grid?.w) || 0) * (Number(level?.grid?.h) || 0));
-            const mustCrossCount = Number(profileSignals?.mustCrossCount) || 0;
-            const mandatoryPortalFamilyCount = Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0;
-            const enableDiversifiedRootPass = boardArea >= 100 && mustCrossCount >= 2 && mandatoryPortalFamilyCount > 0;
-            const hasPortals = (level?.portalMap?.size || 0) > 0;
-            const mustPassCountForPortal = level?.mustPassKeys?.length || 0;
-            const inferredPortalDependency = hasPortals
-                && (mustPassCountForPortal + mustCrossCount) >= 2
-                && Array.isArray(profileSignals?.portalHints?.mandatoryFamilies)
-                && profileSignals.portalHints.mandatoryFamilies.length > 0;
-            const defaultOrderingPolicy = outstandingObligations >= 4
-                ? 'harvestThenFinish'
-                : ((portalDependency || inferredPortalDependency) ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
-            const previousAttempts = Array.isArray(prev.attempts) ? prev.attempts : [];
-            const previousAttempt = previousAttempts[previousAttempts.length - 1] || null;
-            const prePreviousAttempt = previousAttempts[previousAttempts.length - 2] || null;
-            const shouldForcePivot = !!(previousAttempt?.delta?.flatOrNegative);
-            const pivotOrderingPolicy = shouldForcePivot
-                ? pickPivotOrderingPolicy(defaultOrderingPolicy, previousAttempt?.strategy?.orderingPolicy || null)
-                : defaultOrderingPolicy;
-            const basePolicyOrdering = activeTierPolicy?.orderingPolicy === 'profile-default'
-                ? pivotOrderingPolicy
-                : activeTierPolicy?.orderingPolicy;
-            const basePolicyPortalBias = activeTierPolicy?.portalBiasMode === 'profile-default'
-                ? (shouldForcePivot ? 'off' : resolvedPortalBiasMode)
-                : (activeTierPolicy?.portalBiasMode || resolvedPortalBiasMode);
-            const basePolicyRootSeed = activeTierPolicy?.rootSeedMode || (shouldForcePivot ? 'broader-candidate-seed-set' : (enableDiversifiedRootPass ? 'diversified' : 'default'));
-            const basePolicyRescueMode = activeTierPolicy?.rescueMode || (shouldForcePivot ? 'alternate-rescue' : 'default');
-            const hardHintFallbackStage = purpose === 'hint'
-                && timesTried >= 4
-                && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus || '')
-                && escalationTier >= 2;
-            const strategyMetadata = compactDefined({
-                attemptOrdinal: timesTried,
-                policyKey: hardHintFallbackStage ? `${activeTierPolicy?.key || 'policy'}-hard` : (activeTierPolicy?.key || null),
-                policyTier,
-                forcedPivot: shouldForcePivot,
-                pivotTrigger: shouldForcePivot ? 'flat-or-negative-delta' : null,
-                orderingPolicy: hardHintFallbackStage ? 'portalFirstTransfer' : basePolicyOrdering,
-                portalBiasMode: hardHintFallbackStage ? 'off' : basePolicyPortalBias,
-                rootSeedMode: hardHintFallbackStage ? 'diversified-aggressive' : basePolicyRootSeed,
-                rescueMode: hardHintFallbackStage ? 'alternate-rescue' : basePolicyRescueMode,
-                hardHintFallbackStage,
+            let {
+                stagesTried,
+                last,
+                rapidCollapseRecoveryDiagnostics,
+                baselineBudget,
+                recoveryBudget,
+                enduranceBudget,
+                sanityBudget,
+                profileSignals,
+                knotSensitive,
+                enableDiversifiedRootPass,
+                previousAttempts,
+                previousAttempt,
+                strategyMetadata,
+                guardrailStopThirdAttempt
+            } = this._deriveSolveCascadeSetup({
+                level,
                 budgetMs,
-                previousDelta: previousAttempt?.delta || null
+                purpose,
+                prev,
+                timesTried,
+                activeTierPolicy,
+                policyTier,
+                escalationTier,
+                resolvedPortalBiasMode
             });
-            const guardrailStopThirdAttempt = timesTried >= 3
-                && attemptPairNearIdentical(prePreviousAttempt, previousAttempt)
-                && previousAttempt?.delta?.qualityImproved === false
-                && (previousAttempt?.metrics?.nodesExpanded || 0) > 0;
 
             if (guardrailStopThirdAttempt) {
                 const blocked = {
@@ -10996,6 +11207,17 @@
             return 'fallback';
         };
 
+        const triggerFallbackSafely = (reason = 'missing level data') => {
+            try {
+                return triggerFallback(reason);
+            } catch (err) {
+                console.error('[Loader fallback failed]', err);
+                state.status = 'failed';
+                state.mode = 'failed';
+                return 'failed';
+            }
+        };
+
         const finish = () => {
             if (state.hasFinished) return;
             state.hasFinished = true;
@@ -11065,7 +11287,7 @@
                         APP.Data.ingest();
                         APP.Themes.ensureThemeLeaveColors();
                         if (!Array.isArray(APP.Data.getLevels()) || APP.Data.getLevels().length === 0) {
-                            done(triggerFallback('missing levels after external script load'));
+                            done(triggerFallbackSafely('missing levels after external script load'));
                             return;
                         }
                         state.hasLoaded = true;
@@ -11076,11 +11298,11 @@
                     })
                     .catch(err => {
                         console.error('[External level/theme load failed]', err);
-                        done(triggerFallback('exception during external level/theme load'));
+                        done(triggerFallbackSafely('exception during external level/theme load'));
                     });
 
                 state.timeoutId = setTimeout(() => {
-                    done(triggerFallback('loader timeout after 5000ms'));
+                    done(triggerFallbackSafely('loader timeout after 5000ms'));
                 }, 5000);
             });
 
@@ -15293,10 +15515,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Themes.applyTheme(persistedSession.currentTheme);
 
             try {
-                try {
-                    if (APP.Persistence.hasConfig) await APP.Persistence.initAuth();
-                } catch (e) {}
                 APP.Persistence.syncProgress(APP.Persistence.getCurrentUser());
+                if (APP.Persistence.hasConfig) {
+                    Promise.resolve(APP.Persistence.initAuth())
+                        .then(() => {
+                            APP.Persistence.syncProgress(APP.Persistence.getCurrentUser());
+                        })
+                        .catch(() => {});
+                }
 
                 const mode = await APP.Loader.init();
                 if (mode !== 'ready' && mode !== 'fallback') {
@@ -15318,8 +15544,23 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     })();
 
     window.onload = () => {
-        APP.Input.init();
-        APP.Boot.start();
+        let inputInitError = null;
+        try {
+            APP.Input.init();
+        } catch (err) {
+            inputInitError = err;
+            console.error('[Startup] Input init failed; continuing boot.', err);
+        }
+
+        Promise.resolve(APP.Boot.start())
+            .then(() => {
+                if (inputInitError) {
+                    try { APP.UI.reportError('startup-input-init', inputInitError); } catch (_) {}
+                }
+            })
+            .catch((err) => {
+                APP.Loader.fail('startup-boot', err);
+            });
     };
 </script>
 </body>
