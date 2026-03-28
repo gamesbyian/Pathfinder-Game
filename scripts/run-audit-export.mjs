@@ -154,7 +154,6 @@ const summarizeMetrics = (payload, commitSha) => {
 
     if (hasError) {
       failingByStatus.error += 1;
-      return;
     }
 
     if (status === 'timeout') {
