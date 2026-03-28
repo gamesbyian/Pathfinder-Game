@@ -8821,17 +8821,25 @@
             const rootGenerated = Math.max(0, Number(debug?.rootCandidatesGenerated) || 0);
             const rootExpanded = Math.max(0, Number(debug?.rootCandidatesExpanded) || 0);
             const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
-            const noExpansion = returnedWithoutExpansion || (rootGenerated === 0 && rootExpanded === 0 && (Number(debug?.nodesExpanded) || 0) === 0);
-            const triggered = !!goalReachable && !!noExpansion;
+            const nodesExpanded = Math.max(0, Number(diagnostics?.nodesExpanded ?? debug?.nodesExpanded) || 0);
+            const branchFactor = Math.max(0, Number(diagnostics?.branchFactor) || 0);
+            const contradictionPrunes = Math.max(0, Number(debug?.prune?.mustPassBound) || 0) + Math.max(0, Number(debug?.prune?.mustCrossBound) || 0);
+            const noExpansion = returnedWithoutExpansion || (rootGenerated === 0 && rootExpanded === 0 && nodesExpanded === 0);
+            const shallowCollapsed = nodesExpanded <= 4 && rootExpanded <= 1;
+            const contradictionPressure = contradictionPrunes >= Math.max(10, Math.floor((Number(debug?.branchesTried) || 0) * 0.45));
+            const stagnatedConstraintPressure = nodesExpanded >= 30 && branchFactor <= 0.16 && contradictionPressure;
+            const triggered = !!goalReachable && !!(noExpansion || shallowCollapsed || stagnatedConstraintPressure);
             const protectedPrunesDisabled = triggered
                 ? Array.from(new Set(['mustPassBound', 'mustCrossBound', 'connectivity', 'dominance', 'memo']))
                 : [];
             return compactDefined({
                 triggered,
-                reason: triggered ? 'reachable-but-no-expansion' : null,
+                reason: triggered
+                    ? (noExpansion ? 'reachable-but-no-expansion' : (stagnatedConstraintPressure ? 'constraint-stagnation' : 'reachable-shallow-collapse'))
+                    : null,
                 guardBudgetMs: triggered ? Math.max(800, Math.floor((Number(attemptOpts?.budgetMs) || 1200) * 0.55)) : null,
                 protectedPrunesDisabled,
-                rootSearchSummary: triggered ? compactDefined({ rootGenerated, rootExpanded, returnedWithoutExpansion }) : null
+                rootSearchSummary: triggered ? compactDefined({ rootGenerated, rootExpanded, returnedWithoutExpansion, nodesExpanded, contradictionPressure }) : null
             });
         },
 
@@ -9100,6 +9108,7 @@
             };
 
             let autoContradictionRecoveryArmed = !!opts.contradictionRecovery;
+            let timeoutFamilyDiversificationUsed = false;
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
@@ -9297,13 +9306,21 @@
                     structuralTemplate: attempt.structuralTemplate ? { id: attempt.structuralTemplate.id, confidence: attempt.structuralTemplate.confidence || 0 } : null,
                     hypothesis: controlPlane?.activeHypothesis ? { ...controlPlane.activeHypothesis } : null
                 });
-                if (i === 0 && !autoContradictionRecoveryArmed && ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status)) {
+                if (!autoContradictionRecoveryArmed && !attemptResult.ok) {
                     const goalReachableSanity = isGoalReachableFromAnyGate(level);
-                    if (goalReachableSanity) {
+                    const diag = buildSearchDiagnostics(attemptResult?.debug || {}, attemptResult?.status || 'unknown');
+                    const rootGenerated = Math.max(0, Number(attemptResult?.debug?.rootCandidatesGenerated) || 0);
+                    const rootExpanded = Math.max(0, Number(attemptResult?.debug?.rootCandidatesExpanded) || 0);
+                    const contradictionPrunes = Math.max(0, Number(attemptResult?.debug?.prune?.mustPassBound) || 0) + Math.max(0, Number(attemptResult?.debug?.prune?.mustCrossBound) || 0);
+                    const branchesTried = Math.max(0, Number(attemptResult?.debug?.branchesTried) || 0);
+                    const contradictionSignature = !!diag?.returnedWithoutExpansion
+                        || (rootGenerated <= 1 && rootExpanded <= 1 && (Number(diag?.nodesExpanded) || 0) <= 3)
+                        || (contradictionPrunes >= Math.max(8, Math.floor(branchesTried * 0.42)));
+                    if (goalReachableSanity && contradictionSignature) {
                         autoContradictionRecoveryArmed = true;
                         if (attemptResult?.debug) {
                             attemptResult.debug.notes = Array.isArray(attemptResult.debug.notes) ? attemptResult.debug.notes : [];
-                            attemptResult.debug.notes.push('AUTO CONTRADICTION RECOVERY: enabled after first-pass timeout/inconclusive with reachable-goal sanity.');
+                            attemptResult.debug.notes.push('AUTO CONTRADICTION RECOVERY: enabled by contradiction signature telemetry.');
                         }
                     }
                 }
@@ -9333,6 +9350,19 @@
                 if (i + 1 < attempts.length) {
                     const nextAttempt = attempts[i + 1];
                     const timeoutProne = ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status);
+                    const healthyExpansionTimeout = timeoutProne
+                        && (Number(attemptResult?.debug?.nodesExpanded) || 0) >= 110
+                        && (Number(quality?.branchFactor) || 0) >= 0.2
+                        && (Number(quality?.maxProgress) || 0) >= 0.28;
+                    if (healthyExpansionTimeout && !timeoutFamilyDiversificationUsed) {
+                        const switched = this._switchAttemptStrategyFamily(nextAttempt, {
+                            constraintDeficit: quality.constraintDeficit,
+                            remainingMustPass: quality.remainingMustPass,
+                            remainingMustCross: quality.remainingMustCross,
+                            reason: 'healthy-expansion-timeout-diversification'
+                        }, profile, controlPlane);
+                        if (switched?.switched) timeoutFamilyDiversificationUsed = true;
+                    }
                     if (timeoutProne && quality.constraintDeficit > 0) {
                         this._switchAttemptStrategyFamily(nextAttempt, {
                             constraintDeficit: quality.constraintDeficit,
@@ -9641,12 +9671,40 @@
             const simpleLevel = (Number(profileSignalsForBudget.routePressure) || 0) < 0.4
                 && (Number(profileSignalsForBudget.objectiveCount) || 0) <= 1
                 && (Number(profileSignalsForBudget.portalCommitment) || 0) === 0;
+            const previousAttempts = Array.isArray(prev.attempts) ? prev.attempts : [];
+            const previousAttempt = previousAttempts[previousAttempts.length - 1] || null;
+            const progressDelta = Number(previousAttempt?.delta?.progressDelta);
+            const branchFactorTrend = Number(previousAttempt?.delta?.branchFactorDelta);
+            const objectiveDelta = Number(previousAttempt?.delta?.objectiveReductionDelta);
+            const hasRuntimeSignal = Number.isFinite(progressDelta) || Number.isFinite(branchFactorTrend) || Number.isFinite(objectiveDelta);
+            const collapseSignal = hasRuntimeSignal && (
+                (Number.isFinite(progressDelta) && progressDelta <= 0)
+                && (Number.isFinite(objectiveDelta) ? objectiveDelta <= 0 : true)
+                && (Number.isFinite(branchFactorTrend) ? branchFactorTrend <= 0.02 : true)
+            );
+            const momentumSignal = hasRuntimeSignal && (
+                (Number.isFinite(progressDelta) && progressDelta >= 0.05)
+                || (Number.isFinite(objectiveDelta) && objectiveDelta >= 1)
+                || (Number.isFinite(branchFactorTrend) && branchFactorTrend >= 0.08)
+            );
+            const baselineRatio = collapseSignal
+                ? 0.68
+                : (momentumSignal ? 0.8 : 0.75);
+            const recoveryRatio = collapseSignal
+                ? 0.38
+                : (momentumSignal ? 0.22 : 0.3);
+            const enduranceRatio = momentumSignal
+                ? 0.28
+                : (collapseSignal ? 0.18 : 0.25);
+            const sanityRatio = collapseSignal
+                ? 0.34
+                : (momentumSignal ? 0.24 : 0.3);
             const baselineBudget = simpleLevel
                 ? Math.max(750, totalBudget)
-                : Math.max(750, Math.floor(totalBudget * 0.75));
-            const recoveryBudget = Math.max(1500, Math.floor(totalBudget * 0.3));
-            const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.25));
-            const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
+                : Math.max(750, Math.floor(totalBudget * baselineRatio));
+            const recoveryBudget = Math.max(1500, Math.floor(totalBudget * recoveryRatio));
+            const enduranceBudget = Math.max(750, Math.floor(totalBudget * enduranceRatio));
+            const sanityBudget = Math.max(900, Math.floor(totalBudget * sanityRatio));
             const profileSignals = level?.solverProfile || {};
             const outstandingObligations = (Number(profileSignals?.objectiveCount) || 0) + (Number(profileSignals?.mustCrossCount) || 0);
             const portalDependency = (Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0) > 0;
@@ -9665,8 +9723,6 @@
             const defaultOrderingPolicy = outstandingObligations >= 4
                 ? 'harvestThenFinish'
                 : ((portalDependency || inferredPortalDependency) ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
-            const previousAttempts = Array.isArray(prev.attempts) ? prev.attempts : [];
-            const previousAttempt = previousAttempts[previousAttempts.length - 1] || null;
             const prePreviousAttempt = previousAttempts[previousAttempts.length - 2] || null;
             const shouldForcePivot = !!(previousAttempt?.delta?.flatOrNegative);
             const pivotOrderingPolicy = shouldForcePivot
@@ -12051,13 +12107,23 @@
                 const nodesExpanded = Math.max(0, Number(diagnostics?.nodesExpanded ?? debug?.nodesExpanded) || 0);
                 const preExpansionAbort = getPreExpansionAbort(debug);
                 const returnedWithoutExpansion = !!diagnostics?.returnedWithoutExpansion;
+                const status = `${baselineResult?.status || baselineResult?.rawStatus || debug?.status || 'unknown'}`;
+                const depthZeroReason = `${getDepthZeroReason(debug, status) || ''}`;
+                const returnedBeforeExpansionSignal = returnedWithoutExpansion
+                    || String(preExpansionAbort?.code || '').includes('before-expansion')
+                    || depthZeroReason.includes('before-expansion')
+                    || depthZeroReason.includes('returned-without-expansion');
                 const reason = [];
                 if (preExpansionAbort?.code) reason.push(`pre-expansion-abort:${preExpansionAbort.code}`);
-                if (nodesExpanded <= 3) reason.push(`nodes<=3:${nodesExpanded}`);
-                if (expanded <= 1) reason.push(`root-expanded<=1:${expanded}`);
-                if (generated <= 1 && expanded <= 1) reason.push(`root-generated<=1:${generated}`);
-                if (returnedWithoutExpansion) reason.push('returned-without-expansion');
-                const rapidCollapse = reason.length > 0;
+                if (nodesExpanded === 0) reason.push('nodes==0');
+                else if (nodesExpanded <= 2) reason.push(`nodes<=2:${nodesExpanded}`);
+                if (expanded === 0) reason.push('root-expanded==0');
+                else if (expanded <= 1) reason.push(`root-expanded<=1:${expanded}`);
+                if (generated === 0) reason.push('root-generated==0');
+                else if (generated <= 1 && expanded <= 1) reason.push(`root-generated<=1:${generated}`);
+                if (returnedBeforeExpansionSignal) reason.push('returned-before-expansion');
+                const nearZeroRootFrontier = generated <= 2 && expanded <= 1;
+                const rapidCollapse = reason.length > 0 || nearZeroRootFrontier;
                 return {
                     rapidCollapse,
                     reason,
@@ -12065,7 +12131,9 @@
                     rootCandidatesGenerated: generated,
                     rootCandidatesExpanded: expanded,
                     preExpansionAbortCode: preExpansionAbort?.code || null,
-                    returnedWithoutExpansion
+                    returnedWithoutExpansion,
+                    returnedBeforeExpansionSignal,
+                    nearZeroRootFrontier
                 };
             };
             const hasRootInteractionComplexity = (level = null) => {
@@ -12102,18 +12170,20 @@
                 const generated = rapidCollapse.rootCandidatesGenerated;
                 const expanded = rapidCollapse.rootCandidatesExpanded;
                 const nodesExpanded = rapidCollapse.nodesExpanded;
-                const tooFewRoots = generated <= 1 || (expanded < generated && expanded <= 2);
-                const collapsedAtRoot = !!rapidCollapse.returnedWithoutExpansion || nodesExpanded <= 3;
+                const tooFewRoots = generated <= 2 || expanded <= 1 || (expanded < generated && expanded <= 2);
+                const collapsedAtRoot = !!rapidCollapse.returnedBeforeExpansionSignal || !!rapidCollapse.returnedWithoutExpansion || nodesExpanded <= 2;
                 const interactionComplex = hasRootInteractionComplexity(level);
-                const activate = !!force || rapidCollapse.rapidCollapse || (interactionComplex && tooFewRoots && collapsedAtRoot);
-                const rootExpansionFloorCount = interactionComplex ? 6 : 4;
-                const forceRootExpansionFloor = activate && interactionComplex;
+                const genericZeroExpansion = nodesExpanded === 0 || expanded === 0 || generated === 0;
+                const activate = !!force || rapidCollapse.rapidCollapse || genericZeroExpansion || (tooFewRoots && collapsedAtRoot);
+                const rootExpansionFloorCount = (interactionComplex || genericZeroExpansion) ? 6 : 4;
+                const forceRootExpansionFloor = activate && (interactionComplex || genericZeroExpansion);
                 const relaxRootSuppressionFirstLayer = forceRootExpansionFloor;
                 return {
                     activate,
                     interactionComplex,
                     tooFewRoots,
                     collapsedAtRoot,
+                    genericZeroExpansion,
                     generated,
                     expanded,
                     nodesExpanded,

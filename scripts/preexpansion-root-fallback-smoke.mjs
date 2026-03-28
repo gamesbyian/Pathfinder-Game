@@ -10,12 +10,14 @@ vm.createContext(levelsCtx);
 vm.runInContext(levelsJs, levelsCtx, { filename: 'levels.js' });
 const rawLevels = levelsCtx.window.RAW_LEVELS;
 
-const start = html.indexOf('const hasRootInteractionComplexity = (level = null) => {');
+const start = html.indexOf('const detectRapidCollapseSignature = ({ baselineResult = null } = {}) => {');
 const end = html.indexOf('function withZeroExpansionSummary(entry = {}, statusPath = \'unknown\', droppedBy = \'unknown\') {');
 if (start < 0 || end < 0 || end <= start) throw new Error('Unable to locate root fallback helper functions in index.html');
 const helperSource = html.slice(start, end);
 
 const ctx = {
+  getPreExpansionAbort: (debug = {}) => debug?.preExpansionAbortObj || null,
+  getDepthZeroReason: (debug = {}) => debug?.depthZeroReason || null,
   buildSearchDiagnostics: (debug = {}, status = 'unknown') => ({
     nodesExpanded: Math.max(0, Number(debug?.nodesExpanded) || 0),
     returnedWithoutExpansion: (Math.max(0, Number(debug?.nodesExpanded) || 0) === 0) || status === 'no-solution-inconclusive'
@@ -46,7 +48,7 @@ for (const levelNum of [24, 45, 87, 95]) {
   const collapseDecision = ctx.__shouldActivateInteractionRootFallback({ baselineResult: baselineCollapse, level });
   const interaction = ctx.__hasRootInteractionComplexity(level);
   assert.equal(collapseDecision.interactionComplex, interaction, `interaction classification mismatch for L${levelNum}`);
-  assert.equal(collapseDecision.activate, interaction, `collapse activation mismatch for L${levelNum}`);
+  assert.equal(collapseDecision.activate, true, `collapse activation mismatch for L${levelNum}`);
 
   const healthyBaseline = {
     status: 'no-solution-inconclusive',
