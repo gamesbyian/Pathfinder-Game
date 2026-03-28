@@ -8828,7 +8828,7 @@
         },
 
 
-        async solve(levelInput, opts = {}) {
+        _prepareSolveContext(levelInput, opts = {}) {
             const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             console.log('Referee starting tier:', tier);
@@ -8843,13 +8843,11 @@
                     ];
                     const w = level.grid?.w || 1;
                     const h = level.grid?.h || 1;
-                    // Also consider goal position and route pressure
                     const goalKey = level.goalKey;
                     const goalX = goalKey !== undefined && goalKey !== -1 ? (goalKey & 0xFFFF) + 1 : null;
                     const goalY = goalKey !== undefined && goalKey !== -1 ? (goalKey >> 16) + 1 : null;
                     const goalIsInterior = goalX !== null && goalX > 1 && goalX < w && goalY > 1 && goalY < h;
                     const routePressure = Number(level.solverProfile?.routePressure) || 0;
-                    // Trigger if objectives are interior-dominant OR if goal is interior AND route pressure is high
                     if (allObjKeys.length === 0) {
                         return goalIsInterior && routePressure >= 0.65;
                     }
@@ -8919,6 +8917,81 @@
                 && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
                 && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
+            return {
+                requestedTierRaw,
+                tier,
+                level,
+                objectivesAreInteriorDominant,
+                purpose,
+                complexityClass,
+                strategySubtype,
+                complexityStrategy,
+                resolvedPortalBiasMode,
+                resolvedPhasePolicy,
+                defaultBudget,
+                key,
+                prev,
+                timesTried,
+                requestedTier,
+                autoEscalate,
+                escalationTier,
+                requestedBudget,
+                policyLadderByPurpose,
+                activePolicyLadder,
+                maxTier,
+                policyTier,
+                activeTierPolicy,
+                tierMinBudget,
+                budgetMs,
+                tierBudgets,
+                allowRandomizedExploration,
+                allowRandomizedExplorationOnExpensiveTiers,
+                fallbackDisabledPrunes,
+                forcePreExpansionRescue,
+                stagesTried,
+                solveStartTime,
+                controlPlane,
+                lowComplexityLevel
+            };
+        },
+
+        async solve(levelInput, opts = {}) {
+            const {
+                requestedTierRaw,
+                tier,
+                level,
+                objectivesAreInteriorDominant,
+                purpose,
+                complexityClass,
+                strategySubtype,
+                complexityStrategy,
+                resolvedPortalBiasMode,
+                resolvedPhasePolicy,
+                defaultBudget,
+                key,
+                prev,
+                timesTried,
+                requestedTier,
+                autoEscalate,
+                escalationTier,
+                requestedBudget,
+                policyLadderByPurpose,
+                activePolicyLadder,
+                maxTier,
+                policyTier,
+                activeTierPolicy,
+                tierMinBudget,
+                budgetMs,
+                tierBudgets,
+                allowRandomizedExploration,
+                allowRandomizedExplorationOnExpensiveTiers,
+                fallbackDisabledPrunes,
+                forcePreExpansionRescue,
+                stagesTried,
+                solveStartTime,
+                controlPlane,
+                lowComplexityLevel
+            } = this._prepareSolveContext(levelInput, opts);
             // Unified architecture: one referee engine with policy personalities.
             // Migration note: all solving is now referee; historical legacy toggles are compatibility aliases only.
 
