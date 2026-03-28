@@ -65,6 +65,7 @@ const waitForAuditIdle = async (page) => {
       const txt = document.getElementById('auditProgressLabel')?.textContent?.trim() || '';
       return txt === 'Idle' || txt === 'Stopped.';
     },
+    undefined,
     { timeout: AUDIT_TIMEOUT_MS }
   );
 };
@@ -75,6 +76,7 @@ const waitForAuditResult = async (page) => {
       const txt = document.getElementById('auditReportRows')?.textContent?.trim() || '';
       return txt.length > 0 && txt !== 'Run a check to generate report.';
     },
+    undefined,
     { timeout: AUDIT_TIMEOUT_MS }
   );
 };
