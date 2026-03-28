@@ -122,7 +122,9 @@ const run = async () => {
     page = await browser.newPage();
     await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'domcontentloaded', timeout: 120000 });
 
-    await page.click('#devToggleBtn');
+    await page.click('#guideBtn');
+    await page.locator('#devToggleBtn').click();
+    await page.click('#closeGuideX');
     await page.click('#openAuditModalBtn');
     await page.click('#auditNewHintBtn');
 
