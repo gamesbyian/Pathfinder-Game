@@ -6768,21 +6768,9 @@
         };
 
         const Referee = {
-        buildLevelProfile(level) {
+        _computeTopology(level) {
             const w = level?.grid?.w || 0;
             const h = level?.grid?.h || 0;
-            const totalCells = Math.max(1, w * h);
-            const blocks = level?.blockSet?.size || 0;
-            const freeCells = Math.max(1, totalCells - blocks);
-            const routePressure = (Math.max(0, level?.reqLen || 0) / freeCells) + ((level?.reqInt || 0) * 0.35);
-            const portalLoad = level?.portalMap?.size || 0;
-            const mustPassCount = level?.mustPassKeys?.length || 0;
-            const mustCrossCount = level?.mustCrossKeys?.length || 0;
-            const falseGoalCount = level?.falseGoalKeys?.size || 0;
-            const objectiveSignalCount = mustPassCount + mustCrossCount + falseGoalCount;
-            const objectiveDensity = objectiveSignalCount / freeCells;
-            const perimeterThreshold = (w >= 9 || h >= 9) ? 1 : 0;
-
             const walkableKeys = [];
             const walkableSet = new Set();
             for (let y = 0; y < h; y++) {
@@ -6801,7 +6789,8 @@
                 const p = APP.LevelUtils.UNPACK(key);
                 const neighbors = [];
                 [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
-                    const nx = p.x + dx, ny = p.y + dy;
+                    const nx = p.x + dx;
+                    const ny = p.y + dy;
                     if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
                     const nk = APP.LevelUtils.PACK(nx, ny);
                     if (walkableSet.has(nk)) neighbors.push(nk);
@@ -6842,7 +6831,8 @@
                 for (const key of region) {
                     const p = APP.LevelUtils.UNPACK(key);
                     [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
-                        const nx = p.x + dx, ny = p.y + dy;
+                        const nx = p.x + dx;
+                        const ny = p.y + dy;
                         if (!APP.LevelUtils.inBounds(nx, ny, w, h)) {
                             perimeter++;
                             return;
@@ -6885,8 +6875,8 @@
                     }
                 }
             };
-            for (const k of walkableKeys) {
-                if (!disc.has(k)) tarjanDfs(k);
+            for (const key of walkableKeys) {
+                if (!disc.has(key)) tarjanDfs(key);
             }
 
             const corridorDepthMap = new Map();
@@ -6901,7 +6891,7 @@
                 while (true) {
                     corridorNodes.add(cur);
                     corridorDepthMap.set(cur, Math.max(corridorDepthMap.get(cur) || 0, depth));
-                    const nextChoices = (adjacency.get(cur) || []).filter(n => n !== prev);
+                    const nextChoices = (adjacency.get(cur) || []).filter((n) => n !== prev);
                     if (nextChoices.length === 0) break;
                     const next = nextChoices[0];
                     const eid = edgeId(cur, next);
@@ -6950,10 +6940,34 @@
                 + ((1 - Math.max(0, Math.min(1, corridorRatio))) * 0.2)
             ));
 
+            return {
+                walkableKeys,
+                walkableSet,
+                adjacency,
+                degreeMap,
+                degreeHistogram,
+                connectedRegions,
+                regionByKey,
+                compactnessPerRegion,
+                articulationSet,
+                bridgeEdges,
+                corridorDepthMap,
+                corridorNodes,
+                chokeScoreMap,
+                meanDegree,
+                degreeVariance,
+                corridorRatio,
+                openness,
+                maxCorridorDepth: Math.max(0, ...Array.from(corridorDepthMap.values(), (v) => v || 0))
+            };
+        },
+
+        _computeObjectiveModel(level, topology = {}) {
             const objectiveNodes = [];
             for (const key of (level?.mustPassKeys || [])) objectiveNodes.push({ key, type: 'mustPass' });
             for (const key of (level?.mustCrossKeys || [])) objectiveNodes.push({ key, type: 'mustCross' });
             const gateKeys = level?.gateKeys || [];
+            const chokeScoreMap = topology.chokeScoreMap || new Map();
             const objectiveFeatures = objectiveNodes.map((node) => {
                 const objMap = SolverCore._buildOptimisticDistMap(level, [node.key]);
                 let gateToObjective = Infinity;
@@ -6986,7 +7000,22 @@
             });
             const objectivePriority = new Map();
             objectiveFeatures.forEach((n, i) => objectivePriority.set(n.key, i));
+            return {
+                features: objectiveFeatures,
+                priorityMap: objectivePriority,
+                seedMode: 'gate-objective-goal-cost'
+            };
+        },
 
+        _findKnotCandidates(level, topology = {}, objectiveModel = {}) {
+            const walkableSet = topology.walkableSet || new Set();
+            const walkableKeys = topology.walkableKeys || [];
+            const adjacency = topology.adjacency || new Map();
+            const chokeScoreMap = topology.chokeScoreMap || new Map();
+            const degreeMap = topology.degreeMap || new Map();
+            const corridorDepthMap = topology.corridorDepthMap || new Map();
+            const objectiveFeatures = Array.isArray(objectiveModel.features) ? objectiveModel.features : [];
+            const mustCrossSet = new Set(level?.mustCrossKeys || []);
             const knotCandidates = [];
             const makeZoneCells = (seedKeys, maxCells = 12) => {
                 const zone = new Set();
@@ -7015,7 +7044,6 @@
                 return zone;
             };
 
-            const mustCrossSet = new Set(level?.mustCrossKeys || []);
             const visitedCross = new Set();
             for (const start of mustCrossSet) {
                 if (visitedCross.has(start)) continue;
@@ -7085,7 +7113,7 @@
             const enrichedKnotCandidates = knotCandidates.map((candidate, idx) => {
                 const cells = candidate.cells instanceof Set ? candidate.cells : new Set();
                 const cellList = Array.from(cells);
-                const mustCrossHits = cellList.filter(key => mustCrossSet.has(key)).length;
+                const mustCrossHits = cellList.filter((key) => mustCrossSet.has(key)).length;
                 const chokeAvg = cellList.length > 0
                     ? cellList.reduce((acc, key) => acc + (chokeScoreMap.get(key) || 0), 0) / cellList.length
                     : 0;
@@ -7097,7 +7125,7 @@
                     : 0;
                 const portalAdjacency = cellList.reduce((acc, key) => {
                     if (level.portalMap?.has(key)) return acc + 1;
-                    const nearPortal = (adjacency.get(key) || []).some(nb => level.portalMap?.has(nb));
+                    const nearPortal = (adjacency.get(key) || []).some((nb) => level.portalMap?.has(nb));
                     return acc + (nearPortal ? 1 : 0);
                 }, 0);
                 const portalAdjNorm = cellList.length > 0 ? portalAdjacency / cellList.length : 0;
@@ -7148,6 +7176,12 @@
                 if (knotZone.size >= 24) break;
             }
 
+            return { knotCandidates: rankedKnotCandidates, knotZone };
+        },
+
+        _detectSymmetry(level) {
+            const w = level?.grid?.w || 0;
+            const h = level?.grid?.h || 0;
             const symmetryCommitmentThreshold = 0.82;
             const levelFeatureSets = {
                 blocks: new Set(level?.blockSet || []),
@@ -7155,7 +7189,7 @@
                 mustObjectives: new Set([...(level?.mustPassKeys || []), ...(level?.mustCrossKeys || [])]),
                 portalFilterPlacements: new Set([
                     ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.keys()) : []),
-                    ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.values()).map(v => v?.dest).filter(Number.isFinite) : []),
+                    ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.values()).map((v) => v?.dest).filter(Number.isFinite) : []),
                     ...(level?.filterMap instanceof Map ? Array.from(level.filterMap.keys()) : []),
                     ...(level?.flippingFilterMap instanceof Map ? Array.from(level.flippingFilterMap.keys()) : [])
                 ]),
@@ -7265,7 +7299,7 @@
             const symmetryAxis = confidence >= symmetryCommitmentThreshold ? bestPlanarAxis : null;
             const preferredBreak = preferredBreakForAxis(bestPlanarAxis);
 
-            const symmetryModel = {
+            return {
                 axis: symmetryAxis,
                 dominantAxis: bestPlanarAxis,
                 confidence,
@@ -7278,7 +7312,12 @@
                 rotational90Agreement: transformScores.rotational90?.score || 0,
                 transformScores
             };
+        },
 
+        _buildPortalHintModel(level, topology = {}, objectiveModel = {}) {
+            const regionByKey = topology.regionByKey || new Map();
+            const degreeMap = topology.degreeMap || new Map();
+            const objectiveFeatures = Array.isArray(objectiveModel.features) ? objectiveModel.features : [];
             const portalFamilies = [];
             const portalBridgeHints = [];
             const seenPortalPair = new Set();
@@ -7300,7 +7339,7 @@
                     });
                     const fromDeg = degreeMap.get(fromKey) || 0;
                     const toDeg = degreeMap.get(toKey) || 0;
-                    const objectiveNear = objectiveFeatures.some(obj => {
+                    const objectiveNear = objectiveFeatures.some((obj) => {
                         const pObj = APP.LevelUtils.UNPACK(obj.key);
                         const pFrom = APP.LevelUtils.UNPACK(fromKey);
                         const pTo = APP.LevelUtils.UNPACK(toKey);
@@ -7321,54 +7360,94 @@
                     }
                 });
             }
-            const portalHintModel = {
+            return {
                 families: portalFamilies,
                 regionByKey,
                 bridgeHints: portalBridgeHints,
-                mandatoryFamilies: portalBridgeHints.filter(h => h.mandatoryLike).map(h => h.familyId)
+                mandatoryFamilies: portalBridgeHints.filter((h) => h.mandatoryLike).map((h) => h.familyId)
             };
+        },
 
-            const topology = {
-                walkableCellCount: walkableKeys.length,
-                degreeHistogram,
-                averageDegree: meanDegree,
-                degreeVariance,
-                articulationPointCount: articulationSet.size,
-                bridgeCount: bridgeEdges.length,
-                corridorRatio,
-                maxCorridorDepth: Math.max(0, ...Array.from(corridorDepthMap.values(), v => v || 0)),
-                connectedRegionCount: connectedRegions.length,
-                connectedRegionCompactness: compactnessPerRegion,
-                meanRegionCompactness: compactnessPerRegion.length > 0
-                    ? compactnessPerRegion.reduce((a, b) => a + b, 0) / compactnessPerRegion.length
-                    : 0,
-                largestRegionRatio: connectedRegions.length > 0
-                    ? Math.max(...connectedRegions.map(r => r.length)) / Math.max(1, walkableKeys.length)
-                    : 0,
-                chokeScoreMap
-            };
+        buildLevelProfile(level) {
+            const w = level?.grid?.w || 0;
+            const h = level?.grid?.h || 0;
+            const totalCells = Math.max(1, w * h);
+            const blocks = level?.blockSet?.size || 0;
+            const freeCells = Math.max(1, totalCells - blocks);
+            const routePressure = (Math.max(0, level?.reqLen || 0) / freeCells) + ((level?.reqInt || 0) * 0.35);
+            const portalLoad = level?.portalMap?.size || 0;
+            const mustPassCount = level?.mustPassKeys?.length || 0;
+            const mustCrossCount = level?.mustCrossKeys?.length || 0;
+            const falseGoalCount = level?.falseGoalKeys?.size || 0;
+            const objectiveSignalCount = mustPassCount + mustCrossCount + falseGoalCount;
+            const objectiveDensity = objectiveSignalCount / freeCells;
+            const perimeterThreshold = (w >= 9 || h >= 9) ? 1 : 0;
+
+            const topology = this._computeTopology(level);
+            const objectiveModel = this._computeObjectiveModel(level, topology);
+            const knotAnalysis = this._findKnotCandidates(level, topology, objectiveModel);
+            const symmetryModel = this._detectSymmetry(level);
+            const portalHintModel = this._buildPortalHintModel(level, topology, objectiveModel);
+
             const hypothesisModel = this.buildHypothesisModel({
                 routePressure,
-                openness,
-                objectiveCount: objectiveFeatures.length,
-                topology,
+                openness: topology.openness,
+                objectiveCount: objectiveModel.features.length,
+                topology: {
+                    walkableCellCount: topology.walkableKeys.length,
+                    degreeHistogram: topology.degreeHistogram,
+                    averageDegree: topology.meanDegree,
+                    degreeVariance: topology.degreeVariance,
+                    articulationPointCount: topology.articulationSet.size,
+                    bridgeCount: topology.bridgeEdges.length,
+                    corridorRatio: topology.corridorRatio,
+                    maxCorridorDepth: topology.maxCorridorDepth,
+                    connectedRegionCount: topology.connectedRegions.length,
+                    connectedRegionCompactness: topology.compactnessPerRegion,
+                    meanRegionCompactness: topology.compactnessPerRegion.length > 0
+                        ? topology.compactnessPerRegion.reduce((a, b) => a + b, 0) / topology.compactnessPerRegion.length
+                        : 0,
+                    largestRegionRatio: topology.connectedRegions.length > 0
+                        ? Math.max(...topology.connectedRegions.map((r) => r.length)) / Math.max(1, topology.walkableKeys.length)
+                        : 0,
+                    chokeScoreMap: topology.chokeScoreMap
+                },
                 portalHints: portalHintModel,
-                knotCandidates: rankedKnotCandidates,
-                objectiveModel: { features: objectiveFeatures, priorityMap: objectivePriority },
+                knotCandidates: knotAnalysis.knotCandidates,
+                objectiveModel,
                 symmetryModel
             });
-            const archetype = hypothesisModel.primaryArchetype || (portalLoad > 0 ? 'portalFirstTransfer' : (((level?.reqInt || 0) >= 2) ? 'knotBuilder' : (openness > 0.75 ? 'perimeterSweep' : 'harvestThenFinish')));
+            const archetype = hypothesisModel.primaryArchetype || (portalLoad > 0 ? 'portalFirstTransfer' : (((level?.reqInt || 0) >= 2) ? 'knotBuilder' : (topology.openness > 0.75 ? 'perimeterSweep' : 'harvestThenFinish')));
             const templateLibrary = this.buildTemplateLibrary();
+            const topologySummary = {
+                walkableCellCount: topology.walkableKeys.length,
+                degreeHistogram: topology.degreeHistogram,
+                averageDegree: topology.meanDegree,
+                degreeVariance: topology.degreeVariance,
+                articulationPointCount: topology.articulationSet.size,
+                bridgeCount: topology.bridgeEdges.length,
+                corridorRatio: topology.corridorRatio,
+                maxCorridorDepth: topology.maxCorridorDepth,
+                connectedRegionCount: topology.connectedRegions.length,
+                connectedRegionCompactness: topology.compactnessPerRegion,
+                meanRegionCompactness: topology.compactnessPerRegion.length > 0
+                    ? topology.compactnessPerRegion.reduce((a, b) => a + b, 0) / topology.compactnessPerRegion.length
+                    : 0,
+                largestRegionRatio: topology.connectedRegions.length > 0
+                    ? Math.max(...topology.connectedRegions.map((r) => r.length)) / Math.max(1, topology.walkableKeys.length)
+                    : 0,
+                chokeScoreMap: topology.chokeScoreMap
+            };
             const templateCandidates = this.selectTemplateCandidates({
                 archetype,
                 routePressure,
-                openness,
-                objectiveCount: objectiveFeatures.length,
+                openness: topology.openness,
+                objectiveCount: objectiveModel.features.length,
                 perimeterThreshold,
-                topology,
+                topology: topologySummary,
                 portalHints: portalHintModel,
                 symmetryModel,
-                knotCandidates: rankedKnotCandidates,
+                knotCandidates: knotAnalysis.knotCandidates,
                 hypothesisModel
             }, templateLibrary);
             const complexitySignals = {
@@ -7379,24 +7458,24 @@
                 objectiveDensity
             };
             const complexityClass = this.classifyComplexityProfile(complexitySignals);
-            const filterPressure = ((level?.filterMap?.size || 0) + (level?.flippingFilterMap?.size || 0)) / Math.max(1, walkableKeys.length);
+            const filterPressure = ((level?.filterMap?.size || 0) + (level?.flippingFilterMap?.size || 0)) / Math.max(1, topology.walkableKeys.length);
             const strategySubtypeInfo = this.deriveStrategySubtype({
                 routePressure,
-                openness,
-                objectiveCount: objectiveFeatures.length,
+                openness: topology.openness,
+                objectiveCount: objectiveModel.features.length,
                 mustCrossCount,
                 boardArea: (w * h),
                 filterPressure,
-                topology,
+                topology: topologySummary,
                 portalHints: portalHintModel,
                 symmetryModel,
-                objectiveModel: { features: objectiveFeatures, priorityMap: objectivePriority }
+                objectiveModel
             });
 
             return {
                 routePressure,
-                openness,
-                objectiveCount: objectiveFeatures.length,
+                openness: topology.openness,
+                objectiveCount: objectiveModel.features.length,
                 objectiveSignalCount,
                 objectiveDensity,
                 mustCrossCount,
@@ -7408,20 +7487,16 @@
                 strategySubtypeSignals: strategySubtypeInfo.keySignals,
                 strategySubtypeRanked: strategySubtypeInfo.ranked,
                 perimeterThreshold,
-                perimeterBias: routePressure > 0.8 || openness > 0.72 ? 40 : 0,
+                perimeterBias: routePressure > 0.8 || topology.openness > 0.72 ? 40 : 0,
                 knotBias: (level?.reqInt || 0) > 0 ? 34 : 0,
                 portalCommitment: portalLoad > 0 ? 55 : 0,
-                objectivePriority,
-                knotZone,
-                symmetryAxis,
-                topology,
+                objectivePriority: objectiveModel.priorityMap,
+                knotZone: knotAnalysis.knotZone,
+                symmetryAxis: symmetryModel.axis,
+                topology: topologySummary,
                 portalHints: portalHintModel,
-                objectiveModel: {
-                    features: objectiveFeatures,
-                    priorityMap: objectivePriority,
-                    seedMode: 'gate-objective-goal-cost'
-                },
-                knotCandidates: rankedKnotCandidates,
+                objectiveModel,
+                knotCandidates: knotAnalysis.knotCandidates,
                 symmetryModel,
                 archetype,
                 hypothesisModel,
