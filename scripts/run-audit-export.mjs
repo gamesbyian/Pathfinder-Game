@@ -83,6 +83,167 @@ const waitForAuditResult = async (page) => {
 
 const utcStamp = () => new Date().toISOString().replace(/[:]/g, '-').replace(/\.\d{3}Z$/, 'Z');
 
+const toFiniteNumber = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const resolveLevelNumber = (row, index) =>
+  toFiniteNumber(row?.levelNumber) ??
+  toFiniteNumber(row?.level) ??
+  toFiniteNumber(row?.id) ??
+  index + 1;
+
+const deriveFailureFamily = (row) => {
+  const status = `${row?.status || ''}`;
+  const hasError = Boolean(row?.error);
+
+  if (!status && !hasError) return 'unknown';
+  if (hasError) return 'error';
+  if (status === 'success') return 'success';
+  if (status === 'timeout') return 'timeout';
+  if (status === 'no-solution-inconclusive') return 'inconclusive';
+  if (status === 'no-solution-proven') return 'proven-no-solution';
+  if (status === 'aborted') return 'aborted';
+  if (row?.failureCategory) return `${row.failureCategory}`;
+  return status || 'unknown';
+};
+
+const computeTransitionSummary = (currentPayload, previousPayload) => {
+  const currentLevels = Array.isArray(currentPayload?.levels) ? currentPayload.levels : [];
+  const previousLevels = Array.isArray(previousPayload?.levels) ? previousPayload.levels : [];
+  const previousByLevel = new Map(previousLevels.map((row, index) => [resolveLevelNumber(row, index), row]));
+
+  const telemetryFields = [
+    'timeMs',
+    'totalSolveTimeMs',
+    'nodesExpanded',
+    'candidateMovesConsidered',
+    'rootCandidatesGenerated',
+    'rootCandidatesExpanded'
+  ];
+
+  const transitions = [];
+  const counters = {
+    improved: 0,
+    regressed: 0,
+    statusChanged: 0,
+    telemetryChanged: 0,
+    newlyAddedLevels: 0,
+    removedLevels: 0
+  };
+
+  const failureFamilyMigration = {};
+  const bumpMigration = (from, to) => {
+    const key = `${from} -> ${to}`;
+    failureFamilyMigration[key] = (failureFamilyMigration[key] || 0) + 1;
+  };
+
+  currentLevels.forEach((row, index) => {
+    const levelNumber = resolveLevelNumber(row, index);
+    const prev = previousByLevel.get(levelNumber);
+    const currentStatus = `${row?.status || ''}`;
+    const previousStatus = `${prev?.status || ''}`;
+    const currentHasError = Boolean(row?.error);
+    const previousHasError = Boolean(prev?.error);
+    const currentFamily = deriveFailureFamily(row);
+    const previousFamily = deriveFailureFamily(prev);
+
+    if (!prev) {
+      counters.newlyAddedLevels += 1;
+      transitions.push({
+        levelNumber,
+        transition: 'new-level',
+        current: {
+          status: currentStatus,
+          hasError: currentHasError,
+          failureFamily: currentFamily
+        }
+      });
+      return;
+    }
+
+    const statusChanged = currentStatus !== previousStatus || currentHasError !== previousHasError;
+    if (statusChanged) counters.statusChanged += 1;
+
+    const telemetryDelta = {};
+    let telemetryChanged = false;
+    telemetryFields.forEach((field) => {
+      const currentValue = toFiniteNumber(row?.[field]);
+      const previousValue = toFiniteNumber(prev?.[field]);
+      if (currentValue === null && previousValue === null) return;
+      const delta =
+        currentValue === null || previousValue === null ? null : Math.round((currentValue - previousValue) * 100) / 100;
+      telemetryDelta[field] = { previous: previousValue, current: currentValue, delta };
+      if (delta !== 0) telemetryChanged = true;
+      if (delta === null && currentValue !== previousValue) telemetryChanged = true;
+    });
+    if (telemetryChanged) counters.telemetryChanged += 1;
+
+    const previousSuccess = previousStatus === 'success' && !previousHasError;
+    const currentSuccess = currentStatus === 'success' && !currentHasError;
+    const improved = !previousSuccess && currentSuccess;
+    const regressed = previousSuccess && !currentSuccess;
+
+    if (improved) counters.improved += 1;
+    if (regressed) counters.regressed += 1;
+
+    if (previousFamily !== currentFamily) {
+      bumpMigration(previousFamily, currentFamily);
+    }
+
+    if (!statusChanged && !telemetryChanged) return;
+
+    transitions.push({
+      levelNumber,
+      transition: improved ? 'improved' : regressed ? 'regressed' : statusChanged ? 'status-shift' : 'telemetry-shift',
+      previous: {
+        status: previousStatus,
+        hasError: previousHasError,
+        failureFamily: previousFamily
+      },
+      current: {
+        status: currentStatus,
+        hasError: currentHasError,
+        failureFamily: currentFamily
+      },
+      telemetryDelta
+    });
+  });
+
+  const currentNumbers = new Set(currentLevels.map((row, index) => resolveLevelNumber(row, index)));
+  previousLevels.forEach((row, index) => {
+    const levelNumber = resolveLevelNumber(row, index);
+    if (!currentNumbers.has(levelNumber)) {
+      counters.removedLevels += 1;
+      transitions.push({
+        levelNumber,
+        transition: 'removed-level',
+        previous: {
+          status: `${row?.status || ''}`,
+          hasError: Boolean(row?.error),
+          failureFamily: deriveFailureFamily(row)
+        }
+      });
+    }
+  });
+
+  return {
+    comparedAgainst: previousPayload
+      ? {
+          timestamp: previousPayload?.timestamp || null,
+          runType: previousPayload?.runType || null,
+          exportMode: previousPayload?.exportMode || null,
+          levelCount: previousLevels.length
+        }
+      : null,
+    counters,
+    failureFamilyMigration,
+    changedLevels: transitions,
+    unchangedLevelCount: Math.max(0, currentLevels.length - transitions.filter((t) => t.transition !== 'removed-level').length)
+  };
+};
+
 const summarizeMetrics = (payload, commitSha) => {
   const levels = Array.isArray(payload?.levels) ? payload.levels : [];
 
@@ -114,11 +275,6 @@ const summarizeMetrics = (payload, commitSha) => {
     error: 0
   };
 
-  const toFiniteNumber = (value) => {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
-  };
-
   levels.forEach((row, index) => {
     const status = `${row?.status || ''}`;
     const hasError = Boolean(row?.error);
@@ -140,11 +296,7 @@ const summarizeMetrics = (payload, commitSha) => {
     const totalSolveTimeMs = toFiniteNumber(row?.totalSolveTimeMs);
     if (totalSolveTimeMs !== null) solveVals.push(totalSolveTimeMs);
 
-    const levelNumber =
-      toFiniteNumber(row?.levelNumber) ??
-      toFiniteNumber(row?.level) ??
-      toFiniteNumber(row?.id) ??
-      index + 1;
+    const levelNumber = resolveLevelNumber(row, index);
 
     const isFailing = status !== 'success' || hasError;
     if (!isFailing) return;
@@ -244,10 +396,18 @@ const run = async () => {
     const rawFilePath = path.join(rawDir, rawFileName);
     const latestRawPath = path.join(rawDir, 'latest.json');
 
+    let previousPayload = null;
+    try {
+      previousPayload = JSON.parse(await readFile(latestRawPath, 'utf8'));
+    } catch {
+      previousPayload = null;
+    }
+
     await writeFile(rawFilePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
     await writeFile(latestRawPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     const metrics = summarizeMetrics(payload, process.env.GITHUB_SHA || 'local');
+    metrics.levelTransitionSummary = computeTransitionSummary(payload, previousPayload);
     const metricsFileName = `${stamp}-${shortSha}.json`;
     const metricsFilePath = path.join(metricsDir, metricsFileName);
     const latestMetricsPath = path.join(metricsDir, 'latest.json');
@@ -266,6 +426,18 @@ const run = async () => {
 
     console.log(`Audit export written: ${path.relative(process.cwd(), rawFilePath)}`);
     console.log(`Metrics written: ${path.relative(process.cwd(), metricsFilePath)}`);
+    const transitionCounters = metrics.levelTransitionSummary?.counters || {};
+    const migrationPairs = Object.entries(metrics.levelTransitionSummary?.failureFamilyMigration || {})
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+    console.log(
+      `Level transitions (vs previous): improved=${transitionCounters.improved || 0}, regressed=${transitionCounters.regressed || 0}, statusChanged=${transitionCounters.statusChanged || 0}, telemetryChanged=${transitionCounters.telemetryChanged || 0}`
+    );
+    if (migrationPairs) {
+      console.log(`Failure-family migration: ${migrationPairs}`);
+    }
   } finally {
     await browser.close();
     await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
