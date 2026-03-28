@@ -85,9 +85,90 @@ const utcStamp = () => new Date().toISOString().replace(/[:]/g, '-').replace(/\.
 
 const summarizeMetrics = (payload, commitSha) => {
   const levels = Array.isArray(payload?.levels) ? payload.levels : [];
-  const timeVals = levels.map((row) => row?.timeMs).filter((n) => Number.isFinite(n));
-  const solveVals = levels.map((row) => row?.totalSolveTimeMs).filter((n) => Number.isFinite(n));
-  const countBy = (field, target) => levels.filter((row) => `${row?.[field] || ''}` === target).length;
+
+  const timeVals = [];
+  const solveVals = [];
+
+  const statusCounts = {
+    success: 0,
+    timeout: 0,
+    noSolutionInconclusive: 0,
+    noSolutionProven: 0,
+    aborted: 0,
+    error: 0
+  };
+
+  const qualitySignals = {
+    producedHintValidCount: 0,
+    contradictionRecoveryActivatedCount: 0,
+    preExpansionAbortUnexpectedExceptionCount: 0
+  };
+
+  const failingLevelNumbers = new Set();
+  const failingDetails = [];
+  const failingByStatus = {
+    timeout: 0,
+    noSolutionInconclusive: 0,
+    noSolutionProven: 0,
+    aborted: 0,
+    error: 0
+  };
+
+  const toFiniteNumber = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  levels.forEach((row, index) => {
+    const status = `${row?.status || ''}`;
+    const hasError = Boolean(row?.error);
+
+    if (status === 'success') statusCounts.success += 1;
+    if (status === 'timeout') statusCounts.timeout += 1;
+    if (status === 'no-solution-inconclusive') statusCounts.noSolutionInconclusive += 1;
+    if (status === 'no-solution-proven') statusCounts.noSolutionProven += 1;
+    if (status === 'aborted') statusCounts.aborted += 1;
+    if (hasError) statusCounts.error += 1;
+
+    if (row?.producedHintValid === true) qualitySignals.producedHintValidCount += 1;
+    if (row?.contradictionRecoveryActivated === true) qualitySignals.contradictionRecoveryActivatedCount += 1;
+    if (row?.preExpansionAbort === 'unexpected-exception') qualitySignals.preExpansionAbortUnexpectedExceptionCount += 1;
+
+    const timeMs = toFiniteNumber(row?.timeMs);
+    if (timeMs !== null) timeVals.push(timeMs);
+
+    const totalSolveTimeMs = toFiniteNumber(row?.totalSolveTimeMs);
+    if (totalSolveTimeMs !== null) solveVals.push(totalSolveTimeMs);
+
+    const levelNumber =
+      toFiniteNumber(row?.levelNumber) ??
+      toFiniteNumber(row?.level) ??
+      toFiniteNumber(row?.id) ??
+      index + 1;
+
+    const isFailing = status !== 'success' || hasError;
+    if (!isFailing) return;
+
+    failingLevelNumbers.add(levelNumber);
+    failingDetails.push({ levelNumber, status, hasError });
+
+    if (hasError) {
+      failingByStatus.error += 1;
+      return;
+    }
+
+    if (status === 'timeout') {
+      failingByStatus.timeout += 1;
+    } else if (status === 'no-solution-inconclusive') {
+      failingByStatus.noSolutionInconclusive += 1;
+    } else if (status === 'no-solution-proven') {
+      failingByStatus.noSolutionProven += 1;
+    } else if (status === 'aborted') {
+      failingByStatus.aborted += 1;
+    } else {
+      failingByStatus.error += 1;
+    }
+  });
 
   return {
     timestamp: new Date().toISOString(),
@@ -95,19 +176,14 @@ const summarizeMetrics = (payload, commitSha) => {
     runType: payload?.runType || 'unknown',
     exportMode: payload?.exportMode || 'unknown',
     levelCount: levels.length,
-    statusCounts: {
-      success: countBy('status', 'success'),
-      timeout: countBy('status', 'timeout'),
-      noSolutionInconclusive: countBy('status', 'no-solution-inconclusive'),
-      noSolutionProven: countBy('status', 'no-solution-proven'),
-      aborted: countBy('status', 'aborted'),
-      error: levels.filter((row) => row?.error).length
+    statusCounts,
+    failingLevels: {
+      total: failingDetails.length,
+      byStatus: failingByStatus,
+      levelNumbers: Array.from(failingLevelNumbers).sort((a, b) => a - b),
+      details: failingDetails
     },
-    qualitySignals: {
-      producedHintValidCount: levels.filter((row) => row?.producedHintValid === true).length,
-      contradictionRecoveryActivatedCount: levels.filter((row) => row?.contradictionRecoveryActivated === true).length,
-      preExpansionAbortUnexpectedExceptionCount: levels.filter((row) => row?.preExpansionAbort === 'unexpected-exception').length
-    },
+    qualitySignals,
     performance: {
       hintTimeMsAvg: timeVals.length ? Math.round(timeVals.reduce((a, b) => a + b, 0) / timeVals.length) : null,
       totalSolveTimeMsAvg: solveVals.length ? Math.round(solveVals.reduce((a, b) => a + b, 0) / solveVals.length) : null,

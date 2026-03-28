@@ -13,7 +13,7 @@ Outputs:
 
 - `audits/raw/latest.json`: latest full export payload.
 - `audits/raw/<timestamp>-<sha>.json`: timestamped raw history snapshots.
-- `audits/metrics/latest.json`: latest compact metrics summary.
+- `audits/metrics/latest.json`: latest compact metrics summary, including `failingLevels` with failing level numbers/details for downstream tooling.
 - `audits/metrics/<timestamp>-<sha>.json`: timestamped metrics snapshots.
 - `audits/metrics/history.ndjson`: append-only metrics history for easy trend parsing.
 
