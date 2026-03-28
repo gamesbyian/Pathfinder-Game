@@ -3671,6 +3671,9 @@
                     const templateCommitDepthRatio = Number.isFinite(templateCommitment?.depthRatio) ? templateCommitment.depthRatio : 0.38;
                     const inTemplateCommitWindow = !!(structuralTemplate && (l.reqLen > 0) && ((curLen / l.reqLen) <= templateCommitDepthRatio));
                     const objectiveTrackStrictness = Number.isFinite(options?.objectiveTrack?.strictness) ? options.objectiveTrack.strictness : 0.72;
+                    const recentWindow = Math.min(8, Math.max(0, state.path.length - 1));
+                    const recentTurnbackCount = state.recentTurnbackCount || 0;
+                    const dirRepeat = state.recentDirRepeatCount || 0;
                     const scored = valid.map(nk => {
                         const px = k & 0xFFFF;
                         const py = k >> 16;
