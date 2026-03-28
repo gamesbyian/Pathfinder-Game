@@ -5131,6 +5131,10 @@
                 }
             };
 
+        // SearchFramework: iterates start states from a policy and collects results.
+        // policy must provide: getStartStates, expandMoves, getStateKey, applyMove,
+        //   isAcceptState, onAcceptState, initOutput.
+        // applyMove(state, move, out) must return { kind: 'solution'|'aborted'|'timeout'|'trap-spots', ... }.
         const SearchFramework = {
                 async runSearch({
                     level,
@@ -5139,47 +5143,26 @@
                     signal,
                     onProgress = () => {},
                     onStateUpdate = () => {},
-                    policy,
-                    getStartStates,
-                    isAcceptState,
-                    onAcceptState,
-                    expandMoves,
-                    applyMove,
-                    getStateKey,
-                    dominates,
-                    recordBest,
-                    initOutput,
-                    initialOutput
+                    policy
                 }) {
-                    const resolvedGetStartStates = getStartStates || policy?.getStartStates;
-                    const resolvedIsAcceptState = isAcceptState || policy?.isAcceptState;
-                    const resolvedOnAcceptState = onAcceptState || policy?.onAcceptState;
-                    const resolvedExpandMoves = expandMoves || policy?.expandMoves;
-                    const resolvedApplyMove = applyMove || policy?.applyMove;
-                    const resolvedGetStateKey = getStateKey || policy?.getStateKey;
-                    const resolvedDominates = dominates || policy?.dominates;
-                    const resolvedRecordBest = recordBest || policy?.recordBest;
-                    const resolvedInitOutput = initOutput || policy?.initOutput;
-                    const resolvedInitialOutput = initialOutput || policy?.initialOutput;
-
-                    const out = (typeof resolvedInitOutput === 'function') ? (resolvedInitOutput() || {}) : (resolvedInitialOutput || {});
+                    const out = typeof policy?.initOutput === 'function' ? (policy.initOutput() || {}) : (policy?.initialOutput || {});
                     const bestMap = new Map();
-                    const startStates = (typeof resolvedGetStartStates === 'function') ? (resolvedGetStartStates() || []) : [];
+                    const startStates = typeof policy?.getStartStates === 'function' ? (policy.getStartStates() || []) : [];
                     for (const startState of startStates) {
                         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                        const key = resolvedGetStateKey ? resolvedGetStateKey(startState) : null;
+                        const key = policy?.getStateKey ? policy.getStateKey(startState) : null;
                         if (key !== null && key !== undefined) {
                             const prevBest = bestMap.get(key);
                             if (prevBest !== undefined) {
-                                if (!resolvedDominates || resolvedDominates(prevBest, startState)) continue;
+                                if (!policy?.dominates || policy.dominates(prevBest, startState)) continue;
                             }
-                            if (resolvedRecordBest) resolvedRecordBest(bestMap, key, startState);
+                            if (policy?.recordBest) policy.recordBest(bestMap, key, startState);
                             else bestMap.set(key, startState);
                         }
-                        const moves = resolvedExpandMoves ? (resolvedExpandMoves(startState, out) || []) : [null];
+                        const moves = policy?.expandMoves ? (policy.expandMoves(startState, out) || []) : [null];
                         for (const move of moves) {
                             if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                            const candidate = await resolvedApplyMove(startState, move, out);
+                            const candidate = await policy?.applyMove(startState, move, out);
                             if (candidate?.kind === 'aborted') {
                                 out.aborted = true;
                                 out.stop = true;
@@ -5190,8 +5173,8 @@
                                 out.stop = true;
                                 break;
                             }
-                            if (resolvedIsAcceptState && resolvedIsAcceptState(candidate, out)) {
-                                resolvedOnAcceptState?.(candidate, out);
+                            if (policy?.isAcceptState && policy.isAcceptState(candidate, out)) {
+                                policy?.onAcceptState?.(candidate, out);
                             }
                             if (candidate?.timedOutAfterAccept) {
                                 out.timedOut = true;
@@ -5228,53 +5211,8 @@
             };
 
         const SolverPolicies = {
-                makeHintPolicy(level, options = {}) {
-                    const {
-                        validGates,
-                        dirOrderVariant = 'default',
-                        maxSolutions = 5,
-                        distMap,
-                        flipperDistMap,
-                        startTime,
-                        localTimeLimit,
-                        onProgress,
-                        signal,
-                        hazardPolicy = 'forbid',
-                        disabledPrunes = [],
-                        useFailMemo = true,
-                        debugStats,
-                        falseGoalPolicy = 'forbidIntersect',
-                        enableForcedMoves = true,
-                        scoringMode = 'modern',
-                        portalBiasMode = 'adaptiveMustCross',
-                        structuralMode = false,
-                        phasePolicy = null,
-                        structuralTemplate = null,
-                        objectiveTrack = null,
-                        templateCommitment = null,
-                        portalLockPolicy = null,
-                        knotBudgetPolicy = null,
-                        controlPlane = null,
-                        gateBeamTopK = 0,
-                        debugGateVariant = false,
-                        enableLowExpansionProbe = false,
-                        contradictionRecoveryMode = false,
-                        assertKnownSolvableBounds = false,
-                        forcePhaseArchetype = null,
-                        antiDriftEdgeLock = false,
-                        forcedPolicyProfile = null,
-                        suppressPerimeterBias = false
-                    } = options;
-                    if (APP.State?.ENGINE?.isDevMode) {
-                        const undefinedModes = [
-                            ['scoringMode', scoringMode],
-                            ['portalBiasMode', portalBiasMode],
-                            ['structuralMode', structuralMode]
-                        ].filter(([, value]) => typeof value === 'undefined');
-                        if (undefinedModes.length > 0) {
-                            throw new Error(`[SolverPolicies.makeHintPolicy] Missing required option(s): ${undefinedModes.map(([name]) => name).join(', ')}`);
-                        }
-                    }
+                buildSolverContext(level, options = {}) {
+                    const { validGates } = options;
                     const candidateGates = (validGates || level.gateKeys || []).slice();
                     const profile = level?.solverProfile || null;
                     const symmetryModel = profile?.symmetryModel || null;
@@ -5360,6 +5298,47 @@
                         return a.gateKey - b.gateKey;
                     });
 
+                    return { candidateGates, profile, symmetryModel, symmetryCommitted, objectiveFeatures, objectiveDistByKey, knotZone, knotDistMap, portalHints, portalFamilies, mandatoryFamilySet, perimeterThreshold, symmetryAxis, preferredHalf, symmetryMid, gateRankings };
+                },
+                makeSolverPolicy(context, level, options = {}) {
+                    const { gateRankings } = context;
+                    const {
+                        validGates,
+                        dirOrderVariant = 'default',
+                        maxSolutions = 5,
+                        distMap,
+                        flipperDistMap,
+                        startTime,
+                        localTimeLimit,
+                        onProgress,
+                        signal,
+                        hazardPolicy = 'forbid',
+                        disabledPrunes = [],
+                        useFailMemo = true,
+                        debugStats,
+                        falseGoalPolicy = 'forbidIntersect',
+                        enableForcedMoves = true,
+                        scoringMode = 'modern',
+                        portalBiasMode = 'adaptiveMustCross',
+                        structuralMode = false,
+                        phasePolicy = null,
+                        structuralTemplate = null,
+                        objectiveTrack = null,
+                        templateCommitment = null,
+                        portalLockPolicy = null,
+                        knotBudgetPolicy = null,
+                        controlPlane = null,
+                        gateBeamTopK = 0,
+                        debugGateVariant = false,
+                        enableLowExpansionProbe = false,
+                        contradictionRecoveryMode = false,
+                        assertKnownSolvableBounds = false,
+                        forcePhaseArchetype = null,
+                        antiDriftEdgeLock = false,
+                        forcedPolicyProfile = null,
+                        suppressPerimeterBias = false
+                    } = options;
+
                     let rankedQueue = gateRankings.slice();
                     const beamK = Math.max(0, Math.min(gateRankings.length, Math.floor(gateBeamTopK || 0)));
                     if (beamK > 0 && beamK < gateRankings.length) {
@@ -5436,6 +5415,21 @@
                         },
                         initOutput: () => ({ startTime, solutions: [], timedOut: false, aborted: false })
                     };
+                },
+                makeHintPolicy(level, options = {}) {
+                    if (APP.State?.ENGINE?.isDevMode) {
+                        const { scoringMode, portalBiasMode, structuralMode } = options;
+                        const undefinedModes = [
+                            ['scoringMode', scoringMode],
+                            ['portalBiasMode', portalBiasMode],
+                            ['structuralMode', structuralMode]
+                        ].filter(([, value]) => typeof value === 'undefined');
+                        if (undefinedModes.length > 0) {
+                            throw new Error(`[SolverPolicies.makeHintPolicy] Missing required option(s): ${undefinedModes.map(([name]) => name).join(', ')}`);
+                        }
+                    }
+                    const context = SolverPolicies.buildSolverContext(level, options);
+                    return SolverPolicies.makeSolverPolicy(context, level, options);
                 },
                 makeTrapPolicy(level, options = {}) {
                     const { timeLimit = 8000, startTime = Date.now(), onProgress = () => {}, signal = null, hazardPolicy = 'forbid', falseGoalPolicy = 'ignore', enableForcedMoves = true, stageMode = 'enumerate' } = options;
