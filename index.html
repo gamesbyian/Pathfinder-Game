@@ -1707,10 +1707,34 @@
         let runStart = 0;
         let status = { running: false, mode: null, startedAt: 0 };
 
+        // MEMO_KEY_DIMENSIONS — canonical list of state dimensions used in both the debug string
+        // key (StateSignature.makeKey) and the production Murmur hash (_buildStateHashTuple).
+        // When adding a new game-mechanic state field, update BOTH functions to keep them in sync.
+        //   1. posKey            — current grid cell (head of path)
+        //   2. stepsUsed         — path length excluding portal jumps (realLen)
+        //   3. ints              — intersection count so far
+        //   4. mustMask          — bitmask of unvisited must-pass cells
+        //   5. mustCrossMask     — bitmask of must-cross cells not yet crossed twice
+        //   6. mustCrossCounts   — per-cell cross-visit counts (string encoding)
+        //   7. portalForced      — 1 if current cell is a portal entry that hasn't jumped yet
+        //   8. flipParity        — current filter-flip axis parity
+        //   9. flipperCrossMask  — bitmask of flipping filters crossed
+        //  10. flipperParityAtCrossMask — parity state at each flipper crossing
+        //  11. falseGoalPolicy   — solver option controlling false-goal handling
+        //  12. portalFamily      — committed portal family index (-1 if uncommitted)
+        //  13. portalEntry       — committed portal entry key (-1 if uncommitted)
+        //  14. portalRegion      — committed portal region (-1 if uncommitted)
+        //  15. portalCoverage    — required portal coverage bitmask
+        //  16. portalReentry     — remaining portal reentry budget
+        //  17. portalOscillation — remaining portal oscillation budget
+        //  18. portalLock        — derived portal lock state string
+        //  19. orderingPolicy    — solver option controlling move ordering
+        //  20. nonZeroUsage      — count of cells with non-zero filter usage (-1 if no filters)
         const StateSignature = {
                 makeKey(state, policy = {}) {
                     if (!state?.path?.length) return null;
                     const posKey = state.path[state.path.length - 1];
+                    // Dims 1–11: core path/constraint state
                     const portalForced = policy.level && policy.level.portalMap
                         ? (policy.level.portalMap.has(posKey) && !state.isJump?.has(state.path.length - 1) ? 1 : 0)
                         : 0;
@@ -1724,7 +1748,17 @@
                     const flipperCrossMask = (typeof state.flipperCrossMask === 'bigint') ? state.flipperCrossMask.toString() : '0';
                     const flipperParityAtCrossMask = (typeof state.flipperParityAtCrossMask === 'bigint') ? state.flipperParityAtCrossMask.toString() : '0';
                     const falseGoalPolicy = policy.falseGoalPolicy || '';
-                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy].join('|');
+                    // Dims 12–20: portal automaton + solver options (supplied by caller when available)
+                    const portalFamily = Number.isFinite(policy.portalSelectedFamily) ? policy.portalSelectedFamily : -1;
+                    const portalEntry = Number.isFinite(policy.portalSelectedEntry) ? policy.portalSelectedEntry : -1;
+                    const portalRegion = Number.isFinite(policy.portalCommittedRegion) ? policy.portalCommittedRegion : -1;
+                    const portalCoverage = (typeof policy.portalRequiredCoverageMask === 'bigint') ? policy.portalRequiredCoverageMask.toString() : '0';
+                    const portalReentry = Number.isFinite(policy.portalReentryBudget) ? policy.portalReentryBudget : 0;
+                    const portalOscillation = Number.isFinite(policy.portalOscillationBudget) ? policy.portalOscillationBudget : 0;
+                    const portalLock = policy.portalLockState || '';
+                    const orderingPolicy = policy.orderingPolicy || '';
+                    const nonZeroUsage = Number.isFinite(policy.nonZeroUsage) ? policy.nonZeroUsage : -1;
+                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage].join('|');
                 }
             };
 
@@ -2032,18 +2066,24 @@
                     return [h0 >>> 0, h1 >>> 0];
                 },
                 _buildStrictStateSignature(state, l, realLen, options = {}) {
-                    const base = StateSignature.makeKey(state, { level: l, stepsUsed: realLen, falseGoalPolicy: options.falseGoalPolicy || '' }) || '';
-                    return [
-                        base,
-                        Number.isFinite(state.portalSelectedFamily) ? state.portalSelectedFamily : -1,
-                        Number.isFinite(state.portalSelectedEntry) ? state.portalSelectedEntry : -1,
-                        Number.isFinite(state.portalCommittedRegion) ? state.portalCommittedRegion : -1,
-                        (state.portalRequiredCoverageMask || 0n).toString(),
-                        Number.isFinite(state.portalReentryBudget) ? state.portalReentryBudget : 0,
-                        Number.isFinite(state.portalOscillationBudget) ? state.portalOscillationBudget : 0,
-                        this._derivePortalLockState(state, options),
-                        options?.orderingPolicy || 'default'
-                    ].join('|');
+                    // All 20 MEMO_KEY_DIMENSIONS are now encoded inside StateSignature.makeKey.
+                    // Derived portal fields are computed here (SolverCore context required) and
+                    // passed via the policy bag so makeKey stays dependency-free.
+                    const hasFilters = (l?.filterMap?.size || 0) > 0 || (l?.flippingFilterMap?.size || 0) > 0;
+                    return StateSignature.makeKey(state, {
+                        level: l,
+                        stepsUsed: realLen,
+                        falseGoalPolicy: options.falseGoalPolicy || '',
+                        portalSelectedFamily: state.portalSelectedFamily,
+                        portalSelectedEntry: state.portalSelectedEntry,
+                        portalCommittedRegion: state.portalCommittedRegion,
+                        portalRequiredCoverageMask: state.portalRequiredCoverageMask,
+                        portalReentryBudget: state.portalReentryBudget,
+                        portalOscillationBudget: state.portalOscillationBudget,
+                        portalLockState: this._derivePortalLockState(state, options),
+                        orderingPolicy: options?.orderingPolicy || 'default',
+                        nonZeroUsage: hasFilters ? (state.nonZeroUsage | 0) : -1
+                    }) || '';
                 },
                 _refreshStateHashState(state, l, realLen, options = {}, debugStats = null) {
                     if (!state?.hashDirty) return state.memoHashKey;
@@ -3244,6 +3284,28 @@
                         return bonus;
                     };
 
+                    const filterCtx = {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap,
+                        disableDistanceBound, disableMustPassBound, disableMustCrossBound, disablePortalAutomaton,
+                        interactionCandidateFallbackEnabled, assertKnownSolvableBounds, debugNeighborTraceEnabled
+                    };
+                    const { valid, stageTrace, startNeighborBoundSanity } =
+                        this._filterCandidates(candidates, state, l, options, filterCtx, debugStats);
+                    return this._scoreCandidates(valid, state, l, options, {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap, flipperDistMap, usageFreq,
+                        stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
+                        computePortalOpportunity
+                    }, debugStats);
+                },
+                _filterCandidates(candidates, state, l, options, ctx, debugStats) {
+                    const {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap,
+                        disableDistanceBound, disableMustPassBound, disableMustCrossBound, disablePortalAutomaton,
+                        interactionCandidateFallbackEnabled, assertKnownSolvableBounds, debugNeighborTraceEnabled
+                    } = ctx;
                     const stageTrace = debugNeighborTraceEnabled ? {
                         fromKey: k,
                         depth,
@@ -3278,7 +3340,6 @@
                         memoRejected: 0,
                         topologyRejected: 0
                     } : null;
-
                     const startNeighborBoundSanity = depth === 0 ? { legalBranches: 0, satisfiedBranches: 0 } : null;
                     const gateToGateRejected = [];
                     const originalGateSet = l.gateSet;
@@ -3478,6 +3539,19 @@
                             console.warn(msg);
                         }
                     }
+                    return { valid, stageTrace, startNeighborBoundSanity };
+                },
+                _scoreCandidates(valid, state, l, options, ctx, debugStats) {
+                    const {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap, flipperDistMap, usageFreq,
+                        stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
+                        computePortalOpportunity
+                    } = ctx;
+                    const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
+                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, !!(portalForced && portalBiasMode !== 'off'));
+                    const activeObjectiveDistMap = activeObjectiveId >= 0 ? l.objectiveDistMaps?.[activeObjectiveId] : null;
+                    const activeObjectiveCurDist = activeObjectiveDistMap ? (activeObjectiveDistMap.get(k) ?? Infinity) : Infinity;
                     const scoringProfile = (options?.scoringMode === 'legacy' || options?.scoringMode === 'endurance') ? 'endurance' : 'modern';
                     const shouldRecordRootSuppression = depth === 0 && !!debugStats && (!!options?.enableLowExpansionProbe || !!APP?.State?.ENGINE?.isDevMode || !!APP?.State?.ENGINE?.flags?.refereeDebug || !!APP?.State?.ENGINE?.flags?.debugSolver);
                     const structuralMode = !!options?.structuralMode;
@@ -5482,6 +5556,11 @@
                     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
                     onStateUpdate("Analyzing Bipartite Parity...");
 
+                    // Shadow the level object so all solver-derived augmentations (distMaps,
+                    // index Maps, gateSet, etc.) are written onto a new object rather than
+                    // mutating the caller's level.  Reads fall through to the original via
+                    // the prototype chain, so no other code needs to change.
+                    level = Object.create(level);
                     const distMap = SolverCore._buildDistMap(level);
                     level.distMapForSolver = distMap;
                     if (level.falseGoalKeys?.size > 0) {
@@ -8632,7 +8711,7 @@
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             console.log('Referee starting tier:', tier);
             const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
-            const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
+            const level = Object.create(SavedHintArchitecture.toHintBlindSolverLevel(levelRaw));
             level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
             const objectivesAreInteriorDominant = (() => {
                 try {
