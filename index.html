@@ -12955,6 +12955,8 @@
         let auth = null;
         let db = null;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
+        let activeSyncUid = null;
+        let cloudSyncUnsubs = [];
 
         if (firebaseConfigRaw) {
             try {
@@ -13004,36 +13006,55 @@
             }
         }
 
-        function syncProgress(user) {
+        function clearCloudSyncListeners() {
+            if (!cloudSyncUnsubs.length) return;
+            for (const unsub of cloudSyncUnsubs) {
+                try { if (typeof unsub === 'function') unsub(); } catch (_) {}
+            }
+            cloudSyncUnsubs = [];
+            activeSyncUid = null;
+        }
+
+        function syncProgress() {
             const localData = localStorage.getItem(`pathfinder_progress_${appId}`);
             if (localData) {
                 APP.State.ENGINE.progressSet = new Set(JSON.parse(localData));
                 APP.Persistence.updateCompletionUI();
             }
 
-            if (user && db) {
-                const userDataCollection = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('data');
-                const progressDoc = userDataCollection.doc('levelProgress');
-                progressDoc.onSnapshot((doc) => {
-                    if (doc.exists) {
-                        const data = doc.data();
-                        const cloudSet = new Set(data.completedLevels || []);
-                        APP.State.ENGINE.progressSet = new Set([...APP.State.ENGINE.progressSet, ...cloudSet]);
-                        APP.Persistence.updateCompletionUI();
-                        localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
-                    }
-                }, (err) => {});
-
-                const sessionDoc = userDataCollection.doc('sessionState');
-                sessionDoc.onSnapshot((doc) => {
-                    if (!doc.exists) return;
-                    const data = doc.data() || {};
-                    const localSession = getLocalSessionState();
-                    const cloudSession = sanitizeSessionPayload(data, localSession);
-                    const nextSession = cloudSession.updatedAt > localSession.updatedAt ? cloudSession : localSession;
-                    localStorage.setItem(`pathfinder_session_${appId}`, JSON.stringify(nextSession));
-                }, (err) => {});
+            const user = auth?.currentUser;
+            if (!user || !db) {
+                clearCloudSyncListeners();
+                return;
             }
+
+            if (activeSyncUid === user.uid && cloudSyncUnsubs.length > 0) return;
+            clearCloudSyncListeners();
+
+            const userDataCollection = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('data');
+            const progressDoc = userDataCollection.doc('levelProgress');
+            const progressUnsub = progressDoc.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const cloudSet = new Set(data.completedLevels || []);
+                    APP.State.ENGINE.progressSet = new Set([...APP.State.ENGINE.progressSet, ...cloudSet]);
+                    APP.Persistence.updateCompletionUI();
+                    localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
+                }
+            }, () => {});
+
+            const sessionDoc = userDataCollection.doc('sessionState');
+            const sessionUnsub = sessionDoc.onSnapshot((doc) => {
+                if (!doc.exists) return;
+                const data = doc.data() || {};
+                const localSession = getLocalSessionState();
+                const cloudSession = sanitizeSessionPayload(data, localSession);
+                const nextSession = cloudSession.updatedAt > localSession.updatedAt ? cloudSession : localSession;
+                localStorage.setItem(`pathfinder_session_${appId}`, JSON.stringify(nextSession));
+            }, () => {});
+
+            cloudSyncUnsubs = [progressUnsub, sessionUnsub].filter(fn => typeof fn === 'function');
+            activeSyncUid = user.uid;
         }
 
         async function markLevelComplete(idx) {
@@ -15988,13 +16009,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Themes.applyTheme(persistedSession.currentTheme);
 
             try {
-                APP.Persistence.syncProgress(APP.Persistence.getCurrentUser());
+                APP.Persistence.syncProgress();
                 if (APP.Persistence.hasConfig) {
                     Promise.resolve(APP.Persistence.initAuth())
-                        .then(() => {
-                            APP.Persistence.syncProgress(APP.Persistence.getCurrentUser());
-                        })
-                        .catch(() => {});
+                        .then(
+                            () => { APP.Persistence.syncProgress(); },
+                            () => { APP.Persistence.syncProgress(); }
+                        );
                 }
 
                 const mode = await APP.Loader.init();
