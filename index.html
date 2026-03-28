@@ -9021,6 +9021,10 @@
             const profile = opts.profile || level?.solverProfile || null;
             const controlPlane = opts.controlPlane || this.createControlPlane(profile || {});
             const randomExplorationEnabled = !!opts.allowRandomizedExploration;
+            const timeoutEscalationRatios = [0.2, 0.35];
+            const maxTimeoutEscalationTier = timeoutEscalationRatios.length;
+            const strictMaxEscalatedAttemptBudgetMs = Math.max(1, Math.floor((Number(budgetMs) || 1) * 0.75));
+            const maxExtraEscalatedAttempts = 1;
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
             const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts, controlPlane });
 
@@ -9109,6 +9113,9 @@
 
             let autoContradictionRecoveryArmed = !!opts.contradictionRecovery;
             let timeoutFamilyDiversificationUsed = false;
+            let timeoutEscalationTier = 0;
+            let escalatedAttemptsAdded = 0;
+            let previousAttemptSwitchedFamily = false;
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
@@ -9169,6 +9176,9 @@
                 debug.strategySubtypeSignals = profile?.strategySubtypeSignals || null;
                 debug.heuristicFeatureFlags = heuristicFeatureFlags;
                 debug.featureSignature = featureSignature;
+                debug.timeoutEscalationTier = Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : 0;
+                debug.forcedFamilySwitch = !!attemptOpts?.forcedFamilySwitch;
+                debug.escalationReason = attemptOpts?.escalationReason || null;
                 const status = r?.ok && solution.length > 0
                     ? 'solved'
                     : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error'));
@@ -9194,6 +9204,9 @@
                     const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
                     const guardedDebug = guarded?.debug || {};
                     guardedDebug.contradictionGuard = contradictionGuard;
+                    guardedDebug.timeoutEscalationTier = Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : 0;
+                    guardedDebug.forcedFamilySwitch = !!attemptOpts?.forcedFamilySwitch;
+                    guardedDebug.escalationReason = attemptOpts?.escalationReason || null;
                     const guardedStatus = guarded?.ok && guardedSolution.length > 0
                         ? 'solved'
                         : (guardedDebug.status === 'timeout' ? 'timeout' : (guardedDebug.status === 'no-solution' ? normalizeNoSolutionStatus(guardedDebug) : 'error'));
@@ -9294,6 +9307,9 @@
                     featureSignature: attemptResult?.featureSignature || null,
                     status: attemptResult.status,
                     budgetMs: attempt.budgetMs,
+                    timeoutEscalationTier: Number.isFinite(attempt.timeoutEscalationTier) ? attempt.timeoutEscalationTier : 0,
+                    forcedFamilySwitch: !!attempt.forcedFamilySwitch,
+                    escalationReason: attempt.escalationReason || null,
                     scoringMode: attempt.scoringMode,
                     portalBiasMode: attempt.portalBiasMode,
                     structuralMode: !!attempt.structuralMode,
@@ -9349,6 +9365,7 @@
                 lastAttempt = attemptResult;
                 if (i + 1 < attempts.length) {
                     const nextAttempt = attempts[i + 1];
+                    let switchedThisAttempt = false;
                     const timeoutProne = ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status);
                     const healthyExpansionTimeout = timeoutProne
                         && (Number(attemptResult?.debug?.nodesExpanded) || 0) >= 110
@@ -9361,15 +9378,63 @@
                             remainingMustCross: quality.remainingMustCross,
                             reason: 'healthy-expansion-timeout-diversification'
                         }, profile, controlPlane);
-                        if (switched?.switched) timeoutFamilyDiversificationUsed = true;
+                        if (switched?.switched) {
+                            timeoutFamilyDiversificationUsed = true;
+                            switchedThisAttempt = true;
+                        }
+                    }
+                    if (healthyExpansionTimeout) {
+                        const nextTier = Math.min(maxTimeoutEscalationTier, timeoutEscalationTier + 1);
+                        if (nextTier > timeoutEscalationTier) {
+                            const tierRatio = timeoutEscalationRatios[nextTier - 1] || timeoutEscalationRatios[timeoutEscalationRatios.length - 1] || 0;
+                            const originalBudget = Math.max(1, Number(nextAttempt?.budgetMs) || 1);
+                            nextAttempt.budgetMs = Math.max(1, Math.min(strictMaxEscalatedAttemptBudgetMs, Math.floor(originalBudget * (1 + tierRatio))));
+                            nextAttempt.timeoutEscalationTier = nextTier;
+                            nextAttempt.escalationReason = 'healthy-expansion-timeout';
+                            timeoutEscalationTier = nextTier;
+                        }
+                        if (!switchedThisAttempt && !previousAttemptSwitchedFamily) {
+                            const forcedSwitch = this._switchAttemptStrategyFamily(nextAttempt, {
+                                constraintDeficit: quality.constraintDeficit,
+                                remainingMustPass: quality.remainingMustPass,
+                                remainingMustCross: quality.remainingMustCross,
+                                reason: 'healthy-expansion-timeout-forced-family-switch'
+                            }, profile, controlPlane);
+                            if (forcedSwitch?.switched) {
+                                switchedThisAttempt = true;
+                                nextAttempt.forcedFamilySwitch = true;
+                            }
+                        }
+                        const canAddEscalatedAttempt = timeoutEscalationTier >= 1
+                            && escalatedAttemptsAdded < maxExtraEscalatedAttempts
+                            && i + 1 === attempts.length - 1;
+                        if (canAddEscalatedAttempt) {
+                            const baseBudget = Math.max(1, Number(nextAttempt?.budgetMs) || 1);
+                            const finalTier = Math.min(maxTimeoutEscalationTier, timeoutEscalationTier + 1);
+                            const finalRatio = timeoutEscalationRatios[finalTier - 1] || timeoutEscalationRatios[timeoutEscalationRatios.length - 1] || 0;
+                            const finalBudget = Math.max(1, Math.min(strictMaxEscalatedAttemptBudgetMs, Math.floor(baseBudget * (1 + finalRatio))));
+                            const escalatedAttempt = {
+                                ...nextAttempt,
+                                label: `${nextAttempt.label || 'attempt'}-timeout-escalation-final`,
+                                budgetMs: finalBudget,
+                                timeoutEscalationTier: finalTier,
+                                escalationReason: 'healthy-expansion-timeout-final-escalation',
+                                orderingPolicy: 'finishFirst',
+                                policyProfile: 'finishFirst',
+                                forcedFamilySwitch: !!nextAttempt.forcedFamilySwitch
+                            };
+                            attempts.push(escalatedAttempt);
+                            escalatedAttemptsAdded += 1;
+                        }
                     }
                     if (timeoutProne && quality.constraintDeficit > 0) {
-                        this._switchAttemptStrategyFamily(nextAttempt, {
+                        const switched = this._switchAttemptStrategyFamily(nextAttempt, {
                             constraintDeficit: quality.constraintDeficit,
                             remainingMustPass: quality.remainingMustPass,
                             remainingMustCross: quality.remainingMustCross,
                             reason: 'constraint-deficit-priority'
                         }, profile, controlPlane);
+                        if (switched?.switched) switchedThisAttempt = true;
                     }
                     if (previousTelemetry) {
                         const nodesPerSecondImproved = quality.nodesPerSecond > (previousTelemetry.nodesPerSecond * 1.03);
@@ -9381,6 +9446,7 @@
                                 remainingMustCross: quality.remainingMustCross,
                                 reason: 'telemetry-delta-stagnation'
                             }, profile, controlPlane);
+                            if (switched?.switched) switchedThisAttempt = true;
                             if (switched && APP.State.ENGINE.flags?.refereeDebug) {
                                 const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
                                 console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] telemetry stagnation -> switched next strategy family`, switched);
@@ -9391,6 +9457,7 @@
                         nodesPerSecond: quality.nodesPerSecond,
                         frontierQuality: quality.frontierQuality
                     };
+                    previousAttemptSwitchedFamily = switchedThisAttempt;
                 }
                 if (!attemptResult.ok && quality.maxProgress < 0.22) {
                     this.maybeSwitchHypothesis(controlPlane, 'low-progress');
