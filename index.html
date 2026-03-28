@@ -9237,7 +9237,8 @@
             const {
                 level,
                 purpose,
-                strategy: { recoveryBudget, fallbackDisabledPrunes, complexityStrategy, escalationTier, forcePreExpansionRescue, strategyMetadata, solveStartTime },
+                strategy: { fallbackDisabledPrunes, complexityStrategy, escalationTier, forcePreExpansionRescue, solveStartTime },
+                derived: { recoveryBudget, strategyMetadata },
                 controlPlane,
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
@@ -9341,7 +9342,7 @@
                 controlPlane,
                 budgets: { budgetMs, tierBudgets },
                 policyTier,
-                strategy: { strategyMetadata },
+                derived: { strategyMetadata },
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
             const resolvedPolicyTier = Number.isFinite(policyTier) ? policyTier : (Number(solveContext?.strategy?.policyTier) || 0);
@@ -9467,7 +9468,8 @@
                 level,
                 purpose,
                 controlPlane,
-                strategy: { recoveryBudget, resolvedPortalBiasMode, resolvedPhasePolicy },
+                strategy: { resolvedPortalBiasMode, resolvedPhasePolicy },
+                derived: { recoveryBudget },
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
             const { enableDiversifiedRootPass = false } = overrides;
@@ -9526,7 +9528,8 @@
                 level,
                 purpose,
                 controlPlane,
-                strategy: { recoveryBudget, enduranceBudget, resolvedPortalBiasMode, resolvedPhasePolicy, knotSensitive },
+                strategy: { resolvedPortalBiasMode, resolvedPhasePolicy },
+                derived: { recoveryBudget, enduranceBudget, knotSensitive },
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
             if (last.ok || last.status === 'no-solution-proven') return last;
@@ -9775,6 +9778,18 @@
                 escalationTier,
                 resolvedPortalBiasMode
             });
+
+            solveContext.derived = {
+                strategyMetadata,
+                recoveryBudget,
+                enduranceBudget,
+                sanityBudget,
+                profileSignals,
+                knotSensitive,
+                enableDiversifiedRootPass,
+                previousAttempts,
+                previousAttempt
+            };
 
             const guardrailBlocked = this._maybeAbortByRetryGuardrail({
                 guardrailStopThirdAttempt,
