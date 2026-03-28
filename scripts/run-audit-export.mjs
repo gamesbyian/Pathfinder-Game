@@ -133,15 +133,28 @@ const run = async () => {
     await waitForAuditIdle(page);
     await waitForAuditResult(page);
 
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE_URL });
     await page.selectOption('#auditExportMode', 'full');
     await page.click('#copyAuditExportBtn');
 
-    const raw = await page.locator('#auditReportRows').innerText();
+    let raw = '';
+    try {
+      raw = await page.evaluate(async () => {
+        if (!navigator.clipboard?.readText) return '';
+        return navigator.clipboard.readText();
+      });
+    } catch {
+      raw = '';
+    }
+    if (!raw?.trim()) {
+      raw = await page.locator('#auditReportRows').innerText();
+    }
     let payload;
     try {
       payload = JSON.parse(raw);
     } catch (err) {
-      throw new Error(`Audit export is not valid JSON: ${err?.message || err}`);
+      const preview = `${raw || ''}`.trim().slice(0, 160).replace(/\s+/g, ' ');
+      throw new Error(`Audit export is not valid JSON: ${err?.message || err}. Preview: ${preview || '(empty)'}`);
     }
 
     const stamp = utcStamp();
