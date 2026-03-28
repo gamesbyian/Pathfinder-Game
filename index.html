@@ -8947,153 +8947,11 @@
                 allowRandomizedExplorationOnExpensiveTiers,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
+                stagesTried,
                 solveStartTime,
                 controlPlane,
                 lowComplexityLevel
             };
-        },
-
-        _deriveSolveCascadeSetup({
-            level,
-            budgetMs,
-            purpose,
-            prev,
-            timesTried,
-            activeTierPolicy,
-            policyTier,
-            escalationTier,
-            resolvedPortalBiasMode
-        }) {
-            const stagesTried = [];
-            const last = { ok: false, status: 'timeout', stage: -1, message: 'No solution found.', stagesTried };
-            const rapidCollapseRecoveryDiagnostics = {
-                attempted: false,
-                activated: false,
-                selectedBy: [],
-                trigger: null,
-                prior: null,
-                recovery: null
-            };
-            const totalBudget = Math.max(1500, budgetMs);
-            const profileSignalsForBudget = level?.solverProfile || {};
-            const simpleLevel = (Number(profileSignalsForBudget.routePressure) || 0) < 0.4
-                && (Number(profileSignalsForBudget.objectiveCount) || 0) <= 1
-                && (Number(profileSignalsForBudget.portalCommitment) || 0) === 0;
-            const baselineBudget = simpleLevel
-                ? Math.max(750, totalBudget)
-                : Math.max(750, Math.floor(totalBudget * 0.75));
-            const recoveryBudget = Math.max(1500, Math.floor(totalBudget * 0.3));
-            const enduranceBudget = Math.max(750, Math.floor(totalBudget * 0.25));
-            const sanityBudget = Math.max(900, Math.floor(totalBudget * 0.3));
-            const profileSignals = level?.solverProfile || {};
-            const outstandingObligations = (Number(profileSignals?.objectiveCount) || 0) + (Number(profileSignals?.mustCrossCount) || 0);
-            const portalDependency = (Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0) > 0;
-            const knotSensitive = (Number(profileSignals?.mustCrossCount) || 0) >= 2 || (Number(profileSignals?.topology?.bridgeCount) || 0) >= 4;
-            const openBoard = (Number(profileSignals?.openness) || 0) >= 0.62;
-            const boardArea = Number(profileSignals?.boardArea) || ((Number(level?.grid?.w) || 0) * (Number(level?.grid?.h) || 0));
-            const mustCrossCount = Number(profileSignals?.mustCrossCount) || 0;
-            const mandatoryPortalFamilyCount = Array.isArray(profileSignals?.portalHints?.mandatoryFamilies) ? profileSignals.portalHints.mandatoryFamilies.length : 0;
-            const enableDiversifiedRootPass = boardArea >= 100 && mustCrossCount >= 2 && mandatoryPortalFamilyCount > 0;
-            const hasPortals = (level?.portalMap?.size || 0) > 0;
-            const mustPassCountForPortal = level?.mustPassKeys?.length || 0;
-            const inferredPortalDependency = hasPortals
-                && (mustPassCountForPortal + mustCrossCount) >= 2
-                && Array.isArray(profileSignals?.portalHints?.mandatoryFamilies)
-                && profileSignals.portalHints.mandatoryFamilies.length > 0;
-            const defaultOrderingPolicy = outstandingObligations >= 4
-                ? 'harvestThenFinish'
-                : ((portalDependency || inferredPortalDependency) ? 'portalFirstTransfer' : (openBoard ? 'perimeterSweep' : (knotSensitive ? 'knotBuilder' : 'harvestThenFinish')));
-            const previousAttempts = Array.isArray(prev.attempts) ? prev.attempts : [];
-            const previousAttempt = previousAttempts[previousAttempts.length - 1] || null;
-            const prePreviousAttempt = previousAttempts[previousAttempts.length - 2] || null;
-            const shouldForcePivot = !!(previousAttempt?.delta?.flatOrNegative);
-            const pivotOrderingPolicy = shouldForcePivot
-                ? this.pickPivotOrderingPolicy(defaultOrderingPolicy, previousAttempt?.strategy?.orderingPolicy || null)
-                : defaultOrderingPolicy;
-            const basePolicyOrdering = activeTierPolicy?.orderingPolicy === 'profile-default'
-                ? pivotOrderingPolicy
-                : activeTierPolicy?.orderingPolicy;
-            const basePolicyPortalBias = activeTierPolicy?.portalBiasMode === 'profile-default'
-                ? (shouldForcePivot ? 'off' : resolvedPortalBiasMode)
-                : (activeTierPolicy?.portalBiasMode || resolvedPortalBiasMode);
-            const basePolicyRootSeed = activeTierPolicy?.rootSeedMode || (shouldForcePivot ? 'broader-candidate-seed-set' : (enableDiversifiedRootPass ? 'diversified' : 'default'));
-            const basePolicyRescueMode = activeTierPolicy?.rescueMode || (shouldForcePivot ? 'alternate-rescue' : 'default');
-            const hardHintFallbackStage = purpose === 'hint'
-                && timesTried >= 4
-                && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus || '')
-                && escalationTier >= 2;
-            const strategyMetadata = compactDefined({
-                attemptOrdinal: timesTried,
-                policyKey: hardHintFallbackStage ? `${activeTierPolicy?.key || 'policy'}-hard` : (activeTierPolicy?.key || null),
-                policyTier,
-                forcedPivot: shouldForcePivot,
-                pivotTrigger: shouldForcePivot ? 'flat-or-negative-delta' : null,
-                orderingPolicy: hardHintFallbackStage ? 'portalFirstTransfer' : basePolicyOrdering,
-                portalBiasMode: hardHintFallbackStage ? 'off' : basePolicyPortalBias,
-                rootSeedMode: hardHintFallbackStage ? 'diversified-aggressive' : basePolicyRootSeed,
-                rescueMode: hardHintFallbackStage ? 'alternate-rescue' : basePolicyRescueMode,
-                hardHintFallbackStage,
-                budgetMs,
-                previousDelta: previousAttempt?.delta || null
-            });
-            const guardrailStopThirdAttempt = timesTried >= 3
-                && this.attemptPairNearIdentical(prePreviousAttempt, previousAttempt)
-                && previousAttempt?.delta?.qualityImproved === false
-                && (previousAttempt?.metrics?.nodesExpanded || 0) > 0;
-            return {
-                stagesTried,
-                last,
-                rapidCollapseRecoveryDiagnostics,
-                baselineBudget,
-                recoveryBudget,
-                enduranceBudget,
-                sanityBudget,
-                profileSignals,
-                knotSensitive,
-                enableDiversifiedRootPass,
-                previousAttempts,
-                previousAttempt,
-                strategyMetadata,
-                guardrailStopThirdAttempt
-            };
-        },
-
-        pickPivotOrderingPolicy(basePolicy, previousPolicy) {
-            const ordered = ['harvestThenFinish', 'knotBuilder', 'objectiveFirst', 'perimeterSweep', 'portalFirstTransfer'];
-            const baseIndex = Math.max(0, ordered.indexOf(basePolicy));
-            for (let i = 1; i <= ordered.length; i++) {
-                const candidate = ordered[(baseIndex + i) % ordered.length];
-                if (candidate !== previousPolicy) return candidate;
-            }
-            return basePolicy;
-        },
-
-        attemptPairNearIdentical(first = null, second = null) {
-            if (!first || !second) return false;
-            const metricsA = first.metrics || {};
-            const metricsB = second.metrics || {};
-            const progressGap = Math.abs((metricsB.progressReached || 0) - (metricsA.progressReached || 0));
-            const nodesGap = Math.abs((metricsB.nodesExpanded || 0) - (metricsA.nodesExpanded || 0));
-            const depthGap = Math.abs((metricsB.depthReached || 0) - (metricsA.depthReached || 0));
-            const rootGap = Math.abs((metricsB.rootDiversity || 0) - (metricsA.rootDiversity || 0));
-            const sameStrategy = JSON.stringify({
-                policyKey: first?.strategy?.policyKey || null,
-                orderingPolicy: first?.strategy?.orderingPolicy || null,
-                portalBiasMode: first?.strategy?.portalBiasMode || null,
-                rootSeedMode: first?.strategy?.rootSeedMode || null,
-                rescueMode: first?.strategy?.rescueMode || null,
-                hardHintFallbackStage: !!first?.strategy?.hardHintFallbackStage,
-                budgetMs: Number(first?.strategy?.budgetMs) || 0
-            }) === JSON.stringify({
-                policyKey: second?.strategy?.policyKey || null,
-                orderingPolicy: second?.strategy?.orderingPolicy || null,
-                portalBiasMode: second?.strategy?.portalBiasMode || null,
-                rootSeedMode: second?.strategy?.rootSeedMode || null,
-                rescueMode: second?.strategy?.rescueMode || null,
-                hardHintFallbackStage: !!second?.strategy?.hardHintFallbackStage,
-                budgetMs: Number(second?.strategy?.budgetMs) || 0
-            });
-            return sameStrategy && progressGap <= 0.01 && nodesGap <= 20 && depthGap <= 1 && rootGap <= 0;
         },
 
         async solve(levelInput, opts = {}) {
@@ -9128,6 +8986,7 @@
                 allowRandomizedExplorationOnExpensiveTiers,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
+                stagesTried,
                 solveStartTime,
                 controlPlane,
                 lowComplexityLevel
