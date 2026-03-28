@@ -9641,6 +9641,41 @@
             });
         },
 
+        _normalizeFailureRecoveryCategory(failureCategory = null) {
+            if (failureCategory === 'pre-expansion-failure') return 'pre-expansion-failure';
+            if (failureCategory === 'low-expansion-collapse') return 'low-expansion-collapse';
+            if (failureCategory === 'healthy-expansion-timeout') return 'healthy-expansion-timeout';
+            return 'unknown-failure';
+        },
+
+        async _runFailureCategoryRecovery({
+            failureCategory,
+            last,
+            runStage,
+            solveContext,
+            enableDiversifiedRootPass = false,
+            extractStageTelemetry,
+            shouldSwitchFamilyByTelemetryDelta
+        }) {
+            const normalizedCategory = this._normalizeFailureRecoveryCategory(failureCategory);
+            if (normalizedCategory === 'pre-expansion-failure') {
+                return this._runPreExpansionFailureCategory({ last, runStage, solveContext });
+            }
+            if (normalizedCategory === 'low-expansion-collapse') {
+                return this._runLowExpansionCollapseCategory({ last, runStage, solveContext, enableDiversifiedRootPass });
+            }
+            if (normalizedCategory === 'healthy-expansion-timeout') {
+                return this._runHealthyExpansionTimeoutCategory({
+                    last,
+                    runStage,
+                    solveContext,
+                    extractStageTelemetry,
+                    shouldSwitchFamilyByTelemetryDelta
+                });
+            }
+            return this._runUnknownFailureCategory({ last, runStage, solveContext });
+        },
+
         async _runSolveCascade(context = {}) {
             const {
                 solveContext,
@@ -9805,21 +9840,15 @@
                         last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                     }
                     const failureCategory = failureTaxonomy?.category || 'low-expansion-collapse';
-                    if (failureCategory === 'pre-expansion-failure') {
-                        last = await this._runPreExpansionFailureCategory({ last, runStage, solveContext });
-                    } else if (failureCategory === 'low-expansion-collapse') {
-                        last = await this._runLowExpansionCollapseCategory({ last, runStage, solveContext, enableDiversifiedRootPass });
-                    } else if (failureCategory === 'healthy-expansion-timeout') {
-                        last = await this._runHealthyExpansionTimeoutCategory({
-                            last,
-                            runStage,
-                            solveContext,
-                            extractStageTelemetry,
-                            shouldSwitchFamilyByTelemetryDelta
-                        });
-                    } else if (failureCategory === 'unknownFailure') {
-                        last = await this._runUnknownFailureCategory({ last, runStage, solveContext });
-                    }
+                    last = await this._runFailureCategoryRecovery({
+                        failureCategory,
+                        last,
+                        runStage,
+                        solveContext,
+                        enableDiversifiedRootPass,
+                        extractStageTelemetry,
+                        shouldSwitchFamilyByTelemetryDelta
+                    });
                     if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                 }
             }
