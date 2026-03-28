@@ -2965,6 +2965,14 @@
                             knotIntsRemainingMax: 2,
                             knotObjectivesRemainingMax: 2
                         },
+                        hysteresis: {
+                            minNodeWindow: 6
+                        },
+                        bridgeTuning: {
+                            collapseGainRatio: 1.8,
+                            minObjectiveCollapse: 0.45,
+                            maxCoverageGain: 0.03
+                        },
                         profiles: {
                             harvest: { perimeterBias: 1.15, objectivePull: 0.85, knotPull: 0.3, goalAttraction: 0.6, antiDither: 0.32 },
                             transition: { perimeterBias: 0.9, objectivePull: 1.1, knotPull: 0.72, goalAttraction: 0.75, antiDither: 0.45 },
@@ -2980,6 +2988,7 @@
                         base.profiles.harvest.goalAttraction = 0.45;
                         base.profiles.harvest.antiDither = 0.2;
                         base.profiles.finish.goalAttraction = 1.45;
+                        base.hysteresis.minNodeWindow = 7;
                     } else if (archetype === 'portalFirstTransfer') {
                         base.thresholds.transitionProgress = 0.26;
                         base.thresholds.knotProgress = 0.54;
@@ -2988,6 +2997,7 @@
                         base.profiles.transition.objectivePull = 1.3;
                         base.profiles.knot.knotPull = 1.25;
                         base.profiles.finish.goalAttraction = 1.9;
+                        base.hysteresis.minNodeWindow = 5;
                     } else if (archetype === 'knotBuilder') {
                         base.thresholds.transitionProgress = 0.3;
                         base.thresholds.knotProgress = 0.48;
@@ -2995,6 +3005,7 @@
                         base.profiles.knot.knotPull = 1.85;
                         base.profiles.transition.knotPull = 0.9;
                         base.profiles.finish.goalAttraction = 1.45;
+                        base.hysteresis.minNodeWindow = 7;
                     } else if (archetype === 'harvestThenFinish') {
                         base.thresholds.transitionProgress = 0.3;
                         base.thresholds.knotProgress = 0.57;
@@ -3065,10 +3076,18 @@
                         thresholds.transitionProgress = Math.max(0.12, thresholds.transitionProgress - intDensity * 0.8);
                         thresholds.knotProgress = Math.max(0.25, thresholds.knotProgress - intDensity * 1.2);
                     }
+                    const hysteresis = { ...base.hysteresis };
+                    hysteresis.minNodeWindow = Math.max(4, Math.min(14,
+                        (hysteresis.minNodeWindow || 6)
+                        + (mandatoryFamilies > 0 ? 1 : 0)
+                        + (reqInt >= 4 ? 1 : 0)
+                    ));
 
                     return {
                         archetype,
                         thresholds,
+                        hysteresis,
+                        bridgeTuning: { ...base.bridgeTuning },
                         profiles: {
                             harvest: { ...base.profiles.harvest },
                             transition: { ...base.profiles.transition },
@@ -3102,6 +3121,8 @@
                     return {
                         archetype: dynamic.archetype,
                         derivedInputs: dynamic.derivedInputs,
+                        hysteresis: { ...dynamic.hysteresis, ...(override.hysteresis || {}) },
+                        bridgeTuning: { ...dynamic.bridgeTuning, ...(override.bridgeTuning || {}) },
                         thresholds: { ...dynamic.thresholds, ...(override.thresholds || {}) },
                         profiles: {
                             harvest: { ...dynamic.profiles.harvest, ...(override.profiles?.harvest || {}) },
@@ -3117,6 +3138,48 @@
                         remaining += l?._popcountMask ? l._popcountMask(state.mustMask) : 1;
                     }
                     return remaining;
+                },
+                _computeBridgeState(derived, state, l) {
+                    const walkable = Math.max(1, Number(l?.walkableSet?.size) || Number(l?.solverProfile?.topology?.walkableCellCount) || 1);
+                    const coverage = Math.max(0, Math.min(1, (Number(state?.nonZeroUsage) || 0) / walkable));
+                    const objectiveDistance = Math.max(0,
+                        derived.remainingMustPass
+                        + derived.remainingMustCross
+                        + (derived.remainingIntersections * 0.55)
+                        + (Number.isFinite(derived.goalDist) ? (derived.goalDist / Math.max(1, l.reqLen || 1)) : 1)
+                    );
+                    const prev = state.bridgeStateSnapshot || null;
+                    const objCollapse = prev ? Math.max(0, (prev.objectiveDistance || 0) - objectiveDistance) : 0;
+                    const coverageGain = prev ? Math.max(0, coverage - (prev.coverage || 0)) : 0;
+                    const tuning = state.phasePolicy?.bridgeTuning || {};
+                    const collapseGainRatio = Math.max(1.05, Number(tuning.collapseGainRatio) || 1.8);
+                    const minObjectiveCollapse = Math.max(0.08, Number(tuning.minObjectiveCollapse) || 0.45);
+                    const maxCoverageGain = Math.max(0.005, Number(tuning.maxCoverageGain) || 0.03);
+                    const objectiveCollapseFast = objCollapse >= minObjectiveCollapse && objCollapse > (coverageGain * collapseGainRatio);
+                    const stillLengthFeasible = derived.rSteps >= 0 && (Number.isFinite(derived.goalDist) ? derived.goalDist <= (derived.rSteps + Math.max(1, Math.ceil((l.reqLen || 0) * 0.05))) : true);
+                    const intBudgetSlack = Math.max(0, derived.rSteps - derived.remainingIntersections);
+                    const intStillFeasible = derived.remainingIntersections <= 1 || intBudgetSlack >= 0;
+                    const objectiveWindow = derived.remainingObjectives > 0 && derived.remainingObjectives <= Math.max(4, Math.ceil((l.reqLen || 1) * 0.18));
+                    const bridgeState = !!(stillLengthFeasible
+                        && intStillFeasible
+                        && objectiveWindow
+                        && objectiveCollapseFast
+                        && coverageGain <= maxCoverageGain);
+                    state.bridgeStateSnapshot = {
+                        objectiveDistance,
+                        coverage,
+                        atLen: derived.realLen
+                    };
+                    state.bridgeState = {
+                        active: bridgeState,
+                        objectiveCollapse: Number(objCollapse.toFixed(4)),
+                        coverageGain: Number(coverageGain.toFixed(4)),
+                        objectiveDistance: Number(objectiveDistance.toFixed(4)),
+                        coverage: Number(coverage.toFixed(4)),
+                        stillLengthFeasible,
+                        intStillFeasible
+                    };
+                    return state.bridgeState;
                 },
                 _deriveSolverPhase(state, key, l, distMap) {
                     const realLen = state.path.length - 1 - state.isJump.size;
@@ -3159,16 +3222,29 @@
                             : progressRatio <= fp
                                 ? 0.67 + ((progressRatio - kp) / Math.max(1e-6, fp - kp)) * 0.33
                                 : 1.0;
+                    const bridgeState = this._computeBridgeState({
+                        phase, realLen, progressRatio, goalDist, rSteps, slack, remainingObjectives, remainingMustPass, remainingMustCross, remainingIntersections
+                    }, state, l);
+                    if (bridgeState?.active) {
+                        phase = (l.portalMap?.size || 0) > 0 ? 'transition' : (progressRatio >= (t.transitionProgress ?? 0.34) ? 'transition' : phase);
+                    }
 
-                    return { phase, realLen, progressRatio, goalDist, rSteps, slack, remainingObjectives, remainingMustPass, remainingMustCross, remainingIntersections, urgencyScalar };
+                    return { phase, realLen, progressRatio, goalDist, rSteps, slack, remainingObjectives, remainingMustPass, remainingMustCross, remainingIntersections, urgencyScalar, bridgeState };
                 },
                 _updateSolverPhase(state, key, l, distMap, debugStats = null) {
                     const derived = this._deriveSolverPhase(state, key, l, distMap);
                     state.urgencyScalar = derived.urgencyScalar;
-                    if (!state.phase || state.phase !== derived.phase) {
-                        state.phase = derived.phase;
+                    const lastSwitchLen = Number.isFinite(state.phaseLastSwitchLen) ? state.phaseLastSwitchLen : 0;
+                    const minNodeWindow = Math.max(0, Number(state.phasePolicy?.hysteresis?.minNodeWindow) || 0);
+                    const canSwitchNow = !state.phase || (derived.realLen - lastSwitchLen) >= minNodeWindow || derived.phase === 'finish';
+                    const effectivePhase = (state.phase && state.phase !== derived.phase && !canSwitchNow)
+                        ? state.phase
+                        : derived.phase;
+                    if (!state.phase || state.phase !== effectivePhase) {
+                        state.phase = effectivePhase;
+                        state.phaseLastSwitchLen = derived.realLen;
                         const event = {
-                            phase: derived.phase,
+                            phase: effectivePhase,
                             atLen: derived.realLen,
                             progress: Number(derived.progressRatio.toFixed(3)),
                             remainingObjectives: derived.remainingObjectives,
@@ -3177,6 +3253,7 @@
                             remainingIntersections: derived.remainingIntersections,
                             goalDist: Number.isFinite(derived.goalDist) ? derived.goalDist : null,
                             slack: Number.isFinite(derived.slack) ? derived.slack : null,
+                            bridgeState: derived.bridgeState || null,
                             thresholdInputs: state.phasePolicy?.derivedInputs || null,
                             thresholds: state.phasePolicy?.thresholds || null
                         };
@@ -3186,6 +3263,7 @@
                             debugStats.phaseTimeline.push(event);
                         }
                     }
+                    state.bridgeState = derived.bridgeState || state.bridgeState || null;
                     return derived;
                 },
                 _getRawNeighbors(k, l) {
@@ -3655,7 +3733,8 @@
                         currentObjectiveGap, currentGoalDist,
                         committedRegion, committedFamily, portalLockState,
                         inTemplateCommitWindow, objectiveTrackStrictness,
-                        recentWindow, recentTurnbackCount, dirRepeat
+                        recentWindow, recentTurnbackCount, dirRepeat,
+                        bridgeState
                     } = sv;
                         const px = k & 0xFFFF;
                         const py = k >> 16;
@@ -3775,6 +3854,12 @@
                             const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1) * pw('objectiveAttractionWeight');
 
                             let mustPassUrgencyWeight = pw('mustPassUrgencyWeight');
+                            let mustCrossUrgencyWeight = pw('mustCrossUrgencyWeight');
+                            const bridgeCommitmentScale = bridgeState?.active ? ((l.portalMap?.size || 0) > 0 ? 1.28 : 1.34) : 1;
+                            if (bridgeState?.active) {
+                                mustPassUrgencyWeight *= bridgeCommitmentScale;
+                                mustCrossUrgencyWeight *= bridgeCommitmentScale;
+                            }
                             if (depth === 0 && valid.length <= 2) {
                                 mustPassUrgencyWeight = Math.min(mustPassUrgencyWeight, 0.35);
                             }
@@ -3824,15 +3909,20 @@
                                 }
                             }
                             const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
-                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * pw('mustCrossUrgencyWeight'));
+                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * mustCrossUrgencyWeight);
                             score += mustContribution;
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
                             pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
+                            if (bridgeState?.active) {
+                                const bridgeCommitment = -Math.round(12 * bridgeCommitmentScale * Math.max(0.2, phaseProfile.objectivePull || 1));
+                                score += bridgeCommitment;
+                                pushDriver('bridgeStateCommitment', bridgeState.objectiveCollapse || 0, bridgeCommitment);
+                            }
                             if (state.ints < l.reqInt && l.mustPassIndex?.has(nk) && (state.countsArr[searchCtx.keyToIdx(nk)] || 0) > 0) {
                                 score -= Math.round(gravityMult * 0.6);
                             }
-                            if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * pw('mustCrossUrgencyWeight')); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
+                            if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * mustCrossUrgencyWeight); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
 
                             if (activeObjectiveDistMap && activeObjectiveId >= 0) {
                                 const nextObjectiveDist = activeObjectiveDistMap.get(nk) ?? Infinity;
@@ -3900,7 +3990,7 @@
 
                             if (!options?.suppressPerimeterBias) {
                                 if (profile.perimeterBias > 0 && rRatio < 0.45) {
-                                    const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
+                                    const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1) * (bridgeState?.active ? 0.7 : 1);
                                     if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * pw('perimeterBiasWeight')); score += c; pushDriver('perimeterBias', edgeDist, c); }
                                     else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
                                     if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
@@ -4277,7 +4367,7 @@
                     };
                     const structuralTemplate = structuralMode ? (options?.structuralTemplate || null) : null;
                     const templatePhaseOverrides = structuralTemplate?.weightOverrides?.phaseMultipliers?.[activePhase] || null;
-                    const phaseProfile = templatePhaseOverrides
+                    const basePhaseProfile = templatePhaseOverrides
                         ? {
                             ...phaseProfileBase,
                             perimeterBias: (phaseProfileBase.perimeterBias || 1) * (templatePhaseOverrides.perimeterBias || 1),
@@ -4287,6 +4377,18 @@
                             antiDither: (phaseProfileBase.antiDither || 1) * (templatePhaseOverrides.antiDither || 1)
                         }
                         : phaseProfileBase;
+                    const bridgeState = state.bridgeState || null;
+                    const bridgeBoost = bridgeState?.active
+                        ? {
+                            objectivePull: (basePhaseProfile.objectivePull || 1) * ((l.portalMap?.size || 0) > 0 ? 1.3 : 1.38),
+                            goalAttraction: (basePhaseProfile.goalAttraction || 1) * 1.15,
+                            perimeterBias: (basePhaseProfile.perimeterBias || 1) * 0.55,
+                            antiDither: (basePhaseProfile.antiDither || 1) * 0.62
+                        }
+                        : null;
+                    const phaseProfile = bridgeBoost
+                        ? { ...basePhaseProfile, ...bridgeBoost }
+                        : basePhaseProfile;
                     const policyName = options?.orderingPolicy || 'default';
                     const policyProfile = this.getPolicyProfile(policyName, activePhase, state.urgencyScalar ?? null);
                     const heuristicFeatureFlags = compactDefined({
@@ -4330,7 +4432,8 @@
                         currentObjectiveGap, currentGoalDist,
                         committedRegion, committedFamily, portalLockState,
                         inTemplateCommitWindow, objectiveTrackStrictness,
-                        recentWindow, recentTurnbackCount, dirRepeat
+                        recentWindow, recentTurnbackCount, dirRepeat,
+                        bridgeState
                     };
                     const scored = valid.map(nk => this._scoreSingleCandidate(nk, sv));
                     if (options?.dirOrderVariant === 'random') {
@@ -4546,9 +4649,12 @@
                         floodQueue: new Int32Array(keyCount),
                         remainingSteps: 0,
                         phase: 'harvest',
+                        phaseLastSwitchLen: 0,
                         urgencyScalar: 0,
                         phasePolicy,
                         phaseTimeline: [],
+                        bridgeState: null,
+                        bridgeStateSnapshot: null,
                         activeObjectiveId: -1,
                         recentMoveEntropy: 0,
                         recentTurnbackCount: 0,
