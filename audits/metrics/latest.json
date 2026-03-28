@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-03-28T20:23:30.389Z",
+  "commitSha": "b93d966cf2c37fa091e6b8164c61eee6d4b023c5",
+  "runType": "newHint",
+  "exportMode": "full",
+  "levelCount": 133,
+  "statusCounts": {
+    "success": 127,
+    "timeout": 5,
+    "noSolutionInconclusive": 1,
+    "noSolutionProven": 0,
+    "aborted": 0,
+    "error": 6
+  },
+  "qualitySignals": {
+    "producedHintValidCount": 127,
+    "contradictionRecoveryActivatedCount": 0,
+    "preExpansionAbortUnexpectedExceptionCount": 0
+  },
+  "performance": {
+    "hintTimeMsAvg": 2450,
+    "totalSolveTimeMsAvg": 586,
+    "maxSolveTimeMs": 11641
+  }
+}
