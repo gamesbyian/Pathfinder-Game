@@ -6130,7 +6130,7 @@
                             branchFactor: nodesExpanded > 0 ? Number((branchesTried / nodesExpanded).toFixed(4)) : 0
                         };
                     };
-                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null }) => {
+                    const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null, passObjectiveTrack = null, passTemplateCommitment = null, passPortalLockPolicy = null, passKnotBudgetPolicy = null, passPhasePolicy = null }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
                         if (debugStats) {
@@ -6160,12 +6160,12 @@
                             scoringMode: passScoringMode,
                             portalBiasMode: passPortalBiasMode,
                             structuralMode: passStructuralMode,
-                            phasePolicy,
+                            phasePolicy: passPhasePolicy || phasePolicy,
                             structuralTemplate,
-                            objectiveTrack,
-                            templateCommitment,
-                            portalLockPolicy,
-                            knotBudgetPolicy,
+                            objectiveTrack: passObjectiveTrack || objectiveTrack,
+                            templateCommitment: passTemplateCommitment || templateCommitment,
+                            portalLockPolicy: passPortalLockPolicy || portalLockPolicy,
+                            knotBudgetPolicy: passKnotBudgetPolicy || knotBudgetPolicy,
                             controlPlane,
                             gateBeamTopK,
                             debugGateVariant,
@@ -6280,6 +6280,191 @@
                             + (geeseNorm * 0.05);
                         return Math.max(0, Math.min(1, score));
                     })();
+                    const buildMacroPlans = () => {
+                        const objectiveNodes = Array.isArray(level.objectiveNodes) ? level.objectiveNodes : [];
+                        const pairDist = Array.isArray(level.objectivePairDist) ? level.objectivePairDist : [];
+                        const gateMinDist = Array.isArray(level.objectiveGateMinDist) ? level.objectiveGateMinDist : [];
+                        const portalAutomaton = level?.portalTransitionAutomaton || {};
+                        const familyToGoalDist = Array.isArray(portalAutomaton.familyToGoalDist) ? portalAutomaton.familyToGoalDist : [];
+                        const mandatoryMask = typeof portalAutomaton.mandatoryMask === 'bigint' ? portalAutomaton.mandatoryMask : 0n;
+                        const objectiveCount = objectiveNodes.length;
+                        const plans = [];
+                        if (objectiveCount === 0) {
+                            plans.push({
+                                id: 'macro-base-empty',
+                                objectiveOrder: [],
+                                objectiveTrack: null,
+                                portalCommitment: { required: [], optional: [], avoid: [] },
+                                knotSchedule: 'late',
+                                forcedPolicyProfile: 'finishFirst',
+                                forcePhaseArchetype: 'harvestThenFinish',
+                                pruneGate: [],
+                                templateCommitment: templateCommitment ? { ...templateCommitment, depthRatio: Math.max(0.2, Number(templateCommitment?.depthRatio) || 0.32) } : null,
+                                portalLockPolicy: portalLockPolicy ? { ...portalLockPolicy } : null,
+                                knotBudgetPolicy: knotBudgetPolicy ? { ...knotBudgetPolicy } : null
+                            });
+                            plans.push({
+                                id: 'macro-base-empty-late',
+                                objectiveOrder: [],
+                                objectiveTrack: null,
+                                portalCommitment: { required: [], optional: [], avoid: [] },
+                                knotSchedule: 'early',
+                                forcedPolicyProfile: 'harvestThenFinish',
+                                forcePhaseArchetype: 'harvestThenFinish',
+                                pruneGate: ['distance'],
+                                templateCommitment: templateCommitment ? { ...templateCommitment, depthRatio: Math.min(0.58, Math.max(0.22, Number(templateCommitment?.depthRatio) || 0.46)) } : null,
+                                portalLockPolicy: portalLockPolicy ? { ...portalLockPolicy } : null,
+                                knotBudgetPolicy: knotBudgetPolicy ? { ...knotBudgetPolicy } : null
+                            });
+                            return plans;
+                        }
+                        const keyForOrder = (order) => order.join(',');
+                        const orderSeen = new Set();
+                        const buildGreedyOrder = (startIdx, reverse = false) => {
+                            const unvisited = new Set(Array.from({ length: objectiveCount }, (_, idx) => idx));
+                            const order = [];
+                            let cur = startIdx;
+                            while (unvisited.size > 0) {
+                                let pick = cur;
+                                if (!unvisited.has(pick)) {
+                                    let best = -1;
+                                    let bestD = Infinity;
+                                    for (const idx of unvisited) {
+                                        const d = Number(gateMinDist[idx]);
+                                        if (Number.isFinite(d) && d < bestD) {
+                                            bestD = d;
+                                            best = idx;
+                                        }
+                                    }
+                                    if (best < 0) best = unvisited.values().next().value;
+                                    pick = best;
+                                }
+                                order.push(pick);
+                                unvisited.delete(pick);
+                                let nxt = -1;
+                                let bestScore = Infinity;
+                                for (const idx of unvisited) {
+                                    const d = Number(pairDist?.[pick]?.[idx]);
+                                    const goalD = Number(level?.objectiveToGoalDist?.[idx]);
+                                    const score = (Number.isFinite(d) ? d : 9999) + (Number.isFinite(goalD) ? (goalD * 0.12) : 0);
+                                    if (score < bestScore) {
+                                        bestScore = score;
+                                        nxt = idx;
+                                    }
+                                }
+                                cur = nxt;
+                            }
+                            if (reverse) order.reverse();
+                            return order;
+                        };
+                        const anchorByGate = gateMinDist.reduce((bestIdx, d, idx) => {
+                            if (!Number.isFinite(d)) return bestIdx;
+                            if (bestIdx < 0) return idx;
+                            return d < (gateMinDist[bestIdx] ?? Infinity) ? idx : bestIdx;
+                        }, -1);
+                        const anchor = anchorByGate >= 0 ? anchorByGate : 0;
+                        const candidates = [
+                            buildGreedyOrder(anchor, false),
+                            buildGreedyOrder(anchor, true)
+                        ];
+                        const portalFavIdx = objectiveNodes.reduce((bestIdx, node, idx) => {
+                            const famIdx = level.portalFamilyByEntry?.get(node?.key);
+                            if (!Number.isFinite(famIdx)) return bestIdx;
+                            const famGoal = Number(familyToGoalDist[famIdx]);
+                            const curBestFam = bestIdx >= 0 ? level.portalFamilyByEntry?.get(objectiveNodes[bestIdx]?.key) : null;
+                            const curBestGoal = Number.isFinite(curBestFam) ? Number(familyToGoalDist[curBestFam]) : Infinity;
+                            return famGoal < curBestGoal ? idx : bestIdx;
+                        }, -1);
+                        if (portalFavIdx >= 0) candidates.push(buildGreedyOrder(portalFavIdx, false));
+                        const maxPlans = Math.max(2, Math.min(5, 2 + Math.floor(complexityScore * 3)));
+                        for (let i = 0; i < candidates.length && plans.length < maxPlans; i++) {
+                            const order = candidates[i];
+                            const sig = keyForOrder(order);
+                            if (orderSeen.has(sig)) continue;
+                            orderSeen.add(sig);
+                            const requiredFamilies = [];
+                            const optionalFamilies = [];
+                            for (let fam = 0; fam < (portalAutomaton.familyCount || 0); fam++) {
+                                const required = ((mandatoryMask & (1n << BigInt(fam))) !== 0n);
+                                if (required) requiredFamilies.push(fam);
+                                else if (order.some(idx => level.portalFamilyByEntry?.get(objectiveNodes[idx]?.key) === fam)) optionalFamilies.push(fam);
+                            }
+                            const avoidFamilies = [];
+                            for (let fam = 0; fam < (portalAutomaton.familyCount || 0); fam++) {
+                                if (requiredFamilies.includes(fam) || optionalFamilies.includes(fam)) continue;
+                                avoidFamilies.push(fam);
+                            }
+                            const knotSchedule = ((i % 2 === 0 && level.reqInt >= 2) || (level.reqInt >= 4 && i === 0)) ? 'early' : 'late';
+                            const objectiveTrackKeys = order.map(idx => objectiveNodes[idx]?.key).filter(Number.isFinite);
+                            const strictness = knotSchedule === 'early' ? 0.76 : 0.69;
+                            const nonKnotCap = knotSchedule === 'early'
+                                ? Math.max(0, Math.floor((level.reqInt || 0) * 0.45))
+                                : Math.max(0, Math.floor((level.reqInt || 0) * 0.7));
+                            plans.push({
+                                id: `macro-${i + 1}`,
+                                objectiveOrder: order.slice(),
+                                objectiveTrack: {
+                                    id: `macro-track-${i + 1}`,
+                                    keys: objectiveTrackKeys,
+                                    strictness
+                                },
+                                portalCommitment: { required: requiredFamilies, optional: optionalFamilies, avoid: avoidFamilies },
+                                knotSchedule,
+                                forcedPolicyProfile: requiredFamilies.length > 0 ? 'portalCommitted' : (objectiveTrackKeys.length >= 3 ? 'objectiveFirst' : 'harvestThenFinish'),
+                                forcePhaseArchetype: knotSchedule === 'early' ? 'harvestThenFinish' : 'finishFirst',
+                                pruneGate: knotSchedule === 'early' ? [] : ['distance'],
+                                templateCommitment: templateCommitment
+                                    ? { ...templateCommitment, depthRatio: knotSchedule === 'early' ? 0.24 : 0.52 }
+                                    : { depthRatio: knotSchedule === 'early' ? 0.24 : 0.52 },
+                                portalLockPolicy: {
+                                    ...(portalLockPolicy || {}),
+                                    requiredFamilies,
+                                    optionalFamilies,
+                                    avoidFamilies,
+                                    lockReentries: knotSchedule === 'early' ? 1 : 2,
+                                    lockOscillationMax: knotSchedule === 'early' ? 0 : 1
+                                },
+                                knotBudgetPolicy: {
+                                    ...(knotBudgetPolicy || {}),
+                                    knotCrossBudget: knotSchedule === 'early'
+                                        ? Math.max(1, Math.ceil((level.reqInt || 0) * 0.82))
+                                        : Math.max(1, Math.ceil((level.reqInt || 0) * 0.62)),
+                                    nonKnotCrossCap: nonKnotCap
+                                },
+                                phasePolicy: {
+                                    profiles: knotSchedule === 'early'
+                                        ? { transition: { intersectionSetupWeight: 1.2, objectivePull: 1.08 }, knot: { intersectionSetupWeight: 1.25, objectivePull: 1.05 } }
+                                        : { harvest: { objectivePull: 1.16 }, transition: { objectivePull: 1.12 }, knot: { objectivePull: 0.94, intersectionSetupWeight: 0.92 } }
+                                }
+                            });
+                        }
+                        if (plans.length < 2) {
+                            const fallbackOrder = Array.from({ length: objectiveCount }, (_, idx) => idx);
+                            fallbackOrder.sort((a, b) => {
+                                const ag = Number(gateMinDist[a]);
+                                const bg = Number(gateMinDist[b]);
+                                if (Number.isFinite(ag) && Number.isFinite(bg) && ag !== bg) return bg - ag;
+                                return b - a;
+                            });
+                            if (!orderSeen.has(keyForOrder(fallbackOrder))) {
+                                plans.push({
+                                    id: 'macro-fallback',
+                                    objectiveOrder: fallbackOrder.slice(),
+                                    objectiveTrack: { id: 'macro-track-fallback', keys: fallbackOrder.map(idx => objectiveNodes[idx]?.key).filter(Number.isFinite), strictness: 0.64 },
+                                    portalCommitment: { required: [], optional: [], avoid: [] },
+                                    knotSchedule: 'late',
+                                    forcedPolicyProfile: 'harvestThenFinish',
+                                    forcePhaseArchetype: 'harvestThenFinish',
+                                    pruneGate: ['distance'],
+                                    templateCommitment: templateCommitment ? { ...templateCommitment, depthRatio: 0.56 } : { depthRatio: 0.56 },
+                                    portalLockPolicy: portalLockPolicy ? { ...portalLockPolicy } : null,
+                                    knotBudgetPolicy: knotBudgetPolicy ? { ...knotBudgetPolicy } : null,
+                                    phasePolicy: { profiles: { harvest: { objectivePull: 1.08 }, transition: { objectivePull: 1.02 } } }
+                                });
+                            }
+                        }
+                        return plans.slice(0, maxPlans);
+                    };
                     const isPerimeterSpineCandidate = (
                         level.grid.w * level.grid.h > 100 &&
                         level.mustPassKeys.length >= 2 &&
@@ -6379,6 +6564,70 @@
                         const stagnated = objectiveDelta <= 0 && depthDelta <= 0 && diversityDelta <= 0 && reductionRate < 0.00075;
                         return !stagnated;
                     };
+                    const macroPlans = buildMacroPlans();
+                    if (debugStats) {
+                        debugStats.macroPlanCount = macroPlans.length;
+                        debugStats.macroPlanSummaries = macroPlans.map((plan) => ({
+                            id: plan.id,
+                            objectiveOrder: plan.objectiveOrder.slice(),
+                            knotSchedule: plan.knotSchedule,
+                            portalCommitment: plan.portalCommitment,
+                            forcedPolicyProfile: plan.forcedPolicyProfile,
+                            forcePhaseArchetype: plan.forcePhaseArchetype
+                        }));
+                    }
+                    let macroPlanRun = null;
+                    const macroPlanBudgetCap = Math.max(450, Math.floor(timeLimit * (0.12 + complexityScore * 0.16)));
+                    const macroPlanBudgetPerPlan = Math.max(180, Math.floor(macroPlanBudgetCap / Math.max(1, macroPlans.length)));
+                    for (let i = 0; i < macroPlans.length; i++) {
+                        const rem = remainingBudget();
+                        if (rem <= 0) break;
+                        const plan = macroPlans[i];
+                        const localBudget = Math.max(100, Math.min(rem, macroPlanBudgetPerPlan));
+                        const run = await runSolvePass({
+                            passName: `macro-plan-${plan.id}`,
+                            localTimeLimit: localBudget,
+                            disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...(plan.pruneGate || [])])),
+                            useFailMemo: !(Array.isArray(plan.pruneGate) && plan.pruneGate.length > 0),
+                            statusLabel: `Pre-plan ${i + 1}/${macroPlans.length} (${validGates.length} viable gates)...`,
+                            passVariant: i % 2 === 0 ? 'default' : (debugGateVariant ? dirOrderVariant : 'random'),
+                            passScoringMode: scoringMode,
+                            passPortalBiasMode: plan.portalCommitment.required.length > 0 ? 'adaptiveMustCross' : portalBiasMode,
+                            passStructuralMode: structuralMode,
+                            forcePhaseArchetype: plan.forcePhaseArchetype || null,
+                            forcedPolicyProfile: plan.forcedPolicyProfile || null,
+                            passObjectiveTrack: plan.objectiveTrack || null,
+                            passTemplateCommitment: plan.templateCommitment || null,
+                            passPortalLockPolicy: plan.portalLockPolicy || null,
+                            passKnotBudgetPolicy: plan.knotBudgetPolicy || null,
+                            passPhasePolicy: plan.phasePolicy || null
+                        });
+                        if (run.kind !== 'ok') {
+                            macroPlanRun = run;
+                            break;
+                        }
+                        if ((run.solutions || []).length > 0) {
+                            macroPlanRun = run;
+                            if (debugStats) debugStats.notes.push(`MACRO PLAN WINNER: ${plan.id} solved during constrained pre-plan pass.`);
+                            break;
+                        }
+                        if (debugStats) {
+                            const summary = summarizePassTelemetry(run);
+                            debugStats.notes.push(`MACRO PLAN ${plan.id}: no solution (progress=${summary.maxProgress}, objectiveReduction=${summary.objectiveReduction}, profile=${plan.forcedPolicyProfile || 'default'}).`);
+                        }
+                        macroPlanRun = run;
+                    }
+                    if (macroPlanRun?.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
+                    if (macroPlanRun?.kind === "timeout") return { ok: false, solution: null, debug: debugStats };
+                    if ((macroPlanRun?.solutions || []).length > 0) {
+                        foundSolutions.push(...macroPlanRun.solutions);
+                        foundSolutions.timedOut = !!macroPlanRun.solutions?.timedOut;
+                        if (debugStats) {
+                            finalizeSolverDebugStats(debugStats, "solved", perfStart);
+                            return { ok: true, solution: foundSolutions, debug: debugStats };
+                        }
+                        return foundSolutions;
+                    }
                     let primaryRun = { kind: 'ok', solutions: [] };
                     let previousTelemetry = null;
                     for (let i = 0; i < stagedHintPasses.length; i++) {
