@@ -122,20 +122,9 @@ const run = async () => {
     page = await browser.newPage();
     await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'domcontentloaded', timeout: 120000 });
 
-    await page.waitForSelector('#devToggleBtn', { state: 'attached', timeout: 120000 });
-    await page.evaluate(() => {
-      const devToggle = document.getElementById('devToggleBtn');
-      if (!devToggle) throw new Error('Missing #devToggleBtn');
-      devToggle.click();
-    });
-
-    await page.waitForFunction(() => {
-      const auditBtn = document.getElementById('openAuditModalBtn');
-      return !!auditBtn && !auditBtn.classList.contains('hidden');
-    }, { timeout: 30000 });
-
-    await page.locator('#openAuditModalBtn').click({ force: true });
-    await page.locator('#auditNewHintBtn').click({ force: true });
+    await page.click('#devToggleBtn');
+    await page.click('#openAuditModalBtn');
+    await page.click('#auditNewHintBtn');
 
     await waitForAuditIdle(page);
     await waitForAuditResult(page);
