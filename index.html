@@ -9852,6 +9852,123 @@
             return { last, stagesTried, previousAttempt, previousAttempts, strategyMetadata };
         },
 
+        _createSolveExecutionHelpers({ stagesTried, opts = {} } = {}) {
+            const markStage = (stage, name, variant, budget, startedAt, result, meta = {}) => {
+                const normalized = createCanonicalSolveResult(result || {});
+                const stageSummary = toStageAttemptSummary({
+                    stage,
+                    name,
+                    variant,
+                    budgetMs: budget,
+                    elapsedMs: Date.now() - startedAt,
+                    normalized,
+                    meta
+                });
+                if (APP.State?.ENGINE?.isDevMode || opts?.auditMode) {
+                    const leakedCompat = ['solverPath', 'executionPath', 'legacyFallbackTried', 'legacyFallbackStatus', 'legacyFallbackSolved', 'legacyFallbackTimeMs', 'finalSolvedBy', 'totalSolveTimeMs']
+                        .filter(k => Object.prototype.hasOwnProperty.call(stageSummary, k));
+                    if (leakedCompat.length > 0) console.warn('[Referee canonical-stage leak]', { stage, leakedCompat });
+                }
+                stagesTried.push(stageSummary);
+            };
+
+            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee', run, compatLegacyOutputAlias = false }) => {
+                if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
+                    return { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
+                }
+                if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: stageBudgetMs });
+                const startedAt = Date.now();
+                const result = await run();
+                markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine, compatLegacyOutputAlias });
+                const normalized = createCanonicalSolveResult(result || {});
+                normalized.stage = stage;
+                normalized.variant = variant;
+                normalized.engine = engine;
+                normalized.compatLegacyOutputAlias = !!compatLegacyOutputAlias;
+                normalized.message = normalized.ok ? `Solved (${variant}).` : `${variant} ${normalized.status || 'error'}.`;
+                normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
+                return normalized;
+            };
+
+            const extractStageTelemetry = (attemptLike = {}) => {
+                const debug = attemptLike?.debug || attemptLike?.stats?.debug || {};
+                const elapsedMs = Math.max(1, Number(attemptLike?.elapsedMs ?? debug?.elapsedMs) || 1);
+                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
+                const branchesTried = Math.max(0, Number(debug?.branchesTried) || 0);
+                const timeline = Array.isArray(debug?.phaseTimeline) ? debug.phaseTimeline : [];
+                const maxProgress = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
+                const remainingObjectives = timeline.length > 0 ? Math.max(0, Number(timeline[timeline.length - 1]?.remainingObjectives) || 0) : 0;
+                const unresolvedConstraintPenalty = Math.max(0, remainingObjectives / 5);
+                const frontierQuality = Math.max(0, Math.min(1, (maxProgress * 0.7) + (Math.max(0, 1 - unresolvedConstraintPenalty) * 0.2) + (Math.max(0, 1 - Math.min(1, Math.abs((branchesTried / Math.max(1, nodesExpanded)) - 0.55))) * 0.1)));
+                return {
+                    nodesPerSecond: (nodesExpanded * 1000) / elapsedMs,
+                    frontierQuality
+                };
+            };
+
+            const shouldSwitchFamilyByTelemetryDelta = (current = {}, prior = {}) => {
+                if (!current || !prior) return false;
+                const nodesPerSecondImproved = Number(current.nodesPerSecond) > (Number(prior.nodesPerSecond) * 1.03);
+                const frontierImproved = Number(current.frontierQuality) > (Number(prior.frontierQuality) + 0.015);
+                return !(nodesPerSecondImproved || frontierImproved);
+            };
+
+            const extractAttemptQualityMetrics = (attemptLike = {}) => {
+                const debug = attemptLike?.debug || attemptLike?.stats?.debug || {};
+                const timeline = Array.isArray(debug?.phaseTimeline) ? debug.phaseTimeline : [];
+                const progressReached = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
+                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
+                const depthReached = Math.max(0, Number(debug?.maxDepth) || 0);
+                const rootCandidatesExpanded = Math.max(0, Number(debug?.rootCandidatesExpanded) || 0);
+                const rootMoveOrder = Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder : [];
+                const uniqueRootMoves = new Set(rootMoveOrder.map(entry => JSON.stringify(entry))).size;
+                const rootDiversity = Math.max(rootCandidatesExpanded, uniqueRootMoves);
+                return {
+                    progressReached: Number(progressReached.toFixed(3)),
+                    nodesExpanded,
+                    depthReached,
+                    rootDiversity
+                };
+            };
+
+            const computeAttemptDeltaMetrics = (current = {}, previous = null) => {
+                if (!previous) {
+                    return {
+                        hasBaseline: false,
+                        progressDelta: null,
+                        nodesExpandedDelta: null,
+                        depthReachedDelta: null,
+                        rootDiversityDelta: null,
+                        qualityImproved: null,
+                        flatOrNegative: null
+                    };
+                }
+                const progressDelta = Number((Number(current.progressReached || 0) - Number(previous.progressReached || 0)).toFixed(3));
+                const nodesExpandedDelta = Number(current.nodesExpanded || 0) - Number(previous.nodesExpanded || 0);
+                const depthReachedDelta = Number(current.depthReached || 0) - Number(previous.depthReached || 0);
+                const rootDiversityDelta = Number(current.rootDiversity || 0) - Number(previous.rootDiversity || 0);
+                const qualityImproved = progressDelta > 0.01 || nodesExpandedDelta > 20 || depthReachedDelta > 1 || rootDiversityDelta > 0;
+                const flatOrNegative = progressDelta <= 0.01 && nodesExpandedDelta <= 20 && depthReachedDelta <= 1 && rootDiversityDelta <= 0;
+                return {
+                    hasBaseline: true,
+                    progressDelta,
+                    nodesExpandedDelta,
+                    depthReachedDelta,
+                    rootDiversityDelta,
+                    qualityImproved,
+                    flatOrNegative
+                };
+            };
+
+            return {
+                runStage,
+                extractStageTelemetry,
+                shouldSwitchFamilyByTelemetryDelta,
+                extractAttemptQualityMetrics,
+                computeAttemptDeltaMetrics
+            };
+        },
+
         async solve(levelInput, opts = {}) {
             const {
                 requestedTierRaw,
@@ -9939,109 +10056,13 @@
             };
             // Unified architecture: one referee engine with policy personalities.
             // Migration note: all solving is now referee; historical legacy toggles are compatibility aliases only.
-
-            const markStage = (stage, name, variant, budget, startedAt, result, meta = {}) => {
-                const normalized = createCanonicalSolveResult(result || {});
-                const stageSummary = toStageAttemptSummary({
-                    stage,
-                    name,
-                    variant,
-                    budgetMs: budget,
-                    elapsedMs: Date.now() - startedAt,
-                    normalized,
-                    meta
-                });
-                if (APP.State?.ENGINE?.isDevMode || opts?.auditMode) {
-                    const leakedCompat = ['solverPath', 'executionPath', 'legacyFallbackTried', 'legacyFallbackStatus', 'legacyFallbackSolved', 'legacyFallbackTimeMs', 'finalSolvedBy', 'totalSolveTimeMs']
-                        .filter(k => Object.prototype.hasOwnProperty.call(stageSummary, k));
-                    if (leakedCompat.length > 0) console.warn('[Referee canonical-stage leak]', { stage, leakedCompat });
-                }
-                stagesTried.push(stageSummary);
-            };
-
-            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee', run, compatLegacyOutputAlias = false }) => {
-                if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
-                    return { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
-                }
-                if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: stageBudgetMs });
-                const startedAt = Date.now();
-                const result = await run();
-                markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine, compatLegacyOutputAlias });
-                const normalized = createCanonicalSolveResult(result || {});
-                normalized.stage = stage;
-                normalized.variant = variant;
-                normalized.engine = engine;
-                normalized.compatLegacyOutputAlias = !!compatLegacyOutputAlias;
-                normalized.message = normalized.ok ? `Solved (${variant}).` : `${variant} ${normalized.status || 'error'}.`;
-                normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
-                return normalized;
-            };
-            const extractStageTelemetry = (attemptLike = {}) => {
-                const debug = attemptLike?.debug || attemptLike?.stats?.debug || {};
-                const elapsedMs = Math.max(1, Number(attemptLike?.elapsedMs ?? debug?.elapsedMs) || 1);
-                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
-                const branchesTried = Math.max(0, Number(debug?.branchesTried) || 0);
-                const timeline = Array.isArray(debug?.phaseTimeline) ? debug.phaseTimeline : [];
-                const maxProgress = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
-                const remainingObjectives = timeline.length > 0 ? Math.max(0, Number(timeline[timeline.length - 1]?.remainingObjectives) || 0) : 0;
-                const unresolvedConstraintPenalty = Math.max(0, remainingObjectives / 5);
-                const frontierQuality = Math.max(0, Math.min(1, (maxProgress * 0.7) + (Math.max(0, 1 - unresolvedConstraintPenalty) * 0.2) + (Math.max(0, 1 - Math.min(1, Math.abs((branchesTried / Math.max(1, nodesExpanded)) - 0.55))) * 0.1)));
-                return {
-                    nodesPerSecond: (nodesExpanded * 1000) / elapsedMs,
-                    frontierQuality
-                };
-            };
-            const shouldSwitchFamilyByTelemetryDelta = (current = {}, prior = {}) => {
-                if (!current || !prior) return false;
-                const nodesPerSecondImproved = Number(current.nodesPerSecond) > (Number(prior.nodesPerSecond) * 1.03);
-                const frontierImproved = Number(current.frontierQuality) > (Number(prior.frontierQuality) + 0.015);
-                return !(nodesPerSecondImproved || frontierImproved);
-            };
-            const extractAttemptQualityMetrics = (attemptLike = {}) => {
-                const debug = attemptLike?.debug || attemptLike?.stats?.debug || {};
-                const timeline = Array.isArray(debug?.phaseTimeline) ? debug.phaseTimeline : [];
-                const progressReached = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
-                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
-                const depthReached = Math.max(0, Number(debug?.maxDepth) || 0);
-                const rootCandidatesExpanded = Math.max(0, Number(debug?.rootCandidatesExpanded) || 0);
-                const rootMoveOrder = Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder : [];
-                const uniqueRootMoves = new Set(rootMoveOrder.map(entry => JSON.stringify(entry))).size;
-                const rootDiversity = Math.max(rootCandidatesExpanded, uniqueRootMoves);
-                return {
-                    progressReached: Number(progressReached.toFixed(3)),
-                    nodesExpanded,
-                    depthReached,
-                    rootDiversity
-                };
-            };
-            const computeAttemptDeltaMetrics = (current = {}, previous = null) => {
-                if (!previous) {
-                    return {
-                        hasBaseline: false,
-                        progressDelta: null,
-                        nodesExpandedDelta: null,
-                        depthReachedDelta: null,
-                        rootDiversityDelta: null,
-                        qualityImproved: null,
-                        flatOrNegative: null
-                    };
-                }
-                const progressDelta = Number((Number(current.progressReached || 0) - Number(previous.progressReached || 0)).toFixed(3));
-                const nodesExpandedDelta = Number(current.nodesExpanded || 0) - Number(previous.nodesExpanded || 0);
-                const depthReachedDelta = Number(current.depthReached || 0) - Number(previous.depthReached || 0);
-                const rootDiversityDelta = Number(current.rootDiversity || 0) - Number(previous.rootDiversity || 0);
-                const qualityImproved = progressDelta > 0.01 || nodesExpandedDelta > 20 || depthReachedDelta > 1 || rootDiversityDelta > 0;
-                const flatOrNegative = progressDelta <= 0.01 && nodesExpandedDelta <= 20 && depthReachedDelta <= 1 && rootDiversityDelta <= 0;
-                return {
-                    hasBaseline: true,
-                    progressDelta,
-                    nodesExpandedDelta,
-                    depthReachedDelta,
-                    rootDiversityDelta,
-                    qualityImproved,
-                    flatOrNegative
-                };
-            };
+            const {
+                runStage,
+                extractStageTelemetry,
+                shouldSwitchFamilyByTelemetryDelta,
+                extractAttemptQualityMetrics,
+                computeAttemptDeltaMetrics
+            } = this._createSolveExecutionHelpers({ stagesTried, opts });
             const cascadeResult = await this._runSolveCascade({
                 solveContext,
                 computeAttemptDeltaMetrics,
