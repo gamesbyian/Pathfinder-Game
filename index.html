@@ -9176,29 +9176,25 @@
 
         async _runRescueProfileStage({
             last,
-            level,
-            purpose,
-            recoveryBudget,
-            fallbackDisabledPrunes,
-            complexityStrategy,
-            escalationTier,
-            forcePreExpansionRescue,
-            strategyMetadata,
-            solveStartTime,
+            runStage,
+            solveContext,
             rapidCollapseRecoveryDiagnostics,
-            resolvedPortalBiasMode,
-            resolvedPhasePolicy,
-            controlPlane,
-            enableDiversifiedRootPass,
-            objectivesAreInteriorDominant,
-            runStage
+            stage0ZeroExpansion = false,
+            enableDiversifiedRootPass = false
         }) {
+            const {
+                level,
+                purpose,
+                strategy: { recoveryBudget, fallbackDisabledPrunes, complexityStrategy, escalationTier, forcePreExpansionRescue, strategyMetadata, solveStartTime },
+                controlPlane,
+                flags: { objectivesAreInteriorDominant }
+            } = solveContext;
             const priorFailureSummary = !last.ok ? (last.failureSummary || classifyFailureCategory(last)) : null;
             const priorFailureTaxonomy = !last.ok ? (last.failureTaxonomy || classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) })) : null;
             if (!last.ok && last.status !== 'no-solution-proven') {
                 const preExpansionAbortCode = `${last?.preExpansionAbort?.code || last?.debug?.preExpansionAbort?.code || ''}`;
                 const fallbackActivation = shouldActivateInteractionRootFallback({
-                    force: !!forcePreExpansionRescue,
+                    force: !!(forcePreExpansionRescue || stage0ZeroExpansion),
                     baselineResult: last,
                     level
                 });
@@ -9271,16 +9267,17 @@
 
         async _runHardHintFallbackStage({
             last,
-            strategyMetadata,
-            budgetMs,
-            tierBudgets,
-            policyTier,
             runStage,
-            level,
-            controlPlane,
-            purpose,
-            objectivesAreInteriorDominant
+            solveContext
         }) {
+            const {
+                level,
+                purpose,
+                controlPlane,
+                budgets: { budgetMs, tierBudgets },
+                strategy: { policyTier, strategyMetadata },
+                flags: { objectivesAreInteriorDominant }
+            } = solveContext;
             if (!last.ok && last.status !== 'no-solution-proven' && strategyMetadata.hardHintFallbackStage) {
                 const hardFallbackBudget = Math.max(1500, Math.floor(Math.max(budgetMs, tierBudgets[Math.min(2, policyTier)] || budgetMs) * 0.55));
                 const hardFallbackAttempt = await runStage({
@@ -9376,17 +9373,11 @@
             return last;
         },
 
-        async _runPreExpansionFailureCategory({
-            last,
-            runStage,
-            level,
-            sanityBudget,
-            resolvedPortalBiasMode,
-            resolvedPhasePolicy,
-            fallbackDisabledPrunes,
-            complexityStrategy,
-            escalationTier
-        }) {
+        async _runPreExpansionFailureCategory({ last, runStage, solveContext }) {
+            const {
+                level,
+                strategy: { sanityBudget, resolvedPortalBiasMode, resolvedPhasePolicy, fallbackDisabledPrunes, complexityStrategy, escalationTier }
+            } = solveContext;
             if (last.ok || last.status === 'no-solution-proven') return last;
             return runStage({
                 stage: 2,
@@ -9402,18 +9393,14 @@
             });
         },
 
-        async _runLowExpansionCollapseCategory({
-            last,
-            runStage,
-            level,
-            recoveryBudget,
-            resolvedPortalBiasMode,
-            resolvedPhasePolicy,
-            controlPlane,
-            enableDiversifiedRootPass,
-            objectivesAreInteriorDominant,
-            purpose
-        }) {
+        async _runLowExpansionCollapseCategory({ last, runStage, solveContext, enableDiversifiedRootPass = false }) {
+            const {
+                level,
+                purpose,
+                controlPlane,
+                strategy: { recoveryBudget, resolvedPortalBiasMode, resolvedPhasePolicy },
+                flags: { objectivesAreInteriorDominant }
+            } = solveContext;
             if (last.ok || last.status === 'no-solution-proven') return last;
             const policies = ['harvestThenFinish', 'knotBuilder'];
             let next = last;
@@ -9462,18 +9449,17 @@
         async _runHealthyExpansionTimeoutCategory({
             last,
             runStage,
-            level,
-            recoveryBudget,
-            enduranceBudget,
-            resolvedPortalBiasMode,
-            resolvedPhasePolicy,
-            controlPlane,
-            knotSensitive,
-            objectivesAreInteriorDominant,
-            purpose,
+            solveContext,
             extractStageTelemetry,
             shouldSwitchFamilyByTelemetryDelta
         }) {
+            const {
+                level,
+                purpose,
+                controlPlane,
+                strategy: { recoveryBudget, enduranceBudget, resolvedPortalBiasMode, resolvedPhasePolicy, knotSensitive },
+                flags: { objectivesAreInteriorDominant }
+            } = solveContext;
             if (last.ok || last.status === 'no-solution-proven') return last;
             let next = last;
             const stage0Debug = next?.debug || next?.stats?.debug || {};
@@ -9607,18 +9593,12 @@
             return next;
         },
 
-        async _runUnknownFailureCategory({
-            last,
-            runStage,
-            level,
-            recoveryBudget,
-            fallbackDisabledPrunes,
-            complexityStrategy,
-            escalationTier,
-            resolvedPortalBiasMode,
-            resolvedPhasePolicy,
-            objectivesAreInteriorDominant
-        }) {
+        async _runUnknownFailureCategory({ last, runStage, solveContext }) {
+            const {
+                level,
+                strategy: { recoveryBudget, fallbackDisabledPrunes, complexityStrategy, escalationTier, resolvedPortalBiasMode, resolvedPhasePolicy },
+                flags: { objectivesAreInteriorDominant }
+            } = solveContext;
             if (last.ok || last.status === 'no-solution-proven') return last;
             return runStage({
                 stage: 4,
@@ -9636,32 +9616,32 @@
 
         async _runSolveCascade(context = {}) {
             const {
-                level,
-                budgetMs,
-                purpose,
-                prev,
-                timesTried,
-                activeTierPolicy,
-                policyTier,
-                escalationTier,
-                resolvedPortalBiasMode,
-                fallbackDisabledPrunes,
-                complexityStrategy,
-                key,
+                solveContext,
                 computeAttemptDeltaMetrics,
                 runStage,
-                resolvedPhasePolicy,
-                controlPlane,
-                enableDiversifiedRootPass: _unusedEnableDiversifiedRootPass,
-                objectivesAreInteriorDominant,
-                allowRandomizedExploration,
-                solveStartTime,
-                forcePreExpansionRescue,
-                strategyMetadata: _unusedStrategyMetadata,
-                stagesTried: _unusedStagesTried,
                 extractStageTelemetry,
                 shouldSwitchFamilyByTelemetryDelta
             } = context;
+            const {
+                level,
+                purpose,
+                controlPlane,
+                budgets: { budgetMs, tierBudgets },
+                strategy: {
+                    prev,
+                    timesTried,
+                    activeTierPolicy,
+                    policyTier,
+                    escalationTier,
+                    resolvedPortalBiasMode,
+                    fallbackDisabledPrunes,
+                    complexityStrategy,
+                    key,
+                    resolvedPhasePolicy,
+                    solveStartTime
+                },
+                flags: { objectivesAreInteriorDominant, allowRandomizedExploration }
+            } = solveContext;
 
             let {
                 stagesTried,
@@ -9799,59 +9779,19 @@
                     }
                     const failureCategory = failureTaxonomy?.category || 'low-expansion-collapse';
                     if (failureCategory === 'pre-expansion-failure') {
-                        last = await this._runPreExpansionFailureCategory({
-                            last,
-                            runStage,
-                            level,
-                            sanityBudget,
-                            resolvedPortalBiasMode,
-                            resolvedPhasePolicy,
-                            fallbackDisabledPrunes,
-                            complexityStrategy,
-                            escalationTier
-                        });
+                        last = await this._runPreExpansionFailureCategory({ last, runStage, solveContext });
                     } else if (failureCategory === 'low-expansion-collapse') {
-                        last = await this._runLowExpansionCollapseCategory({
-                            last,
-                            runStage,
-                            level,
-                            recoveryBudget,
-                            resolvedPortalBiasMode,
-                            resolvedPhasePolicy,
-                            controlPlane,
-                            enableDiversifiedRootPass,
-                            objectivesAreInteriorDominant,
-                            purpose
-                        });
+                        last = await this._runLowExpansionCollapseCategory({ last, runStage, solveContext, enableDiversifiedRootPass });
                     } else if (failureCategory === 'healthy-expansion-timeout') {
                         last = await this._runHealthyExpansionTimeoutCategory({
                             last,
                             runStage,
-                            level,
-                            recoveryBudget,
-                            enduranceBudget,
-                            resolvedPortalBiasMode,
-                            resolvedPhasePolicy,
-                            controlPlane,
-                            knotSensitive,
-                            objectivesAreInteriorDominant,
-                            purpose,
+                            solveContext,
                             extractStageTelemetry,
                             shouldSwitchFamilyByTelemetryDelta
                         });
                     } else if (failureCategory === 'unknownFailure') {
-                        last = await this._runUnknownFailureCategory({
-                            last,
-                            runStage,
-                            level,
-                            recoveryBudget,
-                            fallbackDisabledPrunes,
-                            complexityStrategy,
-                            escalationTier,
-                            resolvedPortalBiasMode,
-                            resolvedPhasePolicy,
-                            objectivesAreInteriorDominant
-                        });
+                        last = await this._runUnknownFailureCategory({ last, runStage, solveContext });
                     }
                     if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                 }
@@ -9859,22 +9799,11 @@
 
             last = await this._runRescueProfileStage({
                 last,
-                level,
-                purpose,
-                recoveryBudget,
-                fallbackDisabledPrunes,
-                complexityStrategy,
-                escalationTier,
-                forcePreExpansionRescue: forcePreExpansionRescue || stage0ZeroExpansion,
-                strategyMetadata,
-                solveStartTime,
                 rapidCollapseRecoveryDiagnostics,
-                resolvedPortalBiasMode,
-                resolvedPhasePolicy,
-                controlPlane,
-                enableDiversifiedRootPass,
-                objectivesAreInteriorDominant,
-                runStage
+                runStage,
+                solveContext,
+                stage0ZeroExpansion,
+                enableDiversifiedRootPass
             });
             if (!last.ok && purpose === 'hint' && !rapidCollapseRecoveryDiagnostics.attempted) {
                 rapidCollapseRecoveryDiagnostics = {
@@ -9889,15 +9818,8 @@
             if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
             last = await this._runHardHintFallbackStage({
                 last,
-                strategyMetadata,
-                budgetMs,
-                tierBudgets: context.tierBudgets,
-                policyTier,
                 runStage,
-                level,
-                controlPlane,
-                purpose,
-                objectivesAreInteriorDominant
+                solveContext
             });
 
             return { last, stagesTried, previousAttempt, previousAttempts, strategyMetadata };
@@ -9940,6 +9862,54 @@
                 controlPlane,
                 lowComplexityLevel
             } = this._prepareSolveContext(levelInput, opts);
+            const solveContext = {
+                level,
+                profile: level?.solverProfile || {},
+                purpose,
+                controlPlane,
+                complexity: {
+                    class: complexityClass,
+                    strategySubtype,
+                    strategy: complexityStrategy,
+                    lowComplexityLevel
+                },
+                budgets: {
+                    defaultBudget,
+                    tierMinBudget,
+                    budgetMs,
+                    tierBudgets
+                },
+                flags: {
+                    objectivesAreInteriorDominant,
+                    allowRandomizedExploration,
+                    allowRandomizedExplorationOnExpensiveTiers,
+                    autoEscalate,
+                    forcePreExpansionRescue,
+                    fallbackDisabledPrunes
+                },
+                strategy: {
+                    key,
+                    prev,
+                    timesTried,
+                    requestedTierRaw,
+                    requestedTier,
+                    tier,
+                    escalationTier,
+                    policyTier,
+                    activeTierPolicy,
+                    maxTier,
+                    resolvedPortalBiasMode,
+                    resolvedPhasePolicy,
+                    solveStartTime,
+                    complexityStrategy,
+                    fallbackDisabledPrunes
+                },
+                metadata: {
+                    requestedBudget,
+                    policyLadderByPurpose,
+                    activePolicyLadder
+                }
+            };
             // Unified architecture: one referee engine with policy personalities.
             // Migration note: all solving is now referee; historical legacy toggles are compatibility aliases only.
 
@@ -10046,28 +10016,9 @@
                 };
             };
             const cascadeResult = await this._runSolveCascade({
-                level,
-                budgetMs,
-                purpose,
-                prev,
-                timesTried,
-                activeTierPolicy,
-                policyTier,
-                escalationTier,
-                resolvedPortalBiasMode,
-                fallbackDisabledPrunes,
-                complexityStrategy,
-                key,
+                solveContext,
                 computeAttemptDeltaMetrics,
                 runStage,
-                resolvedPhasePolicy,
-                controlPlane,
-                objectivesAreInteriorDominant,
-                allowRandomizedExploration,
-                solveStartTime,
-                forcePreExpansionRescue,
-                stagesTried,
-                tierBudgets,
                 extractStageTelemetry,
                 shouldSwitchFamilyByTelemetryDelta
             });
