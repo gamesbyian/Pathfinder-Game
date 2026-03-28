@@ -3732,6 +3732,7 @@
                             if (depth !== 0 || !Number.isFinite(contribution) || contribution === 0) return;
                             scoreDrivers.push({ feature, value: Number((value || 0).toFixed(3)), contribution: Number(contribution.toFixed(3)) });
                         };
+                        const pw = (key, floor = 0.25) => Math.max(floor, policyProfile[key] || 1);
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
                         if (mustIdx !== undefined) {
                             const bit = 1n << BigInt(mustIdx);
@@ -3802,7 +3803,7 @@
                             if (crossNeed > 0) score += crossNeed * 2;
                             score += (distMap.get(nk) ?? 999);
                         } else {
-                            { const c = computePortalOpportunity(k, nk, rSteps) * Math.max(0.2, policyProfile.portalSetupWeight || 1) * Math.max(0.2, policyProfile.portalCommitmentWeight || 1); score += c; pushDriver('portalCommitment', c, c); }
+                            { const c = computePortalOpportunity(k, nk, rSteps) * pw('portalSetupWeight', 0.2) * pw('portalCommitmentWeight', 0.2); score += c; pushDriver('portalCommitment', c, c); }
 
                             const nx = nk & 0xFFFF;
                             const ny = nk >> 16;
@@ -3837,9 +3838,9 @@
                             const currentSlack = l.reqLen - nLen - activeDist;
 
                             // Penalty scales from 5 (high slack) up to 40 (low slack)
-                            const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.objectiveAttractionWeight || 1);
+                            const gravityMult = (currentSlack > 5 ? 5 : 40) * Math.max(0.25, phaseProfile.objectivePull || 1) * pw('objectiveAttractionWeight');
 
-                            let mustPassUrgencyWeight = Math.max(0.25, policyProfile.mustPassUrgencyWeight || 1);
+                            let mustPassUrgencyWeight = pw('mustPassUrgencyWeight');
                             if (depth === 0 && valid.length <= 2) {
                                 mustPassUrgencyWeight = Math.min(mustPassUrgencyWeight, 0.35);
                             }
@@ -3889,7 +3890,7 @@
                                 }
                             }
                             const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
-                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1));
+                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * pw('mustCrossUrgencyWeight'));
                             score += mustContribution;
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
@@ -3897,7 +3898,7 @@
                             if (state.ints < l.reqInt && l.mustPassIndex?.has(nk) && (state.countsArr[state.keyToIdx(nk)] || 0) > 0) {
                                 score -= Math.round(gravityMult * 0.6);
                             }
-                            if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * Math.max(0.25, policyProfile.mustCrossUrgencyWeight || 1)); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
+                            if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * pw('mustCrossUrgencyWeight')); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
 
                             if (activeObjectiveDistMap && activeObjectiveId >= 0) {
                                 const nextObjectiveDist = activeObjectiveDistMap.get(nk) ?? Infinity;
@@ -3934,7 +3935,7 @@
 
                             if (isTargetingWaypoint) {
                                 // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
-                                { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * Math.max(0.25, policyProfile.goalAttractionWeight || 1))); score += c; pushDriver('goalAttraction', activeDist, c); }
+                                { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * pw('goalAttractionWeight'))); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 score -= this._staticNeighborDegree(nk, l) * 2;
                             } else {
                                 const slack = rSteps - activeDist;
@@ -3943,13 +3944,13 @@
                                 suppressAntiDither = finalApproach || slack <= 0;
                                 if (slack > 0 && !finalApproach) {
                                     // SLACK MODE: Decaying Orbit + Wall Hugging
-                                    const targetSlack = Math.floor((rSteps / 2) * Math.max(0.5, policyProfile.slackPreservationWeight || 1));
+                                    const targetSlack = Math.floor((rSteps / 2) * pw('slackPreservationWeight', 0.5));
                                     score -= Math.abs(slack - targetSlack) * 5;
-                                    score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1) * Math.max(0.25, policyProfile.antiDeadCorridorWeight || 1));
+                                    score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1) * pw('antiDeadCorridorWeight'));
                                 } else {
                                     // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
                                     const ramp = finalApproach ? (1 + (3 - slack) * 0.4) : 1;
-                                    { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * Math.max(0.25, policyProfile.goalAttractionWeight || 1) * ramp)); score += c; pushDriver('goalAttraction', activeDist, c); }
+                                    { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * pw('goalAttractionWeight') * ramp)); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 }
                             }
                         }
@@ -3966,14 +3967,14 @@
                             if (!options?.suppressPerimeterBias) {
                                 if (profile.perimeterBias > 0 && rRatio < 0.45) {
                                     const perimeterWeight = Math.max(0.1, phaseProfile.perimeterBias || 1);
-                                    if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * Math.max(0.25, policyProfile.perimeterBiasWeight || 1)); score += c; pushDriver('perimeterBias', edgeDist, c); }
+                                    if (edgeDist <= perimeterThreshold) { const c = -Math.round(profile.perimeterBias * perimeterWeight * pw('perimeterBiasWeight')); score += c; pushDriver('perimeterBias', edgeDist, c); }
                                     else score += Math.round(profile.perimeterBias * 0.45 * perimeterWeight);
                                     if (goalDist <= Math.max(2, Math.floor(l.reqLen * 0.08))) score += Math.round(profile.perimeterBias * 0.35 * perimeterWeight);
                                 }
                             }
 
                             if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
-                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * Math.max(0.25, policyProfile.intersectionSetupWeight || 1);
+                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * pw('intersectionSetupWeight');
                                 const candidate = activeKnotTarget.candidate;
                                 const targetDist = candidate.distMap instanceof Map ? candidate.distMap.get(nk) : undefined;
                                 const currentTargetDist = candidate.distMap instanceof Map ? candidate.distMap.get(k) : undefined;
@@ -4204,7 +4205,7 @@
 
 
                         const earlySlack = rSteps - (nextGoalDist ?? 999);
-                        const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1) * Math.max(0.2, policyProfile.antiDitherWeight || 1);
+                        const antiDitherScale = Math.max(0.2, phaseProfile.antiDither || 1) * pw('antiDitherWeight', 0.2);
 
                         // Anti-dither 1: discourage inward drift during early, high-slack harvest.
                         if (!suppressAntiDither && (activePhase === 'harvest' || activePhase === 'transition') && rRatio < 0.45 && earlySlack >= 6) {
@@ -4237,13 +4238,13 @@
                         // Anti-dither 3: avoid approaching near-goal basin too early when obligations remain.
                         if (!suppressAntiDither && remainsObligations && Number.isFinite(nextGoalDist) && nextGoalDist <= 2 && rSteps > Math.max(4, nextGoalDist + 2)) {
                             let earlyGoalPenalty = Math.round((18 + (rSteps - nextGoalDist) * 2) * antiDitherScale);
-                            if (activePhase === 'finish') earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.2 * Math.max(0.25, 2 - (policyProfile.finishCommitmentWeight || 1)));
+                            if (activePhase === 'finish') earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.2 * Math.max(0.25, 2 - (pw('finishCommitmentWeight', 0))));
                             else if (productiveAmbiguity && objectiveImproved) earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.5);
                             score += earlyGoalPenalty;
                             if (debugStats) debugStats.earlyGoalApproachBlocked = (debugStats.earlyGoalApproachBlocked || 0) + 1;
                         }
 
-                    const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * Math.max(0.25, policyProfile.revisitPenaltyWeight || 1);
+                    const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * pw('revisitPenaltyWeight');
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
                     return { nk, score, scoreDrivers };
