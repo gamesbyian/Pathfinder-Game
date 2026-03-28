@@ -9498,6 +9498,29 @@
                 resolvedPortalBiasMode
             });
 
+            const guardrailBlocked = this._maybeAbortByRetryGuardrail({
+                guardrailStopThirdAttempt,
+                previousAttempt,
+                previousAttempts,
+                timesTried,
+                escalationTier,
+                budgetMs,
+                strategyMetadata,
+                stagesTried,
+                key,
+                computeAttemptDeltaMetrics
+            });
+            if (guardrailBlocked) return guardrailBlocked;
+                budgetMs,
+                purpose,
+                prev,
+                timesTried,
+                activeTierPolicy,
+                policyTier,
+                escalationTier,
+                resolvedPortalBiasMode
+            });
+
             if (guardrailStopThirdAttempt) {
                 const blocked = {
                     ok: false,
