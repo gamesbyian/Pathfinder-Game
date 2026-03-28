@@ -6,6 +6,7 @@
     "lint:solver": "node scripts/lint-solver-no-undef.mjs",
     "test:solver-smoke": "node scripts/solver-smoke-test.mjs",
     "check:audit-output": "node scripts/check-audit-output.mjs",
-    "ci": "npm run lint:solver && npm run test:solver-smoke"
+    "ci": "npm run lint:solver && npm run test:solver-smoke && npm run test:startup-smoke",
+    "test:startup-smoke": "node scripts/startup-smoke-test.mjs"
   }
 }
