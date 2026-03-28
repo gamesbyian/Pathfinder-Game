@@ -9376,6 +9376,264 @@
             return last;
         },
 
+        async _runPreExpansionFailureCategory({
+            last,
+            runStage,
+            level,
+            sanityBudget,
+            resolvedPortalBiasMode,
+            resolvedPhasePolicy,
+            fallbackDisabledPrunes,
+            complexityStrategy,
+            escalationTier
+        }) {
+            if (last.ok || last.status === 'no-solution-proven') return last;
+            return runStage({
+                stage: 2,
+                name: 'Stage 2',
+                variant: 'contradiction-recovery',
+                budgetMs: sanityBudget,
+                run: () => this.runSanityMode(level, sanityBudget, {
+                    portalBiasMode: resolvedPortalBiasMode,
+                    phasePolicy: resolvedPhasePolicy,
+                    disabledPrunes: fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [],
+                    contradictionRecovery: true
+                })
+            });
+        },
+
+        async _runLowExpansionCollapseCategory({
+            last,
+            runStage,
+            level,
+            recoveryBudget,
+            resolvedPortalBiasMode,
+            resolvedPhasePolicy,
+            controlPlane,
+            enableDiversifiedRootPass,
+            objectivesAreInteriorDominant,
+            purpose
+        }) {
+            if (last.ok || last.status === 'no-solution-proven') return last;
+            const policies = ['harvestThenFinish', 'knotBuilder'];
+            let next = last;
+            for (const policy of policies) {
+                if (next.ok || next.status === 'no-solution-proven') break;
+                next = await runStage({
+                    stage: 2,
+                    name: 'Stage 2',
+                    variant: 'expansion-recovery',
+                    budgetMs: recoveryBudget,
+                    run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                        orderingPolicy: policy,
+                        portalBiasMode: resolvedPortalBiasMode,
+                        phasePolicy: resolvedPhasePolicy,
+                        profile: level.solverProfile,
+                        controlPlane,
+                        refereeRootDiversification: enableDiversifiedRootPass,
+                        scoringMode: 'modern',
+                        structuralMode: true,
+                        enableEnduranceLongpath: true,
+                        allowRandomizedExploration: false,
+                        adaptiveOrderingPhase: policy === 'harvestThenFinish' ? 'objective-harvest' : 'knot-build',
+                        suppressPerimeterBias: objectivesAreInteriorDominant,
+                        purpose
+                    })
+                });
+            }
+            if (!next.ok && next.status !== 'no-solution-proven') {
+                next = await runStage({
+                    stage: 3,
+                    name: 'Stage 3',
+                    variant: 'root-diversity-recovery',
+                    budgetMs: recoveryBudget,
+                    run: () => this.runStage2Fallback(level, recoveryBudget,
+                        ['mustPassBound', 'mustCrossBound', 'connectivity'], {
+                        portalBiasMode: resolvedPortalBiasMode,
+                        phasePolicy: resolvedPhasePolicy,
+                        enableLowExpansionProbe: true,
+                        suppressPerimeterBias: objectivesAreInteriorDominant
+                    })
+                });
+            }
+            return next;
+        },
+
+        async _runHealthyExpansionTimeoutCategory({
+            last,
+            runStage,
+            level,
+            recoveryBudget,
+            enduranceBudget,
+            resolvedPortalBiasMode,
+            resolvedPhasePolicy,
+            controlPlane,
+            knotSensitive,
+            objectivesAreInteriorDominant,
+            purpose,
+            extractStageTelemetry,
+            shouldSwitchFamilyByTelemetryDelta
+        }) {
+            if (last.ok || last.status === 'no-solution-proven') return last;
+            let next = last;
+            const stage0Debug = next?.debug || next?.stats?.debug || {};
+            const topScoreDrivers = Array.isArray(stage0Debug?.rootPolicySummary?.topScoreDrivers) ? stage0Debug.rootPolicySummary.topScoreDrivers : [];
+            const rankedByMag = topScoreDrivers.slice().sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
+            const topDriverLabel = rankedByMag.length > 0 ? rankedByMag[0].feature : null;
+            const reqIntLevel = Number(level?.reqInt) || 0;
+            if (topDriverLabel === 'mustCrossUrgency' && knotSensitive && reqIntLevel >= 3) {
+                next = await runStage({
+                    stage: 3,
+                    name: 'Stage 3',
+                    variant: 'mustcross-knot-recovery',
+                    budgetMs: recoveryBudget,
+                    run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                        orderingPolicy: 'knotBuilder',
+                        portalBiasMode: resolvedPortalBiasMode,
+                        phasePolicy: resolvedPhasePolicy,
+                        profile: level.solverProfile,
+                        controlPlane,
+                        scoringMode: 'modern',
+                        structuralMode: true,
+                        enableEnduranceLongpath: true,
+                        allowRandomizedExploration: false,
+                        adaptiveOrderingPhase: 'knot-build',
+                        suppressPerimeterBias: objectivesAreInteriorDominant,
+                        purpose
+                    })
+                });
+            }
+            if (!next.ok && next.status !== 'no-solution-proven'
+                && (topDriverLabel === 'mustPassUrgency'
+                    || topDriverLabel === 'mustCrossUrgency')) {
+                next = await runStage({
+                    stage: 3,
+                    name: 'Stage 3',
+                    variant: 'objective-ordering-recovery',
+                    budgetMs: recoveryBudget,
+                    run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                        orderingPolicy: 'objectiveFirst',
+                        portalBiasMode: resolvedPortalBiasMode,
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(
+                            level?.solverProfile || {},
+                            { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }
+                        ),
+                        profile: level.solverProfile,
+                        controlPlane,
+                        scoringMode: 'modern',
+                        structuralMode: true,
+                        enableEnduranceLongpath: true,
+                        allowRandomizedExploration: false,
+                        adaptiveOrderingPhase: 'objective-harvest',
+                        suppressPerimeterBias: objectivesAreInteriorDominant,
+                        purpose
+                    })
+                });
+            }
+            if (!next.ok && next.status !== 'no-solution-proven'
+                && topDriverLabel === 'goalAttraction') {
+                next = await runStage({
+                    stage: 3,
+                    name: 'Stage 3',
+                    variant: 'goal-suppression-recovery',
+                    budgetMs: recoveryBudget,
+                    run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                        orderingPolicy: 'finishFirst',
+                        portalBiasMode: 'off',
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(
+                            level?.solverProfile || {},
+                            { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'finishFirst' }
+                        ),
+                        profile: level.solverProfile,
+                        controlPlane,
+                        scoringMode: 'modern',
+                        structuralMode: true,
+                        enableEnduranceLongpath: true,
+                        allowRandomizedExploration: false,
+                        adaptiveOrderingPhase: 'objective-harvest',
+                        suppressPerimeterBias: objectivesAreInteriorDominant,
+                        purpose
+                    })
+                });
+            }
+            if (!next.ok && next.status !== 'no-solution-proven') {
+                const stage0Telemetry = extractStageTelemetry(next);
+                const enduranceAttempt = await runStage({
+                    stage: 4,
+                    name: 'Stage 4',
+                    variant: 'late-search-endurance',
+                    budgetMs: enduranceBudget,
+                    run: () => this.runEnduranceMode(level, enduranceBudget, {
+                        portalBiasMode: resolvedPortalBiasMode,
+                        phasePolicy: resolvedPhasePolicy,
+                        profile: level.solverProfile,
+                        controlPlane,
+                        suppressPerimeterBias: objectivesAreInteriorDominant,
+                        purpose
+                    })
+                });
+                const enduranceTelemetry = extractStageTelemetry(enduranceAttempt);
+                if (!enduranceAttempt.ok && shouldSwitchFamilyByTelemetryDelta(enduranceTelemetry, stage0Telemetry)) {
+                    const switchedAttempt = await runStage({
+                        stage: 5,
+                        name: 'Stage 5',
+                        variant: 'telemetry-family-switch',
+                        budgetMs: recoveryBudget,
+                        run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                            orderingPolicy: 'objectiveFirst',
+                            portalBiasMode: 'adaptiveMustCross',
+                            phasePolicy: SolverCore.deriveDynamicPhasePolicy(level?.solverProfile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }),
+                            profile: level.solverProfile,
+                            controlPlane,
+                            scoringMode: 'modern',
+                            structuralMode: true,
+                            enableEnduranceLongpath: true,
+                            allowRandomizedExploration: false,
+                            adaptiveOrderingPhase: 'objective-harvest',
+                            suppressPerimeterBias: objectivesAreInteriorDominant,
+                            purpose
+                        })
+                    });
+                    switchedAttempt.routingDecision = compactDefined({
+                        category: 'healthy-expansion-timeout',
+                        mode: 'telemetry-family-switch',
+                        trigger: 'no-delta-vs-prior-attempt'
+                    });
+                    next = switchedAttempt;
+                } else {
+                    next = enduranceAttempt;
+                }
+            }
+            return next;
+        },
+
+        async _runUnknownFailureCategory({
+            last,
+            runStage,
+            level,
+            recoveryBudget,
+            fallbackDisabledPrunes,
+            complexityStrategy,
+            escalationTier,
+            resolvedPortalBiasMode,
+            resolvedPhasePolicy,
+            objectivesAreInteriorDominant
+        }) {
+            if (last.ok || last.status === 'no-solution-proven') return last;
+            return runStage({
+                stage: 4,
+                name: 'Stage 4',
+                variant: 'conservative-fallback',
+                budgetMs: recoveryBudget,
+                run: () => this.runStage2Fallback(level, recoveryBudget, fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || ['mustPassBound', 'mustCrossBound', 'connectivity'], {
+                    portalBiasMode: resolvedPortalBiasMode,
+                    phasePolicy: resolvedPhasePolicy,
+                    enableLowExpansionProbe: true,
+                    suppressPerimeterBias: objectivesAreInteriorDominant
+                })
+            });
+        },
+
         async _runSolveCascade(context = {}) {
             const {
                 level,
@@ -9540,201 +9798,59 @@
                         last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                     }
                     const failureCategory = failureTaxonomy?.category || 'low-expansion-collapse';
-                    if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'pre-expansion-failure') {
-                        last = await runStage({
-                            stage: 2,
-                            name: 'Stage 2',
-                            variant: 'contradiction-recovery',
-                            budgetMs: sanityBudget,
-                            run: () => this.runSanityMode(level, sanityBudget, {
-                                portalBiasMode: resolvedPortalBiasMode,
-                                phasePolicy: resolvedPhasePolicy,
-                                disabledPrunes: fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [],
-                                contradictionRecovery: true
-                            })
+                    if (failureCategory === 'pre-expansion-failure') {
+                        last = await this._runPreExpansionFailureCategory({
+                            last,
+                            runStage,
+                            level,
+                            sanityBudget,
+                            resolvedPortalBiasMode,
+                            resolvedPhasePolicy,
+                            fallbackDisabledPrunes,
+                            complexityStrategy,
+                            escalationTier
                         });
-                    } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'low-expansion-collapse') {
-                        const policies = ['harvestThenFinish', 'knotBuilder'];
-                        for (const policy of policies) {
-                            if (last.ok || last.status === 'no-solution-proven') break;
-                            last = await runStage({
-                                stage: 2,
-                                name: 'Stage 2',
-                                variant: 'expansion-recovery',
-                                budgetMs: recoveryBudget,
-                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                                    orderingPolicy: policy,
-                                    portalBiasMode: resolvedPortalBiasMode,
-                                    phasePolicy: resolvedPhasePolicy,
-                                    profile: level.solverProfile,
-                                    controlPlane,
-                                    refereeRootDiversification: enableDiversifiedRootPass,
-                                    scoringMode: 'modern',
-                                    structuralMode: true,
-                                    enableEnduranceLongpath: true,
-                                    allowRandomizedExploration: false,
-                                    adaptiveOrderingPhase: policy === 'harvestThenFinish' ? 'objective-harvest' : 'knot-build',
-                                    suppressPerimeterBias: objectivesAreInteriorDominant,
-                                    purpose
-                                })
-                            });
-                        }
-                        if (!last.ok && last.status !== 'no-solution-proven') {
-                            last = await runStage({
-                                stage: 3,
-                                name: 'Stage 3',
-                                variant: 'root-diversity-recovery',
-                                budgetMs: recoveryBudget,
-                                run: () => this.runStage2Fallback(level, recoveryBudget,
-                                    ['mustPassBound', 'mustCrossBound', 'connectivity'], {
-                                    portalBiasMode: resolvedPortalBiasMode,
-                                    phasePolicy: resolvedPhasePolicy,
-                                    enableLowExpansionProbe: true,
-                                    suppressPerimeterBias: objectivesAreInteriorDominant
-                                })
-                            });
-                        }
-                    } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'healthy-expansion-timeout') {
-                        const stage0Debug = last?.debug || last?.stats?.debug || {};
-                        const topScoreDrivers = Array.isArray(stage0Debug?.rootPolicySummary?.topScoreDrivers) ? stage0Debug.rootPolicySummary.topScoreDrivers : [];
-                        const rankedByMag = topScoreDrivers.slice().sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution));
-                        const topDriverLabel = rankedByMag.length > 0 ? rankedByMag[0].feature : null;
-                        const reqIntLevel = Number(level?.reqInt) || 0;
-                        if (topDriverLabel === 'mustCrossUrgency' && knotSensitive && reqIntLevel >= 3) {
-                            last = await runStage({
-                                stage: 3,
-                                name: 'Stage 3',
-                                variant: 'mustcross-knot-recovery',
-                                budgetMs: recoveryBudget,
-                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                                    orderingPolicy: 'knotBuilder',
-                                    portalBiasMode: resolvedPortalBiasMode,
-                                    phasePolicy: resolvedPhasePolicy,
-                                    profile: level.solverProfile,
-                                    controlPlane,
-                                    scoringMode: 'modern',
-                                    structuralMode: true,
-                                    enableEnduranceLongpath: true,
-                                    allowRandomizedExploration: false,
-                                    adaptiveOrderingPhase: 'knot-build',
-                                    suppressPerimeterBias: objectivesAreInteriorDominant,
-                                    purpose
-                                })
-                            });
-                        }
-                        if (!last.ok && last.status !== 'no-solution-proven'
-                            && (topDriverLabel === 'mustPassUrgency'
-                                || topDriverLabel === 'mustCrossUrgency')) {
-                            last = await runStage({
-                                stage: 3,
-                                name: 'Stage 3',
-                                variant: 'objective-ordering-recovery',
-                                budgetMs: recoveryBudget,
-                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                                    orderingPolicy: 'objectiveFirst',
-                                    portalBiasMode: resolvedPortalBiasMode,
-                                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(
-                                        level?.solverProfile || {},
-                                        { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }
-                                    ),
-                                    profile: level.solverProfile,
-                                    controlPlane,
-                                    scoringMode: 'modern',
-                                    structuralMode: true,
-                                    enableEnduranceLongpath: true,
-                                    allowRandomizedExploration: false,
-                                    adaptiveOrderingPhase: 'objective-harvest',
-                                    suppressPerimeterBias: objectivesAreInteriorDominant,
-                                    purpose
-                                })
-                            });
-                        }
-                        if (!last.ok && last.status !== 'no-solution-proven'
-                            && topDriverLabel === 'goalAttraction') {
-                            last = await runStage({
-                                stage: 3,
-                                name: 'Stage 3',
-                                variant: 'goal-suppression-recovery',
-                                budgetMs: recoveryBudget,
-                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                                    orderingPolicy: 'finishFirst',
-                                    portalBiasMode: 'off',
-                                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(
-                                        level?.solverProfile || {},
-                                        { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'finishFirst' }
-                                    ),
-                                    profile: level.solverProfile,
-                                    controlPlane,
-                                    scoringMode: 'modern',
-                                    structuralMode: true,
-                                    enableEnduranceLongpath: true,
-                                    allowRandomizedExploration: false,
-                                    adaptiveOrderingPhase: 'objective-harvest',
-                                    suppressPerimeterBias: objectivesAreInteriorDominant,
-                                    purpose
-                                })
-                            });
-                        }
-                        if (!last.ok && last.status !== 'no-solution-proven') {
-                            const stage0Telemetry = extractStageTelemetry(last);
-                            const enduranceAttempt = await runStage({
-                                stage: 4,
-                                name: 'Stage 4',
-                                variant: 'late-search-endurance',
-                                budgetMs: enduranceBudget,
-                                run: () => this.runEnduranceMode(level, enduranceBudget, {
-                                    portalBiasMode: resolvedPortalBiasMode,
-                                    phasePolicy: resolvedPhasePolicy,
-                                    profile: level.solverProfile,
-                                    controlPlane,
-                                    suppressPerimeterBias: objectivesAreInteriorDominant,
-                                    purpose
-                                })
-                            });
-                            const enduranceTelemetry = extractStageTelemetry(enduranceAttempt);
-                            if (!enduranceAttempt.ok && shouldSwitchFamilyByTelemetryDelta(enduranceTelemetry, stage0Telemetry)) {
-                                const switchedAttempt = await runStage({
-                                    stage: 5,
-                                    name: 'Stage 5',
-                                    variant: 'telemetry-family-switch',
-                                    budgetMs: recoveryBudget,
-                                    run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                                        orderingPolicy: 'objectiveFirst',
-                                        portalBiasMode: 'adaptiveMustCross',
-                                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(level?.solverProfile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'objectiveFirst' }),
-                                        profile: level.solverProfile,
-                                        controlPlane,
-                                        scoringMode: 'modern',
-                                        structuralMode: true,
-                                        enableEnduranceLongpath: true,
-                                        allowRandomizedExploration: false,
-                                        adaptiveOrderingPhase: 'objective-harvest',
-                                        suppressPerimeterBias: objectivesAreInteriorDominant,
-                                        purpose
-                                    })
-                                });
-                                switchedAttempt.routingDecision = compactDefined({
-                                    category: 'healthy-expansion-timeout',
-                                    mode: 'telemetry-family-switch',
-                                    trigger: 'no-delta-vs-prior-attempt'
-                                });
-                                last = switchedAttempt;
-                            } else {
-                                last = enduranceAttempt;
-                            }
-                        }
-                    } else if (!last.ok && last.status !== 'no-solution-proven' && failureCategory === 'unknownFailure') {
-                        last = await runStage({
-                            stage: 4,
-                            name: 'Stage 4',
-                            variant: 'conservative-fallback',
-                            budgetMs: recoveryBudget,
-                            run: () => this.runStage2Fallback(level, recoveryBudget, fallbackDisabledPrunes || complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || ['mustPassBound', 'mustCrossBound', 'connectivity'], {
-                                portalBiasMode: resolvedPortalBiasMode,
-                                phasePolicy: resolvedPhasePolicy,
-                                enableLowExpansionProbe: true,
-                                suppressPerimeterBias: objectivesAreInteriorDominant
-                            })
+                    } else if (failureCategory === 'low-expansion-collapse') {
+                        last = await this._runLowExpansionCollapseCategory({
+                            last,
+                            runStage,
+                            level,
+                            recoveryBudget,
+                            resolvedPortalBiasMode,
+                            resolvedPhasePolicy,
+                            controlPlane,
+                            enableDiversifiedRootPass,
+                            objectivesAreInteriorDominant,
+                            purpose
+                        });
+                    } else if (failureCategory === 'healthy-expansion-timeout') {
+                        last = await this._runHealthyExpansionTimeoutCategory({
+                            last,
+                            runStage,
+                            level,
+                            recoveryBudget,
+                            enduranceBudget,
+                            resolvedPortalBiasMode,
+                            resolvedPhasePolicy,
+                            controlPlane,
+                            knotSensitive,
+                            objectivesAreInteriorDominant,
+                            purpose,
+                            extractStageTelemetry,
+                            shouldSwitchFamilyByTelemetryDelta
+                        });
+                    } else if (failureCategory === 'unknownFailure') {
+                        last = await this._runUnknownFailureCategory({
+                            last,
+                            runStage,
+                            level,
+                            recoveryBudget,
+                            fallbackDisabledPrunes,
+                            complexityStrategy,
+                            escalationTier,
+                            resolvedPortalBiasMode,
+                            resolvedPhasePolicy,
+                            objectivesAreInteriorDominant
                         });
                     }
                     if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
