@@ -8,7 +8,8 @@
     "check:audit-output": "node scripts/check-audit-output.mjs",
     "ci": "npm run lint:solver && npm run test:solver-smoke && npm run test:startup-smoke",
     "test:startup-smoke": "node scripts/startup-smoke-test.mjs",
-    "audit:newhint:full": "node scripts/run-audit-export.mjs"
+    "audit:newhint:full": "node scripts/run-audit-export.mjs",
+    "audit:analyze-failures": "node scripts/analyze-audit-failures.mjs"
   },
   "devDependencies": {
     "playwright": "^1.54.2"
