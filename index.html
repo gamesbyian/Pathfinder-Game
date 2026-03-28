@@ -9269,6 +9269,53 @@
             return last;
         },
 
+        async _runHardHintFallbackStage({
+            last,
+            strategyMetadata,
+            budgetMs,
+            tierBudgets,
+            policyTier,
+            runStage,
+            level,
+            controlPlane,
+            purpose,
+            objectivesAreInteriorDominant
+        }) {
+            if (!last.ok && last.status !== 'no-solution-proven' && strategyMetadata.hardHintFallbackStage) {
+                const hardFallbackBudget = Math.max(1500, Math.floor(Math.max(budgetMs, tierBudgets[Math.min(2, policyTier)] || budgetMs) * 0.55));
+                const hardFallbackAttempt = await runStage({
+                    stage: 6,
+                    name: 'Stage 6',
+                    variant: 'hint-hard-diversified-fallback',
+                    budgetMs: hardFallbackBudget,
+                    run: () => this.runBaselinePolicySweep(level, hardFallbackBudget, {
+                        orderingPolicy: 'portalFirstTransfer',
+                        portalBiasMode: 'off',
+                        phasePolicy: null,
+                        profile: level.solverProfile,
+                        controlPlane,
+                        refereeRootDiversification: true,
+                        scoringMode: 'endurance',
+                        structuralMode: true,
+                        enableEnduranceLongpath: true,
+                        allowRandomizedExploration: false,
+                        adaptiveOrderingPhase: 'portal-transfer',
+                        purpose,
+                        rootCandidateGeneratorVariant: 'interaction-fallback',
+                        preferMacroSkeleton: true,
+                        suppressPerimeterBias: objectivesAreInteriorDominant
+                    })
+                });
+                hardFallbackAttempt.routingDecision = compactDefined({
+                    category: hardFallbackAttempt.failureTaxonomy?.category || 'hint-hard-fallback',
+                    mode: 'hard-diversified-fallback',
+                    trigger: 'repeated-inconclusive-hint-presses'
+                });
+                return hardFallbackAttempt;
+            }
+            return last;
+        },
+
         _decorateFinalSolveResult({
             last,
             level,
@@ -9871,38 +9918,18 @@
                 };
             }
             if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
-            if (!last.ok && last.status !== 'no-solution-proven' && strategyMetadata.hardHintFallbackStage) {
-                const hardFallbackBudget = Math.max(1500, Math.floor(Math.max(budgetMs, tierBudgets[Math.min(2, policyTier)] || budgetMs) * 0.55));
-                const hardFallbackAttempt = await runStage({
-                    stage: 6,
-                    name: 'Stage 6',
-                    variant: 'hint-hard-diversified-fallback',
-                    budgetMs: hardFallbackBudget,
-                    run: () => this.runBaselinePolicySweep(level, hardFallbackBudget, {
-                        orderingPolicy: 'portalFirstTransfer',
-                        portalBiasMode: 'off',
-                        phasePolicy: null,
-                        profile: level.solverProfile,
-                        controlPlane,
-                        refereeRootDiversification: true,
-                        scoringMode: 'endurance',
-                        structuralMode: true,
-                        enableEnduranceLongpath: true,
-                        allowRandomizedExploration: false,
-                        adaptiveOrderingPhase: 'portal-transfer',
-                        purpose,
-                        rootCandidateGeneratorVariant: 'interaction-fallback',
-                        preferMacroSkeleton: true,
-                        suppressPerimeterBias: objectivesAreInteriorDominant
-                    })
-                });
-                hardFallbackAttempt.routingDecision = compactDefined({
-                    category: hardFallbackAttempt.failureTaxonomy?.category || 'hint-hard-fallback',
-                    mode: 'hard-diversified-fallback',
-                    trigger: 'repeated-inconclusive-hint-presses'
-                });
-                last = hardFallbackAttempt;
-            }
+            last = await this._runHardHintFallbackStage({
+                last,
+                strategyMetadata,
+                budgetMs,
+                tierBudgets,
+                policyTier,
+                runStage,
+                level,
+                controlPlane,
+                purpose,
+                objectivesAreInteriorDominant
+            });
 
             const { attemptDelta } = this._recordSolveAttemptOutcome({
                 last,
