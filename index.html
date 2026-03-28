@@ -5131,6 +5131,10 @@
                 }
             };
 
+        // SearchFramework: iterates start states from a policy and collects results.
+        // policy must provide: getStartStates, expandMoves, getStateKey, applyMove,
+        //   isAcceptState, onAcceptState, initOutput.
+        // applyMove(state, move, out) must return { kind: 'solution'|'aborted'|'timeout'|'trap-spots', ... }.
         const SearchFramework = {
                 async runSearch({
                     level,
@@ -5139,47 +5143,26 @@
                     signal,
                     onProgress = () => {},
                     onStateUpdate = () => {},
-                    policy,
-                    getStartStates,
-                    isAcceptState,
-                    onAcceptState,
-                    expandMoves,
-                    applyMove,
-                    getStateKey,
-                    dominates,
-                    recordBest,
-                    initOutput,
-                    initialOutput
+                    policy
                 }) {
-                    const resolvedGetStartStates = getStartStates || policy?.getStartStates;
-                    const resolvedIsAcceptState = isAcceptState || policy?.isAcceptState;
-                    const resolvedOnAcceptState = onAcceptState || policy?.onAcceptState;
-                    const resolvedExpandMoves = expandMoves || policy?.expandMoves;
-                    const resolvedApplyMove = applyMove || policy?.applyMove;
-                    const resolvedGetStateKey = getStateKey || policy?.getStateKey;
-                    const resolvedDominates = dominates || policy?.dominates;
-                    const resolvedRecordBest = recordBest || policy?.recordBest;
-                    const resolvedInitOutput = initOutput || policy?.initOutput;
-                    const resolvedInitialOutput = initialOutput || policy?.initialOutput;
-
-                    const out = (typeof resolvedInitOutput === 'function') ? (resolvedInitOutput() || {}) : (resolvedInitialOutput || {});
+                    const out = typeof policy?.initOutput === 'function' ? (policy.initOutput() || {}) : (policy?.initialOutput || {});
                     const bestMap = new Map();
-                    const startStates = (typeof resolvedGetStartStates === 'function') ? (resolvedGetStartStates() || []) : [];
+                    const startStates = typeof policy?.getStartStates === 'function' ? (policy.getStartStates() || []) : [];
                     for (const startState of startStates) {
                         if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                        const key = resolvedGetStateKey ? resolvedGetStateKey(startState) : null;
+                        const key = policy?.getStateKey ? policy.getStateKey(startState) : null;
                         if (key !== null && key !== undefined) {
                             const prevBest = bestMap.get(key);
                             if (prevBest !== undefined) {
-                                if (!resolvedDominates || resolvedDominates(prevBest, startState)) continue;
+                                if (!policy?.dominates || policy.dominates(prevBest, startState)) continue;
                             }
-                            if (resolvedRecordBest) resolvedRecordBest(bestMap, key, startState);
+                            if (policy?.recordBest) policy.recordBest(bestMap, key, startState);
                             else bestMap.set(key, startState);
                         }
-                        const moves = resolvedExpandMoves ? (resolvedExpandMoves(startState, out) || []) : [null];
+                        const moves = policy?.expandMoves ? (policy.expandMoves(startState, out) || []) : [null];
                         for (const move of moves) {
                             if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                            const candidate = await resolvedApplyMove(startState, move, out);
+                            const candidate = await policy?.applyMove(startState, move, out);
                             if (candidate?.kind === 'aborted') {
                                 out.aborted = true;
                                 out.stop = true;
@@ -5190,8 +5173,8 @@
                                 out.stop = true;
                                 break;
                             }
-                            if (resolvedIsAcceptState && resolvedIsAcceptState(candidate, out)) {
-                                resolvedOnAcceptState?.(candidate, out);
+                            if (policy?.isAcceptState && policy.isAcceptState(candidate, out)) {
+                                policy?.onAcceptState?.(candidate, out);
                             }
                             if (candidate?.timedOutAfterAccept) {
                                 out.timedOut = true;
