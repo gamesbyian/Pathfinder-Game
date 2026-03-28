@@ -5228,53 +5228,8 @@
             };
 
         const SolverPolicies = {
-                makeHintPolicy(level, options = {}) {
-                    const {
-                        validGates,
-                        dirOrderVariant = 'default',
-                        maxSolutions = 5,
-                        distMap,
-                        flipperDistMap,
-                        startTime,
-                        localTimeLimit,
-                        onProgress,
-                        signal,
-                        hazardPolicy = 'forbid',
-                        disabledPrunes = [],
-                        useFailMemo = true,
-                        debugStats,
-                        falseGoalPolicy = 'forbidIntersect',
-                        enableForcedMoves = true,
-                        scoringMode = 'modern',
-                        portalBiasMode = 'adaptiveMustCross',
-                        structuralMode = false,
-                        phasePolicy = null,
-                        structuralTemplate = null,
-                        objectiveTrack = null,
-                        templateCommitment = null,
-                        portalLockPolicy = null,
-                        knotBudgetPolicy = null,
-                        controlPlane = null,
-                        gateBeamTopK = 0,
-                        debugGateVariant = false,
-                        enableLowExpansionProbe = false,
-                        contradictionRecoveryMode = false,
-                        assertKnownSolvableBounds = false,
-                        forcePhaseArchetype = null,
-                        antiDriftEdgeLock = false,
-                        forcedPolicyProfile = null,
-                        suppressPerimeterBias = false
-                    } = options;
-                    if (APP.State?.ENGINE?.isDevMode) {
-                        const undefinedModes = [
-                            ['scoringMode', scoringMode],
-                            ['portalBiasMode', portalBiasMode],
-                            ['structuralMode', structuralMode]
-                        ].filter(([, value]) => typeof value === 'undefined');
-                        if (undefinedModes.length > 0) {
-                            throw new Error(`[SolverPolicies.makeHintPolicy] Missing required option(s): ${undefinedModes.map(([name]) => name).join(', ')}`);
-                        }
-                    }
+                buildSolverContext(level, options = {}) {
+                    const { validGates } = options;
                     const candidateGates = (validGates || level.gateKeys || []).slice();
                     const profile = level?.solverProfile || null;
                     const symmetryModel = profile?.symmetryModel || null;
@@ -5360,6 +5315,47 @@
                         return a.gateKey - b.gateKey;
                     });
 
+                    return { candidateGates, profile, symmetryModel, symmetryCommitted, objectiveFeatures, objectiveDistByKey, knotZone, knotDistMap, portalHints, portalFamilies, mandatoryFamilySet, perimeterThreshold, symmetryAxis, preferredHalf, symmetryMid, gateRankings };
+                },
+                makeSolverPolicy(context, level, options = {}) {
+                    const { gateRankings } = context;
+                    const {
+                        validGates,
+                        dirOrderVariant = 'default',
+                        maxSolutions = 5,
+                        distMap,
+                        flipperDistMap,
+                        startTime,
+                        localTimeLimit,
+                        onProgress,
+                        signal,
+                        hazardPolicy = 'forbid',
+                        disabledPrunes = [],
+                        useFailMemo = true,
+                        debugStats,
+                        falseGoalPolicy = 'forbidIntersect',
+                        enableForcedMoves = true,
+                        scoringMode = 'modern',
+                        portalBiasMode = 'adaptiveMustCross',
+                        structuralMode = false,
+                        phasePolicy = null,
+                        structuralTemplate = null,
+                        objectiveTrack = null,
+                        templateCommitment = null,
+                        portalLockPolicy = null,
+                        knotBudgetPolicy = null,
+                        controlPlane = null,
+                        gateBeamTopK = 0,
+                        debugGateVariant = false,
+                        enableLowExpansionProbe = false,
+                        contradictionRecoveryMode = false,
+                        assertKnownSolvableBounds = false,
+                        forcePhaseArchetype = null,
+                        antiDriftEdgeLock = false,
+                        forcedPolicyProfile = null,
+                        suppressPerimeterBias = false
+                    } = options;
+
                     let rankedQueue = gateRankings.slice();
                     const beamK = Math.max(0, Math.min(gateRankings.length, Math.floor(gateBeamTopK || 0)));
                     if (beamK > 0 && beamK < gateRankings.length) {
@@ -5436,6 +5432,21 @@
                         },
                         initOutput: () => ({ startTime, solutions: [], timedOut: false, aborted: false })
                     };
+                },
+                makeHintPolicy(level, options = {}) {
+                    if (APP.State?.ENGINE?.isDevMode) {
+                        const { scoringMode, portalBiasMode, structuralMode } = options;
+                        const undefinedModes = [
+                            ['scoringMode', scoringMode],
+                            ['portalBiasMode', portalBiasMode],
+                            ['structuralMode', structuralMode]
+                        ].filter(([, value]) => typeof value === 'undefined');
+                        if (undefinedModes.length > 0) {
+                            throw new Error(`[SolverPolicies.makeHintPolicy] Missing required option(s): ${undefinedModes.map(([name]) => name).join(', ')}`);
+                        }
+                    }
+                    const context = SolverPolicies.buildSolverContext(level, options);
+                    return SolverPolicies.makeSolverPolicy(context, level, options);
                 },
                 makeTrapPolicy(level, options = {}) {
                     const { timeLimit = 8000, startTime = Date.now(), onProgress = () => {}, signal = null, hazardPolicy = 'forbid', falseGoalPolicy = 'ignore', enableForcedMoves = true, stageMode = 'enumerate' } = options;
