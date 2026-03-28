@@ -6145,6 +6145,41 @@
                     };
 
                     const remainingBudget = () => Math.max(0, timeLimit - (Date.now() - startTime));
+                    const buildTierDiagnostics = (passRun, tierName) => {
+                        const dbg = passRun?.debug || debugStats || {};
+                        const prune = dbg?.prune || {};
+                        const timeline = Array.isArray(dbg?.phaseTimeline) ? dbg.phaseTimeline : [];
+                        const maxProgress = timeline.reduce((mx, ev) => Math.max(mx, Number(ev?.progress) || 0), 0);
+                        return {
+                            tierName,
+                            status: passRun?.kind === 'timeout'
+                                ? 'timeout'
+                                : (passRun?.kind === 'aborted' ? 'aborted' : ((passRun?.solutions || []).length > 0 ? 'solved' : (dbg?.status || 'no-solution-inconclusive'))),
+                            nodesExpanded: Math.max(0, Number(dbg?.nodesExpanded) || 0),
+                            rootCandidatesExpanded: Math.max(0, Number(dbg?.rootCandidatesExpanded) || 0),
+                            maxProgress: Number(maxProgress.toFixed(3)),
+                            failedStateHit: Math.max(0, Number(prune?.failedStateHit) || 0),
+                            mustPassBound: Math.max(0, Number(prune?.mustPassBound) || 0),
+                            mustCrossBound: Math.max(0, Number(prune?.mustCrossBound) || 0),
+                            portalAutomatonRejected: Math.max(0, Number(prune?.portalAutomatonRejected) || 0)
+                        };
+                    };
+                    const makeTierSignature = (diag) => JSON.stringify({
+                        status: diag?.status || 'unknown',
+                        maxProgress: Number(diag?.maxProgress || 0).toFixed(3),
+                        nodesBucket: Math.floor((Number(diag?.nodesExpanded) || 0) / 40),
+                        mustPassBucket: Math.floor((Number(diag?.mustPassBound) || 0) / 25),
+                        mustCrossBucket: Math.floor((Number(diag?.mustCrossBound) || 0) / 25),
+                        portalBucket: Math.floor((Number(diag?.portalAutomatonRejected) || 0) / 25)
+                    });
+                    const isTierProductive = (prior, next) => {
+                        if (!prior || !next) return true;
+                        if (next.status === 'solved') return true;
+                        const progressGain = (Number(next.maxProgress) || 0) - (Number(prior.maxProgress) || 0);
+                        const nodeGain = (Number(next.nodesExpanded) || 0) - (Number(prior.nodesExpanded) || 0);
+                        const frontierGain = (Number(next.rootCandidatesExpanded) || 0) - (Number(prior.rootCandidatesExpanded) || 0);
+                        return progressGain > 0.015 || nodeGain > 18 || frontierGain > 0;
+                    };
                     const gateBeamTopK = validGates.length >= 12 ? Math.min(8, Math.max(4, Math.floor(validGates.length * 0.35))) : 0;
                     const debugGateVariant = !!window.__PF_DEBUG_HINT_GATE_VARIANTS__;
                     const gridSize = level.grid.w * level.grid.h;
@@ -6240,22 +6275,51 @@
                     const goalReachable = isGoalReachableFromAnyGate(level);
                     let primarySolved = foundSolutions.length > 0;
                     let primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
+                    const baseInconclusiveLike = !primarySolved && (primaryStatus === 'timeout' || (primaryStatus === 'no-solution' && goalReachable));
+                    const autoContradictionRecovery = baseInconclusiveLike;
 
-                    if (!primarySolved && !foundSolutions.timedOut && remainingBudget() > 1500) {
-                        const recoveryRun = await runSolvePass({
-                            passName: 'pass-4-bound-relaxed',
-                            localTimeLimit: Math.min(remainingBudget(), Math.max(6000, Math.floor(timeLimit * 0.30))),
-                            disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
-                            useFailMemo: false,
-                            passVariant: 'random',
-                            passPortalBiasMode: 'off'
-                        });
-
-                        if ((recoveryRun.solutions || []).length > 0) {
-                            foundSolutions.push(...recoveryRun.solutions);
+                    if (!primarySolved && remainingBudget() > 1200) {
+                        const escalationTiers = [
+                            { tier: 1, passName: 'pass-4a-memo-disabled', disabledPrunes: [], useFailMemo: false, passPortalBiasMode: portalBiasMode, passVariant: 'default', passContradictionRecoveryMode: autoContradictionRecovery },
+                            { tier: 2, passName: 'pass-4-bound-relaxed', disabledPrunes: ['mustPassBound', 'mustCrossBound'], useFailMemo: false, passPortalBiasMode: portalBiasMode, passVariant: 'default', passContradictionRecoveryMode: autoContradictionRecovery },
+                            { tier: 3, passName: 'pass-4c-portal-relaxed', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: 'default', passContradictionRecoveryMode: true },
+                            { tier: 4, passName: 'pass-4d-diversified-order', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: (dirOrderVariant === 'default' ? 'random' : 'default'), passContradictionRecoveryMode: true }
+                        ];
+                        const tierDiagnostics = [];
+                        const seenTierSignatures = new Set();
+                        let lastTierDiag = buildTierDiagnostics(primaryRun, 'primary');
+                        for (const tier of escalationTiers) {
+                            if (primarySolved || remainingBudget() <= 400) break;
+                            const tierBudget = Math.max(400, Math.min(remainingBudget(), Math.floor(timeLimit * 0.22)));
+                            const tierRun = await runSolvePass({
+                                passName: tier.passName,
+                                localTimeLimit: tierBudget,
+                                disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...(tier.disabledPrunes || [])])),
+                                useFailMemo: tier.useFailMemo,
+                                passVariant: tier.passVariant,
+                                passPortalBiasMode: tier.passPortalBiasMode,
+                                passContradictionRecoveryMode: !!tier.passContradictionRecoveryMode
+                            });
+                            const tierDiag = buildTierDiagnostics(tierRun, tier.passName);
+                            const signature = makeTierSignature(tierDiag);
+                            const productive = isTierProductive(lastTierDiag, tierDiag);
+                            tierDiagnostics.push({ ...tierDiag, productive, signature });
+                            if (seenTierSignatures.has(signature) || !productive) {
+                                if (debugStats) {
+                                    debugStats.notes.push(`ESCALATION TIER SKIP: ${tier.passName} produced duplicate/unproductive diagnostics; stopping ladder early.`);
+                                }
+                                break;
+                            }
+                            seenTierSignatures.add(signature);
+                            lastTierDiag = tierDiag;
+                            if ((tierRun.solutions || []).length > 0) {
+                                foundSolutions.push(...tierRun.solutions);
+                                primarySolved = true;
+                                break;
+                            }
+                            foundSolutions.timedOut = !!(foundSolutions.timedOut || tierRun?.solutions?.timedOut || tierRun.kind === 'timeout');
                         }
-
-                        primarySolved = foundSolutions.length > 0;
+                        if (debugStats) debugStats.escalationTierDiagnostics = tierDiagnostics;
                         primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
                     }
 
@@ -8506,6 +8570,7 @@
                 return false;
             };
 
+            let autoContradictionRecoveryArmed = !!opts.contradictionRecovery;
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
@@ -8546,7 +8611,7 @@
                     heuristicFeatureFlags,
                     featureSignature,
                     controlPlane,
-                    contradictionRecoveryMode: !!opts.contradictionRecovery,
+                    contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
                     assertKnownSolvableBounds: hasPortalBounds,
                     suppressPerimeterBias: !!opts.suppressPerimeterBias
                 });
@@ -8582,7 +8647,7 @@
                         structuralTemplate: attemptOpts.structuralTemplate || null,
                         objectiveTrack: attemptOpts.objectiveTrack || null,
                         controlPlane,
-                        contradictionRecoveryMode: !!opts.contradictionRecovery,
+                        contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
                         assertKnownSolvableBounds: hasPortalBounds
                     });
                     const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
@@ -8700,6 +8765,16 @@
                     structuralTemplate: attempt.structuralTemplate ? { id: attempt.structuralTemplate.id, confidence: attempt.structuralTemplate.confidence || 0 } : null,
                     hypothesis: controlPlane?.activeHypothesis ? { ...controlPlane.activeHypothesis } : null
                 });
+                if (i === 0 && !autoContradictionRecoveryArmed && ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status)) {
+                    const goalReachableSanity = isGoalReachableFromAnyGate(level);
+                    if (goalReachableSanity) {
+                        autoContradictionRecoveryArmed = true;
+                        if (attemptResult?.debug) {
+                            attemptResult.debug.notes = Array.isArray(attemptResult.debug.notes) ? attemptResult.debug.notes : [];
+                            attemptResult.debug.notes.push('AUTO CONTRADICTION RECOVERY: enabled after first-pass timeout/inconclusive with reachable-goal sanity.');
+                        }
+                    }
+                }
                 if (APP.State.ENGINE.flags?.refereeDebug || APP.State.ENGINE.flags?.debugSolver) {
                     const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
                     console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] baseline attempt=${attempt.label || 'unnamed'} status=${attemptResult.status} scoringMode=${attempt.scoringMode} portalBiasMode=${attempt.portalBiasMode} budgetMs=${attempt.budgetMs} branchFactor=${quality.branchFactor.toFixed(3)} maxProgress=${quality.maxProgress.toFixed(3)}`);
