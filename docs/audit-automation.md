@@ -26,6 +26,6 @@ On pushes to `main`, CI will:
 1. Run the headless audit exporter (`npm run audit:newhint:full`).
 2. Run output guard checks (`npm run check:audit-output -- audits/raw/latest.json`).
 3. Upload raw full audit JSON as build artifact.
-4. Commit `audits/metrics` updates back to `main` for durable trend history in git.
+4. Commit both `audits/raw` and `audits/metrics` updates back to `main` for durable history in git.
 
-This is hybrid storage: full raw payload in artifacts + compact metrics in git history.
+This now keeps both full raw payloads and compact metrics in git history (with artifacts still available for CI runs).
