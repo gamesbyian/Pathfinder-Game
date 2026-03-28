@@ -8934,6 +8934,7 @@
                 && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
                 && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
                 && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
+            const stagesTried = [];
             return {
                 requestedTierRaw,
                 tier,
