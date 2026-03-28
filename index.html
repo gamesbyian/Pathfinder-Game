@@ -14349,7 +14349,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         return t;
     }
 
-    const getThemeRegistry = () => (APP.Data && APP.Data.isLoaded() ? APP.Data.getThemes() : THEMES);
+    const getThemeRegistry = () => {
+        if (APP.Data && APP.Data.isLoaded()) return APP.Data.getThemes();
+        if (window.THEMES && typeof window.THEMES === 'object') return window.THEMES;
+        return THEMES;
+    };
 
     const REQUIRED_THEME_PATHS = collectThemePaths(normalizeTheme({}, '__schema__'));
 
@@ -15790,11 +15794,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.UI.initDom();
             APP.UI.ThemeEditor.init();
             APP.Debug.expose();
-            APP.Themes.ensureThemeLeaveColors();
-
             const persistedSession = APP.Persistence.applySessionState();
             APP.State.ENGINE.runtime.currentTheme = persistedSession.currentTheme;
-            APP.Themes.applyTheme(persistedSession.currentTheme);
 
             try {
                 APP.Persistence.syncProgress();
@@ -15813,6 +15814,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 }
                 if (APP.Loader.getStatus().phase === 'failed') return;
 
+                APP.Themes.ensureThemeLeaveColors();
+                APP.Themes.applyTheme(persistedSession.currentTheme);
                 APP.Engine.loadLevel(persistedSession.levelIdx);
                 APP.Engine.updatePlayModeLayout();
                 APP.Engine.loop();
