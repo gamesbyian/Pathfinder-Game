@@ -4514,6 +4514,11 @@
                     if (window.__PF_DEBUG_BYPASS_CONNECTIVITY_PRUNE__) disabledPruneSet.add('connectivity');
                     options.disabledPrunes = Array.from(disabledPruneSet);
                     const useFailMemo = options.useFailMemo !== false && disabledPruneSet.size === 0;
+                    const configuredRootExpansionFloor = Number.isFinite(options?.rootExpansionFloorCount)
+                        ? Math.max(1, Math.floor(options.rootExpansionFloorCount))
+                        : 6;
+                    const forceRootExpansionFloor = !!options?.forceRootExpansionFloor;
+                    const relaxRootSuppressionFirstLayer = !!options?.relaxRootSuppressionFirstLayer;
                     const maxLogTriples = Math.max(3, l.reqLen * 24);
                     const phasePolicy = this._resolvePhasePolicy(l, options);
                     const intDensity = (l.reqInt || 0) / Math.max(1, l.reqLen);
@@ -4761,6 +4766,10 @@
                     this._updateSolverPhase(state, startKey, l, distMap, debugStats);
                     maybeEmitAdaptiveTelemetry(this._deriveSolverPhase(state, startKey, l, distMap));
                     const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats);
+                    const enforceRootExpansionFloor = forceRootExpansionFloor
+                        && startNeighbors.length > 0
+                        && startNeighbors.length <= configuredRootExpansionFloor;
+                    const relaxRootSuppressionLayer = relaxRootSuppressionFirstLayer && enforceRootExpansionFloor;
                     const startPortal = APP.LevelUtils.resolvePortal(l, startKey);
                     const startPortalForced = !!(startPortal && !state.isJump.has(state.path.length - 1));
                     if (debugStats) {
@@ -4784,6 +4793,11 @@
                             portalBiasMode: options?.portalBiasMode || 'adaptiveMustCross',
                             phasePolicyArchetype: state.phasePolicy?.archetype || options?.phasePolicy?.archetype || null
                         };
+                        if (enforceRootExpansionFloor) {
+                            debugStats.startState.rootExpansionFloor = configuredRootExpansionFloor;
+                            debugStats.startState.rootExpansionFloorActive = true;
+                        }
+                        if (relaxRootSuppressionLayer) debugStats.startState.relaxedRootSuppressionLayer = true;
                         if (depthZeroDebug) {
                             depthZeroDebug.startState = {
                                 ...debugStats.startState,
@@ -4990,7 +5004,8 @@
                             }
                         }
                         const stateSig = this._ensureStateHashState(state, l, realLen, options, debugStats);
-                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx)) {
+                        const shouldBypassRootSuppression = relaxRootSuppressionLayer && realLen <= 1;
+                        if (!shouldBypassRootSuppression && this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx)) {
                             if (realLen <= 1 && debugStats) {
                                 debugStats.rootCandidatesSuppressedByDominance = (debugStats.rootCandidatesSuppressedByDominance || 0) + 1;
                                 const dbg = ensureDepthZeroDebug(debugStats);
@@ -5002,7 +5017,7 @@
                         if (useFailMemo) {
                             if (debugStats) debugStats.failMemoChecks = (debugStats.failMemoChecks || 0) + 1;
                         }
-                        if (useFailMemo && failMemo.has(stateSig)) {
+                        if (!shouldBypassRootSuppression && useFailMemo && failMemo.has(stateSig)) {
                             if (debugStats) {
                                 debugStats.memoHits = (debugStats.memoHits || 0) + 1;
                                 debugStats.failMemoHits = (debugStats.failMemoHits || 0) + 1;
@@ -5431,6 +5446,9 @@
                         gateBeamTopK = 0,
                         debugGateVariant = false,
                         enableLowExpansionProbe = false,
+                        rootExpansionFloorCount = null,
+                        forceRootExpansionFloor = false,
+                        relaxRootSuppressionFirstLayer = false,
                         contradictionRecoveryMode = false,
                         assertKnownSolvableBounds = false,
                         forcePhaseArchetype = null,
@@ -5502,6 +5520,9 @@
                                 knotBudgetPolicy,
                                 controlPlane,
                                 enableLowExpansionProbe,
+                                rootExpansionFloorCount,
+                                forceRootExpansionFloor,
+                                relaxRootSuppressionFirstLayer,
                                 startGateArchetype: state?.startGateArchetype || null,
                                 forcePhaseArchetype,
                                 antiDriftEdgeLock,
@@ -5617,7 +5638,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -6109,6 +6130,9 @@
                             controlPlane,
                             gateBeamTopK,
                             debugGateVariant,
+                            rootExpansionFloorCount,
+                            forceRootExpansionFloor,
+                            relaxRootSuppressionFirstLayer,
                             contradictionRecoveryMode: !!passContradictionRecoveryMode,
                             assertKnownSolvableBounds: !!assertKnownSolvableBounds,
                             forcePhaseArchetype,
@@ -8613,7 +8637,10 @@
                     controlPlane,
                     contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
                     assertKnownSolvableBounds: hasPortalBounds,
-                    suppressPerimeterBias: !!opts.suppressPerimeterBias
+                    suppressPerimeterBias: !!opts.suppressPerimeterBias,
+                    rootExpansionFloorCount: Number.isFinite(opts.rootExpansionFloorCount) ? opts.rootExpansionFloorCount : null,
+                    forceRootExpansionFloor: !!opts.forceRootExpansionFloor,
+                    relaxRootSuppressionFirstLayer: !!opts.relaxRootSuppressionFirstLayer
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -9368,6 +9395,9 @@
                         suppressPerimeterBias: objectivesAreInteriorDominant,
                         purpose,
                         preferMacroSkeleton: true,
+                        rootExpansionFloorCount: fallbackActivation.rootExpansionFloorCount,
+                        forceRootExpansionFloor: fallbackActivation.forceRootExpansionFloor,
+                        relaxRootSuppressionFirstLayer: fallbackActivation.relaxRootSuppressionFirstLayer,
                         rootCandidateGeneratorVariant: (activatePreExpansionRescue || strategyMetadata.rescueMode === 'alternate-rescue')
                             ? 'interaction-fallback'
                             : 'default'
@@ -11539,12 +11569,28 @@
                 const mustPassCount = (level?.mustPassKeys?.length || 0);
                 const mustCrossCount = (level?.mustCrossKeys?.length || 0);
                 const gooseCount = (level?.gooseSet?.size || 0);
+                const falseGoalCount = (level?.falseGoalKeys?.size || 0);
+                const gateCount = (Array.isArray(level?.gateKeys) ? level.gateKeys.length : 0);
+                const blockCount = (level?.blockSet?.size || 0);
+                const boardArea = Math.max(1, (Number(level?.grid?.w) || 0) * (Number(level?.grid?.h) || 0));
+                const blockDensity = blockCount / boardArea;
                 const hasAnyFilterPressure = filterCount > 0 || flippingFilterCount > 0;
                 const hasFilterFlipMix = filterCount > 0 && flippingFilterCount > 0;
                 const hasPortalConstraintMix = ((level?.portalMap?.size || 0) > 0)
                     && (mustPassCount > 0 || mustCrossCount > 0);
                 const hasGooseMustCrossMix = gooseCount > 0 && mustCrossCount > 0;
-                return hasFilterFlipMix || hasPortalConstraintMix || hasAnyFilterPressure || hasGooseMustCrossMix;
+                const hasHighGooseDensity = gooseCount >= 2;
+                const hasFalseGoalsWithMultipleGates = falseGoalCount > 0 && gateCount >= 2;
+                const hasNarrowCorridorGooseProxy = gooseCount > 0
+                    && blockCount >= Math.max(10, Math.floor(boardArea * 0.16))
+                    && blockDensity >= 0.14;
+                return hasFilterFlipMix
+                    || hasPortalConstraintMix
+                    || hasAnyFilterPressure
+                    || hasGooseMustCrossMix
+                    || hasHighGooseDensity
+                    || hasFalseGoalsWithMultipleGates
+                    || hasNarrowCorridorGooseProxy;
             };
             const shouldActivateInteractionRootFallback = ({ force = false, baselineResult = null, level = null } = {}) => {
                 const rapidCollapse = detectRapidCollapseSignature({ baselineResult });
@@ -11555,6 +11601,9 @@
                 const collapsedAtRoot = !!rapidCollapse.returnedWithoutExpansion || nodesExpanded <= 3;
                 const interactionComplex = hasRootInteractionComplexity(level);
                 const activate = !!force || rapidCollapse.rapidCollapse || (interactionComplex && tooFewRoots && collapsedAtRoot);
+                const rootExpansionFloorCount = interactionComplex ? 6 : 4;
+                const forceRootExpansionFloor = activate && interactionComplex;
+                const relaxRootSuppressionFirstLayer = forceRootExpansionFloor;
                 return {
                     activate,
                     interactionComplex,
@@ -11563,7 +11612,10 @@
                     generated,
                     expanded,
                     nodesExpanded,
-                    rapidCollapse
+                    rapidCollapse,
+                    rootExpansionFloorCount,
+                    forceRootExpansionFloor,
+                    relaxRootSuppressionFirstLayer
                 };
             };
 
