@@ -5482,6 +5482,11 @@
                     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
                     onStateUpdate("Analyzing Bipartite Parity...");
 
+                    // Shadow the level object so all solver-derived augmentations (distMaps,
+                    // index Maps, gateSet, etc.) are written onto a new object rather than
+                    // mutating the caller's level.  Reads fall through to the original via
+                    // the prototype chain, so no other code needs to change.
+                    level = Object.create(level);
                     const distMap = SolverCore._buildDistMap(level);
                     level.distMapForSolver = distMap;
                     if (level.falseGoalKeys?.size > 0) {
@@ -8632,7 +8637,7 @@
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
             console.log('Referee starting tier:', tier);
             const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
-            const level = SavedHintArchitecture.toHintBlindSolverLevel(levelRaw);
+            const level = Object.create(SavedHintArchitecture.toHintBlindSolverLevel(levelRaw));
             level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
             const objectivesAreInteriorDominant = (() => {
                 try {
