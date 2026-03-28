@@ -6070,6 +6070,45 @@
                         return [];
                     }
 
+                    const snapshotPassDebug = () => {
+                        if (!debugStats) return null;
+                        const timeline = Array.isArray(debugStats.phaseTimeline) ? debugStats.phaseTimeline.slice() : [];
+                        const adaptationTimeline = Array.isArray(debugStats.adaptationTimeline) ? debugStats.adaptationTimeline.slice() : [];
+                        return {
+                            nodesExpanded: Math.max(0, Number(debugStats.nodesExpanded) || 0),
+                            rootCandidatesExpanded: Math.max(0, Number(debugStats.rootCandidatesExpanded) || 0),
+                            branchesTried: Math.max(0, Number(debugStats.branchesTried ?? debugStats.branchesGenerated) || 0),
+                            maxDepth: Math.max(0, Number(debugStats.maxDepth) || 0),
+                            prune: { ...(debugStats.prune || {}) },
+                            phaseTimeline: timeline,
+                            adaptationTimeline
+                        };
+                    };
+                    const summarizePassTelemetry = (passRun) => {
+                        const dbg = passRun?.debug || {};
+                        const phaseTimeline = Array.isArray(dbg.phaseTimeline) ? dbg.phaseTimeline : [];
+                        const adaptationTimeline = Array.isArray(dbg.adaptationTimeline) ? dbg.adaptationTimeline : [];
+                        const maxProgress = phaseTimeline.reduce((mx, ev) => Math.max(mx, Number(ev?.progress) || 0), 0);
+                        const finalProgress = phaseTimeline.length > 0 ? (Number(phaseTimeline[phaseTimeline.length - 1]?.progress) || maxProgress) : maxProgress;
+                        const startedObjectives = phaseTimeline.length > 0 ? Math.max(0, Number(phaseTimeline[0]?.remainingObjectives) || 0) : 0;
+                        const finalObjectives = phaseTimeline.length > 0 ? Math.max(0, Number(phaseTimeline[phaseTimeline.length - 1]?.remainingObjectives) || 0) : startedObjectives;
+                        const objectiveReductionRate = adaptationTimeline.reduce((mx, ev) => {
+                            const v = Number(ev?.telemetry?.objectiveReductionRate);
+                            return Number.isFinite(v) ? Math.max(mx, v) : mx;
+                        }, 0);
+                        const branchesTried = Math.max(0, Number(dbg.branchesTried) || 0);
+                        const nodesExpanded = Math.max(0, Number(dbg.nodesExpanded) || 0);
+                        return {
+                            maxProgress: Number(maxProgress.toFixed(4)),
+                            finalProgress: Number(finalProgress.toFixed(4)),
+                            progressDelta: Number(Math.max(0, finalProgress - (Number(phaseTimeline[0]?.progress) || 0)).toFixed(4)),
+                            objectiveReductionRate: Number(objectiveReductionRate.toFixed(6)),
+                            objectiveReduction: Math.max(0, startedObjectives - finalObjectives),
+                            depthGain: Math.max(0, Number(dbg.maxDepth) || 0),
+                            rootFrontierDiversity: Math.max(0, Number(dbg.rootCandidatesExpanded) || 0),
+                            branchFactor: nodesExpanded > 0 ? Number((branchesTried / nodesExpanded).toFixed(4)) : 0
+                        };
+                    };
                     const runSolvePass = async ({ passName, localTimeLimit, disabledPrunes = [], useFailMemo = true, statusLabel = null, passVariant = dirOrderVariant, enableForcedMoves = true, gateBeamTopK = 0, debugGateVariant = false, passScoringMode = scoringMode, passPortalBiasMode = portalBiasMode, passStructuralMode = structuralMode, passContradictionRecoveryMode = contradictionRecoveryMode, forcePhaseArchetype = null, antiDriftEdgeLock = false, forcedPolicyProfile = null }) => {
                         const passSolutions = [];
                         passSolutions.timedOut = false;
@@ -6128,7 +6167,7 @@
                         if (out.aborted) {
                             if (debugStats) {
                                 finalizeSolverDebugStats(debugStats, "aborted", perfStart);
-                                return { kind: "aborted", solutions: null };
+                                return { kind: "aborted", solutions: null, debug: snapshotPassDebug() };
                             }
                             throw new DOMException("Aborted", "AbortError");
                         }
@@ -6136,12 +6175,12 @@
                             passSolutions.timedOut = true;
                             if (debugStats) {
                                 finalizeSolverDebugStats(debugStats, "timeout", perfStart);
-                                return { kind: "timeout", solutions: null };
+                                return { kind: "timeout", solutions: null, debug: snapshotPassDebug() };
                             }
-                            return { kind: "ok", solutions: passSolutions };
+                            return { kind: "ok", solutions: passSolutions, debug: snapshotPassDebug() };
                         }
                         passSolutions.push(...(out.solutions || []));
-                        return { kind: "ok", solutions: passSolutions };
+                        return { kind: "ok", solutions: passSolutions, debug: snapshotPassDebug() };
                     };
 
                     const remainingBudget = () => Math.max(0, timeLimit - (Date.now() - startTime));
@@ -6185,6 +6224,38 @@
                     const gridSize = level.grid.w * level.grid.h;
                     const isLargeGrid = gridSize > 100;
                     const hasFilterFlipMix = ((level?.filterMap?.size || 0) > 0) && ((level?.flippingFilterMap?.size || 0) > 0);
+                    const complexityInputs = {
+                        area: Math.max(1, level.grid.w * level.grid.h),
+                        reqLen: Math.max(0, Number(level.reqLen) || 0),
+                        reqInt: Math.max(0, Number(level.reqInt) || 0),
+                        portals: Math.max(0, Number(level?.portalMap?.size) || 0),
+                        filters: Math.max(0, Number(level?.filterMap?.size) || 0),
+                        flippers: Math.max(0, Number(level?.flippingFilterMap?.size) || 0),
+                        mustPass: Math.max(0, Number(level?.mustPassKeys?.length) || 0),
+                        mustCross: Math.max(0, Number(level?.mustCrossKeys?.length) || 0),
+                        geese: Math.max(0, Number(level?.gooseMap?.size || level?.geese?.length) || 0)
+                    };
+                    const complexityScore = (() => {
+                        const areaNorm = Math.min(1, complexityInputs.area / 196);
+                        const reqLenNorm = Math.min(1, complexityInputs.reqLen / Math.max(8, Math.sqrt(complexityInputs.area) * 2.5));
+                        const reqIntNorm = Math.min(1, complexityInputs.reqInt / 8);
+                        const portalNorm = Math.min(1, complexityInputs.portals / 10);
+                        const filterNorm = Math.min(1, complexityInputs.filters / 8);
+                        const flipperNorm = Math.min(1, complexityInputs.flippers / 8);
+                        const mustPassNorm = Math.min(1, complexityInputs.mustPass / 10);
+                        const mustCrossNorm = Math.min(1, complexityInputs.mustCross / 10);
+                        const geeseNorm = Math.min(1, complexityInputs.geese / 6);
+                        const score = (areaNorm * 0.2)
+                            + (reqLenNorm * 0.16)
+                            + (reqIntNorm * 0.12)
+                            + (portalNorm * 0.1)
+                            + (filterNorm * 0.1)
+                            + (flipperNorm * 0.09)
+                            + (mustPassNorm * 0.1)
+                            + (mustCrossNorm * 0.08)
+                            + (geeseNorm * 0.05);
+                        return Math.max(0, Math.min(1, score));
+                    })();
                     const isPerimeterSpineCandidate = (
                         level.grid.w * level.grid.h > 100 &&
                         level.mustPassKeys.length >= 2 &&
@@ -6195,10 +6266,11 @@
                         })
                     );
                     const stagedHintPasses = [
-                        { passName: 'pass-1-fast', ratio: isLargeGrid ? 0.25 : 0.45, variant: 'default', beamTopK: gateBeamTopK, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates)...` },
+                        { passName: 'pass-1-fast', weight: isLargeGrid ? 0.26 : 0.34, minimumBudgetRatio: 0.08, variant: 'default', beamTopK: gateBeamTopK, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates)...` },
                         ...(isPerimeterSpineCandidate ? [{
                             passName: 'pass-spine',
-                            ratio: isLargeGrid ? 0.35 : 0.2,
+                            weight: isLargeGrid ? 0.2 : 0.15,
+                            minimumBudgetRatio: 0.06,
                             variant: 'default',
                             beamTopK: 0,
                             debugVariant: false,
@@ -6207,14 +6279,15 @@
                             forcedPolicyProfile: 'perimeterSweep',
                             antiDriftEdgeLock: true
                         }] : []),
-                        { passName: 'pass-2-ranked', ratio: isLargeGrid ? 0.25 : 0.35, variant: 'default', beamTopK: 0, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates, full ranked queue)...` },
+                        { passName: 'pass-2-ranked', weight: isLargeGrid ? 0.2 : 0.25, minimumBudgetRatio: 0.08, variant: 'default', beamTopK: 0, debugVariant: false, statusLabel: `Solving (${validGates.length} viable gates, full ranked queue)...` },
                         ...(hasFilterFlipMix || (level?.filterMap?.size || 0) > 0 || (level?.flippingFilterMap?.size || 0) > 0
-                            ? [{ passName: 'pass-4-filter-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'default', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'distance'], statusLabel: `Solving (${validGates.length} viable gates, filter-relaxed)...` }]
+                            ? [{ passName: 'pass-4-filter-relaxed', weight: isLargeGrid ? 0.12 : 0.1, minimumBudgetRatio: 0.1, variant: 'default', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'distance'], statusLabel: `Solving (${validGates.length} viable gates, filter-relaxed)...` }]
                             : []),
                         ...((level?.filterMap?.size || 0) > 0
                             ? [{
                                 passName: 'pass-4c-filter-axis-relaxed',
-                                ratio: isLargeGrid ? 0.12 : 0.08,
+                                weight: isLargeGrid ? 0.09 : 0.07,
+                                minimumBudgetRatio: 0.07,
                                 variant: 'random',
                                 beamTopK: 0,
                                 debugVariant: false,
@@ -6224,11 +6297,66 @@
                               }]
                             : []),
                         ...((level?.flippingFilterMap?.size || 0) > 0
-                            ? [{ passName: 'pass-4-flipper-relaxed', ratio: isLargeGrid ? 0.2 : 0.15, variant: 'random', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'portalAutomaton'], passPortalBiasMode: 'off', statusLabel: `Solving (${validGates.length} viable gates, flipper-relaxed)...` }]
+                            ? [{ passName: 'pass-4-flipper-relaxed', weight: isLargeGrid ? 0.13 : 0.11, minimumBudgetRatio: 0.11, variant: 'random', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'portalAutomaton'], passPortalBiasMode: 'off', statusLabel: `Solving (${validGates.length} viable gates, flipper-relaxed)...` }]
                             : []),
-                        { passName: 'pass-3-fallback', ratio: 1, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
+                        { passName: 'pass-3-fallback', weight: 0.14, minimumBudgetRatio: 0.2, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
+                    const exploratoryPassNames = new Set(['pass-4-filter-relaxed', 'pass-4c-filter-axis-relaxed', 'pass-4-flipper-relaxed', 'pass-3-fallback']);
+                    const dynamicPassBudgets = (() => {
+                        const entries = stagedHintPasses.map((pass) => ({
+                            passName: pass.passName,
+                            minimumMs: Math.max(120, Math.floor(timeLimit * Math.max(0, Number(pass.minimumBudgetRatio) || 0))),
+                            weight: Math.max(0, Number(pass.weight) || 0)
+                        }));
+                        const exploratoryMinRatio = 0.2 + (complexityScore * 0.28);
+                        let exploratoryReserve = Math.max(260, Math.floor(timeLimit * exploratoryMinRatio));
+                        const exploratoryEntries = entries.filter(e => exploratoryPassNames.has(e.passName));
+                        for (const e of exploratoryEntries) exploratoryReserve = Math.max(exploratoryReserve, e.minimumMs);
+                        const guaranteedReserved = Math.min(timeLimit, exploratoryReserve);
+                        const nonExploratory = entries.filter(e => !exploratoryPassNames.has(e.passName));
+                        const exploratory = entries.filter(e => exploratoryPassNames.has(e.passName));
+                        const nonExploratoryMin = nonExploratory.reduce((sum, e) => sum + e.minimumMs, 0);
+                        const exploratoryMin = exploratory.reduce((sum, e) => sum + e.minimumMs, 0);
+                        const budgetAfterMins = Math.max(0, timeLimit - nonExploratoryMin - exploratoryMin);
+                        const weightSum = entries.reduce((sum, e) => sum + e.weight, 0) || 1;
+                        const alloc = {};
+                        for (const e of entries) {
+                            const extra = Math.floor((budgetAfterMins * e.weight) / weightSum);
+                            alloc[e.passName] = e.minimumMs + extra;
+                        }
+                        const currentlyReservedForExploration = exploratory.reduce((sum, e) => sum + (alloc[e.passName] || 0), 0);
+                        if (currentlyReservedForExploration < guaranteedReserved && nonExploratory.length > 0) {
+                            let pull = guaranteedReserved - currentlyReservedForExploration;
+                            const sources = nonExploratory
+                                .map(e => ({ ...e, slack: Math.max(0, (alloc[e.passName] || 0) - e.minimumMs) }))
+                                .sort((a, b) => b.slack - a.slack);
+                            for (const src of sources) {
+                                if (pull <= 0) break;
+                                if (src.slack <= 0) continue;
+                                const delta = Math.min(src.slack, pull);
+                                alloc[src.passName] -= delta;
+                                pull -= delta;
+                            }
+                            const exploratoryWeightSum = exploratory.reduce((sum, e) => sum + Math.max(0.01, e.weight), 0) || 1;
+                            const gained = guaranteedReserved - Math.max(0, pull) - currentlyReservedForExploration;
+                            for (const e of exploratory) {
+                                alloc[e.passName] += Math.floor(gained * (Math.max(0.01, e.weight) / exploratoryWeightSum));
+                            }
+                        }
+                        return alloc;
+                    })();
+                    const shouldContinuePassFamily = (priorSummary, nextSummary, passName) => {
+                        if (!priorSummary || !nextSummary) return true;
+                        if (exploratoryPassNames.has(passName)) return true;
+                        const objectiveDelta = Math.max(0, (nextSummary.objectiveReduction || 0) - (priorSummary.objectiveReduction || 0));
+                        const depthDelta = Math.max(0, (nextSummary.depthGain || 0) - (priorSummary.depthGain || 0));
+                        const diversityDelta = Math.max(0, (nextSummary.rootFrontierDiversity || 0) - (priorSummary.rootFrontierDiversity || 0));
+                        const reductionRate = Number(nextSummary.objectiveReductionRate) || 0;
+                        const stagnated = objectiveDelta <= 0 && depthDelta <= 0 && diversityDelta <= 0 && reductionRate < 0.00075;
+                        return !stagnated;
+                    };
                     let primaryRun = { kind: 'ok', solutions: [] };
+                    let previousTelemetry = null;
                     for (let i = 0; i < stagedHintPasses.length; i++) {
                         const pass = stagedHintPasses[i];
                         const rem = remainingBudget();
@@ -6236,9 +6364,17 @@
                             primaryRun = { kind: 'ok', solutions: Object.assign([], { timedOut: true }) };
                             break;
                         }
+                        const minimumReservedForLater = stagedHintPasses.slice(i + 1).reduce((sum, nextPass) => {
+                            const allocated = Math.max(1, Number(dynamicPassBudgets[nextPass.passName]) || 0);
+                            const isExploratory = exploratoryPassNames.has(nextPass.passName);
+                            const reservationBoost = isExploratory ? (1 + (complexityScore * 0.55)) : 1;
+                            return sum + Math.floor(allocated * reservationBoost);
+                        }, 0);
+                        const maxForCurrent = Math.max(1, rem - Math.min(rem - 1, minimumReservedForLater));
+                        const targetBudget = Math.max(1, Number(dynamicPassBudgets[pass.passName]) || 1);
                         const localBudget = (i === stagedHintPasses.length - 1)
                             ? rem
-                            : Math.max(1, Math.min(rem, Math.floor(timeLimit * pass.ratio)));
+                            : Math.max(1, Math.min(maxForCurrent, targetBudget));
                         const passRun = await runSolvePass({
                             passName: pass.passName,
                             localTimeLimit: localBudget,
@@ -6264,6 +6400,20 @@
                             primaryRun = passRun;
                             break;
                         }
+                        const passSummary = summarizePassTelemetry(passRun);
+                        if (!shouldContinuePassFamily(previousTelemetry, passSummary, pass.passName)) {
+                            if (debugStats) {
+                                debugStats.notes.push(`PASS REALLOCATE: ${pass.passName} stagnated (objective/depth/frontier delta), reallocating to exploratory passes.`);
+                            }
+                            const nextExploratoryIdx = stagedHintPasses.findIndex((candidate, candidateIdx) => candidateIdx > i && exploratoryPassNames.has(candidate.passName));
+                            if (nextExploratoryIdx > i) {
+                                previousTelemetry = passSummary;
+                                i = nextExploratoryIdx - 1;
+                                continue;
+                            }
+                            break;
+                        }
+                        previousTelemetry = passSummary;
                         primaryRun = passRun;
                     }
                     if (primaryRun.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
