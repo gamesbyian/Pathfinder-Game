@@ -1849,6 +1849,12 @@
                 },
                 _diagnoseMoveInvalidReason(targetKey, path, counts, usage, jumpSet, l, flipCount, crossedSet) {
                     if (!l || !Array.isArray(path) || path.length === 0) return 'invalid-unknown';
+                    const trackedReasonCodes = new Set([
+                        'invalid-by-filter-axis',
+                        'invalid-portal-legality',
+                        'invalid-must-cross-impossibility',
+                        'invalid-adjacency'
+                    ]);
                     const diagnostics = {};
                     const valid = this._isMoveValid(targetKey, path, counts, usage, 0, jumpSet, l, flipCount, crossedSet, {
                         falseGoalPolicy: 'ignore',
@@ -1856,21 +1862,21 @@
                         diagnostics
                     });
                     if (valid) return 'valid';
-                    const reason = diagnostics.reasonCode || 'invalid-unknown';
-                    if (reason === 'invalid-by-filter-axis'
-                        || reason === 'invalid-portal-legality'
-                        || reason === 'invalid-must-cross-impossibility'
-                        || reason === 'invalid-adjacency') {
-                        return reason;
-                    }
+                    const canonicalReason = diagnostics.reasonCode || 'invalid-unknown';
+                    let mappedReason = canonicalReason;
                     // Compatibility fallback for older/partial reason reporters.
-                    if (this._isMoveValid(targetKey, path, counts, usage, 0, jumpSet, l, flipCount, crossedSet, {
+                    if (!trackedReasonCodes.has(mappedReason) && this._isMoveValid(targetKey, path, counts, usage, 0, jumpSet, l, flipCount, crossedSet, {
                         falseGoalPolicy: 'ignore',
                         disabledPrunes: ['filterAxisStrict']
                     })) {
-                        return 'invalid-by-filter-axis';
+                        mappedReason = 'invalid-by-filter-axis';
                     }
-                    return reason;
+                    if (APP.State?.ENGINE?.isDevMode
+                        && trackedReasonCodes.has(canonicalReason)
+                        && mappedReason !== canonicalReason) {
+                        throw new Error(`[Move Reason Diagnostic] canonical/mapped reason mismatch: canonical=${canonicalReason}, mapped=${mappedReason}`);
+                    }
+                    return mappedReason;
                 },
                 _buildOptimisticDistMap(l, sourceKeys) {
                     class Deque {
@@ -10825,32 +10831,62 @@
                     const pass = actual === expected;
                     return { label, expected, actual, pass };
                 };
-                const cases = [
-                    evaluate(
-                        'adjacency',
-                        { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(0, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
-                        APP.LevelUtils.PACK(2, 2),
-                        'invalid-adjacency'
-                    ),
-                    evaluate(
-                        'portal-legality',
-                        { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(1, 1)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
-                        APP.LevelUtils.PACK(1, 2),
-                        'invalid-portal-legality'
-                    ),
-                    evaluate(
-                        'filter-axis',
-                        { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(1, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
-                        APP.LevelUtils.PACK(1, 1),
-                        'invalid-by-filter-axis'
-                    ),
-                    evaluate(
-                        'must-cross-impossibility',
-                        { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(0, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
-                        APP.LevelUtils.PACK(1, 0),
-                        'invalid-must-cross-impossibility'
-                    )
+                const assertValidatorDiagnosticAlignment = (cases) => {
+                    if (!APP.State?.ENGINE?.isDevMode) return;
+                    const mismatches = [];
+                    for (const c of cases) {
+                        const mapped = SolverCore._diagnoseMoveInvalidReason(
+                            c.targetKey,
+                            c.state.path,
+                            c.state.visitedCounts,
+                            c.state.cellUsage,
+                            c.state.isPortalJump,
+                            c.level,
+                            0,
+                            new Map()
+                        );
+                        if (mapped !== c.expected) {
+                            mismatches.push({ label: c.label, expected: c.expected, mapped });
+                        }
+                    }
+                    if (mismatches.length) {
+                        throw new Error(`[Move Reason Diagnostic] validator/diagnostic alignment regression: ${JSON.stringify(mismatches)}`);
+                    }
+                };
+                const caseDefs = [
+                    {
+                        label: 'adjacency',
+                        state: { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(0, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
+                        targetKey: APP.LevelUtils.PACK(2, 2),
+                        expected: 'invalid-adjacency',
+                        level: mkLevel()
+                    },
+                    {
+                        label: 'portal-legality',
+                        state: { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(1, 1)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
+                        targetKey: APP.LevelUtils.PACK(1, 2),
+                        expected: 'invalid-portal-legality',
+                        level: mkLevel()
+                    },
+                    {
+                        label: 'filter-axis',
+                        state: { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(1, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
+                        targetKey: APP.LevelUtils.PACK(1, 1),
+                        expected: 'invalid-by-filter-axis',
+                        level: mkLevel()
+                    },
+                    {
+                        label: 'must-cross-impossibility',
+                        state: { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(0, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
+                        targetKey: APP.LevelUtils.PACK(1, 0),
+                        expected: 'invalid-must-cross-impossibility',
+                        level: mkLevel()
+                    }
                 ];
+                const cases = [
+                    ...caseDefs.map(c => evaluate(c.label, c.state, c.targetKey, c.expected))
+                ];
+                assertValidatorDiagnosticAlignment(caseDefs);
                 const failed = cases.filter(c => !c.pass);
                 if (failed.length) throw new Error(`[Move Reason Diagnostic] Regression detected: ${JSON.stringify(failed)}`);
                 console.log('[Move Reason Diagnostic] reason-code mapping verified:', cases);
