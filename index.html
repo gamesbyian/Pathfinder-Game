@@ -11066,6 +11066,17 @@
             return 'fallback';
         };
 
+        const triggerFallbackSafely = (reason = 'missing level data') => {
+            try {
+                return triggerFallback(reason);
+            } catch (err) {
+                console.error('[Loader fallback failed]', err);
+                state.status = 'failed';
+                state.mode = 'failed';
+                return 'failed';
+            }
+        };
+
         const finish = () => {
             if (state.hasFinished) return;
             state.hasFinished = true;
@@ -11135,7 +11146,7 @@
                         APP.Data.ingest();
                         APP.Themes.ensureThemeLeaveColors();
                         if (!Array.isArray(APP.Data.getLevels()) || APP.Data.getLevels().length === 0) {
-                            done(triggerFallback('missing levels after external script load'));
+                            done(triggerFallbackSafely('missing levels after external script load'));
                             return;
                         }
                         state.hasLoaded = true;
@@ -11146,11 +11157,11 @@
                     })
                     .catch(err => {
                         console.error('[External level/theme load failed]', err);
-                        done(triggerFallback('exception during external level/theme load'));
+                        done(triggerFallbackSafely('exception during external level/theme load'));
                     });
 
                 state.timeoutId = setTimeout(() => {
-                    done(triggerFallback('loader timeout after 5000ms'));
+                    done(triggerFallbackSafely('loader timeout after 5000ms'));
                 }, 5000);
             });
 
