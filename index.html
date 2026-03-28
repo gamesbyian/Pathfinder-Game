@@ -2346,12 +2346,12 @@
                         nextOscillationBudget
                     };
                 },
-                _dominancePruneOrStore(map, key, candidate, stats = null, l = null, state = null) {
+                _dominancePruneOrStore(map, key, candidate, stats = null, l = null, state = null, searchCtx = null) {
                     if (!map || key === null || key === undefined || !candidate) return false;
                     if (stats) stats.dominanceMemoChecks = (stats.dominanceMemoChecks || 0) + 1;
                     const mustCrossCompact = (typeof candidate.mustCrossCompact === 'bigint' ? candidate.mustCrossCompact : BigInt(candidate.mustCrossCompact || 0)).toString();
                     const filterAxisKey = (l?.filterMap?.size || 0) > 0
-                        ? `|ua:${state?.usageBits ? state.usageBits[state.keyToIdx(key)] ?? 0 : 0}`
+                        ? `|ua:${state?.usageBits && searchCtx?.keyToIdx ? state.usageBits[searchCtx.keyToIdx(key)] ?? 0 : 0}`
                         : '';
                     const flipKey = (l?.flippingFilterMap?.size || 0) > 0
                         ? `|fp:${state?.flipParity || 0}|fcm:${(state?.flipperCrossMask || 0n).toString(16)}`
@@ -2406,7 +2406,7 @@
                     if (!state.mustCrossCounts) return false;
                     return (state.mustCrossCounts[node.localIdx] || 0) < 2;
                 },
-                _resolveActiveObjectiveTarget(state, currentKey, l, portalForced = false) {
+                _resolveActiveObjectiveTarget(state, currentKey, l, searchCtx, portalForced = false) {
                     if (!l.objectiveNodes || l.objectiveNodes.length === 0) {
                         state.activeObjectiveId = -1;
                         if (state.portal) state.portal.activeObjectivePortalForced = portalForced ? 1 : 0;
@@ -2439,7 +2439,7 @@
                         const ambiguityPenalty = Number.isFinite(nearestPeer) ? Math.max(0, 6 - nearestPeer) : 6;
                         const ambiguityFuture = Number.isFinite(nearestPeer) ? nearestPeer : 0;
                         const detourCost = Number.isFinite(detour) ? detour : 10000;
-                        const objectiveVisited = node && node.type === 'mustPass' && state.countsArr && state.countsArr[state.keyToIdx(node.key)] > 0;
+                        const objectiveVisited = node && node.type === 'mustPass' && state.countsArr && state.countsArr[searchCtx.keyToIdx(node.key)] > 0;
                         const detourMultiplier = objectiveVisited ? 6 : 14;
                         const goalCost = Number.isFinite(toGoal) ? toGoal : 10000;
                         const gateCost = Number.isFinite(gateMin) ? gateMin : 0;
@@ -3199,11 +3199,11 @@
                     if (y > 0) neighbors.push(k - (1 << 16));
                     return neighbors;
                 },
-                _checkTopology(state, currentK, rSteps, l) {
+                _checkTopology(state, currentK, rSteps, l, searchCtx) {
                     this.topoVisited.fill(0);
                     let head = 0;
                     let tail = 0;
-                    const startIdx = state.keyToIdx(currentK);
+                    const startIdx = searchCtx.keyToIdx(currentK);
                     this.topoQueue[tail++] = currentK;
                     this.topoVisited[startIdx] = 1;
 
@@ -3221,9 +3221,9 @@
                         const neighbors = this._getRawNeighbors(k, l);
                         for (let i = 0; i < neighbors.length; i++) {
                             const nk = neighbors[i];
-                            const nIdx = state.keyToIdx(nk);
+                            const nIdx = searchCtx.keyToIdx(nk);
                             if (!l.blockSet.has(nk) && this.topoVisited[nIdx] === 0) {
-                                const isVisited = state.countsArr && state.countsArr[state.keyToIdx(nk)] > 0;
+                                const isVisited = state.countsArr && state.countsArr[searchCtx.keyToIdx(nk)] > 0;
                                 const isGate = l.gateSet && l.gateSet.has(nk);
                                 if (!isVisited || isGate) {
                                     this.topoVisited[nIdx] = 1;
@@ -3236,7 +3236,7 @@
                         const pDest = l.portalMap ? l.portalMap.get(k) : null;
                         if (pDest) {
                             const nk = pDest.dest;
-                            const nIdx = state.keyToIdx(nk);
+                            const nIdx = searchCtx.keyToIdx(nk);
                             if (this.topoVisited[nIdx] === 0) {
                                 // BUGFIX: Support both array-based and Map-based legacy states
                                 const isVisitedDest = state.countsArr ? state.countsArr[nIdx] > 0 : (state.counts && state.counts.get(nk) > 0);
@@ -3250,7 +3250,7 @@
                     const allowedInts = Math.max(0, l.reqInt - state.ints);
                     return foundGoal && ((volume + allowedInts) >= rSteps);
                 },
-                _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats = null) {
+                _getNeighbors(k, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats = null) {
                     const { w, h } = l.grid;
                     const p = APP.LevelUtils.UNPACK(k);
                     const depth = Math.max(0, state.path.length - 1);
@@ -3330,7 +3330,7 @@
                     const mustCachePrefix = `${state.mustMask.toString()}|`;
                     const crossCachePrefix = `${state.mustCrossMask?.toString() || '0'}|${crossNeed}|`;
                     const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
-                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, !!(portalForced && portalBiasMode !== 'off'));
+                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, searchCtx, !!(portalForced && portalBiasMode !== 'off'));
                     const activeObjectiveDistMap = activeObjectiveId >= 0 ? l.objectiveDistMaps?.[activeObjectiveId] : null;
                     const activeObjectiveCurDist = activeObjectiveDistMap ? (activeObjectiveDistMap.get(k) ?? Infinity) : Infinity;
                     const getMustBound = (key) => {
@@ -3395,7 +3395,7 @@
                         k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
                         portalForced, portalDest, distMap, flipperDistMap, usageFreq,
                         stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
-                        computePortalOpportunity, candidatesCount
+                        computePortalOpportunity, candidatesCount, searchCtx
                     }, debugStats);
                 },
                 _filterCandidates(candidates, state, l, options, ctx, debugStats) {
@@ -3645,10 +3645,10 @@
                         k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
                         portalForced, portalDest, distMap, flipperDistMap, usageFreq,
                         stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
-                        computePortalOpportunity, candidatesCount
+                        computePortalOpportunity, candidatesCount, searchCtx
                     } = ctx;
                     const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
-                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, !!(portalForced && portalBiasMode !== 'off'));
+                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, searchCtx, !!(portalForced && portalBiasMode !== 'off'));
                     const activeObjectiveDistMap = activeObjectiveId >= 0 ? l.objectiveDistMaps?.[activeObjectiveId] : null;
                     const activeObjectiveCurDist = activeObjectiveDistMap ? (activeObjectiveDistMap.get(k) ?? Infinity) : Infinity;
                     const scoringProfile = (options?.scoringMode === 'legacy' || options?.scoringMode === 'endurance') ? 'endurance' : 'modern';
@@ -3667,7 +3667,7 @@
                         for (const cell of candidate.cells) {
                             const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(cell) : undefined;
                             if (crossIdx !== undefined && state.mustCrossCounts && (state.mustCrossCounts[crossIdx] || 0) < 2) unresolvedCross++;
-                            if ((state.countsArr ? state.countsArr[state.keyToIdx(cell)] : (state.counts?.get(cell) || 0)) === 0) revisitOpportunity++;
+                            if ((state.countsArr ? state.countsArr[searchCtx.keyToIdx(cell)] : (state.counts?.get(cell) || 0)) === 0) revisitOpportunity++;
                         }
                         const unresolvedScore = (unresolvedCross * 2.4) + (Math.min(4, revisitOpportunity) * 0.7);
                         const weighted = (dist * 18)
@@ -3864,10 +3864,10 @@
                             if ((l.reqInt || 0) > 0 && state.ints < l.reqInt) {
                                 let visitedNeighborCount = 0;
                                 const w = l.grid.w, h = l.grid.h;
-                                if (nx > 0     && (state.countsArr[state.keyToIdx(((ny)     << 16) | (nx - 1))] || 0) > 0) visitedNeighborCount++;
-                                if (nx < w - 1 && (state.countsArr[state.keyToIdx(((ny)     << 16) | (nx + 1))] || 0) > 0) visitedNeighborCount++;
-                                if (ny > 0     && (state.countsArr[state.keyToIdx(((ny - 1) << 16) | nx)]        || 0) > 0) visitedNeighborCount++;
-                                if (ny < h - 1 && (state.countsArr[state.keyToIdx(((ny + 1) << 16) | nx)]        || 0) > 0) visitedNeighborCount++;
+                                if (nx > 0     && (state.countsArr[searchCtx.keyToIdx(((ny)     << 16) | (nx - 1))] || 0) > 0) visitedNeighborCount++;
+                                if (nx < w - 1 && (state.countsArr[searchCtx.keyToIdx(((ny)     << 16) | (nx + 1))] || 0) > 0) visitedNeighborCount++;
+                                if (ny > 0     && (state.countsArr[searchCtx.keyToIdx(((ny - 1) << 16) | nx)]        || 0) > 0) visitedNeighborCount++;
+                                if (ny < h - 1 && (state.countsArr[searchCtx.keyToIdx(((ny + 1) << 16) | nx)]        || 0) > 0) visitedNeighborCount++;
                                 if (visitedNeighborCount >= 2) {
                                     const c = -(visitedNeighborCount * 14);
                                     score += c;
@@ -3946,7 +3946,7 @@
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
                             pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
-                            if (state.ints < l.reqInt && l.mustPassIndex?.has(nk) && (state.countsArr[state.keyToIdx(nk)] || 0) > 0) {
+                            if (state.ints < l.reqInt && l.mustPassIndex?.has(nk) && (state.countsArr[searchCtx.keyToIdx(nk)] || 0) > 0) {
                                 score -= Math.round(gravityMult * 0.6);
                             }
                             if (crossNeed > 0) { const c = crossNeed * Math.round(15 * Math.max(0.25, phaseProfile.objectivePull || 1) * pw('mustCrossUrgencyWeight')); score += c; pushDriver('mustCrossPressure', crossNeed, c); }
@@ -3972,7 +3972,7 @@
                                 for (let i = 0; i < l.parityBreakers.length; i++) {
                                     const pKey = l.parityBreakers[i];
                                     // Unified check for Array vs Map states
-                                    const visited = state.countsArr ? state.countsArr[state.keyToIdx(pKey)] : (state.counts?.get(pKey) || 0);
+                                    const visited = state.countsArr ? state.countsArr[searchCtx.keyToIdx(pKey)] : (state.counts?.get(pKey) || 0);
                                     if (l.parityDistMaps[i] && visited === 0) {
                                         const d = l.parityDistMaps[i].get(nk);
                                         if (d !== undefined && d < waypointDist) waypointDist = d;
@@ -4159,7 +4159,7 @@
 
                         const rRatio = l.reqLen > 0 ? Math.max(0, Math.min(1, nLen / l.reqLen)) : 1;
                         const remainsObligations = hasMust || crossNeed > 0 || Math.max(0, l.reqInt - state.ints) > 0;
-                        const projectedRevisit = (state.countsArr[state.keyToIdx(nk)] || 0) > 0;
+                        const projectedRevisit = (state.countsArr[searchCtx.keyToIdx(nk)] || 0) > 0;
                         const projectedNonKnot = projectedRevisit && !nextInKnot;
                         const inLateKnotPhases = activePhase === 'knot' || activePhase === 'finish';
                         const projectedIntersections = state.ints + (projectedRevisit ? 1 : 0);
@@ -4180,8 +4180,8 @@
                             const zoneMin = Math.max(0, Number(regionCrossingModel.zoneMinCrossOpportunity) || 0);
                             const zonePenaltyWeight = Math.max(1, Number(regionCrossingModel.zonePenaltyWeight) || 16);
                             const knotRetentionWeight = Math.max(1, Number(regionCrossingModel.knotRetentionWeight) || 18);
-                            const curZone = Math.max(0, state.keyToIdx(k) % zoneCount);
-                            const nextZone = Math.max(0, state.keyToIdx(nk) % zoneCount);
+                            const curZone = Math.max(0, searchCtx.keyToIdx(k) % zoneCount);
+                            const nextZone = Math.max(0, searchCtx.keyToIdx(nk) % zoneCount);
                             if (nextZone !== curZone && crossNeed >= zoneMin + 1) {
                                 score += zonePenaltyWeight;
                                 if (debugStats && state.path.length < 14) debugStats.regionCrossPenaltyHits = (debugStats.regionCrossPenaltyHits || 0) + 1;
@@ -4369,7 +4369,7 @@
                     for (const k of l.gooseSet) if (state.counts.has(k)) return false;
                     return true;
                 },
-                _floodFillReachable(startKey, state, l) {
+                _floodFillReachable(startKey, state, l, searchCtx) {
                     const cols = l.grid.w;
                     const rows = l.grid.h;
                     const visited = state.floodVisited;
@@ -4394,13 +4394,13 @@
                     let qHead = 0;
                     let qTail = 0;
                     let volumeCount = 0;
-                    const startIdx = state.keyToIdx(startKey);
+                    const startIdx = searchCtx.keyToIdx(startKey);
                     visited[startIdx] = 1;
                     queue[qTail++] = startKey;
 
                     while (qHead < qTail) {
                         const key = queue[qHead++];
-                        const idx = state.keyToIdx(key);
+                        const idx = searchCtx.keyToIdx(key);
                         volumeCount++;
 
                         if (needGoal && key === l.goalKey) needGoal = false;
@@ -4454,7 +4454,7 @@
                         const portal = APP.LevelUtils.resolvePortal(l, key);
                         const portalDest = portal ? portal.dest : -1;
                         if (portalDest !== -1 && !l.blockSet.has(portalDest)) {
-                            const pIdx = state.keyToIdx(portalDest);
+                            const pIdx = searchCtx.keyToIdx(portalDest);
                             if (visited[pIdx] === 0) {
                                 visited[pIdx] = 1;
                                 queue[qTail++] = portalDest;
@@ -4495,7 +4495,6 @@
                         flipCount: 0,
                         flipParity: 0,
                         crossedFlippersAt: new Int16Array(keyCount),
-                        keyToIdx: searchCtx.keyToIdx,
                         undoLog: new Array(maxLogTriples * 3),
                         logCursor: 0,
                         nonZeroCounts: 0,
@@ -4728,7 +4727,7 @@
                     };
                     this._updateSolverPhase(state, startKey, l, distMap, debugStats);
                     maybeEmitAdaptiveTelemetry(this._deriveSolverPhase(state, startKey, l, distMap));
-                    const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
+                    const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats);
                     const startPortal = APP.LevelUtils.resolvePortal(l, startKey);
                     const startPortalForced = !!(startPortal && !state.isJump.has(state.path.length - 1));
                     if (debugStats) {
@@ -4810,7 +4809,7 @@
                         });
                     }
                     const startSig = this._ensureStateHashState(state, l, 0, options, debugStats);
-                    this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state);
+                    this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx);
                     const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig }];
                     let steps = 0;
                     while (stack.length > 0) {
@@ -4869,7 +4868,7 @@
                             let guaranteedInts = 0;
                             for (let i = 0; i < l.mustCrossKeys.length; i++) {
                                 const crossKey = l.mustCrossKeys[i];
-                                const idx = state.keyToIdx(crossKey);
+                                const idx = searchCtx.keyToIdx(crossKey);
                                 if (crossKey === l.goalKey || searchCtx.gateMask[idx] === 1) continue;
                                 if (state.mustCrossCounts[i] < 2) guaranteedInts++;
                             }
@@ -4945,7 +4944,7 @@
                             let canBreak = false;
                             if (l.hasParityBreaker && l.parityBreakers) {
                                 for (let i = 0; i < l.parityBreakers.length; i++) {
-                                    if (state.countsArr[state.keyToIdx(l.parityBreakers[i])] === 0) {
+                                    if (state.countsArr[searchCtx.keyToIdx(l.parityBreakers[i])] === 0) {
                                         canBreak = true;
                                         break;
                                     }
@@ -4958,7 +4957,7 @@
                             }
                         }
                         const stateSig = this._ensureStateHashState(state, l, realLen, options, debugStats);
-                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state)) {
+                        if (this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx)) {
                             if (realLen <= 1 && debugStats) {
                                 debugStats.rootCandidatesSuppressedByDominance = (debugStats.rootCandidatesSuppressedByDominance || 0) + 1;
                                 const dbg = ensureDepthZeroDebug(debugStats);
@@ -4994,7 +4993,7 @@
                         }
                         const shouldRunConnectivityPrune = !runtimeDisabledPrunes.has('connectivity') && l.mustCrossKeys.length === 0;
                         if (shouldRunConnectivityPrune) {
-                            if (!this._checkTopology(state, lastK, rSteps, l)) {
+                            if (!this._checkTopology(state, lastK, rSteps, l, searchCtx)) {
                                 if (debugStats) debugStats.prune.topology = (debugStats.prune.topology || 0) + 1;
                                 this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                                 continue;
@@ -5002,12 +5001,12 @@
                         }
                         const shouldRunConnectivityCheck = !runtimeDisabledPrunes.has('connectivity')
                             && this._shouldRunConnectivityCheck(state, l, realLen, 6, 20);
-                        if (shouldRunConnectivityCheck && !this._floodFillReachable(lastK, state, l)) {
+                        if (shouldRunConnectivityCheck && !this._floodFillReachable(lastK, state, l, searchCtx)) {
                             if (debugStats) debugStats.prune.deadEnd++;
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                             continue;
                         }
-                        const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, debugStats);
+                        const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats);
                         stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig });
                     }
                     if (debugStats) {
@@ -5080,7 +5079,6 @@
                         flipCount: 0,
                         flipParity: 0,
                         crossedFlippersAt: new Int16Array(keyCount),
-                        keyToIdx: searchCtx.keyToIdx,
                         undoLog: new Array(maxLogTriples * 3),
                         logCursor: 0,
                         nonZeroCounts: 0,
