@@ -12730,7 +12730,7 @@
 
 
 
-                const mustPassOverlayPins = []; l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; if (p.y === 0) { mustPassOverlayPins.push({ x: p.x, y: p.y, isHit }); return; } drawAsset('required', p.x, p.y, { isSatisfied: isHit, themeColors: th.colors }); }); if (mustPassOverlayPins.length > 0) drawMustPassOverflowOverlay(mustPassOverlayPins, th, vp);
+                const mustPassOverlayPins = []; l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; const transformed = APP.LevelUtils.transformPoint(p.x, p.y, APP.State.ENGINE.variant, l.grid.w, l.grid.h); if (transformed.ty === 0) { mustPassOverlayPins.push({ x: p.x, y: p.y, isHit }); return; } drawAsset('required', p.x, p.y, { isSatisfied: isHit, themeColors: th.colors }); }); if (mustPassOverlayPins.length > 0) drawMustPassOverflowOverlay(mustPassOverlayPins, th, vp);
 
                 if (l.goalKey !== -1) { const goalP = APP.LevelUtils.UNPACK(l.goalKey), sGoal = getScreenPos(goalP.x, goalP.y); ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sGoal.sx, sGoal.sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); }
 
