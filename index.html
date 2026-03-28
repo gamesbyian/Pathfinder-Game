@@ -8948,6 +8948,7 @@
                 allowRandomizedExplorationOnExpensiveTiers,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
+                stagesTried,
                 solveStartTime,
                 controlPlane,
                 lowComplexityLevel
@@ -9360,6 +9361,7 @@
                 allowRandomizedExplorationOnExpensiveTiers,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
+                stagesTried,
                 solveStartTime,
                 controlPlane,
                 lowComplexityLevel
@@ -9496,19 +9498,38 @@
                 resolvedPortalBiasMode
             });
 
-            const guardrailBlocked = this._maybeAbortByRetryGuardrail({
-                guardrailStopThirdAttempt,
-                previousAttempt,
-                previousAttempts,
-                timesTried,
-                escalationTier,
-                budgetMs,
-                strategyMetadata,
-                stagesTried,
-                key,
-                computeAttemptDeltaMetrics
-            });
-            if (guardrailBlocked) return guardrailBlocked;
+            if (guardrailStopThirdAttempt) {
+                const blocked = {
+                    ok: false,
+                    status: 'no-solution-inconclusive',
+                    stage: previousAttempt?.stage ?? -1,
+                    message: 'Retry guardrail: skipped wasteful third attempt.',
+                    stagesTried,
+                    retrySuggested: false,
+                    escalationTier,
+                    usedEscalation: escalationTier > 0,
+                    budgetMs,
+                    strategyMetadata: { ...strategyMetadata, guardrailStopThirdAttempt: true }
+                };
+                const blockedMetrics = { progressReached: 0, nodesExpanded: 0, depthReached: 0, rootDiversity: 0 };
+                const blockedDelta = computeAttemptDeltaMetrics(blockedMetrics, previousAttempt?.metrics || null);
+                attemptHistory[key] = {
+                    timesTried,
+                    lastStageReached: blocked.stage,
+                    lastStatus: blocked.status,
+                    guardrailStop: true,
+                    attempts: previousAttempts.concat([{
+                        attempt: timesTried,
+                        status: blocked.status,
+                        stage: blocked.stage,
+                        metrics: blockedMetrics,
+                        delta: blockedDelta,
+                        strategy: blocked.strategyMetadata,
+                        skippedByGuardrail: true
+                    }]).slice(-6)
+                };
+                return blocked;
+            }
 
             let stage0ZeroExpansion = false;
             {
