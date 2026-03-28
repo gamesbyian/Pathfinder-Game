@@ -15363,10 +15363,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Themes.applyTheme(persistedSession.currentTheme);
 
             try {
-                try {
-                    if (APP.Persistence.hasConfig) await APP.Persistence.initAuth();
-                } catch (e) {}
                 APP.Persistence.syncProgress(APP.Persistence.getCurrentUser());
+                if (APP.Persistence.hasConfig) {
+                    Promise.resolve(APP.Persistence.initAuth())
+                        .then(() => {
+                            APP.Persistence.syncProgress(APP.Persistence.getCurrentUser());
+                        })
+                        .catch(() => {});
+                }
 
                 const mode = await APP.Loader.init();
                 if (mode !== 'ready' && mode !== 'fallback') {
