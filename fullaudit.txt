@@ -1,0 +1,3998 @@
+{
+  "exportMode": "full",
+  "runType": "newHint",
+  "progress": {
+    "levelsProcessed": 133,
+    "levelsTotal": 133,
+    "validHints": 0,
+    "invalidHints": 0,
+    "disableLegacyFallback": false,
+    "newHint": {
+      "success": 125,
+      "failure": 8,
+      "byFeatureSignature": {
+        "G1|F0|X1|I0": {
+          "success": 3,
+          "failure": 2,
+          "total": 5
+        },
+        "G1|F0|X0|I0": {
+          "success": 34,
+          "failure": 2,
+          "total": 36
+        },
+        "G1|F1|X0|I0": {
+          "success": 3,
+          "failure": 0,
+          "total": 3
+        },
+        "G0|F0|X0|I0": {
+          "success": 60,
+          "failure": 1,
+          "total": 61
+        },
+        "G0|F0|X1|I0": {
+          "success": 2,
+          "failure": 0,
+          "total": 2
+        },
+        "G0|F1|X0|I0": {
+          "success": 2,
+          "failure": 0,
+          "total": 2
+        },
+        "G1|F0|X0|I1": {
+          "success": 10,
+          "failure": 2,
+          "total": 12
+        },
+        "G1|F0|X1|I1": {
+          "success": 0,
+          "failure": 1,
+          "total": 1
+        },
+        "G0|F0|X0|I1": {
+          "success": 9,
+          "failure": 0,
+          "total": 9
+        },
+        "G1|F1|X1|I0": {
+          "success": 1,
+          "failure": 0,
+          "total": 1
+        },
+        "G0|F1|X1|I0": {
+          "success": 1,
+          "failure": 0,
+          "total": 1
+        }
+      }
+    },
+    "bombs": {
+      "success": 0,
+      "noneFound": 0,
+      "error": 0
+    }
+  },
+  "levelCount": 133,
+  "levels": [
+    {
+      "level": 1,
+      "featureSignature": "G1|F0|X1|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 77,
+      "totalSolveTimeMs": 72,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 817,
+      "candidateMovesConsidered": 1999,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 3,
+        "score": 1000000,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 2,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 60,
+      "totalSolveTimeMs": 57,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 704,
+      "candidateMovesConsidered": 1667,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 327683,
+        "score": -82,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -33
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 3,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 133,
+      "totalSolveTimeMs": 130,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2977,
+      "candidateMovesConsidered": 6373,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 1,
+      "topRootMove": {
+        "key": 393219,
+        "score": -73,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 4,
+      "featureSignature": "G1|F1|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 27,
+      "totalSolveTimeMs": 25,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 138,
+      "candidateMovesConsidered": 389,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 393224,
+        "score": -68,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 5,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 82,
+      "totalSolveTimeMs": 80,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1440,
+      "candidateMovesConsidered": 3633,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 1,
+        "score": -67,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -46.75
+          ],
+          [
+            "mustCrossPressure",
+            52
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 6,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 559,
+      "totalSolveTimeMs": 97,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2010,
+      "candidateMovesConsidered": 4941,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 196610,
+        "score": -97,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -33
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 7,
+      "featureSignature": "G1|F0|X1|I0",
+      "status": "no-solution-inconclusive",
+      "rawStatus": "no-solution-inconclusive",
+      "finalStatus": "no-solution-inconclusive",
+      "finalSolvedBy": "none",
+      "producedHintValid": false,
+      "timeMs": 17349,
+      "totalSolveTimeMs": 3473,
+      "failureCategory": "low-expansion-collapse",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 6280,
+      "candidateMovesConsidered": 16023,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 5,
+        "score": -129,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": "no-solution-inconclusive | no-solution-inconclusive"
+    },
+    {
+      "level": 8,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 12,
+      "totalSolveTimeMs": 9,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 38,
+      "candidateMovesConsidered": 121,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 6,
+        "score": -71.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 9,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 12,
+      "totalSolveTimeMs": 9,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 25,
+      "candidateMovesConsidered": 76,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 1,
+        "score": -394.05,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -261.8
+          ],
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 10,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 80,
+      "totalSolveTimeMs": 78,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2002,
+      "candidateMovesConsidered": 4021,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -149.75,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -55.25
+          ],
+          [
+            "mustCrossUrgency",
+            -59.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 11,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 11,
+      "totalSolveTimeMs": 9,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 50,
+      "candidateMovesConsidered": 132,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65539,
+        "score": -81.5,
+        "drivers": [
+          [
+            "goalAttraction",
+            -37.5
+          ],
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 12,
+      "featureSignature": "G0|F0|X1|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 81,
+      "totalSolveTimeMs": 79,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2237,
+      "candidateMovesConsidered": 4287,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 458756,
+        "score": -140.97,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -51.97
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 13,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 70,
+      "totalSolveTimeMs": 68,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2200,
+      "candidateMovesConsidered": 4182,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196610,
+        "score": -148.5,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -60.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 14,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 22,
+      "totalSolveTimeMs": 20,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 387,
+      "candidateMovesConsidered": 752,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327681,
+        "score": -73,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 15,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 14,
+      "totalSolveTimeMs": 12,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 275,
+      "candidateMovesConsidered": 622,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 65539,
+        "score": -67,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 16,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 21,
+      "totalSolveTimeMs": 19,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 434,
+      "candidateMovesConsidered": 898,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 262145,
+        "score": -126.5,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -38.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 17,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 59,
+      "totalSolveTimeMs": 57,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1389,
+      "candidateMovesConsidered": 2697,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 524290,
+        "score": -58.75,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 18,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 37,
+      "totalSolveTimeMs": 35,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 669,
+      "candidateMovesConsidered": 1682,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -99,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -55
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 19,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 660,
+      "totalSolveTimeMs": 659,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 23114,
+      "candidateMovesConsidered": 46692,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 1,
+        "score": -96.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 20,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 938,
+      "totalSolveTimeMs": 936,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 31842,
+      "candidateMovesConsidered": 70130,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65536,
+        "score": -61.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 21,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 12,
+      "totalSolveTimeMs": 9,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 32,
+      "candidateMovesConsidered": 110,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 196611,
+        "score": -208,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -110
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 22,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 19,
+      "totalSolveTimeMs": 18,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 170,
+      "candidateMovesConsidered": 434,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196615,
+        "score": -152.5,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -49.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 23,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 292,
+      "totalSolveTimeMs": 289,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 8116,
+      "candidateMovesConsidered": 18534,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65536,
+        "score": 1000000,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 24,
+      "featureSignature": "G0|F1|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 156,
+      "totalSolveTimeMs": 154,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 3311,
+      "candidateMovesConsidered": 9326,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 262146,
+        "score": -112.56,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -24.86
+          ],
+          [
+            "mustCrossUrgency",
+            -25.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 25,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 91,
+      "totalSolveTimeMs": 89,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2289,
+      "candidateMovesConsidered": 5150,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 327682,
+        "score": -87.25,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -44
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 26,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "timeout",
+      "rawStatus": "timeout",
+      "finalStatus": "timeout",
+      "finalSolvedBy": "none",
+      "producedHintValid": false,
+      "timeMs": 70284,
+      "totalSolveTimeMs": 14165,
+      "failureCategory": "healthy-expansion-timeout",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 53828,
+      "candidateMovesConsidered": 92231,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131075,
+        "score": -106.31,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -18.81
+          ],
+          [
+            "goalAttraction",
+            -37.5
+          ]
+        ]
+      },
+      "error": "timeout | timeout"
+    },
+    {
+      "level": 27,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 167,
+      "totalSolveTimeMs": 164,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 4351,
+      "candidateMovesConsidered": 8100,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 589825,
+        "score": -80.67,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -21.17
+          ],
+          [
+            "goalAttraction",
+            -7.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 28,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 104,
+      "totalSolveTimeMs": 102,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1410,
+      "candidateMovesConsidered": 3045,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 524297,
+        "score": -220.61,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -63.11
+          ],
+          [
+            "mustCrossUrgency",
+            -72.25
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 29,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 409,
+      "totalSolveTimeMs": 406,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 8222,
+      "candidateMovesConsidered": 18463,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -178.95,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -63.75
+          ],
+          [
+            "mustCrossUrgency",
+            -51
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 30,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 14,
+      "totalSolveTimeMs": 11,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 30,
+      "candidateMovesConsidered": 99,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131074,
+        "score": -1137.37,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -12.37
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 31,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 33,
+      "totalSolveTimeMs": 31,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 407,
+      "candidateMovesConsidered": 870,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 327681,
+        "score": -167,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -88
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 32,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 18,
+      "totalSolveTimeMs": 16,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 152,
+      "candidateMovesConsidered": 358,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 65541,
+        "score": -109,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 33,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 14,
+      "totalSolveTimeMs": 12,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 59,
+      "candidateMovesConsidered": 157,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -110.18,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -32.17
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 34,
+      "featureSignature": "G1|F0|X1|I0",
+      "status": "no-solution-inconclusive",
+      "rawStatus": "no-solution-inconclusive",
+      "finalStatus": "no-solution-inconclusive",
+      "finalSolvedBy": "none",
+      "producedHintValid": false,
+      "timeMs": 7976,
+      "totalSolveTimeMs": 1847,
+      "failureCategory": "low-expansion-collapse",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 4357,
+      "candidateMovesConsidered": 9472,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 6,
+        "score": -56.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": "no-solution-inconclusive | no-solution-inconclusive"
+    },
+    {
+      "level": 35,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 22,
+      "totalSolveTimeMs": 19,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 405,
+      "candidateMovesConsidered": 838,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 6,
+        "score": -96.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 36,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 689,
+      "totalSolveTimeMs": 686,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 16142,
+      "candidateMovesConsidered": 49571,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 589825,
+        "score": 1000000,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 37,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 51,
+      "totalSolveTimeMs": 49,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1271,
+      "candidateMovesConsidered": 2243,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196609,
+        "score": -138,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 38,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 13,
+      "totalSolveTimeMs": 10,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 32,
+      "candidateMovesConsidered": 110,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131077,
+        "score": -77,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 39,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 331,
+      "totalSolveTimeMs": 328,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 9420,
+      "candidateMovesConsidered": 18911,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 262151,
+        "score": -59,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 40,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 13,
+      "totalSolveTimeMs": 11,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 118,
+      "candidateMovesConsidered": 252,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -62,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 41,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 88,
+      "totalSolveTimeMs": 85,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2546,
+      "candidateMovesConsidered": 5190,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131076,
+        "score": -118,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -33
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 42,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 91,
+      "totalSolveTimeMs": 88,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2381,
+      "candidateMovesConsidered": 4343,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65536,
+        "score": -61.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 43,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 16,
+      "totalSolveTimeMs": 14,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 204,
+      "candidateMovesConsidered": 525,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 393221,
+        "score": -244.5,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -137.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 44,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 21,
+      "totalSolveTimeMs": 18,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 192,
+      "candidateMovesConsidered": 438,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 196608,
+        "score": -71.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 45,
+      "featureSignature": "G1|F1|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 462,
+      "totalSolveTimeMs": 459,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 10360,
+      "candidateMovesConsidered": 24442,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131074,
+        "score": -149.11,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -24.86
+          ],
+          [
+            "mustCrossUrgency",
+            -55.25
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 46,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 26,
+      "totalSolveTimeMs": 24,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 521,
+      "candidateMovesConsidered": 1091,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 524290,
+        "score": -144.5,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -71.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 47,
+      "featureSignature": "G1|F0|X1|I1",
+      "status": "timeout",
+      "rawStatus": "timeout",
+      "finalStatus": "timeout",
+      "finalSolvedBy": "none",
+      "producedHintValid": false,
+      "timeMs": 73184,
+      "totalSolveTimeMs": 17271,
+      "failureCategory": "healthy-expansion-timeout",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 86138,
+      "candidateMovesConsidered": 195437,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 196608,
+        "score": -153.03,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -58.78
+          ]
+        ]
+      },
+      "error": "timeout | timeout"
+    },
+    {
+      "level": 48,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 114,
+      "totalSolveTimeMs": 111,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2899,
+      "candidateMovesConsidered": 5040,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 327681,
+        "score": -94,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 49,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 13,
+      "totalSolveTimeMs": 11,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 30,
+      "candidateMovesConsidered": 107,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65544,
+        "score": -110.52,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -44.27
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 50,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 4440,
+      "totalSolveTimeMs": 2403,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 943,
+      "candidateMovesConsidered": 2327,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 524288,
+        "score": -99,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -34.75
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 51,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "timeout",
+      "rawStatus": "timeout",
+      "finalStatus": "timeout",
+      "finalSolvedBy": "none",
+      "producedHintValid": false,
+      "timeMs": 19747,
+      "totalSolveTimeMs": 4335,
+      "failureCategory": "healthy-expansion-timeout",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 15283,
+      "candidateMovesConsidered": 28283,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 1,
+        "score": -211.19,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -56.69
+          ],
+          [
+            "perimeterBias",
+            -43
+          ]
+        ]
+      },
+      "error": "timeout | timeout"
+    },
+    {
+      "level": 52,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 3671,
+      "totalSolveTimeMs": 2395,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 30732,
+      "candidateMovesConsidered": 68102,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196611,
+        "score": -68,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 53,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 5838,
+      "totalSolveTimeMs": 4680,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 87996,
+      "candidateMovesConsidered": 231964,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 1,
+        "score": -157.7,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -35.7
+          ],
+          [
+            "mustCrossUrgency",
+            -97.75
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 54,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 17,
+      "totalSolveTimeMs": 13,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 47,
+      "candidateMovesConsidered": 164,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 2,
+        "score": -126.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 55,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 16,
+      "totalSolveTimeMs": 13,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 36,
+      "candidateMovesConsidered": 133,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 393217,
+        "score": -81,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 56,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 498,
+      "totalSolveTimeMs": 495,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 12658,
+      "candidateMovesConsidered": 23124,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196610,
+        "score": -129,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -55
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 57,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 105,
+      "totalSolveTimeMs": 101,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2602,
+      "candidateMovesConsidered": 4744,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65547,
+        "score": -159.93,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -40.42
+          ],
+          [
+            "goalAttraction",
+            -67.5
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 58,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 33,
+      "totalSolveTimeMs": 31,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 734,
+      "candidateMovesConsidered": 1546,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65542,
+        "score": -57,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 59,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 1346,
+      "totalSolveTimeMs": 657,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 20315,
+      "candidateMovesConsidered": 34136,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 655369,
+        "score": -196,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -77
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 60,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 59,
+      "totalSolveTimeMs": 56,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1298,
+      "candidateMovesConsidered": 2688,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -140,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -66
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 61,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 316,
+      "totalSolveTimeMs": 313,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 8770,
+      "candidateMovesConsidered": 17026,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65538,
+        "score": -180.02,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -47.02
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 62,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 1226,
+      "totalSolveTimeMs": 1222,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 27840,
+      "candidateMovesConsidered": 85329,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 589834,
+        "score": -118.75,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -80.75
+          ],
+          [
+            "mustCrossPressure",
+            52
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 63,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "timeout",
+      "rawStatus": "timeout",
+      "finalStatus": "timeout",
+      "finalSolvedBy": "none",
+      "producedHintValid": false,
+      "timeMs": 42104,
+      "totalSolveTimeMs": 10075,
+      "failureCategory": "healthy-expansion-timeout",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 4033,
+      "candidateMovesConsidered": 8123,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -160.6,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -30.89
+          ],
+          [
+            "mustCrossUrgency",
+            -76.71
+          ]
+        ]
+      },
+      "error": "timeout | timeout"
+    },
+    {
+      "level": 64,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 422,
+      "totalSolveTimeMs": 418,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 8472,
+      "candidateMovesConsidered": 14949,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327685,
+        "score": -129.25,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -63.75
+          ],
+          [
+            "mustCrossPressure",
+            52
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 65,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 279,
+      "totalSolveTimeMs": 275,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 5273,
+      "candidateMovesConsidered": 9905,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65538,
+        "score": -77,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 66,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 25,
+      "totalSolveTimeMs": 20,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 135,
+      "candidateMovesConsidered": 354,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 393219,
+        "score": -82,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 67,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 343,
+      "totalSolveTimeMs": 340,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 638,
+      "candidateMovesConsidered": 1405,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 65539,
+        "score": -40.25,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 68,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 537,
+      "totalSolveTimeMs": 532,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 9534,
+      "candidateMovesConsidered": 28733,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -23,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -66
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 69,
+      "featureSignature": "G1|F0|X1|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 59,
+      "totalSolveTimeMs": 54,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 816,
+      "candidateMovesConsidered": 1697,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 393217,
+        "score": -91.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 70,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 113,
+      "totalSolveTimeMs": 110,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1707,
+      "candidateMovesConsidered": 3605,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327682,
+        "score": -190.17,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -32.17
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 71,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 1851,
+      "totalSolveTimeMs": 1238,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 24569,
+      "candidateMovesConsidered": 71538,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 262148,
+        "score": -128.25,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -55
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 72,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 45,
+      "totalSolveTimeMs": 40,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 588,
+      "candidateMovesConsidered": 1287,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 458758,
+        "score": -101,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 73,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 13344,
+      "totalSolveTimeMs": 9423,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 46072,
+      "candidateMovesConsidered": 77179,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65536,
+        "score": -316.84,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -100.58
+          ],
+          [
+            "perimeterBias",
+            -89
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 74,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 2628,
+      "totalSolveTimeMs": 1848,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 33100,
+      "candidateMovesConsidered": 56354,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 655369,
+        "score": -241.24,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -72.89
+          ],
+          [
+            "perimeterBias",
+            -89
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 75,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 13240,
+      "totalSolveTimeMs": 7623,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 145332,
+      "candidateMovesConsidered": 408546,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 393219,
+        "score": -140.25,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -72.25
+          ],
+          [
+            "mustCrossPressure",
+            52
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 76,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 148,
+      "totalSolveTimeMs": 145,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 3507,
+      "candidateMovesConsidered": 6741,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196610,
+        "score": -67,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 77,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 48,
+      "totalSolveTimeMs": 44,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 482,
+      "candidateMovesConsidered": 1199,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 524291,
+        "score": -87,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 78,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 232,
+      "totalSolveTimeMs": 228,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 3341,
+      "candidateMovesConsidered": 6593,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 655362,
+        "score": -232.35,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -64.35
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 79,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 147,
+      "totalSolveTimeMs": 143,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2430,
+      "candidateMovesConsidered": 5156,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65536,
+        "score": -228.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 80,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 2109,
+      "totalSolveTimeMs": 1315,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 15908,
+      "candidateMovesConsidered": 29939,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 524302,
+        "score": -384.17,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -110.92
+          ],
+          [
+            "perimeterBias",
+            -66
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 81,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 28,
+      "totalSolveTimeMs": 23,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 67,
+      "candidateMovesConsidered": 224,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 393224,
+        "score": -108,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 82,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 16739,
+      "totalSolveTimeMs": 2856,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 19367,
+      "candidateMovesConsidered": 54451,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65538,
+        "score": -64.2,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -51
+          ],
+          [
+            "mustCrossPressure",
+            52
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 83,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 29,
+      "totalSolveTimeMs": 25,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 253,
+      "candidateMovesConsidered": 626,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196610,
+        "score": -120.22,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -27.22
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 84,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 68,
+      "totalSolveTimeMs": 63,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 902,
+      "candidateMovesConsidered": 1814,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 655362,
+        "score": -113,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 85,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 66,
+      "totalSolveTimeMs": 63,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 942,
+      "candidateMovesConsidered": 2065,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 327680,
+        "score": 24.75,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -55
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 86,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 35,
+      "totalSolveTimeMs": 30,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 81,
+      "candidateMovesConsidered": 291,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196616,
+        "score": -98,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 87,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 18,
+      "totalSolveTimeMs": 13,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 74,
+      "candidateMovesConsidered": 240,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 262146,
+        "score": -107.37,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -12.37
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 88,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 21,
+      "totalSolveTimeMs": 18,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 160,
+      "candidateMovesConsidered": 356,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 393219,
+        "score": -57,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 89,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 340,
+      "totalSolveTimeMs": 335,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 5925,
+      "candidateMovesConsidered": 12209,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65538,
+        "score": 1000000,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 90,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 26,
+      "totalSolveTimeMs": 22,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 106,
+      "candidateMovesConsidered": 274,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196610,
+        "score": -117.8,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -19.8
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 91,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 15,
+      "totalSolveTimeMs": 12,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 27,
+      "candidateMovesConsidered": 74,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -68,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 92,
+      "featureSignature": "G1|F0|X0|I1",
+      "status": "timeout",
+      "rawStatus": "timeout",
+      "finalStatus": "timeout",
+      "finalSolvedBy": "none",
+      "producedHintValid": false,
+      "timeMs": 47440,
+      "totalSolveTimeMs": 11211,
+      "failureCategory": "healthy-expansion-timeout",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 3506,
+      "candidateMovesConsidered": 8739,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327681,
+        "score": -336.62,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -19.12
+          ],
+          [
+            "mustCrossUrgency",
+            -93.5
+          ]
+        ]
+      },
+      "error": "timeout | timeout"
+    },
+    {
+      "level": 93,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 27,
+      "totalSolveTimeMs": 21,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 65,
+      "candidateMovesConsidered": 200,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196609,
+        "score": -92.5,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -38.5
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 94,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 24,
+      "totalSolveTimeMs": 20,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 30,
+      "candidateMovesConsidered": 105,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196609,
+        "score": -73,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 95,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 55,
+      "totalSolveTimeMs": 49,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 740,
+      "candidateMovesConsidered": 1527,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327683,
+        "score": -92,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -33
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 96,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 267,
+      "totalSolveTimeMs": 262,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 4615,
+      "candidateMovesConsidered": 9930,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65536,
+        "score": 1000000,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 97,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 17,
+      "totalSolveTimeMs": 14,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 42,
+      "candidateMovesConsidered": 121,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65541,
+        "score": -77,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 98,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 30,
+      "totalSolveTimeMs": 25,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 273,
+      "candidateMovesConsidered": 624,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65542,
+        "score": -93,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 99,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 159,
+      "totalSolveTimeMs": 154,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2107,
+      "candidateMovesConsidered": 4093,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 2,
+        "score": -1.75,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -71.5
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 100,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 18,
+      "totalSolveTimeMs": 15,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 29,
+      "candidateMovesConsidered": 102,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 131079,
+        "score": -38,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 101,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 52,
+      "totalSolveTimeMs": 47,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 468,
+      "candidateMovesConsidered": 981,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196610,
+        "score": -124,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -55
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 102,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 71,
+      "totalSolveTimeMs": 67,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 943,
+      "candidateMovesConsidered": 1931,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327683,
+        "score": -141.37,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -12.37
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 103,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 74,
+      "totalSolveTimeMs": 71,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1420,
+      "candidateMovesConsidered": 2526,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65539,
+        "score": -72,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 104,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 28,
+      "totalSolveTimeMs": 24,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 213,
+      "candidateMovesConsidered": 467,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196610,
+        "score": -52,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 105,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 6569,
+      "totalSolveTimeMs": 3624,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 71661,
+      "candidateMovesConsidered": 119707,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327683,
+        "score": -52.75,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -46.75
+          ],
+          [
+            "mustCrossPressure",
+            104
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 106,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 19,
+      "totalSolveTimeMs": 16,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 51,
+      "candidateMovesConsidered": 147,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65541,
+        "score": -98,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 107,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 30,
+      "totalSolveTimeMs": 25,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 100,
+      "candidateMovesConsidered": 298,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 65540,
+        "score": -116.95,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -22.95
+          ],
+          [
+            "mustCrossUrgency",
+            -51
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 108,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "timeout",
+      "rawStatus": "timeout",
+      "finalStatus": "timeout",
+      "finalSolvedBy": "none",
+      "producedHintValid": false,
+      "timeMs": 48602,
+      "totalSolveTimeMs": 11013,
+      "failureCategory": "healthy-expansion-timeout",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 19039,
+      "candidateMovesConsidered": 31586,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327682,
+        "score": -143.25,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -44.55
+          ]
+        ]
+      },
+      "error": "timeout | timeout"
+    },
+    {
+      "level": 109,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 235,
+      "totalSolveTimeMs": 232,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 3852,
+      "candidateMovesConsidered": 6571,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327681,
+        "score": -143,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 110,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 32,
+      "totalSolveTimeMs": 27,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 266,
+      "candidateMovesConsidered": 550,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65536,
+        "score": -66.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 111,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 49,
+      "totalSolveTimeMs": 43,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 534,
+      "candidateMovesConsidered": 1106,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131080,
+        "score": -86.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 112,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 68,
+      "totalSolveTimeMs": 65,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1246,
+      "candidateMovesConsidered": 2394,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196609,
+        "score": -216,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -77
+          ],
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 113,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 156,
+      "totalSolveTimeMs": 151,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2846,
+      "candidateMovesConsidered": 5933,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 6,
+        "score": -79.5,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 114,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 1406,
+      "totalSolveTimeMs": 1401,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 25588,
+      "candidateMovesConsidered": 61889,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 65537,
+        "score": -956,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -85
+          ],
+          [
+            "mustCrossPressure",
+            52
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 115,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 46,
+      "totalSolveTimeMs": 42,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 526,
+      "candidateMovesConsidered": 1100,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65536,
+        "score": -116.67,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -40.42
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 116,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 27,
+      "totalSolveTimeMs": 22,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 101,
+      "candidateMovesConsidered": 255,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 196610,
+        "score": -62,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 117,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 27,
+      "totalSolveTimeMs": 23,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 62,
+      "candidateMovesConsidered": 190,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 7,
+        "score": -117,
+        "drivers": [
+          [
+            "goalAttraction",
+            -75
+          ],
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 118,
+      "featureSignature": "G0|F0|X1|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 39,
+      "totalSolveTimeMs": 36,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 418,
+      "candidateMovesConsidered": 811,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 65538,
+        "score": -73,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 119,
+      "featureSignature": "G1|F0|X1|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 12664,
+      "totalSolveTimeMs": 5140,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 76995,
+      "candidateMovesConsidered": 216081,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 1,
+      "topRootMove": {
+        "key": 2,
+        "score": 1000000,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 120,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 30,
+      "totalSolveTimeMs": 25,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 196,
+      "candidateMovesConsidered": 548,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 262147,
+        "score": -123,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -44
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 121,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 466,
+      "totalSolveTimeMs": 463,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 9094,
+      "candidateMovesConsidered": 16658,
+      "rootCandidatesGenerated": 3,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 65540,
+        "score": -147.25,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -89.25
+          ],
+          [
+            "mustCrossPressure",
+            52
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 122,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 26,
+      "totalSolveTimeMs": 20,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 31,
+      "candidateMovesConsidered": 116,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65539,
+        "score": -73,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 123,
+      "featureSignature": "G1|F1|X1|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 169,
+      "totalSolveTimeMs": 164,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1321,
+      "candidateMovesConsidered": 3920,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 65543,
+        "score": -132,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -88
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 124,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 160,
+      "totalSolveTimeMs": 157,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 2085,
+      "candidateMovesConsidered": 4086,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -126,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -77
+          ],
+          [
+            "mustCrossPressure",
+            34
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 125,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 35,
+      "totalSolveTimeMs": 30,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 233,
+      "candidateMovesConsidered": 601,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327682,
+        "score": -141.32,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -17.32
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 126,
+      "featureSignature": "G1|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 28,
+      "totalSolveTimeMs": 23,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 128,
+      "candidateMovesConsidered": 275,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -111.25,
+        "drivers": [
+          [
+            "perimeterBias",
+            -36
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 127,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 22,
+      "totalSolveTimeMs": 20,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 50,
+      "candidateMovesConsidered": 174,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 131073,
+        "score": -200.07,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -42.07
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 128,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 470,
+      "totalSolveTimeMs": 465,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 8472,
+      "candidateMovesConsidered": 14949,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 327685,
+        "score": -129.25,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -63.75
+          ],
+          [
+            "mustCrossPressure",
+            52
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 129,
+      "featureSignature": "G0|F0|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 28,
+      "totalSolveTimeMs": 23,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 100,
+      "candidateMovesConsidered": 261,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 4,
+      "topRootMove": {
+        "key": 262148,
+        "score": -66,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 130,
+      "featureSignature": "G0|F0|X0|I1",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 12459,
+      "totalSolveTimeMs": 7106,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 142867,
+      "candidateMovesConsidered": 262397,
+      "rootCandidatesGenerated": 2,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 65536,
+        "score": -131,
+        "drivers": [
+          [
+            "mustCrossUrgency",
+            -97.75
+          ],
+          [
+            "mustCrossPressure",
+            104
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 131,
+      "featureSignature": "G0|F1|X1|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 27,
+      "totalSolveTimeMs": 23,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 62,
+      "candidateMovesConsidered": 189,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 1,
+      "topRootMove": {
+        "key": 196613,
+        "score": -160.12,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -28.87
+          ]
+        ]
+      },
+      "error": null
+    },
+    {
+      "level": 132,
+      "featureSignature": "G0|F1|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 719,
+      "totalSolveTimeMs": 714,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 184,
+      "candidateMovesConsidered": 581,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 2,
+      "topRootMove": {
+        "key": 262148,
+        "score": -71,
+        "drivers": []
+      },
+      "error": null
+    },
+    {
+      "level": 133,
+      "featureSignature": "G1|F1|X0|I0",
+      "status": "success",
+      "rawStatus": "solved",
+      "finalStatus": "solved",
+      "finalSolvedBy": "referee",
+      "producedHintValid": true,
+      "timeMs": 115,
+      "totalSolveTimeMs": 112,
+      "failureCategory": "solved-direct",
+      "contradictionRecoveryActivated": false,
+      "preExpansionAbort": null,
+      "nodesExpanded": 1262,
+      "candidateMovesConsidered": 3378,
+      "rootCandidatesGenerated": 4,
+      "rootCandidatesExpanded": 3,
+      "topRootMove": {
+        "key": 458758,
+        "score": -124.69,
+        "drivers": [
+          [
+            "mustPassUrgency",
+            -28.69
+          ],
+          [
+            "mustCrossUrgency",
+            -51
+          ]
+        ]
+      },
+      "error": null
+    }
+  ]
+}
