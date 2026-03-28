@@ -3640,140 +3640,23 @@
                     }
                     return { valid, stageTrace, startNeighborBoundSanity, candidatesCount: candidates.length };
                 },
-                _scoreCandidates(valid, state, l, options, ctx, debugStats) {
+                _scoreSingleCandidate(nk, sv) {
                     const {
+                        state, l, options, debugStats, valid,
                         k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
-                        portalForced, portalDest, distMap, flipperDistMap, usageFreq,
-                        stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
-                        computePortalOpportunity, candidatesCount, searchCtx
-                    } = ctx;
-                    const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
-                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, searchCtx, !!(portalForced && portalBiasMode !== 'off'));
-                    const activeObjectiveDistMap = activeObjectiveId >= 0 ? l.objectiveDistMaps?.[activeObjectiveId] : null;
-                    const activeObjectiveCurDist = activeObjectiveDistMap ? (activeObjectiveDistMap.get(k) ?? Infinity) : Infinity;
-                    const scoringProfile = (options?.scoringMode === 'legacy' || options?.scoringMode === 'endurance') ? 'endurance' : 'modern';
-                    const shouldRecordRootSuppression = depth === 0 && !!debugStats && (!!options?.enableLowExpansionProbe || !!APP?.State?.ENGINE?.isDevMode || !!APP?.State?.ENGINE?.flags?.refereeDebug || !!APP?.State?.ENGINE?.flags?.debugSolver);
-                    const structuralMode = !!options?.structuralMode;
-                    const profile = l.solverProfile || null;
-                    const symmetryModel = profile?.symmetryModel || null;
-                    const symmetryCommitted = !!(symmetryModel && symmetryModel.committed && (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal'));
-                    const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
-                    const evaluateKnotCandidate = (candidate) => {
-                        if (!candidate || !(candidate.cells instanceof Set) || !(candidate.distMap instanceof Map)) return null;
-                        const dist = candidate.distMap.get(k);
-                        if (!Number.isFinite(dist)) return null;
-                        let unresolvedCross = 0;
-                        let revisitOpportunity = 0;
-                        for (const cell of candidate.cells) {
-                            const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(cell) : undefined;
-                            if (crossIdx !== undefined && state.mustCrossCounts && (state.mustCrossCounts[crossIdx] || 0) < 2) unresolvedCross++;
-                            if ((state.countsArr ? state.countsArr[searchCtx.keyToIdx(cell)] : (state.counts?.get(cell) || 0)) === 0) revisitOpportunity++;
-                        }
-                        const unresolvedScore = (unresolvedCross * 2.4) + (Math.min(4, revisitOpportunity) * 0.7);
-                        const weighted = (dist * 18)
-                            - ((candidate.score || 0) * 0.35)
-                            - (unresolvedScore * 16)
-                            - ((candidate.confidence || 0) * 12);
-                        return { candidate, dist, unresolvedScore, weighted };
-                    };
-                    const knotEvaluations = knotCandidates.map(evaluateKnotCandidate).filter(Boolean).sort((a, b) => a.weighted - b.weighted);
-                    let activeKnotTarget = knotEvaluations.length > 0 ? knotEvaluations[0] : null;
-                    let knotSwitchedByStall = false;
-                    if (knotEvaluations.length > 1 && activeKnotTarget) {
-                        const recentDepth = Math.min(5, state.path.length - 1);
-                        let stalled = recentDepth >= 3;
-                        let prevDist = null;
-                        for (let i = 0; i <= recentDepth; i++) {
-                            const idx = state.path.length - 1 - i;
-                            if (idx < 0) break;
-                            const keyAt = state.path[idx];
-                            const d = activeKnotTarget.candidate.distMap.get(keyAt);
-                            if (!Number.isFinite(d)) continue;
-                            if (prevDist !== null && d < prevDist) stalled = false;
-                            prevDist = d;
-                        }
-                        const runnerUp = knotEvaluations[1];
-                        const hysteresisMargin = 6;
-                        if (stalled && runnerUp && (runnerUp.weighted + hysteresisMargin) < activeKnotTarget.weighted) {
-                            activeKnotTarget = runnerUp;
-                            knotSwitchedByStall = true;
-                        }
-                    }
-                    if (debugStats && activeKnotTarget) {
-                        if (!Array.isArray(debugStats.knotSelectionEvents)) debugStats.knotSelectionEvents = [];
-                        const selectedId = Number.isFinite(activeKnotTarget.candidate?.id) ? activeKnotTarget.candidate.id : -1;
-                        const prevId = Number.isFinite(debugStats.lastKnotCandidateId) ? debugStats.lastKnotCandidateId : null;
-                        if (prevId === null || prevId !== selectedId || knotSwitchedByStall) {
-                            debugStats.knotSelectionEvents.push({
-                                atLen: curLen,
-                                selectedId,
-                                type: activeKnotTarget.candidate?.type || 'unknown',
-                                confidence: Number((activeKnotTarget.candidate?.confidence || 0).toFixed(3)),
-                                dist: activeKnotTarget.dist,
-                                reason: knotSwitchedByStall ? 'stall-switch' : (prevId === null ? 'initial' : 'phase-progress')
-                            });
-                            if (debugStats.knotSelectionEvents.length > 24) debugStats.knotSelectionEvents.shift();
-                        }
-                        debugStats.lastKnotCandidateId = selectedId;
-                    }
-                    const objectivePriority = profile?.objectivePriority instanceof Map
-                        ? profile.objectivePriority
-                        : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
-                    const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
-                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : new Set();
-                    const perimeterThreshold = options?.antiDriftEdgeLock ? 1 : (profile?.perimeterThreshold || 1);
-                    const macroSkeleton = options?.macroSkeleton || null;
-                    const regionCrossingModel = options?.regionCrossingModel || null;
-                    const activePhase = state.phase || 'harvest';
-                    const phaseProfileBase = state.phasePolicy?.profiles?.[activePhase] || state.phasePolicy?.profiles?.harvest || {
-                        perimeterBias: 1,
-                        objectivePull: 1,
-                        knotPull: 1,
-                        goalAttraction: 1,
-                        antiDither: 1
-                    };
-                    const structuralTemplate = structuralMode ? (options?.structuralTemplate || null) : null;
-                    const templatePhaseOverrides = structuralTemplate?.weightOverrides?.phaseMultipliers?.[activePhase] || null;
-                    const phaseProfile = templatePhaseOverrides
-                        ? {
-                            ...phaseProfileBase,
-                            perimeterBias: (phaseProfileBase.perimeterBias || 1) * (templatePhaseOverrides.perimeterBias || 1),
-                            objectivePull: (phaseProfileBase.objectivePull || 1) * (templatePhaseOverrides.objectivePull || 1),
-                            knotPull: (phaseProfileBase.knotPull || 1) * (templatePhaseOverrides.knotPull || 1),
-                            goalAttraction: (phaseProfileBase.goalAttraction || 1) * (templatePhaseOverrides.goalAttraction || 1),
-                            antiDither: (phaseProfileBase.antiDither || 1) * (templatePhaseOverrides.antiDither || 1)
-                        }
-                        : phaseProfileBase;
-                    const policyName = options?.orderingPolicy || 'default';
-                    const policyProfile = this.getPolicyProfile(policyName, activePhase, state.urgencyScalar ?? null);
-                    const heuristicFeatureFlags = compactDefined({
-                        ...(options?.heuristicFeatureFlags || {}),
-                        hasGeese: (options?.heuristicFeatureFlags?.hasGeese !== undefined) ? !!options.heuristicFeatureFlags.hasGeese : ((l.gooseSet?.size || 0) > 0),
-                        hasFlippingFilters: (options?.heuristicFeatureFlags?.hasFlippingFilters !== undefined) ? !!options.heuristicFeatureFlags.hasFlippingFilters : ((l.flippingFilterMap?.size || 0) > 0),
-                        hasFalseGoals: (options?.heuristicFeatureFlags?.hasFalseGoals !== undefined) ? !!options.heuristicFeatureFlags.hasFalseGoals : ((l.falseGoalKeys?.size || 0) > 0),
-                        highReqInt: (options?.heuristicFeatureFlags?.highReqInt !== undefined) ? !!options.heuristicFeatureFlags.highReqInt : ((Number(l.reqInt) || 0) >= 3)
-                    });
-                    const commitmentHorizon = Math.max(0, Number(state.commitmentHorizon) || 0);
-                    const commitmentWindow = commitmentHorizon > 0 && depth <= commitmentHorizon;
-                    const prevKey = state.path.length >= 2 ? state.path[state.path.length - 2] : -1;
-                    const curDx = prevKey >= 0 ? ((k & 0xFFFF) - (prevKey & 0xFFFF)) : 0;
-                    const curDy = prevKey >= 0 ? ((k >> 16) - (prevKey >> 16)) : 0;
-                    const curAxis = curDx !== 0 ? 0 : (curDy !== 0 ? 1 : -1);
-                    const currentMustBound = hasMust ? getMustBound(k) : 0;
-                    const currentCrossBound = crossNeed > 0 ? getCrossBound(k) : 0;
-                    const currentObjectiveGap = (Number.isFinite(currentMustBound) ? currentMustBound : 9999) + (Number.isFinite(currentCrossBound) ? currentCrossBound : 9999);
-                    const currentGoalDist = distMap.get(k) ?? Infinity;
-                    const committedRegion = Number.isFinite(state.portal?.portalCommittedRegion) ? state.portal?.portalCommittedRegion : -1;
-                    const committedFamily = Number.isFinite(state.portal?.portalSelectedFamily) ? state.portal?.portalSelectedFamily : -1;
-                    const portalLockState = this._derivePortalLockState(state, options);
-                    const templateCommitment = structuralMode ? (options?.templateCommitment || null) : null;
-                    const templateCommitDepthRatio = Number.isFinite(templateCommitment?.depthRatio) ? templateCommitment.depthRatio : 0.38;
-                    const inTemplateCommitWindow = !!(structuralTemplate && (l.reqLen > 0) && ((curLen / l.reqLen) <= templateCommitDepthRatio));
-                    const objectiveTrackStrictness = Number.isFinite(options?.objectiveTrack?.strictness) ? options.objectiveTrack.strictness : 0.72;
-                    const recentWindow = Math.min(8, Math.max(0, state.path.length - 1));
-                    const recentTurnbackCount = state.recentTurnbackCount || 0;
-                    const dirRepeat = state.recentDirRepeatCount || 0;
-                    const scored = valid.map(nk => {
+                        portalForced, portalDest, distMap, usageFreq, computePortalOpportunity, searchCtx,
+                        activeObjectiveId, activeObjectiveDistMap, activeObjectiveCurDist,
+                        scoringProfile, shouldRecordRootSuppression, structuralMode,
+                        profile, symmetryModel, symmetryCommitted, activeKnotTarget,
+                        objectivePriority, objectiveCount, knotZone, perimeterThreshold,
+                        macroSkeleton, regionCrossingModel, activePhase, phaseProfile, structuralTemplate,
+                        policyName, policyProfile, heuristicFeatureFlags,
+                        commitmentWindow, prevKey, curDx, curDy, curAxis,
+                        currentObjectiveGap, currentGoalDist,
+                        committedRegion, committedFamily, portalLockState,
+                        inTemplateCommitWindow, objectiveTrackStrictness,
+                        recentWindow, recentTurnbackCount, dirRepeat
+                    } = sv;
                         const px = k & 0xFFFF;
                         const py = k >> 16;
                         let score = 0;
@@ -4299,7 +4182,157 @@
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
                     return { nk, score, scoreDrivers };
-                });
+                },
+                _scoreCandidates(valid, state, l, options, ctx, debugStats) {
+                    const {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap, flipperDistMap, usageFreq,
+                        stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
+                        computePortalOpportunity, candidatesCount, searchCtx
+                    } = ctx;
+                    const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
+                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, searchCtx, !!(portalForced && portalBiasMode !== 'off'));
+                    const activeObjectiveDistMap = activeObjectiveId >= 0 ? l.objectiveDistMaps?.[activeObjectiveId] : null;
+                    const activeObjectiveCurDist = activeObjectiveDistMap ? (activeObjectiveDistMap.get(k) ?? Infinity) : Infinity;
+                    const scoringProfile = (options?.scoringMode === 'legacy' || options?.scoringMode === 'endurance') ? 'endurance' : 'modern';
+                    const shouldRecordRootSuppression = depth === 0 && !!debugStats && (!!options?.enableLowExpansionProbe || !!APP?.State?.ENGINE?.isDevMode || !!APP?.State?.ENGINE?.flags?.refereeDebug || !!APP?.State?.ENGINE?.flags?.debugSolver);
+                    const structuralMode = !!options?.structuralMode;
+                    const profile = l.solverProfile || null;
+                    const symmetryModel = profile?.symmetryModel || null;
+                    const symmetryCommitted = !!(symmetryModel && symmetryModel.committed && (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal'));
+                    const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
+                    const evaluateKnotCandidate = (candidate) => {
+                        if (!candidate || !(candidate.cells instanceof Set) || !(candidate.distMap instanceof Map)) return null;
+                        const dist = candidate.distMap.get(k);
+                        if (!Number.isFinite(dist)) return null;
+                        let unresolvedCross = 0;
+                        let revisitOpportunity = 0;
+                        for (const cell of candidate.cells) {
+                            const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(cell) : undefined;
+                            if (crossIdx !== undefined && state.mustCrossCounts && (state.mustCrossCounts[crossIdx] || 0) < 2) unresolvedCross++;
+                            if ((state.countsArr ? state.countsArr[searchCtx.keyToIdx(cell)] : (state.counts?.get(cell) || 0)) === 0) revisitOpportunity++;
+                        }
+                        const unresolvedScore = (unresolvedCross * 2.4) + (Math.min(4, revisitOpportunity) * 0.7);
+                        const weighted = (dist * 18)
+                            - ((candidate.score || 0) * 0.35)
+                            - (unresolvedScore * 16)
+                            - ((candidate.confidence || 0) * 12);
+                        return { candidate, dist, unresolvedScore, weighted };
+                    };
+                    const knotEvaluations = knotCandidates.map(evaluateKnotCandidate).filter(Boolean).sort((a, b) => a.weighted - b.weighted);
+                    let activeKnotTarget = knotEvaluations.length > 0 ? knotEvaluations[0] : null;
+                    let knotSwitchedByStall = false;
+                    if (knotEvaluations.length > 1 && activeKnotTarget) {
+                        const recentDepth = Math.min(5, state.path.length - 1);
+                        let stalled = recentDepth >= 3;
+                        let prevDist = null;
+                        for (let i = 0; i <= recentDepth; i++) {
+                            const idx = state.path.length - 1 - i;
+                            if (idx < 0) break;
+                            const keyAt = state.path[idx];
+                            const d = activeKnotTarget.candidate.distMap.get(keyAt);
+                            if (!Number.isFinite(d)) continue;
+                            if (prevDist !== null && d < prevDist) stalled = false;
+                            prevDist = d;
+                        }
+                        const runnerUp = knotEvaluations[1];
+                        const hysteresisMargin = 6;
+                        if (stalled && runnerUp && (runnerUp.weighted + hysteresisMargin) < activeKnotTarget.weighted) {
+                            activeKnotTarget = runnerUp;
+                            knotSwitchedByStall = true;
+                        }
+                    }
+                    if (debugStats && activeKnotTarget) {
+                        if (!Array.isArray(debugStats.knotSelectionEvents)) debugStats.knotSelectionEvents = [];
+                        const selectedId = Number.isFinite(activeKnotTarget.candidate?.id) ? activeKnotTarget.candidate.id : -1;
+                        const prevId = Number.isFinite(debugStats.lastKnotCandidateId) ? debugStats.lastKnotCandidateId : null;
+                        if (prevId === null || prevId !== selectedId || knotSwitchedByStall) {
+                            debugStats.knotSelectionEvents.push({
+                                atLen: curLen,
+                                selectedId,
+                                type: activeKnotTarget.candidate?.type || 'unknown',
+                                confidence: Number((activeKnotTarget.candidate?.confidence || 0).toFixed(3)),
+                                dist: activeKnotTarget.dist,
+                                reason: knotSwitchedByStall ? 'stall-switch' : (prevId === null ? 'initial' : 'phase-progress')
+                            });
+                            if (debugStats.knotSelectionEvents.length > 24) debugStats.knotSelectionEvents.shift();
+                        }
+                        debugStats.lastKnotCandidateId = selectedId;
+                    }
+                    const objectivePriority = profile?.objectivePriority instanceof Map
+                        ? profile.objectivePriority
+                        : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
+                    const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
+                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : new Set();
+                    const perimeterThreshold = options?.antiDriftEdgeLock ? 1 : (profile?.perimeterThreshold || 1);
+                    const macroSkeleton = options?.macroSkeleton || null;
+                    const regionCrossingModel = options?.regionCrossingModel || null;
+                    const activePhase = state.phase || 'harvest';
+                    const phaseProfileBase = state.phasePolicy?.profiles?.[activePhase] || state.phasePolicy?.profiles?.harvest || {
+                        perimeterBias: 1,
+                        objectivePull: 1,
+                        knotPull: 1,
+                        goalAttraction: 1,
+                        antiDither: 1
+                    };
+                    const structuralTemplate = structuralMode ? (options?.structuralTemplate || null) : null;
+                    const templatePhaseOverrides = structuralTemplate?.weightOverrides?.phaseMultipliers?.[activePhase] || null;
+                    const phaseProfile = templatePhaseOverrides
+                        ? {
+                            ...phaseProfileBase,
+                            perimeterBias: (phaseProfileBase.perimeterBias || 1) * (templatePhaseOverrides.perimeterBias || 1),
+                            objectivePull: (phaseProfileBase.objectivePull || 1) * (templatePhaseOverrides.objectivePull || 1),
+                            knotPull: (phaseProfileBase.knotPull || 1) * (templatePhaseOverrides.knotPull || 1),
+                            goalAttraction: (phaseProfileBase.goalAttraction || 1) * (templatePhaseOverrides.goalAttraction || 1),
+                            antiDither: (phaseProfileBase.antiDither || 1) * (templatePhaseOverrides.antiDither || 1)
+                        }
+                        : phaseProfileBase;
+                    const policyName = options?.orderingPolicy || 'default';
+                    const policyProfile = this.getPolicyProfile(policyName, activePhase, state.urgencyScalar ?? null);
+                    const heuristicFeatureFlags = compactDefined({
+                        ...(options?.heuristicFeatureFlags || {}),
+                        hasGeese: (options?.heuristicFeatureFlags?.hasGeese !== undefined) ? !!options.heuristicFeatureFlags.hasGeese : ((l.gooseSet?.size || 0) > 0),
+                        hasFlippingFilters: (options?.heuristicFeatureFlags?.hasFlippingFilters !== undefined) ? !!options.heuristicFeatureFlags.hasFlippingFilters : ((l.flippingFilterMap?.size || 0) > 0),
+                        hasFalseGoals: (options?.heuristicFeatureFlags?.hasFalseGoals !== undefined) ? !!options.heuristicFeatureFlags.hasFalseGoals : ((l.falseGoalKeys?.size || 0) > 0),
+                        highReqInt: (options?.heuristicFeatureFlags?.highReqInt !== undefined) ? !!options.heuristicFeatureFlags.highReqInt : ((Number(l.reqInt) || 0) >= 3)
+                    });
+                    const commitmentHorizon = Math.max(0, Number(state.commitmentHorizon) || 0);
+                    const commitmentWindow = commitmentHorizon > 0 && depth <= commitmentHorizon;
+                    const prevKey = state.path.length >= 2 ? state.path[state.path.length - 2] : -1;
+                    const curDx = prevKey >= 0 ? ((k & 0xFFFF) - (prevKey & 0xFFFF)) : 0;
+                    const curDy = prevKey >= 0 ? ((k >> 16) - (prevKey >> 16)) : 0;
+                    const curAxis = curDx !== 0 ? 0 : (curDy !== 0 ? 1 : -1);
+                    const currentMustBound = hasMust ? getMustBound(k) : 0;
+                    const currentCrossBound = crossNeed > 0 ? getCrossBound(k) : 0;
+                    const currentObjectiveGap = (Number.isFinite(currentMustBound) ? currentMustBound : 9999) + (Number.isFinite(currentCrossBound) ? currentCrossBound : 9999);
+                    const currentGoalDist = distMap.get(k) ?? Infinity;
+                    const committedRegion = Number.isFinite(state.portal?.portalCommittedRegion) ? state.portal?.portalCommittedRegion : -1;
+                    const committedFamily = Number.isFinite(state.portal?.portalSelectedFamily) ? state.portal?.portalSelectedFamily : -1;
+                    const portalLockState = this._derivePortalLockState(state, options);
+                    const templateCommitment = structuralMode ? (options?.templateCommitment || null) : null;
+                    const templateCommitDepthRatio = Number.isFinite(templateCommitment?.depthRatio) ? templateCommitment.depthRatio : 0.38;
+                    const inTemplateCommitWindow = !!(structuralTemplate && (l.reqLen > 0) && ((curLen / l.reqLen) <= templateCommitDepthRatio));
+                    const objectiveTrackStrictness = Number.isFinite(options?.objectiveTrack?.strictness) ? options.objectiveTrack.strictness : 0.72;
+                    const recentWindow = Math.min(8, Math.max(0, state.path.length - 1));
+                    const recentTurnbackCount = state.recentTurnbackCount || 0;
+                    const dirRepeat = state.recentDirRepeatCount || 0;
+                    const sv = {
+                        state, l, options, debugStats, valid,
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap, usageFreq, computePortalOpportunity, searchCtx,
+                        activeObjectiveId, activeObjectiveDistMap, activeObjectiveCurDist,
+                        scoringProfile, shouldRecordRootSuppression, structuralMode,
+                        profile, symmetryModel, symmetryCommitted, activeKnotTarget,
+                        objectivePriority, objectiveCount, knotZone, perimeterThreshold,
+                        macroSkeleton, regionCrossingModel, activePhase, phaseProfile, structuralTemplate,
+                        policyName, policyProfile, heuristicFeatureFlags,
+                        commitmentWindow, prevKey, curDx, curDy, curAxis,
+                        currentObjectiveGap, currentGoalDist,
+                        committedRegion, committedFamily, portalLockState,
+                        inTemplateCommitWindow, objectiveTrackStrictness,
+                        recentWindow, recentTurnbackCount, dirRepeat
+                    };
+                    const scored = valid.map(nk => this._scoreSingleCandidate(nk, sv));
                     if (options?.dirOrderVariant === 'random') {
                         scored.sort(() => Math.random() - 0.5);
                     } else {
@@ -8846,6 +8879,32 @@
         },
 
 
+        _computeObjectiveDominance(level) {
+            try {
+                const allObjKeys = [
+                    ...(level.mustPassKeys || []),
+                    ...(level.mustCrossKeys || []),
+                ];
+                const w = level.grid?.w || 1;
+                const h = level.grid?.h || 1;
+                const goalKey = level.goalKey;
+                const goalX = goalKey !== undefined && goalKey !== -1 ? (goalKey & 0xFFFF) + 1 : null;
+                const goalY = goalKey !== undefined && goalKey !== -1 ? (goalKey >> 16) + 1 : null;
+                const goalIsInterior = goalX !== null && goalX > 1 && goalX < w && goalY > 1 && goalY < h;
+                const routePressure = Number(level.solverProfile?.routePressure) || 0;
+                if (allObjKeys.length === 0) {
+                    return goalIsInterior && routePressure >= 0.65;
+                }
+                let interiorCount = 0;
+                for (const k of allObjKeys) {
+                    const x = (k & 0xFFFF) + 1;
+                    const y = (k >> 16) + 1;
+                    if (x > 1 && x < w && y > 1 && y < h) interiorCount++;
+                }
+                return interiorCount / allObjKeys.length >= 0.6;
+            } catch (e) { return false; }
+        },
+
         _prepareSolveContext(levelInput, opts = {}) {
             const requestedTierRaw = Number(opts.escalationTier ?? opts.tier);
             const tier = Number.isFinite(requestedTierRaw) ? Math.max(0, Math.floor(requestedTierRaw)) : 0;
@@ -8853,31 +8912,7 @@
             const levelRaw = levelInput.gateKeys ? levelInput : APP.LevelUtils.normalizeLevel(levelInput.id ?? APP.State.ENGINE.levelIdx);
             const level = Object.create(SavedHintArchitecture.toHintBlindSolverLevel(levelRaw));
             level.solverProfile = this.normalizeSolverProfile(this.buildLevelProfile(level));
-            const objectivesAreInteriorDominant = (() => {
-                try {
-                    const allObjKeys = [
-                        ...(level.mustPassKeys || []),
-                        ...(level.mustCrossKeys || []),
-                    ];
-                    const w = level.grid?.w || 1;
-                    const h = level.grid?.h || 1;
-                    const goalKey = level.goalKey;
-                    const goalX = goalKey !== undefined && goalKey !== -1 ? (goalKey & 0xFFFF) + 1 : null;
-                    const goalY = goalKey !== undefined && goalKey !== -1 ? (goalKey >> 16) + 1 : null;
-                    const goalIsInterior = goalX !== null && goalX > 1 && goalX < w && goalY > 1 && goalY < h;
-                    const routePressure = Number(level.solverProfile?.routePressure) || 0;
-                    if (allObjKeys.length === 0) {
-                        return goalIsInterior && routePressure >= 0.65;
-                    }
-                    let interiorCount = 0;
-                    for (const k of allObjKeys) {
-                        const x = (k & 0xFFFF) + 1;
-                        const y = (k >> 16) + 1;
-                        if (x > 1 && x < w && y > 1 && y < h) interiorCount++;
-                    }
-                    return interiorCount / allObjKeys.length >= 0.6;
-                } catch (e) { return false; }
-            })();
+            const objectivesAreInteriorDominant = this._computeObjectiveDominance(level);
             if (APP?.State?.ENGINE?.isDevMode || opts?.auditMode) {
                 console.log('[Referee strategy]', {
                     complexityClass: level.solverProfile?.complexityClass || 'standard',
