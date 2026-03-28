@@ -15388,8 +15388,23 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     })();
 
     window.onload = () => {
-        APP.Input.init();
-        APP.Boot.start();
+        let inputInitError = null;
+        try {
+            APP.Input.init();
+        } catch (err) {
+            inputInitError = err;
+            console.error('[Startup] Input init failed; continuing boot.', err);
+        }
+
+        Promise.resolve(APP.Boot.start())
+            .then(() => {
+                if (inputInitError) {
+                    try { APP.UI.reportError('startup-input-init', inputInitError); } catch (_) {}
+                }
+            })
+            .catch((err) => {
+                APP.Loader.fail('startup-boot', err);
+            });
     };
 </script>
 </body>
