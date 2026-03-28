@@ -3244,6 +3244,28 @@
                         return bonus;
                     };
 
+                    const filterCtx = {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap,
+                        disableDistanceBound, disableMustPassBound, disableMustCrossBound, disablePortalAutomaton,
+                        interactionCandidateFallbackEnabled, assertKnownSolvableBounds, debugNeighborTraceEnabled
+                    };
+                    const { valid, stageTrace, startNeighborBoundSanity } =
+                        this._filterCandidates(candidates, state, l, options, filterCtx, debugStats);
+                    return this._scoreCandidates(valid, state, l, options, {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap, flipperDistMap, usageFreq,
+                        stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
+                        computePortalOpportunity
+                    }, debugStats);
+                },
+                _filterCandidates(candidates, state, l, options, ctx, debugStats) {
+                    const {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap,
+                        disableDistanceBound, disableMustPassBound, disableMustCrossBound, disablePortalAutomaton,
+                        interactionCandidateFallbackEnabled, assertKnownSolvableBounds, debugNeighborTraceEnabled
+                    } = ctx;
                     const stageTrace = debugNeighborTraceEnabled ? {
                         fromKey: k,
                         depth,
@@ -3278,7 +3300,6 @@
                         memoRejected: 0,
                         topologyRejected: 0
                     } : null;
-
                     const startNeighborBoundSanity = depth === 0 ? { legalBranches: 0, satisfiedBranches: 0 } : null;
                     const gateToGateRejected = [];
                     const originalGateSet = l.gateSet;
@@ -3478,6 +3499,19 @@
                             console.warn(msg);
                         }
                     }
+                    return { valid, stageTrace, startNeighborBoundSanity };
+                },
+                _scoreCandidates(valid, state, l, options, ctx, debugStats) {
+                    const {
+                        k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
+                        portalForced, portalDest, distMap, flipperDistMap, usageFreq,
+                        stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
+                        computePortalOpportunity
+                    } = ctx;
+                    const portalBiasMode = options?.portalBiasMode || 'adaptiveMustCross';
+                    const activeObjectiveId = this._resolveActiveObjectiveTarget(state, k, l, !!(portalForced && portalBiasMode !== 'off'));
+                    const activeObjectiveDistMap = activeObjectiveId >= 0 ? l.objectiveDistMaps?.[activeObjectiveId] : null;
+                    const activeObjectiveCurDist = activeObjectiveDistMap ? (activeObjectiveDistMap.get(k) ?? Infinity) : Infinity;
                     const scoringProfile = (options?.scoringMode === 'legacy' || options?.scoringMode === 'endurance') ? 'endurance' : 'modern';
                     const shouldRecordRootSuppression = depth === 0 && !!debugStats && (!!options?.enableLowExpansionProbe || !!APP?.State?.ENGINE?.isDevMode || !!APP?.State?.ENGINE?.flags?.refereeDebug || !!APP?.State?.ENGINE?.flags?.debugSolver);
                     const structuralMode = !!options?.structuralMode;
