@@ -1841,29 +1841,36 @@
                     }, l, {
                         isStrict: false,
                         checkFalseGoals: options.falseGoalPolicy !== 'ignore',
+                        checkWinMetrics: options.checkWinMetrics === true,
                         hazardPolicy: options.hazardPolicy || 'forbid',
-                        disabledPrunes: options?.disabledPrunes
+                        disabledPrunes: options?.disabledPrunes,
+                        diagnostics: options?.diagnostics
                     });
                 },
                 _diagnoseMoveInvalidReason(targetKey, path, counts, usage, jumpSet, l, flipCount, crossedSet) {
                     if (!l || !Array.isArray(path) || path.length === 0) return 'invalid-unknown';
-                    const lastK = path[path.length - 1];
-                    const lastP = APP.LevelUtils.UNPACK(lastK);
-                    const targetP = APP.LevelUtils.UNPACK(targetKey);
-                    const portal = APP.LevelUtils.resolvePortal(l, lastK);
-                    const portalForced = !!(portal && !jumpSet.has(path.length - 1));
-                    const isPortalJumpCandidate = portalForced && portal?.dest === targetKey;
-                    if (portalForced && !isPortalJumpCandidate) return 'invalid-portal-legality';
-                    if (!isPortalJumpCandidate && Math.abs(targetP.x - lastP.x) + Math.abs(targetP.y - lastP.y) !== 1) return 'invalid-adjacency';
-                    // Detect filter-axis failures by re-testing with filter checks disabled. If the
-                    // move becomes valid when filterAxisStrict is suppressed, the block was axis-based.
-                    if (this._isMoveValid(targetKey, path, counts, usage, 0, jumpSet, l, flipCount, crossedSet, { falseGoalPolicy: 'ignore', disabledPrunes: ['filterAxisStrict'] })) return 'invalid-by-filter-axis';
-                    if (l.goalKey === targetKey) {
-                        const mustPassOk = l.mustPassKeys.every(k => (counts.get(k) || 0) > 0 || k === targetKey);
-                        const mustCrossOk = l.mustCrossKeys.every(k => ((counts.get(k) || 0) + (k === targetKey ? 1 : 0)) >= 2);
-                        if (!mustPassOk || !mustCrossOk) return 'invalid-must-cross-impossibility';
+                    const diagnostics = {};
+                    const valid = this._isMoveValid(targetKey, path, counts, usage, 0, jumpSet, l, flipCount, crossedSet, {
+                        falseGoalPolicy: 'ignore',
+                        checkWinMetrics: true,
+                        diagnostics
+                    });
+                    if (valid) return 'valid';
+                    const reason = diagnostics.reasonCode || 'invalid-unknown';
+                    if (reason === 'invalid-by-filter-axis'
+                        || reason === 'invalid-portal-legality'
+                        || reason === 'invalid-must-cross-impossibility'
+                        || reason === 'invalid-adjacency') {
+                        return reason;
                     }
-                    return 'invalid-unknown';
+                    // Compatibility fallback for older/partial reason reporters.
+                    if (this._isMoveValid(targetKey, path, counts, usage, 0, jumpSet, l, flipCount, crossedSet, {
+                        falseGoalPolicy: 'ignore',
+                        disabledPrunes: ['filterAxisStrict']
+                    })) {
+                        return 'invalid-by-filter-axis';
+                    }
+                    return reason;
                 },
                 _buildOptimisticDistMap(l, sourceKeys) {
                     class Deque {
@@ -10771,8 +10778,68 @@
             }
             APP.Debug.register('runSolverUnitDiagnostics', runSolverUnitDiagnostics);
 
+            function runMoveReasonCodeDiagnostics() {
+                const mkLevel = () => ({
+                    grid: { w: 3, h: 3 },
+                    goalKey: APP.LevelUtils.PACK(1, 0),
+                    gateKeys: [APP.LevelUtils.PACK(0, 1)],
+                    blockSet: new Set(),
+                    gooseSet: new Set(),
+                    falseGoalKeys: new Set(),
+                    portalMap: new Map([[APP.LevelUtils.PACK(1, 1), { dest: APP.LevelUtils.PACK(2, 2), color: '#d946ef' }]]),
+                    filterMap: new Map([[APP.LevelUtils.PACK(1, 1), APP.Core.H]]),
+                    flippingFilterMap: new Map(),
+                    mustPassKeys: [APP.LevelUtils.PACK(2, 0)],
+                    mustCrossKeys: []
+                });
+                const evaluate = (label, state, targetKey, expected) => {
+                    const diagnostics = {};
+                    APP.LevelUtils.isValidMove(targetKey, state, mkLevel(), {
+                        isStrict: false,
+                        checkWinMetrics: true,
+                        checkFalseGoals: true,
+                        diagnostics
+                    });
+                    const actual = diagnostics.reasonCode || 'invalid-unknown';
+                    const pass = actual === expected;
+                    return { label, expected, actual, pass };
+                };
+                const cases = [
+                    evaluate(
+                        'adjacency',
+                        { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(0, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
+                        APP.LevelUtils.PACK(2, 2),
+                        'invalid-adjacency'
+                    ),
+                    evaluate(
+                        'portal-legality',
+                        { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(1, 1)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
+                        APP.LevelUtils.PACK(1, 2),
+                        'invalid-portal-legality'
+                    ),
+                    evaluate(
+                        'filter-axis',
+                        { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(1, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
+                        APP.LevelUtils.PACK(1, 1),
+                        'invalid-by-filter-axis'
+                    ),
+                    evaluate(
+                        'must-cross-impossibility',
+                        { mode: APP.Core.PLAY, path: [APP.LevelUtils.PACK(0, 0)], visitedCounts: new Map(), cellUsage: new Map(), isPortalJump: new Set() },
+                        APP.LevelUtils.PACK(1, 0),
+                        'invalid-must-cross-impossibility'
+                    )
+                ];
+                const failed = cases.filter(c => !c.pass);
+                if (failed.length) throw new Error(`[Move Reason Diagnostic] Regression detected: ${JSON.stringify(failed)}`);
+                console.log('[Move Reason Diagnostic] reason-code mapping verified:', cases);
+                return { pass: true, cases };
+            }
+            APP.Debug.register('runMoveReasonCodeDiagnostics', runMoveReasonCodeDiagnostics);
+
             function runPortalValidatorDiagnostics() {
                 try {
+                    runMoveReasonCodeDiagnostics();
                     const levels = APP.LevelUtils.getRawLevels();
                     const level21Raw = levels[20];
                     const level21Hint = Array.isArray(level21Raw?.hints) && level21Raw.hints.length > 0 ? level21Raw.hints[0] : null;
@@ -12950,8 +13017,15 @@
                     checkHazards = isStrict,
                     checkFalseGoals = isStrict,
                     checkWinMetrics = isStrict,
-                    disabledPrunes = []
+                    disabledPrunes = [],
+                    diagnostics = null
                 } = options;
+                const setReason = (reasonCode, detail = null) => {
+                    if (!diagnostics || typeof diagnostics !== 'object') return false;
+                    diagnostics.reasonCode = reasonCode;
+                    if (detail !== null && detail !== undefined) diagnostics.reasonDetail = detail;
+                    return false;
+                };
                 if (!level) return false;
                 const path = state?.path || [];
                 const counts = state?.visitedCounts || state?.counts || new Map();
@@ -12960,31 +13034,35 @@
 
                 const { x, y } = UNPACK(targetKey);
                 const { w, h } = level.grid;
-                if (!inBounds(x, y, w, h) || level.blockSet.has(targetKey)) return false;
+                if (!inBounds(x, y, w, h)) return setReason('invalid-oob');
+                if (level.blockSet.has(targetKey)) return setReason('invalid-blocked');
 
-                if (mode === APP.Core.EDITOR && checkHazards && level.gooseSet.has(targetKey)) return false;
+                if (mode === APP.Core.EDITOR && checkHazards && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
 
                 const lastK = path[path.length - 1];
-                if (lastK === undefined) return true;
+                if (lastK === undefined) {
+                    if (diagnostics && typeof diagnostics === 'object') diagnostics.reasonCode = 'valid';
+                    return true;
+                }
 
                 const lastP = UNPACK(lastK);
                 const isPortalJumpCandidate = allowJump && level.portalMap.has(lastK) && resolvePortal(level, lastK).dest === targetKey;
 
                 if (mode !== APP.Core.EDITOR) {
-                    if (lastK === level.goalKey) return false;
-                    if (checkFalseGoals && armedFalseGoals?.has(lastK)) return false;
-                    if (!isPortalJumpCandidate && level.gateKeys.includes(targetKey)) return false;
+                    if (lastK === level.goalKey) return setReason('invalid-after-goal');
+                    if (checkFalseGoals && armedFalseGoals?.has(lastK)) return setReason('invalid-false-goal-lock');
+                    if (!isPortalJumpCandidate && level.gateKeys.includes(targetKey)) return setReason('invalid-gate-reentry');
                 } else if (path.length > 1 && level.gateKeys.includes(lastK)) {
-                    return false;
+                    return setReason('invalid-editor-gate-reentry');
                 }
 
-                if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1) && !isPortalJumpCandidate) return false;
-                if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return false;
+                if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1) && !isPortalJumpCandidate) return setReason('invalid-portal-legality');
+                if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return setReason('invalid-adjacency');
 
                 const axis = (y === lastP.y) ? APP.Core.H : APP.Core.V;
                 if (!isPortalJumpCandidate) {
                     const u = usage.get(targetKey);
-                    if (u && ((axis === APP.Core.H && u.h) || (axis === APP.Core.V && u.v))) return false;
+                    if (u && ((axis === APP.Core.H && u.h) || (axis === APP.Core.V && u.v))) return setReason('invalid-edge-reuse-target');
 
                     const uLast = usage.get(lastK);
                     if (uLast) {
@@ -12995,7 +13073,7 @@
                             entryAxis = (prevP.y === lastPC.y) ? APP.Core.H : APP.Core.V;
                         }
                         if (axis !== entryAxis) {
-                            if ((axis === APP.Core.H && uLast.h) || (axis === APP.Core.V && uLast.v)) return false;
+                            if ((axis === APP.Core.H && uLast.h) || (axis === APP.Core.V && uLast.v)) return setReason('invalid-edge-reuse-origin');
                         }
                     }
                 }
@@ -13007,7 +13085,7 @@
                         filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === APP.Core.H ? APP.Core.V : APP.Core.H) : level.flippingFilterMap.get(lastK);
                     }
                     if (!disabledPrunes.includes('filterAxisStrict')) {
-                        if (filterLast && filterLast !== axis) return false;
+                        if (filterLast && filterLast !== axis) return setReason('invalid-by-filter-axis', 'origin-filter-axis-mismatch');
                     }
 
                     let filterTarget = level.filterMap.get(targetKey);
@@ -13017,18 +13095,19 @@
                         filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === APP.Core.H ? APP.Core.V : APP.Core.H) : baseAxis;
                     }
                     if (!disabledPrunes.includes('filterAxisStrict')) {
-                        if (filterTarget && filterTarget !== axis) return false;
+                        if (filterTarget && filterTarget !== axis) return setReason('invalid-by-filter-axis', 'target-filter-axis-mismatch');
                     }
                 }
 
-                if (checkHazards && mode !== APP.Core.EDITOR && level.gooseSet.has(targetKey)) return false;
+                if (checkHazards && mode !== APP.Core.EDITOR && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
                 if (checkWinMetrics && mode !== APP.Core.EDITOR && targetKey === level.goalKey) {
                     const nextCounts = counts;
                     const mustPassOk = level.mustPassKeys.every(k => (nextCounts.get(k) || 0) > 0 || k === targetKey);
                     const mustCrossOk = level.mustCrossKeys.every(k => ((nextCounts.get(k) || 0) + (k === targetKey ? 1 : 0)) >= 2);
-                    if (!mustPassOk || !mustCrossOk) return false;
+                    if (!mustPassOk || !mustCrossOk) return setReason('invalid-must-cross-impossibility');
                 }
 
+                if (diagnostics && typeof diagnostics === 'object') diagnostics.reasonCode = 'valid';
                 return true;
             };
 
