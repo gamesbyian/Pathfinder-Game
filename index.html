@@ -3489,6 +3489,15 @@
                         disableDistanceBound, disableMustPassBound, disableMustCrossBound, disablePortalAutomaton,
                         interactionCandidateFallbackEnabled, assertKnownSolvableBounds, debugNeighborTraceEnabled
                     } = ctx;
+                    const lowBranchMode = !!options?.__lowBranchMode;
+                    const shallowSlackDepthLimit = 1;
+                    const shallowSlack = (lowBranchMode && depth <= shallowSlackDepthLimit) ? 1 : 0;
+                    const auditShallowSoftenedPrune = (key) => {
+                        if (!debugStats) return;
+                        if (!debugStats.prune) debugStats.prune = {};
+                        const statKey = `${key}ShallowSoftened`;
+                        debugStats.prune[statKey] = (debugStats.prune[statKey] || 0) + 1;
+                    };
                     const stageTrace = debugNeighborTraceEnabled ? {
                         fromKey: k,
                         depth,
@@ -3560,35 +3569,53 @@
                         if (startNeighborBoundSanity) startNeighborBoundSanity.legalBranches++;
                         if (!disableDistanceBound) {
                             const d = distMap.get(nk);
-                            if (d === undefined || d > rSteps) {
-                                if (debugStats) debugStats.prune.minRemOverflow++;
-                                if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'minRemOverflow', `goalDist=${d === undefined ? 'inf' : d} rSteps=${rSteps}`);
-                                if (startFilterBreakdown) startFilterBreakdown.falseGoalRejected++;
-                                return false;
+                            const distanceRejected = (d === undefined || d > rSteps);
+                            if (distanceRejected) {
+                                const canSoftenDistancePrune = shallowSlack > 0 && d !== undefined && d <= (rSteps + shallowSlack);
+                                if (canSoftenDistancePrune) {
+                                    auditShallowSoftenedPrune('minRemOverflow');
+                                } else {
+                                    if (debugStats) debugStats.prune.minRemOverflow++;
+                                    if (state.path.length === 1) this._recordDepth0Prune(debugStats, 'minRemOverflow', `goalDist=${d === undefined ? 'inf' : d} rSteps=${rSteps}`);
+                                    if (startFilterBreakdown) startFilterBreakdown.falseGoalRejected++;
+                                    return false;
+                                }
                             }
                         }
                         if (hasMust && !disableMustPassBound) {
                             const bestBound = getMustBound(nk);
-                            if (bestBound === Infinity || bestBound > rSteps) {
-                                if (debugStats) debugStats.prune.mustPassBound++;
-                                if (state.path.length === 1) {
-                                    const mustDetails = this._estimateMustPassBoundDetailed(nk, state, l);
-                                    this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${mustDetails.bound} rSteps=${rSteps} k=${mustDetails.k} method=${mustDetails.method}`);
+                            const mustPassRejected = (bestBound === Infinity || bestBound > rSteps);
+                            if (mustPassRejected) {
+                                const canSoftenMustPassPrune = shallowSlack > 0 && Number.isFinite(bestBound) && bestBound <= (rSteps + shallowSlack);
+                                if (canSoftenMustPassPrune) {
+                                    auditShallowSoftenedPrune('mustPassBound');
+                                } else {
+                                    if (debugStats) debugStats.prune.mustPassBound++;
+                                    if (state.path.length === 1) {
+                                        const mustDetails = this._estimateMustPassBoundDetailed(nk, state, l);
+                                        this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${mustDetails.bound} rSteps=${rSteps} k=${mustDetails.k} method=${mustDetails.method}`);
+                                    }
+                                    if (startFilterBreakdown) startFilterBreakdown.mustPassRejected++;
+                                    return false;
                                 }
-                                if (startFilterBreakdown) startFilterBreakdown.mustPassRejected++;
-                                return false;
                             }
                         }
                         if (crossNeed > 0 && !disableMustCrossBound) {
                             const crossBound = getCrossBound(nk);
-                            if (crossBound === Infinity || crossBound > rSteps) {
-                                if (debugStats) debugStats.prune.mustCrossBound++;
-                                if (state.path.length === 1) {
-                                    const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeed, l);
-                                    this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeed} outstandingNodes=${outstandingNodes}`);
+                            const mustCrossRejected = (crossBound === Infinity || crossBound > rSteps);
+                            if (mustCrossRejected) {
+                                const canSoftenMustCrossPrune = shallowSlack > 0 && Number.isFinite(crossBound) && crossBound <= (rSteps + shallowSlack);
+                                if (canSoftenMustCrossPrune) {
+                                    auditShallowSoftenedPrune('mustCrossBound');
+                                } else {
+                                    if (debugStats) debugStats.prune.mustCrossBound++;
+                                    if (state.path.length === 1) {
+                                        const { outstandingNodes, extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state.mustCrossMask, crossNeed, l);
+                                        this._recordDepth0Prune(debugStats, 'mustCrossBound', `mustCrossBound=${crossBound} rSteps=${rSteps} extraVisitsLB=${extraVisitsLB} crossNeed=${crossNeed} outstandingNodes=${outstandingNodes}`);
+                                    }
+                                    if (startFilterBreakdown) startFilterBreakdown.mustCrossRejected++;
+                                    return false;
                                 }
-                                if (startFilterBreakdown) startFilterBreakdown.mustCrossRejected++;
-                                return false;
                             }
                         }
                         const levelHasPortalFamilies = Number.isFinite(l?.portalFamilyCount) && l.portalFamilyCount > 0;
