@@ -11725,15 +11725,16 @@
         };
 
 
-        // TEMP (2026-03-29): Mega solver time presets are doubled for timeout investigation.
-        // Baseline (for easy revert): default 15000, retry default 60000, presets 30000/60000/120000, alt preset 60000.
-        // Revert by restoring these constants to baseline values.
-        const MEGA_DEFAULT_TIME_LIMIT_MS = 30000;
-        const MEGA_RETRY_DEFAULT_TIME_LIMIT_MS = 120000;
-        const MEGA_RETRY_PRESET_30_MS = 60000;
-        const MEGA_RETRY_PRESET_60_MS = 120000;
-        const MEGA_RETRY_PRESET_120_MS = 240000;
-        const MEGA_RETRY_PRESET_ALT_MS = 120000;
+        // TEMP (2026-03-29): Mega solver time presets doubled a second time (now 4x original) for extended timeout investigation.
+        // Original baseline (for easy full revert): default 15000, retry default 60000, presets 30000/60000/120000, alt preset 60000.
+        // First doubling set: default 30000, retry default 120000, presets 60000/120000/240000, alt preset 120000.
+        // Current (second doubling) values below; restore baseline values above to fully revert.
+        const MEGA_DEFAULT_TIME_LIMIT_MS = 60000;
+        const MEGA_RETRY_DEFAULT_TIME_LIMIT_MS = 240000;
+        const MEGA_RETRY_PRESET_30_MS = 120000;
+        const MEGA_RETRY_PRESET_60_MS = 240000;
+        const MEGA_RETRY_PRESET_120_MS = 480000;
+        const MEGA_RETRY_PRESET_ALT_MS = 240000;
 
         const megaSolve = async (levels, opts = {}) => {
             if (APP.State.ENGINE.activeSolverController) return { cancelled: true };
@@ -11798,9 +11799,9 @@
                 + (level?.portalMap?.size || 0);
 
             const budget = 2500 + (gridArea * 15) + (reqLen * 40) + (specialObjects * 120);
-            // TEMP (2026-03-29): doubled trap-spot search ceiling from 30000ms to 60000ms.
-            // Revert target ceiling to 30000ms once timeout experiment completes.
-            return Math.max(3000, Math.min(60000, Math.floor(budget)));
+            // TEMP (2026-03-29): trap-spot search ceiling doubled a second time from 60000ms to 120000ms (4x original 30000ms).
+            // Revert target ceiling to 30000ms to return to original baseline.
+            return Math.max(3000, Math.min(120000, Math.floor(budget)));
         };
 
         const findTrapSpots = async (level, opts = {}) => {
@@ -16301,9 +16302,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.UI.showMessage('Search timed out; results incomplete.', 'text-amber-300 font-black');
                 const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
                 if (retry) {
-                    // TEMP (2026-03-29): doubled trap-spot retry ceiling from 120000ms to 240000ms.
-                    // Revert target ceiling to 120000ms after timeout experiment.
-                    const retryBudgetMs = Math.min(240000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
+                    // TEMP (2026-03-29): trap-spot retry ceiling doubled a second time from 240000ms to 480000ms (4x original 120000ms).
+                    // Revert target ceiling to 120000ms to return to original baseline.
+                    const retryBudgetMs = Math.min(480000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
                     const retryLevel = APP.LevelUtils.deepCloneLevel(l);
                     const retryRes = await APP.Solver.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs });
                     APP.Editor.setTrapSpots(retryRes.spots || new Set());
