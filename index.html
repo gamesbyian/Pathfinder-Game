@@ -1746,6 +1746,7 @@
         //  18. portalLock        — derived portal lock state string
         //  19. orderingPolicy    — solver option controlling move ordering
         //  20. nonZeroUsage      — count of cells with non-zero filter usage (-1 if no filters)
+        //  21. portalTerminalPolicy — solver option controlling whether portal terminals are enterable
         const StateSignature = {
                 makeKey(state, policy = {}) {
                     if (!state?.path?.length) return null;
@@ -1774,7 +1775,8 @@
                     const portalLock = policy.portalLockState || '';
                     const orderingPolicy = policy.orderingPolicy || '';
                     const nonZeroUsage = Number.isFinite(policy.nonZeroUsage) ? policy.nonZeroUsage : -1;
-                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage].join('|');
+                    const portalTerminalPolicy = policy.portalTerminalPolicy || '';
+                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage, portalTerminalPolicy].join('|');
                 }
             };
 
@@ -1858,6 +1860,7 @@
                         isStrict: false,
                         checkFalseGoals: options.falseGoalPolicy !== 'ignore',
                         checkWinMetrics: options.checkWinMetrics === true,
+                        portalTerminalPolicy: options.portalTerminalPolicy || 'allow',
                         hazardPolicy: options.hazardPolicy || 'forbid',
                         disabledPrunes: options?.disabledPrunes,
                         diagnostics: options?.diagnostics
@@ -2144,6 +2147,8 @@
                     if ((l?.filterMap?.size || 0) > 0 || (l?.flippingFilterMap?.size || 0) > 0) {
                         h0 = this._mixHash32(h0, state.nonZeroUsage | 0);
                     }
+                    const portalTerminalPolicyCode = options?.portalTerminalPolicy === 'forbid' ? 1 : 0;
+                    h1 = this._mixHash32(h1, portalTerminalPolicyCode);
                     return [h0 >>> 0, h1 >>> 0];
                 },
                 _buildStrictStateSignature(state, l, realLen, options = {}) {
@@ -2163,7 +2168,8 @@
                         portalOscillationBudget: state.portal?.portalOscillationBudget,
                         portalLockState: this._derivePortalLockState(state, options),
                         orderingPolicy: options?.orderingPolicy || 'default',
-                        nonZeroUsage: hasFilters ? (state.nonZeroUsage | 0) : -1
+                        nonZeroUsage: hasFilters ? (state.nonZeroUsage | 0) : -1,
+                        portalTerminalPolicy: options?.portalTerminalPolicy || ''
                     }) || '';
                 },
                 _refreshStateHashState(state, l, realLen, options = {}, debugStats = null) {
@@ -9203,6 +9209,11 @@
 
         _buildAttemptPlan({ level, budgetMs, profile, opts = {}, controlPlane }) {
             const total = Math.max(1, Math.floor(budgetMs || 1));
+            const hasPortals = (level?.portalMap?.size || 0) > 0;
+            const portalAbstinenceBudget = hasPortals
+                ? Math.max(1, Math.min(1200, Math.floor(total * 0.14)))
+                : 0;
+            const effectiveTotal = Math.max(1, total - portalAbstinenceBudget);
             const routePressure = Math.max(0, profile?.routePressure || 0);
             const objectiveCount = Math.max(0, profile?.objectiveCount || 0);
             const portalCommitment = Math.max(0, Math.min(1, profile?.portalCommitment || 0));
@@ -9218,10 +9229,23 @@
                 ? !!opts.enableEnduranceLongpath
                 : ((opts.purpose === 'hint' ? false : true) && (portalCommitment > 0.2 || objectiveCount >= 3));
 
-            const modernBudget = Math.max(1, Math.floor(total * structuralModernShare));
-            const conservativeBudget = Math.max(1, Math.floor(total * structuralConservativeShare));
-            const remainingBudget = Math.max(1, total - modernBudget - conservativeBudget);
+            const modernBudget = Math.max(1, Math.floor(effectiveTotal * structuralModernShare));
+            const conservativeBudget = Math.max(1, Math.floor(effectiveTotal * structuralConservativeShare));
+            const remainingBudget = Math.max(1, effectiveTotal - modernBudget - conservativeBudget);
             const attempts = [];
+            if (portalAbstinenceBudget > 0) {
+                attempts.push({
+                    label: 'portal-abstinence-bounded',
+                    budgetMs: portalAbstinenceBudget,
+                    scoringMode: 'modern',
+                    portalBiasMode: 'off',
+                    portalTerminalPolicy: 'forbid',
+                    structuralMode: false,
+                    policyProfile: 'portalAbstinence',
+                    orderingPolicy: 'default',
+                    memoStrictness: 1.0
+                });
+            }
             const objectiveTracks = this.buildObjectiveOrderBundles(profile || {});
             const defaultTrack = objectiveTracks[0] || null;
             const macroSkeletons = this.buildMacroSkeletonHypotheses(profile || {});
@@ -9284,7 +9308,7 @@
             } else {
                 attempts.push({
                     label: 'structural-modern',
-                    budgetMs: modernStructuralGuidanceNotNeeded ? total : modernBudget,
+                    budgetMs: modernStructuralGuidanceNotNeeded ? effectiveTotal : modernBudget,
                     scoringMode: 'modern',
                     portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
                     structuralMode: !modernStructuralGuidanceNotNeeded,
@@ -9509,6 +9533,7 @@
                         ? opts.dirOrderVariant
                         : 'default',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    portalTerminalPolicy: attemptOpts.portalTerminalPolicy || opts.portalTerminalPolicy || 'allow',
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     structuralMode: !!attemptOpts.structuralMode,
                     phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
@@ -9564,6 +9589,7 @@
                         debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
                         disabledPrunes: contradictionGuard.protectedPrunesDisabled,
                         portalBiasMode: 'off',
+                        portalTerminalPolicy: attemptOpts.portalTerminalPolicy || opts.portalTerminalPolicy || 'allow',
                         scoringMode: attemptOpts.scoringMode || 'modern',
                         structuralMode: !!attemptOpts.structuralMode,
                         phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
@@ -9591,6 +9617,7 @@
                             elapsedMs: Number.isFinite(guardedDebug?.elapsedMs) ? guardedDebug.elapsedMs : null,
                             scoringMode: attemptOpts.scoringMode || 'modern',
                             portalBiasMode: 'off',
+                            portalTerminalPolicy: attemptOpts.portalTerminalPolicy || opts.portalTerminalPolicy || 'allow',
                             structuralMode: !!attemptOpts.structuralMode,
                             phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
                             label: attemptOpts.label || null,
@@ -9609,6 +9636,7 @@
                     elapsedMs: Number.isFinite(debug?.elapsedMs) ? debug.elapsedMs : null,
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    portalTerminalPolicy: attemptOpts.portalTerminalPolicy || opts.portalTerminalPolicy || 'allow',
                     structuralMode: !!attemptOpts.structuralMode,
                     phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
                     label: attemptOpts.label || null,
@@ -9684,6 +9712,7 @@
                     escalationReason: attempt.escalationReason || null,
                     scoringMode: attempt.scoringMode,
                     portalBiasMode: attempt.portalBiasMode,
+                    portalTerminalPolicy: attempt.portalTerminalPolicy || 'allow',
                     structuralMode: !!attempt.structuralMode,
                     phasePolicy: attempt.phasePolicy?.archetype || null,
                     policyProfile: attempt.policyProfile || 'standard',
@@ -9714,7 +9743,7 @@
                 }
                 if (APP.State.ENGINE.flags?.refereeDebug || APP.State.ENGINE.flags?.debugSolver) {
                     const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
-                    console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] baseline attempt=${attempt.label || 'unnamed'} status=${attemptResult.status} scoringMode=${attempt.scoringMode} portalBiasMode=${attempt.portalBiasMode} budgetMs=${attempt.budgetMs} branchFactor=${quality.branchFactor.toFixed(3)} maxProgress=${quality.maxProgress.toFixed(3)}`);
+                    console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] baseline attempt=${attempt.label || 'unnamed'} status=${attemptResult.status} scoringMode=${attempt.scoringMode} portalBiasMode=${attempt.portalBiasMode} portalTerminalPolicy=${attempt.portalTerminalPolicy || 'allow'} budgetMs=${attempt.budgetMs} branchFactor=${quality.branchFactor.toFixed(3)} maxProgress=${quality.maxProgress.toFixed(3)}`);
                 }
                 if (attemptResult.ok) {
                     const elapsedMs = Date.now() - started;
@@ -14462,6 +14491,7 @@
                     checkHazards = isStrict,
                     checkFalseGoals = isStrict,
                     checkWinMetrics = isStrict,
+                    portalTerminalPolicy = 'allow',
                     disabledPrunes = [],
                     diagnostics = null
                 } = options;
@@ -14481,6 +14511,7 @@
                 const { w, h } = level.grid;
                 if (!inBounds(x, y, w, h)) return setReason('invalid-oob');
                 if (level.blockSet.has(targetKey)) return setReason('invalid-blocked');
+                if (portalTerminalPolicy === 'forbid' && level.portalMap?.has(targetKey)) return setReason('invalid-portal-legality', 'portal-terminal-forbidden');
 
                 if (mode === APP.Core.EDITOR && checkHazards && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
 
