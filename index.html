@@ -3102,7 +3102,13 @@
                             objectiveOrderComplexity: Number(objectiveOrderComplexity.toFixed(3)),
                             mandatoryFamilies,
                             knotConfidence: Number(knotConfidence.toFixed(3)),
-                            hypothesisConfidence: Number(confidence.toFixed(3))
+                            hypothesisConfidence: Number(confidence.toFixed(3)),
+                            lowBranchTopologySignal: !!(
+                                corridorRatio >= 0.42
+                                || bridgeRatio >= 0.08
+                                || articulationRatio >= 0.1
+                                || mandatoryFamilies >= 1
+                            )
                         }
                     };
                 },
@@ -3734,7 +3740,7 @@
                         committedRegion, committedFamily, portalLockState,
                         inTemplateCommitWindow, objectiveTrackStrictness,
                         recentWindow, recentTurnbackCount, dirRepeat,
-                        bridgeState
+                        bridgeState, earlyLowBranchDepth
                     } = sv;
                         const px = k & 0xFFFF;
                         const py = k >> 16;
@@ -3862,6 +3868,10 @@
                             }
                             if (depth === 0 && valid.length <= 2) {
                                 mustPassUrgencyWeight = Math.min(mustPassUrgencyWeight, 0.35);
+                            }
+                            if (earlyLowBranchDepth) {
+                                mustPassUrgencyWeight *= 1.1;
+                                mustCrossUrgencyWeight *= 1.12;
                             }
                             const mustPassLateCompatible = hasMust && l.reqLen > 0 && (rSteps / l.reqLen) > 0.25;
                             if (mustPassLateCompatible) {
@@ -4389,6 +4399,18 @@
                     const phaseProfile = bridgeBoost
                         ? { ...basePhaseProfile, ...bridgeBoost }
                         : basePhaseProfile;
+                    const derivedInputs = state.phasePolicy?.derivedInputs || {};
+                    const lowBranchTopologySignal = !!derivedInputs.lowBranchTopologySignal
+                        || (Number(derivedInputs.corridorRatio) || 0) >= 0.42
+                        || (Number(derivedInputs.bridgeRatio) || 0) >= 0.08
+                        || (Number(derivedInputs.articulationRatio) || 0) >= 0.1;
+                    const lowBranchMode = (depth === 0 && (valid.length <= 3 || lowBranchTopologySignal))
+                        || (!!options?.__lowBranchMode && depth <= 2);
+                    const earlyLowBranchDepth = lowBranchMode && depth <= 2;
+                    if (earlyLowBranchDepth) {
+                        phaseProfile.perimeterBias = Math.max(0.2, (phaseProfile.perimeterBias || 1) * 0.72);
+                        phaseProfile.objectivePull = Math.max(0.25, (phaseProfile.objectivePull || 1) * 1.08);
+                    }
                     const policyName = options?.orderingPolicy || 'default';
                     const policyProfile = this.getPolicyProfile(policyName, activePhase, state.urgencyScalar ?? null);
                     const heuristicFeatureFlags = compactDefined({
@@ -4433,7 +4455,7 @@
                         committedRegion, committedFamily, portalLockState,
                         inTemplateCommitWindow, objectiveTrackStrictness,
                         recentWindow, recentTurnbackCount, dirRepeat,
-                        bridgeState
+                        bridgeState, lowBranchMode, earlyLowBranchDepth
                     };
                     const scored = valid.map(nk => this._scoreSingleCandidate(nk, sv));
                     if (options?.dirOrderVariant === 'random') {
@@ -4469,7 +4491,34 @@
                             scored[j + 1] = item;
                         }
                     }
-                    const orderedNeighbors = scored.map(item => item.nk);
+                    let orderedNeighbors = scored.map(item => item.nk);
+                    if (depth === 0 && lowBranchMode && scored.length >= 2) {
+                        const top = scored[scored.length - 1];
+                        const topPos = APP.LevelUtils.UNPACK(top.nk);
+                        let contrarianIdx = -1;
+                        let contrarianDist = -1;
+                        for (let i = 0; i < scored.length - 1; i++) {
+                            const pos = APP.LevelUtils.UNPACK(scored[i].nk);
+                            const diverge = Math.abs(pos.x - topPos.x) + Math.abs(pos.y - topPos.y);
+                            if (diverge > contrarianDist || (diverge === contrarianDist && scored[i].nk < (contrarianIdx >= 0 ? scored[contrarianIdx].nk : Infinity))) {
+                                contrarianDist = diverge;
+                                contrarianIdx = i;
+                            }
+                        }
+                        if (contrarianIdx >= 0) {
+                            const protectedBeam = [top.nk, scored[contrarianIdx].nk];
+                            for (let i = scored.length - 2; i >= Math.max(0, scored.length - 3); i--) {
+                                const nk = scored[i].nk;
+                                if (!protectedBeam.includes(nk)) protectedBeam.push(nk);
+                            }
+                            const remainder = orderedNeighbors.filter(nk => !protectedBeam.includes(nk));
+                            orderedNeighbors = [...remainder, ...protectedBeam];
+                            if (debugStats) {
+                                debugStats.lowBranchMode = true;
+                                debugStats.lowBranchProtectedBeam = protectedBeam.slice();
+                            }
+                        }
+                    }
                     if (depth === 0 && debugStats) {
                         debugStats.rootCandidatesGenerated = candidatesCount ?? valid.length;
                         debugStats.rootMoveOrder = orderedNeighbors.slice(0, 20);
@@ -4872,6 +4921,14 @@
                     this._updateSolverPhase(state, startKey, l, distMap, debugStats);
                     maybeEmitAdaptiveTelemetry(this._deriveSolverPhase(state, startKey, l, distMap));
                     const startNeighbors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats);
+                    const rootDerivedInputs = state.phasePolicy?.derivedInputs || {};
+                    const lowBranchTopologySignal = !!rootDerivedInputs.lowBranchTopologySignal
+                        || (Number(rootDerivedInputs.corridorRatio) || 0) >= 0.42
+                        || (Number(rootDerivedInputs.bridgeRatio) || 0) >= 0.08
+                        || (Number(rootDerivedInputs.articulationRatio) || 0) >= 0.1;
+                    const lowBranchMode = startNeighbors.length > 0 && (startNeighbors.length <= 3 || lowBranchTopologySignal);
+                    options.__lowBranchMode = lowBranchMode;
+                    const rootInterleavePool = lowBranchMode ? startNeighbors.slice(Math.max(0, startNeighbors.length - 3)) : [];
                     const enforceRootExpansionFloor = forceRootExpansionFloor
                         && startNeighbors.length > 0
                         && startNeighbors.length <= configuredRootExpansionFloor;
@@ -4963,7 +5020,7 @@
                     }
                     const startSig = this._ensureStateHashState(state, l, 0, options, debugStats);
                     this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx);
-                    const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig }];
+                    const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig, depth: 0 }];
                     let steps = 0;
                     while (stack.length > 0) {
                         if (options.signal?.aborted) {
@@ -4992,7 +5049,19 @@
                             stack.pop();
                             continue;
                         }
-                        const nextKey = top.neighbors.pop();
+                        let nextKey;
+                        if (lowBranchMode && top.depth === 0 && rootInterleavePool.length > 0) {
+                            nextKey = rootInterleavePool.shift();
+                            const idx = top.neighbors.lastIndexOf(nextKey);
+                            if (idx >= 0) top.neighbors.splice(idx, 1);
+                            if (rootInterleavePool.length === 0) {
+                                for (let i = Math.max(0, top.neighbors.length - 3); i < top.neighbors.length; i++) {
+                                    rootInterleavePool.push(top.neighbors[i]);
+                                }
+                            }
+                        } else {
+                            nextKey = top.neighbors.pop();
+                        }
                         if (debugStats) debugStats.nodesExpanded++;
                         const topPortal = APP.LevelUtils.resolvePortal(l, top.k);
                         const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
@@ -5161,7 +5230,7 @@
                             continue;
                         }
                         const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats);
-                        stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig });
+                        stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig, depth: top.depth + 1 });
                     }
                     if (debugStats) {
                         debugStats.memoSize = useFailMemo ? failMemo.size : 0;
