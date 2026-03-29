@@ -7354,11 +7354,17 @@
                 failureSummary: partial.failureSummary || null,
                 failureTaxonomy: partial.failureTaxonomy || null,
                 failureProfile: partial.failureProfile || null,
+                attempts: Array.isArray(partial.attempts) ? partial.attempts : [],
                 rescueProfileSummary: partial.rescueProfileSummary || partial.legacyRescueSummary || null,
                 contradictionRecoveryActivated: !!partial.contradictionRecoveryActivated,
                 routingDecision: partial.routingDecision || null,
                 orderingPolicySummary: partial.orderingPolicySummary || null,
                 enduranceRescueDelta: partial.enduranceRescueDelta || partial.stage11RescueDelta || null,
+                budgetMs: Number.isFinite(partial.budgetMs) ? partial.budgetMs : null,
+                policyProfile: partial.policyProfile || partial.activeProfile || null,
+                orderingPolicy: partial.orderingPolicy || null,
+                scoringMode: partial.scoringMode || null,
+                portalBiasMode: partial.portalBiasMode || null,
                 engine: partial.engine || 'referee'
             };
         };
@@ -16351,35 +16357,61 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             return { terminatedByReferee: false, hitBudgetCap: false, endedNaturally: false, terminationReason: 'error' };
         };
-        const toCanonicalProgressSamples = (samples = []) => {
+        const toCanonicalProgressSamples = (samples = [], elapsedWallTimeMs = null) => {
             if (!Array.isArray(samples)) return [];
-            const canonical = [];
-            let priorTimeMs = 0;
-            let timelineOffsetMs = 0;
-            for (const sample of samples) {
+            const rawTimes = samples.map((sample) => {
                 const rawTimeMs = Number.isFinite(sample?.timeMs)
                     ? sample.timeMs
                     : (Number.isFinite(sample?.tMs) ? sample.tMs : null);
                 const fallbackTimeMs = Number.isFinite(sample?.elapsedMs)
                     ? sample.elapsedMs
                     : (Number.isFinite(sample?.elapsedWallTimeMs) ? sample.elapsedWallTimeMs : null);
-                const sourceTimeMs = Number.isFinite(rawTimeMs)
+                return Number.isFinite(rawTimeMs)
                     ? Math.max(0, rawTimeMs)
-                    : (Number.isFinite(fallbackTimeMs) ? Math.max(0, fallbackTimeMs) : priorTimeMs);
-                if (canonical.length > 0 && sourceTimeMs < priorTimeMs) {
-                    timelineOffsetMs += priorTimeMs;
+                    : (Number.isFinite(fallbackTimeMs) ? Math.max(0, fallbackTimeMs) : null);
+            });
+            const firstFinite = rawTimes.find((t) => Number.isFinite(t));
+            const buildTimeline = (subtractOrigin = false) => {
+                const timeline = [];
+                let prior = 0;
+                for (let i = 0; i < samples.length; i++) {
+                    const source = Number.isFinite(rawTimes[i]) ? rawTimes[i] : prior;
+                    const normalized = subtractOrigin && Number.isFinite(firstFinite)
+                        ? Math.max(0, source - firstFinite)
+                        : source;
+                    const t = Math.max(prior, normalized);
+                    timeline.push(t);
+                    prior = t;
                 }
-                const adjustedTimeMs = Math.max(priorTimeMs, sourceTimeMs + timelineOffsetMs);
-                canonical.push({
-                    timeMs: adjustedTimeMs,
+                return timeline;
+            };
+            const asIs = buildTimeline(false);
+            const rebased = buildTimeline(true);
+            const elapsedHint = Number.isFinite(elapsedWallTimeMs) ? Math.max(0, elapsedWallTimeMs) : null;
+            let picked = rebased;
+            if (elapsedHint !== null && elapsedHint > 0) {
+                const lastAsIs = asIs[asIs.length - 1] || 0;
+                const lastRebased = rebased[rebased.length - 1] || 0;
+                const errAsIs = Math.abs(lastAsIs - elapsedHint);
+                const errRebased = Math.abs(lastRebased - elapsedHint);
+                picked = errAsIs <= errRebased ? asIs : rebased;
+            }
+            let scaled = picked.slice();
+            if (elapsedHint !== null && elapsedHint > 0 && scaled.length > 0) {
+                const observedLast = Math.max(0, scaled[scaled.length - 1] || 0);
+                if (observedLast > (elapsedHint * 1.35)) {
+                    const ratio = elapsedHint / observedLast;
+                    scaled = scaled.map((t) => Math.round(t * ratio));
+                }
+                scaled[scaled.length - 1] = Math.min(scaled[scaled.length - 1], elapsedHint);
+            }
+            return samples.map((sample, idx) => ({
+                    timeMs: Math.max(0, Number(scaled[idx]) || 0),
                     nodesExpanded: Number.isFinite(sample?.nodesExpanded) ? sample.nodesExpanded : 0,
                     depth: Number.isFinite(sample?.depth)
                         ? sample.depth
                         : (Number.isFinite(sample?.maxDepthReached) ? sample.maxDepthReached : 0)
-                });
-                priorTimeMs = adjustedTimeMs;
-            }
-            return canonical;
+                }));
         };
         const toCanonicalAttemptRecord = (attempt = {}, attemptIndex = 0) => {
             const status = normalizeAuditAttemptStatus(attempt);
@@ -16389,7 +16421,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ? attempt.budgetMs
                 : (Number.isFinite(attempt?.attemptBudgetMs) ? attempt.attemptBudgetMs : 0);
             const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
-            const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
+            const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples, elapsedWallTimeMs);
             const progressSummary = attempt?.progressSummary || {};
             const structuralRaw = attempt?.structuralMode;
             const structuralMode = typeof structuralRaw === 'string'
