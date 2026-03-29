@@ -288,6 +288,7 @@ const computeTransitionSummary = (currentPayload, previousPayload) => {
 
 const summarizeMetrics = (payload, commitSha) => {
   const levels = Array.isArray(payload?.levels) ? payload.levels : [];
+  const includeLevels = payload?.exportMode === 'full' && payload?.runType === 'newHint';
 
   const timeVals = [];
   const solveVals = [];
@@ -363,7 +364,7 @@ const summarizeMetrics = (payload, commitSha) => {
     }
   });
 
-  return {
+  const summary = {
     timestamp: new Date().toISOString(),
     commitSha,
     runType: payload?.runType || 'unknown',
@@ -383,6 +384,12 @@ const summarizeMetrics = (payload, commitSha) => {
       maxSolveTimeMs: solveVals.length ? Math.max(...solveVals) : null
     }
   };
+
+  if (includeLevels) {
+    summary.levels = levels;
+  }
+
+  return summary;
 };
 
 const run = async () => {
