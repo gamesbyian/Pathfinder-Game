@@ -1856,6 +1856,7 @@
                         crossedFlippingFilters: crossedSet
                     }, l, {
                         isStrict: false,
+                        allowJump: !options?.forbidPortals,
                         checkFalseGoals: options.falseGoalPolicy !== 'ignore',
                         checkWinMetrics: options.checkWinMetrics === true,
                         hazardPolicy: options.hazardPolicy || 'forbid',
@@ -3368,7 +3369,7 @@
                     const disableMustCrossBound = disabledPruneSet.has('mustCrossBound');
                     const disablePortalAutomaton = disabledPruneSet.has('portalAutomaton');
                     const candidates = [];
-                    const portal = APP.LevelUtils.resolvePortal(l, k);
+                    const portal = options?.forbidPortals ? null : APP.LevelUtils.resolvePortal(l, k);
                     const portalForced = portal && !state.isJump.has(state.path.length - 1);
                     const portalDest = portal ? portal.dest : -1;
                     if (portalForced && portalDest !== -1) {
@@ -6057,7 +6058,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -6593,6 +6594,7 @@
                             relaxRootSuppressionFirstLayer,
                             contradictionRecoveryMode: !!passContradictionRecoveryMode,
                             assertKnownSolvableBounds: !!assertKnownSolvableBounds,
+                            forbidPortals: !!forbidPortals,
                             forcePhaseArchetype,
                             antiDriftEdgeLock,
                             forcedPolicyProfile,
@@ -9530,6 +9532,7 @@
                     enableLowExpansionProbe: !!(attemptOpts.enableLowExpansionProbe || opts.enableLowExpansionProbe),
                     contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
                     assertKnownSolvableBounds: hasPortalBounds,
+                    forbidPortals: !!opts.forbidPortals,
                     suppressPerimeterBias: !!opts.suppressPerimeterBias,
                     rootExpansionFloorCount,
                     forceRootExpansionFloor,
@@ -9571,7 +9574,8 @@
                         objectiveTrack: attemptOpts.objectiveTrack || null,
                         controlPlane,
                         contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
-                        assertKnownSolvableBounds: hasPortalBounds
+                        assertKnownSolvableBounds: hasPortalBounds,
+                        forbidPortals: !!opts.forbidPortals
                     });
                     const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
                     const guardedDebug = guarded?.debug || {};
@@ -9998,6 +10002,216 @@
             }, 'triage-final', 'triage-wrapper');
         },
 
+
+        _forEachNoPortalNeighbor(level, fromKey, fn) {
+            const x = fromKey & 0xFFFF;
+            const y = fromKey >> 16;
+            const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+            for (let i = 0; i < dirs.length; i++) {
+                const nx = x + dirs[i][0];
+                const ny = y + dirs[i][1];
+                if (!APP.LevelUtils.inBounds(nx, ny, level.grid.w, level.grid.h)) continue;
+                const nk = APP.LevelUtils.PACK(nx, ny);
+                if (level.blockSet?.has(nk)) continue;
+                if (level.portalMap?.has(nk)) continue;
+                const ok = APP.LevelUtils.isValidMove(nk, {
+                    mode: APP.Core.PLAY,
+                    path: [fromKey],
+                    visitedCounts: new Map(),
+                    cellUsage: new Map(),
+                    intersections: 0,
+                    isPortalJump: new Set(),
+                    armedFalseGoals: new Set(),
+                    flipCount: 0,
+                    crossedFlippingFilters: new Map()
+                }, level, {
+                    isStrict: false,
+                    allowJump: false,
+                    forbidPortals: true,
+                    checkHazards: false,
+                    checkFalseGoals: false,
+                    checkWinMetrics: false
+                });
+                if (ok) fn(nk);
+            }
+        },
+
+        _collectNoPortalReachability(level, startKeys = []) {
+            const visited = new Set();
+            const queue = [];
+            for (const key of (startKeys || [])) {
+                if (!Number.isFinite(key)) continue;
+                if (level.blockSet?.has(key)) continue;
+                if (level.portalMap?.has(key)) continue;
+                if (visited.has(key)) continue;
+                visited.add(key);
+                queue.push(key);
+            }
+            for (let i = 0; i < queue.length; i++) {
+                const cur = queue[i];
+                this._forEachNoPortalNeighbor(level, cur, (nk) => {
+                    if (visited.has(nk)) return;
+                    visited.add(nk);
+                    queue.push(nk);
+                });
+            }
+            return visited;
+        },
+
+        _buildNoPortalDistMap(level, sourceKeys = []) {
+            const dist = new Map();
+            const queue = [];
+            for (const key of (sourceKeys || [])) {
+                if (!Number.isFinite(key)) continue;
+                if (level.blockSet?.has(key)) continue;
+                if (level.portalMap?.has(key)) continue;
+                if (dist.has(key)) continue;
+                dist.set(key, 0);
+                queue.push(key);
+            }
+            for (let i = 0; i < queue.length; i++) {
+                const cur = queue[i];
+                const base = dist.get(cur) ?? 0;
+                this._forEachNoPortalNeighbor(level, cur, (nk) => {
+                    if (dist.has(nk)) return;
+                    dist.set(nk, base + 1);
+                    queue.push(nk);
+                });
+            }
+            return dist;
+        },
+
+        analyzePortalTopology(level) {
+            const hasPortals = (level?.portalMap?.size || 0) > 0;
+            if (!hasPortals) {
+                return { topologicallyNecessary: false, reachableGateCount: 0, goalReachableWithoutPortals: true, reachableCellCount: 0 };
+            }
+            const gateKeys = Array.isArray(level?.gateKeys) ? level.gateKeys : [];
+            const goalKey = level?.goalKey;
+            let reachableGateCount = 0;
+            let goalReachableWithoutPortals = false;
+            let reachableCellCount = 0;
+            for (const gateKey of gateKeys) {
+                const reach = this._collectNoPortalReachability(level, [gateKey]);
+                if (reach.size > 0) reachableGateCount++;
+                reachableCellCount = Math.max(reachableCellCount, reach.size);
+                if (Number.isFinite(goalKey) && reach.has(goalKey)) {
+                    goalReachableWithoutPortals = true;
+                }
+            }
+            return {
+                topologicallyNecessary: !goalReachableWithoutPortals,
+                reachableGateCount,
+                goalReachableWithoutPortals,
+                reachableCellCount
+            };
+        },
+
+        analyzePortalUsefulness(level, portalTopology = null) {
+            const hasPortals = (level?.portalMap?.size || 0) > 0;
+            if (!hasPortals) return 'probably_irrelevant';
+            const topology = portalTopology || this.analyzePortalTopology(level);
+            if (topology.topologicallyNecessary) return 'probably_useful';
+            const gates = Array.isArray(level?.gateKeys) ? level.gateKeys : [];
+            const mustPassKeys = Array.isArray(level?.mustPassKeys) ? level.mustPassKeys : [];
+            const mustCrossKeys = Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys : [];
+            const goalKey = level?.goalKey;
+            const walkable = Math.max(1, Number(level?.solverProfile?.topology?.walkableCellCount) || ((level?.grid?.w || 1) * (level?.grid?.h || 1)));
+            const gateDist = this._buildNoPortalDistMap(level, gates);
+            const portalEntries = Array.from(level.portalMap?.keys?.() || []);
+            const entryDist = this._buildNoPortalDistMap(level, portalEntries);
+            const distTo = (k) => gateDist.get(k);
+            const entryTo = (k) => entryDist.get(k);
+            let irrelevanceScore = 0;
+            let usefulnessScore = 0;
+            if (topology.goalReachableWithoutPortals) irrelevanceScore += 2;
+            if ((Number(topology.reachableCellCount) || 0) / walkable >= 0.42) irrelevanceScore += 1;
+            const goalBase = Number.isFinite(goalKey) ? distTo(goalKey) : undefined;
+            const goalViaPortalProxy = Number.isFinite(goalKey) ? entryTo(goalKey) : undefined;
+            const goalImprovement = (Number.isFinite(goalBase) && Number.isFinite(goalViaPortalProxy)) ? (goalBase - goalViaPortalProxy) : 0;
+            if (goalImprovement <= 2) irrelevanceScore += 1;
+            if (goalImprovement >= 6) usefulnessScore += 2;
+            const objectiveKeys = [...mustPassKeys, ...mustCrossKeys];
+            let objectiveStrongImprovement = 0;
+            for (const objKey of objectiveKeys) {
+                const base = distTo(objKey);
+                const via = entryTo(objKey);
+                if (Number.isFinite(base) && Number.isFinite(via)) {
+                    const gain = base - via;
+                    if (gain <= 1) irrelevanceScore += 0.5;
+                    if (gain >= 4) objectiveStrongImprovement++;
+                }
+            }
+            if (objectiveStrongImprovement >= 1) usefulnessScore += 2;
+            const reqInt = Number(level?.reqInt) || 0;
+            const reqLen = Number(level?.reqLen) || 0;
+            const mustCrossPressure = mustCrossKeys.length;
+            if (reqInt <= 1 && mustCrossPressure === 0) irrelevanceScore += 1;
+            if (reqInt >= 3 || mustCrossPressure >= 2) usefulnessScore += 1.5;
+            if (reqLen >= Math.max(26, Math.floor(walkable * 0.25))) usefulnessScore += 1;
+            const pairCount = Math.floor((level?.portalMap?.size || 0) / 2);
+            if (pairCount <= 1) irrelevanceScore += 0.5;
+            if (pairCount >= 2 && objectiveKeys.length >= 2) usefulnessScore += 0.5;
+            if (usefulnessScore >= irrelevanceScore + 1.5) return 'probably_useful';
+            if (irrelevanceScore >= usefulnessScore + 1.5) return 'probably_irrelevant';
+            return 'unclear';
+        },
+
+        analyzePortalNeedAndUsefulness(level) {
+            const hasPortals = (level?.portalMap?.size || 0) > 0;
+            if (!hasPortals) {
+                return {
+                    hasPortals: false,
+                    topologicallyNecessary: false,
+                    reachableGateCount: 0,
+                    goalReachableWithoutPortals: true,
+                    portalUsefulness: 'probably_irrelevant'
+                };
+            }
+            const topology = this.analyzePortalTopology(level);
+            const portalUsefulness = this.analyzePortalUsefulness(level, topology);
+            return {
+                hasPortals: true,
+                topologicallyNecessary: !!topology.topologicallyNecessary,
+                reachableGateCount: Number(topology.reachableGateCount) || 0,
+                goalReachableWithoutPortals: !!topology.goalReachableWithoutPortals,
+                portalUsefulness
+            };
+        },
+
+        computePortalAbstinenceBudget(level, portalTriage = {}) {
+            if (!portalTriage?.hasPortals || portalTriage?.topologicallyNecessary) return 0;
+            const area = Math.max(1, (Number(level?.grid?.w) || 1) * (Number(level?.grid?.h) || 1));
+            const objectiveCount = (level?.mustPassKeys?.length || 0) + (level?.mustCrossKeys?.length || 0);
+            const portalFamilies = Math.max(1, Math.floor((level?.portalMap?.size || 0) / 2));
+            const reqInt = Number(level?.reqInt) || 0;
+            const base = 350 + Math.floor(area * 3.5) + (objectiveCount * 120) + (portalFamilies * 90) + (reqInt * 60);
+            if (portalTriage.portalUsefulness === 'probably_irrelevant') return Math.max(500, Math.min(3500, base));
+            if (portalTriage.portalUsefulness === 'unclear') return Math.max(200, Math.min(900, Math.floor(base * 0.25)));
+            return 0;
+        },
+
+        async runPortalAbstinenceAttempt(level, budgetMs, solveContext = {}, runStage) {
+            if (!Number.isFinite(budgetMs) || budgetMs <= 0) return null;
+            const result = await runStage({
+                stage: -1,
+                name: 'Portal Triage',
+                variant: 'portal-abstinence',
+                budgetMs,
+                run: () => this.runBaselinePolicySweep(level, budgetMs, {
+                    orderingPolicy: 'harvestThenFinish',
+                    portalBiasMode: 'off',
+                    phasePolicy: solveContext?.strategy?.resolvedPhasePolicy || null,
+                    profile: level?.solverProfile,
+                    controlPlane: this.createControlPlane(level?.solverProfile || {}),
+                    purpose: solveContext?.purpose || 'solve',
+                    allowRandomizedExploration: false,
+                    forbidPortals: true
+                })
+            });
+            result.mode = 'portalAbstinence';
+            return result;
+        },
 
         _computeObjectiveDominance(level) {
             try {
@@ -10967,6 +11181,42 @@
                 };
             }
 
+            const portalTriage = this.analyzePortalNeedAndUsefulness(level);
+            const portalAbstinenceBudget = this.computePortalAbstinenceBudget(level, portalTriage);
+            let portalAbstinenceRan = false;
+            let portalAbstinenceOutcome = 'not-run';
+            if (portalTriage.hasPortals && !portalTriage.topologicallyNecessary && portalAbstinenceBudget > 0) {
+                portalAbstinenceRan = true;
+                const abstinenceResult = await this.runPortalAbstinenceAttempt(level, portalAbstinenceBudget, solveContext, runStage);
+                if (abstinenceResult?.ok) {
+                    abstinenceResult.diagnostics = compactDefined({
+                        ...(abstinenceResult.diagnostics || {}),
+                        portalTriage: {
+                            hasPortals: true,
+                            topologicallyNecessary: !!portalTriage.topologicallyNecessary,
+                            portalUsefulness: portalTriage.portalUsefulness || 'unclear',
+                            abstinenceBudgetMs: portalAbstinenceBudget,
+                            abstinenceRun: true,
+                            abstinenceOutcome: 'solved'
+                        }
+                    });
+                    return {
+                        last: abstinenceResult,
+                        stagesTried,
+                        previousAttempt,
+                        previousAttempts,
+                        strategyMetadata
+                    };
+                }
+                portalAbstinenceOutcome = abstinenceResult?.status || 'failed';
+            } else if (portalTriage.hasPortals && portalTriage.topologicallyNecessary) {
+                portalAbstinenceOutcome = 'skipped-topology-required';
+            } else if (portalTriage.hasPortals) {
+                portalAbstinenceOutcome = 'skipped-policy';
+            } else {
+                portalAbstinenceOutcome = 'no-portals';
+            }
+
             let stage0ZeroExpansion = false;
             {
                 last = await runStage({
@@ -11093,6 +11343,17 @@
                 last,
                 solveContext,
                 stageHelpers
+            });
+            last.diagnostics = compactDefined({
+                ...(last.diagnostics || {}),
+                portalTriage: {
+                    hasPortals: !!portalTriage.hasPortals,
+                    topologicallyNecessary: !!portalTriage.topologicallyNecessary,
+                    portalUsefulness: portalTriage.portalUsefulness || null,
+                    abstinenceBudgetMs: portalAbstinenceBudget,
+                    abstinenceRun: portalAbstinenceRan,
+                    abstinenceOutcome: portalAbstinenceOutcome
+                }
             });
 
             return { last, stagesTried, previousAttempt, previousAttempts, strategyMetadata };
@@ -14455,6 +14716,7 @@
                 const {
                     isStrict = false,
                     allowJump = true,
+                    forbidPortals = false,
                     mode = state?.mode,
                     armedFalseGoals = state?.armedFalseGoals,
                     flipCount = state?.flipCount || 0,
@@ -14481,6 +14743,7 @@
                 const { w, h } = level.grid;
                 if (!inBounds(x, y, w, h)) return setReason('invalid-oob');
                 if (level.blockSet.has(targetKey)) return setReason('invalid-blocked');
+                if (forbidPortals && level.portalMap?.has(targetKey)) return setReason('invalid-portal-legality', 'portal-terminal-forbidden');
 
                 if (mode === APP.Core.EDITOR && checkHazards && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
 
