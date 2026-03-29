@@ -7625,6 +7625,9 @@
                     rootCandidatesGenerated: Number.isFinite(entry?.rootCandidatesGenerated) ? entry.rootCandidatesGenerated : null,
                     rootCandidatesExpanded: Number.isFinite(entry?.rootCandidatesExpanded) ? entry.rootCandidatesExpanded : null,
                     rootCandidateCountDepth0: Number.isFinite(entry?.rootCandidateCountDepth0) ? entry.rootCandidateCountDepth0 : null,
+                    depthReached: Number.isFinite(entry?.quality?.depthReached)
+                        ? entry.quality.depthReached
+                        : (Number.isFinite(entry?.debug?.maxDepth) ? entry.debug.maxDepth : null),
                     softBoundActivations: entry?.softBoundActivations || null,
                     lowBranchModeActivated: entry?.lowBranchModeActivated === true ? true : null,
                     depth0DiversityFloorApplied: entry?.depth0DiversityFloorApplied === true ? true : null,
@@ -12099,6 +12102,7 @@
                     solutions: solution,
                     debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
+                    attempts: Array.isArray(solverResult.attempts) ? solverResult.attempts : [],
                     stage: solverResult.stage,
                     // Compatibility alias: final effective execution path, not the requested engine.
                     solverPath: compatAliases.solverPath,
@@ -16343,9 +16347,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const toCanonicalProgressSamples = (samples = []) => {
             if (!Array.isArray(samples)) return [];
             return samples.map((sample) => ({
-                timeMs: Number.isFinite(sample?.timeMs) ? sample.timeMs : 0,
+                timeMs: Number.isFinite(sample?.timeMs)
+                    ? sample.timeMs
+                    : (Number.isFinite(sample?.tMs) ? sample.tMs : 0),
                 nodesExpanded: Number.isFinite(sample?.nodesExpanded) ? sample.nodesExpanded : 0,
-                depth: Number.isFinite(sample?.depth) ? sample.depth : 0
+                depth: Number.isFinite(sample?.depth)
+                    ? sample.depth
+                    : (Number.isFinite(sample?.maxDepthReached) ? sample.maxDepthReached : 0)
             }));
         };
         const toCanonicalAttemptRecord = (attempt = {}, attemptIndex = 0) => {
@@ -16382,7 +16390,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 terminationReason: termination.terminationReason,
                 status,
                 nodesExpanded: Number.isFinite(attempt?.nodesExpanded) ? attempt.nodesExpanded : 0,
-                maxDepth: Number.isFinite(attempt?.depthReached) ? attempt.depthReached : 0,
+                maxDepth: Number.isFinite(attempt?.depthReached)
+                    ? attempt.depthReached
+                    : (Number.isFinite(attempt?.maxDepth) ? attempt.maxDepth : 0),
                 prunes: {
                     lenOverflow: Number.isFinite(prunes?.lenOverflow) ? prunes.lenOverflow : 0,
                     intsOverflow: Number.isFinite(prunes?.intsOverflow) ? prunes.intsOverflow : 0,
