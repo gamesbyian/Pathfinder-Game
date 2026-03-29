@@ -8,7 +8,9 @@ import { chromium } from 'playwright';
 const HOST = '127.0.0.1';
 const PORT = 4173;
 const BASE_URL = `http://${HOST}:${PORT}`;
-const AUDIT_TIMEOUT_MS = Number(process.env.AUDIT_TIMEOUT_MS || 15 * 60 * 1000);
+// TEMP (2026-03-29): doubled audit timeout fallback from 15m to 30m so audit reflects solver max-time increase.
+// Baseline fallback: 15 * 60 * 1000. Revert by restoring baseline multiplier below.
+const AUDIT_TIMEOUT_MS = Number(process.env.AUDIT_TIMEOUT_MS || 30 * 60 * 1000);
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
