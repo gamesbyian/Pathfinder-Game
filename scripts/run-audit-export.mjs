@@ -431,13 +431,14 @@ const run = async () => {
       raw = await page.locator('#auditReportRows').innerText();
     }
     console.log(`[audit-export] clipboardReadStatus=${clipboardReadStatus} usedClipboardFallback=${usedClipboardFallback} rawChars=${String(raw || '').length}`);
-    let payload;
+    let rawPayload;
     try {
-      payload = normalizeAuditPayload(JSON.parse(raw));
+      rawPayload = JSON.parse(raw);
     } catch (err) {
       const preview = `${raw || ''}`.trim().slice(0, 160).replace(/\s+/g, ' ');
       throw new Error(`Audit export is not valid JSON: ${err?.message || err}. Preview: ${preview || '(empty)'}`);
     }
+    const payload = normalizeAuditPayload(rawPayload);
 
     const stamp = utcStamp();
     const shortSha = `${process.env.GITHUB_SHA || process.env.AUDIT_GIT_SHA || 'local'}`.slice(0, 12);
@@ -458,8 +459,8 @@ const run = async () => {
       previousPayload = null;
     }
 
-    await writeFile(rawFilePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
-    await writeFile(latestRawPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+    await writeFile(rawFilePath, raw, 'utf8');
+    await writeFile(latestRawPath, raw, 'utf8');
 
     const metrics = summarizeMetrics(payload, process.env.GITHUB_SHA || 'local');
     metrics.levelTransitionSummary = computeTransitionSummary(payload, previousPayload);
