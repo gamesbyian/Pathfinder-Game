@@ -9497,6 +9497,7 @@
                 const debug = attemptResult?.debug || {};
                 const nodesExpanded = Math.max(0, Number(debug.nodesExpanded) || 0);
                 const branchesTried = Math.max(0, Number(debug.branchesTried) || 0);
+                const depthReached = Math.max(0, Number(debug.maxDepth) || 0);
                 const branchFactor = nodesExpanded > 0 ? (branchesTried / nodesExpanded) : 0;
                 const elapsedMs = Math.max(1, Number(attemptResult?.elapsedMs ?? debug?.elapsedMs) || 1);
                 const nodesPerSecond = (nodesExpanded * 1000) / elapsedMs;
@@ -9512,6 +9513,7 @@
                 const branchingCollapse = nodesExpanded >= 80 && branchFactor <= 0.18;
                 const frontierQuality = Math.max(0, Math.min(1, (maxProgress * 0.58) + (reachedTransition ? 0.14 : 0) + (Math.max(0, 1 - (constraintDeficit / 4)) * 0.2) + (Math.max(0, 1 - Math.min(1, Math.abs(branchFactor - 0.55))) * 0.08)));
                 return {
+                    depthReached,
                     branchFactor,
                     branchingCollapse,
                     maxProgress,
@@ -9701,11 +9703,13 @@
                             elapsedMs: Number.isFinite(guardedDebug?.elapsedMs) ? guardedDebug.elapsedMs : null,
                             scoringMode: attemptOpts.scoringMode || 'modern',
                             portalBiasMode: 'off',
+                            orderingPolicy,
                             structuralMode: !!attemptOpts.structuralMode,
                             phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
                             label: attemptOpts.label || null,
                             structuralTemplate: attemptOpts.structuralTemplate || null,
                             policyProfile: attemptOpts.policyProfile || 'standard',
+                            budgetMs: attemptBudgetMs,
                             heuristicFeatureFlags,
                             featureSignature
                         };
@@ -9719,11 +9723,13 @@
                     elapsedMs: Number.isFinite(debug?.elapsedMs) ? debug.elapsedMs : null,
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    orderingPolicy,
                     structuralMode: !!attemptOpts.structuralMode,
                     phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
                     label: attemptOpts.label || null,
                     structuralTemplate: attemptOpts.structuralTemplate || null,
                     policyProfile: attemptOpts.policyProfile || 'standard',
+                    budgetMs: attemptBudgetMs,
                     heuristicFeatureFlags,
                     featureSignature
                 };
@@ -9796,12 +9802,12 @@
                     timeoutEscalationTier: Number.isFinite(attempt.timeoutEscalationTier) ? attempt.timeoutEscalationTier : 0,
                     forcedFamilySwitch: !!attempt.forcedFamilySwitch,
                     escalationReason: attempt.escalationReason || null,
-                    scoringMode: attempt.scoringMode,
-                    portalBiasMode: attempt.portalBiasMode,
-                    structuralMode: !!attempt.structuralMode,
-                    phasePolicy: attempt.phasePolicy || null,
-                    orderingPolicy: attempt.orderingPolicy || null,
-                    policyProfile: attempt.policyProfile || 'standard',
+                    scoringMode: attemptResult.scoringMode || attempt.scoringMode || 'modern',
+                    portalBiasMode: attemptResult.portalBiasMode || attempt.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    structuralMode: (attemptResult.structuralMode !== undefined) ? !!attemptResult.structuralMode : !!attempt.structuralMode,
+                    phasePolicy: attemptResult.phasePolicy || attempt.phasePolicy || opts.phasePolicy || null,
+                    orderingPolicy: attemptResult.orderingPolicy || attempt.orderingPolicy || attempt.policyProfile || opts.orderingPolicy || 'harvestThenFinish',
+                    policyProfile: attemptResult.policyProfile || attempt.policyProfile || 'standard',
                     commitmentPlan: attempt.commitmentPlan || null,
                     memoStrictness: Number.isFinite(attempt.memoStrictness) ? attempt.memoStrictness : null,
                     disabledPrunes: Array.isArray(attempt.disabledPrunes) ? attempt.disabledPrunes.slice() : [],
@@ -9818,6 +9824,7 @@
                     rootCandidatesGenerated: Number.isFinite(attemptResult?.debug?.rootCandidatesGenerated) ? attemptResult.debug.rootCandidatesGenerated : null,
                     rootCandidatesExpanded: Number.isFinite(attemptResult?.debug?.rootCandidatesExpanded) ? attemptResult.debug.rootCandidatesExpanded : null,
                     rootCandidateCountDepth0: Number.isFinite(attemptResult?.debug?.rootCandidateCountDepth0) ? attemptResult.debug.rootCandidateCountDepth0 : null,
+                    depthReached: Number.isFinite(quality?.depthReached) ? quality.depthReached : (Number.isFinite(attemptResult?.debug?.maxDepth) ? attemptResult.debug.maxDepth : null),
                     softBoundActivations: attemptResult?.debug?.softBoundActivations || null,
                     lowBranchModeActivated: !!(attemptResult?.debug?.lowBranchModeActivated || attemptResult?.debug?.lowBranchMode),
                     depth0DiversityFloorApplied: !!attemptResult?.debug?.depth0DiversityFloorApplied,
@@ -16346,21 +16353,41 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         const toCanonicalProgressSamples = (samples = []) => {
             if (!Array.isArray(samples)) return [];
-            return samples.map((sample) => ({
-                timeMs: Number.isFinite(sample?.timeMs)
+            const canonical = [];
+            let priorTimeMs = 0;
+            let timelineOffsetMs = 0;
+            for (const sample of samples) {
+                const rawTimeMs = Number.isFinite(sample?.timeMs)
                     ? sample.timeMs
-                    : (Number.isFinite(sample?.tMs) ? sample.tMs : 0),
-                nodesExpanded: Number.isFinite(sample?.nodesExpanded) ? sample.nodesExpanded : 0,
-                depth: Number.isFinite(sample?.depth)
-                    ? sample.depth
-                    : (Number.isFinite(sample?.maxDepthReached) ? sample.maxDepthReached : 0)
-            }));
+                    : (Number.isFinite(sample?.tMs) ? sample.tMs : null);
+                const fallbackTimeMs = Number.isFinite(sample?.elapsedMs)
+                    ? sample.elapsedMs
+                    : (Number.isFinite(sample?.elapsedWallTimeMs) ? sample.elapsedWallTimeMs : null);
+                const sourceTimeMs = Number.isFinite(rawTimeMs)
+                    ? Math.max(0, rawTimeMs)
+                    : (Number.isFinite(fallbackTimeMs) ? Math.max(0, fallbackTimeMs) : priorTimeMs);
+                if (canonical.length > 0 && sourceTimeMs < priorTimeMs) {
+                    timelineOffsetMs += priorTimeMs;
+                }
+                const adjustedTimeMs = Math.max(priorTimeMs, sourceTimeMs + timelineOffsetMs);
+                canonical.push({
+                    timeMs: adjustedTimeMs,
+                    nodesExpanded: Number.isFinite(sample?.nodesExpanded) ? sample.nodesExpanded : 0,
+                    depth: Number.isFinite(sample?.depth)
+                        ? sample.depth
+                        : (Number.isFinite(sample?.maxDepthReached) ? sample.maxDepthReached : 0)
+                });
+                priorTimeMs = adjustedTimeMs;
+            }
+            return canonical;
         };
         const toCanonicalAttemptRecord = (attempt = {}, attemptIndex = 0) => {
             const status = normalizeAuditAttemptStatus(attempt);
             const termination = normalizeAuditTermination(attempt, status);
             const elapsedWallTimeMs = Number.isFinite(attempt?.elapsedWallTimeMs) ? attempt.elapsedWallTimeMs : (Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : 0);
-            const budgetMs = Number.isFinite(attempt?.budgetMs) ? attempt.budgetMs : 0;
+            const budgetMs = Number.isFinite(attempt?.budgetMs)
+                ? attempt.budgetMs
+                : (Number.isFinite(attempt?.attemptBudgetMs) ? attempt.attemptBudgetMs : 0);
             const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
             const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
             const progressSummary = attempt?.progressSummary || {};
@@ -16371,14 +16398,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const phasePolicy = typeof attempt?.phasePolicy === 'string'
                 ? attempt.phasePolicy
                 : (attempt?.phasePolicy?.archetype || 'default');
+            const maxSampleDepth = progressSamples.reduce((maxDepth, sample) => {
+                const depth = Number.isFinite(sample?.depth) ? sample.depth : 0;
+                return Math.max(maxDepth, depth);
+            }, 0);
             return {
                 label: attempt?.label || toAttemptLabel(attemptIndex),
                 attemptIndex,
                 attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || 'main',
-                policyProfile: attempt?.policyProfile || 'unknown',
-                scoringMode: attempt?.scoringMode || 'unknown',
-                orderingPolicy: attempt?.orderingPolicy || 'unknown',
-                portalBiasMode: attempt?.portalBiasMode || 'unknown',
+                policyProfile: attempt?.policyProfile || attempt?.attemptFamily || 'unknown',
+                scoringMode: attempt?.scoringMode || attempt?.mode || 'unknown',
+                orderingPolicy: attempt?.orderingPolicy || attempt?.policy || 'unknown',
+                portalBiasMode: attempt?.portalBiasMode || attempt?.portalMode || 'unknown',
                 structuralMode,
                 phasePolicy,
                 budgetMs,
@@ -16392,7 +16423,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 nodesExpanded: Number.isFinite(attempt?.nodesExpanded) ? attempt.nodesExpanded : 0,
                 maxDepth: Number.isFinite(attempt?.depthReached)
                     ? attempt.depthReached
-                    : (Number.isFinite(attempt?.maxDepth) ? attempt.maxDepth : 0),
+                    : (Number.isFinite(attempt?.maxDepth)
+                        ? attempt.maxDepth
+                        : maxSampleDepth),
                 prunes: {
                     lenOverflow: Number.isFinite(prunes?.lenOverflow) ? prunes.lenOverflow : 0,
                     intsOverflow: Number.isFinite(prunes?.intsOverflow) ? prunes.intsOverflow : 0,
@@ -16421,8 +16454,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         solved: attempt?.solved === true,
                         stopReason: attempt?.status || null,
                         elapsedWallTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
+                        budgetMs: Number.isFinite(attempt?.budgetMs) ? attempt.budgetMs : null,
+                        policyProfile: attempt?.policyProfile || null,
+                        orderingPolicy: attempt?.orderingPolicy || null,
+                        scoringMode: attempt?.scoringMode || null,
+                        portalBiasMode: attempt?.portalBiasMode || null,
+                        phasePolicy: attempt?.phasePolicy || null,
                         nodesExpanded: Number.isFinite(attempt?.failureProfile?.metrics?.nodesExpanded) ? attempt.failureProfile.metrics.nodesExpanded : null,
-                        depthReached: null,
+                        depthReached: Number.isFinite(attempt?.depthReached) ? attempt.depthReached : null,
                         progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : [],
                         progressSummary: attempt?.progressSummary || null,
                         depth0PruneBreakdown: attempt?.depth0PruneBreakdown || null
