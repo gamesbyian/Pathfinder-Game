@@ -15521,6 +15521,45 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const trimAuditError = (err) => `${err?.message || err || ''}`.trim().slice(0, 140);
         const copyClone = (v) => JSON.parse(JSON.stringify(v));
         const delay0 = () => new Promise(r => setTimeout(r, 0));
+        const HINT_LADDER_CAP_MS = 180000;
+        const HINT_RESCUE_DISABLED_PRUNES = ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton'];
+        const toAttemptLabel = (attemptIndex = 0) => {
+            let value = Math.max(0, Math.floor(Number(attemptIndex) || 0));
+            let label = '';
+            do {
+                label = String.fromCharCode(65 + (value % 26)) + label;
+                value = Math.floor(value / 26) - 1;
+            } while (value >= 0);
+            return label;
+        };
+        const buildHintAttemptPolicy = ({ attemptIndex = 0, disableLegacyFallback = false } = {}) => {
+            const idx = Math.max(0, Math.floor(Number(attemptIndex) || 0));
+            const tierCycle = [0, 1, 2, 3, 3, 3];
+            const tier = tierCycle[idx % tierCycle.length];
+            const variation = idx % 8;
+            const policy = {
+                purpose: 'hint',
+                allowReferee: true,
+                disableLegacyFallback: !!disableLegacyFallback,
+                escalationTier: tier,
+                variant: `policy-${variation}`
+            };
+            if (variation === 4 || variation === 6) {
+                policy.forcePreExpansionRescue = true;
+                policy.fallbackDisabledPrunes = HINT_RESCUE_DISABLED_PRUNES.slice();
+            }
+            if (variation === 5 || variation === 7) {
+                policy.disableLegacyFallback = false;
+            }
+            return policy;
+        };
+        const formatHintLadderSummary = (result = {}) => {
+            const attempts = Number.isFinite(result?.attemptCount) ? result.attemptCount : (Array.isArray(result?.attemptHistory) ? result.attemptHistory.length : 0);
+            const wallMs = Number.isFinite(result?.ladderTotalWallTimeMs) ? result.ladderTotalWallTimeMs : 0;
+            const status = result?.status || 'unknown';
+            const stopReason = result?.stopReason || 'unknown';
+            return `${status} (${attempts} attempt${attempts === 1 ? '' : 's'}, ${wallMs}ms, stop=${stopReason})`;
+        };
         const waitForSolverIdle = async (maxWaitMs = 3000) => {
             const started = performance.now();
             while (APP.Solver.isRunning()) {
@@ -15595,7 +15634,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ? ` | structural ${structural.family || 'other'}${structural.confidence ? `/${structural.confidence}` : ''}`
                 : '';
             const attemptCount = Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : (r.newHint.refereeAttemptCount || 0);
-            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} first=${r.newHint.firstPressOutcome || 'not-run'} eventual=${r.newHint.eventualOutcome || r.newHint.status || 'not-run'}<=${r.newHint.eventualOutcomeWithinPresses || 0} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} first=${r.newHint.firstPressOutcome || 'not-run'} eventual=${r.newHint.eventualOutcome || r.newHint.status || 'not-run'}<=${r.newHint.eventualOutcomeWithinPresses || 0} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} ladder=${r.newHint.ladderTotalWallTimeMs || 0}/${r.newHint.ladderTotalSolveTimeMs || 0}ms stop=${r.newHint.stopReason || 'unknown'} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const hasAuditIssue = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -15635,6 +15674,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     finalSolvedBy: r.newHint.finalSolvedBy,
                     timeMs: r.newHint.timeMs,
                     totalSolveTimeMs: r.newHint.totalSolveTimeMs,
+                    ladderTotalWallTimeMs: r.newHint.ladderTotalWallTimeMs,
+                    ladderTotalSolveTimeMs: r.newHint.ladderTotalSolveTimeMs,
+                    stopReason: r.newHint.stopReason || null,
+                    attemptCount: r.newHint.attemptCount,
+                    attemptLabelsTried: Array.isArray(r.newHint.attemptLabelsTried) ? r.newHint.attemptLabelsTried : [],
                     attempts: Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : 0,
                     firstPressOutcome: r.newHint.firstPressOutcome || 'not-run',
                     eventualOutcome: r.newHint.eventualOutcome || r.newHint.status || 'not-run',
@@ -15739,6 +15783,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 producedHintValid: !!r?.newHint?.producedHintValid,
                 timeMs: Number.isFinite(r?.newHint?.timeMs) ? r.newHint.timeMs : null,
                 totalSolveTimeMs: Number.isFinite(r?.newHint?.totalSolveTimeMs) ? r.newHint.totalSolveTimeMs : null,
+                ladderTotalWallTimeMs: Number.isFinite(r?.newHint?.ladderTotalWallTimeMs) ? r.newHint.ladderTotalWallTimeMs : null,
+                ladderTotalSolveTimeMs: Number.isFinite(r?.newHint?.ladderTotalSolveTimeMs) ? r.newHint.ladderTotalSolveTimeMs : null,
+                stopReason: r?.newHint?.stopReason || null,
+                attemptCount: Number.isFinite(r?.newHint?.attemptCount) ? r.newHint.attemptCount : (Array.isArray(r?.newHint?.attemptHistory) ? r.newHint.attemptHistory.length : null),
+                attemptLabelsTried: Array.isArray(r?.newHint?.attemptLabelsTried) ? r.newHint.attemptLabelsTried : [],
                 failureCategory: r?.newHint?.failureTaxonomy?.category || null,
                 contradictionRecoveryActivated: !!r?.newHint?.contradictionRecoveryActivated,
                 preExpansionAbort: compactAbortReason(r?.newHint?.preExpansionAbort),
@@ -15799,7 +15848,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, depth0DiversityFloorApplied: false, depth0DiversityFloorSize: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, ladderTotalWallTimeMs: 0, ladderTotalSolveTimeMs: 0, stopReason: null, attemptCount: 0, attemptLabelsTried: [], firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, depth0DiversityFloorApplied: false, depth0DiversityFloorSize: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -15827,11 +15876,25 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
         };
 
-        const runNewHintCheck = async (normalized, levelEntry, progress) => {
-            const setLevelError = (messageLike, extra = {}) => {
-                levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...summarizeErrorContext(extra) };
-            };
-            const t0 = performance.now();
+        const runHintLadder = async (normalizedLevel, options = {}) => {
+            const normalized = APP.LevelUtils.deepCloneLevel(normalizedLevel);
+            const auditMode = !!options.auditMode;
+            const disableLegacyFallback = options.disableLegacyFallback !== undefined
+                ? !!options.disableLegacyFallback
+                : (auditMode ? getAuditDisableLegacyFallback() : false);
+            const maxWallTimeMs = Number.isFinite(options.maxWallTimeMs)
+                ? Math.max(1, Math.floor(options.maxWallTimeMs))
+                : HINT_LADDER_CAP_MS;
+            const startedAt = performance.now();
+            const attemptHistory = [];
+            let status = 'error';
+            let stopReason = 'error';
+            let finalHintResult = null;
+            let selectedHintPath = null;
+            let cancelled = false;
+            let solved = false;
+            let provenNoSolution = false;
+
             const classifyHintStatus = (hintRes, hintValidation) => {
                 if (hintRes?.ok && hintValidation?.ok) return 'success';
                 if (hintRes?.rawStatus === 'no-solution-proven') return 'no-solution-proven';
@@ -15841,99 +15904,143 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') return 'aborted';
                 return 'error';
             };
-            const isRetryableInconclusive = (attemptStatus, rawStatus) => ['timeout', 'no-solution-inconclusive'].includes(rawStatus || attemptStatus);
-            const getPreExpansionAbortCode = (attemptLike) => `${attemptLike?.preExpansionAbort?.code || attemptLike?.debug?.preExpansionAbort?.code || ''}`.trim();
-            const getStageConfigSignature = (attemptRecord) => JSON.stringify(
-                Array.isArray(attemptRecord?.refereeAttempts)
-                    ? attemptRecord.refereeAttempts.map(st => `${Number.isFinite(st?.stage) ? st.stage : 'na'}:${st?.variant || 'unknown'}`)
-                    : []
-            );
-            const hintAttempts = [
-                { key: 'A', purpose: 'hint', escalationTier: 0, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'B', purpose: 'hint', escalationTier: 1, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'C', purpose: 'hint', escalationTier: 2, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'D', purpose: 'hint', escalationTier: 3, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'E', purpose: 'hint', escalationTier: 3, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() },
-                { key: 'F', purpose: 'hint', escalationTier: 3, allowReferee: true, disableLegacyFallback: getAuditDisableLegacyFallback() }
-            ];
-            let finalAttempt = null;
-            let finalHintResult = null;
-            const levelFeatureFlags = deriveHeuristicFeatureFlagsSafely(normalized, { attemptOrdinal: 1 });
-            const levelFeatureSignature = toHeuristicFeatureSignature(levelFeatureFlags);
-            levelEntry.newHint.featureFlags = levelFeatureFlags;
-            levelEntry.newHint.featureSignature = levelFeatureSignature;
-            const abortSignatureCounts = new Map();
-            let runPreExpansionRescuePass = false;
+
             try {
-                for (let attemptIdx = 0; attemptIdx < hintAttempts.length; attemptIdx++) {
-                    const attemptPlan = hintAttempts[attemptIdx];
-                    if (attemptIdx > 0 && (!finalAttempt || !isRetryableInconclusive(finalAttempt.status, finalAttempt.rawStatus))) break;
+                for (let attemptIndex = 0; ; attemptIndex++) {
+                    const elapsedWallMs = Math.round(performance.now() - startedAt);
+                    const remainingMs = maxWallTimeMs - elapsedWallMs;
+                    if (remainingMs <= 0) {
+                        status = 'timeout';
+                        stopReason = 'cap-reached';
+                        break;
+                    }
+                    if (APP.State.ENGINE.solverAbortRequested) {
+                        cancelled = true;
+                        status = 'aborted';
+                        stopReason = 'cancelled';
+                        break;
+                    }
                     if (!(await waitForSolverIdle(2000))) {
                         APP.Solver.cancel();
                         await waitForSolverIdle(2000);
                     }
+                    const label = toAttemptLabel(attemptIndex);
+                    const policy = buildHintAttemptPolicy({ attemptIndex, disableLegacyFallback });
                     const attemptStart = performance.now();
-                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), attemptPlan);
-                    finalHintResult = hintRes || null;
+                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), {
+                        ...policy,
+                        auditMode,
+                        timeBudgetMs: remainingMs
+                    });
+                    finalHintResult = hintRes || finalHintResult;
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
-                    const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
+                    const hintValidation = producedPath
+                        ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath))
+                        : null;
                     const attemptStatus = classifyHintStatus(hintRes, hintValidation);
                     const attemptRecord = APP.Solver.toAuditAttemptSummary(hintRes, {
-                        attemptLabel: attemptPlan.key,
-                        variant: 'default',
-                        escalationTierRequested: attemptPlan.escalationTier,
+                        attemptLabel: label,
+                        variant: policy.variant || 'default',
+                        escalationTierRequested: policy.escalationTier,
                         status: attemptStatus,
                         elapsedMs: Math.round(performance.now() - attemptStart),
                         producedHintValid: !!hintValidation?.ok,
                         validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
                         diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics)
                     });
-                    levelEntry.newHint.attemptHistory.push(attemptRecord);
-                    finalAttempt = attemptRecord;
-                    const abortCode = getPreExpansionAbortCode(attemptRecord);
-                    const stageSignature = getStageConfigSignature(attemptRecord);
-                    if (abortCode) {
-                        const signatureKey = `${abortCode}::${stageSignature}`;
-                        const seenCount = (abortSignatureCounts.get(signatureKey) || 0) + 1;
-                        abortSignatureCounts.set(signatureKey, seenCount);
-                        if (seenCount >= 2 && abortCode === 'no-legal-start-neighbors') {
-                            runPreExpansionRescuePass = true;
-                            break;
-                        }
-                    }
-                    if (attemptRecord.status === 'success' || attemptRecord.status === 'no-solution-proven') break;
-                }
+                    attemptHistory.push(attemptRecord);
 
-                if (runPreExpansionRescuePass && finalAttempt && finalAttempt.status !== 'success' && finalAttempt.status !== 'no-solution-proven') {
-                    if (!(await waitForSolverIdle(2000))) {
-                        APP.Solver.cancel();
-                        await waitForSolverIdle(2000);
+                    if (attemptStatus === 'success' && hintValidation?.ok) {
+                        solved = true;
+                        status = 'success';
+                        stopReason = 'solved';
+                        selectedHintPath = copyClone(hintValidation.path);
+                        break;
                     }
-                    const attemptStart = performance.now();
-                    const rescueHintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), {
-                        purpose: 'hint',
-                        allowReferee: true,
-                        disableLegacyFallback: getAuditDisableLegacyFallback(),
-                        forcePreExpansionRescue: true,
-                        fallbackDisabledPrunes: ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton']
-                    });
-                    finalHintResult = rescueHintRes || null;
-                    const producedPath = rescueHintRes?.solution?.[0]?.path || rescueHintRes?.solutions?.[0]?.path || null;
-                    const hintValidation = producedPath ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath)) : null;
-                    const rescueStatus = classifyHintStatus(rescueHintRes, hintValidation);
-                    const rescueAttempt = APP.Solver.toAuditAttemptSummary(rescueHintRes, {
-                        attemptLabel: 'R',
-                        variant: 'pre-expansion-rescue',
-                        escalationTierRequested: 2,
-                        status: rescueStatus,
-                        elapsedMs: Math.round(performance.now() - attemptStart),
-                        producedHintValid: !!hintValidation?.ok,
-                        validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
-                        diagnosticsSummary: summarizeDiagnostics(rescueHintRes?.diagnostics)
-                    });
-                    levelEntry.newHint.attemptHistory.push(rescueAttempt);
-                    finalAttempt = rescueAttempt;
+                    if (attemptStatus === 'no-solution-proven') {
+                        provenNoSolution = true;
+                        status = 'no-solution-proven';
+                        stopReason = 'no-solution-proven';
+                        break;
+                    }
+                    if (attemptStatus === 'aborted') {
+                        cancelled = true;
+                        status = 'aborted';
+                        stopReason = 'cancelled';
+                        break;
+                    }
+                    const wallNow = Math.round(performance.now() - startedAt);
+                    if (wallNow >= maxWallTimeMs) {
+                        status = 'timeout';
+                        stopReason = 'cap-reached';
+                        break;
+                    }
                 }
+            } catch (err) {
+                if (`${err?.name || ''}` === 'AbortError') {
+                    cancelled = true;
+                    status = 'aborted';
+                    stopReason = 'cancelled';
+                } else {
+                    status = `${err?.message || ''}`.includes('timeout') ? 'timeout' : 'error';
+                    stopReason = status === 'timeout' ? 'cap-reached' : 'error';
+                }
+            } finally {
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+            }
+
+            const ladderTotalWallTimeMs = Math.round(performance.now() - startedAt);
+            const ladderTotalSolveTimeMs = attemptHistory.reduce((sum, attempt) => sum + (Number(attempt?.elapsedMs) || 0), 0);
+            const attemptLabelsTried = attemptHistory.map((attempt) => `${attempt?.attempt || ''}`.trim()).filter(Boolean);
+            const attemptCount = attemptHistory.length;
+            if (!solved && !provenNoSolution && !cancelled && status === 'error' && ladderTotalWallTimeMs >= maxWallTimeMs) {
+                status = 'timeout';
+                stopReason = 'cap-reached';
+            }
+            const finalAttempt = attemptHistory[attemptHistory.length - 1] || null;
+            const finalStatus = finalHintResult?.finalStatus || finalHintResult?.rawStatus || finalAttempt?.rawStatus || status;
+            return {
+                ok: solved && Array.isArray(selectedHintPath) && selectedHintPath.length > 0,
+                status,
+                rawStatus: finalHintResult?.rawStatus || finalAttempt?.rawStatus || status,
+                finalStatus,
+                stopReason,
+                attemptHistory,
+                attemptCount,
+                attemptLabelsTried,
+                ladderTotalWallTimeMs,
+                ladderTotalSolveTimeMs,
+                selectedHintPath: (solved && Array.isArray(selectedHintPath) && selectedHintPath.length > 0) ? selectedHintPath : null,
+                finalHintResult,
+                firstAttemptOutcome: attemptHistory[0]?.status || attemptHistory[0]?.rawStatus || 'not-run'
+            };
+        };
+
+        const runNewHintCheck = async (normalized, levelEntry, progress) => {
+            const setLevelError = (messageLike, extra = {}) => {
+                levelEntry.error = { ...(levelEntry.error || {}), message: trimAuditError(messageLike), ...summarizeErrorContext(extra) };
+            };
+            const t0 = performance.now();
+            const levelFeatureFlags = deriveHeuristicFeatureFlagsSafely(normalized, { attemptOrdinal: 1 });
+            const levelFeatureSignature = toHeuristicFeatureSignature(levelFeatureFlags);
+            levelEntry.newHint.featureFlags = levelFeatureFlags;
+            levelEntry.newHint.featureSignature = levelFeatureSignature;
+            let finalHintResult = null;
+            let finalAttempt = null;
+            try {
+                const ladderResult = await runHintLadder(normalized, {
+                    auditMode: true,
+                    disableLegacyFallback: getAuditDisableLegacyFallback(),
+                    maxWallTimeMs: HINT_LADDER_CAP_MS
+                });
+                levelEntry.newHint.attemptHistory = Array.isArray(ladderResult?.attemptHistory) ? ladderResult.attemptHistory : [];
+                finalAttempt = levelEntry.newHint.attemptHistory[levelEntry.newHint.attemptHistory.length - 1] || null;
+                finalHintResult = ladderResult?.finalHintResult || null;
+                levelEntry.newHint.stopReason = ladderResult?.stopReason || null;
+                levelEntry.newHint.ladderTotalWallTimeMs = Number.isFinite(ladderResult?.ladderTotalWallTimeMs) ? ladderResult.ladderTotalWallTimeMs : 0;
+                levelEntry.newHint.ladderTotalSolveTimeMs = Number.isFinite(ladderResult?.ladderTotalSolveTimeMs) ? ladderResult.ladderTotalSolveTimeMs : 0;
+                levelEntry.newHint.attemptCount = Number.isFinite(ladderResult?.attemptCount) ? ladderResult.attemptCount : levelEntry.newHint.attemptHistory.length;
+                levelEntry.newHint.attemptLabelsTried = Array.isArray(ladderResult?.attemptLabelsTried) ? ladderResult.attemptLabelsTried : [];
 
                 if (finalAttempt?.rawStatus === 'no-solution-inconclusive') {
                     const triage = finalAttempt?.diagnosticsSummary?.inconclusiveTriage || null;
@@ -15969,13 +16076,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const firstPressAttempt = attemptHistory.find((entry) => entry?.attempt === 'A') || attemptHistory[0] || null;
             levelEntry.newHint.firstPressOutcome = firstPressAttempt?.status || firstPressAttempt?.rawStatus || 'not-run';
             levelEntry.newHint.eventualOutcome = finalAttempt?.status || finalAttempt?.rawStatus || 'not-run';
-            levelEntry.newHint.eventualOutcomeWithinPresses = attemptHistory.reduce((max, entry) => {
-                const label = `${entry?.attempt || ''}`.trim();
-                if (!/^[A-F]$/.test(label)) return max;
-                const idx = 'ABCDEF'.indexOf(label);
-                if (idx < 0) return max;
-                return Math.max(max, idx + 1);
-            }, 0);
+            levelEntry.newHint.eventualOutcomeWithinPresses = attemptHistory.length;
             levelEntry.newHint.solverPath = finalHintResult?.solverPath || 'unknown';
             levelEntry.newHint.requestedSolverPath = finalHintResult?.requestedSolverPath || 'unknown';
             levelEntry.newHint.executionPath = finalHintResult?.executionPath || finalHintResult?.solverPath || 'unknown';
@@ -15994,6 +16095,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.winningStageNumber = Number.isFinite(finalHintResult?.winningStageNumber) ? finalHintResult.winningStageNumber : null;
             levelEntry.newHint.refereeAttemptCount = Number.isFinite(finalHintResult?.refereeAttemptCount) ? finalHintResult.refereeAttemptCount : (Array.isArray(finalHintResult?.stagesTried) ? finalHintResult.stagesTried.length : 0);
             levelEntry.newHint.totalSolveTimeMs = Number.isFinite(finalHintResult?.totalSolveTimeMs) ? finalHintResult.totalSolveTimeMs : 0;
+            if (!Number.isFinite(levelEntry.newHint.ladderTotalWallTimeMs)) levelEntry.newHint.ladderTotalWallTimeMs = Math.round(performance.now() - t0);
+            if (!Number.isFinite(levelEntry.newHint.ladderTotalSolveTimeMs)) {
+                levelEntry.newHint.ladderTotalSolveTimeMs = attemptHistory.reduce((sum, entry) => sum + (Number(entry?.elapsedMs) || 0), 0);
+            }
+            if (!Number.isFinite(levelEntry.newHint.attemptCount)) levelEntry.newHint.attemptCount = attemptHistory.length;
+            if (!Array.isArray(levelEntry.newHint.attemptLabelsTried)) {
+                levelEntry.newHint.attemptLabelsTried = attemptHistory.map((entry) => `${entry?.attempt || ''}`.trim()).filter(Boolean);
+            }
             validateSolveAttributionConsistency({
                 finalStatus: levelEntry.newHint.finalStatus,
                 finalSolvedBy: levelEntry.newHint.finalSolvedBy,
@@ -16265,7 +16374,25 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
                     updateHintLabel();
                     try {
-                        await APP.Solver.getHint(0);
+                        const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                        const normalized = APP.LevelUtils.deepCloneLevel(activeLevel);
+                        const ladderResult = await runHintLadder(normalized, {
+                            auditMode: false,
+                            maxWallTimeMs: HINT_LADDER_CAP_MS
+                        });
+                        if (ladderResult.ok && Array.isArray(ladderResult.selectedHintPath)) {
+                            APP.Solver.applySolutionsToEngine([{ path: ladderResult.selectedHintPath }], 'hint');
+                            APP.UI.showMessage(`Hint found via ladder ${formatHintLadderSummary(ladderResult)}.`, 'text-emerald-600');
+                        } else if (ladderResult.status === 'no-solution-proven') {
+                            APP.UI.showMessage(`No solution exists (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
+                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                        } else if (ladderResult.status === 'aborted') {
+                            APP.UI.showMessage(`Hint cancelled (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
+                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                        } else {
+                            APP.UI.showMessage(`No valid full hint (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
+                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                        }
                     } catch (err) {
                         console.error('Hint solve failed:', err);
                         APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
