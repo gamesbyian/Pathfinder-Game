@@ -17,6 +17,32 @@ if (selectedFiles.length < 2) {
   process.exit(1);
 }
 
+const getSoftBoundTotal = (row) => {
+  if (Number.isFinite(row?.softBoundActivations?.total)) return row.softBoundActivations.total;
+  return (Number(row?.softBoundActivations?.minRemOverflow) || 0)
+    + (Number(row?.softBoundActivations?.mustPassBound) || 0)
+    + (Number(row?.softBoundActivations?.mustCrossBound) || 0);
+};
+
+const getRootCandidateDepth0 = (row) =>
+  Number.isFinite(row?.rootCandidateCountDepth0)
+    ? row.rootCandidateCountDepth0
+    : (Number.isFinite(row?.rootCandidatesGenerated) ? row.rootCandidatesGenerated : null);
+
+const isCollapseFamily = (row) => {
+  const failureCategory = `${row?.failureCategory || ''}`.toLowerCase();
+  if (failureCategory.includes('collapse')) return true;
+  if (failureCategory.includes('pre-expansion')) return true;
+  const status = `${row?.finalStatus || row?.status || ''}`.toLowerCase();
+  if (status === 'timeout' || status === 'no-solution-inconclusive') {
+    const rootDepth0 = getRootCandidateDepth0(row);
+    const rootExpanded = Number(row?.rootCandidatesExpanded) || 0;
+    const nodes = Number(row?.nodesExpanded) || 0;
+    return (Number.isFinite(rootDepth0) && rootDepth0 <= 1) || rootExpanded <= 1 || nodes <= 2;
+  }
+  return false;
+};
+
 const readAudit = (file) => {
   const fullPath = path.join(rawDir, file);
   if (!fs.existsSync(fullPath)) {
@@ -62,25 +88,76 @@ const printWindowTransitions = () => {
   console.log('');
 };
 
+const printCollapseFamilySummary = () => {
+  console.log('Collapse-family summary (new metrics):');
+  for (const audit of audits) {
+    const collapseRows = audit.failed.filter(isCollapseFamily);
+    const suppressionByType = {};
+    let rootDepth0Sum = 0;
+    let rootDepth0Count = 0;
+    let softBoundTotal = 0;
+    let lowBranchCount = 0;
+
+    collapseRows.forEach((row) => {
+      const rootDepth0 = getRootCandidateDepth0(row);
+      if (Number.isFinite(rootDepth0)) {
+        rootDepth0Sum += rootDepth0;
+        rootDepth0Count += 1;
+      }
+      softBoundTotal += getSoftBoundTotal(row);
+      if (row?.lowBranchModeActivated) lowBranchCount += 1;
+      if (Array.isArray(row?.rootSuppressionLog)) {
+        row.rootSuppressionLog.forEach((entry) => {
+          const type = `${entry?.type || 'other'}`;
+          suppressionByType[type] = (suppressionByType[type] || 0) + 1;
+        });
+      }
+    });
+
+    const avgRootDepth0 = rootDepth0Count > 0 ? (rootDepth0Sum / rootDepth0Count).toFixed(2) : 'n/a';
+    const suppressionSummary = Object.entries(suppressionByType)
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, count]) => `${key}:${count}`)
+      .join(', ') || 'none';
+
+    console.log(`- ${audit.file}: collapseFailures=${collapseRows.length}/${audit.failed.length}`);
+    console.log(`  avgRootCandidateCountDepth0=${avgRootDepth0}; softBoundActivations=${softBoundTotal}; lowBranchModeActivated=${lowBranchCount}`);
+    console.log(`  rootSuppressionTypes=${suppressionSummary}`);
+  }
+  console.log('');
+};
+
 const printLevel50Trajectory = () => {
   const l50 = audits.map((audit) => {
     const row = audit.levels.find((level) => level.level === 50);
     if (!row) {
-      return { file: audit.file, finalStatus: 'missing', failureCategory: 'missing', totalSolveTimeMs: null, nodesExpanded: null };
+      return {
+        file: audit.file,
+        finalStatus: 'missing',
+        failureCategory: 'missing',
+        totalSolveTimeMs: null,
+        nodesExpanded: null,
+        rootCandidateCountDepth0: null,
+        softBoundActivations: 0,
+        lowBranchModeActivated: false
+      };
     }
     return {
       file: audit.file,
       finalStatus: row.finalStatus,
       failureCategory: row.failureCategory,
       totalSolveTimeMs: row.totalSolveTimeMs,
-      nodesExpanded: row.nodesExpanded
+      nodesExpanded: row.nodesExpanded,
+      rootCandidateCountDepth0: getRootCandidateDepth0(row),
+      softBoundActivations: getSoftBoundTotal(row),
+      lowBranchModeActivated: !!row.lowBranchModeActivated
     };
   });
 
   console.log('Level 50 trajectory:');
   for (const row of l50) {
     console.log(
-      `- ${row.file}: status=${row.finalStatus}; category=${row.failureCategory}; totalSolveTimeMs=${row.totalSolveTimeMs}; nodes=${row.nodesExpanded}`
+      `- ${row.file}: status=${row.finalStatus}; category=${row.failureCategory}; totalSolveTimeMs=${row.totalSolveTimeMs}; nodes=${row.nodesExpanded}; rootDepth0=${row.rootCandidateCountDepth0}; softBounds=${row.softBoundActivations}; lowBranch=${row.lowBranchModeActivated}`
     );
   }
 
@@ -91,4 +168,5 @@ const printLevel50Trajectory = () => {
 
 printFailureSummary();
 printWindowTransitions();
+printCollapseFamilySummary();
 printLevel50Trajectory();

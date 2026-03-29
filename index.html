@@ -3513,7 +3513,7 @@
                         afterOrdering: [],
                         finalNeighbors: []
                     } : null;
-                    const startFilterBreakdown = debugNeighborTraceEnabled && depth === 0 ? {
+                    const startFilterBreakdown = depth === 0 ? {
                         rawCandidateCount: candidates.length,
                         afterBoundsCount: candidates.length,
                         afterPortalRuleCount: candidates.length,
@@ -3725,15 +3725,19 @@
                             startFilterBreakdown.candidateGeneratorFallbackRecovered = 0;
                         }
                     }
-                    if (stageTrace && depth === 0) {
-                        if (startFilterBreakdown) {
-                            startFilterBreakdown.afterIllegalMoveCount = stageTrace.afterIllegalMove.length;
-                            startFilterBreakdown.afterHazardPolicyCount = stageTrace.afterHazardPolicy.length;
-                            startFilterBreakdown.afterDirectionalityCount = stageTrace.afterDirectionality.length;
-                            startFilterBreakdown.afterObjectiveHeuristicsCount = stageTrace.afterObjectiveHeuristics.length;
-                            startFilterBreakdown.finalCandidateCount = valid.length;
-                            startFilterBreakdown.interactionCandidateFallbackEnabled = interactionCandidateFallbackEnabled;
+                    if (startFilterBreakdown) {
+                        startFilterBreakdown.afterIllegalMoveCount = stageTrace ? stageTrace.afterIllegalMove.length : null;
+                        startFilterBreakdown.afterHazardPolicyCount = stageTrace ? stageTrace.afterHazardPolicy.length : null;
+                        startFilterBreakdown.afterDirectionalityCount = stageTrace ? stageTrace.afterDirectionality.length : null;
+                        startFilterBreakdown.afterObjectiveHeuristicsCount = stageTrace ? stageTrace.afterObjectiveHeuristics.length : null;
+                        startFilterBreakdown.finalCandidateCount = valid.length;
+                        startFilterBreakdown.interactionCandidateFallbackEnabled = interactionCandidateFallbackEnabled;
+                        if (debugStats && depth === 0) {
+                            debugStats.rootCandidateCountDepth0 = Number.isFinite(startFilterBreakdown.rawCandidateCount) ? startFilterBreakdown.rawCandidateCount : (candidates?.length || 0);
+                            debugStats.depth0PruneBreakdown = { ...startFilterBreakdown };
                         }
+                    }
+                    if (stageTrace && depth === 0) {
                         stageTrace.filterBreakdown = startFilterBreakdown;
                         if (startNeighborBoundSanity) stageTrace.portalBoundSanity = { ...startNeighborBoundSanity };
                     } else if (stageTrace && debugStats) {
@@ -4542,14 +4546,26 @@
                             orderedNeighbors = [...remainder, ...protectedBeam];
                             if (debugStats) {
                                 debugStats.lowBranchMode = true;
+                                debugStats.lowBranchModeActivated = true;
                                 debugStats.lowBranchProtectedBeam = protectedBeam.slice();
                             }
                         }
                     }
                     if (depth === 0 && debugStats) {
                         debugStats.rootCandidatesGenerated = candidatesCount ?? valid.length;
+                        debugStats.rootCandidateCountDepth0 = candidatesCount ?? valid.length;
                         debugStats.rootMoveOrder = orderedNeighbors.slice(0, 20);
                         debugStats.rootCandidatesExpanded = orderedNeighbors.length;
+                        const minRemSoft = Number(debugStats?.prune?.minRemOverflowShallowSoftened) || 0;
+                        const mustPassSoft = Number(debugStats?.prune?.mustPassBoundShallowSoftened) || 0;
+                        const mustCrossSoft = Number(debugStats?.prune?.mustCrossBoundShallowSoftened) || 0;
+                        const softTotal = minRemSoft + mustPassSoft + mustCrossSoft;
+                        debugStats.softBoundActivations = {
+                            total: softTotal,
+                            minRemOverflow: minRemSoft,
+                            mustPassBound: mustPassSoft,
+                            mustCrossBound: mustCrossSoft
+                        };
                         if (shouldRecordRootSuppression) {
                             debugStats.rootMoveScores = scored.slice(0, 20).map(item => ({ key: item.nk, score: item.score, drivers: Array.isArray(item.scoreDrivers) ? item.scoreDrivers.slice(0, 3) : [] }));
                         }
@@ -7319,6 +7335,21 @@
                 })
             };
         };
+        const compactRootSuppressionLog = (entries = [], maxEntries = 12) => {
+            if (!Array.isArray(entries) || entries.length === 0) return null;
+            const out = [];
+            for (const entry of entries) {
+                const depth = Number.isFinite(entry?.depth) ? entry.depth : null;
+                if (depth !== 1) continue;
+                out.push(compactDefined({
+                    type: entry?.type || null,
+                    key: Number.isFinite(entry?.key) ? entry.key : null,
+                    reason: typeof entry?.reason === 'string' ? entry.reason.slice(0, 72) : null
+                }));
+                if (out.length >= maxEntries) break;
+            }
+            return out.length > 0 ? out : null;
+        };
         const toAuditAttemptSummary = (attempt = {}, options = {}) => {
             const debug = attempt?.debug || attempt?.stats?.debug || {};
             const summary = compactDefined({
@@ -7348,13 +7379,17 @@
                 stage11RescueDelta: attempt?.stage11RescueDelta || attempt?.enduranceRescueDelta || null,
                 diagnosticsSummary: options.diagnosticsSummary || null,
                 rootCandidatesGenerated: Number.isFinite(debug?.rootCandidatesGenerated) ? debug.rootCandidatesGenerated : null,
+                rootCandidateCountDepth0: Number.isFinite(debug?.rootCandidateCountDepth0) ? debug.rootCandidateCountDepth0 : null,
+                depth0PruneBreakdown: debug?.depth0PruneBreakdown && typeof debug.depth0PruneBreakdown === 'object' ? compactDefined(debug.depth0PruneBreakdown) : null,
+                softBoundActivations: debug?.softBoundActivations && typeof debug.softBoundActivations === 'object' ? compactDefined(debug.softBoundActivations) : null,
+                lowBranchModeActivated: !!(debug?.lowBranchModeActivated || debug?.lowBranchMode),
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
                 rootCandidatesSuppressedByDominance: Number.isFinite(debug?.rootCandidatesSuppressedByDominance) ? debug.rootCandidatesSuppressedByDominance : null,
                 rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
                 attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
                 rootMoveOrder: Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 20) : null,
                 rootMoveScores: Array.isArray(debug?.rootMoveScores) ? debug.rootMoveScores.slice(0, 20) : null,
-                rootSuppressionLog: Array.isArray(debug?.debug?.rootSuppressionLog) ? debug.debug.rootSuppressionLog.slice(0, 20) : null,
+                rootSuppressionLog: compactRootSuppressionLog(debug?.debug?.rootSuppressionLog, 12),
                 refereeAttempts: Array.isArray(attempt?.stagesTried)
                     ? attempt.stagesTried.map(st => compactDefined({
                         stage: Number.isFinite(st?.stage) ? st.stage : null,
@@ -12044,6 +12079,10 @@
                         rootSuppressionLog: []
                     },
                     rootCandidatesGenerated: 0,
+                    rootCandidateCountDepth0: 0,
+                    depth0PruneBreakdown: null,
+                    softBoundActivations: null,
+                    lowBranchModeActivated: false,
                     rootCandidatesSuppressedByMemo: 0,
                     rootCandidatesSuppressedByDominance: 0,
                     rootCandidatesExpanded: 0,
@@ -12556,6 +12595,7 @@
                     `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`,
                     `antiDither: ditherPenaltyHits=${debug?.ditherPenaltyHits || 0} earlyGoalApproachBlocked=${debug?.earlyGoalApproachBlocked || 0}`
                 ];
+                lines.push(`depth0Metrics: rootCandidateCountDepth0=${debug?.rootCandidateCountDepth0 ?? 'n/a'} lowBranchModeActivated=${debug?.lowBranchModeActivated ? 'yes' : 'no'} softBoundTotal=${debug?.softBoundActivations?.total ?? 0}`);
                 if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
                     lines[0] = `Level ${levelNumber}: UNSOLVED (INVALID) reasons: ${debug.invalidReasons.join('; ')}`;
                 }
@@ -15423,7 +15463,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 nodesExpanded: Number.isFinite(metrics.nodesExpanded) ? metrics.nodesExpanded : null,
                 candidateMovesConsidered: Number.isFinite(metrics.candidateMovesConsidered) ? metrics.candidateMovesConsidered : null,
                 rootCandidatesGenerated: Number.isFinite(r?.newHint?.rootCandidatesGenerated) ? r.newHint.rootCandidatesGenerated : null,
+                rootCandidateCountDepth0: Number.isFinite(r?.newHint?.rootCandidateCountDepth0) ? r.newHint.rootCandidateCountDepth0 : null,
+                depth0PruneBreakdown: (r?.newHint?.depth0PruneBreakdown && typeof r.newHint.depth0PruneBreakdown === 'object') ? r.newHint.depth0PruneBreakdown : null,
+                softBoundActivations: (r?.newHint?.softBoundActivations && typeof r.newHint.softBoundActivations === 'object') ? r.newHint.softBoundActivations : null,
+                lowBranchModeActivated: !!r?.newHint?.lowBranchModeActivated,
                 rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
+                rootSuppressionLog: Array.isArray(r?.newHint?.rootSuppressionLog) ? r.newHint.rootSuppressionLog.slice(0, 12) : null,
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
                 error: r?.error?.message || null
             };
@@ -15470,7 +15515,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -15694,6 +15739,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.stage11RescueDelta = summarizeSearchSignal(finalHintResult?.stage11RescueDelta || finalHintResult?.enduranceRescueDelta || null);
             levelEntry.newHint.legacyRescueSummary = summarizeSearchSignal(finalHintResult?.legacyRescueSummary || finalHintResult?.rescueProfileSummary || null);
             levelEntry.newHint.rootCandidatesGenerated = Number.isFinite(finalAttempt?.rootCandidatesGenerated) ? finalAttempt.rootCandidatesGenerated : null;
+            levelEntry.newHint.rootCandidateCountDepth0 = Number.isFinite(finalAttempt?.rootCandidateCountDepth0)
+                ? finalAttempt.rootCandidateCountDepth0
+                : levelEntry.newHint.rootCandidatesGenerated;
+            levelEntry.newHint.depth0PruneBreakdown = (finalAttempt?.depth0PruneBreakdown && typeof finalAttempt.depth0PruneBreakdown === 'object') ? finalAttempt.depth0PruneBreakdown : null;
+            levelEntry.newHint.softBoundActivations = (finalAttempt?.softBoundActivations && typeof finalAttempt.softBoundActivations === 'object') ? finalAttempt.softBoundActivations : null;
+            levelEntry.newHint.lowBranchModeActivated = !!finalAttempt?.lowBranchModeActivated;
             levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
             levelEntry.newHint.rootCandidatesSuppressedByDominance = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByDominance) ? finalAttempt.rootCandidatesSuppressedByDominance : null;
             levelEntry.newHint.rootCandidatesExpanded = Number.isFinite(finalAttempt?.rootCandidatesExpanded) ? finalAttempt.rootCandidatesExpanded : null;

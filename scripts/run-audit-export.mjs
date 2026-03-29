@@ -111,6 +111,43 @@ const deriveFailureFamily = (row) => {
   return status || 'unknown';
 };
 
+const summarizeRootSuppressionLog = (entries) => {
+  if (!Array.isArray(entries) || entries.length === 0) return null;
+  const counts = {};
+  entries.forEach((entry) => {
+    const type = `${entry?.type || 'other'}`;
+    counts[type] = (counts[type] || 0) + 1;
+  });
+  return { total: entries.length, byType: counts, sample: entries.slice(0, 8) };
+};
+
+const normalizeLevelRow = (row = {}) => {
+  const softBounds = row?.softBoundActivations && typeof row.softBoundActivations === 'object' ? row.softBoundActivations : null;
+  return {
+    ...row,
+    rootCandidateCountDepth0: Number.isFinite(row?.rootCandidateCountDepth0)
+      ? row.rootCandidateCountDepth0
+      : (Number.isFinite(row?.rootCandidatesGenerated) ? row.rootCandidatesGenerated : null),
+    depth0PruneBreakdown: row?.depth0PruneBreakdown && typeof row.depth0PruneBreakdown === 'object' ? row.depth0PruneBreakdown : null,
+    softBoundActivations: softBounds,
+    softBoundActivationsTotal: Number.isFinite(softBounds?.total)
+      ? softBounds.total
+      : ((Number(softBounds?.minRemOverflow) || 0) + (Number(softBounds?.mustPassBound) || 0) + (Number(softBounds?.mustCrossBound) || 0)),
+    lowBranchModeActivated: Boolean(row?.lowBranchModeActivated),
+    rootSuppressionLog: Array.isArray(row?.rootSuppressionLog) ? row.rootSuppressionLog.slice(0, 12) : null,
+    rootSuppressionSummary: summarizeRootSuppressionLog(row?.rootSuppressionLog)
+  };
+};
+
+const normalizeAuditPayload = (payload = {}) => {
+  const levels = Array.isArray(payload?.levels) ? payload.levels.map(normalizeLevelRow) : [];
+  return {
+    ...payload,
+    levels,
+    levelCount: levels.length
+  };
+};
+
 const computeTransitionSummary = (currentPayload, previousPayload) => {
   const currentLevels = Array.isArray(currentPayload?.levels) ? currentPayload.levels : [];
   const previousLevels = Array.isArray(previousPayload?.levels) ? previousPayload.levels : [];
@@ -122,7 +159,10 @@ const computeTransitionSummary = (currentPayload, previousPayload) => {
     'nodesExpanded',
     'candidateMovesConsidered',
     'rootCandidatesGenerated',
-    'rootCandidatesExpanded'
+    'rootCandidateCountDepth0',
+    'rootCandidatesExpanded',
+    'lowBranchModeActivated',
+    'softBoundActivationsTotal'
   ];
 
   const transitions = [];
@@ -380,7 +420,7 @@ const run = async () => {
     }
     let payload;
     try {
-      payload = JSON.parse(raw);
+      payload = normalizeAuditPayload(JSON.parse(raw));
     } catch (err) {
       const preview = `${raw || ''}`.trim().slice(0, 160).replace(/\s+/g, ' ');
       throw new Error(`Audit export is not valid JSON: ${err?.message || err}. Preview: ${preview || '(empty)'}`);
