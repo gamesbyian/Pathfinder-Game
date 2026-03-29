@@ -4435,6 +4435,41 @@
                         || (Number(derivedInputs.corridorRatio) || 0) >= 0.42
                         || (Number(derivedInputs.bridgeRatio) || 0) >= 0.08
                         || (Number(derivedInputs.articulationRatio) || 0) >= 0.1;
+                    const profileTopology = profile?.topology || {};
+                    const walkableCellCount = Math.max(1, Number(profileTopology.walkableCellCount) || ((Number(l?.grid?.w) || 0) * (Number(l?.grid?.h) || 0)));
+                    const routePressureSignal = Math.max(0, Number(profile?.routePressure) || 0);
+                    const articulationRatioSignal = Math.max(
+                        0,
+                        Number(derivedInputs.articulationRatio)
+                        || ((Number(profileTopology.articulationPointCount) || 0) / walkableCellCount)
+                    );
+                    const bridgeRatioSignal = Math.max(
+                        0,
+                        Number(derivedInputs.bridgeRatio)
+                        || ((Number(profileTopology.bridgeCount) || 0) / walkableCellCount)
+                    );
+                    const corridorRatioSignal = Math.max(
+                        0,
+                        Number(derivedInputs.corridorRatio)
+                        || Number(profileTopology.corridorRatio)
+                        || 0
+                    );
+                    const objectiveCountSignal = Math.max(0, Number(profile?.objectiveCount) || Number(profile?.objectiveModel?.features?.length) || 0);
+                    const falseGoalCountSignal = Math.max(0, Number(l?.falseGoalKeys?.size) || 0);
+                    const mustPassCountSignal = Math.max(0, Number(l?.mustPassKeys?.length) || 0);
+                    const hasPortalSignal = (Number(l?.portalMap?.size) || 0) > 0;
+                    const reqLenSignal = Math.max(0, Number(l?.reqLen) || 0);
+                    const corridorDiameterSignal = Math.max(0, Number(profileTopology?.corridorDiameter) || Number(profileTopology?.diameter) || 0);
+                    const nearCorridorDiameter = corridorDiameterSignal > 0
+                        && Math.abs(reqLenSignal - corridorDiameterSignal) <= Math.max(2, Math.round(corridorDiameterSignal * 0.16));
+                    const nearUniquePathSignature = depth === 0
+                        && !hasPortalSignal
+                        && mustPassCountSignal === 1
+                        && falseGoalCountSignal > 0
+                        && objectiveCountSignal <= 1
+                        && routePressureSignal >= 0.72
+                        && (bridgeRatioSignal >= 0.09 || articulationRatioSignal >= 0.13 || corridorRatioSignal >= 0.48)
+                        && (nearCorridorDiameter || routePressureSignal >= 0.86);
                     const lowBranchMode = (depth === 0 && (valid.length <= 3 || lowBranchTopologySignal))
                         || (!!options?.__lowBranchMode && depth <= 2);
                     const earlyLowBranchDepth = lowBranchMode && depth <= 2;
@@ -4538,9 +4573,17 @@
                         }
                         if (contrarianIdx >= 0) {
                             const protectedBeam = [top.nk, scored[contrarianIdx].nk];
-                            for (let i = scored.length - 2; i >= Math.max(0, scored.length - 3); i--) {
+                            const rootCandidateCountDepth0 = candidatesCount ?? valid.length;
+                            const minProtectedBeam = (nearUniquePathSignature && rootCandidateCountDepth0 <= 3) ? 4 : 3;
+                            for (let i = scored.length - 2; i >= Math.max(0, scored.length - minProtectedBeam); i--) {
                                 const nk = scored[i].nk;
                                 if (!protectedBeam.includes(nk)) protectedBeam.push(nk);
+                            }
+                            if (nearUniquePathSignature) {
+                                for (let i = 0; i < scored.length && protectedBeam.length < Math.min(scored.length, 4); i++) {
+                                    const nk = scored[i].nk;
+                                    if (!protectedBeam.includes(nk)) protectedBeam.push(nk);
+                                }
                             }
                             const remainder = orderedNeighbors.filter(nk => !protectedBeam.includes(nk));
                             orderedNeighbors = [...remainder, ...protectedBeam];
@@ -4548,6 +4591,11 @@
                                 debugStats.lowBranchMode = true;
                                 debugStats.lowBranchModeActivated = true;
                                 debugStats.lowBranchProtectedBeam = protectedBeam.slice();
+                                if (nearUniquePathSignature && protectedBeam.length >= 3) {
+                                    debugStats.depth0DiversityFloorApplied = true;
+                                    debugStats.depth0DiversityFloorSize = protectedBeam.length;
+                                    debugStats.nearUniquePathSignature = true;
+                                }
                             }
                         }
                     }
@@ -4578,6 +4626,9 @@
                                 topScoreDrivers: rankedDrivers.slice(0, 3),
                                 rootPolicyDistinctiveness: `${policyName}:${policyFingerprint}`
                             };
+                        }
+                        if (nearUniquePathSignature && !debugStats.depth0DiversityFloorApplied) {
+                            debugStats.nearUniquePathSignature = true;
                         }
                     }
                     if (stageTrace) {
@@ -7383,6 +7434,8 @@
                 depth0PruneBreakdown: debug?.depth0PruneBreakdown && typeof debug.depth0PruneBreakdown === 'object' ? compactDefined(debug.depth0PruneBreakdown) : null,
                 softBoundActivations: debug?.softBoundActivations && typeof debug.softBoundActivations === 'object' ? compactDefined(debug.softBoundActivations) : null,
                 lowBranchModeActivated: !!(debug?.lowBranchModeActivated || debug?.lowBranchMode),
+                depth0DiversityFloorApplied: !!debug?.depth0DiversityFloorApplied,
+                depth0DiversityFloorSize: Number.isFinite(debug?.depth0DiversityFloorSize) ? debug.depth0DiversityFloorSize : null,
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
                 rootCandidatesSuppressedByDominance: Number.isFinite(debug?.rootCandidatesSuppressedByDominance) ? debug.rootCandidatesSuppressedByDominance : null,
                 rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
@@ -12083,6 +12136,8 @@
                     depth0PruneBreakdown: null,
                     softBoundActivations: null,
                     lowBranchModeActivated: false,
+                    depth0DiversityFloorApplied: false,
+                    depth0DiversityFloorSize: 0,
                     rootCandidatesSuppressedByMemo: 0,
                     rootCandidatesSuppressedByDominance: 0,
                     rootCandidatesExpanded: 0,
@@ -12595,7 +12650,7 @@
                     `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`,
                     `antiDither: ditherPenaltyHits=${debug?.ditherPenaltyHits || 0} earlyGoalApproachBlocked=${debug?.earlyGoalApproachBlocked || 0}`
                 ];
-                lines.push(`depth0Metrics: rootCandidateCountDepth0=${debug?.rootCandidateCountDepth0 ?? 'n/a'} lowBranchModeActivated=${debug?.lowBranchModeActivated ? 'yes' : 'no'} softBoundTotal=${debug?.softBoundActivations?.total ?? 0}`);
+                lines.push(`depth0Metrics: rootCandidateCountDepth0=${debug?.rootCandidateCountDepth0 ?? 'n/a'} lowBranchModeActivated=${debug?.lowBranchModeActivated ? 'yes' : 'no'} diversityFloor=${debug?.depth0DiversityFloorApplied ? (debug?.depth0DiversityFloorSize ?? 'yes') : 'no'} softBoundTotal=${debug?.softBoundActivations?.total ?? 0}`);
                 if (Array.isArray(debug?.invalidReasons) && debug.invalidReasons.length > 0) {
                     lines[0] = `Level ${levelNumber}: UNSOLVED (INVALID) reasons: ${debug.invalidReasons.join('; ')}`;
                 }
@@ -15467,6 +15522,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 depth0PruneBreakdown: (r?.newHint?.depth0PruneBreakdown && typeof r.newHint.depth0PruneBreakdown === 'object') ? r.newHint.depth0PruneBreakdown : null,
                 softBoundActivations: (r?.newHint?.softBoundActivations && typeof r.newHint.softBoundActivations === 'object') ? r.newHint.softBoundActivations : null,
                 lowBranchModeActivated: !!r?.newHint?.lowBranchModeActivated,
+                depth0DiversityFloorApplied: !!r?.newHint?.depth0DiversityFloorApplied,
+                depth0DiversityFloorSize: Number.isFinite(r?.newHint?.depth0DiversityFloorSize) ? r.newHint.depth0DiversityFloorSize : null,
                 rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
                 rootSuppressionLog: Array.isArray(r?.newHint?.rootSuppressionLog) ? r.newHint.rootSuppressionLog.slice(0, 12) : null,
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
@@ -15515,7 +15572,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, depth0DiversityFloorApplied: false, depth0DiversityFloorSize: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -15745,6 +15802,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.depth0PruneBreakdown = (finalAttempt?.depth0PruneBreakdown && typeof finalAttempt.depth0PruneBreakdown === 'object') ? finalAttempt.depth0PruneBreakdown : null;
             levelEntry.newHint.softBoundActivations = (finalAttempt?.softBoundActivations && typeof finalAttempt.softBoundActivations === 'object') ? finalAttempt.softBoundActivations : null;
             levelEntry.newHint.lowBranchModeActivated = !!finalAttempt?.lowBranchModeActivated;
+            levelEntry.newHint.depth0DiversityFloorApplied = !!finalAttempt?.depth0DiversityFloorApplied;
+            levelEntry.newHint.depth0DiversityFloorSize = Number.isFinite(finalAttempt?.depth0DiversityFloorSize) ? finalAttempt.depth0DiversityFloorSize : null;
             levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
             levelEntry.newHint.rootCandidatesSuppressedByDominance = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByDominance) ? finalAttempt.rootCandidatesSuppressedByDominance : null;
             levelEntry.newHint.rootCandidatesExpanded = Number.isFinite(finalAttempt?.rootCandidatesExpanded) ? finalAttempt.rootCandidatesExpanded : null;
