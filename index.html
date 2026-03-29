@@ -5266,9 +5266,12 @@
                     const startSig = this._ensureStateHashState(state, l, 0, options, debugStats);
                     this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx);
                     const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig, depth: 0 }];
+                    const progressStartTimeMs = Date.now();
+                    captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     let steps = 0;
                     while (stack.length > 0) {
                         if (options.signal?.aborted) {
+                            captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                             recordPhaseAttempt('aborted');
                             if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
                                 setDepthZeroReason(debugStats, 'returned-without-expansion', { returnedBeforeExpansion: true, aborted: true });
@@ -5276,6 +5279,7 @@
                             return SOLVER_ABORTED;
                         }
                         if (Date.now() - options.startTime > options.timeLimit) {
+                            captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                             recordPhaseAttempt('timeout');
                             if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
                                 setDepthZeroReason(debugStats, 'returned-without-expansion', { returnedBeforeExpansion: true, timeout: true });
@@ -5321,6 +5325,7 @@
                         const phaseDerived = this._updateSolverPhase(state, lastK, l, distMap, debugStats);
                         maybeEmitAdaptiveTelemetry(phaseDerived);
                         if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
+                        captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l });
                         if (realLen > l.reqLen) {
                             if (debugStats) debugStats.prune.lenOverflow++;
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
@@ -5389,6 +5394,7 @@
                         if (lastK === l.goalKey) {
                             if (realLen === l.reqLen && state.ints === l.reqInt) {
                                 if (this._checkFinalConstraints(state, l)) {
+                                    captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                                     recordPhaseAttempt('solved');
                                     return { path: state.path.slice(), len: realLen };
                                 }
@@ -5477,6 +5483,7 @@
                         const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats);
                         stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig, depth: top.depth + 1 });
                     }
+                    captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     if (debugStats) {
                         debugStats.memoSize = useFailMemo ? failMemo.size : 0;
                         const domChecks = debugStats.dominanceMemoChecks || 0;
@@ -7640,7 +7647,9 @@
                     instrumentation: compactDefined({
                         branchingFactorSnapshots: instrumentation?.branchingFactorSnapshots || null,
                         pruningHitRates: instrumentation?.pruningHitRates || null
-                    })
+                    }),
+                    progressSamples: Array.isArray(entry?.progressSamples) ? entry.progressSamples : null,
+                    progressSummary: entry?.progressSummary || null
                 });
             });
         };
@@ -7683,6 +7692,8 @@
                 rootCandidatesSuppressedByDominance: Number.isFinite(debug?.rootCandidatesSuppressedByDominance) ? debug.rootCandidatesSuppressedByDominance : null,
                 rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
                 attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
+                progressSamples: Array.isArray(debug?.progressSamples) ? debug.progressSamples : null,
+                progressSummary: debug?.progressSummary || null,
                 refereeAttemptHistory: toAuditRefereeAttemptHistory(attempt?.attempts),
                 rootMoveOrder: Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 20) : null,
                 rootMoveScores: Array.isArray(debug?.rootMoveScores) ? debug.rootMoveScores.slice(0, 20) : null,
@@ -9812,6 +9823,8 @@
                     rootSuppressionLog: Array.isArray(attemptResult?.debug?.debug?.rootSuppressionLog) ? attemptResult.debug.debug.rootSuppressionLog.slice(0, 20) : null,
                     rootMoveScores: Array.isArray(attemptResult?.debug?.rootMoveScores) ? attemptResult.debug.rootMoveScores.slice(0, 20) : null,
                     candidateMovesConsidered: Number.isFinite(attemptResult?.debug?.candidateMovesConsidered) ? attemptResult.debug.candidateMovesConsidered : null,
+                    progressSamples: Array.isArray(attemptResult?.debug?.progressSamples) ? attemptResult.debug.progressSamples : [],
+                    progressSummary: attemptResult?.debug?.progressSummary || null,
                     preExpansionAbort: attemptResult?.preExpansionAbort || attemptResult?.debug?.preExpansionAbort || null,
                     contradictionRecoveryActivated: !!attemptResult?.contradictionRecoveryActivated,
                     failureCategory: attemptResult?.failureTaxonomy?.category || null,
@@ -12804,6 +12817,8 @@
                     rootMoveScores: [],
                     rootPolicySummary: null,
                     phaseTimeline: [],
+                    progressSamples: [],
+                    progressSummary: null,
                     phaseAttempts: [],
                     knotSelectionEvents: [],
                     lastKnotCandidateId: null,
@@ -12825,6 +12840,123 @@
                     notes: []
                 };
             }
+
+            const PROGRESS_SAMPLE_INTERVAL_MS = 350;
+            const MAX_PROGRESS_SAMPLES = 32;
+            const PROGRESS_PLATEAU_WINDOW_MS = 1400;
+            const PROGRESS_STALLED_NODE_DELTA = 180;
+            const toFixedMetric = (value, digits = 6) => Number(Number(value || 0).toFixed(digits));
+            const countMaskBits = (mask, level = null) => {
+                if (typeof mask !== 'bigint' || mask === 0n) return 0;
+                if (typeof level?._popcountMask === 'function') {
+                    const pop = Number(level._popcountMask(mask));
+                    return Number.isFinite(pop) ? Math.max(0, pop) : 0;
+                }
+                let bits = 0;
+                let work = mask;
+                while (work !== 0n) {
+                    bits += Number(work & 1n);
+                    work >>= 1n;
+                }
+                return bits;
+            };
+            const downsampleProgressSamples = (samples = [], maxSamples = MAX_PROGRESS_SAMPLES) => {
+                const src = Array.isArray(samples) ? samples : [];
+                if (src.length <= maxSamples) return src.slice();
+                if (maxSamples <= 2) return [src[0], src[src.length - 1]];
+                const picked = [src[0]];
+                const interior = maxSamples - 2;
+                const denom = Math.max(1, interior - 1);
+                for (let i = 0; i < interior; i++) {
+                    const ratio = i / denom;
+                    const idx = Math.max(1, Math.min(src.length - 2, Math.round(ratio * (src.length - 3)) + 1));
+                    picked.push(src[idx]);
+                }
+                picked.push(src[src.length - 1]);
+                picked.sort((a, b) => (a.tMs || 0) - (b.tMs || 0));
+                return picked;
+            };
+            const deriveProgressSummary = (samples = [], debugStats = {}, level = null) => {
+                const seq = Array.isArray(samples) ? samples : [];
+                const first = seq[0] || null;
+                const last = seq[seq.length - 1] || null;
+                const dt = Math.max(1, Number(last?.tMs || 0) - Number(first?.tMs || 0));
+                const dDepth = Math.max(0, Number(last?.maxDepthReached || 0) - Number(first?.maxDepthReached || 0));
+                const dInts = Math.max(0, Number(last?.intersectionsSoFar || 0) - Number(first?.intersectionsSoFar || 0));
+                const dNodes = Math.max(0, Number(last?.nodesExpanded || 0) - Number(first?.nodesExpanded || 0));
+                let plateauDetected = false;
+                let plateauStartMs = null;
+                let stalled = false;
+                let stalledReason = null;
+                for (let i = 0; i < seq.length; i++) {
+                    const base = seq[i];
+                    const windowEnd = seq.find((s) => (Number(s?.tMs || 0) - Number(base?.tMs || 0)) >= PROGRESS_PLATEAU_WINDOW_MS);
+                    if (!windowEnd) continue;
+                    const depthFlat = Number(windowEnd.maxDepthReached || 0) <= Number(base.maxDepthReached || 0);
+                    const intsFlat = Number(windowEnd.intersectionsSoFar || 0) <= Number(base.intersectionsSoFar || 0);
+                    if (!depthFlat && !intsFlat) continue;
+                    plateauDetected = true;
+                    plateauStartMs = Number(base.tMs) || 0;
+                    const nodeGain = Math.max(0, Number(windowEnd.nodesExpanded || 0) - Number(base.nodesExpanded || 0));
+                    const frontierGain = Math.max(0, Number(windowEnd.frontierSize || 0) - Number(base.frontierSize || 0));
+                    stalled = nodeGain >= PROGRESS_STALLED_NODE_DELTA && (depthFlat || intsFlat);
+                    if (depthFlat && !intsFlat) stalledReason = 'depth-plateau';
+                    else if (intsFlat && !depthFlat) stalledReason = 'intersection-plateau';
+                    else if (nodeGain >= PROGRESS_STALLED_NODE_DELTA && frontierGain >= 6) stalledReason = 'branching-explosion';
+                    else stalledReason = depthFlat ? 'depth-plateau' : (intsFlat ? 'intersection-plateau' : 'unknown');
+                    break;
+                }
+                const reqLen = Math.max(0, Number(level?.reqLen ?? debugStats?.startState?.requiredLength) || 0);
+                const reqInt = Math.max(0, Number(level?.reqInt ?? debugStats?.startState?.requiredIntersections) || 0);
+                const finalDepth = Math.max(0, Number(last?.maxDepthReached || debugStats?.maxDepth) || 0);
+                const finalInts = Math.max(0, Number(last?.intersectionsSoFar) || 0);
+                const depthRatio = reqLen > 0 ? Math.min(1, finalDepth / reqLen) : 0;
+                const intRatio = reqInt > 0 ? Math.min(1, finalInts / reqInt) : (reqInt === 0 ? 1 : 0);
+                const closeness = reqLen > 0 || reqInt > 0 ? ((depthRatio + intRatio) / 2) : 0;
+                let finalProgressPhase = 'early';
+                if (stalled || plateauDetected) finalProgressPhase = 'stalled';
+                else if (closeness >= 0.8) finalProgressPhase = 'late';
+                else if (closeness >= 0.35) finalProgressPhase = 'mid';
+                return compactDefined({
+                    depthGrowthRate: toFixedMetric(dDepth / dt),
+                    nodeExpansionRate: toFixedMetric(dNodes / dt),
+                    intersectionGrowthRate: toFixedMetric(dInts / dt),
+                    plateauDetected,
+                    plateauStartMs,
+                    stalled,
+                    stalledReason: stalledReason || (stalled ? 'unknown' : null),
+                    finalProgressPhase
+                });
+            };
+            const captureProgressSample = ({ debugStats = null, state = null, stack = null, startTimeMs = null, level = null, force = false } = {}) => {
+                if (!debugStats || !state || !Array.isArray(stack)) return;
+                const now = Date.now();
+                const samples = Array.isArray(debugStats.progressSamples) ? debugStats.progressSamples : [];
+                const lastSample = samples[samples.length - 1] || null;
+                if (!force && lastSample && (now - Number(debugStats._nextProgressSampleAt || 0)) < 0) return;
+                const elapsedMs = Math.max(0, now - Number(startTimeMs || now));
+                const remainingMust = countMaskBits(state.mustMask, level);
+                const totalMust = Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0;
+                const activeBranchCount = stack.length;
+                const sample = {
+                    tMs: elapsedMs,
+                    nodesExpanded: Math.max(0, Number(debugStats?.nodesExpanded) || 0),
+                    candidateMovesConsidered: Math.max(0, Number(debugStats?.branchesTried) || 0),
+                    maxDepthReached: Math.max(0, Number(debugStats?.maxDepth) || 0),
+                    currentPathLength: Math.max(0, Number(state.path?.length || 0) - 1 - Number(state.isJump?.size || 0)),
+                    intersectionsSoFar: Math.max(0, Number(state.ints) || 0),
+                    mustPassVisited: Math.max(0, totalMust - remainingMust),
+                    frontierSize: Math.max(0, stack.length),
+                    activeBranchCount: Math.max(0, activeBranchCount)
+                };
+                if (!lastSample || sample.tMs > lastSample.tMs || sample.nodesExpanded !== lastSample.nodesExpanded) {
+                    samples.push(sample);
+                } else {
+                    samples[samples.length - 1] = sample;
+                }
+                debugStats.progressSamples = samples;
+                debugStats._nextProgressSampleAt = now + PROGRESS_SAMPLE_INTERVAL_MS;
+            };
 
             function ensureDepthZeroDebug(debugStats) {
                 if (!debugStats || typeof debugStats !== 'object') return null;
@@ -12947,6 +13079,9 @@
                 if (!debugStats) return;
                 debugStats.status = status;
                 debugStats.elapsedMs = Math.round(performance.now() - startPerf);
+                debugStats.progressSamples = downsampleProgressSamples(debugStats.progressSamples, MAX_PROGRESS_SAMPLES);
+                debugStats.progressSummary = deriveProgressSummary(debugStats.progressSamples, debugStats, null);
+                delete debugStats._nextProgressSampleAt;
                 const nodesExpanded = Math.max(0, Number(debugStats?.nodesExpanded) || 0);
                 const elapsedMs = Math.max(1, Number(debugStats?.elapsedMs) || 1);
                 const branchesTried = Math.max(0, Number(debugStats?.branchesTried) || 0);
@@ -16228,6 +16363,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         rootSuppressionLog: Array.isArray(attempt?.rootSuppressionLog) ? attempt.rootSuppressionLog.slice(0, 10) : null,
                         memoHits: Number.isFinite(attempt?.failureProfile?.metrics?.memoHits) ? attempt.failureProfile.metrics.memoHits : null,
                         failedStateHits: Number.isFinite(attempt?.failureProfile?.metrics?.failedStateHits) ? attempt.failureProfile.metrics.failedStateHits : null,
+                        progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : null,
+                        progressSummary: attempt?.progressSummary || null,
                         nextAttemptInserted: null,
                         nextAttemptReason: null,
                         strategyFamilySwitchReason: null,
@@ -16250,6 +16387,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     solveTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
                     attemptFamily: attempt?.failureProfile?.family || null,
                     stageType: 'hint-press',
+                    progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : null,
+                    progressSummary: attempt?.progressSummary || null,
                     refereeAttemptHistory: condensed
                 };
             });
