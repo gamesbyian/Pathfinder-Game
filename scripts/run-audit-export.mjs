@@ -407,17 +407,23 @@ const run = async () => {
     await page.click('#copyAuditExportBtn');
 
     let raw = '';
+    let clipboardReadStatus = 'unknown';
+    let usedClipboardFallback = false;
     try {
       raw = await page.evaluate(async () => {
         if (!navigator.clipboard?.readText) return '';
         return navigator.clipboard.readText();
       });
+      clipboardReadStatus = raw?.trim() ? 'ok' : 'empty';
     } catch {
       raw = '';
+      clipboardReadStatus = 'exception';
     }
     if (!raw?.trim()) {
+      usedClipboardFallback = true;
       raw = await page.locator('#auditReportRows').innerText();
     }
+    console.log(`[audit-export] clipboardReadStatus=${clipboardReadStatus} usedClipboardFallback=${usedClipboardFallback} rawChars=${String(raw || '').length}`);
     let payload;
     try {
       payload = normalizeAuditPayload(JSON.parse(raw));
