@@ -259,9 +259,16 @@
                     <div id="megaStatus" class="hidden text-[var(--theme-search-mega-status-text)] font-bold text-sm text-center animate-pulse whitespace-pre-line mb-2 tracking-widest border-b border-[var(--theme-search-mega-status-border)] pb-2 w-full"></div>
                     <div class="flex flex-col items-center gap-3">
                         <span id="searchLabel" class="text-sm font-black uppercase tracking-widest text-center text-[var(--theme-search-label)]">Finding Solutions...</span>
+                        <span id="solverDetailLabel" class="text-[0.68rem] font-semibold tracking-wide text-center text-[var(--theme-search-label)] opacity-90">Preparing solver…</span>
                         <div class="flex gap-1"><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0s"></div><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0.2s"></div><div class="w-2 h-2 bg-[var(--theme-search-dot)] rounded-full searching-dot" style="animation-delay: 0.4s"></div></div>
                     </div>
                     <div id="solverTimer" class="text-5xl font-mono text-[var(--theme-search-timer)] font-bold tracking-tighter tabular-nums">0.0s</div>
+                    <div class="w-full max-w-md flex flex-col gap-1">
+                        <div class="w-full h-2 rounded-full overflow-hidden bg-white/20 border border-white/20">
+                            <div id="solverProgressBar" class="h-full rounded-full bg-[var(--theme-loading-bar)] transition-all duration-200" style="width: 0%"></div>
+                        </div>
+                        <div id="solverProgressPct" class="text-center text-[0.7rem] font-black tracking-wider text-[var(--theme-search-label)]">0%</div>
+                    </div>
                     <button id="solverCloseBtn" class="absolute top-4 right-4 text-[var(--theme-search-close)] hover:text-[var(--theme-search-close-hover)] hover:scale-110 transition p-2"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                 </div>
             </div>
@@ -625,7 +632,7 @@
             dom.__inited = true;
             [
                 'loadingOverlay','loadPercent','loadProgressBar','loadStatusLabel','loadErrorMessage',
-                'message','searchIndicator','searchLabel','solverCloseBtn','solverTimer',
+                'message','searchIndicator','searchLabel','solverDetailLabel','solverCloseBtn','solverTimer','solverProgressBar','solverProgressPct',
                 'megaStatus','megaSummary','megaOutput','megaModal','megaSolverBtn',
                 'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
                 'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
@@ -928,6 +935,12 @@
         };
 
         const setSolverTimerText = (text) => setModalContent('solverTimer', text, 'text');
+        const setSolverDetailText = (text) => setModalContent('solverDetailLabel', text, 'text');
+        const setSolverProgress = (pct = 0) => {
+            const clamped = Math.max(0, Math.min(100, Number(pct) || 0));
+            setStyle(getEl('solverProgressBar'), 'width', `${clamped}%`);
+            setText(getEl('solverProgressPct'), `${Math.round(clamped)}%`);
+        };
 
         // setOverlayState updates state only; APP.UI.applyOverlayState renders it.
         const applyOverlayState = (state) => {
@@ -935,6 +948,8 @@
                 setSearchIndicatorVisible(true);
                 setButtonState('solverCloseBtn', { enabled: true });
                 if (!solverAbortRequested) setModalContent('searchLabel', 'Finding Solutions...', 'text');
+                if (!solverAbortRequested) setSolverDetailText('Preparing solver…');
+                setSolverProgress(0);
                 setSolverControlsEnabled(false);
                 return;
             }
@@ -1604,7 +1619,7 @@
             return { update, getPaletteIconSVG, isPointerOverPalette };
         })();
 
-        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, showSolverAlreadyRunning, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
+        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, setSolverDetailText, setSolverProgress, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, showSolverAlreadyRunning, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
     })();
 
     const compactDefined = (obj = {}) => {
@@ -1705,6 +1720,7 @@
         const SOLVER_ABORTED = Symbol("solver-aborted");
         let timerTick = null;
         let runStart = 0;
+        let runEstimatedMaxMs = 0;
         let status = { running: false, mode: null, startedAt: 0 };
 
         // MEMO_KEY_DIMENSIONS — canonical list of state dimensions used in both the debug string
@@ -11428,17 +11444,24 @@
         showReport() { this.updateSummary(); APP.UI.openModal('megaModal'); }
     };
 
-        const startRun = ({ label = 'Solve search running…', mode = 'solve' } = {}) => {
+        const startRun = ({ label = 'Solve search running…', mode = 'solve', estimatedMaxMs = 0, detail = 'Preparing solver…' } = {}) => {
             if (APP.State.ENGINE.activeSolverController) return null;
             APP.State.ENGINE.activeSolverController = new AbortController();
             APP.State.ENGINE.solverAbortRequested = false;
             APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
             runStart = Date.now();
+            runEstimatedMaxMs = Math.max(0, Number(estimatedMaxMs) || 0);
             status = { running: true, mode, startedAt: runStart };
             APP.UI.setModalContent('searchLabel', label, 'text');
+            APP.UI.setSolverDetailText(detail);
             APP.UI.setSolverTimerText('0.0s');
+            APP.UI.setSolverProgress(0);
             timerTick = setInterval(() => {
-                APP.UI.setSolverTimerText(((Date.now() - runStart) / 1000).toFixed(1) + 's');
+                const elapsedMs = Date.now() - runStart;
+                APP.UI.setSolverTimerText((elapsedMs / 1000).toFixed(1) + 's');
+                if (runEstimatedMaxMs > 0) {
+                    APP.UI.setSolverProgress((elapsedMs / runEstimatedMaxMs) * 100);
+                }
             }, 100);
             return APP.State.ENGINE.activeSolverController;
         };
@@ -11447,6 +11470,7 @@
             if (timerTick) clearInterval(timerTick);
             timerTick = null;
             APP.State.ENGINE.activeSolverController = null;
+            runEstimatedMaxMs = 0;
             status = { running: false, mode: null, startedAt: 0 };
             APP.State.ENGINE.solverAbortRequested = false;
             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
@@ -11528,7 +11552,12 @@
                 executionPath: defaultExecutionPath,
                     totalSolveTimeMs: 0
                 };
-                const controller = startRun({ label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…', mode: 'solve' });
+                const controller = startRun({
+                    label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…',
+                    mode: 'solve',
+                    estimatedMaxMs: Number(opts.estimatedMaxMs) || 0,
+                    detail: opts.detailLabel || 'Preparing solver…'
+                });
             if (!controller) {
                 return {
                     ok: false,
@@ -11552,10 +11581,10 @@
                     : 0;
                 const escalationTier = Math.max(requestedEscalationTier, autoTier);
                 if (allowReferee) {
-                    if (escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
-                    if (escalationTier >= 2) APP.UI.showMessage(purpose === 'hint' ? 'Deep hint search: diversified policy ladder active.' : 'Deep search on: extended search mode.', 'text-amber-700');
+                    if (!opts.auditMode && escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
+                    if (!opts.auditMode && escalationTier >= 2) APP.UI.showMessage(purpose === 'hint' ? 'Deep hint search: diversified policy ladder active.' : 'Deep search on: extended search mode.', 'text-amber-700');
                 } else {
-                    APP.UI.showMessage('Solving…', 'text-sky-600');
+                    if (!opts.auditMode) APP.UI.showMessage('Solving…', 'text-sky-600');
                 }
                 const refereeStart = performance.now();
                 // Unified architecture: outer callers invoke Referee once and receive one normalized solve result.
@@ -11570,7 +11599,8 @@
                     auditMode: !!opts.auditMode,
                     onStage: ({ name, variant, budgetMs }) => {
                         APP.UI.setModalContent('searchLabel', `${name} (${variant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
-                        if (APP.State.ENGINE.flags?.refereeDebug) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
+                        APP.UI.setSolverDetailText(`Running ${name} (${variant}) with ${(Math.round(budgetMs / 100) / 10).toFixed(1)}s stage budget.`);
+                        if (APP.State.ENGINE.flags?.refereeDebug && !opts.auditMode) APP.UI.showMessage(`Stage transition: ${name} (${variant})`, 'text-sky-600');
                         if (typeof opts.onStage === 'function') opts.onStage({ name, variant, budgetMs });
                     }
                 });
@@ -12173,13 +12203,77 @@
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
-                let requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
+                const requestedTierBase = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
+                let requestedTier = requestedTierBase;
                 if (purpose === 'hint') {
                     const hintHist = attemptHistory[getLevelAttemptKey(solveInputLevel, 'hint')] || { timesTried: 0, lastStatus: null };
                     const pressDrivenTier = Math.min(2, Math.max(0, Number(hintHist.timesTried) || 0));
-                    requestedTier = Math.max(requestedTier, pressDrivenTier);
+                    requestedTier = Math.max(requestedTierBase, pressDrivenTier);
                 }
-                const solverResult = await APP.Solver.solveLevel(solveInputLevel, { purpose, escalationTier: requestedTier, allowReferee: true });
+
+                const buildHintPlan = (startTier = 0) => {
+                    const tier0 = Math.max(0, startTier);
+                    const tier1 = Math.max(tier0, 1);
+                    const tier2 = Math.max(tier1, 2);
+                    return [
+                        { tier: tier0, maxMs: 5000, label: 'Baseline hint search' },
+                        { tier: tier1, maxMs: 9000, label: 'Expanded hint search' },
+                        { tier: tier2, maxMs: 15000, label: 'Deep diversified hint search' }
+                    ];
+                };
+
+                const runSingleAttempt = async ({ tier, maxMs, label, index, total, elapsedBeforeMs, totalMaxMs }) => {
+                    APP.UI.setModalContent('searchLabel', `Hint attempt ${index}/${total}: ${label}`, 'text');
+                    APP.UI.setSolverDetailText(`Trying tier ${tier}. If this attempt fails, next: ${index < total ? `attempt ${index + 1}` : 'stop and report result'}.`);
+                    if (totalMaxMs > 0) {
+                        APP.UI.setSolverProgress((elapsedBeforeMs / totalMaxMs) * 100);
+                    }
+                    const startedAt = performance.now();
+                    const result = await APP.Solver.solveLevel(solveInputLevel, {
+                        purpose,
+                        escalationTier: tier,
+                        allowReferee: true,
+                        estimatedMaxMs: totalMaxMs,
+                        detailLabel: `Attempt ${index}/${total}: ${label}`
+                    });
+                    const elapsed = Math.max(0, performance.now() - startedAt);
+                    return { result, elapsedMs: elapsed, plannedMs: maxMs };
+                };
+
+                let solverResult;
+                if (purpose === 'hint') {
+                    const plan = buildHintPlan(requestedTier);
+                    const totalMaxMs = plan.reduce((sum, item) => sum + item.maxMs, 0);
+                    let elapsedMs = 0;
+                    let finalAttempt = null;
+                    for (let i = 0; i < plan.length; i++) {
+                        const attempt = plan[i];
+                        const out = await runSingleAttempt({
+                            ...attempt,
+                            index: i + 1,
+                            total: plan.length,
+                            elapsedBeforeMs: elapsedMs,
+                            totalMaxMs
+                        });
+                        elapsedMs += Math.max(out.elapsedMs, out.plannedMs * 0.25);
+                        finalAttempt = out.result;
+                        const statusNow = out.result?.finalStatus || out.result?.rawStatus || out.result?.status || 'unknown';
+                        const solved = !!out.result?.ok;
+                        const provenNoSolution = statusNow === 'no-solution-proven';
+                        const aborted = statusNow === 'aborted';
+                        if (solved || provenNoSolution || aborted || APP.State.ENGINE.solverAbortRequested || i === plan.length - 1) {
+                            if (solved) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished: hint found.`);
+                            else if (provenNoSolution) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished: puzzle proven unsolved.`);
+                            else if (aborted || APP.State.ENGINE.solverAbortRequested) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} cancelled by user.`);
+                            else APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished with no hint.`);
+                            break;
+                        }
+                        APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished with no hint. Next: attempt ${i + 2}/${plan.length}.`);
+                    }
+                    solverResult = finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
+                } else {
+                    solverResult = await APP.Solver.solveLevel(solveInputLevel, { purpose, escalationTier: requestedTier, allowReferee: true });
+                }
                 console.info('[Solver] runGameSolver', {
                     purpose,
                     levelId: Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null,
@@ -12218,7 +12312,7 @@
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else {
                     if (purpose === 'hint') {
-                        APP.UI.showMessage('No hint found. Tap again to search deeper.', 'text-amber-600');
+                        APP.UI.showMessage('No hint found after full automated search.', 'text-amber-600');
                     } else {
                         APP.UI.showMessage('No solution found. Press Solve for an extended search.', 'text-amber-600');
                     }
@@ -15083,10 +15177,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // ======================================================
     APP.Input = (() => {
         let initialized = false;
-        let consecutiveHintFails = 0;
         let consecutiveSolveFails = 0;
         const resetSearchEscalation = () => {
-            consecutiveHintFails = 0;
             consecutiveSolveFails = 0;
         };
         const init = () => {
@@ -16173,10 +16265,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
                     updateHintLabel();
                     try {
-                        const hintResult = await APP.Solver.getHint(consecutiveHintFails);
-                        if (!hintResult?.ok) consecutiveHintFails++;
+                        await APP.Solver.getHint(0);
                     } catch (err) {
-                        consecutiveHintFails++;
                         console.error('Hint solve failed:', err);
                         APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
                         APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
