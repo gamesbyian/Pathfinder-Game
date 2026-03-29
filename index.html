@@ -16308,106 +16308,130 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 drivers
             };
         };
-        const buildFullExportAttemptHistory = (rawAttemptHistory = []) => {
+        const normalizeAuditAttemptStatus = (attempt = {}) => {
+            const raw = `${attempt?.status || attempt?.finalStatus || ''}`.trim();
+            if (attempt?.solved === true || raw === 'solved' || raw === 'success') return 'success';
+            if (raw === 'timeout' || raw === 'no-solution-inconclusive' || raw === 'aborted') return 'timeout';
+            if (raw === 'no-solution' || raw === 'no-solution-proven' || raw === 'exhausted') return 'no-solution';
+            return 'error';
+        };
+        const normalizeAuditTermination = (attempt = {}, status = 'error') => {
+            const rawReason = `${attempt?.stopReason || attempt?.terminationReason || ''}`.trim().toLowerCase();
+            const isCutoff = attempt?.terminatedByReferee === true
+                || rawReason === 'cutoff'
+                || rawReason === 'cancelled'
+                || rawReason === 'aborted';
+            if (isCutoff) {
+                return {
+                    terminatedByReferee: true,
+                    hitBudgetCap: false,
+                    endedNaturally: false,
+                    terminationReason: 'cutoff'
+                };
+            }
+            if (status === 'success') {
+                return { terminatedByReferee: false, hitBudgetCap: false, endedNaturally: true, terminationReason: 'solved' };
+            }
+            if (status === 'timeout') {
+                return { terminatedByReferee: false, hitBudgetCap: true, endedNaturally: false, terminationReason: 'timeout' };
+            }
+            if (status === 'no-solution') {
+                return { terminatedByReferee: false, hitBudgetCap: false, endedNaturally: true, terminationReason: 'exhausted' };
+            }
+            return { terminatedByReferee: false, hitBudgetCap: false, endedNaturally: false, terminationReason: 'error' };
+        };
+        const toCanonicalProgressSamples = (samples = []) => {
+            if (!Array.isArray(samples)) return [];
+            return samples.map((sample) => ({
+                timeMs: Number.isFinite(sample?.timeMs) ? sample.timeMs : 0,
+                nodesExpanded: Number.isFinite(sample?.nodesExpanded) ? sample.nodesExpanded : 0,
+                depth: Number.isFinite(sample?.depth) ? sample.depth : 0
+            }));
+        };
+        const toCanonicalAttemptRecord = (attempt = {}, attemptIndex = 0) => {
+            const status = normalizeAuditAttemptStatus(attempt);
+            const termination = normalizeAuditTermination(attempt, status);
+            const elapsedWallTimeMs = Number.isFinite(attempt?.elapsedWallTimeMs) ? attempt.elapsedWallTimeMs : (Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : 0);
+            const budgetMs = Number.isFinite(attempt?.budgetMs) ? attempt.budgetMs : 0;
+            const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
+            const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
+            const progressSummary = attempt?.progressSummary || {};
+            const structuralRaw = attempt?.structuralMode;
+            const structuralMode = typeof structuralRaw === 'string'
+                ? structuralRaw
+                : (structuralRaw === true ? 'mustCross' : 'none');
+            const phasePolicy = typeof attempt?.phasePolicy === 'string'
+                ? attempt.phasePolicy
+                : (attempt?.phasePolicy?.archetype || 'default');
+            return {
+                label: attempt?.label || toAttemptLabel(attemptIndex),
+                attemptIndex,
+                attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || 'main',
+                policyProfile: attempt?.policyProfile || 'unknown',
+                scoringMode: attempt?.scoringMode || 'unknown',
+                orderingPolicy: attempt?.orderingPolicy || 'unknown',
+                portalBiasMode: attempt?.portalBiasMode || 'unknown',
+                structuralMode,
+                phasePolicy,
+                budgetMs,
+                elapsedWallTimeMs,
+                solveTimeMs: status === 'success' ? elapsedWallTimeMs : null,
+                hitBudgetCap: termination.hitBudgetCap,
+                endedNaturally: termination.endedNaturally,
+                terminatedByReferee: termination.terminatedByReferee,
+                terminationReason: termination.terminationReason,
+                status,
+                nodesExpanded: Number.isFinite(attempt?.nodesExpanded) ? attempt.nodesExpanded : 0,
+                maxDepth: Number.isFinite(attempt?.depthReached) ? attempt.depthReached : 0,
+                prunes: {
+                    lenOverflow: Number.isFinite(prunes?.lenOverflow) ? prunes.lenOverflow : 0,
+                    intsOverflow: Number.isFinite(prunes?.intsOverflow) ? prunes.intsOverflow : 0,
+                    mustPassBound: Number.isFinite(prunes?.mustPassBound) ? prunes.mustPassBound : 0,
+                    mustCrossBound: Number.isFinite(prunes?.mustCrossBound) ? prunes.mustCrossBound : 0,
+                    failedStateHit: Number.isFinite(prunes?.failedStateHit) ? prunes.failedStateHit : 0,
+                    deadEnd: Number.isFinite(prunes?.deadEnd) ? prunes.deadEnd : 0
+                },
+                progressSamples,
+                progressSummary: {
+                    plateauDetected: !!progressSummary?.plateauDetected,
+                    plateauTimeMs: Number.isFinite(progressSummary?.plateauTimeMs) ? progressSummary.plateauTimeMs : null
+                }
+            };
+        };
+        const buildFullExportAttempts = (rawAttemptHistory = []) => {
             const attempts = Array.isArray(rawAttemptHistory) ? rawAttemptHistory : [];
-            return attempts.map((attempt, idx) => {
-                const refereeAttemptHistory = Array.isArray(attempt?.refereeAttemptHistory) ? attempt.refereeAttemptHistory : [];
-                const condensed = refereeAttemptHistory.length > 0
-                    ? refereeAttemptHistory
+            const canonical = [];
+            attempts.forEach((attempt) => {
+                const nested = Array.isArray(attempt?.refereeAttemptHistory) && attempt.refereeAttemptHistory.length > 0
+                    ? attempt.refereeAttemptHistory
                     : [compactDefined({
-                        index: idx + 1,
                         label: attempt?.attempt || null,
-                        stageType: 'hint-press',
-                        attemptFamily: attempt?.failureProfile?.family || null,
-                        elapsedWallTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
-                        solveTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
-                        budgetMs: null,
-                        policyProfile: null,
-                        orderingPolicy: null,
-                        scoringMode: null,
-                        portalBiasMode: null,
-                        phasePolicy: null,
-                        structuralMode: null,
-                        compatLegacyOutputAlias: null,
-                        memoStrictness: null,
-                        disabledPrunes: null,
-                        rootExpansionFloorCount: null,
-                        forceRootExpansionFloor: null,
-                        relaxRootSuppressionFirstLayer: null,
-                        enableLowExpansionProbe: null,
-                        timeoutEscalationTier: null,
-                        escalationReason: null,
-                        orderingTweaks: null,
-                        commitmentPlan: null,
                         status: attempt?.status || null,
                         finalStatus: attempt?.rawStatus || attempt?.status || null,
-                        stopReason: attempt?.status || null,
                         solved: attempt?.solved === true,
-                        producedHintValid: attempt?.producedHintValid === true,
-                        failureCategory: attempt?.failureTaxonomy?.category || null,
-                        preExpansionAbort: attempt?.preExpansionAbort || null,
-                        contradictionRecoveryActivated: attempt?.contradictionRecoveryActivated === true,
-                        strategyFamilySwitched: null,
+                        stopReason: attempt?.status || null,
+                        elapsedWallTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
                         nodesExpanded: Number.isFinite(attempt?.failureProfile?.metrics?.nodesExpanded) ? attempt.failureProfile.metrics.nodesExpanded : null,
-                        candidateMovesConsidered: Number.isFinite(attempt?.failureProfile?.metrics?.candidateMovesConsidered) ? attempt.failureProfile.metrics.candidateMovesConsidered : null,
-                        rootCandidatesGenerated: Number.isFinite(attempt?.rootCandidatesGenerated) ? attempt.rootCandidatesGenerated : null,
-                        rootCandidatesExpanded: Number.isFinite(attempt?.rootCandidatesExpanded) ? attempt.rootCandidatesExpanded : null,
-                        rootCandidateCountDepth0: Number.isFinite(attempt?.rootCandidateCountDepth0) ? attempt.rootCandidateCountDepth0 : null,
-                        softBoundActivations: attempt?.softBoundActivations || null,
-                        lowBranchModeActivated: attempt?.lowBranchModeActivated === true,
-                        depth0DiversityFloorApplied: attempt?.depth0DiversityFloorApplied === true,
-                        depth0DiversityFloorSize: Number.isFinite(attempt?.depth0DiversityFloorSize) ? attempt.depth0DiversityFloorSize : null,
-                        topRootMove: compactTopRootMove(attempt?.rootMoveScores),
-                        depth0PruneBreakdown: attempt?.depth0PruneBreakdown || null,
-                        rootSuppressionSummary: null,
-                        rootSuppressionLog: Array.isArray(attempt?.rootSuppressionLog) ? attempt.rootSuppressionLog.slice(0, 10) : null,
-                        memoHits: Number.isFinite(attempt?.failureProfile?.metrics?.memoHits) ? attempt.failureProfile.metrics.memoHits : null,
-                        failedStateHits: Number.isFinite(attempt?.failureProfile?.metrics?.failedStateHits) ? attempt.failureProfile.metrics.failedStateHits : null,
-                        progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : null,
+                        depthReached: null,
+                        progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : [],
                         progressSummary: attempt?.progressSummary || null,
-                        nextAttemptInserted: null,
-                        nextAttemptReason: null,
-                        strategyFamilySwitchReason: null,
-                        timeoutFamilyDiversificationUsed: null,
-                        lowExpansionRecoveryAdded: null,
-                        budgetEscalatedFrom: null,
-                        budgetEscalatedTo: null,
-                        switchedFrom: null,
-                        switchedTo: null
+                        depth0PruneBreakdown: attempt?.depth0PruneBreakdown || null
                     })];
-                return {
-                    index: idx + 1,
-                    label: attempt?.attempt || null,
-                    status: attempt?.status || null,
-                    finalStatus: attempt?.rawStatus || attempt?.status || null,
-                    solved: attempt?.solved === true,
-                    producedHintValid: attempt?.producedHintValid === true,
-                    startWallTimeMs: null,
-                    elapsedWallTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
-                    solveTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
-                    attemptFamily: attempt?.failureProfile?.family || null,
-                    stageType: 'hint-press',
-                    progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : null,
-                    progressSummary: attempt?.progressSummary || null,
-                    refereeAttemptHistory: condensed
-                };
+                nested.forEach((solverAttempt) => {
+                    canonical.push(solverAttempt);
+                });
             });
+            return canonical.map((attempt, idx) => toCanonicalAttemptRecord(attempt, idx));
         };
-        const buildAttemptHistorySummary = (attemptHistory = []) => {
-            const flat = [];
-            (Array.isArray(attemptHistory) ? attemptHistory : []).forEach((entry) => {
-                const nested = Array.isArray(entry?.refereeAttemptHistory) ? entry.refereeAttemptHistory : [];
-                if (nested.length > 0) flat.push(...nested);
-            });
-            const list = flat.length > 0 ? flat : (Array.isArray(attemptHistory) ? attemptHistory : []);
-            const solvedOnAttempt = list.findIndex((entry) => entry?.solved === true || entry?.status === 'solved');
+        const buildLevelAttemptSummary = (attempts = []) => {
+            const list = Array.isArray(attempts) ? attempts : [];
+            const solvingAttemptIndex = list.findIndex((entry) => entry?.status === 'success');
             return {
+                solved: solvingAttemptIndex >= 0,
+                solvingAttemptIndex: solvingAttemptIndex >= 0 ? solvingAttemptIndex : null,
                 totalAttempts: list.length,
-                solvedOnAttempt: solvedOnAttempt >= 0 ? solvedOnAttempt + 1 : null,
-                escalationsUsed: list.some((entry) => Number(entry?.timeoutEscalationTier || 0) > 0 || Number.isFinite(entry?.budgetEscalatedTo)),
-                familySwitchesUsed: list.some((entry) => entry?.strategyFamilySwitched === true || !!entry?.strategyFamilySwitchReason),
-                lowExpansionRecoveryUsed: list.some((entry) => entry?.lowExpansionRecoveryAdded === true),
-                timeoutDiversificationUsed: list.some((entry) => entry?.timeoutFamilyDiversificationUsed === true)
+                totalNodesExpanded: list.reduce((sum, entry) => sum + (Number(entry?.nodesExpanded) || 0), 0),
+                totalTimeMs: list.reduce((sum, entry) => sum + (Number(entry?.elapsedWallTimeMs) || 0), 0)
             };
         };
         const createAuditCompactLevel = (r) => {
@@ -16431,7 +16455,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 };
             }
             const metrics = r?.newHint?.failureProfile?.metrics || {};
-            const attemptHistory = buildFullExportAttemptHistory(r?.newHint?.attemptHistory);
+            const attempts = buildFullExportAttempts(r?.newHint?.attemptHistory);
             return {
                 level: r.level,
                 featureSignature: r?.newHint?.featureSignature || null,
@@ -16462,8 +16486,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
                 rootSuppressionLog: Array.isArray(r?.newHint?.rootSuppressionLog) ? r.newHint.rootSuppressionLog.slice(0, 12) : null,
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
-                attemptHistory,
-                attemptHistorySummary: buildAttemptHistorySummary(attemptHistory),
+                attempts,
+                summary: buildLevelAttemptSummary(attempts),
                 error: r?.error?.message || null
             };
         };
