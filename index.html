@@ -7337,6 +7337,7 @@
                 solution: ok ? canonical : [],
                 solutions: ok ? canonical : [],
                 stagesTried: Array.isArray(partial.stagesTried) ? partial.stagesTried : [],
+                attempts: Array.isArray(partial.attempts) ? partial.attempts : [],
                 message: partial.message || '',
                 elapsedMs: Number.isFinite(partial.elapsedMs) ? partial.elapsedMs : null,
                 diagnostics: partial.diagnostics || null,
@@ -7595,6 +7596,7 @@
                 rootMoveOrder: Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 20) : null,
                 rootMoveScores: Array.isArray(debug?.rootMoveScores) ? debug.rootMoveScores.slice(0, 20) : null,
                 rootSuppressionLog: compactRootSuppressionLog(debug?.debug?.rootSuppressionLog, 12),
+                refereeAttemptHistory: toAuditRefereeAttemptHistory(Array.isArray(attempt?.attempts) ? attempt.attempts : []),
                 refereeAttempts: Array.isArray(attempt?.stagesTried)
                     ? attempt.stagesTried.map(st => compactDefined({
                         stage: Number.isFinite(st?.stage) ? st.stage : null,
@@ -7615,8 +7617,89 @@
             if (Array.isArray(summary.rootMoveOrder) && summary.rootMoveOrder.length === 0) delete summary.rootMoveOrder;
             if (Array.isArray(summary.rootMoveScores) && summary.rootMoveScores.length === 0) delete summary.rootMoveScores;
             if (Array.isArray(summary.rootSuppressionLog) && summary.rootSuppressionLog.length === 0) delete summary.rootSuppressionLog;
+            if (Array.isArray(summary.refereeAttemptHistory) && summary.refereeAttemptHistory.length === 0) delete summary.refereeAttemptHistory;
             if (Array.isArray(summary.refereeAttempts) && summary.refereeAttempts.length === 0) delete summary.refereeAttempts;
             return summary;
+        };
+        const summarizePhasePolicyForAudit = (phasePolicy) => {
+            if (!phasePolicy || typeof phasePolicy !== 'object') return phasePolicy || null;
+            return compactDefined({
+                archetype: phasePolicy?.archetype || null,
+                thresholds: phasePolicy?.thresholds || null
+            });
+        };
+        const summarizeCommitmentPlanForAudit = (plan) => {
+            if (!plan || typeof plan !== 'object') return plan || null;
+            return compactDefined({
+                horizonSteps: Number.isFinite(plan?.horizonSteps) ? plan.horizonSteps : null,
+                mode: plan?.mode || null,
+                requiredCount: Array.isArray(plan?.required) ? plan.required.length : null
+            });
+        };
+        const toAuditRefereeAttemptHistory = (attempts = []) => {
+            if (!Array.isArray(attempts) || attempts.length === 0) return [];
+            return attempts.map((entry = {}, idx) => ({
+                index: idx,
+                ordinal: idx + 1,
+                label: entry?.label || null,
+                stageType: entry?.stageType || 'referee-attempt',
+                attemptFamily: entry?.policyProfile || null,
+                startWallTimeMs: Number.isFinite(entry?.startWallTimeMs) ? entry.startWallTimeMs : null,
+                elapsedWallTimeMs: Number.isFinite(entry?.elapsedWallTimeMs) ? entry.elapsedWallTimeMs : null,
+                solveTimeMs: Number.isFinite(entry?.elapsedMs) ? entry.elapsedMs : null,
+                budgetMs: Number.isFinite(entry?.budgetMs) ? entry.budgetMs : null,
+                policyProfile: entry?.policyProfile || null,
+                orderingPolicy: entry?.orderingPolicy || null,
+                scoringMode: entry?.scoringMode || null,
+                portalBiasMode: entry?.portalBiasMode || null,
+                phasePolicy: summarizePhasePolicyForAudit(entry?.phasePolicy),
+                structuralMode: !!entry?.structuralMode,
+                compatLegacyOutputAlias: !!entry?.compatLegacyOutputAlias,
+                memoStrictness: Number.isFinite(entry?.memoStrictness) ? entry.memoStrictness : null,
+                disabledPrunes: Array.isArray(entry?.disabledPrunes) ? entry.disabledPrunes.slice(0, 12) : [],
+                rootExpansionFloorCount: Number.isFinite(entry?.rootExpansionFloorCount) ? entry.rootExpansionFloorCount : null,
+                forceRootExpansionFloor: !!entry?.forceRootExpansionFloor,
+                relaxRootSuppressionFirstLayer: !!entry?.relaxRootSuppressionFirstLayer,
+                enableLowExpansionProbe: !!entry?.enableLowExpansionProbe,
+                timeoutEscalationTier: Number.isFinite(entry?.timeoutEscalationTier) ? entry.timeoutEscalationTier : 0,
+                escalationReason: entry?.escalationReason || null,
+                orderingTweaks: entry?.retryEscalation || null,
+                commitmentPlan: summarizeCommitmentPlanForAudit(entry?.commitmentPlan),
+                status: entry?.status || null,
+                finalStatus: entry?.rawStatus || entry?.status || null,
+                stopReason: entry?.stopReason || null,
+                solved: !!entry?.solved,
+                producedHintValid: null,
+                failureCategory: entry?.failureCategory || null,
+                preExpansionAbort: entry?.preExpansionAbort || null,
+                contradictionRecoveryActivated: !!entry?.contradictionRecoveryActivated,
+                triggeredDiversificationOrRescue: !!(entry?.strategyFamilySwitched || entry?.timeoutFamilyDiversificationUsed || entry?.lowExpansionRecoveryAdded),
+                nodesExpanded: Number.isFinite(entry?.nodesExpanded) ? entry.nodesExpanded : null,
+                candidateMovesConsidered: Number.isFinite(entry?.candidateMovesConsidered) ? entry.candidateMovesConsidered : null,
+                rootCandidatesGenerated: Number.isFinite(entry?.rootCandidatesGenerated) ? entry.rootCandidatesGenerated : null,
+                rootCandidatesExpanded: Number.isFinite(entry?.rootCandidatesExpanded) ? entry.rootCandidatesExpanded : null,
+                rootCandidateCountDepth0: Number.isFinite(entry?.rootCandidateCountDepth0) ? entry.rootCandidateCountDepth0 : null,
+                softBoundActivations: (entry?.softBoundActivations && typeof entry.softBoundActivations === 'object') ? entry.softBoundActivations : null,
+                lowBranchModeActivated: !!entry?.lowBranchModeActivated,
+                depth0DiversityFloorApplied: !!entry?.depth0DiversityFloorApplied,
+                depth0DiversityFloorSize: Number.isFinite(entry?.depth0DiversityFloorSize) ? entry.depth0DiversityFloorSize : null,
+                topRootMove: entry?.topRootMove || null,
+                depth0PruneBreakdown: (entry?.depth0PruneBreakdown && typeof entry.depth0PruneBreakdown === 'object') ? entry.depth0PruneBreakdown : null,
+                rootSuppressionSummary: entry?.rootSuppressionSummary || null,
+                rootSuppressionLog: Array.isArray(entry?.rootSuppressionLog) ? entry.rootSuppressionLog.slice(0, 12) : [],
+                memoHits: Number.isFinite(entry?.memoHits) ? entry.memoHits : null,
+                failedStateHits: Number.isFinite(entry?.failedStateHits) ? entry.failedStateHits : null,
+                nextAttemptInserted: !!entry?.nextAttemptInserted,
+                nextAttemptReason: entry?.nextAttemptReason || null,
+                strategyFamilySwitched: !!entry?.strategyFamilySwitched,
+                strategyFamilySwitchReason: entry?.strategyFamilySwitchReason || null,
+                timeoutFamilyDiversificationUsed: !!entry?.timeoutFamilyDiversificationUsed,
+                lowExpansionRecoveryAdded: !!entry?.lowExpansionRecoveryAdded,
+                budgetEscalatedFrom: Number.isFinite(entry?.budgetEscalatedFrom) ? entry.budgetEscalatedFrom : null,
+                budgetEscalatedTo: Number.isFinite(entry?.budgetEscalatedTo) ? entry.budgetEscalatedTo : null,
+                switchedFrom: (entry?.switchedFrom && typeof entry.switchedFrom === 'object') ? entry.switchedFrom : null,
+                switchedTo: (entry?.switchedTo && typeof entry.switchedTo === 'object') ? entry.switchedTo : null
+            }));
         };
         // Canonical internal stage records are stage-native only. Compatibility aliases are derived once at top-level.
         const toStageAttemptSummary = ({ stage, name, variant, budgetMs, elapsedMs, normalized = {}, meta = {} } = {}) => compactDefined({
@@ -9682,19 +9765,61 @@
                     featureFlags: attemptResult?.heuristicFeatureFlags || null,
                     featureSignature: attemptResult?.featureSignature || null,
                     status: attemptResult.status,
+                    rawStatus: attemptResult.status,
+                    solved: !!attemptResult.ok,
                     budgetMs: attempt.budgetMs,
+                    startWallTimeMs: Math.max(0, Date.now() - started - Math.max(0, Number(attemptResult?.elapsedMs) || 0)),
+                    elapsedWallTimeMs: Math.max(0, Date.now() - started),
                     timeoutEscalationTier: Number.isFinite(attempt.timeoutEscalationTier) ? attempt.timeoutEscalationTier : 0,
                     forcedFamilySwitch: !!attempt.forcedFamilySwitch,
                     escalationReason: attempt.escalationReason || null,
+                    orderingPolicy: attempt.orderingPolicy || attempt.policyProfile || null,
                     scoringMode: attempt.scoringMode,
                     portalBiasMode: attempt.portalBiasMode,
                     structuralMode: !!attempt.structuralMode,
-                    phasePolicy: attempt.phasePolicy?.archetype || null,
+                    phasePolicy: attempt.phasePolicy || null,
                     policyProfile: attempt.policyProfile || 'standard',
+                    commitmentPlan: attempt.commitmentPlan || null,
+                    memoStrictness: Number(attempt.memoStrictness) || 1,
+                    disabledPrunes: Array.isArray(attempt.disabledPrunes) ? attempt.disabledPrunes.slice(0, 16) : [],
+                    rootExpansionFloorCount: Number.isFinite(attempt.rootExpansionFloorCount) ? attempt.rootExpansionFloorCount : null,
+                    forceRootExpansionFloor: !!attempt.forceRootExpansionFloor,
+                    relaxRootSuppressionFirstLayer: !!attempt.relaxRootSuppressionFirstLayer,
+                    enableLowExpansionProbe: !!attempt.enableLowExpansionProbe,
                     phaseTimeline: attemptResult?.debug?.phaseTimeline || [],
                     quality,
                     attemptInstrumentation,
                     retryEscalation: attempt.orderingTweaks || null,
+                    preExpansionAbort: attemptResult?.debug?.preExpansionAbort || null,
+                    contradictionRecoveryActivated: !!attemptResult?.debug?.contradictionGuard?.triggered,
+                    nodesExpanded: Number.isFinite(attemptResult?.debug?.nodesExpanded) ? attemptResult.debug.nodesExpanded : null,
+                    candidateMovesConsidered: Number.isFinite(attemptResult?.debug?.branchesTried) ? attemptResult.debug.branchesTried : null,
+                    rootCandidatesGenerated: Number.isFinite(attemptResult?.debug?.rootCandidatesGenerated) ? attemptResult.debug.rootCandidatesGenerated : null,
+                    rootCandidateCountDepth0: Number.isFinite(attemptResult?.debug?.rootCandidateCountDepth0) ? attemptResult.debug.rootCandidateCountDepth0 : null,
+                    rootCandidatesExpanded: Number.isFinite(attemptResult?.debug?.rootCandidatesExpanded) ? attemptResult.debug.rootCandidatesExpanded : null,
+                    softBoundActivations: attemptResult?.debug?.softBoundActivations || null,
+                    lowBranchModeActivated: !!(attemptResult?.debug?.lowBranchModeActivated || attemptResult?.debug?.lowBranchMode),
+                    depth0DiversityFloorApplied: !!attemptResult?.debug?.depth0DiversityFloorApplied,
+                    depth0DiversityFloorSize: Number.isFinite(attemptResult?.debug?.depth0DiversityFloorSize) ? attemptResult.debug.depth0DiversityFloorSize : null,
+                    topRootMove: compactTopRootMove(attemptResult?.debug?.rootMoveScores),
+                    depth0PruneBreakdown: attemptResult?.debug?.depth0PruneBreakdown || null,
+                    rootSuppressionSummary: compactDefined({
+                        suppressedByMemo: Number.isFinite(attemptResult?.debug?.rootCandidatesSuppressedByMemo) ? attemptResult.debug.rootCandidatesSuppressedByMemo : null,
+                        suppressedByDominance: Number.isFinite(attemptResult?.debug?.rootCandidatesSuppressedByDominance) ? attemptResult.debug.rootCandidatesSuppressedByDominance : null
+                    }),
+                    rootSuppressionLog: compactRootSuppressionLog(attemptResult?.debug?.debug?.rootSuppressionLog, 12),
+                    memoHits: Number.isFinite(attemptResult?.debug?.memoHits) ? attemptResult.debug.memoHits : null,
+                    failedStateHits: Number.isFinite(attemptResult?.debug?.prune?.failedStateHit) ? attemptResult.debug.prune.failedStateHit : null,
+                    nextAttemptInserted: false,
+                    nextAttemptReason: null,
+                    strategyFamilySwitched: false,
+                    strategyFamilySwitchReason: null,
+                    timeoutFamilyDiversificationUsed: false,
+                    lowExpansionRecoveryAdded: false,
+                    budgetEscalatedFrom: null,
+                    budgetEscalatedTo: null,
+                    switchedFrom: null,
+                    switchedTo: null,
                     structuralTemplate: attempt.structuralTemplate ? { id: attempt.structuralTemplate.id, confidence: attempt.structuralTemplate.confidence || 0 } : null,
                     hypothesis: controlPlane?.activeHypothesis ? { ...controlPlane.activeHypothesis } : null
                 });
@@ -9740,6 +9865,7 @@
                 }
                 lastAttempt = attemptResult;
                 if (i + 1 < attempts.length) {
+                    const usedAttemptRecord = attemptsUsed[attemptsUsed.length - 1] || null;
                     const nextAttempt = attempts[i + 1];
                     let switchedThisAttempt = false;
                     const timeoutProne = ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status);
@@ -9784,6 +9910,11 @@
                             })
                         };
                         attempts.splice(i + 1, 0, recoveryAttempt);
+                        if (usedAttemptRecord) {
+                            usedAttemptRecord.nextAttemptInserted = true;
+                            usedAttemptRecord.nextAttemptReason = 'low-expansion-inconclusive-recovery';
+                            usedAttemptRecord.lowExpansionRecoveryAdded = true;
+                        }
                         lowExpansionRecoveryAdded = true;
                         continue;
                     }
@@ -9801,6 +9932,13 @@
                         if (switched?.switched) {
                             timeoutFamilyDiversificationUsed = true;
                             switchedThisAttempt = true;
+                            if (usedAttemptRecord) {
+                                usedAttemptRecord.timeoutFamilyDiversificationUsed = true;
+                                usedAttemptRecord.strategyFamilySwitched = true;
+                                usedAttemptRecord.strategyFamilySwitchReason = switched.reason || 'healthy-expansion-timeout-diversification';
+                                usedAttemptRecord.switchedFrom = switched.from || null;
+                                usedAttemptRecord.switchedTo = switched.to || null;
+                            }
                         }
                     }
                     if (healthyExpansionTimeout) {
@@ -9812,6 +9950,12 @@
                             nextAttempt.timeoutEscalationTier = nextTier;
                             nextAttempt.escalationReason = 'healthy-expansion-timeout';
                             timeoutEscalationTier = nextTier;
+                            if (usedAttemptRecord) {
+                                usedAttemptRecord.budgetEscalatedFrom = originalBudget;
+                                usedAttemptRecord.budgetEscalatedTo = nextAttempt.budgetMs;
+                                usedAttemptRecord.nextAttemptInserted = true;
+                                usedAttemptRecord.nextAttemptReason = usedAttemptRecord.nextAttemptReason || 'healthy-expansion-timeout';
+                            }
                         }
                         if (!switchedThisAttempt && !previousAttemptSwitchedFamily) {
                             const forcedSwitch = this._switchAttemptStrategyFamily(nextAttempt, {
@@ -9823,6 +9967,12 @@
                             if (forcedSwitch?.switched) {
                                 switchedThisAttempt = true;
                                 nextAttempt.forcedFamilySwitch = true;
+                                if (usedAttemptRecord) {
+                                    usedAttemptRecord.strategyFamilySwitched = true;
+                                    usedAttemptRecord.strategyFamilySwitchReason = forcedSwitch.reason || 'healthy-expansion-timeout-forced-family-switch';
+                                    usedAttemptRecord.switchedFrom = forcedSwitch.from || usedAttemptRecord.switchedFrom;
+                                    usedAttemptRecord.switchedTo = forcedSwitch.to || usedAttemptRecord.switchedTo;
+                                }
                             }
                         }
                         const canAddEscalatedAttempt = timeoutEscalationTier >= 1
@@ -9844,6 +9994,10 @@
                                 forcedFamilySwitch: !!nextAttempt.forcedFamilySwitch
                             };
                             attempts.push(escalatedAttempt);
+                            if (usedAttemptRecord) {
+                                usedAttemptRecord.nextAttemptInserted = true;
+                                usedAttemptRecord.nextAttemptReason = 'healthy-expansion-timeout-final-escalation';
+                            }
                             escalatedAttemptsAdded += 1;
                         }
                     }
@@ -9854,7 +10008,17 @@
                             remainingMustCross: quality.remainingMustCross,
                             reason: 'constraint-deficit-priority'
                         }, profile, controlPlane);
-                        if (switched?.switched) switchedThisAttempt = true;
+                        if (switched?.switched) {
+                            switchedThisAttempt = true;
+                            if (usedAttemptRecord) {
+                                usedAttemptRecord.strategyFamilySwitched = true;
+                                usedAttemptRecord.strategyFamilySwitchReason = switched.reason || 'constraint-deficit-priority';
+                                usedAttemptRecord.switchedFrom = switched.from || usedAttemptRecord.switchedFrom;
+                                usedAttemptRecord.switchedTo = switched.to || usedAttemptRecord.switchedTo;
+                                usedAttemptRecord.nextAttemptInserted = true;
+                                usedAttemptRecord.nextAttemptReason = usedAttemptRecord.nextAttemptReason || 'constraint-deficit-priority';
+                            }
+                        }
                     }
                     if (previousTelemetry) {
                         const nodesPerSecondImproved = quality.nodesPerSecond > (previousTelemetry.nodesPerSecond * 1.03);
@@ -9867,6 +10031,14 @@
                                 reason: 'telemetry-delta-stagnation'
                             }, profile, controlPlane);
                             if (switched?.switched) switchedThisAttempt = true;
+                            if (switched?.switched && usedAttemptRecord) {
+                                usedAttemptRecord.strategyFamilySwitched = true;
+                                usedAttemptRecord.strategyFamilySwitchReason = switched.reason || 'telemetry-delta-stagnation';
+                                usedAttemptRecord.switchedFrom = switched.from || usedAttemptRecord.switchedFrom;
+                                usedAttemptRecord.switchedTo = switched.to || usedAttemptRecord.switchedTo;
+                                usedAttemptRecord.nextAttemptInserted = true;
+                                usedAttemptRecord.nextAttemptReason = usedAttemptRecord.nextAttemptReason || 'telemetry-delta-stagnation';
+                            }
                             if (switched && APP.State.ENGINE.flags?.refereeDebug) {
                                 const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
                                 console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] telemetry stagnation -> switched next strategy family`, switched);
@@ -11928,6 +12100,7 @@
                     solutions: solution,
                     debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
+                    attempts: Array.isArray(solverResult.attempts) ? solverResult.attempts : [],
                     stage: solverResult.stage,
                     // Compatibility alias: final effective execution path, not the requested engine.
                     solverPath: compatAliases.solverPath,
@@ -16015,6 +16188,23 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 drivers
             };
         };
+        const buildAttemptHistorySummary = (attemptHistory = []) => {
+            const history = Array.isArray(attemptHistory) ? attemptHistory : [];
+            if (history.length === 0) return null;
+            const solvedIndex = history.findIndex((entry) => !!entry?.solved);
+            const escalationsUsed = history.some((entry) => Number(entry?.timeoutEscalationTier) > 0 || Number.isFinite(entry?.budgetEscalatedTo));
+            const familySwitchesUsed = history.some((entry) => !!entry?.strategyFamilySwitched);
+            const lowExpansionRecoveryUsed = history.some((entry) => !!entry?.lowExpansionRecoveryAdded);
+            const timeoutDiversificationUsed = history.some((entry) => !!entry?.timeoutFamilyDiversificationUsed);
+            return {
+                totalAttempts: history.length,
+                solvedOnAttempt: solvedIndex >= 0 ? solvedIndex + 1 : null,
+                escalationsUsed,
+                familySwitchesUsed,
+                lowExpansionRecoveryUsed,
+                timeoutDiversificationUsed
+            };
+        };
         const createAuditCompactLevel = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
                 return {
@@ -16036,6 +16226,26 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 };
             }
             const metrics = r?.newHint?.failureProfile?.metrics || {};
+            const ladderAttempts = Array.isArray(r?.newHint?.attemptHistory) ? r.newHint.attemptHistory : [];
+            const fullAttemptHistory = ladderAttempts.map((attemptEntry, idx) => {
+                const refereeHistory = Array.isArray(attemptEntry?.refereeAttemptHistory)
+                    ? attemptEntry.refereeAttemptHistory
+                    : [];
+                return {
+                    index: idx,
+                    ordinal: idx + 1,
+                    label: attemptEntry?.attempt || null,
+                    status: attemptEntry?.status || attemptEntry?.rawStatus || null,
+                    rawStatus: attemptEntry?.rawStatus || attemptEntry?.status || null,
+                    solved: !!attemptEntry?.solved,
+                    elapsedMs: Number.isFinite(attemptEntry?.elapsedMs) ? attemptEntry.elapsedMs : null,
+                    producedHintValid: !!attemptEntry?.producedHintValid,
+                    failureCategory: attemptEntry?.failureTaxonomy?.category || null,
+                    validationReason: attemptEntry?.validationReason || null,
+                    refereeAttemptCount: refereeHistory.length,
+                    refereeAttemptHistory: refereeHistory
+                };
+            });
             return {
                 level: r.level,
                 featureSignature: r?.newHint?.featureSignature || null,
@@ -16066,6 +16276,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
                 rootSuppressionLog: Array.isArray(r?.newHint?.rootSuppressionLog) ? r.newHint.rootSuppressionLog.slice(0, 12) : null,
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
+                attemptHistory: fullAttemptHistory,
+                attemptHistorySummary: buildAttemptHistorySummary(fullAttemptHistory.flatMap((entry) => Array.isArray(entry?.refereeAttemptHistory) ? entry.refereeAttemptHistory : [])),
                 error: r?.error?.message || null
             };
         };
