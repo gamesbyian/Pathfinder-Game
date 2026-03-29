@@ -9656,7 +9656,12 @@
                 : this.getComplexityStrategy('standard', 'corridor_commitment');
             const resolvedPortalBiasMode = opts.portalBiasMode || complexityStrategy.portalBiasMode || 'adaptiveMustCross';
             const resolvedPhasePolicy = opts.phasePolicy || level.solverProfile?.phasePolicy || null;
-            const defaultBudget = purpose === 'hint' ? 5000 : 15000;
+            // TEMP (2026-03-29): Global solver max-time multiplier for timeout investigation.
+            // Baseline was 1x. We are temporarily running at 2x to evaluate the remaining 8 failures.
+            // Revert by setting SOLVER_MAX_TIME_MULTIPLIER back to 1.
+            const SOLVER_MAX_TIME_MULTIPLIER = 2;
+            const scaleSolverBudget = (ms) => Math.max(1, Math.floor(ms * SOLVER_MAX_TIME_MULTIPLIER));
+            const defaultBudget = purpose === 'hint' ? scaleSolverBudget(5000) : scaleSolverBudget(15000);
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null, attempts: [] };
             const timesTried = prev.timesTried + 1;
@@ -9666,15 +9671,15 @@
             const requestedBudget = opts.timeBudgetMs || defaultBudget;
             const policyLadderByPurpose = {
                 hint: [
-                    { tier: 0, key: 'hint-tier-0', minBudgetMs: 5000,  orderingPolicy: 'profile-default',   rootSeedMode: 'default',                    portalBiasMode: 'profile-default',    rescueMode: 'default' },
-                    { tier: 1, key: 'hint-tier-1', minBudgetMs: 15000, orderingPolicy: 'knotBuilder',        rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off',                rescueMode: 'alternate-rescue' },
-                    { tier: 2, key: 'hint-tier-2', minBudgetMs: 60000, orderingPolicy: 'objectiveFirst',     rootSeedMode: 'diversified',                portalBiasMode: 'adaptiveMustCross',  rescueMode: 'alternate-rescue' },
-                    { tier: 3, key: 'hint-tier-3', minBudgetMs: 60000, orderingPolicy: 'profile-default', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'profile-default', rescueMode: 'alternate-rescue' }
+                    { tier: 0, key: 'hint-tier-0', minBudgetMs: scaleSolverBudget(5000),  orderingPolicy: 'profile-default',   rootSeedMode: 'default',                    portalBiasMode: 'profile-default',    rescueMode: 'default' },
+                    { tier: 1, key: 'hint-tier-1', minBudgetMs: scaleSolverBudget(15000), orderingPolicy: 'knotBuilder',        rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off',                rescueMode: 'alternate-rescue' },
+                    { tier: 2, key: 'hint-tier-2', minBudgetMs: scaleSolverBudget(60000), orderingPolicy: 'objectiveFirst',     rootSeedMode: 'diversified',                portalBiasMode: 'adaptiveMustCross',  rescueMode: 'alternate-rescue' },
+                    { tier: 3, key: 'hint-tier-3', minBudgetMs: scaleSolverBudget(60000), orderingPolicy: 'profile-default', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'profile-default', rescueMode: 'alternate-rescue' }
                 ],
                 solve: [
-                    { tier: 0, key: 'solve-tier-0', minBudgetMs: 15000, orderingPolicy: 'profile-default', rootSeedMode: 'default', portalBiasMode: 'profile-default', rescueMode: 'default' },
-                    { tier: 1, key: 'solve-tier-1', minBudgetMs: 60000, orderingPolicy: 'harvestThenFinish', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off', rescueMode: 'alternate-rescue' },
-                    { tier: 2, key: 'solve-tier-2', minBudgetMs: 180000, orderingPolicy: 'objectiveFirst', rootSeedMode: 'diversified', portalBiasMode: 'adaptiveMustCross', rescueMode: 'alternate-rescue' }
+                    { tier: 0, key: 'solve-tier-0', minBudgetMs: scaleSolverBudget(15000), orderingPolicy: 'profile-default', rootSeedMode: 'default', portalBiasMode: 'profile-default', rescueMode: 'default' },
+                    { tier: 1, key: 'solve-tier-1', minBudgetMs: scaleSolverBudget(60000), orderingPolicy: 'harvestThenFinish', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off', rescueMode: 'alternate-rescue' },
+                    { tier: 2, key: 'solve-tier-2', minBudgetMs: scaleSolverBudget(180000), orderingPolicy: 'objectiveFirst', rootSeedMode: 'diversified', portalBiasMode: 'adaptiveMustCross', rescueMode: 'alternate-rescue' }
                 ]
             };
             const activePolicyLadder = policyLadderByPurpose[purpose] || policyLadderByPurpose.solve;
@@ -9684,8 +9689,8 @@
             const tierMinBudget = Number(activeTierPolicy?.minBudgetMs) || defaultBudget;
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
             const tierBudgets = purpose === 'hint'
-                ? [5000, 15000, 60000]
-                : [15000, 60000, 180000];
+                ? [scaleSolverBudget(5000), scaleSolverBudget(15000), scaleSolverBudget(60000)]
+                : [scaleSolverBudget(15000), scaleSolverBudget(60000), scaleSolverBudget(180000)];
             const allowRandomizedExploration = !!opts.allowRandomizedExploration;
             const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
             const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
@@ -10988,8 +10993,8 @@
             APP.UI.closeModal('megaStatus');
             APP.UI.setModalContent('megaStatus', '', 'text');
         },
-        async run() { return this.runTargets({ targets: null, timeLimitMs: 15000, variant: 'default' }); },
-        async runTargets({ targets = null, timeLimitMs = 15000, variant = 'default' }) {
+        async run() { return this.runTargets({ targets: null, timeLimitMs: MEGA_DEFAULT_TIME_LIMIT_MS, variant: 'default' }); },
+        async runTargets({ targets = null, timeLimitMs = MEGA_DEFAULT_TIME_LIMIT_MS, variant = 'default' }) {
             if (this.active || APP.Solver.isRunning()) return;
             const levels = APP.LevelUtils.getRawLevels();
             if (!targets) { this.results = {}; this.meta = {}; APP.UI.setMegaOutput(''); }
@@ -11035,7 +11040,7 @@
                 APP.UI.showMessage('Mega solver finished…', 'text-emerald-600');
             }
         },
-        async retryFailed({ timeLimitMs = 60000, variant = 'default' }) {
+        async retryFailed({ timeLimitMs = MEGA_RETRY_DEFAULT_TIME_LIMIT_MS, variant = 'default' }) {
             const failed = this.getFailedLevels();
             if (!failed.length) {
                 APP.UI.showMessage('Mega retry: no failed levels.', 'text-emerald-600');
@@ -11343,12 +11348,22 @@
         };
 
 
+        // TEMP (2026-03-29): Mega solver time presets are doubled for timeout investigation.
+        // Baseline (for easy revert): default 15000, retry default 60000, presets 30000/60000/120000, alt preset 60000.
+        // Revert by restoring these constants to baseline values.
+        const MEGA_DEFAULT_TIME_LIMIT_MS = 30000;
+        const MEGA_RETRY_DEFAULT_TIME_LIMIT_MS = 120000;
+        const MEGA_RETRY_PRESET_30_MS = 60000;
+        const MEGA_RETRY_PRESET_60_MS = 120000;
+        const MEGA_RETRY_PRESET_120_MS = 240000;
+        const MEGA_RETRY_PRESET_ALT_MS = 120000;
+
         const megaSolve = async (levels, opts = {}) => {
             if (APP.State.ENGINE.activeSolverController) return { cancelled: true };
             const controller = startRun({ label: 'Mega solver running…', mode: 'mega' });
             if (!controller) return { cancelled: true };
             const toRun = opts.targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
-            const timeLimitMs = opts.timeLimitMs ?? 15000;
+            const timeLimitMs = opts.timeLimitMs ?? MEGA_DEFAULT_TIME_LIMIT_MS;
             const variant = opts.variant || 'default';
             const results = opts.results || {};
             const meta = opts.meta || {};
@@ -11406,7 +11421,9 @@
                 + (level?.portalMap?.size || 0);
 
             const budget = 2500 + (gridArea * 15) + (reqLen * 40) + (specialObjects * 120);
-            return Math.max(3000, Math.min(30000, Math.floor(budget)));
+            // TEMP (2026-03-29): doubled trap-spot search ceiling from 30000ms to 60000ms.
+            // Revert target ceiling to 30000ms once timeout experiment completes.
+            return Math.max(3000, Math.min(60000, Math.floor(budget)));
         };
 
         const findTrapSpots = async (level, opts = {}) => {
@@ -15816,10 +15833,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             await APP.UI.copyText(out, { fallbackElId: 'auditReportRows' });
             APP.UI.showMessage(`Audit ${mode} copied.`, 'text-white font-black');
         };
-        document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 30000, variant: 'default' }); };
-        document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'default' }); };
-        document.getElementById('megaRetry120Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 120000, variant: 'default' }); };
-        document.getElementById('megaRetryAltBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: 60000, variant: 'altOrder' }); };
+        document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_30_MS, variant: 'default' }); };
+        document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_60_MS, variant: 'default' }); };
+        document.getElementById('megaRetry120Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_120_MS, variant: 'default' }); };
+        document.getElementById('megaRetryAltBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_ALT_MS, variant: 'altOrder' }); };
 
         const tModal = document.getElementById('themeModal');
         document.getElementById('openThemeModalBtn').onclick = () => {
@@ -15885,7 +15902,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.UI.showMessage('Search timed out; results incomplete.', 'text-amber-300 font-black');
                 const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
                 if (retry) {
-                    const retryBudgetMs = Math.min(120000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
+                    // TEMP (2026-03-29): doubled trap-spot retry ceiling from 120000ms to 240000ms.
+                    // Revert target ceiling to 120000ms after timeout experiment.
+                    const retryBudgetMs = Math.min(240000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
                     const retryLevel = APP.LevelUtils.deepCloneLevel(l);
                     const retryRes = await APP.Solver.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs });
                     APP.Editor.setTrapSpots(retryRes.spots || new Set());
