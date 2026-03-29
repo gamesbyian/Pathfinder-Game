@@ -16351,13 +16351,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             return { terminatedByReferee: false, hitBudgetCap: false, endedNaturally: false, terminationReason: 'error' };
         };
-        const toCanonicalProgressSamples = (samples = [], attempt = {}, elapsedWallTimeMs = 0) => {
-            if (!Array.isArray(samples) || samples.length === 0) return [];
+        const toCanonicalProgressSamples = (samples = []) => {
+            if (!Array.isArray(samples)) return [];
             const canonical = [];
             let priorTimeMs = 0;
-            let seenDepth = Number.isFinite(attempt?.depthReached)
-                ? attempt.depthReached
-                : (Number.isFinite(attempt?.maxDepth) ? attempt.maxDepth : 0);
+            let timelineOffsetMs = 0;
             for (const sample of samples) {
                 const rawTimeMs = Number.isFinite(sample?.timeMs)
                     ? sample.timeMs
@@ -16368,31 +16366,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const sourceTimeMs = Number.isFinite(rawTimeMs)
                     ? Math.max(0, rawTimeMs)
                     : (Number.isFinite(fallbackTimeMs) ? Math.max(0, fallbackTimeMs) : priorTimeMs);
-                const adjustedTimeMs = Math.max(priorTimeMs, sourceTimeMs);
-                if (Number.isFinite(sample?.depth)) seenDepth = Math.max(seenDepth, sample.depth);
-                const depth = Number.isFinite(sample?.depth)
-                    ? sample.depth
-                    : (Number.isFinite(sample?.maxDepthReached)
-                        ? sample.maxDepthReached
-                        : seenDepth);
+                if (canonical.length > 0 && sourceTimeMs < priorTimeMs) {
+                    timelineOffsetMs += priorTimeMs;
+                }
+                const adjustedTimeMs = Math.max(priorTimeMs, sourceTimeMs + timelineOffsetMs);
                 canonical.push({
                     timeMs: adjustedTimeMs,
                     nodesExpanded: Number.isFinite(sample?.nodesExpanded) ? sample.nodesExpanded : 0,
-                    depth: Number.isFinite(depth) ? Math.max(0, depth) : 0
+                    depth: Number.isFinite(sample?.depth)
+                        ? sample.depth
+                        : (Number.isFinite(sample?.maxDepthReached) ? sample.maxDepthReached : 0)
                 });
                 priorTimeMs = adjustedTimeMs;
-            }
-            if (canonical.length > 0 && canonical[0].timeMs !== 0) {
-                canonical.unshift({ ...canonical[0], timeMs: 0 });
-            }
-            if (Number.isFinite(elapsedWallTimeMs) && elapsedWallTimeMs >= 0 && canonical.length > 0) {
-                const last = canonical[canonical.length - 1];
-                if (last.timeMs < elapsedWallTimeMs) {
-                    canonical.push({
-                        ...last,
-                        timeMs: elapsedWallTimeMs
-                    });
-                }
             }
             return canonical;
         };
@@ -16404,6 +16389,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ? attempt.budgetMs
                 : (Number.isFinite(attempt?.attemptBudgetMs) ? attempt.attemptBudgetMs : 0);
             const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
+            const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
+            const progressSummary = attempt?.progressSummary || {};
             const structuralRaw = attempt?.structuralMode;
             const structuralMode = typeof structuralRaw === 'string'
                 ? structuralRaw
@@ -16411,57 +16398,34 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const phasePolicy = typeof attempt?.phasePolicy === 'string'
                 ? attempt.phasePolicy
                 : (attempt?.phasePolicy?.archetype || 'default');
-            const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples, attempt, elapsedWallTimeMs);
             const maxSampleDepth = progressSamples.reduce((maxDepth, sample) => {
                 const depth = Number.isFinite(sample?.depth) ? sample.depth : 0;
                 return Math.max(maxDepth, depth);
             }, 0);
-            const maxDepth = Number.isFinite(attempt?.depthReached)
-                ? attempt.depthReached
-                : (Number.isFinite(attempt?.maxDepth)
-                    ? attempt.maxDepth
-                    : maxSampleDepth);
-            const derivedPlateau = (() => {
-                if (!progressSamples.length) return { plateauDetected: false, plateauTimeMs: null };
-                const finalNodes = Number(progressSamples[progressSamples.length - 1]?.nodesExpanded) || 0;
-                for (let i = progressSamples.length - 2; i >= 0; i--) {
-                    if ((Number(progressSamples[i]?.nodesExpanded) || 0) < finalNodes) {
-                        return {
-                            plateauDetected: i < progressSamples.length - 2,
-                            plateauTimeMs: i < progressSamples.length - 2
-                                ? progressSamples[i + 1]?.timeMs || null
-                                : null
-                        };
-                    }
-                }
-                return {
-                    plateauDetected: progressSamples.length > 1,
-                    plateauTimeMs: progressSamples.length > 1 ? progressSamples[1]?.timeMs || 0 : null
-                };
-            })();
             return {
                 label: attempt?.label || toAttemptLabel(attemptIndex),
                 attemptIndex,
                 attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || 'main',
-                policyProfile: attempt?.policyProfile || attempt?.attemptFamily || null,
-                scoringMode: attempt?.scoringMode || attempt?.mode || null,
-                orderingPolicy: attempt?.orderingPolicy || attempt?.policy || null,
-                portalBiasMode: attempt?.portalBiasMode || attempt?.portalMode || null,
+                policyProfile: attempt?.policyProfile || attempt?.attemptFamily || 'unknown',
+                scoringMode: attempt?.scoringMode || attempt?.mode || 'unknown',
+                orderingPolicy: attempt?.orderingPolicy || attempt?.policy || 'unknown',
+                portalBiasMode: attempt?.portalBiasMode || attempt?.portalMode || 'unknown',
                 structuralMode,
                 phasePolicy,
                 budgetMs,
                 elapsedWallTimeMs,
-                solveTimeMs: Number.isFinite(attempt?.solveTimeMs) ? attempt.solveTimeMs : elapsedWallTimeMs,
+                solveTimeMs: status === 'success' ? elapsedWallTimeMs : null,
                 hitBudgetCap: termination.hitBudgetCap,
                 endedNaturally: termination.endedNaturally,
                 terminatedByReferee: termination.terminatedByReferee,
                 terminationReason: termination.terminationReason,
                 status,
-                solved: status === 'success',
-                producedHintValid: attempt?.producedHintValid === true || status === 'success',
                 nodesExpanded: Number.isFinite(attempt?.nodesExpanded) ? attempt.nodesExpanded : 0,
-                candidateMovesConsidered: Number.isFinite(attempt?.candidateMovesConsidered) ? attempt.candidateMovesConsidered : 0,
-                maxDepth: Math.max(maxDepth, maxSampleDepth),
+                maxDepth: Number.isFinite(attempt?.depthReached)
+                    ? attempt.depthReached
+                    : (Number.isFinite(attempt?.maxDepth)
+                        ? attempt.maxDepth
+                        : maxSampleDepth),
                 prunes: {
                     lenOverflow: Number.isFinite(prunes?.lenOverflow) ? prunes.lenOverflow : 0,
                     intsOverflow: Number.isFinite(prunes?.intsOverflow) ? prunes.intsOverflow : 0,
@@ -16471,7 +16435,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     deadEnd: Number.isFinite(prunes?.deadEnd) ? prunes.deadEnd : 0
                 },
                 progressSamples,
-                progressSummary: derivedPlateau
+                progressSummary: {
+                    plateauDetected: !!progressSummary?.plateauDetected,
+                    plateauTimeMs: Number.isFinite(progressSummary?.plateauTimeMs) ? progressSummary.plateauTimeMs : null
+                }
             };
         };
         const buildFullExportAttempts = (rawAttemptHistory = []) => {
@@ -16538,7 +16505,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             const metrics = r?.newHint?.failureProfile?.metrics || {};
             const attempts = buildFullExportAttempts(r?.newHint?.attemptHistory);
-            const attemptLabelsTried = attempts.map((attempt) => `${attempt?.label || ''}`.trim()).filter(Boolean);
             return {
                 level: r.level,
                 featureSignature: r?.newHint?.featureSignature || null,
@@ -16552,8 +16518,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ladderTotalWallTimeMs: Number.isFinite(r?.newHint?.ladderTotalWallTimeMs) ? r.newHint.ladderTotalWallTimeMs : null,
                 ladderTotalSolveTimeMs: Number.isFinite(r?.newHint?.ladderTotalSolveTimeMs) ? r.newHint.ladderTotalSolveTimeMs : null,
                 stopReason: r?.newHint?.stopReason || null,
-                attemptCount: attempts.length,
-                attemptLabelsTried,
+                attemptCount: Number.isFinite(r?.newHint?.attemptCount) ? r.newHint.attemptCount : (Array.isArray(r?.newHint?.attemptHistory) ? r.newHint.attemptHistory.length : null),
+                attemptLabelsTried: Array.isArray(r?.newHint?.attemptLabelsTried) ? r.newHint.attemptLabelsTried : [],
                 failureCategory: r?.newHint?.failureTaxonomy?.category || null,
                 contradictionRecoveryActivated: !!r?.newHint?.contradictionRecoveryActivated,
                 preExpansionAbort: compactAbortReason(r?.newHint?.preExpansionAbort),
@@ -16563,113 +16529,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 rootCandidateCountDepth0: Number.isFinite(r?.newHint?.rootCandidateCountDepth0) ? r.newHint.rootCandidateCountDepth0 : null,
                 depth0PruneBreakdown: (r?.newHint?.depth0PruneBreakdown && typeof r.newHint.depth0PruneBreakdown === 'object') ? r.newHint.depth0PruneBreakdown : null,
                 softBoundActivations: (r?.newHint?.softBoundActivations && typeof r.newHint.softBoundActivations === 'object') ? r.newHint.softBoundActivations : null,
-                softBoundActivationsTotal: Number.isFinite(r?.newHint?.softBoundActivationsTotal)
-                    ? r.newHint.softBoundActivationsTotal
-                    : (r?.newHint?.softBoundActivations && typeof r.newHint.softBoundActivations === 'object'
-                        ? Object.values(r.newHint.softBoundActivations).reduce((sum, count) => sum + (Number(count) || 0), 0)
-                        : null),
                 lowBranchModeActivated: !!r?.newHint?.lowBranchModeActivated,
                 depth0DiversityFloorApplied: !!r?.newHint?.depth0DiversityFloorApplied,
                 depth0DiversityFloorSize: Number.isFinite(r?.newHint?.depth0DiversityFloorSize) ? r.newHint.depth0DiversityFloorSize : null,
                 rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
                 rootSuppressionLog: Array.isArray(r?.newHint?.rootSuppressionLog) ? r.newHint.rootSuppressionLog.slice(0, 12) : null,
-                rootSuppressionSummary: r?.newHint?.rootSuppressionSummary || null,
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
                 attempts,
                 summary: buildLevelAttemptSummary(attempts),
                 error: r?.error?.message || null
             };
-        };
-        const deriveFullExportTopLevelSummaries = (levels = [], progressPayload = null) => {
-            const list = Array.isArray(levels) ? levels : [];
-            const statusCounts = { success: 0, timeout: 0, noSolution: 0, error: 0, other: 0 };
-            const failingLevels = [];
-            let totalTimeMs = 0;
-            let totalNodesExpanded = 0;
-            list.forEach((level) => {
-                const status = `${level?.status || ''}`.trim();
-                if (status === 'success') statusCounts.success++;
-                else if (status === 'timeout') statusCounts.timeout++;
-                else if (status === 'no-solution' || status === 'no-solution-proven' || status === 'no-solution-inconclusive') statusCounts.noSolution++;
-                else if (status === 'error') statusCounts.error++;
-                else statusCounts.other++;
-                if (status !== 'success') failingLevels.push(level?.level);
-                totalTimeMs += Number(level?.timeMs) || 0;
-                totalNodesExpanded += Number(level?.nodesExpanded) || 0;
-            });
-            return {
-                statusCounts,
-                failingLevels,
-                qualitySignals: compactDefined({
-                    avgAttemptsPerLevel: list.length > 0
-                        ? Math.round((list.reduce((sum, level) => sum + (Number(level?.attemptCount) || 0), 0) / list.length) * 100) / 100
-                        : 0,
-                    contradictionRecoveryActivations: list.reduce((sum, level) => sum + (level?.contradictionRecoveryActivated ? 1 : 0), 0)
-                }),
-                performance: compactDefined({
-                    totalTimeMs,
-                    totalNodesExpanded,
-                    avgTimeMsPerLevel: list.length > 0 ? Math.round(totalTimeMs / list.length) : 0
-                }),
-                levelTransitionSummary: null,
-                progress: progressPayload
-            };
-        };
-        const validateFullAuditExportPayload = (payload = {}) => {
-            const errors = [];
-            const levels = Array.isArray(payload?.levels) ? payload.levels : [];
-            if ((Number(payload?.levelCount) || 0) !== levels.length) errors.push('levels.length must equal levelCount');
-            const recomputedStatusCounts = { success: 0, timeout: 0, noSolution: 0, error: 0, other: 0 };
-            const recomputedFailing = [];
-            levels.forEach((level) => {
-                const attempts = Array.isArray(level?.attempts) ? level.attempts : [];
-                if (Array.isArray(level?.attemptHistory)) errors.push(`L${level?.level}: attemptHistory is forbidden`);
-                if (Array.isArray(level?.refereeAttemptHistory)) errors.push(`L${level?.level}: refereeAttemptHistory is forbidden`);
-                if ((Number(level?.attemptCount) || 0) !== attempts.length) errors.push(`L${level?.level}: attemptCount mismatch`);
-                if ((Array.isArray(level?.attemptLabelsTried) ? level.attemptLabelsTried.length : 0) !== attempts.length) errors.push(`L${level?.level}: attemptLabelsTried length mismatch`);
-                if ((Number(level?.summary?.totalAttempts) || 0) !== attempts.length) errors.push(`L${level?.level}: summary.totalAttempts mismatch`);
-                const attemptNodes = attempts.reduce((sum, attempt) => sum + (Number(attempt?.nodesExpanded) || 0), 0);
-                if ((Number(level?.summary?.totalNodesExpanded) || 0) !== attemptNodes) errors.push(`L${level?.level}: summary.totalNodesExpanded mismatch`);
-                const attemptTime = attempts.reduce((sum, attempt) => sum + (Number(attempt?.elapsedWallTimeMs) || 0), 0);
-                if ((Number(level?.summary?.totalTimeMs) || 0) !== attemptTime) errors.push(`L${level?.level}: summary.totalTimeMs mismatch`);
-                const solvedLevel = level?.status === 'success'
-                    || level?.rawStatus === 'solved'
-                    || level?.finalStatus === 'solved'
-                    || level?.finalSolvedBy === 'referee';
-                if (solvedLevel) {
-                    if (attempts.length < 1) errors.push(`L${level?.level}: solved level without attempts`);
-                    if (level?.summary?.solved !== true) errors.push(`L${level?.level}: solved level summary.solved mismatch`);
-                    if (!Number.isFinite(level?.summary?.solvingAttemptIndex)) errors.push(`L${level?.level}: missing solvingAttemptIndex`);
-                }
-                attempts.forEach((attempt) => {
-                    if (attempt?.policyProfile === 'unknown' || attempt?.scoringMode === 'unknown' || attempt?.orderingPolicy === 'unknown' || attempt?.portalBiasMode === 'unknown') {
-                        errors.push(`L${level?.level}: unknown strategy field in attempt ${attempt?.attemptIndex}`);
-                    }
-                    if ((Number(attempt?.budgetMs) || 0) <= 0) errors.push(`L${level?.level}: invalid budgetMs in attempt ${attempt?.attemptIndex}`);
-                    const samples = Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : [];
-                    if (samples.length > 0) {
-                        if (samples[0]?.timeMs !== 0) errors.push(`L${level?.level}: first progress sample must start at 0`);
-                        for (let i = 1; i < samples.length; i++) {
-                            if ((Number(samples[i]?.timeMs) || 0) < (Number(samples[i - 1]?.timeMs) || 0)) errors.push(`L${level?.level}: non-monotonic progress times`);
-                        }
-                        const sampleMaxDepth = samples.reduce((maxDepth, sample) => Math.max(maxDepth, Number(sample?.depth) || 0), 0);
-                        if ((Number(attempt?.maxDepth) || 0) !== sampleMaxDepth) errors.push(`L${level?.level}: maxDepth mismatch in attempt ${attempt?.attemptIndex}`);
-                    }
-                });
-                const status = `${level?.status || ''}`.trim();
-                if (status === 'success') recomputedStatusCounts.success++;
-                else if (status === 'timeout') recomputedStatusCounts.timeout++;
-                else if (status === 'no-solution' || status === 'no-solution-proven' || status === 'no-solution-inconclusive') recomputedStatusCounts.noSolution++;
-                else if (status === 'error') recomputedStatusCounts.error++;
-                else recomputedStatusCounts.other++;
-                if (status !== 'success') recomputedFailing.push(level?.level);
-            });
-            if (JSON.stringify(payload?.statusCounts || {}) !== JSON.stringify(recomputedStatusCounts)) errors.push('statusCounts mismatch vs levels');
-            if (JSON.stringify(payload?.failingLevels || []) !== JSON.stringify(recomputedFailing)) errors.push('failingLevels mismatch vs levels');
-            const progressNewHint = payload?.progress?.newHint || {};
-            if (Number.isFinite(progressNewHint?.success) && progressNewHint.success !== recomputedStatusCounts.success) errors.push('progress.newHint.success mismatch vs levels');
-            if (Number.isFinite(progressNewHint?.failure) && progressNewHint.failure !== (levels.length - recomputedStatusCounts.success)) errors.push('progress.newHint.failure mismatch vs levels');
-            if (errors.length > 0) throw new Error(`Audit export validation failed: ${errors.join('; ')}`);
         };
         const buildAuditExportPayload = (mode = 'issues') => {
             const selectedMode = ['summary', 'issues', 'full'].includes(mode) ? mode : 'issues';
@@ -16682,26 +16551,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const progressPayload = selectedMode === 'full'
                 ? compactProgressForExport(auditProgress, auditLastRunType)
                 : auditProgress;
-            const payload = {
-                timestamp: new Date().toISOString(),
-                commitSha: null,
+            return {
                 exportMode: selectedMode,
                 runType: auditLastRunType,
                 progress: progressPayload,
                 levelCount: levels.length,
                 levels
             };
-            if (selectedMode === 'full' && auditLastRunType === AUDIT_RUN_TYPES.newHint) {
-                const derived = deriveFullExportTopLevelSummaries(levels, progressPayload);
-                payload.progress = derived.progress;
-                payload.statusCounts = derived.statusCounts;
-                payload.failingLevels = derived.failingLevels;
-                payload.qualitySignals = derived.qualitySignals;
-                payload.performance = derived.performance;
-                payload.levelTransitionSummary = derived.levelTransitionSummary;
-                validateFullAuditExportPayload(payload);
-            }
-            return payload;
         };
         const renderAuditReport = () => {
             const summaryEl = document.getElementById('auditSummary');
@@ -17321,24 +17177,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('cancelAuditBtn').onclick = () => { if (!auditRunning) return; stopAuditRun(); };
         document.getElementById('copyAuditExportBtn').onclick = async () => {
             const mode = getAuditExportMode();
-            try {
-                const payload = buildAuditExportPayload(mode);
-                const out = mode === 'issues' && payload.levelCount === 0
-                    ? 'No issues found for last check.'
-                    : JSON.stringify(payload, null, 2);
-                await APP.UI.copyText(out, { fallbackElId: 'auditReportRows' });
-                APP.UI.showMessage(`Audit ${mode} copied.`, 'text-white font-black');
-            } catch (err) {
-                const errorMessage = trimAuditError(err) || 'Audit export failed';
-                console.error('[Audit export error]', err);
-                const errorPayload = JSON.stringify({
-                    exportMode: mode,
-                    runType: auditLastRunType,
-                    error: errorMessage
-                }, null, 2);
-                await APP.UI.copyText(errorPayload, { fallbackElId: 'auditReportRows' });
-                APP.UI.showMessage(`Audit export failed: ${errorMessage}`, 'text-red-300 font-black');
-            }
+            const payload = buildAuditExportPayload(mode);
+            const out = mode === 'issues' && payload.levelCount === 0
+                ? 'No issues found for last check.'
+                : JSON.stringify(payload, null, 2);
+            await APP.UI.copyText(out, { fallbackElId: 'auditReportRows' });
+            APP.UI.showMessage(`Audit ${mode} copied.`, 'text-white font-black');
         };
         document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_30_MS, variant: 'default' }); };
         document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_60_MS, variant: 'default' }); };
