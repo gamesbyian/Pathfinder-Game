@@ -4345,6 +4345,7 @@
                         score,
                         scoreDrivers,
                         mustPassBound: mustBound,
+                        mustCrossBound: crossBound,
                         perimeterBiasContribution,
                         rootAdjustments
                     };
@@ -4581,8 +4582,46 @@
                     if (options?.dirOrderVariant === 'random') {
                         scored.sort(() => Math.random() - 0.5);
                     } else {
+                        const scoreTieEpsilon = 0.35;
+                        const tieFinite = (value, fallback = 9999) => Number.isFinite(value) ? Number(value) : fallback;
+                        const tieObligationMetric = (item) => {
+                            const mustPass = tieFinite(item?.mustPassBound, 9999);
+                            const mustCross = tieFinite(item?.mustCrossBound, 9999);
+                            const total = mustPass + mustCross;
+                            return { mustPass, mustCross, total };
+                        };
+                        const tieGeometryKey = (item) => {
+                            const p = APP.LevelUtils.UNPACK(item.nk);
+                            const gx = l.goalKey & 0xFFFF;
+                            const gy = l.goalKey >> 16;
+                            const distToGoal = Math.abs(p.x - gx) + Math.abs(p.y - gy);
+                            const edgeDist = Math.min(p.x, p.y, (l.grid.w - 1) - p.x, (l.grid.h - 1) - p.y);
+                            const centerX2 = (l.grid.w - 1);
+                            const centerY2 = (l.grid.h - 1);
+                            const centerDist2 = Math.abs((p.x * 2) - centerX2) + Math.abs((p.y * 2) - centerY2);
+                            const parity = ((p.x + p.y) & 1);
+                            return { distToGoal, edgeDist, centerDist2, parity };
+                        };
+                        const compareTieAware = (a, b) => {
+                            const scoreDelta = a.score - b.score;
+                            if (Math.abs(scoreDelta) > scoreTieEpsilon) {
+                                return { order: scoreDelta, reason: 'score-delta', scoreDelta };
+                            }
+                            const oa = tieObligationMetric(a);
+                            const ob = tieObligationMetric(b);
+                            if (oa.total !== ob.total) return { order: oa.total - ob.total, reason: 'obligation-total' };
+                            if (oa.mustPass !== ob.mustPass) return { order: oa.mustPass - ob.mustPass, reason: 'obligation-mustPass' };
+                            if (oa.mustCross !== ob.mustCross) return { order: oa.mustCross - ob.mustCross, reason: 'obligation-mustCross' };
+                            const ga = tieGeometryKey(a);
+                            const gb = tieGeometryKey(b);
+                            if (ga.distToGoal !== gb.distToGoal) return { order: ga.distToGoal - gb.distToGoal, reason: 'geometry-goal-distance' };
+                            if (ga.edgeDist !== gb.edgeDist) return { order: ga.edgeDist - gb.edgeDist, reason: 'geometry-edge-distance' };
+                            if (ga.centerDist2 !== gb.centerDist2) return { order: ga.centerDist2 - gb.centerDist2, reason: 'geometry-center-distance' };
+                            if (ga.parity !== gb.parity) return { order: ga.parity - gb.parity, reason: 'geometry-parity' };
+                            const staticOrder = options?.dirOrderVariant === 'alt' ? (a.nk - b.nk) : (b.nk - a.nk);
+                            return { order: staticOrder, reason: 'static-nk' };
+                        };
                         const compareScored = (a, b) => {
-                            if (a.score !== b.score) return a.score - b.score;
                             if (structuralMode && symmetryCommitted) {
                                 const axis = symmetryModel.axis;
                                 const prefHalf = symmetryModel?.preferredBreak?.half;
@@ -4599,7 +4638,7 @@
                                 const sideOrder = prefBias(ca) - prefBias(cb);
                                 if (sideOrder !== 0) return sideOrder;
                             }
-                            return options?.dirOrderVariant === 'alt' ? (a.nk - b.nk) : (b.nk - a.nk);
+                            return compareTieAware(a, b).order;
                         };
                         for (let i = 1; i < scored.length; i++) {
                             const item = scored[i];
@@ -4609,6 +4648,28 @@
                                 j--;
                             }
                             scored[j + 1] = item;
+                        }
+                        if (depth === 0 && debugStats && scored.length > 0) {
+                            const best = scored[0];
+                            const nearEqual = scored.filter(item => Math.abs(item.score - best.score) <= scoreTieEpsilon);
+                            debugStats.rootTieCount = Math.max(0, nearEqual.length - 1);
+                            if (nearEqual.length >= 2) {
+                                const tieDecision = compareTieAware(nearEqual[0], nearEqual[1]);
+                                debugStats.rootTieBreak = {
+                                    reason: tieDecision.reason || 'score-delta',
+                                    epsilon: scoreTieEpsilon,
+                                    chosenKey: nearEqual[0].nk,
+                                    runnerUpKey: nearEqual[1].nk,
+                                    chosenScore: Number(nearEqual[0].score.toFixed(3)),
+                                    runnerUpScore: Number(nearEqual[1].score.toFixed(3))
+                                };
+                            } else {
+                                debugStats.rootTieBreak = {
+                                    reason: 'score-delta',
+                                    epsilon: scoreTieEpsilon,
+                                    chosenKey: best.nk
+                                };
+                            }
                         }
                     }
                     let orderedNeighbors = scored.map(item => item.nk);
@@ -4686,7 +4747,9 @@
                                 policyName,
                                 phaseArchetype: activePhase,
                                 topScoreDrivers: rankedDrivers.slice(0, 3),
-                                rootPolicyDistinctiveness: `${policyName}:${policyFingerprint}`
+                                rootPolicyDistinctiveness: `${policyName}:${policyFingerprint}`,
+                                rootTieCount: Number(debugStats.rootTieCount || 0),
+                                rootTieBreakReason: debugStats.rootTieBreak?.reason || 'score-delta'
                             };
                         }
                         if (nearUniquePathSignature && !debugStats.depth0DiversityFloorApplied) {
