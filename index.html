@@ -7704,6 +7704,10 @@
                     escalationReason: entry?.escalationReason || null,
                     retryTag: entry?.retryTag || null,
                     orderingTweaks: entry?.retryEscalation || entry?.orderingTweaks || null,
+                    diversificationMatrix: entry?.diversificationMatrix || null,
+                    attemptSignatureHash: entry?.attemptSignatureHash || null,
+                    attemptSignatureTuple: Array.isArray(entry?.attemptSignatureTuple) ? entry.attemptSignatureTuple : null,
+                    duplicateAttemptSignature: entry?.duplicateAttemptSignature === true ? true : null,
                     commitmentPlan: compactCommitmentPlanForAudit(entry?.commitmentPlan),
                     status: entry?.status || null,
                     finalStatus: entry?.rawStatus || null,
@@ -9747,6 +9751,118 @@
             let broadStagnationRescueUsed = false;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
+            const canonicalizeDisabledPrunes = (prunes = []) => {
+                if (!Array.isArray(prunes) || prunes.length === 0) return [];
+                return Array.from(new Set(prunes.map(p => String(p || '').trim()).filter(Boolean))).sort();
+            };
+            const hashAttemptSignature = (raw) => {
+                const src = String(raw || '');
+                let hash = 0x811c9dc5;
+                for (let i = 0; i < src.length; i++) {
+                    hash ^= src.charCodeAt(i);
+                    hash = Math.imul(hash, 0x01000193);
+                }
+                return `sig-${(hash >>> 0).toString(16).padStart(8, '0')}`;
+            };
+            const buildAttemptSignatureTuple = (attempt = {}) => {
+                const rootOrderingProfile = String(
+                    attempt?.rootOrderingProfile
+                    || attempt?.orderingPolicy
+                    || attempt?.policyProfile
+                    || 'default'
+                );
+                const beamCompositionRule = String(
+                    attempt?.beamCompositionRule
+                    || (attempt?.forceRootExpansionFloor ? `floor:${Number(attempt?.rootExpansionFloorCount) || 0}` : 'adaptive')
+                );
+                const portalBiasMode = String(attempt?.portalBiasMode || 'adaptiveMustCross');
+                const disabledPruneSet = canonicalizeDisabledPrunes(attempt?.disabledPrunes || []);
+                const seed = Number.isFinite(attempt?.rootTieSeed)
+                    ? Number(attempt.rootTieSeed)
+                    : ((typeof attempt?.label === 'string' ? attempt.label.length : 0) + ((Number(attempt?.attemptOrdinal) || 0) * 17));
+                return [rootOrderingProfile, beamCompositionRule, portalBiasMode, disabledPruneSet, seed];
+            };
+            const applyAttemptSignature = (attempt = {}) => {
+                const signatureTuple = buildAttemptSignatureTuple(attempt);
+                const signatureSource = JSON.stringify(signatureTuple);
+                attempt.attemptSignatureTuple = signatureTuple;
+                attempt.attemptSignatureHash = hashAttemptSignature(signatureSource);
+                return {
+                    tuple: signatureTuple,
+                    hash: attempt.attemptSignatureHash
+                };
+            };
+            const diversificationMatrix = [
+                { rootOrderingProfile: 'objectiveFirst', orderingPolicy: 'objectiveFirst', beamCompositionRule: 'floor-2-wide', rootExpansionFloorCount: 2, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: [] },
+                { rootOrderingProfile: 'knotBuilder', orderingPolicy: 'knotBuilder', beamCompositionRule: 'floor-3-objective', rootExpansionFloorCount: 3, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'off', disabledPrunes: ['mustPassBound'] },
+                { rootOrderingProfile: 'portalFirstTransfer', orderingPolicy: 'portalFirstTransfer', beamCompositionRule: 'adaptive-relaxed', rootExpansionFloorCount: 1, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'agnostic', disabledPrunes: ['mustCrossBound'] },
+                { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] }
+            ];
+            const applyDeterministicDiversificationMatrix = (attempt, context = {}) => {
+                if (!attempt) return null;
+                const timeoutLikeCount = Math.max(0, Number(context?.timeoutLikeAttemptsSoFar) || 0);
+                const tier = Math.max(0, Number(context?.timeoutEscalationTier) || 0);
+                const familyOffset = context?.timeoutFamilyDiversificationUsed ? 1 : 0;
+                const matrixOffset = Math.max(0, Number(context?.matrixOffset) || 0);
+                const idx = (timeoutLikeCount + tier + familyOffset + matrixOffset) % diversificationMatrix.length;
+                const row = diversificationMatrix[idx];
+                attempt.rootOrderingProfile = row.rootOrderingProfile;
+                attempt.orderingPolicy = row.orderingPolicy;
+                attempt.beamCompositionRule = row.beamCompositionRule;
+                attempt.rootExpansionFloorCount = Math.max(Number(attempt?.rootExpansionFloorCount) || 0, Number(row.rootExpansionFloorCount) || 0);
+                attempt.forceRootExpansionFloor = row.forceRootExpansionFloor;
+                attempt.relaxRootSuppressionFirstLayer = row.relaxRootSuppressionFirstLayer;
+                attempt.portalBiasMode = row.portalBiasMode;
+                attempt.disabledPrunes = canonicalizeDisabledPrunes([...(attempt?.disabledPrunes || []), ...(row.disabledPrunes || [])]);
+                const seededBase = Number.isFinite(attempt.rootTieSeed) ? Number(attempt.rootTieSeed) : 0;
+                attempt.rootTieSeed = (seededBase ^ ((idx + 1) * 2654435761 >>> 0)) >>> 0;
+                applyAttemptSignature(attempt);
+                return compactDefined({
+                    matrixIndex: idx,
+                    rootOrderingProfile: row.rootOrderingProfile,
+                    beamCompositionRule: row.beamCompositionRule,
+                    portalBiasMode: row.portalBiasMode,
+                    disabledPruneSet: attempt.disabledPrunes.slice()
+                });
+            };
+            const queuedAttemptSignatures = new Set();
+            const registerAttemptSignature = (attempt, options = {}) => {
+                if (!attempt) return { allowed: false, reason: 'missing-attempt' };
+                const signature = applyAttemptSignature(attempt);
+                const hash = signature?.hash || null;
+                if (!hash) return { allowed: false, reason: 'missing-signature' };
+                if (attempt.__signatureRegistered === true && attempt.__signatureRegisteredHash === hash) {
+                    return { allowed: true, hash, tuple: signature?.tuple || null, alreadyRegistered: true };
+                }
+                if (queuedAttemptSignatures.has(hash)) {
+                    if (options.markDuplicate !== false) {
+                        attempt.duplicateAttemptSignature = true;
+                        attempt.duplicateAttemptSignatureHash = hash;
+                    }
+                    return { allowed: false, reason: 'duplicate-signature', hash, tuple: signature?.tuple || null };
+                }
+                queuedAttemptSignatures.add(hash);
+                attempt.__signatureRegistered = true;
+                attempt.__signatureRegisteredHash = hash;
+                attempt.duplicateAttemptSignature = false;
+                return { allowed: true, hash, tuple: signature?.tuple || null };
+            };
+            const diversifyAndRegisterAttempt = (attempt, context = {}, options = {}) => {
+                if (!attempt) return { allowed: false, reason: 'missing-attempt' };
+                const maxTries = Math.max(1, diversificationMatrix.length);
+                let lastRegistration = null;
+                for (let offset = 0; offset < maxTries; offset++) {
+                    const matrixApplied = applyDeterministicDiversificationMatrix(attempt, { ...context, matrixOffset: offset });
+                    attempt.diversificationMatrix = matrixApplied;
+                    lastRegistration = registerAttemptSignature(attempt, options);
+                    if (lastRegistration.allowed) {
+                        attempt.duplicateAttemptSignature = false;
+                        return { ...lastRegistration, matrixApplied };
+                    }
+                }
+                attempt.duplicateAttemptSignature = true;
+                return { ...(lastRegistration || {}), allowed: false, reason: 'duplicate-signature-after-diversification' };
+            };
             const extractAttemptRootKeys = (entry = null) => {
                 if (!entry) return [];
                 const forced = Array.isArray(entry?.forcedRootSelectedKeys) ? entry.forcedRootSelectedKeys : [];
@@ -10004,6 +10120,14 @@
             let previousTelemetry = null;
             let bestTemplate = null;
             let bestTemplateScore = -Infinity;
+            for (let planIdx = 0; planIdx < attempts.length; planIdx++) {
+                const plannedAttempt = attempts[planIdx];
+                if (!plannedAttempt) continue;
+                const plannedRegistration = registerAttemptSignature(plannedAttempt, { markDuplicate: true });
+                if (!plannedRegistration.allowed) {
+                    plannedAttempt.skipReason = plannedRegistration.reason || 'duplicate-signature-planned';
+                }
+            }
             const templatePerfScore = (quality, result) => {
                 const objectiveBonus = Number.isFinite(quality.finalObjectives) ? Math.max(0, 2 - quality.finalObjectives) * 0.2 : 0;
                 const statusBonus = result?.status === 'timeout' ? -0.05 : (result?.status === 'no-solution-proven' ? 0.4 : 0);
@@ -10012,6 +10136,22 @@
             for (let i = 0; i < attempts.length; i++) {
                 const attempt = attempts[i];
                 attempt.attemptOrdinal = i + 1;
+                applyAttemptSignature(attempt);
+                const executionRegistration = registerAttemptSignature(attempt, { markDuplicate: true });
+                if (!executionRegistration.allowed) {
+                    attemptsUsed.push({
+                        label: attempt.label || null,
+                        status: 'skipped-duplicate-signature',
+                        rawStatus: 'skipped-duplicate-signature',
+                        stopReason: executionRegistration.reason || 'duplicate-signature',
+                        solved: false,
+                        budgetMs: attempt.budgetMs,
+                        attemptSignatureHash: attempt?.attemptSignatureHash || executionRegistration.hash || null,
+                        attemptSignatureTuple: attempt?.attemptSignatureTuple || executionRegistration.tuple || null,
+                        duplicateAttemptSignature: true
+                    });
+                    continue;
+                }
                 if (attempt.label === 'template-best-focus') {
                     if (!bestTemplate || bestTemplateScore < 0.2) {
                         templateDiagnostics.reallocatedBudgetMs += attempt.budgetMs;
@@ -10089,6 +10229,10 @@
                     quality,
                     attemptInstrumentation,
                     retryEscalation: attempt.orderingTweaks || null,
+                    diversificationMatrix: attempt.diversificationMatrix || null,
+                    attemptSignatureHash: attempt.attemptSignatureHash || null,
+                    attemptSignatureTuple: attempt.attemptSignatureTuple || null,
+                    duplicateAttemptSignature: attempt.duplicateAttemptSignature === true ? true : null,
                     structuralTemplate: attempt.structuralTemplate ? { id: attempt.structuralTemplate.id, confidence: attempt.structuralTemplate.confidence || 0 } : null,
                     hypothesis: controlPlane?.activeHypothesis ? { ...controlPlane.activeHypothesis } : null,
                     rootCandidatesGenerated: Number.isFinite(attemptResult?.debug?.rootCandidatesGenerated) ? attemptResult.debug.rootCandidatesGenerated : null,
@@ -10178,11 +10322,11 @@
                             nextAttempt.escalationReason = reason;
                         }
                     };
-                    const nodesExpanded = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
-                    const maxDepthReached = Math.max(0, Number(attemptResult?.debug?.maxDepth) || 0);
                     const timeoutLikeAttemptsSoFar = attemptsUsed.reduce((count, usedAttempt) => {
                         return count + (['timeout', 'no-solution-inconclusive'].includes(usedAttempt?.status) ? 1 : 0);
                     }, 0);
+                    const nodesExpanded = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
+                    const maxDepthReached = Math.max(0, Number(attemptResult?.debug?.maxDepth) || 0);
                     const lowExpansionThreshold = Math.max(14, Math.floor(((timeoutLikeAttemptsSoFar + 1) * 16) / 2));
                     const depthZeroDebug = ensureDepthZeroDebug(attemptResult?.debug || {});
                     const rootExpanded = Math.max(0, Number(attemptResult?.debug?.rootCandidatesExpanded) || 0);
@@ -10285,9 +10429,19 @@
                             })
                         };
                         if (!recoveryExists) {
-                            attempts.splice(i + 1, 0, recoveryAttempt);
-                            if (currentAttemptEntry) {
-                                currentAttemptEntry.nextAttemptInserted = true;
+                            const recoveryRegistration = diversifyAndRegisterAttempt(recoveryAttempt, {
+                                timeoutLikeAttemptsSoFar,
+                                timeoutEscalationTier,
+                                timeoutFamilyDiversificationUsed
+                            }, { markDuplicate: true });
+                            if (recoveryRegistration.allowed) {
+                                attempts.splice(i + 1, 0, recoveryAttempt);
+                                if (currentAttemptEntry) {
+                                    currentAttemptEntry.nextAttemptInserted = true;
+                                }
+                            } else if (currentAttemptEntry) {
+                                currentAttemptEntry.nextAttemptInserted = false;
+                                currentAttemptEntry.nextAttemptBlockedReason = recoveryRegistration.reason || 'duplicate-signature';
                             }
                         }
                         if (currentAttemptEntry) {
@@ -10527,14 +10681,26 @@
                                 policyProfile: 'finishFirst',
                                 forcedFamilySwitch: !!nextAttempt.forcedFamilySwitch
                             };
-                            attempts.push(escalatedAttempt);
-                            setAdaptationReason('healthy-expansion-timeout-final-escalation-more-time', {
-                                nextAttemptInserted: true
-                            });
+                            const escalatedRegistration = diversifyAndRegisterAttempt(escalatedAttempt, {
+                                timeoutLikeAttemptsSoFar,
+                                timeoutEscalationTier: finalTier,
+                                timeoutFamilyDiversificationUsed
+                            }, { markDuplicate: true });
+                            if (escalatedRegistration.allowed) {
+                                attempts.push(escalatedAttempt);
+                                setAdaptationReason('healthy-expansion-timeout-final-escalation-more-time', {
+                                    nextAttemptInserted: true
+                                });
+                            } else {
+                                setAdaptationReason('healthy-expansion-timeout-final-escalation-skipped-duplicate', {
+                                    nextAttemptInserted: false,
+                                    nextAttemptBlockedReason: escalatedRegistration.reason || 'duplicate-signature'
+                                });
+                            }
                             if (currentAttemptEntry && !currentAttemptEntry.escalationDecision) {
                                 currentAttemptEntry.escalationDecision = 'novelty-gate-pass-final-escalation-added';
                             }
-                            escalatedAttemptsAdded += 1;
+                            if (escalatedRegistration.allowed) escalatedAttemptsAdded += 1;
                         }
                         if (Number.isFinite(noveltyScore)) {
                             lastEscalationNoveltyScore = noveltyScore;
@@ -10589,10 +10755,29 @@
                             maxProgress: quality.maxProgress
                         };
                     }
-                    if (currentAttemptEntry && nextAttempt) {
-                        if (timeoutProne) {
-                            applyRootNoveltyPenalty(nextAttempt, 'timeout-retry-novelty-penalty', currentAttemptEntry);
+                    if (currentAttemptEntry && nextAttempt && timeoutProne) {
+                        applyRootNoveltyPenalty(nextAttempt, 'timeout-retry-novelty-penalty', currentAttemptEntry);
+                    }
+                    if (timeoutProne && nextAttempt) {
+                        const diversifiedRegistration = diversifyAndRegisterAttempt(nextAttempt, {
+                            timeoutLikeAttemptsSoFar,
+                            timeoutEscalationTier,
+                            timeoutFamilyDiversificationUsed
+                        }, { markDuplicate: true });
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.retryDiversificationApplied = true;
+                            currentAttemptEntry.retryDiversificationMatrix = diversifiedRegistration?.matrixApplied || null;
+                            currentAttemptEntry.nextAttemptSignatureHash = diversifiedRegistration?.hash || nextAttempt?.attemptSignatureHash || null;
                         }
+                        if (!diversifiedRegistration?.allowed) {
+                            if (currentAttemptEntry) {
+                                currentAttemptEntry.nextAttemptBlockedReason = diversifiedRegistration?.reason || 'duplicate-signature-after-diversification';
+                                currentAttemptEntry.nextAttemptDuplicateSignature = true;
+                            }
+                            continue;
+                        }
+                    }
+                    if (currentAttemptEntry && nextAttempt) {
                         currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
                         currentAttemptEntry.nextAttemptReason = currentAttemptEntry.nextAttemptReason || (switchedThisAttempt ? 'strategy-family-switch' : 'advance-ladder');
                     }
