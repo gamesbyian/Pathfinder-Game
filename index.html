@@ -1740,12 +1740,13 @@
         //  12. portalFamily      — committed portal family index (-1 if uncommitted)
         //  13. portalEntry       — committed portal entry key (-1 if uncommitted)
         //  14. portalRegion      — committed portal region (-1 if uncommitted)
-        //  15. portalCoverage    — required portal coverage bitmask
-        //  16. portalReentry     — remaining portal reentry budget
-        //  17. portalOscillation — remaining portal oscillation budget
-        //  18. portalLock        — derived portal lock state string
-        //  19. orderingPolicy    — solver option controlling move ordering
-        //  20. nonZeroUsage      — count of cells with non-zero filter usage (-1 if no filters)
+        //  15. portalHardCoverage — required portal coverage bitmask
+        //  16. portalSoftCoverage — scoring-only desired portal bitmask
+        //  17. portalReentry      — remaining portal reentry budget
+        //  18. portalOscillation  — remaining portal oscillation budget
+        //  19. portalLock         — derived portal lock state string
+        //  20. orderingPolicy     — solver option controlling move ordering
+        //  21. nonZeroUsage       — count of cells with non-zero filter usage (-1 if no filters)
         const StateSignature = {
                 makeKey(state, policy = {}) {
                     if (!state?.path?.length) return null;
@@ -1768,13 +1769,14 @@
                     const portalFamily = Number.isFinite(policy.portalSelectedFamily) ? policy.portalSelectedFamily : -1;
                     const portalEntry = Number.isFinite(policy.portalSelectedEntry) ? policy.portalSelectedEntry : -1;
                     const portalRegion = Number.isFinite(policy.portalCommittedRegion) ? policy.portalCommittedRegion : -1;
-                    const portalCoverage = (typeof policy.portalRequiredCoverageMask === 'bigint') ? policy.portalRequiredCoverageMask.toString() : '0';
+                    const portalHardCoverage = (typeof policy.portalHardRequiredMask === 'bigint') ? policy.portalHardRequiredMask.toString() : '0';
+                    const portalSoftCoverage = (typeof policy.portalSoftDesiredMask === 'bigint') ? policy.portalSoftDesiredMask.toString() : '0';
                     const portalReentry = Number.isFinite(policy.portalReentryBudget) ? policy.portalReentryBudget : 0;
                     const portalOscillation = Number.isFinite(policy.portalOscillationBudget) ? policy.portalOscillationBudget : 0;
                     const portalLock = policy.portalLockState || '';
                     const orderingPolicy = policy.orderingPolicy || '';
                     const nonZeroUsage = Number.isFinite(policy.nonZeroUsage) ? policy.nonZeroUsage : -1;
-                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage].join('|');
+                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalHardCoverage, portalSoftCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage].join('|');
                 }
             };
 
@@ -2099,7 +2101,8 @@
                         portalLastProgressValue: -1,
                         portalLastFamily: -1,
                         portalLastRegion: -1,
-                        portalRequiredCoverageMask: typeof portalAutomaton?.mandatoryMask === 'bigint' ? portalAutomaton.mandatoryMask : 0n,
+                        portalHardRequiredMask: typeof portalAutomaton?.mandatoryMask === 'bigint' ? portalAutomaton.mandatoryMask : 0n,
+                        portalSoftDesiredMask: typeof portalAutomaton?.desiredMask === 'bigint' ? portalAutomaton.desiredMask : (typeof portalAutomaton?.mandatoryMask === 'bigint' ? portalAutomaton.mandatoryMask : 0n),
                         portalReentryBudget: portalReentryCap,
                         portalOscillationBudget: portalOscillationCap
                     };
@@ -2136,7 +2139,8 @@
                     h0 = this._mixHashBigInt(h0, mustCrossCompact);
                     h1 = this._mixHash32(h1, portalFamily | 0);
                     h0 = this._mixHash32(h0, portalLockCode);
-                    h1 = this._mixHashBigInt(h1, state.portal?.portalRequiredCoverageMask || 0n);
+                    h1 = this._mixHashBigInt(h1, state.portal?.portalHardRequiredMask || 0n);
+                    h0 = this._mixHashBigInt(h0, state.portal?.portalSoftDesiredMask || 0n);
                     h0 = this._mixHash32(h0, Number.isFinite(state.portal?.portalCommittedRegion) ? state.portal?.portalCommittedRegion : -1);
                     h1 = this._mixHash32(h1, Number.isFinite(state.portal?.portalReentryBudget) ? state.portal?.portalReentryBudget : 0);
                     h0 = this._mixHash32(h0, Number.isFinite(state.portal?.portalOscillationBudget) ? state.portal?.portalOscillationBudget : 0);
@@ -2160,7 +2164,8 @@
                         portalSelectedFamily: state.portal?.portalSelectedFamily,
                         portalSelectedEntry: state.portal?.portalSelectedEntry,
                         portalCommittedRegion: state.portal?.portalCommittedRegion,
-                        portalRequiredCoverageMask: state.portal?.portalRequiredCoverageMask,
+                        portalHardRequiredMask: state.portal?.portalHardRequiredMask,
+                        portalSoftDesiredMask: state.portal?.portalSoftDesiredMask,
                         portalReentryBudget: state.portal?.portalReentryBudget,
                         portalOscillationBudget: state.portal?.portalOscillationBudget,
                         portalLockState: this._derivePortalLockState(state, options),
@@ -2284,7 +2289,7 @@
                     const crossNeed = this._crossNeeds(state);
                     const crossBound = crossNeed > 0 ? this._estimateMustCrossBoundFrom(key, state, l) : 0;
                     const { extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state?.mustCrossMask || 0n, crossNeed, l);
-                    const coverageMask = typeof state?.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal?.portalRequiredCoverageMask : 0n;
+                    const coverageMask = typeof state?.portal?.portalHardRequiredMask === 'bigint' ? state.portal?.portalHardRequiredMask : 0n;
                     const portalDetail = this._estimatePortalMandatoryFamilyBoundFrom(key, coverageMask, l);
                     const portalBound = portalDetail.bound;
                     const components = [goalDist ?? Infinity, mustBound, crossBound, portalBound];
@@ -2336,22 +2341,26 @@
                 },
                 _portalProgressTransitionFeasible(fromKey, toKey, state, l, options = {}) {
                     const automaton = l?.portalTransitionAutomaton;
-                    const currentMask = typeof state?.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal?.portalRequiredCoverageMask : 0n;
+                    const currentHardMask = typeof state?.portal?.portalHardRequiredMask === 'bigint' ? state.portal?.portalHardRequiredMask : 0n;
+                    const currentSoftMask = typeof state?.portal?.portalSoftDesiredMask === 'bigint' ? state.portal?.portalSoftDesiredMask : 0n;
                     if (!automaton || !automaton.ready) {
                         return {
                             feasible: true,
-                            nextCoverageMask: currentMask,
+                            nextHardRequiredMask: currentHardMask,
+                            nextSoftDesiredMask: currentSoftMask,
                             nextReentryBudget: Number.isFinite(state?.portal?.portalReentryBudget) ? state.portal?.portalReentryBudget : 0,
                             nextOscillationBudget: Number.isFinite(state?.portal?.portalOscillationBudget) ? state.portal?.portalOscillationBudget : 0
                         };
                     }
                     const family = automaton.familyByEntry?.get(fromKey);
-                    let nextMask = currentMask;
+                    let nextHardMask = currentHardMask;
+                    let nextSoftMask = currentSoftMask;
                     let nextReentryBudget = Number.isFinite(state?.portal?.portalReentryBudget) ? state.portal?.portalReentryBudget : 0;
                     let nextOscillationBudget = Number.isFinite(state?.portal?.portalOscillationBudget) ? state.portal?.portalOscillationBudget : 0;
                     if (Number.isFinite(family) && family >= 0) {
                         const bit = 1n << BigInt(family);
-                        nextMask &= ~bit;
+                        nextHardMask &= ~bit;
+                        nextSoftMask &= ~bit;
                         const selectedFamily = Number.isFinite(state?.portal?.portalSelectedFamily) ? state.portal?.portalSelectedFamily : -1;
                         const lastFamily = Number.isFinite(state?.portal?.portalLastFamily) ? state.portal?.portalLastFamily : -1;
                         if (selectedFamily === family) nextReentryBudget -= 1;
@@ -2359,7 +2368,8 @@
                     }
                     return {
                         feasible: nextReentryBudget >= 0 && nextOscillationBudget >= 0,
-                        nextCoverageMask: nextMask,
+                        nextHardRequiredMask: nextHardMask,
+                        nextSoftDesiredMask: nextSoftMask,
                         nextReentryBudget,
                         nextOscillationBudget
                     };
@@ -2610,9 +2620,10 @@
                     const LOG_PORTAL_LAST_PROGRESS = 18;
                     const LOG_PORTAL_LAST_FAMILY = 19;
                     const LOG_PORTAL_LAST_REGION = 20;
-                    const LOG_PORTAL_REQUIRED_MASK = 21;
-                    const LOG_PORTAL_REENTRY_BUDGET = 22;
-                    const LOG_PORTAL_OSC_BUDGET = 23;
+                    const LOG_PORTAL_HARD_MASK = 21;
+                    const LOG_PORTAL_SOFT_MASK = 22;
+                    const LOG_PORTAL_REENTRY_BUDGET = 23;
+                    const LOG_PORTAL_OSC_BUDGET = 24;
                     const startLogCursor = s.logCursor;
                     const prevKey = s.path[s.path.length - 1];
                     const prevPathLen = s.path.length;
@@ -2698,11 +2709,15 @@
                                 this._undoLogWrite(s, LOG_PORTAL_OSC, 0, Number.isFinite(s.portal?.portalOscillationCount) ? s.portal?.portalOscillationCount : 0);
                                 s.portal.portalOscillationCount = (s.portal.portalOscillationCount || 0) + 1;
                             }
-                            if (typeof s.portal?.portalRequiredCoverageMask === 'bigint' && portalCtx.family >= 0) {
+                            if (portalCtx.family >= 0) {
                                 const bit = 1n << BigInt(portalCtx.family);
-                                if ((s.portal?.portalRequiredCoverageMask & bit) !== 0n) {
-                                    this._undoLogWrite(s, LOG_PORTAL_REQUIRED_MASK, 0, s.portal?.portalRequiredCoverageMask);
-                                    s.portal.portalRequiredCoverageMask &= ~bit;
+                                if (typeof s.portal?.portalHardRequiredMask === 'bigint' && (s.portal?.portalHardRequiredMask & bit) !== 0n) {
+                                    this._undoLogWrite(s, LOG_PORTAL_HARD_MASK, 0, s.portal?.portalHardRequiredMask);
+                                    s.portal.portalHardRequiredMask &= ~bit;
+                                }
+                                if (typeof s.portal?.portalSoftDesiredMask === 'bigint' && (s.portal?.portalSoftDesiredMask & bit) !== 0n) {
+                                    this._undoLogWrite(s, LOG_PORTAL_SOFT_MASK, 0, s.portal?.portalSoftDesiredMask);
+                                    s.portal.portalSoftDesiredMask &= ~bit;
                                 }
                             }
                             if (Number.isFinite(s.portal?.portalReentryBudget) && portalCtx.isReentry) {
@@ -2757,9 +2772,10 @@
                     const LOG_PORTAL_LAST_PROGRESS = 18;
                     const LOG_PORTAL_LAST_FAMILY = 19;
                     const LOG_PORTAL_LAST_REGION = 20;
-                    const LOG_PORTAL_REQUIRED_MASK = 21;
-                    const LOG_PORTAL_REENTRY_BUDGET = 22;
-                    const LOG_PORTAL_OSC_BUDGET = 23;
+                    const LOG_PORTAL_HARD_MASK = 21;
+                    const LOG_PORTAL_SOFT_MASK = 22;
+                    const LOG_PORTAL_REENTRY_BUDGET = 23;
+                    const LOG_PORTAL_OSC_BUDGET = 24;
                     s.path.pop();
                     while (s.logCursor > logMark) {
                         s.logCursor -= 3;
@@ -2794,7 +2810,8 @@
                         else if (arrayId === LOG_PORTAL_LAST_PROGRESS && s.portal) s.portal.portalLastProgressValue = prev;
                         else if (arrayId === LOG_PORTAL_LAST_FAMILY && s.portal) s.portal.portalLastFamily = prev;
                         else if (arrayId === LOG_PORTAL_LAST_REGION && s.portal) s.portal.portalLastRegion = prev;
-                        else if (arrayId === LOG_PORTAL_REQUIRED_MASK && s.portal) s.portal.portalRequiredCoverageMask = BigInt(prev);
+                        else if (arrayId === LOG_PORTAL_HARD_MASK && s.portal) s.portal.portalHardRequiredMask = BigInt(prev);
+                        else if (arrayId === LOG_PORTAL_SOFT_MASK && s.portal) s.portal.portalSoftDesiredMask = BigInt(prev);
                         else if (arrayId === LOG_PORTAL_REENTRY_BUDGET && s.portal) s.portal.portalReentryBudget = prev;
                         else if (arrayId === LOG_PORTAL_OSC_BUDGET && s.portal) s.portal.portalOscillationBudget = prev;
                     }
@@ -3270,7 +3287,7 @@
                         ? state.phase
                         : derived.phase;
                     if (!state.phase || state.phase !== effectivePhase) {
-                        const coverageMask = typeof state.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal.portalRequiredCoverageMask : 0n;
+                        const coverageMask = typeof state.portal?.portalSoftDesiredMask === 'bigint' ? state.portal.portalSoftDesiredMask : 0n;
                         const portalPhase = coverageMask !== 0n ? 'mandatory-portal-family-completion' : 'post-portal-obligation-cleanup';
                         state.phase = effectivePhase;
                         state.phaseLastSwitchLen = derived.realLen;
@@ -3657,7 +3674,7 @@
                             }
                         }
                         const levelHasPortalFamilies = Number.isFinite(l?.portalFamilyCount) && l.portalFamilyCount > 0;
-                        const hasMandatoryPortalObligation = typeof state.portal?.portalRequiredCoverageMask === 'bigint' && state.portal?.portalRequiredCoverageMask !== 0n;
+                        const hasMandatoryPortalObligation = typeof state.portal?.portalHardRequiredMask === 'bigint' && state.portal?.portalHardRequiredMask !== 0n;
                         const hasCommittedPortalContinuation = (Number.isFinite(state?.portal?.portalSelectedFamily) && state.portal?.portalSelectedFamily >= 0)
                             && (
                                 (Number.isFinite(state?.portal?.portalCommittedRegion) && state.portal?.portalCommittedRegion >= 0)
@@ -3671,7 +3688,8 @@
                             ? this._portalProgressTransitionFeasible(k, nk, state, l, options)
                             : {
                                 feasible: true,
-                                nextCoverageMask: typeof state.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal?.portalRequiredCoverageMask : 0n,
+                                nextHardRequiredMask: typeof state.portal?.portalHardRequiredMask === 'bigint' ? state.portal?.portalHardRequiredMask : 0n,
+                                nextSoftDesiredMask: typeof state.portal?.portalSoftDesiredMask === 'bigint' ? state.portal?.portalSoftDesiredMask : 0n,
                                 nextReentryBudget: Number.isFinite(state.portal?.portalReentryBudget) ? state.portal?.portalReentryBudget : 0,
                                 nextOscillationBudget: Number.isFinite(state.portal?.portalOscillationBudget) ? state.portal?.portalOscillationBudget : 0
                             };
@@ -3693,9 +3711,12 @@
                             mustCrossMask: state.mustCrossMask,
                             mustCrossCounts: state.mustCrossCounts,
                             ints: state.ints,
-                            portalRequiredCoverageMask: portalTransition.nextCoverageMask,
-                            portalReentryBudget: portalTransition.nextReentryBudget,
-                            portalOscillationBudget: portalTransition.nextOscillationBudget
+                            portal: {
+                                portalHardRequiredMask: portalTransition.nextHardRequiredMask,
+                                portalSoftDesiredMask: portalTransition.nextSoftDesiredMask,
+                                portalReentryBudget: portalTransition.nextReentryBudget,
+                                portalOscillationBudget: portalTransition.nextOscillationBudget
+                            }
                         };
                         if (portalAutomatonLowerBoundActive) {
                             const portalAwareInfo = this._portalAwareLowerBound(nk, projectedState, l, {
@@ -3858,7 +3879,7 @@
                         const obligationOrderState = `${remainingMustAfterMove}|${remainingIntsAfterMove}|${projectedCrossNeed}|${remainingStepsAfterMove}`;
                         const nextRegion = l.portalRegionByKey instanceof Map ? (l.portalRegionByKey.get(nk) ?? -1) : -1;
                         const nextFamily = l.portalFamilyByEntry instanceof Map ? (l.portalFamilyByEntry.get(nk) ?? -1) : -1;
-                        const currentPortalCoverageMask = typeof state.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal.portalRequiredCoverageMask : 0n;
+                        const currentPortalCoverageMask = typeof state.portal?.portalSoftDesiredMask === 'bigint' ? state.portal.portalSoftDesiredMask : 0n;
                         let nextPortalCoverageMask = currentPortalCoverageMask;
                         if (isP && nextFamily >= 0) {
                             const famBit = 1n << BigInt(nextFamily);
@@ -5094,7 +5115,7 @@
                 _checkFinalConstraints(state, l) {
                     for (const k of l.mustPassKeys) if (!state.counts.has(k)) return false;
                     for (const k of l.mustCrossKeys) if ((state.counts.get(k) || 0) < 2) return false;
-                    if (typeof state.portal?.portalRequiredCoverageMask === 'bigint' && state.portal?.portalRequiredCoverageMask !== 0n) return false;
+                    if (typeof state.portal?.portalHardRequiredMask === 'bigint' && state.portal?.portalHardRequiredMask !== 0n) return false;
                     for (const k of l.gooseSet) if (state.counts.has(k)) return false;
                     return true;
                 },
@@ -5492,7 +5513,8 @@
                             startOnFlipper: !!l.flippingFilterMap.has(startKey),
                             startMustMask: typeof state.mustMask === 'bigint' ? state.mustMask.toString() : null,
                             startMustCrossMask: typeof state.mustCrossMask === 'bigint' ? state.mustCrossMask.toString() : null,
-                            portalRequiredCoverageMask: typeof state.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal?.portalRequiredCoverageMask.toString() : '0',
+                            portalHardRequiredMask: typeof state.portal?.portalHardRequiredMask === 'bigint' ? state.portal?.portalHardRequiredMask.toString() : '0',
+                            portalSoftDesiredMask: typeof state.portal?.portalSoftDesiredMask === 'bigint' ? state.portal?.portalSoftDesiredMask.toString() : '0',
                             portalReentryBudget: Number.isFinite(state.portal?.portalReentryBudget) ? state.portal?.portalReentryBudget : 0,
                             portalOscillationBudget: Number.isFinite(state.portal?.portalOscillationBudget) ? state.portal?.portalOscillationBudget : 0,
                             portalAutomatonActive: !!debugStats?.startNeighborTrace?.filterBreakdown?.portalAutomatonActive,
@@ -5719,7 +5741,8 @@
                             remainingMustPass,
                             remainingInteractionDeficit: interactionDeficit,
                             lowerBoundToValidSolution,
-                            remainingPortalCoverageMask: state.portal?.portalRequiredCoverageMask,
+                            remainingPortalHardMask: state.portal?.portalHardRequiredMask,
+                            remainingPortalSoftMask: state.portal?.portalSoftDesiredMask,
                             levelRef: l,
                             nearSolutionMissingDimension: missingDimensions.length === 1 ? missingDimensions[0] : null
                         });
@@ -6606,6 +6629,7 @@
                     level.portalRegionByKey = new Map();
                     level.portalFamilyCount = 0;
                     let mandatoryFamilyMask = 0n;
+                    let desiredFamilyMask = 0n;
                     if (portalHints && Array.isArray(portalHints.families)) {
                         for (let i = 0; i < portalHints.families.length; i++) {
                             const fam = portalHints.families[i];
@@ -6632,6 +6656,12 @@
                             if (!Number.isFinite(famIdx) || famIdx < 0) continue;
                             mandatoryFamilyMask |= (1n << BigInt(famIdx));
                         }
+                    }
+                    desiredFamilyMask |= mandatoryFamilyMask;
+                    const portalHintStats = SolverCore._portalHintStats(portalHints || {});
+                    for (const famIdx of portalHintStats.softPriorityFamilies || []) {
+                        if (!Number.isFinite(famIdx) || famIdx < 0) continue;
+                        desiredFamilyMask |= (1n << BigInt(famIdx));
                     }
                     const familyDistMaps = [];
                     const familyToGoalDist = [];
@@ -6679,6 +6709,7 @@
                         familyByEntry: level.portalFamilyByEntry,
                         regionByKey: level.portalRegionByKey,
                         mandatoryMask: mandatoryFamilyMask,
+                        desiredMask: desiredFamilyMask,
                         familyDistMaps,
                         familyToGoalDist,
                         familyPairDist
@@ -7075,6 +7106,7 @@
                         const portalAutomaton = level?.portalTransitionAutomaton || {};
                         const familyToGoalDist = Array.isArray(portalAutomaton.familyToGoalDist) ? portalAutomaton.familyToGoalDist : [];
                         const mandatoryMask = typeof portalAutomaton.mandatoryMask === 'bigint' ? portalAutomaton.mandatoryMask : 0n;
+                        const desiredMask = typeof portalAutomaton.desiredMask === 'bigint' ? portalAutomaton.desiredMask : mandatoryMask;
                         const portalHintStats = SolverCore._portalHintStats(level?.solverProfile?.portalHints || {});
                         const softPriorityFamilies = portalHintStats.softPriorityFamilies;
                         const portalConfidenceByFamily = portalHintStats.confidenceByFamily;
@@ -7178,7 +7210,7 @@
                             for (let fam = 0; fam < (portalAutomaton.familyCount || 0); fam++) {
                                 const required = ((mandatoryMask & (1n << BigInt(fam))) !== 0n);
                                 if (required) requiredFamilies.push(fam);
-                                else if (order.some(idx => level.portalFamilyByEntry?.get(objectiveNodes[idx]?.key) === fam) || softPriorityFamilies.includes(fam)) optionalFamilies.push(fam);
+                                else if (((desiredMask & (1n << BigInt(fam))) !== 0n) || order.some(idx => level.portalFamilyByEntry?.get(objectiveNodes[idx]?.key) === fam) || softPriorityFamilies.includes(fam)) optionalFamilies.push(fam);
                             }
                             const avoidFamilies = [];
                             for (let fam = 0; fam < (portalAutomaton.familyCount || 0); fam++) {
@@ -14181,9 +14213,18 @@
                         diag.bestLowerBoundToValidSolution = lowerBound;
                     }
                 }
-                const portalCoverageMaskBits = (typeof sample.remainingPortalCoverageMask === 'bigint')
-                    ? countMaskBits(sample.remainingPortalCoverageMask, sample.levelRef || null)
-                    : Number(sample.remainingPortalCoverageMaskBits);
+                const portalCoverageMaskBits = (() => {
+                    if (typeof sample.remainingPortalHardMask === 'bigint') {
+                        return countMaskBits(sample.remainingPortalHardMask, sample.levelRef || null);
+                    }
+                    if (typeof sample.remainingPortalCoverageMask === 'bigint') {
+                        return countMaskBits(sample.remainingPortalCoverageMask, sample.levelRef || null);
+                    }
+                    if (Number.isFinite(Number(sample.remainingPortalHardMaskBits))) {
+                        return Number(sample.remainingPortalHardMaskBits);
+                    }
+                    return Number(sample.remainingPortalCoverageMaskBits);
+                })();
                 if (Number.isFinite(portalCoverageMaskBits)) {
                     const normalizedBits = Math.max(0, Math.floor(portalCoverageMaskBits));
                     if (!Number.isFinite(diag.bestPortalCoverageMaskBits) || normalizedBits < diag.bestPortalCoverageMaskBits) {
