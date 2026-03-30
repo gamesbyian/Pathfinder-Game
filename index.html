@@ -820,7 +820,8 @@
         const appendMegaOutputLine = (line = '') => appendFieldLine('megaOutput', line);
         const getMegaOutputText = () => getValue('megaOutput');
         const updateLevelDisplay = (index, isComplete = false) => {
-            const lvlStr = `${index + 1}`;
+            let lvlStr = `${index + 1}`;
+            if (APP?.ReviewMode?.isActive?.()) lvlStr = APP.ReviewMode.getDisplayLevelLabel();
             setModalContent('levelTitle', lvlStr, 'text');
             setInlineStyle('levelTitle', 'fontSize', lvlStr.length >= 3 ? '2.5rem' : '');
             setCompletionBurstVisible(!!isComplete);
@@ -18389,8 +18390,28 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         });
         const handleWinClose = (callback) => { const circle = document.getElementById('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
         document.getElementById('copyWinDataBtn').onclick = async () => { if (document.getElementById('winSolutionOutput').value) await APP.UI.copyText(document.getElementById('winSolutionOutput').value, { fallbackElId: 'winSolutionOutput' }); };
-        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
-        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
+        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => {
+            APP.UI.closeAllModals();
+            if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+            if (APP.ReviewMode.isActive()) {
+                APP.ReviewMode.goPrev();
+                return;
+            }
+            const levels = APP.LevelUtils.getRawLevels();
+            APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1);
+            APP.UI.setSolutionOutput('');
+        });
+        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => {
+            APP.UI.closeAllModals();
+            if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+            if (APP.ReviewMode.isActive()) {
+                APP.ReviewMode.goNext();
+                return;
+            }
+            const levels = APP.LevelUtils.getRawLevels();
+            APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0);
+            APP.UI.setSolutionOutput('');
+        });
         document.getElementById('nextLevelModalBtn').onclick = () => { const levels = APP.LevelUtils.getRawLevels(); handleWinClose(() => { if (APP.State.ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(APP.State.ENGINE.levelIdx + 1); }); };
         document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => { APP.Engine.setLogicState(APP.Core.IDLE); });
 
@@ -18573,12 +18594,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     APP.ReviewMode = (() => {
         let list = [];
         let idx = 0;
+        let active = false;
         const getCurrent = () => list[idx] || null;
+        const getDisplayLevelLabel = () => (list.length === 0 ? 'XX' : `${idx + 1}?`);
+        const syncLevelDisplay = () => APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, false);
         const setMeta = () => {
             const cur = getCurrent();
             const meta = document.getElementById('reviewMeta');
             if (!meta) return;
             meta.textContent = cur ? `Submission #${cur.id} (${idx + 1}/${list.length})` : 'No pending submissions';
+            syncLevelDisplay();
         };
         const loadIntoEditor = (sub) => {
             if (!sub?.level) return;
@@ -18599,6 +18624,24 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (idx >= list.length) idx = Math.max(0, list.length - 1);
             setMeta();
             if (getCurrent()) loadIntoEditor(getCurrent());
+            else {
+                APP.Engine.PathNavigator.clear(APP.State.ENGINE);
+                APP.State.ENGINE.isDirty = true;
+            }
+        };
+        const goPrev = () => {
+            if (idx > 0) {
+                idx--;
+                loadIntoEditor(getCurrent());
+                setMeta();
+            }
+        };
+        const goNext = () => {
+            if (idx < list.length - 1) {
+                idx++;
+                loadIntoEditor(getCurrent());
+                setMeta();
+            }
         };
         const reviewAction = async (action, includeLevel = false) => {
             const cur = getCurrent();
@@ -18620,8 +18663,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         const init = async () => {
             if (!IS_REVIEW_MODE) return;
+            active = true;
             APP.State.ENGINE.isDevMode = false;
             APP.Editor.enterEditorMode();
+            APP.UI.setTextContent('levelTitle', 'XX');
             APP.UI.setClassState('reviewMeta', 'hidden', false);
             APP.UI.setClassState('whoaBtn', 'hidden', true);
             APP.UI.setClassState('guideBtn', 'hidden', true);
@@ -18639,15 +18684,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.UI.setClassState('reviewRejectBtn', 'hidden', false);
             APP.UI.setClassState('reviewApproveBtn', 'hidden', false);
             APP.UI.setClassState('reviewAddHintBtn', 'hidden', false);
-            document.getElementById('reviewPrevBtn').onclick = () => { if (idx > 0) { idx--; loadIntoEditor(getCurrent()); setMeta(); } };
-            document.getElementById('reviewNextBtn').onclick = () => { if (idx < list.length - 1) { idx++; loadIntoEditor(getCurrent()); setMeta(); } };
+            document.getElementById('reviewPrevBtn').onclick = goPrev;
+            document.getElementById('reviewNextBtn').onclick = goNext;
             document.getElementById('reviewRefreshBtn').onclick = () => fetchList().catch((e) => APP.UI.showMessage(e.message, 'text-red-500'));
             document.getElementById('reviewRejectBtn').onclick = () => reviewAction('reject').catch((e) => APP.UI.showMessage(e.message, 'text-red-500'));
             document.getElementById('reviewApproveBtn').onclick = () => reviewAction('approve', true).catch((e) => APP.UI.showMessage(e.message, 'text-red-500'));
             document.getElementById('reviewAddHintBtn').onclick = addHint;
             await fetchList();
         };
-        return { init };
+        return { init, isActive: () => active, getDisplayLevelLabel, goPrev, goNext };
     })();
 
     // APP.Boot lifecycle guarantees:
