@@ -7604,6 +7604,7 @@
                 const quality = entry?.quality || {};
                 const instrumentation = entry?.attemptInstrumentation || {};
                 const rootSuppressionLog = compactRootSuppressionLog(entry?.rootSuppressionLog || entry?.debug?.rootSuppressionLog, 10);
+                const phaseTelemetry = deriveAttemptPhaseTelemetry(entry);
                 return compactDefined({
                     index: idx + 1,
                     label: entry?.label || null,
@@ -7672,12 +7673,19 @@
                         pruningHitRates: instrumentation?.pruningHitRates || null
                     }),
                     progressSamples: Array.isArray(entry?.progressSamples) ? entry.progressSamples : null,
-                    progressSummary: entry?.progressSummary || null
+                    progressSummary: entry?.progressSummary || null,
+                    maxProgress: phaseTelemetry.maxProgress,
+                    bestPhaseReached: phaseTelemetry.bestPhaseReached,
+                    remainingMustPass: phaseTelemetry.remainingMustPass,
+                    remainingMustCross: phaseTelemetry.remainingMustCross,
+                    plateauDetected: phaseTelemetry.plateauDetected,
+                    plateauNodeWindow: phaseTelemetry.plateauNodeWindow
                 });
             });
         };
         const toAuditAttemptSummary = (attempt = {}, options = {}) => {
             const debug = attempt?.debug || attempt?.stats?.debug || {};
+            const phaseTelemetry = deriveAttemptPhaseTelemetry({ ...attempt, debug });
             const summary = compactDefined({
                 attempt: options.attemptLabel || null,
                 variant: options.variant || null,
@@ -7717,6 +7725,12 @@
                 attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
                 progressSamples: Array.isArray(debug?.progressSamples) ? debug.progressSamples : null,
                 progressSummary: debug?.progressSummary || null,
+                maxProgress: phaseTelemetry.maxProgress,
+                bestPhaseReached: phaseTelemetry.bestPhaseReached,
+                remainingMustPass: phaseTelemetry.remainingMustPass,
+                remainingMustCross: phaseTelemetry.remainingMustCross,
+                plateauDetected: phaseTelemetry.plateauDetected,
+                plateauNodeWindow: phaseTelemetry.plateauNodeWindow,
                 refereeAttemptHistory: toAuditRefereeAttemptHistory(attempt?.attempts),
                 rootMoveOrder: Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 20) : null,
                 rootMoveScores: Array.isArray(debug?.rootMoveScores) ? debug.rootMoveScores.slice(0, 20) : null,
@@ -16727,6 +16741,57 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             return canonical;
         };
+        const ATTEMPT_PHASE_ORDER = Object.freeze(['start', 'early', 'transition', 'knot', 'finish']);
+        const ATTEMPT_TELEMETRY_SENTINELS = Object.freeze({
+            maxProgress: -1,
+            bestPhaseReached: 'unknown',
+            remainingMustPass: -1,
+            remainingMustCross: -1,
+            plateauDetected: false,
+            plateauNodeWindow: -1
+        });
+        const deriveAttemptPhaseTelemetry = (attempt = {}) => {
+            const timeline = Array.isArray(attempt?.phaseTimeline)
+                ? attempt.phaseTimeline
+                : (Array.isArray(attempt?.debug?.phaseTimeline) ? attempt.debug.phaseTimeline : []);
+            const progressSummary = attempt?.progressSummary || attempt?.debug?.progressSummary || {};
+            if (!Array.isArray(timeline) || timeline.length === 0) {
+                return { ...ATTEMPT_TELEMETRY_SENTINELS };
+            }
+            const maxProgressRaw = timeline.reduce((mx, ev) => {
+                const value = Number(ev?.progress);
+                return Number.isFinite(value) ? Math.max(mx, value) : mx;
+            }, 0);
+            let bestPhaseRank = -1;
+            let bestPhaseReached = ATTEMPT_TELEMETRY_SENTINELS.bestPhaseReached;
+            for (const event of timeline) {
+                const phase = `${event?.phase || ''}`.trim();
+                const rank = ATTEMPT_PHASE_ORDER.indexOf(phase);
+                if (rank >= bestPhaseRank) {
+                    bestPhaseRank = rank;
+                    bestPhaseReached = rank >= 0 ? phase : (bestPhaseReached === 'unknown' ? 'unknown' : bestPhaseReached);
+                }
+            }
+            const lastWithConstraintData = [...timeline].reverse().find((ev) =>
+                Number.isFinite(Number(ev?.remainingMustPass)) || Number.isFinite(Number(ev?.remainingMustCross)));
+            const remainingMustPass = lastWithConstraintData && Number.isFinite(Number(lastWithConstraintData?.remainingMustPass))
+                ? Math.max(0, Number(lastWithConstraintData.remainingMustPass))
+                : ATTEMPT_TELEMETRY_SENTINELS.remainingMustPass;
+            const remainingMustCross = lastWithConstraintData && Number.isFinite(Number(lastWithConstraintData?.remainingMustCross))
+                ? Math.max(0, Number(lastWithConstraintData.remainingMustCross))
+                : ATTEMPT_TELEMETRY_SENTINELS.remainingMustCross;
+            const plateauNodeWindow = Number.isFinite(Number(progressSummary?.plateauNodeWindow))
+                ? Math.max(0, Number(progressSummary.plateauNodeWindow))
+                : ATTEMPT_TELEMETRY_SENTINELS.plateauNodeWindow;
+            return {
+                maxProgress: Number(maxProgressRaw.toFixed(4)),
+                bestPhaseReached,
+                remainingMustPass,
+                remainingMustCross,
+                plateauDetected: progressSummary?.plateauDetected === true,
+                plateauNodeWindow
+            };
+        };
         const toCanonicalAttemptRecord = (attempt = {}, attemptIndex = 0) => {
             const status = normalizeAuditAttemptStatus(attempt);
             const termination = normalizeAuditTermination(attempt, status);
@@ -16737,6 +16802,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
             const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
             const progressSummary = attempt?.progressSummary || {};
+            const phaseTelemetry = deriveAttemptPhaseTelemetry(attempt);
             const structuralRaw = attempt?.structuralMode;
             const structuralMode = typeof structuralRaw === 'string'
                 ? structuralRaw
@@ -16782,9 +16848,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     deadEnd: Number.isFinite(prunes?.deadEnd) ? prunes.deadEnd : 0
                 },
                 progressSamples,
+                maxProgress: phaseTelemetry.maxProgress,
+                bestPhaseReached: phaseTelemetry.bestPhaseReached,
+                remainingMustPass: phaseTelemetry.remainingMustPass,
+                remainingMustCross: phaseTelemetry.remainingMustCross,
+                plateauDetected: phaseTelemetry.plateauDetected,
+                plateauNodeWindow: phaseTelemetry.plateauNodeWindow,
                 progressSummary: {
-                    plateauDetected: !!progressSummary?.plateauDetected,
-                    plateauTimeMs: Number.isFinite(progressSummary?.plateauTimeMs) ? progressSummary.plateauTimeMs : null
+                    plateauDetected: phaseTelemetry.plateauDetected,
+                    plateauTimeMs: Number.isFinite(progressSummary?.plateauTimeMs) ? progressSummary.plateauTimeMs : null,
+                    plateauNodeWindow: phaseTelemetry.plateauNodeWindow
                 }
             };
         };
