@@ -288,12 +288,7 @@
                         <div class="flex flex-col items-center text-center gap-2 p-3 rounded-lg shadow-sm border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] w-[30%] min-w-[8rem]"><div class="w-[3.075rem] h-[3.075rem] flex items-center justify-center shrink-0"><svg viewBox="0 0 100 100" class="w-full h-full" style="color: var(--theme-cross)"><use href="#def-mustcross"/></svg></div><div class="flex flex-col"><span class="font-bold text-[0.8rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Cross</span><p class="serif-desc text-[0.7rem] leading-tight text-[var(--theme-modal-text)]">Create an intersection inside this square.</p></div></div>
                         <div class="flex flex-col items-center text-center gap-2 p-3 rounded-lg shadow-sm border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] w-[30%] min-w-[8rem]"><div class="w-[3.075rem] h-[3.075rem] flex items-center justify-center shrink-0" id="legendGooseContainer"><svg viewBox="0 0 100 100" class="w-full h-full"><use href="#def-goose"/></svg></div><div class="flex flex-col"><span class="font-bold text-[0.8rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Goose</span><p class="serif-desc text-[0.7rem] leading-tight text-[var(--theme-modal-text)]">Danger!</p></div></div>
                     </div>
-                    <div class="pb-4 border-t border-[var(--theme-modal-border)] pt-3">
-                        <p id="devToggleBtn" class="text-center text-[0.8rem] uppercase font-black text-[var(--theme-modal-muted)] tracking-wider cursor-pointer select-none hover:text-[var(--theme-modal-accent)] transition">PATHFINDER GAME BY IAN WALLACE. &copy;2025</p>
-                        <div class="mt-2 flex justify-center">
-                            <button id="reviewSubmissionsBtn" class="hidden text-[0.65rem] font-black uppercase tracking-wider bg-slate-200 text-slate-700 border border-slate-300 rounded-lg px-3 py-2 hover:brightness-105 transition">Review Submissions</button>
-                        </div>
-                    </div>
+                    <div class="pb-4 border-t border-[var(--theme-modal-border)] pt-3"><p id="devToggleBtn" class="text-center text-[0.8rem] uppercase font-black text-[var(--theme-modal-muted)] tracking-wider cursor-pointer select-none hover:text-[var(--theme-modal-accent)] transition">PATHFINDER GAME BY IAN WALLACE. &copy;2025</p></div>
                 </div>
             </div>
             <div id="themeModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
@@ -484,8 +479,6 @@
                 <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
                 <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
-                <button id="reviewApproveBtn" class="hidden flex-1 h-10 bg-emerald-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Approve</button>
-                <button id="reviewRejectBtn" class="hidden flex-1 h-10 bg-rose-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Reject</button>
                 <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
             </div>
             <div id="alertOverlay" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
@@ -503,7 +496,6 @@
                         <button id="devGenBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Copy Hints</button>
                         <button id="editCopyBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
                         <button id="editGenBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
-                        <button id="editSubmitBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Submit</button>
                     </div>
                 </div>
             </div>
@@ -801,15 +793,6 @@
         const appendMegaOutputLine = (line = '') => appendFieldLine('megaOutput', line);
         const getMegaOutputText = () => getValue('megaOutput');
         const updateLevelDisplay = (index, isComplete = false) => {
-            const review = APP.State?.ENGINE?.review;
-            if (review?.isActive) {
-                const hasCurrent = review.currentReviewIndex >= 0 && review.currentReviewIndex < review.pendingSubmissions.length;
-                const lvlStr = hasCurrent ? `${review.currentReviewIndex + 1}?` : 'XX';
-                setModalContent('levelTitle', lvlStr, 'text');
-                setInlineStyle('levelTitle', 'fontSize', lvlStr.length >= 3 ? '2.5rem' : '');
-                setCompletionBurstVisible(false);
-                return;
-            }
             const lvlStr = `${index + 1}`;
             setModalContent('levelTitle', lvlStr, 'text');
             setInlineStyle('levelTitle', 'fontSize', lvlStr.length >= 3 ? '2.5rem' : '');
@@ -1133,7 +1116,7 @@
             getEl('orientationToggleBtn').style.color = t.text.shellBtn || t.text.megaPrimary || '#ffffff';
             getEl('orientationToggleBtn').style.borderColor = t.grid;
 
-            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('hintBtn').style.backgroundColor = t.btns.hint || t.btns.guide || t.headerRight || '#cf6b17'; ['resetBtn','undoBtn','whoaBtn','guideBtn','megaSolverBtn','modeToggleBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','reviewApproveBtn','reviewRejectBtn','editModeToggleBtn','editCopyMetrics','hintBtn','editSubmitBtn'].forEach(id=>{const el=getEl(id); if(el) el.style.color=t.text.actionBtn;}); getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('reviewApproveBtn').style.backgroundColor = t.btns.editNew || '#0a8a65'; getEl('reviewRejectBtn').style.backgroundColor = t.btns.reset || '#dc2626'; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('editSubmitBtn').style.backgroundColor = t.btns.copy; getEl('devCopyBtn').style.color = t.text.utilityBtn; getEl('editCopyBtn').style.color = t.text.utilityBtn; getEl('devGenBtn').style.color = t.text.utilityBtnGen; getEl('editGenBtn').style.color = t.text.utilityBtnGen; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
+            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('hintBtn').style.backgroundColor = t.btns.hint || t.btns.guide || t.headerRight || '#cf6b17'; ['resetBtn','undoBtn','whoaBtn','guideBtn','megaSolverBtn','modeToggleBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editModeToggleBtn','editCopyMetrics','hintBtn'].forEach(id=>{const el=getEl(id); if(el) el.style.color=t.text.actionBtn;}); getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.text.utilityBtn; getEl('editCopyBtn').style.color = t.text.utilityBtn; getEl('devGenBtn').style.color = t.text.utilityBtnGen; getEl('editGenBtn').style.color = t.text.utilityBtnGen; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
             const gArea = getEl('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
             const panel = getEl('editorLineGridPanel'); if (panel) { panel.style.borderTopColor = t.layout.editorPanelBorder; panel.style.borderRightColor = t.layout.editorPanelBorder; }
             const dragGhost = getEl('dragGhost'); if (dragGhost) dragGhost.style.borderColor = t.layout.mainBorder;
@@ -14914,7 +14897,6 @@
         ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, isHintExpanded: false, tapStartCoord: null, tapMoved: false }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
         ,flags: { useRefereeSolver: true, refereeDebug: false }
-        ,review: { isActive: false, pendingSubmissions: [], currentReviewIndex: -1, currentReviewSubmissionId: null, currentReviewLevel: null, isBusy: false }
     };
         return { ENGINE };
     })();
@@ -15489,7 +15471,7 @@
 
             function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('modeToggleBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
-            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.UI.setSolutionOutput(''); APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); document.getElementById('editSubmitBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { APP.State.ENGINE.review.isActive = false; updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
+            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.UI.setSolutionOutput(''); APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
             function updatePencilState() {
                 const btn = document.getElementById('editPencilBtn');
@@ -16021,8 +16003,6 @@
     // J) Persistence
     // ======================================================
     APP.Persistence = (() => {
-        // Developer note: define Firebase Web SDK config in window.__firebase_config (JSON string).
-        // Example placeholder keys: apiKey, authDomain, projectId, appId.
         const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
         let auth = null;
         let db = null;
@@ -16177,123 +16157,9 @@
             hasConfig: !!firebaseConfigRaw,
             getCurrentUser: () => auth?.currentUser,
             persistSessionState,
-            applySessionState,
-            getDb: () => db,
-            getAppId: () => appId
+            applySessionState
         };
     })();
-
-
-    // ======================================================
-    // J2) Submissions / Firestore Review Pipeline
-    // ======================================================
-    APP.Submissions = (() => {
-        const COLLECTIONS = {
-            pending: 'submissions_pending',
-            approved: 'submissions_approved',
-            rejected: 'submissions_rejected'
-        };
-
-        const getDb = () => APP.Persistence.getDb?.() || null;
-        const nowTs = () => (firebase?.firestore?.FieldValue?.serverTimestamp ? firebase.firestore.FieldValue.serverTimestamp() : Date.now());
-
-        const seedLevels = [
-{"grid":{"w":12,"h":12},"gates":[{"x":7,"y":7}],"goal":{"x":7,"y":10},"falseGoals":[],"reqLen":53,"reqInt":3,"blocks":[{"x":2,"y":2},{"x":2,"y":3},{"x":2,"y":4},{"x":2,"y":5},{"x":2,"y":6},{"x":2,"y":7},{"x":2,"y":8},{"x":2,"y":9},{"x":2,"y":10},{"x":2,"y":11},{"x":11,"y":11},{"x":11,"y":10},{"x":11,"y":9},{"x":11,"y":8},{"x":11,"y":7},{"x":11,"y":6},{"x":11,"y":5},{"x":11,"y":4},{"x":11,"y":3},{"x":11,"y":2},{"x":3,"y":2},{"x":4,"y":2},{"x":5,"y":2},{"x":6,"y":2},{"x":8,"y":2},{"x":7,"y":2},{"x":9,"y":2},{"x":10,"y":2},{"x":3,"y":11},{"x":5,"y":11},{"x":4,"y":11},{"x":6,"y":11},{"x":8,"y":11},{"x":9,"y":11},{"x":10,"y":11},{"x":7,"y":11},{"x":8,"y":8},{"x":5,"y":5},{"x":6,"y":5},{"x":7,"y":5},{"x":8,"y":5},{"x":8,"y":6},{"x":8,"y":7},{"x":7,"y":8},{"x":6,"y":8},{"x":5,"y":8},{"x":5,"y":6},{"x":5,"y":7}],"mustPass":[{"x":10,"y":3},{"x":5,"y":9}],"mustCross":[{"x":4,"y":4},{"x":9,"y":9}],"filters":[],"flippingFilters":[{"x":6,"y":4,"axis":1},{"x":8,"y":9,"axis":2}],"portals":[{"x1":6,"y1":6,"x2":6,"y2":1,"color":"#d946ef"},{"x1":12,"y1":9,"x2":3,"y2":9,"color":"#0ea5e9"},{"x1":1,"y1":5,"x2":10,"y2":6,"color":"#10b981"}],"geese":[{"x":1,"y":2},{"x":3,"y":8},{"x":4,"y":6}],"hints":[[393222,327686,327685,5,6,7,8,9,10,11,65547,131083,196619,262155,327691,393227,458763,524299,524290,524291,458755,393219,393218,327682,262146,262147,196611,131075,131074,196610,196611,196612,196613,196614,196615,196616,196617,131081,131080,196616,262152,327688,393224,458760,524296,589832,589833,524297,524296,524295,524294,524293,524292,589828,589829,589830]]},
-{"grid":{"w":7,"h":7},"gates":[{"x":2,"y":2}],"goal":{"x":6,"y":6},"falseGoals":[],"reqLen":27,"reqInt":0,"blocks":[{"x":4,"y":1},{"x":4,"y":2},{"x":4,"y":3},{"x":4,"y":4},{"x":4,"y":5},{"x":4,"y":6},{"x":4,"y":7},{"x":1,"y":4},{"x":2,"y":4},{"x":3,"y":4},{"x":5,"y":4},{"x":6,"y":4},{"x":7,"y":4}],"mustPass":[{"x":1,"y":1},{"x":3,"y":5}],"mustCross":[],"filters":[],"flippingFilters":[],"portals":[{"x1":3,"y1":3,"x2":7,"y2":1,"color":"#d946ef"},{"x1":5,"y1":3,"x2":1,"y2":7,"color":"#0ea5e9"},{"x1":2,"y1":5,"x2":7,"y2":7,"color":"#10b981"}],"geese":[{"x":3,"y":2},{"x":3,"y":7}],"hints":[[65537,1,0,65536,131072,131073,131074,6,5,4,65540,65541,65542,131078,131077,131076,393216,393217,327681,327682,262146,262145,393222,393221,393220,327684,262148,262149,262150,327686,327685]]},
-{"grid":{"w":10,"h":10},"gates":[{"x":3,"y":5}],"goal":{"x":4,"y":3},"falseGoals":[{"x":3,"y":6}],"reqLen":29,"reqInt":6,"blocks":[],"mustPass":[],"mustCross":[{"x":4,"y":5},{"x":5,"y":4},{"x":6,"y":5},{"x":5,"y":6}],"filters":[],"flippingFilters":[],"portals":[],"geese":[],"hints":[[262146,262147,262148,262149,262150,196614,131078,131077,131076,196612,262148,327684,393220,393219,393218,393217,327681,262145,196609,196610,196611,196612,196613,262149,327685,327684,327683,262147,196611,131075]]},
-{"grid":{"w":8,"h":8},"gates":[{"x":5,"y":1}],"goal":{"x":3,"y":1},"falseGoals":[],"reqLen":38,"reqInt":1,"blocks":[{"x":4,"y":4},{"x":6,"y":4},{"x":2,"y":4},{"x":3,"y":6},{"x":5,"y":6}],"mustPass":[{"x":4,"y":3}],"mustCross":[{"x":5,"y":3}],"filters":[],"flippingFilters":[],"portals":[],"geese":[],"hints":[[4,65540,131076,196612,262148,262149,327685,393221,393220,393219,327683,262147,262146,196610,131074,131073,131072,196608,262144,262145,327681,393217,393218,458754,458755,458756,458757,458758,393222,327686,262150,196614,131078,131077,131076,131075,65539,3,2],[4,65540,131076,196612,262148,262149,327685,393221,393220,393219,327683,262147,262146,196610,131074,131073,131072,196608,262144,262145,327681,393217,393218,458754,458755,458756,458757,458758,393222,327686,262150,196614,131078,131077,131076,131075,65539,3,2]]}
-        ];
-
-        const normalizePendingDoc = (doc) => {
-            const data = doc.data() || {};
-            const submitted = data.submittedLevel || null;
-            return { id: doc.id, ...data, submittedLevel: submitted };
-        };
-
-        const submitLevel = async (levelObj) => {
-            const db = getDb();
-            if (!db) throw new Error('Firebase not configured.');
-            const payload = { createdAt: nowTs(), source: 'user-submit', status: 'pending', submittedLevel: levelObj };
-            const ref = await db.collection(COLLECTIONS.pending).add(payload);
-            return ref.id;
-        };
-
-        const fetchPendingSubmissions = async () => {
-            const db = getDb();
-            if (!db) return [];
-            const snap = await db.collection(COLLECTIONS.pending).orderBy('createdAt', 'asc').get();
-            return snap.docs.map(normalizePendingDoc);
-        };
-
-        const fetchApprovedCount = async () => {
-            const db = getDb();
-            if (!db) return 0;
-            const snap = await db.collection(COLLECTIONS.approved).get();
-            return snap.size;
-        };
-
-        const approveSubmission = async (submissionId, approvedLevelObj) => {
-            const db = getDb();
-            if (!db) throw new Error('Firebase not configured.');
-            const pendingRef = db.collection(COLLECTIONS.pending).doc(submissionId);
-            const approvedRef = db.collection(COLLECTIONS.approved).doc();
-            const counterRef = db.collection('_app_meta').doc('submission_approved_counter_v1');
-            const fallbackApprovedCount = await fetchApprovedCount();
-            return db.runTransaction(async (tx) => {
-                const [pendingSnap, counterSnap] = await Promise.all([tx.get(pendingRef), tx.get(counterRef)]);
-                if (!pendingSnap.exists) throw new Error('Submission no longer exists.');
-                const offset = Number.isFinite(counterSnap.data()?.approvedCount) ? counterSnap.data().approvedCount : fallbackApprovedCount;
-                const nextOffset = offset + 1;
-                const assignedLevelNumber = (APP.LevelUtils.getRawLevels()?.length || 0) + nextOffset;
-                tx.set(approvedRef, {
-                    approvedAt: nowTs(),
-                    originalSubmissionId: submissionId,
-                    assignedLevelNumber,
-                    approvedLevel: approvedLevelObj,
-                    status: 'approved'
-                });
-                tx.set(counterRef, { approvedCount: nextOffset, updatedAt: nowTs() }, { merge: true });
-                tx.delete(pendingRef);
-                return { assignedLevelNumber };
-            });
-        };
-
-        const rejectSubmission = async (submissionId) => {
-            const db = getDb();
-            if (!db) throw new Error('Firebase not configured.');
-            const pendingRef = db.collection(COLLECTIONS.pending).doc(submissionId);
-            const rejectedRef = db.collection(COLLECTIONS.rejected).doc();
-            return db.runTransaction(async (tx) => {
-                const pendingSnap = await tx.get(pendingRef);
-                if (!pendingSnap.exists) return false;
-                tx.set(rejectedRef, { rejectedAt: nowTs(), originalSubmissionId: submissionId, source: pendingSnap.data()?.source || 'user-submit', status: 'rejected', submittedLevel: pendingSnap.data()?.submittedLevel || null });
-                tx.delete(pendingRef);
-                return true;
-            });
-        };
-
-        const seedPendingSubmissionsIfEmpty = async () => {
-            const db = getDb();
-            if (!db) throw new Error('Firebase not configured.');
-            const pendingCol = db.collection(COLLECTIONS.pending);
-            const existing = await pendingCol.limit(1).get();
-            if (!existing.empty) return { seeded: false, reason: 'pending-not-empty' };
-            const markerRef = db.collection('_app_meta').doc('submission_seed_v1');
-            const marker = await markerRef.get();
-            if (marker.exists) return { seeded: false, reason: 'already-seeded' };
-            const batch = db.batch();
-            seedLevels.forEach(level => {
-                const ref = pendingCol.doc();
-                batch.set(ref, { createdAt: nowTs(), source: 'user-submit', status: 'pending', submittedLevel: level });
-            });
-            batch.set(markerRef, { seededAt: nowTs(), count: seedLevels.length });
-            await batch.commit();
-            return { seeded: true, count: seedLevels.length };
-        };
-
-        return { COLLECTIONS, submitLevel, fetchPendingSubmissions, fetchApprovedCount, approveSubmission, rejectSubmission, seedPendingSubmissionsIfEmpty };
-    })();
-
     APP.LevelUtils = (() => {
             const getRawLevels = () => APP.Data.getLevels();
             const resolvePortal = (level, key) => (level?.portalMap?.has(key) ? level.portalMap.get(key) : null);
@@ -17027,187 +16893,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     // ======================================================
     // F/G/H) Input + UI Wiring + Solver Boot
     // ======================================================
-    APP.Review = (() => {
-        const toNormalized = (raw) => {
-            if (!raw || !raw.grid || !raw.goal) return null;
-            const adj = (v) => v - 1;
-            const pack = APP.LevelUtils.PACK;
-            const l = {
-                id: -1,
-                grid: { ...raw.grid },
-                reqLen: raw.reqLen || 0,
-                reqInt: raw.reqInt || 0,
-                goalKey: pack(adj(raw.goal.x), adj(raw.goal.y)),
-                gateKeys: (raw.gates || []).map(g => pack(adj(g.x), adj(g.y))),
-                blockSet: new Set(),
-                gooseSet: new Set(),
-                falseGoalKeys: new Set(),
-                portalMap: new Map(),
-                portalVisuals: [],
-                filterMap: new Map(),
-                flippingFilterMap: new Map(),
-                mustPassKeys: (raw.mustPass || []).map(m => pack(adj(m.x), adj(m.y))),
-                mustCrossKeys: (raw.mustCross || []).map(m => pack(adj(m.x), adj(m.y))),
-                hints: Array.isArray(raw.hints) ? raw.hints : [],
-                hasParityBreaker: false
-            };
-            (raw.blocks || []).forEach(w => l.blockSet.add(pack(adj(w.x), adj(w.y))));
-            (raw.geese || []).forEach(m => l.gooseSet.add(pack(adj(m.x), adj(m.y))));
-            (raw.filters || []).forEach(f => l.filterMap.set(pack(adj(f.x), adj(f.y)), f.axis));
-            (raw.flippingFilters || []).forEach(f => l.flippingFilterMap.set(pack(adj(f.x), adj(f.y)), f.axis));
-            (raw.falseGoals || []).forEach(g => l.falseGoalKeys.add(pack(adj(g.x), adj(g.y))));
-            (raw.portals || []).forEach(p => {
-                const k1 = pack(adj(p.x1), adj(p.y1));
-                const k2 = pack(adj(p.x2), adj(p.y2));
-                l.portalMap.set(k1, { dest: k2, color: p.color || '#d946ef' });
-                l.portalMap.set(k2, { dest: k1, color: p.color || '#d946ef' });
-                l.portalVisuals.push({ k1, k2, color: p.color || '#d946ef' });
-            });
-            return l;
-        };
-
-        const hasCurrent = () => {
-            const r = APP.State.ENGINE.review;
-            return r.isActive && r.currentReviewIndex >= 0 && r.currentReviewIndex < r.pendingSubmissions.length;
-        };
-
-        const syncUI = () => {
-            const isReview = APP.State.ENGINE.review.isActive;
-            const isEditor = APP.State.ENGINE.mode === APP.Core.EDITOR;
-            APP.UI.setClassState('reviewSubmissionsBtn', 'hidden', !APP.State.ENGINE.isDevMode);
-            APP.UI.setClassState('reviewApproveBtn', 'hidden', !(isReview && isEditor));
-            APP.UI.setClassState('reviewRejectBtn', 'hidden', !(isReview && isEditor));
-            APP.UI.setClassState('editResetGrid', 'hidden', !!isReview);
-            APP.UI.setClassState('editNewLevel', 'hidden', !!isReview);
-            APP.UI.setClassState('editHelpBtn', 'hidden', !!isReview);
-            APP.UI.setClassState('editSubmitBtn', 'hidden', !!isReview || !isEditor);
-            APP.UI.setButtonState('reviewApproveBtn', { enabled: hasCurrent() && !APP.State.ENGINE.review.isBusy });
-            APP.UI.setButtonState('reviewRejectBtn', { enabled: hasCurrent() && !APP.State.ENGINE.review.isBusy });
-            APP.UI.setButtonState('editMegaSolver', { enabled: !isReview || hasCurrent() });
-            APP.UI.setButtonState('editTrapSpotsBtn', { enabled: !isReview || hasCurrent() });
-            APP.Persistence.updateCompletionUI();
-        };
-
-        const loadCurrent = () => {
-            const r = APP.State.ENGINE.review;
-            if (!hasCurrent()) {
-                APP.Editor.createNewLevel();
-                APP.State.ENGINE.editor.isModified = false;
-                APP.UI.showMessage('No pending submissions.', 'text-slate-500');
-                syncUI();
-                APP.Persistence.updateCompletionUI();
-                return;
-            }
-            const row = r.pendingSubmissions[r.currentReviewIndex];
-            r.currentReviewSubmissionId = row.id;
-            r.currentReviewLevel = toNormalized(row.submittedLevel);
-            APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(r.currentReviewLevel);
-            APP.State.ENGINE.editor.pendingPortal = null;
-            APP.State.ENGINE.editor.undoStack = [];
-            APP.State.ENGINE.editor.validTrapSpots.clear();
-            APP.State.ENGINE.editor.isModified = false;
-            APP.Engine.PathNavigator.clear(APP.State.ENGINE);
-            APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0);
-            APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0);
-            APP.UI.updateViewport();
-            APP.Persistence.updateCompletionUI();
-            syncUI();
-        };
-
-        const refreshPending = async () => {
-            APP.State.ENGINE.review.pendingSubmissions = await APP.Submissions.fetchPendingSubmissions();
-            if (APP.State.ENGINE.review.pendingSubmissions.length === 0) APP.State.ENGINE.review.currentReviewIndex = -1;
-            else if (APP.State.ENGINE.review.currentReviewIndex < 0) APP.State.ENGINE.review.currentReviewIndex = 0;
-            else APP.State.ENGINE.review.currentReviewIndex = Math.min(APP.State.ENGINE.review.currentReviewIndex, APP.State.ENGINE.review.pendingSubmissions.length - 1);
-            loadCurrent();
-        };
-
-        const open = async () => {
-            APP.UI.closeAllModals();
-            APP.Editor.enterEditorMode();
-            APP.State.ENGINE.review.isActive = true;
-            syncUI();
-            try {
-                await refreshPending();
-            } catch (err) {
-                APP.UI.showMessage(`Review load failed: ${err?.message || 'network issue'}`, 'text-red-500 font-bold');
-            }
-        };
-
-        const navigate = (delta) => {
-            const r = APP.State.ENGINE.review;
-            if (!r.isActive || r.pendingSubmissions.length === 0) return;
-            const len = r.pendingSubmissions.length;
-            r.currentReviewIndex = (r.currentReviewIndex + delta + len) % len;
-            loadCurrent();
-        };
-
-        const submitCurrentEditor = async () => {
-            APP.Editor.applyMetricsFromUI();
-            const l = APP.State.ENGINE.editor.workingLevel;
-            const validation = APP.Editor.validateWorkingLevel();
-            if (!validation?.ok) {
-                APP.UI.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'text-red-500 font-bold');
-                return;
-            }
-            const payload = APP.LevelUtils.denormalizeLevel(l);
-            if (!payload?.goal) {
-                APP.UI.showMessage('Goal missing', 'text-red-500 font-bold');
-                return;
-            }
-            await APP.Submissions.submitLevel(payload);
-            APP.UI.showMessage('Submission sent for review.', 'text-emerald-600 font-bold');
-        };
-
-        const removeCurrentAndAdvance = () => {
-            const r = APP.State.ENGINE.review;
-            if (!hasCurrent()) return;
-            r.pendingSubmissions.splice(r.currentReviewIndex, 1);
-            if (r.pendingSubmissions.length === 0) r.currentReviewIndex = -1;
-            else r.currentReviewIndex = Math.min(r.currentReviewIndex, r.pendingSubmissions.length - 1);
-            loadCurrent();
-        };
-
-        const approveCurrent = async () => {
-            if (!hasCurrent()) return;
-            APP.Editor.applyMetricsFromUI();
-            const validation = APP.Editor.validateWorkingLevel();
-            if (!validation?.ok) {
-                APP.UI.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'text-red-500 font-bold');
-                return;
-            }
-            const id = APP.State.ENGINE.review.currentReviewSubmissionId;
-            const approved = APP.LevelUtils.denormalizeLevel(APP.State.ENGINE.editor.workingLevel);
-            APP.State.ENGINE.review.isBusy = true;
-            syncUI();
-            try {
-                const result = await APP.Submissions.approveSubmission(id, approved);
-                APP.UI.showMessage(`Approved as #${result.assignedLevelNumber}.`, 'text-emerald-600 font-bold');
-                removeCurrentAndAdvance();
-            } finally {
-                APP.State.ENGINE.review.isBusy = false;
-                syncUI();
-            }
-        };
-
-        const rejectCurrent = async () => {
-            if (!hasCurrent()) return;
-            const id = APP.State.ENGINE.review.currentReviewSubmissionId;
-            APP.State.ENGINE.review.isBusy = true;
-            syncUI();
-            try {
-                await APP.Submissions.rejectSubmission(id);
-                APP.UI.showMessage('Submission rejected.', 'text-amber-500 font-bold');
-                removeCurrentAndAdvance();
-            } finally {
-                APP.State.ENGINE.review.isBusy = false;
-                syncUI();
-            }
-        };
-
-        return { isActive: () => APP.State.ENGINE.review.isActive, syncUI, open, navigate, submitCurrentEditor, approveCurrent, rejectCurrent, refreshPending };
-    })();
-
     APP.Input = (() => {
         let initialized = false;
         let consecutiveSolveFails = 0;
@@ -18536,7 +18221,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('undoBtn').onclick = () => { APP.UI.closeAllModals(); if(APP.State.ENGINE.undoStack.length) APP.Engine.applySnapshot(APP.State.ENGINE.undoStack.pop()); };
         document.getElementById('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = (APP.State.ENGINE.foundHintsSinceLoad || []).filter(path => APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level), path)?.ok); if (!hints.length) { APP.UI.showMessage("No valid hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); APP.UI.setSolutionOutput(hintText); await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
         document.getElementById('editGenBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.setButtonState('editGenBtn', { enabled: true }); APP.Editor.generateLevelString(); };
-        document.getElementById('editSubmitBtn').onclick = async () => { APP.UI.closeAllModals(); try { await APP.Review.submitCurrentEditor(); } catch (err) { APP.UI.showMessage(`Submit failed: ${err?.message || 'network issue'}`, 'text-red-500 font-bold'); } };
         document.getElementById('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
         document.getElementById('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
 
@@ -18656,8 +18340,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         });
         const handleWinClose = (callback) => { const circle = document.getElementById('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
         document.getElementById('copyWinDataBtn').onclick = async () => { if (document.getElementById('winSolutionOutput').value) await APP.UI.copyText(document.getElementById('winSolutionOutput').value, { fallbackElId: 'winSolutionOutput' }); };
-        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; if (APP.Review.isActive()) { APP.Review.navigate(-1); APP.UI.setSolutionOutput(''); return; } const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
-        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; if (APP.Review.isActive()) { APP.Review.navigate(1); APP.UI.setSolutionOutput(''); return; } const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
+        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
+        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
         document.getElementById('nextLevelModalBtn').onclick = () => { const levels = APP.LevelUtils.getRawLevels(); handleWinClose(() => { if (APP.State.ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(APP.State.ENGINE.levelIdx + 1); }); };
         document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => { APP.Engine.setLogicState(APP.Core.IDLE); });
 
@@ -18667,10 +18351,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!isVisible) APP.UI.openModal('guideModal');
         };
         document.getElementById('closeGuideX').onclick = () => APP.UI.closeModal('guideModal');
-        document.getElementById('reviewSubmissionsBtn').onclick = async () => {
-            if (!APP.State.ENGINE.isDevMode) return;
-            await APP.Review.open();
-        };
         document.getElementById('megaSolverBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.run(); };
         document.getElementById('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
         document.getElementById('copyMegaDataBtn').onclick = async () => { const out = APP.UI.getMegaOutputText(); if (out) await APP.UI.copyText(out, { fallbackElId: 'megaOutput' }); };
@@ -18723,13 +18403,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         document.getElementById('backToThemeSelectBtn').onclick = closeEditor;
         document.getElementById('doneThemeEditBtn').onclick = closeEditor;
-        document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); if (!APP.State.ENGINE.isDevMode) { auditModalOpen = false; APP.UI.closeModal('auditModal'); APP.State.ENGINE.review.isActive = false; if (APP.State.ENGINE.runtime.isHintExpanded) { APP.State.ENGINE.runtime.isHintExpanded = false; APP.UI.setClassState(hintTopHalf, 'hidden', true); APP.UI.setClassState(hintTopHalf, 'flex', false); APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem'); APP.UI.setInlineStyle(hintBtn, 'marginTop', '0'); } } APP.Review.syncUI(); updateHintLabel(); APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
+        document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); if (!APP.State.ENGINE.isDevMode) { auditModalOpen = false; APP.UI.closeModal('auditModal'); if (APP.State.ENGINE.runtime.isHintExpanded) { APP.State.ENGINE.runtime.isHintExpanded = false; APP.UI.setClassState(hintTopHalf, 'hidden', true); APP.UI.setClassState(hintTopHalf, 'flex', false); APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem'); APP.UI.setInlineStyle(hintBtn, 'marginTop', '0'); } } updateHintLabel(); APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
         APP.UI.bindAll('.editor-input', 'input', () => {
             APP.Editor.markEditorInputsDirty();
             APP.Editor.applyMetricsFromUI();
         });
-        document.getElementById('modeToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.enterEditorMode(); APP.Review.syncUI(); };
-        document.getElementById('editModeToggleBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); APP.Editor.exitEditorMode(); APP.Review.syncUI(); });
+        document.getElementById('modeToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.enterEditorMode(); };
+        document.getElementById('editModeToggleBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); APP.Editor.exitEditorMode(); });
 
         document.getElementById('editTrapSpotsBtn').onclick = async () => {
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
@@ -18815,8 +18495,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.Editor.createNewLevel();
             APP.UI.showMessage("New Level Created", "text-white font-black");
         });
-        document.getElementById('reviewApproveBtn').onclick = async () => { APP.UI.closeAllModals(); try { await APP.Review.approveCurrent(); } catch (err) { APP.UI.showMessage(`Approve failed: ${err?.message || 'network issue'}`, 'text-red-500 font-bold'); } };
-        document.getElementById('reviewRejectBtn').onclick = async () => { APP.UI.closeAllModals(); try { await APP.Review.rejectCurrent(); } catch (err) { APP.UI.showMessage(`Reject failed: ${err?.message || 'network issue'}`, 'text-red-500 font-bold'); } };
         document.getElementById('editHelpBtn').onclick = () => {
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
             APP.UI.closeAllModals();
@@ -18882,17 +18560,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.Themes.applyTheme(persistedSession.currentTheme);
                 APP.Engine.loadLevel(persistedSession.levelIdx);
                 APP.Engine.updatePlayModeLayout();
-                APP.Review.syncUI();
-                window.seedPendingSubmissionsIfEmpty = async () => {
-                    try {
-                        const result = await APP.Submissions.seedPendingSubmissionsIfEmpty();
-                        APP.UI.showMessage(result.seeded ? `Seeded ${result.count} pending submissions.` : `Seed skipped (${result.reason}).`, result.seeded ? 'text-emerald-600 font-bold' : 'text-slate-500');
-                        return result;
-                    } catch (err) {
-                        APP.UI.showMessage(`Seed failed: ${err?.message || 'network issue'}`, 'text-red-500 font-bold');
-                        throw err;
-                    }
-                };
                 APP.Engine.loop();
                 APP.Loader.finish();
             } catch (error) {
