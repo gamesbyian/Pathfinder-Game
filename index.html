@@ -496,6 +496,7 @@
                         <button id="devGenBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Copy Hints</button>
                         <button id="editCopyBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
                         <button id="editGenBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
+                        <button id="editSubmitBtn" class="export-action-btn hidden flex-1 bg-emerald-200 text-emerald-700 rounded-lg font-black text-[0.6rem] transition uppercase">Submit</button>
                     </div>
                 </div>
             </div>
@@ -513,8 +514,40 @@
     </div>
 </div>
 
+
+<div id="submitLevelModal" class="fixed inset-0 z-[95] bg-[var(--theme-modal-bg)] items-center justify-center hidden">
+    <div class="w-[min(92vw,30rem)] rounded-2xl border bg-[var(--theme-modal-panel)] border-[var(--theme-modal-border)] p-4">
+        <h3 class="font-black text-lg text-[var(--theme-modal-accent)]">Submit Level</h3>
+        <p class="text-sm text-[var(--theme-modal-muted)] mb-2">Optional details for moderation.</p>
+        <div class="space-y-2">
+            <input id="submitterNameInput" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Your name (optional)" />
+            <input id="submitterEmailInput" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Your email (optional)" />
+            <textarea id="submitterNotesInput" class="w-full border rounded-lg px-3 py-2 text-sm h-24" placeholder="Notes for reviewer (optional)"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 mt-3">
+            <button id="cancelSubmitLevelBtn" class="px-3 py-2 rounded-lg border">Cancel</button>
+            <button id="confirmSubmitLevelBtn" class="px-3 py-2 rounded-lg bg-emerald-600 text-white font-bold">Submit</button>
+        </div>
+    </div>
+</div>
+
+<div id="reviewPanel" class="fixed bottom-3 left-3 z-[91] hidden bg-white/95 border border-slate-300 rounded-xl p-3 shadow-xl w-[22rem] max-w-[90vw]">
+    <div id="reviewMeta" class="text-xs text-slate-600 mb-2">Review mode</div>
+    <div class="flex gap-1 mb-2">
+        <button id="reviewPrevBtn" class="px-2 py-1 rounded border text-xs">Prev</button>
+        <button id="reviewNextBtn" class="px-2 py-1 rounded border text-xs">Next</button>
+        <button id="reviewRefreshBtn" class="px-2 py-1 rounded border text-xs">Refresh</button>
+    </div>
+    <div class="flex gap-1">
+        <button id="reviewAddHintBtn" class="px-2 py-1 rounded bg-sky-600 text-white text-xs font-bold">Add Hint</button>
+        <button id="reviewRejectBtn" class="px-2 py-1 rounded bg-rose-600 text-white text-xs font-bold">Reject</button>
+        <button id="reviewApproveBtn" class="px-2 py-1 rounded bg-emerald-600 text-white text-xs font-bold">Approve</button>
+    </div>
+</div>
 <script type="module">
     const APP = {};
+    const URL_FLAGS = new URLSearchParams(window.location.search);
+    const IS_REVIEW_MODE = URL_FLAGS.get('review') === '1';
 
     // ======================================================
     // A) Core / ConstantsAndUtils
@@ -15822,9 +15855,8 @@
             function restoreEditorState() { if (APP.State.ENGINE.editor.undoStack.length === 0) return; APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.workingLevel = APP.State.ENGINE.editor.undoStack.pop(); let newPending = null; APP.State.ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); APP.State.ENGINE.editor.pendingPortal = newPending; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("Undo Grid Action", "text-slate-500"); }
 
 
-            async function generateLevelString() {
+            function buildCanonicalLevelData() {
                 const l = APP.State.ENGINE.editor.workingLevel;
-                const isValid = validateLevel(l);
                 const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0;
                 const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0;
                 const validateHintPath = (candidatePath) => {
@@ -15844,18 +15876,10 @@
                     seen.add(key);
                     normalizedHints.push(path);
                 };
-
-                const savedHints = Array.isArray(l.hints) ? l.hints : [];
-                savedHints.forEach(pushUniqueHint);
-
-                const liveHints = Array.isArray(APP.State.ENGINE.foundHintsSinceLoad) ? APP.State.ENGINE.foundHintsSinceLoad : [];
-                liveHints.forEach(pushUniqueHint);
-
+                (Array.isArray(l.hints) ? l.hints : []).forEach(pushUniqueHint);
+                (Array.isArray(APP.State.ENGINE.foundHintsSinceLoad) ? APP.State.ENGINE.foundHintsSinceLoad : []).forEach(pushUniqueHint);
                 if (APP.State.ENGINE.path.length > 1) pushUniqueHint(APP.State.ENGINE.path);
-
-                const exportedHints = normalizedHints.slice(0, 5);
-
-                const out = {
+                return {
                     grid: l.grid,
                     gates: APP.LevelUtils.expCoords(l.gateKeys),
                     goal: { x: APP.LevelUtils.UNPACK(l.goalKey).x + 1, y: APP.LevelUtils.UNPACK(l.goalKey).y + 1 },
@@ -15869,8 +15893,16 @@
                     flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
                     portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x + 1, y1: APP.LevelUtils.UNPACK(pv.k1).y + 1, x2: APP.LevelUtils.UNPACK(pv.k2).x + 1, y2: APP.LevelUtils.UNPACK(pv.k2).y + 1, color: pv.color })),
                     geese: APP.LevelUtils.expCoords(l.gooseSet),
-                    hints: exportedHints
+                    hints: normalizedHints.slice(0, 5)
                 };
+            }
+
+            async function generateLevelString() {
+                const l = APP.State.ENGINE.editor.workingLevel;
+                const isValid = validateLevel(l);
+                const out = buildCanonicalLevelData();
+                const reqLen = out.reqLen;
+                const reqInt = out.reqInt;
 
                 const json = JSON.stringify(out).replace(/\"([^\"]+)\":/g, '$1:').replace(/\s/g, '').slice(1, -1);
                 APP.UI.setSolutionOutput(json);
@@ -15987,6 +16019,7 @@
             restoreEditorState() { return restoreEditorState(); },
             validateLevel(level) { return validateLevel(level); },
             generateLevelString() { return generateLevelString(); },
+            buildCanonicalLevelData() { return buildCanonicalLevelData(); },
             setLogicState(newState) { return APP.Engine.setLogicState(newState); },
             setOverlayState(newState) { return APP.Engine.setOverlayState(newState); },
             getRealLength(state = APP.State.ENGINE) { return APP.Engine.getRealLength(state); },
@@ -18223,6 +18256,28 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('editGenBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.setButtonState('editGenBtn', { enabled: true }); APP.Editor.generateLevelString(); };
         document.getElementById('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
         document.getElementById('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
+        const submitModal = document.getElementById('submitLevelModal');
+        const toggleSubmitModal = (open) => { submitModal.classList.toggle('hidden', !open); submitModal.classList.toggle('flex', open); };
+        document.getElementById('editSubmitBtn').onclick = () => { APP.UI.closeAllModals(); toggleSubmitModal(true); };
+        document.getElementById('cancelSubmitLevelBtn').onclick = () => toggleSubmitModal(false);
+        document.getElementById('confirmSubmitLevelBtn').onclick = async () => {
+            const payload = {
+                submitterName: document.getElementById('submitterNameInput').value || '',
+                submitterEmail: document.getElementById('submitterEmailInput').value || '',
+                notes: document.getElementById('submitterNotesInput').value || '',
+                level: APP.Editor.buildCanonicalLevelData()
+            };
+            try {
+                const res = await fetch('api/submit_level.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (!data?.ok) throw new Error(data?.error || 'submit_failed');
+                toggleSubmitModal(false);
+                APP.UI.showMessage(`Submitted #${data.submissionId}`, 'text-emerald-600 font-bold');
+            } catch (err) {
+                APP.UI.showMessage(`Submit failed: ${err?.message || 'error'}`, 'text-red-500 font-bold');
+            }
+        };
+
 
         const hintBtn = document.getElementById('hintBtn'); const hintTopHalf = document.getElementById('hintTopHalf');
         const showSavedHint = () => {
@@ -18520,6 +18575,72 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         return { init };
     })();
 
+
+    APP.ReviewMode = (() => {
+        let list = [];
+        let idx = 0;
+        const panel = () => document.getElementById('reviewPanel');
+        const getCurrent = () => list[idx] || null;
+        const setMeta = () => {
+            const cur = getCurrent();
+            const meta = document.getElementById('reviewMeta');
+            if (!meta) return;
+            meta.textContent = cur ? `Submission #${cur.id} (${idx + 1}/${list.length})` : 'No pending submissions';
+        };
+        const loadIntoEditor = (sub) => {
+            if (!sub?.level) return;
+            const normalized = APP.LevelUtils.normalizeLevel(sub.level);
+            APP.Editor.loadWorkingLevel(normalized);
+            APP.Editor.enterEditorMode();
+            APP.UI.setInputValue('editReqLen', normalized.reqLen || 0);
+            APP.UI.setInputValue('editReqInt', normalized.reqInt || 0);
+            APP.Engine.rebuildDerivedPathState(APP.State.ENGINE);
+            APP.UI.updateViewport();
+            APP.State.ENGINE.isDirty = true;
+        };
+        const fetchList = async () => {
+            const res = await fetch('api/review_submissions.php');
+            const data = await res.json();
+            if (!data?.ok) throw new Error(data?.error || 'review_list_failed');
+            list = Array.isArray(data.items) ? data.items : [];
+            if (idx >= list.length) idx = Math.max(0, list.length - 1);
+            setMeta();
+            if (getCurrent()) loadIntoEditor(getCurrent());
+        };
+        const reviewAction = async (action, includeLevel = false) => {
+            const cur = getCurrent();
+            if (!cur) return;
+            const payload = { action, submissionId: cur.id };
+            if (includeLevel) payload.level = APP.Editor.buildCanonicalLevelData();
+            const res = await fetch('api/review_submissions.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            const data = await res.json();
+            if (!data?.ok) throw new Error(data?.error || 'review_action_failed');
+            await fetchList();
+            if (action === 'approve') APP.UI.showMessage(`Approved as L${data.levelNumber}`, 'text-emerald-700 font-bold');
+            if (action === 'reject') APP.UI.showMessage('Submission rejected', 'text-rose-700 font-bold');
+        };
+        const addHint = () => {
+            const out = APP.Editor.buildCanonicalLevelData();
+            const current = APP.State.ENGINE.editor.workingLevel;
+            current.hints = out.hints;
+            APP.UI.showMessage(`Added ${out.hints.length} hint(s)`, 'text-sky-700 font-bold');
+        };
+        const init = async () => {
+            if (!IS_REVIEW_MODE) return;
+            panel()?.classList.remove('hidden');
+            document.getElementById('modeToggleBtn').classList.add('hidden');
+            document.getElementById('editSubmitBtn').classList.add('hidden');
+            document.getElementById('reviewPrevBtn').onclick = () => { if (idx > 0) { idx--; loadIntoEditor(getCurrent()); setMeta(); } };
+            document.getElementById('reviewNextBtn').onclick = () => { if (idx < list.length - 1) { idx++; loadIntoEditor(getCurrent()); setMeta(); } };
+            document.getElementById('reviewRefreshBtn').onclick = () => fetchList().catch((e) => APP.UI.showMessage(e.message, 'text-red-500'));
+            document.getElementById('reviewRejectBtn').onclick = () => reviewAction('reject').catch((e) => APP.UI.showMessage(e.message, 'text-red-500'));
+            document.getElementById('reviewApproveBtn').onclick = () => reviewAction('approve', true).catch((e) => APP.UI.showMessage(e.message, 'text-red-500'));
+            document.getElementById('reviewAddHintBtn').onclick = addHint;
+            await fetchList();
+        };
+        return { init };
+    })();
+
     // APP.Boot lifecycle guarantees:
     // - start() is the single authoritative init entrypoint.
     // - loader/init errors route through APP.Loader.fail(...) and stop further boot progression.
@@ -18560,6 +18681,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.Themes.applyTheme(persistedSession.currentTheme);
                 APP.Engine.loadLevel(persistedSession.levelIdx);
                 APP.Engine.updatePlayModeLayout();
+                await APP.ReviewMode.init();
                 APP.Engine.loop();
                 APP.Loader.finish();
             } catch (error) {
