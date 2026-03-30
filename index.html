@@ -18638,9 +18638,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             syncLevelDisplay();
         };
         const loadIntoEditor = (sub) => {
-            const levelCandidate = sub?.level || sub?.payload?.level || sub?.payload || null;
-            if (!levelCandidate) return;
-            const normalized = APP.LevelUtils.normalizeLevel(levelCandidate);
+            const payloadLevel = sub?.payload?.level;
+            const payloadLooksLikeLevel = sub?.payload && typeof sub.payload === 'object' && sub.payload.grid && sub.payload.gates && sub.payload.goal;
+            const levelCandidate = sub?.level || payloadLevel || (payloadLooksLikeLevel ? sub.payload : null);
+            if (!levelCandidate) {
+                APP.UI.showMessage(`Submission #${sub?.id ?? '?'} has no level payload`, 'text-red-600 font-bold');
+                return;
+            }
+            let normalized = null;
+            try {
+                normalized = APP.LevelUtils.normalizeLevel(levelCandidate);
+            } catch (err) {
+                console.error('Failed to normalize review submission', sub?.id, err);
+                normalized = null;
+            }
             if (!normalized) {
                 APP.UI.showMessage(`Submission #${sub?.id ?? '?'} has invalid level payload`, 'text-red-600 font-bold');
                 return;
