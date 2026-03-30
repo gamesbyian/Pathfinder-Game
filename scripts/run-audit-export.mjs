@@ -121,36 +121,8 @@ const summarizeRootSuppressionLog = (entries) => {
   return { total: entries.length, byType: counts, sample: entries.slice(0, 8) };
 };
 
-const ATTEMPT_TELEMETRY_SENTINELS = Object.freeze({
-  maxProgress: -1,
-  bestPhaseReached: 'unknown',
-  remainingMustPass: -1,
-  remainingMustCross: -1,
-  plateauDetected: false,
-  plateauNodeWindow: -1
-});
-
-const normalizeAttemptTelemetry = (attempt = {}) => ({
-  ...attempt,
-  maxProgress: Number.isFinite(Number(attempt?.maxProgress))
-    ? Number(attempt.maxProgress)
-    : ATTEMPT_TELEMETRY_SENTINELS.maxProgress,
-  bestPhaseReached: `${attempt?.bestPhaseReached || ''}`.trim() || ATTEMPT_TELEMETRY_SENTINELS.bestPhaseReached,
-  remainingMustPass: Number.isFinite(Number(attempt?.remainingMustPass))
-    ? Math.max(0, Number(attempt.remainingMustPass))
-    : ATTEMPT_TELEMETRY_SENTINELS.remainingMustPass,
-  remainingMustCross: Number.isFinite(Number(attempt?.remainingMustCross))
-    ? Math.max(0, Number(attempt.remainingMustCross))
-    : ATTEMPT_TELEMETRY_SENTINELS.remainingMustCross,
-  plateauDetected: attempt?.plateauDetected === true,
-  plateauNodeWindow: Number.isFinite(Number(attempt?.plateauNodeWindow))
-    ? Math.max(0, Number(attempt.plateauNodeWindow))
-    : ATTEMPT_TELEMETRY_SENTINELS.plateauNodeWindow
-});
-
 const normalizeLevelRow = (row = {}) => {
   const softBounds = row?.softBoundActivations && typeof row.softBoundActivations === 'object' ? row.softBoundActivations : null;
-  const attempts = Array.isArray(row?.attempts) ? row.attempts.map(normalizeAttemptTelemetry) : [];
   return {
     ...row,
     rootCandidateCountDepth0: Number.isFinite(row?.rootCandidateCountDepth0)
@@ -162,7 +134,6 @@ const normalizeLevelRow = (row = {}) => {
       ? softBounds.total
       : ((Number(softBounds?.minRemOverflow) || 0) + (Number(softBounds?.mustPassBound) || 0) + (Number(softBounds?.mustCrossBound) || 0)),
     lowBranchModeActivated: Boolean(row?.lowBranchModeActivated),
-    attempts,
     rootSuppressionLog: Array.isArray(row?.rootSuppressionLog) ? row.rootSuppressionLog.slice(0, 12) : null,
     rootSuppressionSummary: summarizeRootSuppressionLog(row?.rootSuppressionLog)
   };

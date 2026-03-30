@@ -166,73 +166,7 @@ const printLevel50Trajectory = () => {
   console.log(`- solved=${solvedCount}/${l50.length}; failed=${failedCount}/${l50.length}`);
 };
 
-const REQUIRED_TIMEOUT_TELEMETRY_KEYS = [
-  'maxProgress',
-  'bestPhaseReached',
-  'remainingMustPass',
-  'remainingMustCross',
-  'plateauDetected',
-  'plateauNodeWindow'
-];
-
-const summarizeFailureAttemptTelemetry = () => {
-  console.log('Failure attempt telemetry summary (timeout/inconclusive attempts):');
-  for (const audit of audits) {
-    const failedLevels = audit.failed;
-    let timeoutLikeAttempts = 0;
-    let sentinelMaxProgress = 0;
-    let sentinelBestPhase = 0;
-    let sentinelRemainingMustPass = 0;
-    let sentinelRemainingMustCross = 0;
-    let sentinelPlateauWindow = 0;
-    let plateauDetectedCount = 0;
-    let missingKeys = 0;
-
-    const levelSnapshots = [];
-    for (const level of failedLevels) {
-      const attempts = Array.isArray(level?.attempts) ? level.attempts : [];
-      const timeoutAttempts = attempts.filter((attempt) =>
-        ['timeout', 'no-solution-inconclusive'].includes(`${attempt?.status || ''}`));
-      if (timeoutAttempts.length === 0) continue;
-      const latest = timeoutAttempts[timeoutAttempts.length - 1];
-      levelSnapshots.push({
-        level: level.level,
-        status: level.finalStatus || level.status || 'unknown',
-        maxProgress: latest?.maxProgress,
-        bestPhaseReached: latest?.bestPhaseReached,
-        remainingMustPass: latest?.remainingMustPass,
-        remainingMustCross: latest?.remainingMustCross,
-        plateauDetected: latest?.plateauDetected,
-        plateauNodeWindow: latest?.plateauNodeWindow
-      });
-      for (const attempt of timeoutAttempts) {
-        timeoutLikeAttempts += 1;
-        for (const key of REQUIRED_TIMEOUT_TELEMETRY_KEYS) {
-          if (!Object.prototype.hasOwnProperty.call(attempt, key)) missingKeys += 1;
-        }
-        if (!Number.isFinite(Number(attempt?.maxProgress)) || Number(attempt?.maxProgress) < 0) sentinelMaxProgress += 1;
-        if (`${attempt?.bestPhaseReached || ''}`.trim() === '' || `${attempt?.bestPhaseReached || ''}` === 'unknown') sentinelBestPhase += 1;
-        if (!Number.isFinite(Number(attempt?.remainingMustPass)) || Number(attempt?.remainingMustPass) < 0) sentinelRemainingMustPass += 1;
-        if (!Number.isFinite(Number(attempt?.remainingMustCross)) || Number(attempt?.remainingMustCross) < 0) sentinelRemainingMustCross += 1;
-        if (!Number.isFinite(Number(attempt?.plateauNodeWindow)) || Number(attempt?.plateauNodeWindow) < 0) sentinelPlateauWindow += 1;
-        if (attempt?.plateauDetected === true) plateauDetectedCount += 1;
-      }
-    }
-
-    console.log(`- ${audit.file}: timeoutLikeAttempts=${timeoutLikeAttempts}; missingTelemetryKeys=${missingKeys}`);
-    console.log(`  sentinels maxProgress=${sentinelMaxProgress}, bestPhaseReached=${sentinelBestPhase}, remainingMustPass=${sentinelRemainingMustPass}, remainingMustCross=${sentinelRemainingMustCross}, plateauNodeWindow=${sentinelPlateauWindow}, plateauDetected=true count=${plateauDetectedCount}`);
-    const preview = levelSnapshots
-      .sort((a, b) => a.level - b.level)
-      .slice(0, 8)
-      .map((row) => `L${row.level}:${row.status} p=${row.maxProgress} phase=${row.bestPhaseReached} rem=(${row.remainingMustPass}/${row.remainingMustCross}) plateau=${row.plateauDetected ? 'Y' : 'N'}@${row.plateauNodeWindow}`)
-      .join(' | ');
-    console.log(`  samples=${preview || 'none'}`);
-  }
-  console.log('');
-};
-
 printFailureSummary();
 printWindowTransitions();
 printCollapseFamilySummary();
-summarizeFailureAttemptTelemetry();
 printLevel50Trajectory();
