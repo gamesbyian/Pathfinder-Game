@@ -198,6 +198,35 @@ function submission_seed_review_fixtures(PDO $pdo): void {
     }
 }
 
+
+function submission_extract_level_from_payload($payload): ?array {
+    if (!is_array($payload)) return null;
+
+    $looksLikeRawLevel = static function ($candidate): bool {
+        return is_array($candidate)
+            && isset($candidate['grid'], $candidate['gates'], $candidate['goal'])
+            && is_array($candidate['grid'])
+            && is_array($candidate['gates']);
+    };
+
+    if (isset($payload['level'])) {
+        if (is_array($payload['level'])) {
+            return $payload['level'];
+        }
+        if (is_string($payload['level'])) {
+            $decoded = json_decode($payload['level'], true);
+            if (is_array($decoded)) return $decoded;
+        }
+    }
+
+    if ($looksLikeRawLevel($payload)) {
+        // Backward compatibility: some rows stored only the raw level object.
+        return $payload;
+    }
+
+    return null;
+}
+
 function submission_append_level_to_levels_js(array $level): array {
     $path = dirname(__DIR__) . '/levels.js';
     $fh = fopen($path, 'c+');
