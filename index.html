@@ -2411,6 +2411,42 @@
                     for (let i = 0; i < state.mustCrossCounts.length; i++) needs += Math.max(0, 2 - state.mustCrossCounts[i]);
                     return needs;
                 },
+                _estimateCompositeScheduleBound(key, state, l, overrides = {}) {
+                    const goalDist = Number.isFinite(overrides.goalDist) ? overrides.goalDist : (l?.distMapForSolver?.get(key) ?? Infinity);
+                    const remainingMustPass = Number.isFinite(overrides.remainingMustPass)
+                        ? Math.max(0, overrides.remainingMustPass)
+                        : countMaskBits(state?.mustMask, l);
+                    const crossNeed = Number.isFinite(overrides.crossNeed)
+                        ? Math.max(0, overrides.crossNeed)
+                        : this._crossNeeds(state);
+                    const interactionDeficit = Number.isFinite(overrides.interactionDeficit)
+                        ? Math.max(0, overrides.interactionDeficit)
+                        : Math.max(0, (l?.reqInt || 0) - (state?.ints || 0));
+                    const mustBound = Number.isFinite(overrides.mustBound)
+                        ? overrides.mustBound
+                        : (remainingMustPass > 0 ? this._estimateMustPassBoundFrom(key, state, l) : 0);
+                    const crossBound = Number.isFinite(overrides.crossBound)
+                        ? overrides.crossBound
+                        : (crossNeed > 0 ? this._estimateMustCrossBoundFrom(key, state, l) : 0);
+                    const { extraVisitsLB } = this._mustCrossExtraVisitsLowerBound(state?.mustCrossMask || 0n, crossNeed, l);
+                    const baseBound = Math.max(
+                        Number.isFinite(goalDist) ? goalDist : Infinity,
+                        Number.isFinite(mustBound) ? mustBound : Infinity,
+                        Number.isFinite(crossBound) ? crossBound : Infinity,
+                        interactionDeficit
+                    );
+                    const obligationMass = remainingMustPass + crossNeed + interactionDeficit;
+                    const overlapPenalty = Math.max(0, interactionDeficit - Math.min(interactionDeficit, crossNeed));
+                    const coupledScheduleBound = Math.ceil((obligationMass + Math.max(0, extraVisitsLB) + overlapPenalty) / 2);
+                    return {
+                        bound: Math.max(baseBound, coupledScheduleBound),
+                        baseBound,
+                        coupledScheduleBound,
+                        obligationMass,
+                        crossNeed,
+                        interactionDeficit
+                    };
+                },
                 _isObjectiveOutstanding(state, l, objectiveId) {
                     if (!l.objectiveNodes || objectiveId < 0 || objectiveId >= l.objectiveNodes.length) return false;
                     const node = l.objectiveNodes[objectiveId];
@@ -3502,6 +3538,8 @@
                     const filterCtx = {
                         k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
                         portalForced, portalDest, distMap,
+                        activeObjectiveDistMap, activeObjectiveCurDist,
+                        searchCtx,
                         disableDistanceBound, disableMustPassBound, disableMustCrossBound, disablePortalAutomaton,
                         interactionCandidateFallbackEnabled, assertKnownSolvableBounds, debugNeighborTraceEnabled
                     };
@@ -3518,6 +3556,8 @@
                     const {
                         k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
                         portalForced, portalDest, distMap,
+                        activeObjectiveDistMap, activeObjectiveCurDist,
+                        searchCtx,
                         disableDistanceBound, disableMustPassBound, disableMustCrossBound, disablePortalAutomaton,
                         interactionCandidateFallbackEnabled, assertKnownSolvableBounds, debugNeighborTraceEnabled
                     } = ctx;
@@ -3650,6 +3690,55 @@
                                 }
                             }
                         }
+                        const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
+                        const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(nk) : undefined;
+                        const projectedMustMask = (mustIdx !== undefined)
+                            ? (state.mustMask & ~(1n << BigInt(mustIdx)))
+                            : state.mustMask;
+                        const projectedMustPass = countMaskBits(projectedMustMask, l);
+                        let projectedCrossNeed = crossNeed;
+                        if (crossIdx !== undefined && state.mustCrossCounts) {
+                            const currentCrossCount = state.mustCrossCounts[crossIdx] || 0;
+                            if (currentCrossCount < 2) projectedCrossNeed = Math.max(0, crossNeed - 1);
+                        }
+                        const projectedRevisit = (state.countsArr[searchCtx.keyToIdx(nk)] || 0) > 0;
+                        const projectedInteractionDeficit = Math.max(0, l.reqInt - (state.ints + (projectedRevisit ? 1 : 0)));
+                        const scheduleInfo = this._estimateCompositeScheduleBound(nk, state, l, {
+                            remainingMustPass: projectedMustPass,
+                            crossNeed: projectedCrossNeed,
+                            interactionDeficit: projectedInteractionDeficit,
+                            mustBound: hasMust ? getMustBound(nk) : 0,
+                            crossBound: crossNeed > 0 ? getCrossBound(nk) : 0,
+                            goalDist: distMap.get(nk) ?? Infinity
+                        });
+                        if (!Number.isFinite(scheduleInfo.bound) || scheduleInfo.bound > rSteps) {
+                            if (debugStats) debugStats.prune.mustCrossBound++;
+                            if (startFilterBreakdown) startFilterBreakdown.mustCrossRejected++;
+                            if (state.path.length === 1) {
+                                this._recordDepth0Prune(debugStats, 'scheduleBound', `scheduleBound=${Number.isFinite(scheduleInfo.bound) ? scheduleInfo.bound : 'inf'} rSteps=${rSteps} coupling=${scheduleInfo.coupledScheduleBound}`);
+                            }
+                            return false;
+                        }
+                        const isPortalJump = (portalDest === nk && portalForced);
+                        if (isPortalJump) {
+                            const hasMandatoryPortalObligation = typeof state.portal?.portalRequiredCoverageMask === 'bigint' && state.portal?.portalRequiredCoverageMask !== 0n;
+                            if (!hasMandatoryPortalObligation) {
+                                const curMustBound = hasMust ? getMustBound(k) : 0;
+                                const curCrossBound = crossNeed > 0 ? getCrossBound(k) : 0;
+                                const nextMustBound = hasMust ? getMustBound(nk) : 0;
+                                const nextCrossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
+                                const objectiveDistNow = Number.isFinite(activeObjectiveCurDist) ? activeObjectiveCurDist : Infinity;
+                                const objectiveDistNext = activeObjectiveDistMap ? (activeObjectiveDistMap.get(nk) ?? Infinity) : Infinity;
+                                const objectiveTrackImproved = Number.isFinite(objectiveDistNow) && Number.isFinite(objectiveDistNext) && objectiveDistNext < objectiveDistNow;
+                                const obligationImproved = nextMustBound < curMustBound || nextCrossBound < curCrossBound || projectedInteractionDeficit < Math.max(0, l.reqInt - state.ints);
+                                const slackNeedCompression = (rSteps - scheduleInfo.bound) <= 1;
+                                if (!obligationImproved && !objectiveTrackImproved && !slackNeedCompression) {
+                                    if (debugStats) debugStats.prune.portalAutomatonRejected = (debugStats.prune.portalAutomatonRejected || 0) + 1;
+                                    if (startFilterBreakdown) startFilterBreakdown.portalAutomatonRejected++;
+                                    return false;
+                                }
+                            }
+                        }
                         const levelHasPortalFamilies = Number.isFinite(l?.portalFamilyCount) && l.portalFamilyCount > 0;
                         const hasMandatoryPortalObligation = typeof state.portal?.portalRequiredCoverageMask === 'bigint' && state.portal?.portalRequiredCoverageMask !== 0n;
                         const hasCommittedPortalContinuation = (Number.isFinite(state?.portal?.portalSelectedFamily) && state.portal?.portalSelectedFamily >= 0)
@@ -3660,7 +3749,6 @@
                         const portalAutomatonActive = !disablePortalAutomaton && levelHasPortalFamilies && (hasMandatoryPortalObligation || hasCommittedPortalContinuation);
                         const portalAutomatonLowerBoundActive = portalAutomatonActive && hasMandatoryPortalObligation;
                         if (startFilterBreakdown) startFilterBreakdown.portalAutomatonActive = portalAutomatonActive;
-                        const isPortalJump = (portalDest === nk && portalForced);
                         const portalTransition = (portalAutomatonActive && isPortalJump)
                             ? this._portalProgressTransitionFeasible(k, nk, state, l, options)
                             : {
@@ -3873,6 +3961,14 @@
                         const portalPhaseOrder = Math.max(1, configuredPortalPhaseOrder.indexOf(portalPhase) + 1) || 3;
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
+                        const scheduleInfo = this._estimateCompositeScheduleBound(nk, state, l, {
+                            remainingMustPass: remainingMustAfterMove,
+                            crossNeed: projectedCrossNeed,
+                            interactionDeficit: remainingIntsAfterMove,
+                            mustBound,
+                            crossBound,
+                            goalDist: distMap.get(nk) ?? Infinity
+                        });
                         const nextObjectiveGap = (Number.isFinite(mustBound) ? mustBound : 9999) + (Number.isFinite(crossBound) ? crossBound : 9999);
                         const nextInKnot = !!(knotZone && knotZone.has(nk));
                         const currentObligationMass = countMaskBits(state.mustMask, l) + Math.max(0, l.reqInt - state.ints) + Math.max(0, crossNeed);
@@ -3881,12 +3977,25 @@
                         const portalFamilySwitchCount = Math.max(0, Number(state.portal?.portalOscillationCount) || 0) + (switchingPortalFamily ? 1 : 0);
                         const oscillationWindow = Math.max(2, Number(options?.phasePolicy?.portalOscillationPenaltyWindow) || 3);
                         const noObligationImprovement = nextObligationMass >= currentObligationMass && nextObjectiveGap >= currentObjectiveGap;
+                        const portalOpportunityDebt = Math.max(0,
+                            (state.portal?.portalReentryCounts?.[committedFamily] || 0)
+                            + Math.max(0, portalFamilySwitchCount - 1)
+                        );
                         let portalOscillationPenaltyApplied = false;
                         if (switchingPortalFamily && noObligationImprovement && portalFamilySwitchCount >= oscillationWindow) {
                             const oscillationPenalty = 36 + ((portalFamilySwitchCount - oscillationWindow) * 18);
                             score += oscillationPenalty;
                             portalOscillationPenaltyApplied = true;
                             pushDriver('portalFamilyOscillation', portalFamilySwitchCount, oscillationPenalty);
+                        }
+                        if (isP && portalOpportunityDebt > 0) {
+                            const debtPenalty = noObligationImprovement
+                                ? (22 + portalOpportunityDebt * 18)
+                                : Math.max(0, 8 + portalOpportunityDebt * 6 - ((currentObligationMass - nextObligationMass) * 10));
+                            if (debtPenalty > 0) {
+                                score += debtPenalty;
+                                pushDriver('portalOpportunityDebt', portalOpportunityDebt, debtPenalty);
+                            }
                         }
 
                         if (portalLockState === 'locked' && committedFamily >= 0 && nextFamily >= 0 && nextFamily !== committedFamily) {
@@ -4043,6 +4152,36 @@
                                         }
                                     }
                                 }
+                            }
+                            const scheduleSlack = remainingStepsAfterMove - scheduleInfo.bound;
+                            if (!Number.isFinite(scheduleInfo.bound) || scheduleSlack < 0) {
+                                const shortfall = Number.isFinite(scheduleInfo.bound) ? Math.abs(scheduleSlack) : 4;
+                                const schedulePenalty = 180 + (shortfall * 52);
+                                score += schedulePenalty;
+                                pushDriver('scheduleBoundShortfall', shortfall, schedulePenalty);
+                            } else if (scheduleSlack <= 2) {
+                                const pressure = Math.max(0, 3 - scheduleSlack);
+                                const schedulePressure = pressure * 28;
+                                score += schedulePressure;
+                                pushDriver('scheduleBoundTight', pressure, schedulePressure);
+                            }
+                            const crossDominatesObjective = projectedCrossNeed > 0 && projectedCrossNeed >= Math.max(2, remainingMustAfterMove + remainingIntsAfterMove);
+                            if (crossDominatesObjective) {
+                                const currentCrossBound = crossNeed > 0 ? getCrossBound(k) : 0;
+                                if (Number.isFinite(crossBound) && Number.isFinite(currentCrossBound)) {
+                                    const delta = crossBound - currentCrossBound;
+                                    if (delta < 0) {
+                                        const unlockBonus = -Math.round(delta * 38 * mustCrossUrgencyWeight);
+                                        score -= unlockBonus;
+                                        pushDriver('mustCrossUnlock', Math.abs(delta), -unlockBonus);
+                                    } else if (delta > 0) {
+                                        const unlockPenalty = Math.round(delta * 34 * mustCrossUrgencyWeight);
+                                        score += unlockPenalty;
+                                        pushDriver('mustCrossUnlockMiss', delta, unlockPenalty);
+                                    }
+                                }
+                                const corridorRiskPenalty = this._staticNeighborDegree(nk, l) <= 2 ? 18 : -8;
+                                score += corridorRiskPenalty;
                             }
                             let lengthPressureContribution = 0;
                             const pressureCtx = lengthPressureContext;
@@ -5691,6 +5830,28 @@
                             Number.isFinite(mustCrossBoundEstimate) ? mustCrossBoundEstimate : Infinity,
                             interactionDeficit
                         );
+                        const scheduleInfo = this._estimateCompositeScheduleBound(lastK, state, l, {
+                            remainingMustPass,
+                            crossNeed: crossNeeds,
+                            interactionDeficit,
+                            mustBound: mustPassBoundEstimate,
+                            crossBound: mustCrossBoundEstimate,
+                            goalDist: minRemForLowerBound
+                        });
+                        const timeoutDiag = ensureTimeoutDiagnostics(debugStats);
+                        if (timeoutDiag && Number.isFinite(scheduleInfo.bound) && scheduleInfo.bound > rSteps) {
+                            timeoutDiag.mustCrossScheduleInfeasibleFrontierStates = (timeoutDiag.mustCrossScheduleInfeasibleFrontierStates || 0) + 1;
+                        }
+                        if (timeoutDiag && isP) {
+                            const prevMustBound = state.mustMask !== 0n ? this._estimateMustPassBoundFrom(top.k, state, l) : 0;
+                            const prevCrossBound = crossNeeds > 0 ? this._estimateMustCrossBoundFrom(top.k, state, l) : 0;
+                            const nonImprovingPortal = mustPassBoundEstimate >= prevMustBound
+                                && mustCrossBoundEstimate >= prevCrossBound
+                                && interactionDeficit >= Math.max(0, l.reqInt - (state.ints || 0));
+                            if (nonImprovingPortal) {
+                                timeoutDiag.nonImprovingPortalTransitionsExpanded = (timeoutDiag.nonImprovingPortalTransitionsExpanded || 0) + 1;
+                            }
+                        }
                         const missingDimensions = [];
                         if (remainingMustPass > 0) missingDimensions.push('must-pass');
                         if (crossNeeds > 0) missingDimensions.push('must-cross');
@@ -8063,7 +8224,13 @@
                         nearSolutionStates: Number.isFinite(debug.timeoutDiagnostics.nearSolutionStates)
                             ? debug.timeoutDiagnostics.nearSolutionStates
                             : null,
-                        nearSolutionByDimension: debug.timeoutDiagnostics.nearSolutionByDimension || null
+                        nearSolutionByDimension: debug.timeoutDiagnostics.nearSolutionByDimension || null,
+                        nonImprovingPortalTransitionsExpanded: Number.isFinite(debug.timeoutDiagnostics.nonImprovingPortalTransitionsExpanded)
+                            ? debug.timeoutDiagnostics.nonImprovingPortalTransitionsExpanded
+                            : null,
+                        mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(debug.timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates)
+                            ? debug.timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
+                            : null
                     })
                     : null,
                 refereeAttemptHistory: toAuditRefereeAttemptHistory(attempt?.attempts),
@@ -13942,7 +14109,9 @@
                         frontierInteractionDeficitDistribution: {},
                         bestLowerBoundToValidSolution: null,
                         nearSolutionStates: 0,
-                        nearSolutionByDimension: {}
+                        nearSolutionByDimension: {},
+                        nonImprovingPortalTransitionsExpanded: 0,
+                        mustCrossScheduleInfeasibleFrontierStates: 0
                     };
                 }
                 return debugStats.timeoutDiagnostics;
@@ -17611,7 +17780,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     nearSolutionStates: Number.isFinite(timeoutDiagnostics?.nearSolutionStates)
                         ? timeoutDiagnostics.nearSolutionStates
                         : null,
-                    nearSolutionByDimension: timeoutDiagnostics?.nearSolutionByDimension || null
+                    nearSolutionByDimension: timeoutDiagnostics?.nearSolutionByDimension || null,
+                    nonImprovingPortalTransitionsExpanded: Number.isFinite(timeoutDiagnostics?.nonImprovingPortalTransitionsExpanded)
+                        ? timeoutDiagnostics.nonImprovingPortalTransitionsExpanded
+                        : null,
+                    mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates)
+                        ? timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
+                        : null
                 })
             };
         };
