@@ -7628,6 +7628,7 @@
                     enableLowExpansionProbe: entry?.enableLowExpansionProbe === true ? true : null,
                     timeoutEscalationTier: Number.isFinite(entry?.timeoutEscalationTier) ? entry.timeoutEscalationTier : 0,
                     escalationReason: entry?.escalationReason || null,
+                    retryTag: entry?.retryTag || null,
                     orderingTweaks: entry?.retryEscalation || entry?.orderingTweaks || null,
                     commitmentPlan: compactCommitmentPlanForAudit(entry?.commitmentPlan),
                     status: entry?.status || null,
@@ -9607,6 +9608,37 @@
             let consecutiveTimeoutStagnation = 0;
             let portalRetryBiasToggle = 0;
             let portalRetryObjectiveFirstUsed = false;
+            let broadStagnationRescueUsed = false;
+            const applyRootNoveltyPenalty = (nextAttempt, reasonTag, sourceAttempt = null) => {
+                if (!nextAttempt || !reasonTag) return null;
+                const recentTimeoutAttempts = attemptsUsed
+                    .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
+                    .slice(-3);
+                const avoidedRootKeys = recentTimeoutAttempts
+                    .map(entry => Number(entry?.rootMoveScores?.[0]?.key))
+                    .filter(key => Number.isFinite(key));
+                const sourceTopKey = Number(sourceAttempt?.rootMoveScores?.[0]?.key);
+                if (Number.isFinite(sourceTopKey)) avoidedRootKeys.push(sourceTopKey);
+                const uniqueAvoidedKeys = Array.from(new Set(avoidedRootKeys)).slice(0, 4);
+                if (uniqueAvoidedKeys.length === 0) return null;
+                const baseSeed = Number.isFinite(nextAttempt.rootTieSeed)
+                    ? Number(nextAttempt.rootTieSeed)
+                    : ((typeof nextAttempt.label === 'string' ? nextAttempt.label.length : 0) + ((Number(nextAttempt.attemptOrdinal) || 0) * 17));
+                const noveltyMix = uniqueAvoidedKeys.reduce((acc, key, idx) => {
+                    const mixed = ((key * (idx + 3)) ^ ((key << ((idx % 5) + 1)) >>> 0)) >>> 0;
+                    return (acc ^ mixed) >>> 0;
+                }, 0);
+                nextAttempt.rootTieSeed = (baseSeed ^ noveltyMix ^ 0x9e3779b9) >>> 0;
+                nextAttempt.rootTieProfile = 'stable-diversified';
+                nextAttempt.orderingTweaks = compactDefined({
+                    ...(nextAttempt.orderingTweaks || {}),
+                    noveltyPenalty: {
+                        reason: reasonTag,
+                        avoidedRootKeys: uniqueAvoidedKeys
+                    }
+                });
+                return uniqueAvoidedKeys;
+            };
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
@@ -9866,7 +9898,8 @@
                     preExpansionAbort: attemptResult?.preExpansionAbort || attemptResult?.debug?.preExpansionAbort || null,
                     contradictionRecoveryActivated: !!attemptResult?.contradictionRecoveryActivated,
                     failureCategory: attemptResult?.failureTaxonomy?.category || null,
-                    compatLegacyOutputAlias: !!attempt.compatLegacyOutputAlias
+                    compatLegacyOutputAlias: !!attempt.compatLegacyOutputAlias,
+                    retryTag: attempt.retryTag || null
                 });
                 if (!autoContradictionRecoveryArmed && !attemptResult.ok) {
                     const goalReachableSanity = isGoalReachableFromAnyGate(level);
@@ -10042,6 +10075,59 @@
                             currentAttemptEntry.lowExpansionRecoveryAdded = !recoveryExists;
                             currentAttemptEntry.lowExpansionRecoveryDuplicateSkipped = recoveryExists;
                             currentAttemptEntry.consecutiveLowExpansionDetections = consecutiveLowExpansionDetections;
+                        }
+                        continue;
+                    }
+                    const recentTimeoutAttempts = attemptsUsed
+                        .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
+                        .slice(-3);
+                    const highExpansionFloor = Math.max(110, lowExpansionThreshold * 3);
+                    const depthSeries = recentTimeoutAttempts
+                        .map(entry => Number(entry?.depthReached))
+                        .filter(depth => Number.isFinite(depth));
+                    const depthPlateauBand = depthSeries.length >= 2
+                        ? (Math.max(...depthSeries) - Math.min(...depthSeries))
+                        : Infinity;
+                    const noSoftBoundActivity = recentTimeoutAttempts.length >= 2
+                        && recentTimeoutAttempts.every(entry => Math.max(0, Number(entry?.softBoundActivations?.total) || 0) === 0);
+                    const sustainedHighExpansion = recentTimeoutAttempts.length >= 2
+                        && recentTimeoutAttempts.every(entry => Math.max(0, Number(entry?.quality?.nodesExpanded) || 0) >= highExpansionFloor);
+                    const nonPortalBroadSearch = !portalInvolvedRun && (level?.portalMap?.size || 0) === 0;
+                    const broadStagnationDetected = timeoutProne
+                        && nonPortalBroadSearch
+                        && !broadStagnationRescueUsed
+                        && sustainedHighExpansion
+                        && depthSeries.length >= 2
+                        && depthPlateauBand <= 2
+                        && noSoftBoundActivity;
+                    if (broadStagnationDetected && nextAttempt) {
+                        const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
+                        const noveltyKeys = applyRootNoveltyPenalty(nextAttempt, 'broad-stagnation-novelty-rescue', attemptsUsed[attemptsUsed.length - 1] || null);
+                        nextAttempt.budgetMs = priorBudget;
+                        nextAttempt.memoStrictness = Math.max(2, (Number(nextAttempt?.memoStrictness) || 1) + 1);
+                        nextAttempt.policyProfile = 'objectiveFirst';
+                        nextAttempt.orderingPolicy = 'objectiveFirst';
+                        nextAttempt.retryTag = 'broad-stagnation-novelty-rescue';
+                        nextAttempt.escalationReason = 'broad-stagnation-novelty-rescue';
+                        nextAttempt.orderingTweaks = compactDefined({
+                            ...(nextAttempt.orderingTweaks || {}),
+                            stage: 'timeout-rescue-second-stage',
+                            mode: 'broad-stagnation-novelty-rescue',
+                            objectiveOrdering: 'unresolved-objectives-first',
+                            depthPlateauBand,
+                            highExpansionFloor,
+                            noveltyAvoidedRootKeys: noveltyKeys || null
+                        });
+                        broadStagnationRescueUsed = true;
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = 'broad-stagnation-novelty-rescue';
+                            currentAttemptEntry.broadStagnationDetected = true;
+                            currentAttemptEntry.broadStagnationWindow = {
+                                attempts: recentTimeoutAttempts.length,
+                                highExpansionFloor,
+                                depthPlateauBand
+                            };
+                            currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
                         }
                         continue;
                     }
@@ -10237,6 +10323,9 @@
                         };
                     }
                     if (currentAttemptEntry && nextAttempt) {
+                        if (timeoutProne) {
+                            applyRootNoveltyPenalty(nextAttempt, 'timeout-retry-novelty-penalty', currentAttemptEntry);
+                        }
                         currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
                         currentAttemptEntry.nextAttemptReason = currentAttemptEntry.nextAttemptReason || (switchedThisAttempt ? 'strategy-family-switch' : 'advance-ladder');
                     }
@@ -16664,6 +16753,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 attemptIndex,
                 attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || 'main',
                 policyProfile: attempt?.policyProfile || attempt?.attemptFamily || 'unknown',
+                retryTag: attempt?.retryTag || null,
                 scoringMode: attempt?.scoringMode || attempt?.mode || 'unknown',
                 orderingPolicy: attempt?.orderingPolicy || attempt?.policy || 'unknown',
                 portalBiasMode: attempt?.portalBiasMode || attempt?.portalMode || 'unknown',
@@ -16713,6 +16803,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         elapsedWallTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
                         budgetMs: Number.isFinite(attempt?.budgetMs) ? attempt.budgetMs : null,
                         policyProfile: attempt?.policyProfile || null,
+                        retryTag: attempt?.retryTag || null,
                         orderingPolicy: attempt?.orderingPolicy || null,
                         scoringMode: attempt?.scoringMode || null,
                         portalBiasMode: attempt?.portalBiasMode || null,
