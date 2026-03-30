@@ -78,6 +78,13 @@ submission_respond(400, ['ok' => false, 'error' => 'invalid_action']);
 function submission_map_row(array $row): array {
     $payload = json_decode((string)$row['payload_json'], true);
     if (!is_array($payload)) $payload = [];
+    $level = null;
+    if (isset($payload['level']) && is_array($payload['level'])) {
+        $level = $payload['level'];
+    } elseif (isset($payload['grid'], $payload['gates'], $payload['goal']) && is_array($payload['grid']) && is_array($payload['gates'])) {
+        // Backward compatibility: older rows may have stored only the raw level object.
+        $level = $payload;
+    }
     return [
         'id' => (int)$row['id'],
         'createdAt' => $row['created_at'],
@@ -85,7 +92,7 @@ function submission_map_row(array $row): array {
         'submitterName' => $row['submitter_name'],
         'submitterEmail' => $row['submitter_email'],
         'notes' => $row['notes'],
-        'level' => $payload['level'] ?? null,
+        'level' => $level,
         'payload' => $payload,
     ];
 }

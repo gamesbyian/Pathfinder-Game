@@ -18638,8 +18638,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             syncLevelDisplay();
         };
         const loadIntoEditor = (sub) => {
-            if (!sub?.level) return;
-            const normalized = APP.LevelUtils.normalizeLevel(sub.level);
+            const levelCandidate = sub?.level || sub?.payload?.level || sub?.payload || null;
+            if (!levelCandidate) return;
+            const normalized = APP.LevelUtils.normalizeLevel(levelCandidate);
+            if (!normalized) {
+                APP.UI.showMessage(`Submission #${sub?.id ?? '?'} has invalid level payload`, 'text-red-600 font-bold');
+                return;
+            }
             APP.Editor.loadWorkingLevel(normalized);
             APP.UI.setInputValue('editReqLen', normalized.reqLen || 0);
             APP.UI.setInputValue('editReqInt', normalized.reqInt || 0);
