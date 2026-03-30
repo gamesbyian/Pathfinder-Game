@@ -18641,7 +18641,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!sub?.level) return;
             const normalized = APP.LevelUtils.normalizeLevel(sub.level);
             APP.Editor.loadWorkingLevel(normalized);
-            APP.Editor.enterEditorMode();
             APP.UI.setInputValue('editReqLen', normalized.reqLen || 0);
             APP.UI.setInputValue('editReqInt', normalized.reqInt || 0);
             APP.Engine.rebuildDerivedPathState(APP.State.ENGINE);
