@@ -9603,6 +9603,10 @@
             let escalatedAttemptsAdded = 0;
             let previousAttemptSwitchedFamily = false;
             let consecutiveLowExpansionDetections = 0;
+            let previousTimeoutTelemetry = null;
+            let consecutiveTimeoutStagnation = 0;
+            let portalRetryBiasToggle = 0;
+            let portalRetryObjectiveFirstUsed = false;
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
@@ -9910,6 +9914,17 @@
                     const currentAttemptEntry = attemptsUsed[attemptsUsed.length - 1] || null;
                     let switchedThisAttempt = false;
                     const timeoutProne = ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status);
+                    const setAdaptationReason = (reason, extra = {}) => {
+                        if (!reason) return;
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = reason;
+                            currentAttemptEntry.adaptationReason = reason;
+                            Object.assign(currentAttemptEntry, extra || {});
+                        }
+                        if (nextAttempt && !nextAttempt.escalationReason) {
+                            nextAttempt.escalationReason = reason;
+                        }
+                    };
                     const nodesExpanded = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
                     const maxDepthReached = Math.max(0, Number(attemptResult?.debug?.maxDepth) || 0);
                     const timeoutLikeAttemptsSoFar = attemptsUsed.reduce((count, usedAttempt) => {
@@ -9933,6 +9948,30 @@
                             || maxDepthReached === 0);
                     const lowExpansionDetected = lowExpansionInconclusive || lowExpansionTimeout;
                     consecutiveLowExpansionDetections = lowExpansionDetected ? (consecutiveLowExpansionDetections + 1) : 0;
+                    const depth0PruneBreakdown = (attemptResult?.debug?.depth0PruneBreakdown && typeof attemptResult.debug.depth0PruneBreakdown === 'object')
+                        ? attemptResult.debug.depth0PruneBreakdown
+                        : {};
+                    const portalInvolvedRun = (Number(profile?.portalCommitment) || 0) > 0 || depth0PruneBreakdown.portalAutomatonActive === true;
+                    const timeoutImprovement = previousTimeoutTelemetry
+                        ? {
+                            nodesPerSecondDelta: quality.nodesPerSecond - previousTimeoutTelemetry.nodesPerSecond,
+                            frontierQualityDelta: quality.frontierQuality - previousTimeoutTelemetry.frontierQuality,
+                            maxProgressDelta: quality.maxProgress - previousTimeoutTelemetry.maxProgress,
+                            nodesPerSecondImproved: quality.nodesPerSecond > (previousTimeoutTelemetry.nodesPerSecond * 1.03),
+                            frontierImproved: quality.frontierQuality > (previousTimeoutTelemetry.frontierQuality + 0.015),
+                            maxProgressImproved: quality.maxProgress > (previousTimeoutTelemetry.maxProgress + 0.02)
+                        }
+                        : null;
+                    const timeoutMaterialProgress = !timeoutProne
+                        ? true
+                        : !timeoutImprovement
+                            ? true
+                            : !!(timeoutImprovement.nodesPerSecondImproved || timeoutImprovement.frontierImproved || timeoutImprovement.maxProgressImproved);
+                    if (timeoutProne) {
+                        consecutiveTimeoutStagnation = timeoutMaterialProgress ? 0 : (consecutiveTimeoutStagnation + 1);
+                    } else {
+                        consecutiveTimeoutStagnation = 0;
+                    }
                     const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         && (nodesExpanded === 0 || maxDepthReached === 0);
                     if (zeroExpansionTimeoutGuard) {
@@ -10006,6 +10045,48 @@
                         }
                         continue;
                     }
+                    if (timeoutProne && portalInvolvedRun && nextAttempt) {
+                        const nextPortalBias = (portalRetryBiasToggle % 2 === 0) ? 'adaptiveMustCross' : 'off';
+                        portalRetryBiasToggle += 1;
+                        nextAttempt.portalBiasMode = nextPortalBias;
+                        setAdaptationReason('healthy-expansion-portal-diversity-bias-toggle', {
+                            portalDiversityBiasApplied: true,
+                            portalDiversityBiasMode: nextPortalBias
+                        });
+                        if (!portalRetryObjectiveFirstUsed) {
+                            nextAttempt.policyProfile = 'objectiveFirst';
+                            nextAttempt.orderingPolicy = 'objectiveFirst';
+                            nextAttempt.phasePolicy = SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane?.activeHypothesis, activeArchetype: 'objectiveFirst' });
+                            portalRetryObjectiveFirstUsed = true;
+                            setAdaptationReason('healthy-expansion-portal-diversity-objective-first', {
+                                portalObjectiveFirstForced: true
+                            });
+                        }
+                    }
+                    if (timeoutProne && consecutiveTimeoutStagnation >= 2 && nextAttempt) {
+                        const forcedStagnationSwitch = this._switchAttemptStrategyFamily(nextAttempt, {
+                            constraintDeficit: quality.constraintDeficit,
+                            remainingMustPass: quality.remainingMustPass,
+                            remainingMustCross: quality.remainingMustCross,
+                            reason: 'healthy-expansion-stagnation-forced-switch'
+                        }, profile, controlPlane);
+                        if (forcedStagnationSwitch?.switched) {
+                            switchedThisAttempt = true;
+                            nextAttempt.forcedFamilySwitch = true;
+                            setAdaptationReason('healthy-expansion-stagnation-forced-switch', {
+                                strategyFamilySwitchReason: forcedStagnationSwitch?.reason || 'healthy-expansion-stagnation-forced-switch',
+                                switchedFrom: forcedStagnationSwitch?.from || null,
+                                switchedTo: forcedStagnationSwitch?.to || null,
+                                timeoutStagnationCount: consecutiveTimeoutStagnation,
+                                timeoutImprovement
+                            });
+                        } else {
+                            setAdaptationReason('healthy-expansion-stagnation-forced-switch', {
+                                timeoutStagnationCount: consecutiveTimeoutStagnation,
+                                timeoutImprovement
+                            });
+                        }
+                    }
                     const healthyExpansionTimeout = timeoutProne
                         && (Number(attemptResult?.debug?.nodesExpanded) || 0) >= 110
                         && (Number(quality?.branchFactor) || 0) >= 0.2
@@ -10029,17 +10110,38 @@
                         }
                     }
                     if (healthyExpansionTimeout) {
-                        const nextTier = Math.min(maxTimeoutEscalationTier, timeoutEscalationTier + 1);
-                        if (nextTier > timeoutEscalationTier) {
-                            const tierRatio = timeoutEscalationRatios[nextTier - 1] || timeoutEscalationRatios[timeoutEscalationRatios.length - 1] || 0;
-                            const originalBudget = Math.max(1, Number(nextAttempt?.budgetMs) || 1);
-                            nextAttempt.budgetMs = Math.max(1, Math.min(strictMaxEscalatedAttemptBudgetMs, Math.floor(originalBudget * (1 + tierRatio))));
-                            nextAttempt.timeoutEscalationTier = nextTier;
-                            nextAttempt.escalationReason = 'healthy-expansion-timeout';
-                            timeoutEscalationTier = nextTier;
-                            if (currentAttemptEntry) {
-                                currentAttemptEntry.budgetEscalatedFrom = originalBudget;
-                                currentAttemptEntry.budgetEscalatedTo = nextAttempt.budgetMs;
+                        const allowBudgetEscalation = !!(timeoutImprovement && timeoutMaterialProgress && consecutiveTimeoutStagnation === 0 && !switchedThisAttempt);
+                        if (allowBudgetEscalation) {
+                            const nextTier = Math.min(maxTimeoutEscalationTier, timeoutEscalationTier + 1);
+                            if (nextTier > timeoutEscalationTier) {
+                                const tierRatio = timeoutEscalationRatios[nextTier - 1] || timeoutEscalationRatios[timeoutEscalationRatios.length - 1] || 0;
+                                const originalBudget = Math.max(1, Number(nextAttempt?.budgetMs) || 1);
+                                nextAttempt.budgetMs = Math.max(1, Math.min(strictMaxEscalatedAttemptBudgetMs, Math.floor(originalBudget * (1 + tierRatio))));
+                                nextAttempt.timeoutEscalationTier = nextTier;
+                                nextAttempt.escalationReason = 'healthy-expansion-timeout-more-time';
+                                timeoutEscalationTier = nextTier;
+                                setAdaptationReason('healthy-expansion-timeout-more-time', {
+                                    budgetEscalatedFrom: originalBudget,
+                                    budgetEscalatedTo: nextAttempt.budgetMs,
+                                    timeoutImprovement
+                                });
+                            }
+                        } else if (!switchedThisAttempt) {
+                            const nonImprovingSwitch = this._switchAttemptStrategyFamily(nextAttempt, {
+                                constraintDeficit: quality.constraintDeficit,
+                                remainingMustPass: quality.remainingMustPass,
+                                remainingMustCross: quality.remainingMustCross,
+                                reason: 'healthy-expansion-timeout-no-improvement-family-switch'
+                            }, profile, controlPlane);
+                            if (nonImprovingSwitch?.switched) {
+                                switchedThisAttempt = true;
+                                nextAttempt.forcedFamilySwitch = true;
+                                setAdaptationReason('healthy-expansion-timeout-no-improvement-family-switch', {
+                                    strategyFamilySwitchReason: nonImprovingSwitch?.reason || 'healthy-expansion-timeout-no-improvement-family-switch',
+                                    switchedFrom: nonImprovingSwitch?.from || null,
+                                    switchedTo: nonImprovingSwitch?.to || null,
+                                    timeoutImprovement
+                                });
                             }
                         }
                         if (!switchedThisAttempt && !previousAttemptSwitchedFamily) {
@@ -10052,14 +10154,15 @@
                             if (forcedSwitch?.switched) {
                                 switchedThisAttempt = true;
                                 nextAttempt.forcedFamilySwitch = true;
-                                if (currentAttemptEntry) {
-                                    currentAttemptEntry.strategyFamilySwitchReason = forcedSwitch?.reason || 'healthy-expansion-timeout-forced-family-switch';
-                                    currentAttemptEntry.switchedFrom = forcedSwitch?.from || null;
-                                    currentAttemptEntry.switchedTo = forcedSwitch?.to || null;
-                                }
+                                setAdaptationReason('healthy-expansion-timeout-forced-family-switch', {
+                                    strategyFamilySwitchReason: forcedSwitch?.reason || 'healthy-expansion-timeout-forced-family-switch',
+                                    switchedFrom: forcedSwitch?.from || null,
+                                    switchedTo: forcedSwitch?.to || null
+                                });
                             }
                         }
-                        const canAddEscalatedAttempt = timeoutEscalationTier >= 1
+                        const canAddEscalatedAttempt = allowBudgetEscalation
+                            && timeoutEscalationTier >= 1
                             && escalatedAttemptsAdded < maxExtraEscalatedAttempts
                             && i + 1 === attempts.length - 1;
                         if (canAddEscalatedAttempt) {
@@ -10072,16 +10175,15 @@
                                 label: `${nextAttempt.label || 'attempt'}-timeout-escalation-final`,
                                 budgetMs: finalBudget,
                                 timeoutEscalationTier: finalTier,
-                                escalationReason: 'healthy-expansion-timeout-final-escalation',
+                                escalationReason: 'healthy-expansion-timeout-final-escalation-more-time',
                                 orderingPolicy: 'finishFirst',
                                 policyProfile: 'finishFirst',
                                 forcedFamilySwitch: !!nextAttempt.forcedFamilySwitch
                             };
                             attempts.push(escalatedAttempt);
-                            if (currentAttemptEntry) {
-                                currentAttemptEntry.nextAttemptInserted = true;
-                                currentAttemptEntry.nextAttemptReason = 'healthy-expansion-timeout-final-escalation';
-                            }
+                            setAdaptationReason('healthy-expansion-timeout-final-escalation-more-time', {
+                                nextAttemptInserted: true
+                            });
                             escalatedAttemptsAdded += 1;
                         }
                     }
@@ -10102,7 +10204,8 @@
                     if (previousTelemetry) {
                         const nodesPerSecondImproved = quality.nodesPerSecond > (previousTelemetry.nodesPerSecond * 1.03);
                         const frontierImproved = quality.frontierQuality > (previousTelemetry.frontierQuality + 0.015);
-                        if (!nodesPerSecondImproved && !frontierImproved) {
+                        const maxProgressImproved = quality.maxProgress > ((previousTelemetry.maxProgress || 0) + 0.02);
+                        if (!nodesPerSecondImproved && !frontierImproved && !maxProgressImproved) {
                             const switched = this._switchAttemptStrategyFamily(nextAttempt, {
                                 constraintDeficit: quality.constraintDeficit,
                                 remainingMustPass: quality.remainingMustPass,
@@ -10123,8 +10226,16 @@
                     }
                     previousTelemetry = {
                         nodesPerSecond: quality.nodesPerSecond,
-                        frontierQuality: quality.frontierQuality
+                        frontierQuality: quality.frontierQuality,
+                        maxProgress: quality.maxProgress
                     };
+                    if (timeoutProne) {
+                        previousTimeoutTelemetry = {
+                            nodesPerSecond: quality.nodesPerSecond,
+                            frontierQuality: quality.frontierQuality,
+                            maxProgress: quality.maxProgress
+                        };
+                    }
                     if (currentAttemptEntry && nextAttempt) {
                         currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
                         currentAttemptEntry.nextAttemptReason = currentAttemptEntry.nextAttemptReason || (switchedThisAttempt ? 'strategy-family-switch' : 'advance-ladder');
