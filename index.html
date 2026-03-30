@@ -18616,9 +18616,31 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             APP.UI.updateViewport();
             APP.State.ENGINE.isDirty = true;
         };
+        const parseReviewResponse = async (res, fallbackErrorCode) => {
+            const raw = await res.text();
+            let data = null;
+            try {
+                data = JSON.parse(raw);
+            } catch (_) {
+                const start = raw.indexOf('{');
+                const end = raw.lastIndexOf('}');
+                if (start !== -1 && end !== -1 && end > start) {
+                    try {
+                        data = JSON.parse(raw.slice(start, end + 1));
+                    } catch (_) {
+                        data = null;
+                    }
+                }
+            }
+            if (!data) {
+                const preview = raw.trim().slice(0, 180) || 'empty_response';
+                throw new Error(`${fallbackErrorCode}: ${preview}`);
+            }
+            return data;
+        };
         const fetchList = async () => {
             const res = await fetch('api/review_submissions.php');
-            const data = await res.json();
+            const data = await parseReviewResponse(res, 'review_list_invalid_json');
             if (!data?.ok) throw new Error(data?.error || 'review_list_failed');
             list = Array.isArray(data.items) ? data.items : [];
             if (idx >= list.length) idx = Math.max(0, list.length - 1);
@@ -18649,7 +18671,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const payload = { action, submissionId: cur.id };
             if (includeLevel) payload.level = APP.Editor.buildCanonicalLevelData();
             const res = await fetch('api/review_submissions.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            const data = await res.json();
+            const data = await parseReviewResponse(res, 'review_action_invalid_json');
             if (!data?.ok) throw new Error(data?.error || 'review_action_failed');
             await fetchList();
             if (action === 'approve') APP.UI.showMessage(`Approved as L${data.levelNumber}`, 'text-emerald-700 font-bold');
