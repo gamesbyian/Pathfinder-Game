@@ -5544,7 +5544,15 @@
                     }
                     const startSig = this._ensureStateHashState(state, l, 0, options, debugStats);
                     this._dominancePruneOrStore(dominanceMemo, startSig, { intersections: state.ints, stepsUsed: 0, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx);
-                    const stack = [{ k: startKey, neighbors: startNeighbors, log: [], sig: startSig, depth: 0 }];
+                    const stack = [{
+                        k: startKey,
+                        neighbors: startNeighbors,
+                        log: [],
+                        sig: startSig,
+                        depth: 0,
+                        remainingMustPass: countMaskBits(state.mustMask, l),
+                        remainingInteractionDeficit: Math.max(0, l.reqInt - state.ints)
+                    }];
                     const progressStartTimeMs = Date.now();
                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     let steps = 0;
@@ -5559,6 +5567,7 @@
                         }
                         if (Date.now() - options.startTime > options.timeLimit) {
                             captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
+                            snapshotTimeoutFrontierDiagnostics(debugStats, stack);
                             recordPhaseAttempt('timeout');
                             if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
                                 setDepthZeroReason(debugStats, 'returned-without-expansion', { returnedBeforeExpansion: true, timeout: true });
@@ -5640,7 +5649,11 @@
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                             continue;
                         }
+                        const remainingMustPass = countMaskBits(state.mustMask, l);
+                        const interactionDeficit = Math.max(0, l.reqInt - state.ints);
                         const crossNeeds = this._crossNeeds(state);
+                        let mustPassBoundEstimate = remainingMustPass;
+                        let mustCrossBoundEstimate = crossNeeds;
                         if (crossNeeds > rSteps) {
                             if (debugStats) debugStats.prune.mustCrossBound++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustCrossNeed', `crossNeeds=${crossNeeds} rSteps=${rSteps}`);
@@ -5649,16 +5662,17 @@
                         }
                         if (!disableMustPassBoundNow && state.mustMask !== 0n) {
                             const mustDetails = this._estimateMustPassBoundDetailed(lastK, state, l);
-                            const mustBound = mustDetails.bound;
-                            if (mustBound === Infinity || mustBound > rSteps) {
+                            mustPassBoundEstimate = Number.isFinite(mustDetails?.bound) ? mustDetails.bound : Infinity;
+                            if (mustPassBoundEstimate === Infinity || mustPassBoundEstimate > rSteps) {
                                 if (debugStats) debugStats.prune.mustPassBound++;
-                                if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${mustBound} rSteps=${rSteps} k=${mustDetails.k} method=${mustDetails.method}`);
+                                if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'mustPassBound', `mustPassBound=${mustPassBoundEstimate} rSteps=${rSteps} k=${mustDetails.k} method=${mustDetails.method}`);
                                 this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                                 continue;
                             }
                         }
                         if (!disableMustCrossBoundNow && state.mustCrossMask !== 0n) {
                             const crossBound = this._estimateMustCrossBoundFrom(lastK, state, l);
+                            mustCrossBoundEstimate = Number.isFinite(crossBound) ? crossBound : Infinity;
                             if (crossBound === Infinity || crossBound > rSteps) {
                                 if (debugStats) debugStats.prune.mustCrossBound++;
                                 if (state.path.length === 2) {
@@ -5670,11 +5684,28 @@
                                 continue;
                             }
                         }
+                        const minRemForLowerBound = distMap.get(lastK) || Infinity;
+                        const lowerBoundToValidSolution = Math.max(
+                            Number.isFinite(minRemForLowerBound) ? minRemForLowerBound : Infinity,
+                            Number.isFinite(mustPassBoundEstimate) ? mustPassBoundEstimate : Infinity,
+                            Number.isFinite(mustCrossBoundEstimate) ? mustCrossBoundEstimate : Infinity,
+                            interactionDeficit
+                        );
+                        const missingDimensions = [];
+                        if (remainingMustPass > 0) missingDimensions.push('must-pass');
+                        if (crossNeeds > 0) missingDimensions.push('must-cross');
+                        if (interactionDeficit > 0) missingDimensions.push('interaction');
+                        recordTimeoutStateDiagnostics(debugStats, {
+                            remainingMustPass,
+                            remainingInteractionDeficit: interactionDeficit,
+                            lowerBoundToValidSolution,
+                            nearSolutionMissingDimension: missingDimensions.length === 1 ? missingDimensions[0] : null
+                        });
                         if (realLen === l.reqLen && debugStats) {
                             debugStats.reachedReqLenStates = (debugStats.reachedReqLenStates || 0) + 1;
-                            const unresolvedMustAtReqLen = countMaskBits(state.mustMask, l);
-                            const interactionDeficitAtReqLen = Math.max(0, l.reqInt - state.ints);
-                            const unresolvedCrossAtReqLen = this._crossNeeds(state);
+                            const unresolvedMustAtReqLen = remainingMustPass;
+                            const interactionDeficitAtReqLen = interactionDeficit;
+                            const unresolvedCrossAtReqLen = crossNeeds;
                             const scheduleImpossibleAtReqLen = unresolvedMustAtReqLen + interactionDeficitAtReqLen + unresolvedCrossAtReqLen > 0;
                             if (unresolvedMustAtReqLen > 0) debugStats.unresolvedMustPassAtReqLen = (debugStats.unresolvedMustPassAtReqLen || 0) + 1;
                             if (interactionDeficitAtReqLen > 0) debugStats.interactionDeficitAtReqLen = (debugStats.interactionDeficitAtReqLen || 0) + 1;
@@ -5693,7 +5724,7 @@
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                             continue;
                         }
-                        const minRem = distMap.get(lastK) || Infinity;
+                        const minRem = minRemForLowerBound;
                         if (!runtimeDisabledPrunes.has('distance') && !runtimeDisabledPrunes.has('minRemOverflow') && realLen + minRem > l.reqLen) {
                             if (debugStats) debugStats.prune.minRemOverflow++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'minRemOverflow', `minRem=${minRem} realLen=${realLen} reqLen=${l.reqLen}`);
@@ -5772,7 +5803,15 @@
                             continue;
                         }
                         const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats);
-                        stack.push({ k: nextKey, neighbors, log: transLog, sig: stateSig, depth: top.depth + 1 });
+                        stack.push({
+                            k: nextKey,
+                            neighbors,
+                            log: transLog,
+                            sig: stateSig,
+                            depth: top.depth + 1,
+                            remainingMustPass,
+                            remainingInteractionDeficit: interactionDeficit
+                        });
                     }
                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     if (debugStats) {
@@ -8014,6 +8053,19 @@
                 attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
                 progressSamples: Array.isArray(debug?.progressSamples) ? debug.progressSamples : null,
                 progressSummary: debug?.progressSummary || null,
+                timeoutDiagnostics: debug?.timeoutDiagnostics && typeof debug.timeoutDiagnostics === 'object'
+                    ? compactDefined({
+                        frontierMustPassDistribution: debug.timeoutDiagnostics.frontierMustPassDistribution || null,
+                        frontierInteractionDeficitDistribution: debug.timeoutDiagnostics.frontierInteractionDeficitDistribution || null,
+                        bestLowerBoundToValidSolution: Number.isFinite(debug.timeoutDiagnostics.bestLowerBoundToValidSolution)
+                            ? debug.timeoutDiagnostics.bestLowerBoundToValidSolution
+                            : null,
+                        nearSolutionStates: Number.isFinite(debug.timeoutDiagnostics.nearSolutionStates)
+                            ? debug.timeoutDiagnostics.nearSolutionStates
+                            : null,
+                        nearSolutionByDimension: debug.timeoutDiagnostics.nearSolutionByDimension || null
+                    })
+                    : null,
                 refereeAttemptHistory: toAuditRefereeAttemptHistory(attempt?.attempts),
                 rootMoveOrder: Array.isArray(debug?.rootMoveOrder) ? debug.rootMoveOrder.slice(0, 20) : null,
                 rootMoveScores: Array.isArray(debug?.rootMoveScores) ? debug.rootMoveScores.slice(0, 20) : null,
@@ -10472,6 +10524,7 @@
                     lengthDeficitAtTimeout: Number.isFinite(attemptResult?.debug?.lengthDeficitAtTimeout)
                         ? attemptResult.debug.lengthDeficitAtTimeout
                         : null,
+                    timeoutDiagnostics: attemptResult?.debug?.timeoutDiagnostics || null,
                     preExpansionAbort: attemptResult?.preExpansionAbort || attemptResult?.debug?.preExpansionAbort || null,
                     contradictionRecoveryActivated: !!attemptResult?.contradictionRecoveryActivated,
                     failureCategory: attemptResult?.failureTaxonomy?.category || null,
@@ -13855,6 +13908,7 @@
                     lengthPressureActive: false,
                     targetDepthByPhase: null,
                     lengthDeficitAtTimeout: null,
+                    timeoutDiagnostics: null,
                     phaseTimeline: [],
                     progressSamples: [],
                     progressSummary: null,
@@ -13879,6 +13933,54 @@
                     notes: []
                 };
             }
+
+            const ensureTimeoutDiagnostics = (debugStats) => {
+                if (!debugStats || typeof debugStats !== 'object') return null;
+                if (!debugStats.timeoutDiagnostics || typeof debugStats.timeoutDiagnostics !== 'object') {
+                    debugStats.timeoutDiagnostics = {
+                        frontierMustPassDistribution: {},
+                        frontierInteractionDeficitDistribution: {},
+                        bestLowerBoundToValidSolution: null,
+                        nearSolutionStates: 0,
+                        nearSolutionByDimension: {}
+                    };
+                }
+                return debugStats.timeoutDiagnostics;
+            };
+            const bumpTimeoutDiagBucket = (hist = {}, key = null, weight = 1) => {
+                if (!hist || key === null || key === undefined) return;
+                const k = String(Math.max(0, Math.floor(Number(key) || 0)));
+                hist[k] = (hist[k] || 0) + Math.max(1, Math.floor(Number(weight) || 1));
+            };
+            const recordTimeoutStateDiagnostics = (debugStats, sample = {}) => {
+                const diag = ensureTimeoutDiagnostics(debugStats);
+                if (!diag) return;
+                const mustPass = Math.max(0, Math.floor(Number(sample.remainingMustPass) || 0));
+                const interactionDeficit = Math.max(0, Math.floor(Number(sample.remainingInteractionDeficit) || 0));
+                bumpTimeoutDiagBucket(diag.frontierMustPassDistribution, mustPass, 1);
+                bumpTimeoutDiagBucket(diag.frontierInteractionDeficitDistribution, interactionDeficit, 1);
+                const lowerBound = Number(sample.lowerBoundToValidSolution);
+                if (Number.isFinite(lowerBound)) {
+                    if (!Number.isFinite(diag.bestLowerBoundToValidSolution) || lowerBound < diag.bestLowerBoundToValidSolution) {
+                        diag.bestLowerBoundToValidSolution = lowerBound;
+                    }
+                }
+                const nearMissing = sample.nearSolutionMissingDimension;
+                if (nearMissing) {
+                    diag.nearSolutionStates = (diag.nearSolutionStates || 0) + 1;
+                    diag.nearSolutionByDimension[nearMissing] = (diag.nearSolutionByDimension[nearMissing] || 0) + 1;
+                }
+            };
+            const snapshotTimeoutFrontierDiagnostics = (debugStats, stack = []) => {
+                const diag = ensureTimeoutDiagnostics(debugStats);
+                if (!diag || !Array.isArray(stack)) return;
+                for (const frame of stack) {
+                    const pending = Math.max(0, Number(frame?.neighbors?.length) || 0);
+                    if (pending <= 0) continue;
+                    bumpTimeoutDiagBucket(diag.frontierMustPassDistribution, frame?.remainingMustPass, pending);
+                    bumpTimeoutDiagBucket(diag.frontierInteractionDeficitDistribution, frame?.remainingInteractionDeficit, pending);
+                }
+            };
 
             const PROGRESS_SAMPLE_INTERVAL_MS = 350;
             const MAX_PROGRESS_SAMPLES = 32;
@@ -14139,6 +14241,7 @@
                     })
                 });
                 if (status === 'timeout') {
+                    ensureTimeoutDiagnostics(debugStats);
                     const phaseTargets = (debugStats?.targetDepthByPhase && typeof debugStats.targetDepthByPhase === 'object')
                         ? debugStats.targetDepthByPhase
                         : null;
@@ -14156,6 +14259,7 @@
                     }
                 } else {
                     debugStats.lengthDeficitAtTimeout = null;
+                    debugStats.timeoutDiagnostics = null;
                 }
             }
 
@@ -17438,6 +17542,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
             const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
             const progressSummary = attempt?.progressSummary || {};
+            const timeoutDiagnostics = attempt?.timeoutDiagnostics && typeof attempt.timeoutDiagnostics === 'object'
+                ? attempt.timeoutDiagnostics
+                : {};
             const structuralRaw = attempt?.structuralMode;
             const structuralMode = typeof structuralRaw === 'string'
                 ? structuralRaw
@@ -17494,7 +17601,18 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     : null,
                 lengthDeficitAtTimeout: Number.isFinite(attempt?.lengthDeficitAtTimeout)
                     ? attempt.lengthDeficitAtTimeout
-                    : null
+                    : null,
+                timeoutDiagnostics: compactDefined({
+                    frontierMustPassDistribution: timeoutDiagnostics?.frontierMustPassDistribution || null,
+                    frontierInteractionDeficitDistribution: timeoutDiagnostics?.frontierInteractionDeficitDistribution || null,
+                    bestLowerBoundToValidSolution: Number.isFinite(timeoutDiagnostics?.bestLowerBoundToValidSolution)
+                        ? timeoutDiagnostics.bestLowerBoundToValidSolution
+                        : null,
+                    nearSolutionStates: Number.isFinite(timeoutDiagnostics?.nearSolutionStates)
+                        ? timeoutDiagnostics.nearSolutionStates
+                        : null,
+                    nearSolutionByDimension: timeoutDiagnostics?.nearSolutionByDimension || null
+                })
             };
         };
         const buildFullExportAttempts = (rawAttemptHistory = []) => {
@@ -17524,7 +17642,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         depthReached: Number.isFinite(attempt?.depthReached) ? attempt.depthReached : null,
                         progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : [],
                         progressSummary: attempt?.progressSummary || null,
-                        depth0PruneBreakdown: attempt?.depth0PruneBreakdown || null
+                        depth0PruneBreakdown: attempt?.depth0PruneBreakdown || null,
+                        timeoutDiagnostics: attempt?.timeoutDiagnostics || null
                     })];
                 nested.forEach((solverAttempt) => {
                     canonical.push(solverAttempt);

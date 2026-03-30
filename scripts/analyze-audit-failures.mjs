@@ -59,6 +59,45 @@ const readAudit = (file) => {
   };
 };
 
+const mergeHistogram = (target, source) => {
+  if (!source || typeof source !== 'object') return target;
+  Object.entries(source).forEach(([key, value]) => {
+    const bucket = `${key}`;
+    const count = Number(value) || 0;
+    if (!Number.isFinite(count) || count <= 0) return;
+    target[bucket] = (target[bucket] || 0) + count;
+  });
+  return target;
+};
+
+const summarizeHistogram = (hist, limit = 6) => {
+  const entries = Object.entries(hist || {})
+    .map(([bucket, count]) => [bucket, Number(count) || 0])
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => {
+      const aNum = Number(a[0]);
+      const bNum = Number(b[0]);
+      if (Number.isFinite(aNum) && Number.isFinite(bNum)) return aNum - bNum;
+      return a[0].localeCompare(b[0]);
+    });
+  if (entries.length === 0) return 'none';
+  return entries.slice(0, limit).map(([bucket, count]) => `${bucket}:${count}`).join(', ');
+};
+
+const getAttemptTimeoutDiagnostics = (attempt) => {
+  const diag = attempt?.timeoutDiagnostics;
+  if (diag && typeof diag === 'object') return diag;
+  return null;
+};
+
+const collectLevelTimeoutDiagnostics = (level) => {
+  const attempts = Array.isArray(level?.attempts) ? level.attempts : [];
+  return attempts
+    .filter((attempt) => `${attempt?.status || ''}`.toLowerCase() === 'timeout')
+    .map((attempt) => getAttemptTimeoutDiagnostics(attempt))
+    .filter(Boolean);
+};
+
 const audits = selectedFiles.map(readAudit);
 
 const printFailureSummary = () => {
@@ -166,7 +205,42 @@ const printLevel50Trajectory = () => {
   console.log(`- solved=${solvedCount}/${l50.length}; failed=${failedCount}/${l50.length}`);
 };
 
+const printTimeoutDiagnosticsSummary = () => {
+  console.log('Timeout diagnostics summary (failed levels):');
+  for (const audit of audits) {
+    const mustPassDist = {};
+    const interactionDist = {};
+    const nearSolutionByDimension = {};
+    let timeoutAttemptsWithDiag = 0;
+    let nearSolutionStates = 0;
+    let bestLowerBound = null;
+
+    audit.failed.forEach((level) => {
+      const diagnostics = collectLevelTimeoutDiagnostics(level);
+      diagnostics.forEach((diag) => {
+        timeoutAttemptsWithDiag += 1;
+        mergeHistogram(mustPassDist, diag.frontierMustPassDistribution);
+        mergeHistogram(interactionDist, diag.frontierInteractionDeficitDistribution);
+        mergeHistogram(nearSolutionByDimension, diag.nearSolutionByDimension);
+        nearSolutionStates += Number(diag.nearSolutionStates) || 0;
+        const lb = Number(diag.bestLowerBoundToValidSolution);
+        if (Number.isFinite(lb)) {
+          bestLowerBound = bestLowerBound === null ? lb : Math.min(bestLowerBound, lb);
+        }
+      });
+    });
+
+    console.log(`- ${audit.file}: timeoutAttemptsWithDiag=${timeoutAttemptsWithDiag}`);
+    console.log(`  frontierMustPassDistribution=${summarizeHistogram(mustPassDist)}`);
+    console.log(`  frontierInteractionDeficitDistribution=${summarizeHistogram(interactionDist)}`);
+    console.log(`  bestLowerBoundToValidSolution=${bestLowerBound === null ? 'n/a' : bestLowerBound}`);
+    console.log(`  nearSolutionStates=${nearSolutionStates}; nearSolutionByDimension=${summarizeHistogram(nearSolutionByDimension)}`);
+  }
+  console.log('');
+};
+
 printFailureSummary();
 printWindowTransitions();
 printCollapseFamilySummary();
+printTimeoutDiagnosticsSummary();
 printLevel50Trajectory();
