@@ -480,7 +480,14 @@
                 <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
                 <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
+                <button id="reviewPrevBtn" class="hidden flex-1 h-10 bg-slate-200 text-slate-700 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Prev</button>
+                <button id="reviewNextBtn" class="hidden flex-1 h-10 bg-slate-200 text-slate-700 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Next</button>
+                <button id="reviewRefreshBtn" class="hidden flex-1 h-10 bg-slate-200 text-slate-700 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Refresh</button>
+                <button id="reviewAddHintBtn" class="hidden flex-1 h-10 bg-sky-600 text-white font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Add Hint</button>
+                <button id="reviewRejectBtn" class="hidden flex-1 h-10 bg-rose-600 text-white font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Reject</button>
+                <button id="reviewApproveBtn" class="hidden flex-1 h-10 bg-emerald-600 text-white font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Approve</button>
             </div>
+            <div id="reviewMeta" class="hidden mt-2 text-[0.65rem] text-slate-600 font-semibold text-center">Review mode</div>
             <div id="alertOverlay" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
                 <p id="message" class="font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
             </div>
@@ -531,19 +538,6 @@
     </div>
 </div>
 
-<div id="reviewPanel" class="fixed bottom-3 left-3 z-[91] hidden bg-white/95 border border-slate-300 rounded-xl p-3 shadow-xl w-[22rem] max-w-[90vw]">
-    <div id="reviewMeta" class="text-xs text-slate-600 mb-2">Review mode</div>
-    <div class="flex gap-1 mb-2">
-        <button id="reviewPrevBtn" class="px-2 py-1 rounded border text-xs">Prev</button>
-        <button id="reviewNextBtn" class="px-2 py-1 rounded border text-xs">Next</button>
-        <button id="reviewRefreshBtn" class="px-2 py-1 rounded border text-xs">Refresh</button>
-    </div>
-    <div class="flex gap-1">
-        <button id="reviewAddHintBtn" class="px-2 py-1 rounded bg-sky-600 text-white text-xs font-bold">Add Hint</button>
-        <button id="reviewRejectBtn" class="px-2 py-1 rounded bg-rose-600 text-white text-xs font-bold">Reject</button>
-        <button id="reviewApproveBtn" class="px-2 py-1 rounded bg-emerald-600 text-white text-xs font-bold">Approve</button>
-    </div>
-</div>
 <script type="module">
     const APP = {};
     const URL_FLAGS = new URLSearchParams(window.location.search);
@@ -15504,7 +15498,7 @@
 
             function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('modeToggleBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
-            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.UI.setSolutionOutput(''); APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
+            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.UI.setSolutionOutput(''); APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); document.getElementById('editSubmitBtn').classList.toggle('hidden', !isEd || IS_REVIEW_MODE); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
             function updatePencilState() {
                 const btn = document.getElementById('editPencilBtn');
@@ -18579,7 +18573,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     APP.ReviewMode = (() => {
         let list = [];
         let idx = 0;
-        const panel = () => document.getElementById('reviewPanel');
         const getCurrent = () => list[idx] || null;
         const setMeta = () => {
             const cur = getCurrent();
@@ -18627,9 +18620,25 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         const init = async () => {
             if (!IS_REVIEW_MODE) return;
-            panel()?.classList.remove('hidden');
-            document.getElementById('modeToggleBtn').classList.add('hidden');
-            document.getElementById('editSubmitBtn').classList.add('hidden');
+            APP.State.ENGINE.isDevMode = false;
+            APP.Editor.enterEditorMode();
+            APP.UI.setClassState('reviewMeta', 'hidden', false);
+            APP.UI.setClassState('whoaBtn', 'hidden', true);
+            APP.UI.setClassState('guideBtn', 'hidden', true);
+            APP.UI.setClassState('modeToggleBtn', 'hidden', true);
+            APP.UI.setClassState('editResetGrid', 'hidden', true);
+            APP.UI.setClassState('editNewLevel', 'hidden', true);
+            APP.UI.setClassState('editHelpBtn', 'hidden', true);
+            APP.UI.setClassState('editModeToggleBtn', 'hidden', true);
+            APP.UI.setClassState('openThemeModalBtn', 'hidden', true);
+            APP.UI.setClassState('openAuditModalBtn', 'hidden', true);
+            APP.UI.setClassState('editSubmitBtn', 'hidden', true);
+            APP.UI.setClassState('reviewPrevBtn', 'hidden', false);
+            APP.UI.setClassState('reviewNextBtn', 'hidden', false);
+            APP.UI.setClassState('reviewRefreshBtn', 'hidden', false);
+            APP.UI.setClassState('reviewRejectBtn', 'hidden', false);
+            APP.UI.setClassState('reviewApproveBtn', 'hidden', false);
+            APP.UI.setClassState('reviewAddHintBtn', 'hidden', false);
             document.getElementById('reviewPrevBtn').onclick = () => { if (idx > 0) { idx--; loadIntoEditor(getCurrent()); setMeta(); } };
             document.getElementById('reviewNextBtn').onclick = () => { if (idx < list.length - 1) { idx++; loadIntoEditor(getCurrent()); setMeta(); } };
             document.getElementById('reviewRefreshBtn').onclick = () => fetchList().catch((e) => APP.UI.showMessage(e.message, 'text-red-500'));
