@@ -3047,7 +3047,9 @@
                     const articulationRatio = (Number(topology.articulationPointCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
                     const bridgeRatio = (Number(topology.bridgeCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
                     const corridorRatio = Math.max(0, Number(topology.corridorRatio) || 0);
-                    const mandatoryFamilies = Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies.length : 0;
+                    const portalHintStats = this._portalHintStats(portalHints);
+                    const mandatoryFamilies = portalHintStats.provenCount;
+                    const softPortalPressure = portalHintStats.softConfidenceMass;
                     const objectiveDensity = objectiveCount / Math.max(1, Number(topology.walkableCellCount) || 1);
                     const objectiveOrderComplexity = objectiveCount >= 3 ? 1 : (objectiveCount >= 2 ? 0.55 : 0.2);
                     const knotConfidence = knotCandidates.length > 0 ? Math.max(0, Number(knotCandidates[0]?.confidence) || 0) : 0;
@@ -3059,6 +3061,7 @@
                         - corridorRatio * 0.08
                         - bridgeRatio * 0.12
                         - mandatoryFamilies * 0.02
+                        - softPortalPressure * 0.01
                         - objectiveOrderComplexity * 0.02
                         + objectiveDensity * 0.2
                     ));
@@ -3071,6 +3074,7 @@
                     thresholds.finishProgress = Math.max(0.62, Math.min(0.95,
                         thresholds.finishProgress
                         - mandatoryFamilies * 0.025
+                        - softPortalPressure * 0.012
                         - bridgeRatio * 0.18
                         + objectiveDensity * 0.22
                         + confidence * 0.03
@@ -3118,6 +3122,7 @@
                             objectiveDensity: Number(objectiveDensity.toFixed(3)),
                             objectiveOrderComplexity: Number(objectiveOrderComplexity.toFixed(3)),
                             mandatoryFamilies,
+                            softPortalPressure: Number(softPortalPressure.toFixed(3)),
                             knotConfidence: Number(knotConfidence.toFixed(3)),
                             hypothesisConfidence: Number(confidence.toFixed(3)),
                             lowBranchTopologySignal: !!(
@@ -3909,7 +3914,8 @@
                                 return { nk, score: 1000000 };
                             }
                             if (c.prefersPortalBridge) {
-                                const mandatoryFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies) ? profile.portalHints.mandatoryFamilies : [];
+                                const portalHintStats = this._portalHintStats(profile?.portalHints || {});
+                                const mandatoryFamilies = portalHintStats.provenFamilies;
                                 if (mandatoryFamilies.length > 0 && nextFamily >= 0 && !mandatoryFamilies.includes(nextFamily)) {
                                     if (debugStats) debugStats.templateCommitRejects = (debugStats.templateCommitRejects || 0) + 1;
                                     return { nk, score: 1000000 };
@@ -4254,12 +4260,14 @@
                                     }
                                 }
                             }
-                            const mandatoryPortalFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies)
-                                ? profile.portalHints.mandatoryFamilies
-                                : [];
+                            const portalHintStats = this._portalHintStats(profile?.portalHints || {});
+                            const mandatoryPortalFamilies = portalHintStats.provenFamilies;
                             if (mandatoryPortalFamilies.length > 0 && nextFamily >= 0) {
                                 if (mandatoryPortalFamilies.includes(nextFamily)) score -= 44;
                                 else if (committedFamily >= 0 && nextFamily !== committedFamily) score += 28;
+                            } else if (nextFamily >= 0) {
+                                const softConf = Number(portalHintStats.confidenceByFamily.get(nextFamily)) || 0;
+                                if (softConf > 0) score -= Math.round(softConf * 18);
                             }
                         }
 
@@ -4284,11 +4292,12 @@
                                 score += consistency.edgeDriftPenalty || 16;
                             }
                             if (consistency.prefersPortalBridge) {
-                                const mandatoryPortalFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies)
-                                    ? profile.portalHints.mandatoryFamilies
-                                    : [];
+                                const mandatoryPortalFamilies = portalHintStats.provenFamilies;
                                 if (mandatoryPortalFamilies.length > 0 && nextFamily >= 0 && !mandatoryPortalFamilies.includes(nextFamily)) {
                                     score += consistency.portalMissPenalty || 20;
+                                } else if (nextFamily >= 0 && mandatoryPortalFamilies.length === 0) {
+                                    const softConf = Number(portalHintStats.confidenceByFamily.get(nextFamily)) || 0;
+                                    if (softConf <= 0.05) score += Math.round((consistency.portalMissPenalty || 20) * 0.4);
                                 }
                             }
                             if (consistency.prefersCornerHarvest && rRatioTemplate < 0.6) {
@@ -6100,7 +6109,9 @@
                     const knotDistMap = knotZone.size > 0 ? SolverCore._buildOptimisticDistMap(level, Array.from(knotZone)) : null;
                     const portalHints = profile?.portalHints || {};
                     const portalFamilies = Array.isArray(portalHints.families) ? portalHints.families : [];
-                    const mandatoryFamilySet = new Set(Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies : []);
+                    const portalHintStats = this._portalHintStats(portalHints);
+                    const mandatoryFamilySet = portalHintStats.provenSet;
+                    const portalFamilyConfidence = portalHintStats.confidenceByFamily;
                     const perimeterThreshold = Number.isFinite(profile?.perimeterThreshold) ? profile.perimeterThreshold : 1;
                     const symmetryAxis = symmetryCommitted ? symmetryModel.axis : null;
                     const preferredHalf = symmetryModel?.preferredBreak?.half || null;
@@ -6142,7 +6153,8 @@
                                 if (d < best) best = d;
                             }
                             if (Number.isFinite(best)) {
-                                const mandatoryBoost = mandatoryFamilySet.has(family.familyId) ? 1.4 : 1;
+                                const confidenceBoost = Math.max(0, Math.min(1, Number(portalFamilyConfidence.get(family.familyId)) || 0));
+                                const mandatoryBoost = mandatoryFamilySet.has(family.familyId) ? 1.4 : (1 + confidenceBoost * 0.28);
                                 portalScore += Math.max(0, 16 - best * 2) * mandatoryBoost;
                             }
                         }
@@ -6170,7 +6182,7 @@
                         return a.gateKey - b.gateKey;
                     });
 
-                    return { candidateGates, profile, symmetryModel, symmetryCommitted, objectiveFeatures, objectiveDistByKey, knotZone, knotDistMap, portalHints, portalFamilies, mandatoryFamilySet, perimeterThreshold, symmetryAxis, preferredHalf, symmetryMid, gateRankings };
+                    return { candidateGates, profile, symmetryModel, symmetryCommitted, objectiveFeatures, objectiveDistByKey, knotZone, knotDistMap, portalHints, portalFamilies, mandatoryFamilySet, portalFamilyConfidence, perimeterThreshold, symmetryAxis, preferredHalf, symmetryMid, gateRankings };
                 },
                 makeSolverPolicy(context, level, options = {}) {
                     const { gateRankings } = context;
@@ -6598,9 +6610,12 @@
                         }
                         level.portalFamilyCount = level.portalVisuals.length;
                     }
-                    if (portalHints && Array.isArray(portalHints.mandatoryFamilies)) {
-                        for (let i = 0; i < portalHints.mandatoryFamilies.length; i++) {
-                            const famIdx = portalHints.mandatoryFamilies[i];
+                    const hardMandatoryFamilies = Array.isArray(portalHints?.hardMandatoryFamilies)
+                        ? portalHints.hardMandatoryFamilies
+                        : (Array.isArray(portalHints?.mandatoryFamilies) ? portalHints.mandatoryFamilies : []);
+                    if (hardMandatoryFamilies.length > 0) {
+                        for (let i = 0; i < hardMandatoryFamilies.length; i++) {
+                            const famIdx = hardMandatoryFamilies[i];
                             if (!Number.isFinite(famIdx) || famIdx < 0) continue;
                             mandatoryFamilyMask |= (1n << BigInt(famIdx));
                         }
@@ -6718,9 +6733,11 @@
                     level.gateSet = new Set(level.gateKeys || []);
 
                     const gatePruneReasons = [];
-                    const mandatoryPortalFamilies = Array.isArray(level?.solverProfile?.portalHints?.mandatoryFamilies)
-                        ? level.solverProfile.portalHints.mandatoryFamilies
-                        : [];
+                    const mandatoryPortalFamilies = Array.isArray(level?.solverProfile?.portalHints?.hardMandatoryFamilies)
+                        ? level.solverProfile.portalHints.hardMandatoryFamilies
+                        : (Array.isArray(level?.solverProfile?.portalHints?.mandatoryFamilies)
+                            ? level.solverProfile.portalHints.mandatoryFamilies
+                            : []);
                     const mandatoryPortalEntryDistMaps = new Map();
                     for (const famIdx of mandatoryPortalFamilies) {
                         const family = level?.solverProfile?.portalHints?.families?.[famIdx];
@@ -7045,6 +7062,9 @@
                         const portalAutomaton = level?.portalTransitionAutomaton || {};
                         const familyToGoalDist = Array.isArray(portalAutomaton.familyToGoalDist) ? portalAutomaton.familyToGoalDist : [];
                         const mandatoryMask = typeof portalAutomaton.mandatoryMask === 'bigint' ? portalAutomaton.mandatoryMask : 0n;
+                        const portalHintStats = SolverCore._portalHintStats(level?.solverProfile?.portalHints || {});
+                        const softPriorityFamilies = portalHintStats.softPriorityFamilies;
+                        const portalConfidenceByFamily = portalHintStats.confidenceByFamily;
                         const objectiveCount = objectiveNodes.length;
                         const plans = [];
                         if (objectiveCount === 0) {
@@ -7145,7 +7165,7 @@
                             for (let fam = 0; fam < (portalAutomaton.familyCount || 0); fam++) {
                                 const required = ((mandatoryMask & (1n << BigInt(fam))) !== 0n);
                                 if (required) requiredFamilies.push(fam);
-                                else if (order.some(idx => level.portalFamilyByEntry?.get(objectiveNodes[idx]?.key) === fam)) optionalFamilies.push(fam);
+                                else if (order.some(idx => level.portalFamilyByEntry?.get(objectiveNodes[idx]?.key) === fam) || softPriorityFamilies.includes(fam)) optionalFamilies.push(fam);
                             }
                             const avoidFamilies = [];
                             for (let fam = 0; fam < (portalAutomaton.familyCount || 0); fam++) {
@@ -7179,6 +7199,11 @@
                                     requiredFamilies,
                                     optionalFamilies,
                                     avoidFamilies,
+                                    familyConfidence: Object.fromEntries(Array.from(portalConfidenceByFamily.entries()).map(([fam, conf]) => [fam, Number(conf.toFixed(3))])),
+                                    reasonTagsByFamily: Object.fromEntries(
+                                        (Array.isArray(level?.solverProfile?.portalHints?.familyHints) ? level.solverProfile.portalHints.familyHints : [])
+                                            .map((hint) => [hint.familyId, Array.isArray(hint.reasonTags) ? hint.reasonTags.slice() : []])
+                                    ),
                                     lockReentries: knotSchedule === 'early' ? 1 : 2,
                                     lockOscillationMax: knotSchedule === 'early' ? 0 : 1
                                 },
@@ -8775,6 +8800,7 @@
             const objectiveFeatures = Array.isArray(objectiveModel.features) ? objectiveModel.features : [];
             const portalFamilies = [];
             const portalBridgeHints = [];
+            const familyHintById = new Map();
             const seenPortalPair = new Set();
             if (level?.portalMap instanceof Map) {
                 level.portalMap.forEach((v, fromKey) => {
@@ -8802,24 +8828,57 @@
                         const d2 = Math.abs(pObj.x - pTo.x) + Math.abs(pObj.y - pTo.y);
                         return Math.min(d1, d2) <= 3;
                     });
-                    const mandatoryLike = (fromRegion !== toRegion)
-                        || fromDeg <= 2
-                        || toDeg <= 2
-                        || objectiveNear;
-                    if (mandatoryLike) {
-                        portalBridgeHints.push({
-                            familyId,
-                            mandatoryLike: true,
-                            reason: (fromRegion !== toRegion) ? 'region-bridge' : (fromDeg <= 2 || toDeg <= 2 ? 'constrained-exit' : 'objective-proximity')
-                        });
+                    const reasonTags = [];
+                    const structuralTags = [];
+                    const heuristicTags = [];
+                    if (fromRegion !== toRegion) {
+                        structuralTags.push('region-bridge');
+                        reasonTags.push('region-bridge');
                     }
+                    const minDeg = Math.min(fromDeg, toDeg);
+                    if (minDeg <= 1) {
+                        structuralTags.push('terminal-exit');
+                        reasonTags.push('terminal-exit');
+                    } else if (minDeg === 2) {
+                        heuristicTags.push('constrained-exit');
+                        reasonTags.push('constrained-exit');
+                    }
+                    if (objectiveNear) {
+                        heuristicTags.push('objective-proximity');
+                        reasonTags.push('objective-proximity');
+                    }
+                    const structuralConfidence = structuralTags.includes('region-bridge')
+                        ? 0.98
+                        : (structuralTags.includes('terminal-exit') ? 0.92 : 0);
+                    const heuristicConfidence = heuristicTags.reduce((acc, tag) => {
+                        if (tag === 'constrained-exit') return 1 - ((1 - acc) * 0.45);
+                        if (tag === 'objective-proximity') return 1 - ((1 - acc) * 0.38);
+                        return acc;
+                    }, 0);
+                    const confidence = Math.max(0, Math.min(1, Math.max(structuralConfidence, heuristicConfidence)));
+                    const provenStructural = structuralTags.length > 0 && confidence >= 0.9;
+                    const hint = {
+                        familyId,
+                        confidence,
+                        reasonTags,
+                        structuralTags,
+                        heuristicTags,
+                        provenStructural
+                    };
+                    familyHintById.set(familyId, hint);
+                    portalBridgeHints.push(hint);
                 });
             }
+            const hardMandatoryFamilies = portalBridgeHints
+                .filter((h) => h.provenStructural)
+                .map((h) => h.familyId);
             return {
                 families: portalFamilies,
                 regionByKey,
                 bridgeHints: portalBridgeHints,
-                mandatoryFamilies: portalBridgeHints.filter((h) => h.mandatoryLike).map((h) => h.familyId)
+                familyHints: Array.from(familyHintById.values()),
+                hardMandatoryFamilies,
+                mandatoryFamilies: hardMandatoryFamilies.slice()
             };
         },
 
@@ -8961,6 +9020,42 @@
             };
         },
 
+        _portalHintStats(portalHints = {}) {
+            const familyHints = Array.isArray(portalHints?.familyHints) ? portalHints.familyHints : [];
+            const mandatoryFamilies = Array.isArray(portalHints?.mandatoryFamilies) ? portalHints.mandatoryFamilies : [];
+            const mandatorySet = new Set(mandatoryFamilies);
+            const confidenceByFamily = new Map();
+            familyHints.forEach((hint) => {
+                const fam = Number(hint?.familyId);
+                if (!Number.isFinite(fam) || fam < 0) return;
+                const conf = Math.max(0, Math.min(1, Number(hint?.confidence) || 0));
+                confidenceByFamily.set(fam, conf);
+                if (hint?.provenStructural) mandatorySet.add(fam);
+            });
+            const provenFamilies = Array.from(mandatorySet.values());
+            const provenSet = new Set(provenFamilies);
+            let softConfidenceMass = 0;
+            let hardConfidenceMass = 0;
+            confidenceByFamily.forEach((conf, fam) => {
+                if (provenSet.has(fam)) hardConfidenceMass += conf;
+                else softConfidenceMass += conf;
+            });
+            const softPriorityFamilies = Array.from(confidenceByFamily.entries())
+                .filter(([fam, conf]) => !provenSet.has(fam) && conf >= 0.35)
+                .sort((a, b) => b[1] - a[1])
+                .map(([fam]) => fam);
+            return {
+                provenFamilies,
+                provenSet,
+                provenCount: provenFamilies.length,
+                softPriorityFamilies,
+                confidenceByFamily,
+                hardConfidenceMass,
+                softConfidenceMass,
+                totalConfidenceMass: hardConfidenceMass + softConfidenceMass
+            };
+        },
+
         buildHypothesisModel(profile = {}) {
             const topology = profile?.topology || {};
             const portalHints = profile?.portalHints || {};
@@ -8973,16 +9068,18 @@
             const corridorRatio = Math.max(0, Number(topology.corridorRatio) || 0);
             const articulationRatio = (Number(topology.articulationPointCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
             const bridgeRatio = (Number(topology.bridgeCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
-            const mandatoryFamilies = Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies.length : 0;
+            const portalHintStats = this._portalHintStats(portalHints);
+            const mandatoryFamilies = portalHintStats.provenCount;
             const portalFamilyCount = Array.isArray(portalHints.families) ? portalHints.families.length : 0;
             const knotConfidence = knotCandidates.length > 0 ? Math.max(0, Number(knotCandidates[0]?.confidence) || 0) : 0;
             const objectiveOrderComplexity = objectiveCount >= 4 ? 1 : (objectiveCount >= 3 ? 0.75 : (objectiveCount >= 2 ? 0.45 : 0.2));
             const symmetryConfidence = Math.max(0, Number(symmetryModel.confidence) || 0);
+            const softPortalPressure = portalHintStats.softConfidenceMass;
 
             const rawScores = {
                 perimeterSweep: 0.2 + openness * 0.66 + Math.max(0, routePressure - 0.55) * 0.34 + Math.max(0, 1 - corridorRatio) * 0.18,
                 harvestThenFinish: 0.22 + corridorRatio * 0.54 + articulationRatio * 0.28 + objectiveOrderComplexity * 0.24,
-                portalFirstTransfer: 0.2 + mandatoryFamilies * 0.25 + bridgeRatio * 0.45 + (portalFamilyCount > 0 ? 0.2 : 0),
+                portalFirstTransfer: 0.2 + mandatoryFamilies * 0.25 + softPortalPressure * 0.14 + bridgeRatio * 0.45 + (portalFamilyCount > 0 ? 0.2 : 0),
                 knotBuilder: 0.2 + knotConfidence * 0.74 + articulationRatio * 0.36 + Math.max(0, objectiveCount - 1) * 0.04
             };
             if (symmetryConfidence > 0.72) rawScores.harvestThenFinish += 0.08;
@@ -9135,7 +9232,9 @@
         },
 
         selectTemplateCandidates(profile = {}, templateLibrary = []) {
-            const mandatoryFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies) ? profile.portalHints.mandatoryFamilies.length : 0;
+            const portalHintStats = this._portalHintStats(profile?.portalHints || {});
+            const mandatoryFamilies = portalHintStats.provenCount;
+            const softPortalPressure = portalHintStats.softConfidenceMass;
             const symmetryConfidence = Number(profile?.symmetryModel?.confidence) || 0;
             const knotConfidence = (Array.isArray(profile?.knotCandidates) && profile.knotCandidates.length > 0)
                 ? (profile.knotCandidates[0]?.confidence || 0)
@@ -9146,7 +9245,7 @@
                 let confidence = 0.18;
                 if (t.id.startsWith('perimeter')) confidence += Math.max(0, pressure - 0.55) * 0.7 + Math.max(0, openness - 0.48) * 0.35;
                 if (t.id === 'side-commitment') confidence += symmetryConfidence * 0.85 + Math.max(0, pressure - 0.5) * 0.2;
-                if (t.id === 'portal-bridge-first') confidence += (mandatoryFamilies > 0 ? 0.42 : 0) + Math.max(0, pressure - 0.45) * 0.25;
+                if (t.id === 'portal-bridge-first') confidence += (mandatoryFamilies > 0 ? 0.42 : 0) + (softPortalPressure * 0.12) + Math.max(0, pressure - 0.45) * 0.25;
                 if (t.id === 'corner-harvest') confidence += Math.max(0, openness - 0.42) * 0.55 + knotConfidence * 0.4;
                 if (profile?.archetype === 'portalFirstTransfer' && t.id === 'portal-bridge-first') confidence += 0.22;
                 if (profile?.archetype === 'perimeterSweep' && (t.id === 'corner-harvest' || t.id.startsWith('perimeter'))) confidence += 0.12;
@@ -9188,6 +9287,8 @@
                     families: Array.isArray(portalHints.families) ? portalHints.families : [],
                     regionByKey: portalHints.regionByKey instanceof Map ? portalHints.regionByKey : new Map(),
                     bridgeHints: Array.isArray(portalHints.bridgeHints) ? portalHints.bridgeHints : [],
+                    familyHints: Array.isArray(portalHints.familyHints) ? portalHints.familyHints : [],
+                    hardMandatoryFamilies: Array.isArray(portalHints.hardMandatoryFamilies) ? portalHints.hardMandatoryFamilies : [],
                     mandatoryFamilies: Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies : []
                 },
                 topology: {
@@ -9293,7 +9394,9 @@
             const corridorRatio = Math.max(0, Number(topology.corridorRatio) || 0);
             const articulationRatio = (Number(topology.articulationPointCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
             const bridgeRatio = (Number(topology.bridgeCount) || 0) / Math.max(1, Number(topology.walkableCellCount) || 1);
-            const mandatoryPortalFamilies = Array.isArray(portalHints?.mandatoryFamilies) ? portalHints.mandatoryFamilies.length : 0;
+            const portalHintStats = this._portalHintStats(portalHints);
+            const mandatoryPortalFamilies = portalHintStats.provenCount;
+            const softPortalPressure = portalHintStats.softConfidenceMass;
             const hasPortal = Array.isArray(portalHints?.families) && portalHints.families.length > 0;
             const symmetryConfidence = Math.max(0, Number(symmetryModel?.confidence) || 0);
             const wideBoard = (Number(profile?.boardArea) || 0) >= 90;
@@ -9304,7 +9407,7 @@
                 objective_order: (objectiveCount * 0.24) + (routePressure * 0.32) + ((objectiveCount >= 4) ? 0.2 : 0),
                 corridor_commitment: (corridorRatio * 1.15) + (articulationRatio * 0.6) + (Math.max(0, routePressure - 0.7) * 0.35),
                 filter_commitment: (filterPressure * 1.35) + (routePressure * 0.24) + (mustCrossCount * 0.08),
-                portal_macro_hybrid: (hasPortal ? 0.42 : 0) + (mandatoryPortalFamilies * 0.24) + (routePressure * 0.45) + (wideBoard ? 0.08 : 0),
+                portal_macro_hybrid: (hasPortal ? 0.42 : 0) + (mandatoryPortalFamilies * 0.24) + (softPortalPressure * 0.12) + (routePressure * 0.45) + (wideBoard ? 0.08 : 0),
                 symmetric_split: (symmetryConfidence * 0.95) + (corridorRatio * 0.2) + ((symmetryModel?.committed && objectiveCount >= 2) ? 0.18 : 0)
             };
             const ranked = Object.entries(subtypeScores).sort((a, b) => b[1] - a[1]);
@@ -9321,7 +9424,7 @@
                     objectiveCount,
                     mustCrossCount,
                     filterPressure: Number(filterPressure.toFixed(3)),
-                    mandatoryPortalFamilies,
+                    mandatoryPortalFamilies: Number((mandatoryPortalFamilies + softPortalPressure).toFixed(3)),
                     symmetryConfidence: Number(symmetryConfidence.toFixed(3))
                 }
             };
@@ -9334,7 +9437,8 @@
             const routePressure = Number(profile?.routePressure) || 0;
             const openness = Number(profile?.openness) || 0;
             const symmetry = profile?.symmetryModel || {};
-            const mandatoryPortalFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies) ? profile.portalHints.mandatoryFamilies.length : 0;
+            const portalHintStats = this._portalHintStats(profile?.portalHints || {});
+            const mandatoryPortalFamilies = portalHintStats.provenCount + (portalHintStats.softConfidenceMass * 0.5);
             const hypotheses = [];
             const push = (id, confidence, policy = {}) => hypotheses.push({ id, confidence: Number(Math.max(0.05, Math.min(0.99, confidence)).toFixed(3)), policy });
             if (subtype === 'macro_sweep' || subtype === 'portal_macro_hybrid') {
