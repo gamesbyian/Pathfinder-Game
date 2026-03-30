@@ -9602,7 +9602,7 @@
             let timeoutEscalationTier = 0;
             let escalatedAttemptsAdded = 0;
             let previousAttemptSwitchedFamily = false;
-            let lowExpansionRecoveryAdded = false;
+            let consecutiveLowExpansionDetections = 0;
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
@@ -9911,6 +9911,7 @@
                     let switchedThisAttempt = false;
                     const timeoutProne = ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status);
                     const nodesExpanded = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
+                    const maxDepthReached = Math.max(0, Number(attemptResult?.debug?.maxDepth) || 0);
                     const timeoutLikeAttemptsSoFar = attemptsUsed.reduce((count, usedAttempt) => {
                         return count + (['timeout', 'no-solution-inconclusive'].includes(usedAttempt?.status) ? 1 : 0);
                     }, 0);
@@ -9925,38 +9926,84 @@
                         && (nodesExpanded <= lowExpansionThreshold
                             || (rootExpanded <= 1 && rootGenerated <= 2)
                             || (!!depthZeroDebug?.preExpansionAbort));
-                    if (lowExpansionInconclusive && !lowExpansionRecoveryAdded) {
+                    const lowExpansionTimeout = attemptResult.status === 'timeout'
+                        && (nodesExpanded <= lowExpansionThreshold
+                            || (rootExpanded <= 1 && rootGenerated <= 2)
+                            || (!!depthZeroDebug?.preExpansionAbort)
+                            || maxDepthReached === 0);
+                    const lowExpansionDetected = lowExpansionInconclusive || lowExpansionTimeout;
+                    consecutiveLowExpansionDetections = lowExpansionDetected ? (consecutiveLowExpansionDetections + 1) : 0;
+                    const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
+                        && (nodesExpanded === 0 || maxDepthReached === 0);
+                    if (zeroExpansionTimeoutGuard) {
+                        const forcedCycle = this._switchAttemptStrategyFamily(nextAttempt, {
+                            constraintDeficit: quality.constraintDeficit,
+                            remainingMustPass: quality.remainingMustPass,
+                            remainingMustCross: quality.remainingMustCross,
+                            reason: 'timeout-zero-expansion-cycle-guard'
+                        }, profile, controlPlane);
+                        if (!forcedCycle?.switched) {
+                            nextAttempt.policyProfile = 'knotBuilder';
+                            nextAttempt.orderingPolicy = 'knotBuilder';
+                            nextAttempt.escalationReason = 'timeout-zero-expansion-cycle-guard';
+                        }
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.zeroExpansionTimeoutGuardTriggered = true;
+                            currentAttemptEntry.nextAttemptReason = 'timeout-zero-expansion-cycle-guard';
+                            currentAttemptEntry.switchedFrom = forcedCycle?.from || currentAttemptEntry.switchedFrom || null;
+                            currentAttemptEntry.switchedTo = forcedCycle?.to || currentAttemptEntry.switchedTo || nextAttempt.policyProfile || null;
+                        }
+                        continue;
+                    }
+                    if (lowExpansionDetected) {
+                        const recoveryLabel = `${nextAttempt.label || 'attempt'}-low-expansion-recovery`;
+                        const recoveryExists = attempts.some((pendingAttempt, pendingIndex) => {
+                            if (pendingIndex <= i) return false;
+                            const pendingLabel = (typeof pendingAttempt?.label === 'string') ? pendingAttempt.label : '';
+                            return pendingLabel === recoveryLabel || pendingLabel.endsWith('-low-expansion-recovery');
+                        });
+                        const escalatedRecovery = consecutiveLowExpansionDetections >= 2;
                         const recoveryDisabledPrunes = new Set(Array.isArray(nextAttempt?.disabledPrunes) ? nextAttempt.disabledPrunes : []);
                         recoveryDisabledPrunes.add('mustPassBound');
-                        if (depthZeroPrunePressure >= 12) recoveryDisabledPrunes.add('mustCrossBound');
+                        if (escalatedRecovery || depthZeroPrunePressure >= 12) recoveryDisabledPrunes.add('mustCrossBound');
                         const recoveryAttempt = {
                             ...nextAttempt,
-                            label: `${nextAttempt.label || 'attempt'}-low-expansion-recovery`,
+                            label: recoveryLabel,
                             budgetMs: Math.max(1, Number(nextAttempt?.budgetMs) || Number(attempt?.budgetMs) || 1),
                             orderingPolicy: 'knotBuilder',
                             policyProfile: 'knotBuilder',
                             disabledPrunes: Array.from(recoveryDisabledPrunes),
                             enableLowExpansionProbe: true,
-                            rootExpansionFloorCount: Math.max(2, Number(nextAttempt?.rootExpansionFloorCount) || 2),
+                            rootExpansionFloorCount: Math.max(escalatedRecovery ? 3 : 2, Number(nextAttempt?.rootExpansionFloorCount) || (escalatedRecovery ? 3 : 2)),
                             forceRootExpansionFloor: true,
                             relaxRootSuppressionFirstLayer: true,
-                            escalationReason: 'low-expansion-inconclusive-recovery',
+                            escalationReason: escalatedRecovery
+                                ? 'low-expansion-inconclusive-recovery-escalated'
+                                : 'low-expansion-inconclusive-recovery',
                             orderingTweaks: compactDefined({
                                 stage: 'timeout-rescue-second-stage',
-                                mode: 'low-expansion-inconclusive-recovery',
+                                mode: escalatedRecovery
+                                    ? 'low-expansion-inconclusive-recovery-escalated'
+                                    : 'low-expansion-inconclusive-recovery',
                                 timeoutLikeAttempts: timeoutLikeAttemptsSoFar,
                                 nodesExpanded,
                                 lowExpansionThreshold,
-                                depthZeroPrunePressure
+                                depthZeroPrunePressure,
+                                consecutiveLowExpansionDetections
                             })
                         };
-                        attempts.splice(i + 1, 0, recoveryAttempt);
-                        if (currentAttemptEntry) {
-                            currentAttemptEntry.nextAttemptInserted = true;
-                            currentAttemptEntry.nextAttemptReason = 'low-expansion-inconclusive-recovery';
-                            currentAttemptEntry.lowExpansionRecoveryAdded = true;
+                        if (!recoveryExists) {
+                            attempts.splice(i + 1, 0, recoveryAttempt);
+                            if (currentAttemptEntry) {
+                                currentAttemptEntry.nextAttemptInserted = true;
+                            }
                         }
-                        lowExpansionRecoveryAdded = true;
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = recoveryAttempt.escalationReason;
+                            currentAttemptEntry.lowExpansionRecoveryAdded = !recoveryExists;
+                            currentAttemptEntry.lowExpansionRecoveryDuplicateSkipped = recoveryExists;
+                            currentAttemptEntry.consecutiveLowExpansionDetections = consecutiveLowExpansionDetections;
+                        }
                         continue;
                     }
                     const healthyExpansionTimeout = timeoutProne
