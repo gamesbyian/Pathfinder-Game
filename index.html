@@ -9643,6 +9643,9 @@
             const maxTimeoutEscalationTier = timeoutEscalationRatios.length;
             const strictMaxEscalatedAttemptBudgetMs = Math.max(1, Math.floor((Number(budgetMs) || 1) * 0.75));
             const maxExtraEscalatedAttempts = 1;
+            const escalationNoveltyThreshold = 0.24;
+            const escalationNoveltyImprovementEpsilon = 0.03;
+            const lowNoveltySameFamilyRetryCap = 1;
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
             const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts, controlPlane });
 
@@ -9742,6 +9745,52 @@
             let portalRetryBiasToggle = 0;
             let portalRetryObjectiveFirstUsed = false;
             let broadStagnationRescueUsed = false;
+            let lastEscalationNoveltyScore = null;
+            let lowNoveltySameFamilyRetries = 0;
+            const extractAttemptRootKeys = (entry = null) => {
+                if (!entry) return [];
+                const forced = Array.isArray(entry?.forcedRootSelectedKeys) ? entry.forcedRootSelectedKeys : [];
+                const scored = Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.map(item => Number(item?.key)) : [];
+                return Array.from(new Set([...forced, ...scored].map(Number).filter(key => Number.isFinite(key)))).slice(0, 10);
+            };
+            const computeEscalationNovelty = (entry = null, previousEntry = null) => {
+                if (!entry || !previousEntry) return null;
+                const currentRootKeys = extractAttemptRootKeys(entry);
+                const priorRootKeys = extractAttemptRootKeys(previousEntry);
+                const currentSet = new Set(currentRootKeys);
+                const priorSet = new Set(priorRootKeys);
+                const unionSize = new Set([...currentSet, ...priorSet]).size;
+                const overlap = [...currentSet].filter(key => priorSet.has(key)).length;
+                const rootKeyChangeRatio = unionSize > 0 ? ((unionSize - overlap) / unionSize) : 0;
+                const depthDelta = Math.max(0, (Number(entry?.depthReached) || 0) - (Number(previousEntry?.depthReached) || 0));
+                const nodesDelta = Math.max(0, (Number(entry?.quality?.nodesExpanded) || Number(entry?.nodesExpanded) || 0) - (Number(previousEntry?.quality?.nodesExpanded) || Number(previousEntry?.nodesExpanded) || 0));
+                const objectiveDelta = Math.max(0, (Number(previousEntry?.quality?.constraintDeficit) || 0) - (Number(entry?.quality?.constraintDeficit) || 0));
+                return Number(Math.min(1, (rootKeyChangeRatio * 0.4) + (Math.min(depthDelta, 3) / 3 * 0.25) + (Math.min(nodesDelta, 220) / 220 * 0.2) + (Math.min(objectiveDelta, 2) / 2 * 0.15)).toFixed(4));
+            };
+            const forceEscalationNoveltyDiversification = (nextAttempt, currentPolicyProfile = null) => {
+                if (!nextAttempt) return null;
+                const familyCycle = ['objectiveFirst', 'knotBuilder', 'portalFirstTransfer'];
+                const currentFamily = String(currentPolicyProfile || nextAttempt?.policyProfile || nextAttempt?.orderingPolicy || 'objectiveFirst');
+                const currentIdx = Math.max(0, familyCycle.indexOf(currentFamily));
+                const forcedFamily = familyCycle[(currentIdx + 1) % familyCycle.length];
+                nextAttempt.policyProfile = forcedFamily;
+                nextAttempt.orderingPolicy = forcedFamily;
+                const priorUsage = nextAttempt.portalUsagePolicy
+                    || (nextAttempt.forbidPortals ? 'optional-off' : 'optional-on');
+                const portalModeCycle = ['optional-on', 'optional-off', 'required'];
+                const usageIdx = portalModeCycle.indexOf(priorUsage);
+                const nextPortalUsagePolicy = portalModeCycle[(Math.max(0, usageIdx) + 1) % portalModeCycle.length];
+                nextAttempt.portalUsagePolicy = nextPortalUsagePolicy;
+                nextAttempt.forbidPortals = nextPortalUsagePolicy === 'optional-off';
+                nextAttempt.portalBiasMode = nextPortalUsagePolicy === 'optional-off' ? 'off' : (nextPortalUsagePolicy === 'required' ? 'adaptiveMustCross' : 'agnostic');
+                const priorMemoStrictness = Number(nextAttempt?.memoStrictness) || 1;
+                nextAttempt.memoStrictness = ((Math.max(1, priorMemoStrictness) % 3) + 1);
+                return {
+                    forcedFamily,
+                    portalUsagePolicy: nextPortalUsagePolicy,
+                    memoStrictness: nextAttempt.memoStrictness
+                };
+            };
             const applyRootNoveltyPenalty = (nextAttempt, reasonTag, sourceAttempt = null) => {
                 if (!nextAttempt || !reasonTag) return null;
                 const recentTimeoutAttempts = attemptsUsed
@@ -10063,7 +10112,9 @@
                     contradictionRecoveryActivated: !!attemptResult?.contradictionRecoveryActivated,
                     failureCategory: attemptResult?.failureTaxonomy?.category || null,
                     compatLegacyOutputAlias: !!attempt.compatLegacyOutputAlias,
-                    retryTag: attempt.retryTag || null
+                    retryTag: attempt.retryTag || null,
+                    escalationNoveltyScore: null,
+                    escalationDecision: null
                 });
                 if (!autoContradictionRecoveryArmed && !attemptResult.ok) {
                     const goalReachableSanity = isGoalReachableFromAnyGate(level);
@@ -10111,6 +10162,11 @@
                     const currentAttemptEntry = attemptsUsed[attemptsUsed.length - 1] || null;
                     let switchedThisAttempt = false;
                     const timeoutProne = ['timeout', 'no-solution-inconclusive'].includes(attemptResult.status);
+                    const previousAttemptEntry = attemptsUsed.length >= 2 ? attemptsUsed[attemptsUsed.length - 2] : null;
+                    const attemptNoveltyScore = computeEscalationNovelty(currentAttemptEntry, previousAttemptEntry);
+                    if (currentAttemptEntry && Number.isFinite(attemptNoveltyScore)) {
+                        currentAttemptEntry.escalationNoveltyScore = attemptNoveltyScore;
+                    }
                     const setAdaptationReason = (reason, extra = {}) => {
                         if (!reason) return;
                         if (currentAttemptEntry) {
@@ -10360,7 +10416,44 @@
                         }
                     }
                     if (healthyExpansionTimeout) {
-                        const allowBudgetEscalation = !!(timeoutImprovement && timeoutMaterialProgress && consecutiveTimeoutStagnation === 0 && !switchedThisAttempt);
+                        const noveltyScore = Number.isFinite(attemptNoveltyScore) ? attemptNoveltyScore : null;
+                        const noveltyImproved = Number.isFinite(noveltyScore)
+                            && (!Number.isFinite(lastEscalationNoveltyScore) || noveltyScore > (lastEscalationNoveltyScore + escalationNoveltyImprovementEpsilon));
+                        const noveltyBelowThreshold = Number.isFinite(noveltyScore) && noveltyScore < escalationNoveltyThreshold;
+                        const sameFamilyAsCurrent = (String(nextAttempt?.policyProfile || nextAttempt?.orderingPolicy || '') === String(attempt?.policyProfile || attempt?.orderingPolicy || ''));
+                        lowNoveltySameFamilyRetries = (noveltyBelowThreshold && sameFamilyAsCurrent)
+                            ? (lowNoveltySameFamilyRetries + 1)
+                            : 0;
+                        const forceNoveltyDiversification = !noveltyImproved || noveltyBelowThreshold || lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap;
+                        if (forceNoveltyDiversification && nextAttempt) {
+                            const diversified = forceEscalationNoveltyDiversification(nextAttempt, attempt?.policyProfile || attempt?.orderingPolicy || null);
+                            switchedThisAttempt = true;
+                            nextAttempt.forcedFamilySwitch = true;
+                            nextAttempt.escalationReason = lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap
+                                ? 'healthy-expansion-timeout-novelty-family-cap'
+                                : 'healthy-expansion-timeout-novelty-diversification';
+                            if (currentAttemptEntry) {
+                                currentAttemptEntry.escalationDecision = lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap
+                                    ? 'novelty-low-family-cap-forced-diversification'
+                                    : 'novelty-gate-failed-forced-diversification';
+                                currentAttemptEntry.noveltyGate = compactDefined({
+                                    score: noveltyScore,
+                                    threshold: escalationNoveltyThreshold,
+                                    improved: noveltyImproved,
+                                    belowThreshold: noveltyBelowThreshold,
+                                    lowNoveltySameFamilyRetries,
+                                    forcedFamily: diversified?.forcedFamily || null,
+                                    forcedPortalUsagePolicy: diversified?.portalUsagePolicy || null,
+                                    forcedMemoStrictness: diversified?.memoStrictness || null
+                                });
+                            }
+                        }
+                        const allowBudgetEscalation = !!(timeoutImprovement
+                            && timeoutMaterialProgress
+                            && consecutiveTimeoutStagnation === 0
+                            && !switchedThisAttempt
+                            && noveltyImproved
+                            && !noveltyBelowThreshold);
                         if (allowBudgetEscalation) {
                             const nextTier = Math.min(maxTimeoutEscalationTier, timeoutEscalationTier + 1);
                             if (nextTier > timeoutEscalationTier) {
@@ -10375,6 +10468,7 @@
                                     budgetEscalatedTo: nextAttempt.budgetMs,
                                     timeoutImprovement
                                 });
+                                if (currentAttemptEntry) currentAttemptEntry.escalationDecision = 'novelty-gate-pass-budget-escalated';
                             }
                         } else if (!switchedThisAttempt) {
                             const nonImprovingSwitch = this._switchAttemptStrategyFamily(nextAttempt, {
@@ -10392,6 +10486,9 @@
                                     switchedTo: nonImprovingSwitch?.to || null,
                                     timeoutImprovement
                                 });
+                                if (currentAttemptEntry && !currentAttemptEntry.escalationDecision) {
+                                    currentAttemptEntry.escalationDecision = 'budget-blocked-family-switch';
+                                }
                             }
                         }
                         if (!switchedThisAttempt && !previousAttemptSwitchedFamily) {
@@ -10434,7 +10531,13 @@
                             setAdaptationReason('healthy-expansion-timeout-final-escalation-more-time', {
                                 nextAttemptInserted: true
                             });
+                            if (currentAttemptEntry && !currentAttemptEntry.escalationDecision) {
+                                currentAttemptEntry.escalationDecision = 'novelty-gate-pass-final-escalation-added';
+                            }
                             escalatedAttemptsAdded += 1;
+                        }
+                        if (Number.isFinite(noveltyScore)) {
+                            lastEscalationNoveltyScore = noveltyScore;
                         }
                     }
                     if (timeoutProne && quality.constraintDeficit > 0) {
