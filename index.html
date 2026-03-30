@@ -3826,6 +3826,25 @@
                         const isP = (portalDest === nk && portalForced);
                         const nLen = curLen + (isP ? 0 : 1);
                         const rSteps = l.reqLen - nLen;
+                        const remainingStepsAfterMove = Math.max(0, rSteps);
+                        const projectedMustMask = (mustIdx !== undefined)
+                            ? (state.mustMask & ~(1n << BigInt(mustIdx)))
+                            : state.mustMask;
+                        const remainingMustAfterMove = countMaskBits(projectedMustMask, l);
+                        const projectedRevisitForInt = (state.countsArr[searchCtx.keyToIdx(nk)] || 0) > 0;
+                        const projectedIntsAfterMove = state.ints + (projectedRevisitForInt ? 1 : 0);
+                        const remainingIntsAfterMove = Math.max(0, l.reqInt - projectedIntsAfterMove);
+                        let projectedCrossNeed = crossNeed;
+                        if (crossIdx !== undefined && state.mustCrossCounts) {
+                            const currentCrossCount = state.mustCrossCounts[crossIdx] || 0;
+                            if (currentCrossCount < 2) projectedCrossNeed = Math.max(0, crossNeed - 1);
+                        }
+                        const obligationsSatisfiableInRemainingSteps = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) <= remainingStepsAfterMove;
+                        const goalReadyAfterMove = obligationsSatisfiableInRemainingSteps
+                            && remainingMustAfterMove === 0
+                            && remainingIntsAfterMove === 0
+                            && projectedCrossNeed === 0;
+                        const obligationOrderState = `${remainingMustAfterMove}|${remainingIntsAfterMove}|${projectedCrossNeed}|${remainingStepsAfterMove}`;
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
                         const nextObjectiveGap = (Number.isFinite(mustBound) ? mustBound : 9999) + (Number.isFinite(crossBound) ? crossBound : 9999);
@@ -4014,6 +4033,21 @@
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
                             pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
+                            const scheduleDeficit = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) - remainingStepsAfterMove;
+                            if (scheduleDeficit > 0) {
+                                const c = Math.round(scheduleDeficit * 90);
+                                score += c;
+                                pushDriver('obligationScheduleDeficit', scheduleDeficit, c);
+                            } else {
+                                const readinessProgress = Math.max(0, ((l.mustPassKeys?.length || 0) - remainingMustAfterMove))
+                                    + Math.max(0, ((l.reqInt || 0) - remainingIntsAfterMove) * 0.8)
+                                    + Math.max(0, ((crossNeed || 0) - projectedCrossNeed) * 0.9);
+                                if (readinessProgress > 0) {
+                                    const c = -Math.round(readinessProgress * 6);
+                                    score += c;
+                                    pushDriver('obligationReadinessProgress', readinessProgress, c);
+                                }
+                            }
                             if (bridgeState?.active) {
                                 const bridgeCommitment = -Math.round(12 * bridgeCommitmentScale * Math.max(0.2, phaseProfile.objectivePull || 1));
                                 score += bridgeCommitment;
@@ -4063,8 +4097,8 @@
                                 score -= this._staticNeighborDegree(nk, l) * 2;
                             } else {
                                 const slack = rSteps - activeDist;
-                                const remainsObligationsNow = hasMust || crossNeed > 0 || Math.max(0, l.reqInt - state.ints) > 0;
-                                const finalApproach = slack >= 0 && slack <= 3 && !remainsObligationsNow;
+                                const remainsObligationsNow = !goalReadyAfterMove;
+                                const finalApproach = slack >= 0 && slack <= 3 && goalReadyAfterMove;
                                 suppressAntiDither = finalApproach || slack <= 0;
                                 if (slack > 0 && !finalApproach) {
                                     // SLACK MODE: Decaying Orbit + Wall Hugging
@@ -4384,6 +4418,11 @@
                             score += earlyGoalPenalty;
                             if (debugStats) debugStats.earlyGoalApproachBlocked = (debugStats.earlyGoalApproachBlocked || 0) + 1;
                         }
+                        if (nLen >= l.reqLen && !goalReadyAfterMove) {
+                            const unresolvedPenalty = 240 + (remainingMustAfterMove * 110) + (remainingIntsAfterMove * 90) + (projectedCrossNeed * 80);
+                            score += unresolvedPenalty;
+                            pushDriver('reqLenFrontierUnresolvedObligations', remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed, unresolvedPenalty);
+                        }
 
                     const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * pw('revisitPenaltyWeight');
                     score += revisitContribution;
@@ -4396,6 +4435,7 @@
                         mustCrossBound: crossBound,
                         projectedLength: nLen,
                         projectedObjectiveGap: nextObjectiveGap,
+                        obligationOrderState,
                         perimeterBiasContribution,
                         rootAdjustments
                     };
@@ -4699,8 +4739,14 @@
                         const tieObligationMetric = (item) => {
                             const mustPass = tieFinite(item?.mustPassBound, 9999);
                             const mustCross = tieFinite(item?.mustCrossBound, 9999);
-                            const total = mustPass + mustCross;
-                            return { mustPass, mustCross, total };
+                            const orderTuple = `${item?.obligationOrderState || ''}`.split('|').map(v => Number(v));
+                            const remMust = Number.isFinite(orderTuple[0]) ? orderTuple[0] : 9999;
+                            const remInt = Number.isFinite(orderTuple[1]) ? orderTuple[1] : 9999;
+                            const remCross = Number.isFinite(orderTuple[2]) ? orderTuple[2] : 9999;
+                            const remSteps = Number.isFinite(orderTuple[3]) ? orderTuple[3] : 0;
+                            const scheduleDeficit = Math.max(0, (remMust + remInt + remCross) - remSteps);
+                            const total = mustPass + mustCross + scheduleDeficit;
+                            return { mustPass, mustCross, remMust, remInt, remCross, remSteps, scheduleDeficit, total };
                         };
                         const tieGeometryKey = (item) => {
                             const p = APP.LevelUtils.UNPACK(item.nk);
@@ -4721,6 +4767,9 @@
                             }
                             const oa = tieObligationMetric(a);
                             const ob = tieObligationMetric(b);
+                            if (oa.scheduleDeficit !== ob.scheduleDeficit) return { order: oa.scheduleDeficit - ob.scheduleDeficit, reason: 'obligation-schedule-deficit' };
+                            if (oa.remMust !== ob.remMust) return { order: oa.remMust - ob.remMust, reason: 'obligation-rem-must' };
+                            if (oa.remInt !== ob.remInt) return { order: oa.remInt - ob.remInt, reason: 'obligation-rem-int' };
                             if (oa.total !== ob.total) return { order: oa.total - ob.total, reason: 'obligation-total' };
                             if (oa.mustPass !== ob.mustPass) return { order: oa.mustPass - ob.mustPass, reason: 'obligation-mustPass' };
                             if (oa.mustCross !== ob.mustCross) return { order: oa.mustCross - ob.mustCross, reason: 'obligation-mustCross' };
@@ -5566,6 +5615,18 @@
                                 }
                                 this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                                 continue;
+                            }
+                        }
+                        if (realLen === l.reqLen && debugStats) {
+                            debugStats.reachedReqLenStates = (debugStats.reachedReqLenStates || 0) + 1;
+                            const unresolvedMustAtReqLen = countMaskBits(state.mustMask, l);
+                            const interactionDeficitAtReqLen = Math.max(0, l.reqInt - state.ints);
+                            const unresolvedCrossAtReqLen = this._crossNeeds(state);
+                            const scheduleImpossibleAtReqLen = unresolvedMustAtReqLen + interactionDeficitAtReqLen + unresolvedCrossAtReqLen > 0;
+                            if (unresolvedMustAtReqLen > 0) debugStats.unresolvedMustPassAtReqLen = (debugStats.unresolvedMustPassAtReqLen || 0) + 1;
+                            if (interactionDeficitAtReqLen > 0) debugStats.interactionDeficitAtReqLen = (debugStats.interactionDeficitAtReqLen || 0) + 1;
+                            if (scheduleImpossibleAtReqLen || lastK !== l.goalKey) {
+                                debugStats.reqLenButInvalidStates = (debugStats.reqLenButInvalidStates || 0) + 1;
                             }
                         }
                         if (lastK === l.goalKey) {
@@ -7627,6 +7688,10 @@
             const rootCandidatesExpanded = Math.max(0, Number(result?.rootCandidatesExpanded ?? rootSummary?.rootCandidatesExpanded ?? result?.debug?.rootCandidatesExpanded) || 0);
             const memoHits = Math.max(0, Number(result?.memoHits ?? diagnostics?.memoHits ?? result?.debug?.memoHits) || 0);
             const failedStateHits = Math.max(0, Number(result?.failedStateHits ?? diagnostics?.failedStateHits ?? result?.debug?.prune?.failedStateHit) || 0);
+            const reachedReqLenStates = Math.max(0, Number(result?.reachedReqLenStates ?? result?.debug?.reachedReqLenStates) || 0);
+            const reqLenButInvalidStates = Math.max(0, Number(result?.reqLenButInvalidStates ?? result?.debug?.reqLenButInvalidStates) || 0);
+            const unresolvedMustPassAtReqLen = Math.max(0, Number(result?.unresolvedMustPassAtReqLen ?? result?.debug?.unresolvedMustPassAtReqLen) || 0);
+            const interactionDeficitAtReqLen = Math.max(0, Number(result?.interactionDeficitAtReqLen ?? result?.debug?.interactionDeficitAtReqLen) || 0);
             const totalSolveTimeMs = Number.isFinite(result?.totalSolveTimeMs)
                 ? result.totalSolveTimeMs
                 : (Number.isFinite(result?.elapsedMs) ? result.elapsedMs : (Number.isFinite(result?.duration) ? result.duration : null));
@@ -7717,6 +7782,10 @@
                     rootCandidatesExpanded,
                     memoHits,
                     failedStateHits,
+                    reachedReqLenStates,
+                    reqLenButInvalidStates,
+                    unresolvedMustPassAtReqLen,
+                    interactionDeficitAtReqLen,
                     totalSolveTimeMs,
                     attempts: attemptsCount
                 })
@@ -13715,6 +13784,10 @@
                     failMemoHits: 0,
                     dominanceMemoChecks: 0,
                     dominanceMemoHits: 0,
+                    reachedReqLenStates: 0,
+                    reqLenButInvalidStates: 0,
+                    unresolvedMustPassAtReqLen: 0,
+                    interactionDeficitAtReqLen: 0,
                     failMemoHitRate: 0,
                     dominanceMemoHitRate: 0,
                     rootMoveOrder: [],
