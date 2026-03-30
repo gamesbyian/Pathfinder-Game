@@ -10129,6 +10129,8 @@
             const maxTimeoutEscalationTier = timeoutEscalationRatios.length;
             const strictMaxEscalatedAttemptBudgetMs = Math.max(1, Math.floor((Number(budgetMs) || 1) * 0.75));
             const maxExtraEscalatedAttempts = 1;
+            const timeoutStagnationEscalationThreshold = 3;
+            const proofAttemptStagnationStopThreshold = 2;
             const escalationNoveltyThreshold = 0.24;
             const escalationNoveltyImprovementEpsilon = 0.03;
             const lowNoveltySameFamilyRetryCap = 1;
@@ -10233,6 +10235,14 @@
             let broadStagnationRescueUsed = false;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
+            let timeoutStagnantAttemptCount = 0;
+            let proofAttemptStagnationCount = 0;
+            let timeoutProofProfileArmed = false;
+            let timeoutProofStopTriggered = false;
+            let timeoutEscalationHoldDiversification = false;
+            let timeoutProgressionHistory = [];
+            let timeoutProgressionReference = null;
+            let highConfidenceInconclusiveSummary = null;
             const canonicalizeDisabledPrunes = (prunes = []) => {
                 if (!Array.isArray(prunes) || prunes.length === 0) return [];
                 return Array.from(new Set(prunes.map(p => String(p || '').trim()).filter(Boolean))).sort();
@@ -10365,6 +10375,34 @@
                 const nodesDelta = Math.max(0, (Number(entry?.quality?.nodesExpanded) || Number(entry?.nodesExpanded) || 0) - (Number(previousEntry?.quality?.nodesExpanded) || Number(previousEntry?.nodesExpanded) || 0));
                 const objectiveDelta = Math.max(0, (Number(previousEntry?.quality?.constraintDeficit) || 0) - (Number(entry?.quality?.constraintDeficit) || 0));
                 return Number(Math.min(1, (rootKeyChangeRatio * 0.4) + (Math.min(depthDelta, 3) / 3 * 0.25) + (Math.min(nodesDelta, 220) / 220 * 0.2) + (Math.min(objectiveDelta, 2) / 2 * 0.15)).toFixed(4));
+            };
+            const buildTimeoutProgressVector = (entry = null) => {
+                if (!entry) return null;
+                const lowerBound = Number(entry?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
+                return compactDefined({
+                    attemptIndex: Number(entry?.attemptOrdinal) || null,
+                    label: entry?.label || null,
+                    timeoutEscalationTier: Number.isFinite(entry?.timeoutEscalationTier) ? entry.timeoutEscalationTier : 0,
+                    bestLowerBoundToValidSolution: Number.isFinite(lowerBound) ? lowerBound : null,
+                    deficitVector: [
+                        Math.max(0, Number(entry?.quality?.remainingMustPass) || 0),
+                        Math.max(0, Number(entry?.quality?.remainingMustCross) || 0)
+                    ],
+                    proofProfileActive: !!entry?.proofAttemptProfile
+                });
+            };
+            const sameTimeoutProgressVector = (a = null, b = null) => {
+                if (!a || !b) return false;
+                const lbA = Number.isFinite(a?.bestLowerBoundToValidSolution) ? a.bestLowerBoundToValidSolution : null;
+                const lbB = Number.isFinite(b?.bestLowerBoundToValidSolution) ? b.bestLowerBoundToValidSolution : null;
+                if (lbA !== lbB) return false;
+                const av = Array.isArray(a?.deficitVector) ? a.deficitVector : [];
+                const bv = Array.isArray(b?.deficitVector) ? b.deficitVector : [];
+                if (av.length !== bv.length) return false;
+                for (let i = 0; i < av.length; i++) {
+                    if ((Number(av[i]) || 0) !== (Number(bv[i]) || 0)) return false;
+                }
+                return true;
             };
             const forceEscalationNoveltyDiversification = (nextAttempt, currentPolicyProfile = null) => {
                 if (!nextAttempt) return null;
@@ -10688,6 +10726,7 @@
                     }
                 }
                 attemptsUsed.push({
+                    attemptOrdinal: i + 1,
                     label: attempt.label || null,
                     featureFlags: attemptResult?.heuristicFeatureFlags || null,
                     featureSignature: attemptResult?.featureSignature || null,
@@ -10759,7 +10798,8 @@
                     compatLegacyOutputAlias: !!attempt.compatLegacyOutputAlias,
                     retryTag: attempt.retryTag || null,
                     escalationNoveltyScore: null,
-                    escalationDecision: null
+                    escalationDecision: null,
+                    proofAttemptProfile: !!attempt.proofAttemptProfile
                 });
                 if (!autoContradictionRecoveryArmed && !attemptResult.ok) {
                     const goalReachableSanity = isGoalReachableFromAnyGate(level);
@@ -10826,6 +10866,23 @@
                     const timeoutLikeAttemptsSoFar = attemptsUsed.reduce((count, usedAttempt) => {
                         return count + (['timeout', 'no-solution-inconclusive'].includes(usedAttempt?.status) ? 1 : 0);
                     }, 0);
+                    if (timeoutProne && currentAttemptEntry) {
+                        const progressVector = buildTimeoutProgressVector(currentAttemptEntry);
+                        if (progressVector) {
+                            const previousProgressVector = timeoutProgressionHistory.length > 0
+                                ? timeoutProgressionHistory[timeoutProgressionHistory.length - 1]
+                                : null;
+                            const unchanged = sameTimeoutProgressVector(progressVector, previousProgressVector);
+                            timeoutStagnantAttemptCount = unchanged ? (timeoutStagnantAttemptCount + 1) : 0;
+                            timeoutProgressionHistory.push({
+                                ...progressVector,
+                                stagnantRunLength: timeoutStagnantAttemptCount
+                            });
+                            currentAttemptEntry.timeoutProgressVector = progressVector;
+                            currentAttemptEntry.timeoutProgressStagnantRunLength = timeoutStagnantAttemptCount;
+                            currentAttemptEntry.timeoutProgressionHistorySize = timeoutProgressionHistory.length;
+                        }
+                    }
                     const nodesExpanded = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
                     const maxDepthReached = Math.max(0, Number(attemptResult?.debug?.maxDepth) || 0);
                     const lowExpansionThreshold = Math.max(14, Math.floor(((timeoutLikeAttemptsSoFar + 1) * 16) / 2));
@@ -11175,7 +11232,8 @@
                         lowNoveltySameFamilyRetries = (noveltyBelowThreshold && sameFamilyAsCurrent)
                             ? (lowNoveltySameFamilyRetries + 1)
                             : 0;
-                        const forceNoveltyDiversification = !noveltyImproved || noveltyBelowThreshold || lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap;
+                        const forceNoveltyDiversification = !timeoutEscalationHoldDiversification
+                            && (!noveltyImproved || noveltyBelowThreshold || lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap);
                         if (forceNoveltyDiversification && nextAttempt) {
                             const diversified = forceEscalationNoveltyDiversification(nextAttempt, attempt?.policyProfile || attempt?.orderingPolicy || null);
                             switchedThisAttempt = true;
@@ -11378,18 +11436,73 @@
                             maxProgress: quality.maxProgress
                         };
                     }
+                    if (timeoutProne && currentAttemptEntry && nextAttempt) {
+                        const shouldArmProofProfile = !timeoutProofProfileArmed
+                            && timeoutStagnantAttemptCount >= timeoutStagnationEscalationThreshold;
+                        if (shouldArmProofProfile) {
+                            timeoutProofProfileArmed = true;
+                            timeoutEscalationHoldDiversification = true;
+                            timeoutProgressionReference = currentAttemptEntry.timeoutProgressVector || buildTimeoutProgressVector(currentAttemptEntry);
+                            proofAttemptStagnationCount = 0;
+                            nextAttempt.proofAttemptProfile = true;
+                            nextAttempt.disableNoveltyDiversification = true;
+                            nextAttempt.retryTag = 'timeout-proof-attempt-profile';
+                            nextAttempt.escalationReason = 'timeout-proof-attempt-profile';
+                            nextAttempt.beamCompositionRule = 'floor-5-proof';
+                            nextAttempt.rootExpansionFloorCount = Math.max(5, Number(nextAttempt?.rootExpansionFloorCount) || 0);
+                            nextAttempt.forceRootExpansionFloor = true;
+                            nextAttempt.memoStrictness = Math.max(0.55, Math.min(0.9, Number(nextAttempt?.memoStrictness) || 0.75));
+                            nextAttempt.disabledPrunes = canonicalizeDisabledPrunes([...(nextAttempt?.disabledPrunes || []), 'dominance']);
+                            nextAttempt.proofStopConditions = {
+                                stagnantAttemptThreshold: timeoutStagnationEscalationThreshold,
+                                proofAttemptStagnationStopThreshold,
+                                stopWhenNoVectorChange: true
+                            };
+                            currentAttemptEntry.escalationDecision = 'timeout-proof-profile-armed';
+                            currentAttemptEntry.proofAttemptEscalation = compactDefined({
+                                trigger: 'timeout-stagnant-progression',
+                                stagnantAttemptCount: timeoutStagnantAttemptCount,
+                                timeoutProgressVector: timeoutProgressionReference
+                            });
+                        }
+                    }
+                    if (timeoutProne && timeoutProofProfileArmed && currentAttemptEntry?.proofAttemptProfile) {
+                        const currentVector = currentAttemptEntry.timeoutProgressVector || buildTimeoutProgressVector(currentAttemptEntry);
+                        const unchangedVsReference = sameTimeoutProgressVector(currentVector, timeoutProgressionReference);
+                        proofAttemptStagnationCount = unchangedVsReference ? (proofAttemptStagnationCount + 1) : 0;
+                        currentAttemptEntry.proofAttemptStagnationCount = proofAttemptStagnationCount;
+                        currentAttemptEntry.proofAttemptUnchangedFromReference = unchangedVsReference;
+                        if (!unchangedVsReference) timeoutProgressionReference = currentVector;
+                        if (proofAttemptStagnationCount >= proofAttemptStagnationStopThreshold) {
+                            timeoutProofStopTriggered = true;
+                            highConfidenceInconclusiveSummary = compactDefined({
+                                classification: 'high-confidence-inconclusive-unsat-candidate',
+                                reason: 'timeout-proof-profile-stagnation-stop',
+                                proofAttemptsWithoutProgress: proofAttemptStagnationCount,
+                                progression: timeoutProgressionHistory.slice(-Math.max(3, timeoutStagnationEscalationThreshold + proofAttemptStagnationStopThreshold))
+                            });
+                            currentAttemptEntry.stopReason = 'high-confidence-inconclusive-unsat-candidate';
+                            currentAttemptEntry.escalationDecision = 'proof-profile-stop-no-progress';
+                            currentAttemptEntry.highConfidenceUnsatCandidate = true;
+                        }
+                    }
                     if (currentAttemptEntry && nextAttempt && timeoutProne) {
-                        applyRootNoveltyPenalty(nextAttempt, 'timeout-retry-novelty-penalty', currentAttemptEntry);
+                        if (!nextAttempt.disableNoveltyDiversification) {
+                            applyRootNoveltyPenalty(nextAttempt, 'timeout-retry-novelty-penalty', currentAttemptEntry);
+                        }
                     }
                     if (timeoutProne && nextAttempt) {
-                        const diversifiedRegistration = diversifyAndRegisterAttempt(nextAttempt, {
-                            timeoutLikeAttemptsSoFar,
-                            timeoutEscalationTier,
-                            timeoutFamilyDiversificationUsed
-                        }, { markDuplicate: true });
+                        const diversifiedRegistration = nextAttempt.disableNoveltyDiversification
+                            ? registerAttemptSignature(nextAttempt, { markDuplicate: true })
+                            : diversifyAndRegisterAttempt(nextAttempt, {
+                                timeoutLikeAttemptsSoFar,
+                                timeoutEscalationTier,
+                                timeoutFamilyDiversificationUsed
+                            }, { markDuplicate: true });
                         if (currentAttemptEntry) {
-                            currentAttemptEntry.retryDiversificationApplied = true;
-                            currentAttemptEntry.retryDiversificationMatrix = diversifiedRegistration?.matrixApplied || null;
+                            currentAttemptEntry.retryDiversificationApplied = !nextAttempt.disableNoveltyDiversification;
+                            currentAttemptEntry.retryDiversificationMatrix = nextAttempt.disableNoveltyDiversification ? null : (diversifiedRegistration?.matrixApplied || null);
+                            currentAttemptEntry.proofAttemptProfileQueued = !!nextAttempt.proofAttemptProfile;
                             currentAttemptEntry.nextAttemptSignatureHash = diversifiedRegistration?.hash || nextAttempt?.attemptSignatureHash || null;
                         }
                         if (!diversifiedRegistration?.allowed) {
@@ -11404,6 +11517,7 @@
                         currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
                         currentAttemptEntry.nextAttemptReason = currentAttemptEntry.nextAttemptReason || (switchedThisAttempt ? 'strategy-family-switch' : 'advance-ladder');
                     }
+                    if (timeoutProofStopTriggered) break;
                     previousAttemptSwitchedFamily = switchedThisAttempt;
                 }
                 if (!attemptResult.ok && quality.maxProgress < 0.22) {
@@ -11415,16 +11529,34 @@
             const elapsedMs = Date.now() - started;
             return {
                 ok: false,
-                status: lastAttempt ? lastAttempt.status : 'error',
+                status: timeoutProofStopTriggered
+                    ? 'no-solution-inconclusive'
+                    : (lastAttempt ? lastAttempt.status : 'error'),
                 elapsedMs,
-                stats: { debug: lastAttempt ? lastAttempt.debug : {}, templateDiagnostics },
+                stats: {
+                    debug: compactDefined({
+                        ...(lastAttempt ? lastAttempt.debug : {}),
+                        timeoutEscalation: compactDefined({
+                            proofProfileArmed: timeoutProofProfileArmed,
+                            proofStopTriggered: timeoutProofStopTriggered,
+                            proofStopConditions: timeoutProofProfileArmed ? {
+                                stagnantAttemptThreshold: timeoutStagnationEscalationThreshold,
+                                proofAttemptStagnationStopThreshold
+                            } : null,
+                            progression: timeoutProgressionHistory,
+                            highConfidenceInconclusive: highConfidenceInconclusiveSummary
+                        })
+                    }),
+                    templateDiagnostics
+                },
                 attempts: attemptsUsed,
                 scoringMode: lastAttempt ? lastAttempt.scoringMode : 'modern',
                 templateDiagnostics,
                 controlPlane,
                 activeProfile: lastAttempt?.policyProfile || 'standard',
                 adaptivePhaseSummary: summarizeAdaptivePhaseTimeline(lastAttempt?.debug?.phaseTimeline || []),
-                contradictionGuardTriggered: !!lastAttempt?.debug?.contradictionGuard?.triggered
+                contradictionGuardTriggered: !!lastAttempt?.debug?.contradictionGuard?.triggered,
+                classification: highConfidenceInconclusiveSummary
             };
         },
 
