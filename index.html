@@ -7617,6 +7617,7 @@
                     orderingPolicy: entry?.orderingPolicy || null,
                     scoringMode: entry?.scoringMode || null,
                     portalBiasMode: entry?.portalBiasMode || null,
+                    portalUsagePolicy: entry?.portalUsagePolicy || null,
                     phasePolicy: compactPhasePolicyForAudit(entry?.phasePolicy),
                     structuralMode: entry?.structuralMode === true,
                     compatLegacyOutputAlias: !!entry?.compatLegacyOutputAlias,
@@ -9334,6 +9335,18 @@
             const routePressure = Math.max(0, profile?.routePressure || 0);
             const objectiveCount = Math.max(0, profile?.objectiveCount || 0);
             const portalCommitment = Math.max(0, Math.min(1, profile?.portalCommitment || 0));
+            const portalTriage = opts.portalTriage || this.analyzePortalNeedAndUsefulness(level);
+            const explicitPortalCount = Array.isArray(level?.portals) ? level.portals.length : 0;
+            const portalTerminalCount = Math.max(explicitPortalCount, Number(level?.portalMap?.size) || 0);
+            const portalTraversalRequired = !!(
+                portalTriage?.topologicallyNecessary
+                || portalTriage?.nonPortalFeasibility?.stronglySuggestsPortalRequired
+            );
+            const portalOptionalBranchEligible = portalTerminalCount > 0 && !portalTraversalRequired;
+            const resolvePortalUsagePolicy = ({ forbidPortals = false } = {}) => {
+                if (forbidPortals) return 'optional-off';
+                return portalTraversalRequired ? 'required' : 'optional-on';
+            };
             const modernStructuralGuidanceNotNeeded = routePressure < 0.4 && objectiveCount <= 1 && portalCommitment === 0;
             const complexityBias = Math.max(0, Math.min(0.18,
                 Math.max(0, (routePressure - 0.95) * 0.08)
@@ -9386,7 +9399,8 @@
                         templatePhase: 'warmup',
                         policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
                         commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
-                        memoStrictness: 1.35
+                        memoStrictness: 1.35,
+                        portalUsagePolicy: resolvePortalUsagePolicy()
                     });
                 });
                 const reserve = Math.max(1, modernBudget - warmupTotal);
@@ -9407,7 +9421,8 @@
                     templatePhase: 'reallocated',
                     policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
                     commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
-                    memoStrictness: 1.35
+                    memoStrictness: 1.35,
+                    portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             } else {
                 attempts.push({
@@ -9428,7 +9443,44 @@
                     startGateArchetype: null,
                     useControlPlaneArchetype: modernStructuralGuidanceNotNeeded ? false : true,
                     commitmentPlan: modernStructuralGuidanceNotNeeded ? null : { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
-                    memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2
+                    memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2,
+                    portalUsagePolicy: resolvePortalUsagePolicy()
+                });
+            }
+            if (portalOptionalBranchEligible) {
+                const noPortalModernBudget = Math.max(1, Math.floor(total * 0.16));
+                const noPortalEnduranceBudget = Math.max(1, Math.floor(total * 0.1));
+                attempts.push({
+                    label: 'portal-optional-modern-no-portal',
+                    budgetMs: noPortalModernBudget,
+                    scoringMode: 'modern',
+                    portalBiasMode: 'off',
+                    forbidPortals: true,
+                    structuralMode: true,
+                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
+                    objectiveTrack: defaultTrack,
+                    templateCommitment: commonTemplateCommitment,
+                    portalLockPolicy: commonPortalLockPolicy,
+                    knotBudgetPolicy: commonKnotBudgetPolicy,
+                    macroSkeleton: defaultSkeleton,
+                    regionCrossingModel,
+                    policyProfile: 'harvestThenFinish',
+                    commitmentPlan: { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.16)) },
+                    memoStrictness: 0.95,
+                    portalUsagePolicy: resolvePortalUsagePolicy({ forbidPortals: true })
+                });
+                attempts.push({
+                    label: 'portal-optional-endurance-no-portal',
+                    budgetMs: noPortalEnduranceBudget,
+                    scoringMode: 'endurance',
+                    portalBiasMode: 'off',
+                    forbidPortals: true,
+                    structuralMode: true,
+                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
+                    policyProfile: 'knotBuilder',
+                    commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.2)) },
+                    memoStrictness: 1.25,
+                    portalUsagePolicy: resolvePortalUsagePolicy({ forbidPortals: true })
                 });
             }
             if (!modernStructuralGuidanceNotNeeded) {
@@ -9447,7 +9499,8 @@
                     regionCrossingModel,
                     policyProfile: 'harvestThenFinish',
                     commitmentPlan: { horizonSteps: Math.max(2, Math.floor(level.reqLen * 0.14)) },
-                    memoStrictness: 0.85
+                    memoStrictness: 0.85,
+                    portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
 
@@ -9463,7 +9516,8 @@
                     policyProfile: 'knotBuilder',
                     commitmentPlan: { horizonSteps: Math.max(5, Math.floor(level.reqLen * 0.26)) },
                     memoStrictness: 1.55,
-                    compatLegacyOutputAlias: true
+                    compatLegacyOutputAlias: true,
+                    portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
             return attempts;
@@ -9666,6 +9720,15 @@
                 const relaxRootSuppressionFirstLayer = (attemptOpts.relaxRootSuppressionFirstLayer !== undefined)
                     ? !!attemptOpts.relaxRootSuppressionFirstLayer
                     : !!opts.relaxRootSuppressionFirstLayer;
+                const attemptForbidPortals = (attemptOpts.forbidPortals !== undefined)
+                    ? !!attemptOpts.forbidPortals
+                    : !!opts.forbidPortals;
+                const portalTraversalRequiredForAttempt = !!(
+                    opts?.portalTriage?.topologicallyNecessary
+                    || opts?.portalTriage?.nonPortalFeasibility?.stronglySuggestsPortalRequired
+                );
+                const resolvedPortalUsagePolicy = attemptOpts.portalUsagePolicy
+                    || (attemptForbidPortals ? 'optional-off' : (portalTraversalRequiredForAttempt ? 'required' : 'optional-on'));
                 const r = await PathfinderSolver.solve(level, {
                     timeLimit: attemptBudgetMs,
                     debug: true,
@@ -9695,7 +9758,7 @@
                     enableLowExpansionProbe: !!(attemptOpts.enableLowExpansionProbe || opts.enableLowExpansionProbe),
                     contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
                     assertKnownSolvableBounds: hasPortalBounds,
-                    forbidPortals: !!opts.forbidPortals,
+                    forbidPortals: attemptForbidPortals,
                     suppressPerimeterBias: !!opts.suppressPerimeterBias,
                     rootExpansionFloorCount,
                     forceRootExpansionFloor,
@@ -9743,7 +9806,7 @@
                         controlPlane,
                         contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
                         assertKnownSolvableBounds: hasPortalBounds,
-                        forbidPortals: !!opts.forbidPortals
+                        forbidPortals: attemptForbidPortals
                     });
                     const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
                     const guardedDebug = guarded?.debug || {};
@@ -9763,6 +9826,8 @@
                             elapsedMs: Number.isFinite(guardedDebug?.elapsedMs) ? guardedDebug.elapsedMs : null,
                             scoringMode: attemptOpts.scoringMode || 'modern',
                             portalBiasMode: 'off',
+                            forbidPortals: attemptForbidPortals,
+                            portalUsagePolicy: resolvedPortalUsagePolicy,
                             orderingPolicy,
                             structuralMode: !!attemptOpts.structuralMode,
                             phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
@@ -9783,6 +9848,8 @@
                     elapsedMs: Number.isFinite(debug?.elapsedMs) ? debug.elapsedMs : null,
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    forbidPortals: attemptForbidPortals,
+                    portalUsagePolicy: resolvedPortalUsagePolicy,
                     orderingPolicy,
                     structuralMode: !!attemptOpts.structuralMode,
                     phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
@@ -9864,6 +9931,11 @@
                     escalationReason: attempt.escalationReason || null,
                     scoringMode: attemptResult.scoringMode || attempt.scoringMode || 'modern',
                     portalBiasMode: attemptResult.portalBiasMode || attempt.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
+                    portalUsagePolicy: attemptResult.portalUsagePolicy
+                        || attempt.portalUsagePolicy
+                        || (attempt.forbidPortals
+                            ? 'optional-off'
+                            : ((opts?.portalTriage?.topologicallyNecessary || opts?.portalTriage?.nonPortalFeasibility?.stronglySuggestsPortalRequired) ? 'required' : 'optional-on')),
                     structuralMode: (attemptResult.structuralMode !== undefined) ? !!attemptResult.structuralMode : !!attempt.structuralMode,
                     phasePolicy: attemptResult.phasePolicy || attempt.phasePolicy || opts.phasePolicy || null,
                     orderingPolicy: attemptResult.orderingPolicy || attempt.orderingPolicy || attempt.policyProfile || opts.orderingPolicy || 'harvestThenFinish',
@@ -16757,6 +16829,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 scoringMode: attempt?.scoringMode || attempt?.mode || 'unknown',
                 orderingPolicy: attempt?.orderingPolicy || attempt?.policy || 'unknown',
                 portalBiasMode: attempt?.portalBiasMode || attempt?.portalMode || 'unknown',
+                portalUsagePolicy: attempt?.portalUsagePolicy || (attempt?.forbidPortals ? 'optional-off' : null),
                 structuralMode,
                 phasePolicy,
                 budgetMs,
