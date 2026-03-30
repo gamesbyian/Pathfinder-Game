@@ -4710,43 +4710,116 @@
                     }
                     let orderedNeighbors = scored.map(item => item.nk);
                     if (depth === 0 && lowBranchMode && scored.length >= 2) {
-                        const top = scored[scored.length - 1];
+                        const rootDiversityTelemetry = options?.rootDiversityTelemetry || {};
+                        const timeoutLikeAttemptsRecent = Math.max(0, Number(rootDiversityTelemetry?.timeoutLikeAttemptsRecent) || 0);
+                        const timeoutStagnationCount = Math.max(0, Number(rootDiversityTelemetry?.timeoutStagnationCount) || 0);
+                        const timeoutEscalationTierSignal = Math.max(0, Number(rootDiversityTelemetry?.timeoutEscalationTier) || 0);
+                        const reqLenHighCost = reqLenSignal >= Math.max(16, Math.floor(walkableCellCount * 0.52));
+                        const multiObjectiveSignal = objectiveCountSignal >= 2 || mustPassCountSignal >= 2 || falseGoalCountSignal >= 2;
+                        const portalHeavySignal = hasPortalSignal && (Number(l?.portalMap?.size) || 0) >= 2;
+                        const structuralHighCostTrigger = reqLenHighCost && multiObjectiveSignal && hasPortalSignal && (portalHeavySignal || routePressureSignal >= 0.62);
+                        const repeatedTimeoutTelemetryTrigger = timeoutLikeAttemptsRecent >= 2
+                            && (timeoutStagnationCount >= 1 || timeoutEscalationTierSignal >= 1);
+                        const forceRootDiversityGuard = structuralHighCostTrigger || repeatedTimeoutTelemetryTrigger;
+
+                        const top = scored[0];
                         const topPos = APP.LevelUtils.UNPACK(top.nk);
-                        let contrarianIdx = -1;
-                        let contrarianDist = -1;
-                        for (let i = 0; i < scored.length - 1; i++) {
-                            const pos = APP.LevelUtils.UNPACK(scored[i].nk);
+                        const alternates = scored.slice(1);
+                        const finiteOr = (value, fallback = 9999) => Number.isFinite(value) ? Number(value) : fallback;
+                        const portalDriverValue = (item) => {
+                            const drivers = Array.isArray(item?.scoreDrivers) ? item.scoreDrivers : [];
+                            let total = 0;
+                            for (const d of drivers) {
+                                const feature = (typeof d?.feature === 'string') ? d.feature.toLowerCase() : '';
+                                if (feature.includes('portal')) total += Number(d?.contribution) || 0;
+                            }
+                            return total;
+                        };
+                        const compareTuple = (aTuple, bTuple) => {
+                            const len = Math.max(aTuple.length, bTuple.length);
+                            for (let i = 0; i < len; i++) {
+                                const av = Number(aTuple[i]) || 0;
+                                const bv = Number(bTuple[i]) || 0;
+                                if (av !== bv) return av - bv;
+                            }
+                            return 0;
+                        };
+                        const chooseAlternate = (metricFn) => {
+                            let best = null;
+                            let bestMetric = null;
+                            for (const item of alternates) {
+                                const metric = metricFn(item);
+                                if (!best) {
+                                    best = item;
+                                    bestMetric = metric;
+                                    continue;
+                                }
+                                const cmp = compareTuple(metric, bestMetric);
+                                if (cmp < 0 || (cmp === 0 && item.nk < best.nk)) {
+                                    best = item;
+                                    bestMetric = metric;
+                                }
+                            }
+                            return best;
+                        };
+                        const contrarianAlt = chooseAlternate((item) => {
+                            const pos = APP.LevelUtils.UNPACK(item.nk);
                             const diverge = Math.abs(pos.x - topPos.x) + Math.abs(pos.y - topPos.y);
-                            if (diverge > contrarianDist || (diverge === contrarianDist && scored[i].nk < (contrarianIdx >= 0 ? scored[contrarianIdx].nk : Infinity))) {
-                                contrarianDist = diverge;
-                                contrarianIdx = i;
+                            return [-diverge, finiteOr(item.score, 999999), item.nk];
+                        });
+                        const urgencyAlt = chooseAlternate((item) => {
+                            const mustPass = finiteOr(item?.mustPassBound, 9999);
+                            const mustCross = finiteOr(item?.mustCrossBound, 9999);
+                            const urgency = mustPass + mustCross;
+                            return [urgency, mustPass, mustCross, finiteOr(item.score, 999999), item.nk];
+                        });
+                        const antiPortalAlt = chooseAlternate((item) => {
+                            const isPortalTerminal = l.portalMap?.has(item.nk) ? 1 : 0;
+                            const portalDriver = portalDriverValue(item);
+                            return [isPortalTerminal, -portalDriver, finiteOr(item.score, 999999), item.nk];
+                        });
+
+                        const protectedBeam = [];
+                        const protectedSet = new Set();
+                        const addProtected = (item) => {
+                            if (!item || !Number.isFinite(item.nk) || protectedSet.has(item.nk)) return;
+                            protectedSet.add(item.nk);
+                            protectedBeam.push(item.nk);
+                        };
+                        addProtected(top);
+                        addProtected(contrarianAlt);
+                        addProtected(urgencyAlt);
+                        addProtected(antiPortalAlt);
+
+                        const rootCandidateCountDepth0 = candidatesCount ?? valid.length;
+                        const nearUniqueProtectedBeamMin = (nearUniquePathSignature && rootCandidateCountDepth0 <= 3) ? 4 : 3;
+                        const forceProtectedBeamMin = forceRootDiversityGuard ? 4 : 0;
+                        const minProtectedBeam = Math.max(nearUniqueProtectedBeamMin, forceProtectedBeamMin);
+                        for (let i = 1; i < scored.length && protectedBeam.length < Math.min(scored.length, minProtectedBeam); i++) {
+                            addProtected(scored[i]);
+                        }
+                        if (nearUniquePathSignature) {
+                            for (let i = 0; i < scored.length && protectedBeam.length < Math.min(scored.length, 4); i++) {
+                                addProtected(scored[i]);
                             }
                         }
-                        if (contrarianIdx >= 0) {
-                            const protectedBeam = [top.nk, scored[contrarianIdx].nk];
-                            const rootCandidateCountDepth0 = candidatesCount ?? valid.length;
-                            const minProtectedBeam = (nearUniquePathSignature && rootCandidateCountDepth0 <= 3) ? 4 : 3;
-                            for (let i = scored.length - 2; i >= Math.max(0, scored.length - minProtectedBeam); i--) {
-                                const nk = scored[i].nk;
-                                if (!protectedBeam.includes(nk)) protectedBeam.push(nk);
-                            }
-                            if (nearUniquePathSignature) {
-                                for (let i = 0; i < scored.length && protectedBeam.length < Math.min(scored.length, 4); i++) {
-                                    const nk = scored[i].nk;
-                                    if (!protectedBeam.includes(nk)) protectedBeam.push(nk);
-                                }
-                            }
-                            const remainder = orderedNeighbors.filter(nk => !protectedBeam.includes(nk));
-                            orderedNeighbors = [...remainder, ...protectedBeam];
-                            if (debugStats) {
-                                debugStats.lowBranchMode = true;
-                                debugStats.lowBranchModeActivated = true;
-                                debugStats.lowBranchProtectedBeam = protectedBeam.slice();
-                                if (nearUniquePathSignature && protectedBeam.length >= 3) {
-                                    debugStats.depth0DiversityFloorApplied = true;
-                                    debugStats.depth0DiversityFloorSize = protectedBeam.length;
-                                    debugStats.nearUniquePathSignature = true;
-                                }
+
+                        const remainder = orderedNeighbors.filter(nk => !protectedSet.has(nk));
+                        orderedNeighbors = [...remainder, ...protectedBeam];
+                        if (debugStats) {
+                            debugStats.lowBranchMode = true;
+                            debugStats.lowBranchModeActivated = true;
+                            debugStats.lowBranchProtectedBeam = protectedBeam.slice();
+                            debugStats.forcedRootDiversity = !!forceRootDiversityGuard;
+                            debugStats.forcedRootBeamSize = forceRootDiversityGuard ? protectedBeam.length : 0;
+                            debugStats.forcedRootSelectedKeys = forceRootDiversityGuard ? protectedBeam.slice(0, 8) : [];
+                            if (nearUniquePathSignature && protectedBeam.length >= 3) {
+                                debugStats.depth0DiversityFloorApplied = true;
+                                debugStats.depth0DiversityFloorSize = protectedBeam.length;
+                                debugStats.nearUniquePathSignature = true;
+                            } else if (forceRootDiversityGuard) {
+                                debugStats.depth0DiversityFloorApplied = true;
+                                debugStats.depth0DiversityFloorSize = protectedBeam.length;
                             }
                         }
                     }
@@ -7653,6 +7726,9 @@
                     lowBranchModeActivated: entry?.lowBranchModeActivated === true ? true : null,
                     depth0DiversityFloorApplied: entry?.depth0DiversityFloorApplied === true ? true : null,
                     depth0DiversityFloorSize: Number.isFinite(entry?.depth0DiversityFloorSize) ? entry.depth0DiversityFloorSize : null,
+                    forcedRootDiversity: entry?.forcedRootDiversity === true ? true : null,
+                    forcedRootBeamSize: Number.isFinite(entry?.forcedRootBeamSize) ? entry.forcedRootBeamSize : null,
+                    forcedRootSelectedKeys: Array.isArray(entry?.forcedRootSelectedKeys) ? entry.forcedRootSelectedKeys.slice(0, 8) : null,
                     topRootMove: compactTopRootMove(entry?.rootMoveScores),
                     depth0PruneBreakdown: entry?.depth0PruneBreakdown || null,
                     rootSuppressionSummary: entry?.rootSuppressionSummary || null,
@@ -7712,6 +7788,9 @@
                 lowBranchModeActivated: !!(debug?.lowBranchModeActivated || debug?.lowBranchMode),
                 depth0DiversityFloorApplied: !!debug?.depth0DiversityFloorApplied,
                 depth0DiversityFloorSize: Number.isFinite(debug?.depth0DiversityFloorSize) ? debug.depth0DiversityFloorSize : null,
+                forcedRootDiversity: !!debug?.forcedRootDiversity,
+                forcedRootBeamSize: Number.isFinite(debug?.forcedRootBeamSize) ? debug.forcedRootBeamSize : null,
+                forcedRootSelectedKeys: Array.isArray(debug?.forcedRootSelectedKeys) ? debug.forcedRootSelectedKeys.slice(0, 8) : null,
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
                 rootCandidatesSuppressedByDominance: Number.isFinite(debug?.rootCandidatesSuppressedByDominance) ? debug.rootCandidatesSuppressedByDominance : null,
                 rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
@@ -9695,6 +9774,9 @@
             };
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
+                const recentTimeoutTelemetry = attemptsUsed
+                    .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
+                    .slice(-4);
                 const heuristicFeatureFlags = deriveHeuristicFeatureFlagsSafely(level, {
                     attemptOrdinal: attemptOpts?.attemptOrdinal,
                     highReqIntThreshold: attemptOpts?.highReqIntThreshold
@@ -9767,7 +9849,14 @@
                     rootTieSeed: Number.isFinite(attemptOpts.rootTieSeed)
                         ? attemptOpts.rootTieSeed
                         : ((typeof attemptOpts.label === 'string' ? attemptOpts.label.length : 0) + ((Number(attemptOpts.attemptOrdinal) || 0) * 17)),
-                    rootTieProfile: attemptOpts.rootTieProfile || opts.rootTieProfile || 'stable'
+                    rootTieProfile: attemptOpts.rootTieProfile || opts.rootTieProfile || 'stable',
+                    rootDiversityTelemetry: {
+                        timeoutLikeAttemptsRecent: recentTimeoutTelemetry.length,
+                        timeoutStagnationCount: consecutiveTimeoutStagnation,
+                        timeoutEscalationTier: Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : timeoutEscalationTier,
+                        maxRecentRootExpanded: recentTimeoutTelemetry.reduce((m, entry) => Math.max(m, Math.max(0, Number(entry?.rootCandidatesExpanded) || 0)), 0),
+                        maxRecentRootGenerated: recentTimeoutTelemetry.reduce((m, entry) => Math.max(m, Math.max(0, Number(entry?.rootCandidatesGenerated) || 0)), 0)
+                    }
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -9961,6 +10050,9 @@
                     lowBranchModeActivated: !!(attemptResult?.debug?.lowBranchModeActivated || attemptResult?.debug?.lowBranchMode),
                     depth0DiversityFloorApplied: !!attemptResult?.debug?.depth0DiversityFloorApplied,
                     depth0DiversityFloorSize: Number.isFinite(attemptResult?.debug?.depth0DiversityFloorSize) ? attemptResult.debug.depth0DiversityFloorSize : null,
+                    forcedRootDiversity: !!attemptResult?.debug?.forcedRootDiversity,
+                    forcedRootBeamSize: Number.isFinite(attemptResult?.debug?.forcedRootBeamSize) ? attemptResult.debug.forcedRootBeamSize : null,
+                    forcedRootSelectedKeys: Array.isArray(attemptResult?.debug?.forcedRootSelectedKeys) ? attemptResult.debug.forcedRootSelectedKeys.slice(0, 12) : null,
                     depth0PruneBreakdown: attemptResult?.debug?.depth0PruneBreakdown || null,
                     rootSuppressionLog: Array.isArray(attemptResult?.debug?.debug?.rootSuppressionLog) ? attemptResult.debug.debug.rootSuppressionLog.slice(0, 20) : null,
                     rootMoveScores: Array.isArray(attemptResult?.debug?.rootMoveScores) ? attemptResult.debug.rootMoveScores.slice(0, 20) : null,
@@ -13228,6 +13320,9 @@
                     lowBranchModeActivated: false,
                     depth0DiversityFloorApplied: false,
                     depth0DiversityFloorSize: 0,
+                    forcedRootDiversity: false,
+                    forcedRootBeamSize: 0,
+                    forcedRootSelectedKeys: [],
                     rootCandidatesSuppressedByMemo: 0,
                     rootCandidatesSuppressedByDominance: 0,
                     rootCandidatesExpanded: 0,
@@ -16953,6 +17048,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 lowBranchModeActivated: !!r?.newHint?.lowBranchModeActivated,
                 depth0DiversityFloorApplied: !!r?.newHint?.depth0DiversityFloorApplied,
                 depth0DiversityFloorSize: Number.isFinite(r?.newHint?.depth0DiversityFloorSize) ? r.newHint.depth0DiversityFloorSize : null,
+                forcedRootDiversity: !!r?.newHint?.forcedRootDiversity,
+                forcedRootBeamSize: Number.isFinite(r?.newHint?.forcedRootBeamSize) ? r.newHint.forcedRootBeamSize : null,
+                forcedRootSelectedKeys: Array.isArray(r?.newHint?.forcedRootSelectedKeys) ? r.newHint.forcedRootSelectedKeys.slice(0, 12) : null,
                 rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
                 rootSuppressionLog: Array.isArray(r?.newHint?.rootSuppressionLog) ? r.newHint.rootSuppressionLog.slice(0, 12) : null,
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
@@ -17003,7 +17101,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, ladderTotalWallTimeMs: 0, ladderTotalSolveTimeMs: 0, stopReason: null, attemptCount: 0, attemptLabelsTried: [], firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, depth0DiversityFloorApplied: false, depth0DiversityFloorSize: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, ladderTotalWallTimeMs: 0, ladderTotalSolveTimeMs: 0, stopReason: null, attemptCount: 0, attemptLabelsTried: [], firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, depth0DiversityFloorApplied: false, depth0DiversityFloorSize: null, forcedRootDiversity: false, forcedRootBeamSize: null, forcedRootSelectedKeys: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -17295,6 +17393,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.lowBranchModeActivated = !!finalAttempt?.lowBranchModeActivated;
             levelEntry.newHint.depth0DiversityFloorApplied = !!finalAttempt?.depth0DiversityFloorApplied;
             levelEntry.newHint.depth0DiversityFloorSize = Number.isFinite(finalAttempt?.depth0DiversityFloorSize) ? finalAttempt.depth0DiversityFloorSize : null;
+            levelEntry.newHint.forcedRootDiversity = !!finalAttempt?.forcedRootDiversity;
+            levelEntry.newHint.forcedRootBeamSize = Number.isFinite(finalAttempt?.forcedRootBeamSize) ? finalAttempt.forcedRootBeamSize : null;
+            levelEntry.newHint.forcedRootSelectedKeys = Array.isArray(finalAttempt?.forcedRootSelectedKeys) ? finalAttempt.forcedRootSelectedKeys.slice(0, 12) : null;
             levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
             levelEntry.newHint.rootCandidatesSuppressedByDominance = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByDominance) ? finalAttempt.rootCandidatesSuppressedByDominance : null;
             levelEntry.newHint.rootCandidatesExpanded = Number.isFinite(finalAttempt?.rootCandidatesExpanded) ? finalAttempt.rootCandidatesExpanded : null;
