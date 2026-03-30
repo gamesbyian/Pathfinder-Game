@@ -8,7 +8,6 @@ if (!submission_origin_allowed()) {
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $pdo = submission_db();
-submission_seed_review_fixtures($pdo);
 $ip = (string)($_SERVER['REMOTE_ADDR'] ?? 'unknown');
 if (!submission_check_rate_limit($pdo, 'review:' . $ip, 240, 3600)) {
     submission_respond(429, ['ok' => false, 'error' => 'rate_limited']);
