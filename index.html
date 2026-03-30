@@ -1792,6 +1792,7 @@
                     perimeterSweep:      { direction: { goalAttractionWeight: 0.6,  objectiveAttractionWeight: 0.95, finishCommitmentWeight: 0.45, portalSetupWeight: 1,    portalCommitmentWeight: 0.95 }, coverage: { perimeterBiasWeight: 2.05, slackPreservationWeight: 1.5  }, urgency: { mustPassUrgencyWeight: 1.1,  mustCrossUrgencyWeight: 1.15, intersectionSetupWeight: 1.1  }, pathology: { antiDeadCorridorWeight: 1.05, antiDitherWeight: 0.55, revisitPenaltyWeight: 0.65 } },
                     harvestThenFinish:   { direction: { goalAttractionWeight: 0.82, objectiveAttractionWeight: 1.35, finishCommitmentWeight: 0.72, portalSetupWeight: 1.2,  portalCommitmentWeight: 1.2  }, coverage: { perimeterBiasWeight: 1.15, slackPreservationWeight: 1.2  }, urgency: { mustPassUrgencyWeight: 1.35, mustCrossUrgencyWeight: 1.4,  intersectionSetupWeight: 1.15 }, pathology: { antiDeadCorridorWeight: 1.1,  antiDitherWeight: 0.85, revisitPenaltyWeight: 0.85 } },
                     portalFirstTransfer: { direction: { goalAttractionWeight: 0.72, objectiveAttractionWeight: 1.2,  finishCommitmentWeight: 0.7,  portalSetupWeight: 2.2,  portalCommitmentWeight: 2.35 }, coverage: { perimeterBiasWeight: 0.85, slackPreservationWeight: 1.28 }, urgency: { mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1.35, intersectionSetupWeight: 1.05 }, pathology: { antiDeadCorridorWeight: 1.1,  antiDitherWeight: 0.95, revisitPenaltyWeight: 0.8  } },
+                    portalAbstain:       { direction: { goalAttractionWeight: 0.9,  objectiveAttractionWeight: 1.28, finishCommitmentWeight: 0.82, portalSetupWeight: 0.55, portalCommitmentWeight: 0.6  }, coverage: { perimeterBiasWeight: 1.08, slackPreservationWeight: 1.18 }, urgency: { mustPassUrgencyWeight: 1.45, mustCrossUrgencyWeight: 1.3,  intersectionSetupWeight: 1.08 }, pathology: { antiDeadCorridorWeight: 1.05, antiDitherWeight: 1.08, revisitPenaltyWeight: 1.02 } },
                     objectiveFirst:      { direction: { goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, portalSetupWeight: 1.25, portalCommitmentWeight: 1.2  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 0.85 }, urgency: { mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2  }, pathology: { antiDeadCorridorWeight: 1.1,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9  } },
                     finishFirst:         { direction: { goalAttractionWeight: 1.45, objectiveAttractionWeight: 0.85, finishCommitmentWeight: 1.75, portalSetupWeight: 0.9,  portalCommitmentWeight: 1    }, coverage: { perimeterBiasWeight: 0.75, slackPreservationWeight: 1.5  }, urgency: { mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1.05, intersectionSetupWeight: 0.8  }, pathology: { antiDeadCorridorWeight: 1.25, antiDitherWeight: 1.3,  revisitPenaltyWeight: 1.3  } },
                     lengthHarvest:       { direction: { goalAttractionWeight: 0.7,  objectiveAttractionWeight: 0.95, finishCommitmentWeight: 0.55, portalSetupWeight: 0.95, portalCommitmentWeight: 0.8  }, coverage: { perimeterBiasWeight: 1.45, slackPreservationWeight: 1.35 }, urgency: { mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1,    intersectionSetupWeight: 1.05 }, pathology: { antiDeadCorridorWeight: 1.15, antiDitherWeight: 0.85, revisitPenaltyWeight: 0.85 } },
@@ -1802,10 +1803,10 @@
                 // Phase multipliers apply on top of the base profile. Keys must match active weight names.
                 // lengthHarvestWeight and antiTrapWeight entries removed (dead weights).
                 SOLVER_POLICY_PHASE_MULTIPLIERS: {
-                    harvest:    { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, lengthHarvest: { perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 } },
-                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 } },
-                    knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 } },
-                    finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 } }
+                    harvest:    { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, portalAbstain: { portalSetupWeight: 0.72, portalCommitmentWeight: 0.7, mustPassUrgencyWeight: 1.18 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, lengthHarvest: { perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 } },
+                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, portalAbstain: { portalSetupWeight: 0.78, portalCommitmentWeight: 0.72, objectiveAttractionWeight: 1.08, mustPassUrgencyWeight: 1.14 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 } },
+                    knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, portalAbstain: { portalCommitmentWeight: 0.76, mustCrossUrgencyWeight: 1.16, intersectionSetupWeight: 1.12 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 } },
+                    finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, portalAbstain: { goalAttractionWeight: 1.16, finishCommitmentWeight: 1.2, portalCommitmentWeight: 0.86 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 } }
                 },
                 getPolicyProfile(policyName = 'default', phase = 'harvest', urgencyScalar = null) {
                     const canonicalName = this.SOLVER_POLICY_PROFILES[policyName] ? policyName : 'default';
@@ -3863,6 +3864,10 @@
                             const famBit = 1n << BigInt(nextFamily);
                             nextPortalCoverageMask &= ~famBit;
                         }
+                        const enteringPortalCell = !isP && !!l.portalMap?.has(nk);
+                        const enteringPortalFamily = enteringPortalCell ? (l.portalFamilyByEntry instanceof Map ? (l.portalFamilyByEntry.get(nk) ?? -1) : -1) : -1;
+                        const enteringPortalFamilyRequired = enteringPortalFamily >= 0
+                            && ((currentPortalCoverageMask & (1n << BigInt(enteringPortalFamily))) !== 0n);
                         const hasOutstandingPortalCoverage = currentPortalCoverageMask !== 0n;
                         const hasRemainingPortalCoverageAfterMove = nextPortalCoverageMask !== 0n;
                         const portalPhase = !hasOutstandingPortalCoverage
@@ -3929,6 +3934,12 @@
                             if (stagnated && (nextObjectiveGap >= currentObjectiveGap) && !nextInKnot) {
                                 score += 95 + ((state.portal?.portalReentryCounts?.[committedFamily] || 0) * 30);
                             }
+                        }
+                        if (enteringPortalCell && !enteringPortalFamilyRequired) {
+                            const unresolvedConstraintPressure = remainingMustAfterMove + projectedCrossNeed + remainingIntsAfterMove;
+                            const optionalPortalPenalty = Math.round((policyName === 'portalAbstain' ? 46 : 22) + Math.min(28, unresolvedConstraintPressure * 5));
+                            score += optionalPortalPenalty;
+                            pushDriver('voluntaryPortalEntryPenalty', unresolvedConstraintPressure, optionalPortalPenalty);
                         }
 
                         if (committedRegion >= 0 && nextRegion >= 0) {
@@ -5708,6 +5719,8 @@
                             remainingMustPass,
                             remainingInteractionDeficit: interactionDeficit,
                             lowerBoundToValidSolution,
+                            remainingPortalCoverageMask: state.portal?.portalRequiredCoverageMask,
+                            levelRef: l,
                             nearSolutionMissingDimension: missingDimensions.length === 1 ? missingDimensions[0] : null
                         });
                         if (realLen === l.reqLen && debugStats) {
@@ -8085,6 +8098,9 @@
                         bestLowerBoundToValidSolution: Number.isFinite(debug.timeoutDiagnostics.bestLowerBoundToValidSolution)
                             ? debug.timeoutDiagnostics.bestLowerBoundToValidSolution
                             : null,
+                        bestPortalCoverageMaskBits: Number.isFinite(debug.timeoutDiagnostics.bestPortalCoverageMaskBits)
+                            ? debug.timeoutDiagnostics.bestPortalCoverageMaskBits
+                            : null,
                         nearSolutionStates: Number.isFinite(debug.timeoutDiagnostics.nearSolutionStates)
                             ? debug.timeoutDiagnostics.nearSolutionStates
                             : null,
@@ -9553,6 +9569,7 @@
                 perimeterSweep: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'perimeterSweep' },
                 harvestThenFinish: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'harvestThenFinish' },
                 portalFirstTransfer: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'portalFirstTransfer' },
+                portalAbstain: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'portalAbstain' },
                 knotBuilder: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'knotBuilder' },
                 endurance: { dirOrderVariant: 'random', allowRandomizedExploration: true, policyName: 'endurance' },
                 memoRelaxed: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'memoRelaxed' }
@@ -9563,7 +9580,7 @@
         buildOrderingPolicyListForFailure(category, opts = {}) {
             if (category === 'shallowCollapse') return ['harvestThenFinish', 'knotBuilder'];
             if (category === 'deepTimeout') return ['endurance', 'perimeterSweep'];
-            if (category === 'unknownFailure') return ['portalFirstTransfer', 'harvestThenFinish'];
+            if (category === 'unknownFailure') return ['portalFirstTransfer', 'portalAbstain', 'harvestThenFinish'];
             const allowRandom = !!opts.allowRandomizedExploration;
             return allowRandom ? ['shuffle'] : ['alt'];
         },
@@ -9982,6 +9999,23 @@
                 portalBiasMode: nextAttempt.portalBiasMode || null,
                 scoringMode: nextAttempt.scoringMode || null
             };
+            if (context?.forcePortalAbstain) {
+                nextAttempt.policyProfile = 'portalAbstain';
+                nextAttempt.orderingPolicy = 'portalAbstain';
+                nextAttempt.portalBiasMode = 'off';
+                nextAttempt.portalUsagePolicy = 'optional-off';
+                nextAttempt.forbidPortals = false;
+                nextAttempt.scoringMode = 'modern';
+                nextAttempt.phasePolicy = SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane?.activeHypothesis, activeArchetype: 'portalAbstain' });
+                nextAttempt.orderingTweaks = compactDefined({
+                    stage: 'timeout-rescue-second-stage',
+                    mode: 'portal-abstain-timeout-adaptation',
+                    reason: context?.reason || 'portal-abstain-timeout-adaptation',
+                    timeoutLowerBound: Number.isFinite(context?.bestLowerBoundToValidSolution) ? context.bestLowerBoundToValidSolution : null,
+                    portalProgressMaskStalled: context?.portalProgressMaskStalled === true
+                });
+                return compactDefined({ switched: true, family: 'portalAbstain', reason: context?.reason || 'portal-abstain-timeout-adaptation', from: original, to: { policyProfile: nextAttempt.policyProfile, portalBiasMode: nextAttempt.portalBiasMode, scoringMode: nextAttempt.scoringMode } });
+            }
             const deficit = Math.max(0, Number(context?.constraintDeficit) || 0);
             if (deficit > 0) {
                 nextAttempt.policyProfile = 'objectiveFirst';
@@ -10165,6 +10199,7 @@
                 { rootOrderingProfile: 'objectiveFirst', orderingPolicy: 'objectiveFirst', beamCompositionRule: 'floor-2-wide', rootExpansionFloorCount: 2, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: [] },
                 { rootOrderingProfile: 'knotBuilder', orderingPolicy: 'knotBuilder', beamCompositionRule: 'floor-3-objective', rootExpansionFloorCount: 3, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'off', disabledPrunes: ['mustPassBound'] },
                 { rootOrderingProfile: 'portalFirstTransfer', orderingPolicy: 'portalFirstTransfer', beamCompositionRule: 'adaptive-relaxed', rootExpansionFloorCount: 1, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'agnostic', disabledPrunes: ['mustCrossBound'] },
+                { rootOrderingProfile: 'portalAbstain', orderingPolicy: 'portalAbstain', beamCompositionRule: 'floor-2-portal-abstain', rootExpansionFloorCount: 2, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'off', disabledPrunes: ['mustCrossBound'] },
                 { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] }
             ];
             const applyDeterministicDiversificationMatrix = (attempt, context = {}) => {
@@ -10254,7 +10289,7 @@
             };
             const forceEscalationNoveltyDiversification = (nextAttempt, currentPolicyProfile = null) => {
                 if (!nextAttempt) return null;
-                const familyCycle = ['objectiveFirst', 'knotBuilder', 'portalFirstTransfer'];
+                const familyCycle = ['objectiveFirst', 'knotBuilder', 'portalAbstain', 'portalFirstTransfer'];
                 const currentFamily = String(currentPolicyProfile || nextAttempt?.policyProfile || nextAttempt?.orderingPolicy || 'objectiveFirst');
                 const currentIdx = Math.max(0, familyCycle.indexOf(currentFamily));
                 const forcedFamily = familyCycle[(currentIdx + 1) % familyCycle.length];
@@ -10275,6 +10310,16 @@
                     portalUsagePolicy: nextPortalUsagePolicy,
                     memoStrictness: nextAttempt.memoStrictness
                 };
+            };
+            const chooseDiversifiedStrategySwitch = (nextAttempt = null, context = {}) => {
+                if (!nextAttempt) return null;
+                if (context?.preferPortalAbstain) {
+                    return this._switchAttemptStrategyFamily(nextAttempt, {
+                        ...context,
+                        forcePortalAbstain: true
+                    }, profile, controlPlane);
+                }
+                return this._switchAttemptStrategyFamily(nextAttempt, context, profile, controlPlane);
             };
             const applyRootNoveltyPenalty = (nextAttempt, reasonTag, sourceAttempt = null) => {
                 if (!nextAttempt || !reasonTag) return null;
@@ -10832,6 +10877,43 @@
                     const recentTimeoutAttempts = attemptsUsed
                         .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
                         .slice(-3);
+                    const portalAbstainDiagnostics = (() => {
+                        const levelHasPortals = (level?.portalMap?.size || 0) > 0;
+                        const timeoutWithTightLowerBound = recentTimeoutAttempts.filter(entry => {
+                            const lb = Number(entry?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
+                            return Number.isFinite(lb) && lb <= 2;
+                        }).length;
+                        const nearSolutionTally = recentTimeoutAttempts.reduce((acc, entry) => {
+                            const byDim = entry?.timeoutDiagnostics?.nearSolutionByDimension || {};
+                            acc.mustPass += Math.max(0, Number(byDim?.['must-pass']) || 0);
+                            acc.interaction += Math.max(0, Number(byDim?.interaction) || 0);
+                            acc.mustCross += Math.max(0, Number(byDim?.['must-cross']) || 0);
+                            return acc;
+                        }, { mustPass: 0, interaction: 0, mustCross: 0 });
+                        const deficitDominatedTotal = nearSolutionTally.mustPass + nearSolutionTally.interaction;
+                        const nearSolutionTotal = deficitDominatedTotal + nearSolutionTally.mustCross;
+                        const nearSolutionDeficitDominated = nearSolutionTotal > 0
+                            && deficitDominatedTotal >= Math.max(2, Math.ceil(nearSolutionTotal * 0.62))
+                            && deficitDominatedTotal > nearSolutionTally.mustCross;
+                        const portalMaskSeries = recentTimeoutAttempts
+                            .map(entry => Number(entry?.timeoutDiagnostics?.bestPortalCoverageMaskBits))
+                            .filter(value => Number.isFinite(value));
+                        const portalProgressMaskStalled = portalMaskSeries.length >= 2
+                            && portalMaskSeries.slice(1).every((value, idx) => value >= portalMaskSeries[idx]);
+                        return {
+                            triggerable: levelHasPortals
+                                && timeoutWithTightLowerBound >= 2
+                                && nearSolutionDeficitDominated
+                                && portalProgressMaskStalled,
+                            levelHasPortals,
+                            timeoutWithTightLowerBound,
+                            nearSolutionDeficitDominated,
+                            portalProgressMaskStalled,
+                            bestLowerBoundToValidSolution: Number.isFinite(recentTimeoutAttempts[recentTimeoutAttempts.length - 1]?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
+                                ? recentTimeoutAttempts[recentTimeoutAttempts.length - 1].timeoutDiagnostics.bestLowerBoundToValidSolution
+                                : null
+                        };
+                    })();
                     const highExpansionFloor = Math.max(110, lowExpansionThreshold * 3);
                     const depthSeries = recentTimeoutAttempts
                         .map(entry => Number(entry?.depthReached))
@@ -10929,12 +11011,15 @@
                         && (Number(quality?.branchFactor) || 0) >= 0.2
                         && (Number(quality?.maxProgress) || 0) >= 0.28;
                     if (healthyExpansionTimeout && !timeoutFamilyDiversificationUsed) {
-                        const switched = this._switchAttemptStrategyFamily(nextAttempt, {
+                        const switched = chooseDiversifiedStrategySwitch(nextAttempt, {
                             constraintDeficit: quality.constraintDeficit,
                             remainingMustPass: quality.remainingMustPass,
                             remainingMustCross: quality.remainingMustCross,
+                            preferPortalAbstain: !!portalAbstainDiagnostics?.triggerable,
+                            portalProgressMaskStalled: !!portalAbstainDiagnostics?.portalProgressMaskStalled,
+                            bestLowerBoundToValidSolution: portalAbstainDiagnostics?.bestLowerBoundToValidSolution,
                             reason: 'healthy-expansion-timeout-diversification'
-                        }, profile, controlPlane);
+                        });
                         if (switched?.switched) {
                             timeoutFamilyDiversificationUsed = true;
                             switchedThisAttempt = true;
@@ -10977,6 +11062,32 @@
                                     forcedPortalUsagePolicy: diversified?.portalUsagePolicy || null,
                                     forcedMemoStrictness: diversified?.memoStrictness || null
                                 });
+                            }
+                        }
+                        if (!switchedThisAttempt && nextAttempt && portalAbstainDiagnostics?.triggerable) {
+                            const portalAbstainSwitch = chooseDiversifiedStrategySwitch(nextAttempt, {
+                                constraintDeficit: quality.constraintDeficit,
+                                remainingMustPass: quality.remainingMustPass,
+                                remainingMustCross: quality.remainingMustCross,
+                                preferPortalAbstain: true,
+                                portalProgressMaskStalled: true,
+                                bestLowerBoundToValidSolution: portalAbstainDiagnostics?.bestLowerBoundToValidSolution,
+                                reason: 'healthy-expansion-timeout-portal-abstain-diversification'
+                            });
+                            if (portalAbstainSwitch?.switched) {
+                                switchedThisAttempt = true;
+                                nextAttempt.forcedFamilySwitch = true;
+                                setAdaptationReason('healthy-expansion-timeout-portal-abstain-diversification', {
+                                    strategyFamilySwitchReason: portalAbstainSwitch?.reason || 'healthy-expansion-timeout-portal-abstain-diversification',
+                                    switchedFrom: portalAbstainSwitch?.from || null,
+                                    switchedTo: portalAbstainSwitch?.to || null,
+                                    timeoutLowerBoundTight: portalAbstainDiagnostics?.timeoutWithTightLowerBound || 0,
+                                    nearSolutionDeficitDominated: !!portalAbstainDiagnostics?.nearSolutionDeficitDominated,
+                                    portalProgressMaskStalled: !!portalAbstainDiagnostics?.portalProgressMaskStalled
+                                });
+                                if (currentAttemptEntry && !currentAttemptEntry.escalationDecision) {
+                                    currentAttemptEntry.escalationDecision = 'portal-abstain-diversification-before-budget-escalation';
+                                }
                             }
                         }
                         const allowBudgetEscalation = !!(timeoutImprovement
@@ -11833,7 +11944,7 @@
         },
 
         pickPivotOrderingPolicy(basePolicy, previousPolicy) {
-            const ordered = ['harvestThenFinish', 'knotBuilder', 'objectiveFirst', 'perimeterSweep', 'portalFirstTransfer'];
+            const ordered = ['harvestThenFinish', 'knotBuilder', 'objectiveFirst', 'portalAbstain', 'perimeterSweep', 'portalFirstTransfer'];
             const baseIndex = Math.max(0, ordered.indexOf(basePolicy));
             for (let i = 1; i <= ordered.length; i++) {
                 const candidate = ordered[(baseIndex + i) % ordered.length];
@@ -14045,6 +14156,7 @@
                         frontierMustPassDistribution: {},
                         frontierInteractionDeficitDistribution: {},
                         bestLowerBoundToValidSolution: null,
+                        bestPortalCoverageMaskBits: null,
                         nearSolutionStates: 0,
                         nearSolutionByDimension: {}
                     };
@@ -14067,6 +14179,15 @@
                 if (Number.isFinite(lowerBound)) {
                     if (!Number.isFinite(diag.bestLowerBoundToValidSolution) || lowerBound < diag.bestLowerBoundToValidSolution) {
                         diag.bestLowerBoundToValidSolution = lowerBound;
+                    }
+                }
+                const portalCoverageMaskBits = (typeof sample.remainingPortalCoverageMask === 'bigint')
+                    ? countMaskBits(sample.remainingPortalCoverageMask, sample.levelRef || null)
+                    : Number(sample.remainingPortalCoverageMaskBits);
+                if (Number.isFinite(portalCoverageMaskBits)) {
+                    const normalizedBits = Math.max(0, Math.floor(portalCoverageMaskBits));
+                    if (!Number.isFinite(diag.bestPortalCoverageMaskBits) || normalizedBits < diag.bestPortalCoverageMaskBits) {
+                        diag.bestPortalCoverageMaskBits = normalizedBits;
                     }
                 }
                 const nearMissing = sample.nearSolutionMissingDimension;
@@ -17711,6 +17832,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     frontierInteractionDeficitDistribution: timeoutDiagnostics?.frontierInteractionDeficitDistribution || null,
                     bestLowerBoundToValidSolution: Number.isFinite(timeoutDiagnostics?.bestLowerBoundToValidSolution)
                         ? timeoutDiagnostics.bestLowerBoundToValidSolution
+                        : null,
+                    bestPortalCoverageMaskBits: Number.isFinite(timeoutDiagnostics?.bestPortalCoverageMaskBits)
+                        ? timeoutDiagnostics.bestPortalCoverageMaskBits
                         : null,
                     nearSolutionStates: Number.isFinite(timeoutDiagnostics?.nearSolutionStates)
                         ? timeoutDiagnostics.nearSolutionStates
