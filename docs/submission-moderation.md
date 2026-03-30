@@ -25,6 +25,7 @@ Response:
 - SQLite DB at `data/submissions.sqlite`
 - `submissions` table stores submission metadata, payload, status, review action metadata.
 - Pending queue = rows where `status='pending'`.
+- Review endpoint does **not** auto-seed fixture submissions into this table.
 
 ## Approval to `levels.js`
 - Approval appends as the next sequential level number comment (`/* N */`) at end of `window.RAW_LEVELS`.
