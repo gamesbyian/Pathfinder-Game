@@ -3264,10 +3264,15 @@
                         ? state.phase
                         : derived.phase;
                     if (!state.phase || state.phase !== effectivePhase) {
+                        const coverageMask = typeof state.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal.portalRequiredCoverageMask : 0n;
+                        const portalPhase = coverageMask !== 0n ? 'mandatory-portal-family-completion' : 'post-portal-obligation-cleanup';
                         state.phase = effectivePhase;
                         state.phaseLastSwitchLen = derived.realLen;
                         const event = {
                             phase: effectivePhase,
+                            portalPhase,
+                            portalFamilySwitchCount: Math.max(0, Number(state.portal?.portalOscillationCount) || 0),
+                            portalOscillationPenaltyApplied: false,
                             atLen: derived.realLen,
                             progress: Number(derived.progressRatio.toFixed(3)),
                             remainingObjectives: derived.remainingObjectives,
@@ -3845,12 +3850,44 @@
                             && remainingIntsAfterMove === 0
                             && projectedCrossNeed === 0;
                         const obligationOrderState = `${remainingMustAfterMove}|${remainingIntsAfterMove}|${projectedCrossNeed}|${remainingStepsAfterMove}`;
+                        const nextRegion = l.portalRegionByKey instanceof Map ? (l.portalRegionByKey.get(nk) ?? -1) : -1;
+                        const nextFamily = l.portalFamilyByEntry instanceof Map ? (l.portalFamilyByEntry.get(nk) ?? -1) : -1;
+                        const currentPortalCoverageMask = typeof state.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal.portalRequiredCoverageMask : 0n;
+                        let nextPortalCoverageMask = currentPortalCoverageMask;
+                        if (isP && nextFamily >= 0) {
+                            const famBit = 1n << BigInt(nextFamily);
+                            nextPortalCoverageMask &= ~famBit;
+                        }
+                        const hasOutstandingPortalCoverage = currentPortalCoverageMask !== 0n;
+                        const hasRemainingPortalCoverageAfterMove = nextPortalCoverageMask !== 0n;
+                        const portalPhase = !hasOutstandingPortalCoverage
+                            ? 'post-portal-obligation-cleanup'
+                            : (hasRemainingPortalCoverageAfterMove
+                                ? ((isP && nextFamily >= 0 && nextPortalCoverageMask !== currentPortalCoverageMask)
+                                    ? 'mandatory-portal-family-completion'
+                                    : 'pre-portal-obligation-setup')
+                                : 'post-portal-obligation-cleanup');
+                        const configuredPortalPhaseOrder = Array.isArray(options?.phasePolicy?.portalPhaseOrdering)
+                            ? options.phasePolicy.portalPhaseOrdering
+                            : ['pre-portal-obligation-setup', 'mandatory-portal-family-completion', 'post-portal-obligation-cleanup'];
+                        const portalPhaseOrder = Math.max(1, configuredPortalPhaseOrder.indexOf(portalPhase) + 1) || 3;
                         const mustBound = hasMust ? getMustBound(nk) : 0;
                         const crossBound = crossNeed > 0 ? getCrossBound(nk) : 0;
                         const nextObjectiveGap = (Number.isFinite(mustBound) ? mustBound : 9999) + (Number.isFinite(crossBound) ? crossBound : 9999);
                         const nextInKnot = !!(knotZone && knotZone.has(nk));
-                        const nextRegion = l.portalRegionByKey instanceof Map ? (l.portalRegionByKey.get(nk) ?? -1) : -1;
-                        const nextFamily = l.portalFamilyByEntry instanceof Map ? (l.portalFamilyByEntry.get(nk) ?? -1) : -1;
+                        const currentObligationMass = countMaskBits(state.mustMask, l) + Math.max(0, l.reqInt - state.ints) + Math.max(0, crossNeed);
+                        const nextObligationMass = remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed;
+                        const switchingPortalFamily = committedFamily >= 0 && nextFamily >= 0 && nextFamily !== committedFamily;
+                        const portalFamilySwitchCount = Math.max(0, Number(state.portal?.portalOscillationCount) || 0) + (switchingPortalFamily ? 1 : 0);
+                        const oscillationWindow = Math.max(2, Number(options?.phasePolicy?.portalOscillationPenaltyWindow) || 3);
+                        const noObligationImprovement = nextObligationMass >= currentObligationMass && nextObjectiveGap >= currentObjectiveGap;
+                        let portalOscillationPenaltyApplied = false;
+                        if (switchingPortalFamily && noObligationImprovement && portalFamilySwitchCount >= oscillationWindow) {
+                            const oscillationPenalty = 36 + ((portalFamilySwitchCount - oscillationWindow) * 18);
+                            score += oscillationPenalty;
+                            portalOscillationPenaltyApplied = true;
+                            pushDriver('portalFamilyOscillation', portalFamilySwitchCount, oscillationPenalty);
+                        }
 
                         if (portalLockState === 'locked' && committedFamily >= 0 && nextFamily >= 0 && nextFamily !== committedFamily) {
                             const rCount = state.portal?.portalReentryCounts?.[committedFamily] || 0;
@@ -4427,18 +4464,22 @@
                     const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * pw('revisitPenaltyWeight');
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
-                    return {
-                        nk,
-                        score,
-                        scoreDrivers,
-                        mustPassBound: mustBound,
-                        mustCrossBound: crossBound,
-                        projectedLength: nLen,
-                        projectedObjectiveGap: nextObjectiveGap,
-                        obligationOrderState,
-                        perimeterBiasContribution,
-                        rootAdjustments
-                    };
+                        return {
+                            nk,
+                            score,
+                            scoreDrivers,
+                            mustPassBound: mustBound,
+                            mustCrossBound: crossBound,
+                            projectedLength: nLen,
+                            projectedObjectiveGap: nextObjectiveGap,
+                            obligationOrderState,
+                            portalPhase,
+                            portalPhaseOrder,
+                            portalFamilySwitchCount,
+                            portalOscillationPenaltyApplied,
+                            perimeterBiasContribution,
+                            rootAdjustments
+                        };
                 },
                 _scoreCandidates(valid, state, l, options, ctx, debugStats) {
                     const {
@@ -4739,6 +4780,9 @@
                         const tieObligationMetric = (item) => {
                             const mustPass = tieFinite(item?.mustPassBound, 9999);
                             const mustCross = tieFinite(item?.mustCrossBound, 9999);
+                            const portalPhaseOrder = Number.isFinite(item?.portalPhaseOrder) ? Number(item.portalPhaseOrder) : 3;
+                            const portalFamilySwitchCount = Math.max(0, Number(item?.portalFamilySwitchCount) || 0);
+                            const portalOscillationPenaltyApplied = !!item?.portalOscillationPenaltyApplied;
                             const orderTuple = `${item?.obligationOrderState || ''}`.split('|').map(v => Number(v));
                             const remMust = Number.isFinite(orderTuple[0]) ? orderTuple[0] : 9999;
                             const remInt = Number.isFinite(orderTuple[1]) ? orderTuple[1] : 9999;
@@ -4746,7 +4790,7 @@
                             const remSteps = Number.isFinite(orderTuple[3]) ? orderTuple[3] : 0;
                             const scheduleDeficit = Math.max(0, (remMust + remInt + remCross) - remSteps);
                             const total = mustPass + mustCross + scheduleDeficit;
-                            return { mustPass, mustCross, remMust, remInt, remCross, remSteps, scheduleDeficit, total };
+                            return { mustPass, mustCross, remMust, remInt, remCross, remSteps, scheduleDeficit, total, portalPhaseOrder, portalFamilySwitchCount, portalOscillationPenaltyApplied };
                         };
                         const tieGeometryKey = (item) => {
                             const p = APP.LevelUtils.UNPACK(item.nk);
@@ -4767,6 +4811,9 @@
                             }
                             const oa = tieObligationMetric(a);
                             const ob = tieObligationMetric(b);
+                            if (oa.portalPhaseOrder !== ob.portalPhaseOrder) return { order: oa.portalPhaseOrder - ob.portalPhaseOrder, reason: 'portal-phase-order' };
+                            if (oa.portalOscillationPenaltyApplied !== ob.portalOscillationPenaltyApplied) return { order: (oa.portalOscillationPenaltyApplied ? 1 : 0) - (ob.portalOscillationPenaltyApplied ? 1 : 0), reason: 'portal-oscillation-penalty' };
+                            if (oa.portalFamilySwitchCount !== ob.portalFamilySwitchCount) return { order: oa.portalFamilySwitchCount - ob.portalFamilySwitchCount, reason: 'portal-family-switch-count' };
                             if (oa.scheduleDeficit !== ob.scheduleDeficit) return { order: oa.scheduleDeficit - ob.scheduleDeficit, reason: 'obligation-schedule-deficit' };
                             if (oa.remMust !== ob.remMust) return { order: oa.remMust - ob.remMust, reason: 'obligation-rem-must' };
                             if (oa.remInt !== ob.remInt) return { order: oa.remInt - ob.remInt, reason: 'obligation-rem-int' };
@@ -4831,13 +4878,19 @@
                                     chosenKey: nearEqual[0].nk,
                                     runnerUpKey: nearEqual[1].nk,
                                     chosenScore: Number(nearEqual[0].score.toFixed(3)),
-                                    runnerUpScore: Number(nearEqual[1].score.toFixed(3))
+                                    runnerUpScore: Number(nearEqual[1].score.toFixed(3)),
+                                    portalPhase: nearEqual[0]?.portalPhase || null,
+                                    portalFamilySwitchCount: Math.max(0, Number(nearEqual[0]?.portalFamilySwitchCount) || 0),
+                                    portalOscillationPenaltyApplied: !!nearEqual[0]?.portalOscillationPenaltyApplied
                                 };
                             } else {
                                 debugStats.rootTieBreak = {
                                     reason: 'score-delta',
                                     epsilon: scoreTieEpsilon,
-                                    chosenKey: best.nk
+                                    chosenKey: best.nk,
+                                    portalPhase: best?.portalPhase || null,
+                                    portalFamilySwitchCount: Math.max(0, Number(best?.portalFamilySwitchCount) || 0),
+                                    portalOscillationPenaltyApplied: !!best?.portalOscillationPenaltyApplied
                                 };
                             }
                         }
@@ -7098,6 +7151,8 @@
                                     nonKnotCrossCap: nonKnotCap
                                 },
                                 phasePolicy: {
+                                    portalPhaseOrdering: ['pre-portal-obligation-setup', 'mandatory-portal-family-completion', 'post-portal-obligation-cleanup'],
+                                    portalOscillationPenaltyWindow: 3,
                                     profiles: knotSchedule === 'early'
                                         ? { transition: { intersectionSetupWeight: 1.2, objectivePull: 1.08 }, knot: { intersectionSetupWeight: 1.25, objectivePull: 1.05 } }
                                         : { harvest: { objectivePull: 1.16 }, transition: { objectivePull: 1.12 }, knot: { objectivePull: 0.94, intersectionSetupWeight: 0.92 } }
@@ -7125,7 +7180,11 @@
                                     templateCommitment: templateCommitment ? { ...templateCommitment, depthRatio: 0.56 } : { depthRatio: 0.56 },
                                     portalLockPolicy: portalLockPolicy ? { ...portalLockPolicy } : null,
                                     knotBudgetPolicy: knotBudgetPolicy ? { ...knotBudgetPolicy } : null,
-                                    phasePolicy: { profiles: { harvest: { objectivePull: 1.08 }, transition: { objectivePull: 1.02 } } }
+                                    phasePolicy: {
+                                        portalPhaseOrdering: ['pre-portal-obligation-setup', 'mandatory-portal-family-completion', 'post-portal-obligation-cleanup'],
+                                        portalOscillationPenaltyWindow: 3,
+                                        profiles: { harvest: { objectivePull: 1.08 }, transition: { objectivePull: 1.02 } }
+                                    }
                                 });
                             }
                         }
