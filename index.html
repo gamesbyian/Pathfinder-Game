@@ -3798,7 +3798,8 @@
                         committedRegion, committedFamily, portalLockState,
                         inTemplateCommitWindow, objectiveTrackStrictness,
                         recentWindow, recentTurnbackCount, dirRepeat,
-                        bridgeState, earlyLowBranchDepth
+                        bridgeState, earlyLowBranchDepth,
+                        lengthPressureContext
                     } = sv;
                         const px = k & 0xFFFF;
                         const py = k >> 16;
@@ -3987,6 +3988,26 @@
                                     }
                                 }
                             }
+                            let lengthPressureContribution = 0;
+                            const pressureCtx = lengthPressureContext;
+                            if (pressureCtx?.active) {
+                                const nextObjectiveSlack = rSteps - nextObjectiveGap;
+                                const phaseWeight = pressureCtx.phaseWeight || 1;
+                                const depthDeficitAfterMove = Math.max(0, (pressureCtx.targetDepth || 0) - nLen);
+                                const obligationFeasibility = rSteps > 0 ? Math.max(0, Math.min(1, nextObjectiveSlack / Math.max(1, rSteps))) : 0;
+                                const urgencyAmplifier = 1 + (pressureCtx.gain || 0) * phaseWeight * (0.45 + obligationFeasibility);
+                                mustPassUrgencyWeight *= urgencyAmplifier;
+                                mustCrossUrgencyWeight *= urgencyAmplifier;
+                                const deficitPenalty = Math.round(depthDeficitAfterMove * (2.8 + (pressureCtx.gain || 0) * 8.5) * phaseWeight);
+                                const portalNoGainPenalty = isP ? Math.round((1 + depthDeficitAfterMove) * (0.9 + phaseWeight * 0.8)) : 0;
+                                const infeasiblePenalty = nextObjectiveSlack < 0
+                                    ? Math.round(Math.abs(nextObjectiveSlack) * (2.2 + phaseWeight * 2.4))
+                                    : 0;
+                                lengthPressureContribution = deficitPenalty + portalNoGainPenalty + infeasiblePenalty;
+                                score += lengthPressureContribution;
+                                pushDriver('lengthPressure', depthDeficitAfterMove, lengthPressureContribution);
+                            }
+
                             const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
                             const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * mustCrossUrgencyWeight);
                             score += mustContribution;
@@ -4373,6 +4394,8 @@
                         scoreDrivers,
                         mustPassBound: mustBound,
                         mustCrossBound: crossBound,
+                        projectedLength: nLen,
+                        projectedObjectiveGap: nextObjectiveGap,
                         perimeterBiasContribution,
                         rootAdjustments
                     };
@@ -4522,6 +4545,51 @@
                     const mustPassCountSignal = Math.max(0, Number(l?.mustPassKeys?.length) || 0);
                     const hasPortalSignal = (Number(l?.portalMap?.size) || 0) > 0;
                     const reqLenSignal = Math.max(0, Number(l?.reqLen) || 0);
+                    const phaseByName = (phaseName) => {
+                        if (phaseName === 'harvest') return 'early';
+                        if (phaseName === 'transition') return 'mid';
+                        return 'late';
+                    };
+                    const lengthPressurePhase = phaseByName(activePhase);
+                    const topologyComplexitySignal = Math.max(
+                        0,
+                        (routePressureSignal * 0.45)
+                        + (articulationRatioSignal * 1.7)
+                        + (bridgeRatioSignal * 1.3)
+                        + (corridorRatioSignal * 0.9)
+                    );
+                    const reqLenAreaRatio = walkableCellCount > 0 ? (reqLenSignal / walkableCellCount) : 0;
+                    const highReqLenThreshold = Math.max(0.42, 0.6 - Math.min(0.16, topologyComplexitySignal * 0.12));
+                    const highReqLenRelative = reqLenSignal > 0 && reqLenAreaRatio >= highReqLenThreshold;
+                    const targetRatioEarly = Math.max(0.14, Math.min(0.42, 0.18 + (reqLenAreaRatio * 0.16) + (topologyComplexitySignal * 0.06)));
+                    const targetRatioMid = Math.max(0.38, Math.min(0.82, 0.48 + (reqLenAreaRatio * 0.22) + (topologyComplexitySignal * 0.1)));
+                    const targetRatioLate = Math.max(0.66, Math.min(0.98, 0.78 + (reqLenAreaRatio * 0.18) + (topologyComplexitySignal * 0.12)));
+                    const targetDepthByPhase = {
+                        early: Math.round(reqLenSignal * targetRatioEarly),
+                        mid: Math.round(reqLenSignal * targetRatioMid),
+                        late: Math.round(reqLenSignal * targetRatioLate)
+                    };
+                    const targetDepthCurrentPhase = Number(targetDepthByPhase[lengthPressurePhase]) || 0;
+                    const depthDeficitCurrentPhase = Math.max(0, targetDepthCurrentPhase - curLen);
+                    const lengthPressurePhaseWeight = lengthPressurePhase === 'early' ? 0.35 : (lengthPressurePhase === 'mid' ? 0.9 : 1.35);
+                    const lengthPressureGain = reqLenSignal > 0
+                        ? Math.max(0, Math.min(1.5, (depthDeficitCurrentPhase / reqLenSignal) * (1 + (topologyComplexitySignal * 0.35))))
+                        : 0;
+                    const lengthPressureActive = highReqLenRelative && depthDeficitCurrentPhase > 0;
+                    const lengthPressureContext = {
+                        active: lengthPressureActive,
+                        phase: lengthPressurePhase,
+                        phaseWeight: lengthPressurePhaseWeight,
+                        gain: lengthPressureGain,
+                        reqLen: reqLenSignal,
+                        targetDepth: targetDepthCurrentPhase,
+                        targetDepthByPhase,
+                        depthDeficit: depthDeficitCurrentPhase
+                    };
+                    if (debugStats && reqLenSignal > 0) {
+                        debugStats.lengthPressureActive = !!lengthPressureActive;
+                        debugStats.targetDepthByPhase = { ...targetDepthByPhase };
+                    }
                     const corridorDiameterSignal = Math.max(0, Number(profileTopology?.corridorDiameter) || Number(profileTopology?.diameter) || 0);
                     const nearCorridorDiameter = corridorDiameterSignal > 0
                         && Math.abs(reqLenSignal - corridorDiameterSignal) <= Math.max(2, Math.round(corridorDiameterSignal * 0.16));
@@ -4584,7 +4652,8 @@
                         committedRegion, committedFamily, portalLockState,
                         inTemplateCommitWindow, objectiveTrackStrictness,
                         recentWindow, recentTurnbackCount, dirRepeat,
-                        bridgeState, lowBranchMode, earlyLowBranchDepth
+                        bridgeState, lowBranchMode, earlyLowBranchDepth,
+                        lengthPressureContext
                     };
                     const scored = valid.map(nk => this._scoreSingleCandidate(nk, sv));
                     if (depth === 0 && scored.length >= 2) {
@@ -4604,6 +4673,22 @@
                             top.score += perimeterOverridePenalty;
                             top.rootAdjustments = Array.isArray(top.rootAdjustments) ? top.rootAdjustments : [];
                             top.rootAdjustments.push({ feature: 'perimeterMustPassSanity', contribution: perimeterOverridePenalty });
+                        }
+                        if (lengthPressureContext?.active) {
+                            const rootWeight = 2.6 + ((lengthPressureContext.gain || 0) * 6.8);
+                            for (const item of scored) {
+                                const projectedLength = Number.isFinite(item?.projectedLength) ? item.projectedLength : curLen;
+                                const projectedObjectiveGap = Number.isFinite(item?.projectedObjectiveGap) ? item.projectedObjectiveGap : Infinity;
+                                const projectedRSteps = l.reqLen - projectedLength;
+                                const depthDeficit = Math.max(0, (lengthPressureContext.targetDepth || 0) - projectedLength);
+                                const feasibilityDeficit = Math.max(0, projectedObjectiveGap - projectedRSteps);
+                                const pressurePenalty = Math.round((depthDeficit * rootWeight) + (feasibilityDeficit * (rootWeight + 1.8)));
+                                if (pressurePenalty > 0) {
+                                    item.score += pressurePenalty;
+                                    item.rootAdjustments = Array.isArray(item.rootAdjustments) ? item.rootAdjustments : [];
+                                    item.rootAdjustments.push({ feature: 'lengthPressureRootGuard', contribution: pressurePenalty });
+                                }
+                            }
                         }
                     }
                     if (options?.dirOrderVariant === 'random') {
@@ -10252,6 +10337,13 @@
                     candidateMovesConsidered: Number.isFinite(attemptResult?.debug?.candidateMovesConsidered) ? attemptResult.debug.candidateMovesConsidered : null,
                     progressSamples: Array.isArray(attemptResult?.debug?.progressSamples) ? attemptResult.debug.progressSamples : [],
                     progressSummary: attemptResult?.debug?.progressSummary || null,
+                    lengthPressureActive: !!attemptResult?.debug?.lengthPressureActive,
+                    targetDepthByPhase: (attemptResult?.debug?.targetDepthByPhase && typeof attemptResult.debug.targetDepthByPhase === 'object')
+                        ? { ...attemptResult.debug.targetDepthByPhase }
+                        : null,
+                    lengthDeficitAtTimeout: Number.isFinite(attemptResult?.debug?.lengthDeficitAtTimeout)
+                        ? attemptResult.debug.lengthDeficitAtTimeout
+                        : null,
                     preExpansionAbort: attemptResult?.preExpansionAbort || attemptResult?.debug?.preExpansionAbort || null,
                     contradictionRecoveryActivated: !!attemptResult?.contradictionRecoveryActivated,
                     failureCategory: attemptResult?.failureTaxonomy?.category || null,
@@ -13628,6 +13720,9 @@
                     rootMoveOrder: [],
                     rootMoveScores: [],
                     rootPolicySummary: null,
+                    lengthPressureActive: false,
+                    targetDepthByPhase: null,
+                    lengthDeficitAtTimeout: null,
                     phaseTimeline: [],
                     progressSamples: [],
                     progressSummary: null,
@@ -13911,6 +14006,25 @@
                         failedStateHit: Number((Math.max(0, Number(prune.failedStateHit) || 0) / totalPruneDenom).toFixed(4))
                     })
                 });
+                if (status === 'timeout') {
+                    const phaseTargets = (debugStats?.targetDepthByPhase && typeof debugStats.targetDepthByPhase === 'object')
+                        ? debugStats.targetDepthByPhase
+                        : null;
+                    if (phaseTargets) {
+                        const phaseOrder = ['late', 'mid', 'early'];
+                        let targetDepth = 0;
+                        for (const phase of phaseOrder) {
+                            const candidate = Number(phaseTargets?.[phase]);
+                            if (Number.isFinite(candidate) && candidate > targetDepth) targetDepth = candidate;
+                        }
+                        const reached = Math.max(0, Number(debugStats?.maxDepth) || 0);
+                        debugStats.lengthDeficitAtTimeout = Math.max(0, targetDepth - reached);
+                    } else {
+                        debugStats.lengthDeficitAtTimeout = null;
+                    }
+                } else {
+                    debugStats.lengthDeficitAtTimeout = null;
+                }
             }
 
             function buildSearchDiagnostics(debug = {}, status = 'unknown') {
@@ -17241,7 +17355,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 progressSummary: {
                     plateauDetected: !!progressSummary?.plateauDetected,
                     plateauTimeMs: Number.isFinite(progressSummary?.plateauTimeMs) ? progressSummary.plateauTimeMs : null
-                }
+                },
+                lengthPressureActive: !!attempt?.lengthPressureActive,
+                targetDepthByPhase: (attempt?.targetDepthByPhase && typeof attempt.targetDepthByPhase === 'object')
+                    ? { ...attempt.targetDepthByPhase }
+                    : null,
+                lengthDeficitAtTimeout: Number.isFinite(attempt?.lengthDeficitAtTimeout)
+                    ? attempt.lengthDeficitAtTimeout
+                    : null
             };
         };
         const buildFullExportAttempts = (rawAttemptHistory = []) => {
@@ -17264,6 +17385,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         scoringMode: attempt?.scoringMode || null,
                         portalBiasMode: attempt?.portalBiasMode || null,
                         phasePolicy: attempt?.phasePolicy || null,
+                        lengthPressureActive: attempt?.lengthPressureActive === true ? true : null,
+                        targetDepthByPhase: (attempt?.targetDepthByPhase && typeof attempt.targetDepthByPhase === 'object') ? { ...attempt.targetDepthByPhase } : null,
+                        lengthDeficitAtTimeout: Number.isFinite(attempt?.lengthDeficitAtTimeout) ? attempt.lengthDeficitAtTimeout : null,
                         nodesExpanded: Number.isFinite(attempt?.failureProfile?.metrics?.nodesExpanded) ? attempt.failureProfile.metrics.nodesExpanded : null,
                         depthReached: Number.isFinite(attempt?.depthReached) ? attempt.depthReached : null,
                         progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : [],
