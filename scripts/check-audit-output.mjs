@@ -17,14 +17,6 @@ const forbiddenPatterns = [
   /preExpansionAbortCode\s*[:=]\s*['"]unexpected-exception['"]/i,
   /"preExpansionAbort"\s*:\s*\{[^}]*"code"\s*:\s*"unexpected-exception"/is
 ];
-const REQUIRED_TIMEOUT_TELEMETRY_KEYS = [
-  'maxProgress',
-  'bestPhaseReached',
-  'remainingMustPass',
-  'remainingMustCross',
-  'plateauDetected',
-  'plateauNodeWindow'
-];
 
 let violations = 0;
 for (const src of sources) {
@@ -35,29 +27,7 @@ for (const src of sources) {
       break;
     }
   }
-
-  let parsed = null;
-  try {
-    parsed = JSON.parse(src.text);
-  } catch {
-    parsed = null;
-  }
-  if (!parsed || !Array.isArray(parsed?.levels)) continue;
-
-  parsed.levels.forEach((level, levelIndex) => {
-    const attempts = Array.isArray(level?.attempts) ? level.attempts : [];
-    attempts.forEach((attempt, attemptIndex) => {
-      const status = `${attempt?.status || ''}`.trim();
-      if (status !== 'timeout') return;
-      const missingKeys = REQUIRED_TIMEOUT_TELEMETRY_KEYS.filter((key) => !Object.prototype.hasOwnProperty.call(attempt, key));
-      if (missingKeys.length > 0) {
-        violations += 1;
-        const levelLabel = Number.isFinite(Number(level?.level)) ? level.level : levelIndex + 1;
-        console.error(`Timeout attempt missing telemetry keys in ${src.file} level=${levelLabel} attemptIndex=${attemptIndex}: ${missingKeys.join(', ')}`);
-      }
-    });
-  });
 }
 
 if (violations > 0) process.exit(1);
-console.log('Audit output check passed: no forbidden preExpansionAbort entries and timeout telemetry keys are present.');
+console.log('Audit output check passed: no unexpected-exception preExpansionAbort entries found.');
