@@ -17852,6 +17852,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             };
 
             try {
+                await new Promise(requestAnimationFrame);
                 for (let attemptIndex = 0; ; attemptIndex++) {
                     const elapsedWallMs = Math.round(performance.now() - startedAt);
                     const remainingMs = maxWallTimeMs - elapsedWallMs;
@@ -18322,6 +18323,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem');
                     APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
                     updateHintLabel();
+                    await new Promise(requestAnimationFrame);
                     try {
                         const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                         const normalized = APP.LevelUtils.canonicalCloneLevel(activeLevel);
