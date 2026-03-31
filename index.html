@@ -10074,10 +10074,12 @@
             let timeoutFamilyDiversificationUsed = false;
             let timeoutEscalationTier = 0;
             let escalatedAttemptsAdded = 0;
+            let previousAttemptSwitchedFamily = false;
             let consecutiveLowExpansionDetections = 0;
             let previousTimeoutTelemetry = null;
             let consecutiveTimeoutStagnation = 0;
             let portalRetryBiasToggle = 0;
+            let portalRetryObjectiveFirstUsed = false;
             let broadStagnationRescueUsed = false;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
@@ -10266,154 +10268,6 @@
                     }
                 });
                 return uniqueAvoidedKeys;
-            };
-            const adaptNextAttempt = (currentAttemptEntry, nextAttempt, context = {}) => {
-                if (!nextAttempt || typeof nextAttempt !== 'object') {
-                    return { nextPlan: nextAttempt, adaptationPlan: null, switchedFamily: false, decisionSource: null, decisionReason: null, stateUpdates: {} };
-                }
-                const clonePlan = (src) => ({
-                    ...src,
-                    disabledPrunes: Array.isArray(src?.disabledPrunes) ? src.disabledPrunes.slice() : [],
-                    orderingTweaks: src?.orderingTweaks && typeof src.orderingTweaks === 'object' ? { ...src.orderingTweaks } : {}
-                });
-                const candidates = [];
-                const basePlan = clonePlan(nextAttempt);
-                const addCandidate = (bucket, id, reason, apply, meta = {}) => {
-                    const precedenceMap = { guardrail: 0, familySwitch: 1, noveltyDiversification: 2, budgetEscalation: 3, cosmeticTweaks: 4 };
-                    candidates.push({ bucket, precedence: precedenceMap[bucket], id, reason, apply, meta });
-                };
-                const recordFamilySwitch = (plan, switchedInfo = null) => {
-                    if (!switchedInfo?.switched) return null;
-                    plan.forcedFamilySwitch = true;
-                    return { switchedFrom: switchedInfo?.from || null, switchedTo: switchedInfo?.to || null, strategyFamilySwitchReason: switchedInfo?.reason || null };
-                };
-                const simulateFamilySwitch = (reason) => {
-                    const plan = clonePlan(basePlan);
-                    const switched = this._switchAttemptStrategyFamily(plan, {
-                        constraintDeficit: context?.quality?.constraintDeficit,
-                        remainingMustPass: context?.quality?.remainingMustPass,
-                        remainingMustCross: context?.quality?.remainingMustCross,
-                        reason
-                    }, profile, controlPlane);
-                    return { plan, switched };
-                };
-                if (context.timeoutProne && context.portalInvolvedRun) {
-                    const nextPortalBias = (context.portalRetryBiasToggle % 2 === 0) ? 'adaptiveMustCross' : 'off';
-                    addCandidate('cosmeticTweaks', 'portal-bias-toggle', 'healthy-expansion-portal-diversity-bias-toggle', (plan) => {
-                        plan.portalBiasMode = nextPortalBias;
-                        return {
-                            portalDiversityBiasApplied: true,
-                            portalDiversityBiasMode: nextPortalBias,
-                            portalRetryBiasToggle: context.portalRetryBiasToggle + 1
-                        };
-                    });
-                }
-                if (context.timeoutProne && context.consecutiveTimeoutStagnation >= 2) {
-                    const simulated = simulateFamilySwitch('healthy-expansion-stagnation-forced-switch');
-                    addCandidate('guardrail', 'stagnation-family-switch', 'healthy-expansion-stagnation-forced-switch', (plan) => {
-                        Object.assign(plan, simulated.plan);
-                        return {
-                            timeoutStagnationCount: context.consecutiveTimeoutStagnation,
-                            timeoutImprovement: context.timeoutImprovement,
-                            ...recordFamilySwitch(plan, simulated.switched)
-                        };
-                    });
-                }
-                if (context.timeoutProne && context.quality?.constraintDeficit > 0) {
-                    const simulated = simulateFamilySwitch('constraint-deficit-priority');
-                    addCandidate('guardrail', 'constraint-deficit-priority', 'constraint-deficit-priority', (plan) => {
-                        Object.assign(plan, simulated.plan);
-                        return recordFamilySwitch(plan, simulated.switched);
-                    });
-                }
-                if (context.telemetryStagnation) {
-                    const simulated = simulateFamilySwitch('telemetry-delta-stagnation');
-                    addCandidate('familySwitch', 'telemetry-stagnation-switch', 'telemetry-delta-stagnation', (plan) => {
-                        Object.assign(plan, simulated.plan);
-                        return recordFamilySwitch(plan, simulated.switched);
-                    });
-                }
-                if (context.healthyExpansionTimeout && !context.timeoutFamilyDiversificationUsed) {
-                    const simulated = simulateFamilySwitch('healthy-expansion-timeout-diversification');
-                    addCandidate('familySwitch', 'healthy-timeout-diversification-switch', 'healthy-expansion-timeout-diversification', (plan) => {
-                        Object.assign(plan, simulated.plan);
-                        const switchedMeta = recordFamilySwitch(plan, simulated.switched) || {};
-                        return { ...switchedMeta, timeoutFamilyDiversificationUsed: !!simulated.switched };
-                    });
-                }
-                if (context.healthyExpansionTimeout && context.forceNoveltyDiversification) {
-                    addCandidate('noveltyDiversification', 'novelty-family-diversification', context.noveltyDiversificationReason, (plan) => {
-                        const diversified = forceEscalationNoveltyDiversification(plan, context.currentFamilyPolicy);
-                        plan.forcedFamilySwitch = true;
-                        return {
-                            strategyFamilySwitchReason: context.noveltyDiversificationReason,
-                            escalationDecision: context.lowNoveltySameFamilyRetries > context.lowNoveltySameFamilyRetryCap
-                                ? 'novelty-low-family-cap-forced-diversification'
-                                : 'novelty-gate-failed-forced-diversification',
-                            noveltyGate: compactDefined({
-                                score: context.noveltyScore,
-                                threshold: escalationNoveltyThreshold,
-                                improved: context.noveltyImproved,
-                                belowThreshold: context.noveltyBelowThreshold,
-                                lowNoveltySameFamilyRetries: context.lowNoveltySameFamilyRetries,
-                                forcedFamily: diversified?.forcedFamily || null,
-                                forcedPortalUsagePolicy: diversified?.portalUsagePolicy || null,
-                                forcedMemoStrictness: diversified?.memoStrictness || null
-                            })
-                        };
-                    });
-                }
-                if (context.healthyExpansionTimeout && context.allowBudgetEscalation) {
-                    addCandidate('budgetEscalation', 'healthy-timeout-budget-escalation', 'healthy-expansion-timeout-more-time', (plan) => {
-                        const nextTier = Math.min(maxTimeoutEscalationTier, context.timeoutEscalationTier + 1);
-                        if (!(nextTier > context.timeoutEscalationTier)) return {};
-                        const tierRatio = timeoutEscalationRatios[nextTier - 1] || timeoutEscalationRatios[timeoutEscalationRatios.length - 1] || 0;
-                        const originalBudget = Math.max(1, Number(plan?.budgetMs) || 1);
-                        const nextBudget = Math.max(1, Math.min(strictMaxEscalatedAttemptBudgetMs, Math.floor(originalBudget * (1 + tierRatio))));
-                        plan.budgetMs = nextBudget;
-                        plan.timeoutEscalationTier = nextTier;
-                        return {
-                            budgetEscalatedFrom: originalBudget,
-                            budgetEscalatedTo: nextBudget,
-                            timeoutEscalationTier: nextTier,
-                            timeoutImprovement: context.timeoutImprovement,
-                            escalationDecision: 'novelty-gate-pass-budget-escalated'
-                        };
-                    });
-                }
-                if (context.timeoutProne) {
-                    addCandidate('cosmeticTweaks', 'timeout-retry-novelty-penalty', 'timeout-retry-novelty-penalty', (plan) => {
-                        const noveltyAvoidedRootKeys = applyRootNoveltyPenalty(plan, 'timeout-retry-novelty-penalty', currentAttemptEntry);
-                        return { noveltyAvoidedRootKeys: noveltyAvoidedRootKeys || null };
-                    });
-                }
-                const sortedCandidates = candidates.slice().sort((a, b) => (a.precedence - b.precedence) || a.id.localeCompare(b.id));
-                const winner = sortedCandidates[0] || null;
-                const finalPlan = clonePlan(basePlan);
-                const winnerMeta = winner ? (winner.apply(finalPlan) || {}) : {};
-                finalPlan.escalationReason = winner?.reason || finalPlan.escalationReason || 'advance-ladder';
-                const suppressed = sortedCandidates.slice(1).map(c => ({ bucket: c.bucket, id: c.id, reason: c.reason }));
-                const adaptationPlan = {
-                    decisionSource: winner?.id || 'none',
-                    decisionReason: winner?.reason || 'advance-ladder',
-                    precedence: winner?.bucket || 'none',
-                    winner: winner ? { bucket: winner.bucket, id: winner.id, reason: winner.reason } : null,
-                    suppressed,
-                    candidates: sortedCandidates.map(c => ({ bucket: c.bucket, id: c.id, reason: c.reason })),
-                    metadata: winnerMeta
-                };
-                return {
-                    nextPlan: finalPlan,
-                    adaptationPlan,
-                    switchedFamily: !!finalPlan.forcedFamilySwitch,
-                    decisionSource: adaptationPlan.decisionSource,
-                    decisionReason: adaptationPlan.decisionReason,
-                    stateUpdates: {
-                        timeoutEscalationTier: Number.isFinite(winnerMeta?.timeoutEscalationTier) ? winnerMeta.timeoutEscalationTier : context.timeoutEscalationTier,
-                        timeoutFamilyDiversificationUsed: winnerMeta?.timeoutFamilyDiversificationUsed ? true : context.timeoutFamilyDiversificationUsed,
-                        portalRetryBiasToggle: Number.isFinite(winnerMeta?.portalRetryBiasToggle) ? winnerMeta.portalRetryBiasToggle : context.portalRetryBiasToggle
-                    }
-                };
             };
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
@@ -10991,71 +10845,163 @@
                         }
                         continue;
                     }
+                    if (timeoutProne && portalInvolvedRun && nextAttempt) {
+                        const nextPortalBias = (portalRetryBiasToggle % 2 === 0) ? 'adaptiveMustCross' : 'off';
+                        portalRetryBiasToggle += 1;
+                        nextAttempt.portalBiasMode = nextPortalBias;
+                        setAdaptationReason('healthy-expansion-portal-diversity-bias-toggle', {
+                            portalDiversityBiasApplied: true,
+                            portalDiversityBiasMode: nextPortalBias
+                        });
+                        if (!portalRetryObjectiveFirstUsed) {
+                            nextAttempt.policyProfile = 'objectiveFirst';
+                            nextAttempt.orderingPolicy = 'objectiveFirst';
+                            nextAttempt.phasePolicy = SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane?.activeHypothesis, activeArchetype: 'objectiveFirst' });
+                            portalRetryObjectiveFirstUsed = true;
+                            setAdaptationReason('healthy-expansion-portal-diversity-objective-first', {
+                                portalObjectiveFirstForced: true
+                            });
+                        }
+                    }
+                    if (timeoutProne && consecutiveTimeoutStagnation >= 2 && nextAttempt) {
+                        const forcedStagnationSwitch = this._switchAttemptStrategyFamily(nextAttempt, {
+                            constraintDeficit: quality.constraintDeficit,
+                            remainingMustPass: quality.remainingMustPass,
+                            remainingMustCross: quality.remainingMustCross,
+                            reason: 'healthy-expansion-stagnation-forced-switch'
+                        }, profile, controlPlane);
+                        if (forcedStagnationSwitch?.switched) {
+                            switchedThisAttempt = true;
+                            nextAttempt.forcedFamilySwitch = true;
+                            setAdaptationReason('healthy-expansion-stagnation-forced-switch', {
+                                strategyFamilySwitchReason: forcedStagnationSwitch?.reason || 'healthy-expansion-stagnation-forced-switch',
+                                switchedFrom: forcedStagnationSwitch?.from || null,
+                                switchedTo: forcedStagnationSwitch?.to || null,
+                                timeoutStagnationCount: consecutiveTimeoutStagnation,
+                                timeoutImprovement
+                            });
+                        } else {
+                            setAdaptationReason('healthy-expansion-stagnation-forced-switch', {
+                                timeoutStagnationCount: consecutiveTimeoutStagnation,
+                                timeoutImprovement
+                            });
+                        }
+                    }
                     const healthyExpansionTimeout = timeoutProne
                         && (Number(attemptResult?.debug?.nodesExpanded) || 0) >= 110
                         && (Number(quality?.branchFactor) || 0) >= 0.2
                         && (Number(quality?.maxProgress) || 0) >= 0.28;
-                    const noveltyScore = Number.isFinite(attemptNoveltyScore) ? attemptNoveltyScore : null;
-                    const noveltyImproved = Number.isFinite(noveltyScore)
-                        && (!Number.isFinite(lastEscalationNoveltyScore) || noveltyScore > (lastEscalationNoveltyScore + escalationNoveltyImprovementEpsilon));
-                    const noveltyBelowThreshold = Number.isFinite(noveltyScore) && noveltyScore < escalationNoveltyThreshold;
-                    const sameFamilyAsCurrent = (String(nextAttempt?.policyProfile || nextAttempt?.orderingPolicy || '') === String(attempt?.policyProfile || attempt?.orderingPolicy || ''));
-                    lowNoveltySameFamilyRetries = (noveltyBelowThreshold && sameFamilyAsCurrent)
-                        ? (lowNoveltySameFamilyRetries + 1)
-                        : 0;
-                    const forceNoveltyDiversification = healthyExpansionTimeout
-                        && (!noveltyImproved || noveltyBelowThreshold || lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap);
-                    const noveltyDiversificationReason = lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap
-                        ? 'healthy-expansion-timeout-novelty-family-cap'
-                        : 'healthy-expansion-timeout-novelty-diversification';
-                    const allowBudgetEscalation = !!(healthyExpansionTimeout
-                        && timeoutImprovement
-                        && timeoutMaterialProgress
-                        && consecutiveTimeoutStagnation === 0
-                        && !forceNoveltyDiversification
-                        && noveltyImproved
-                        && !noveltyBelowThreshold);
-                    const telemetryStagnation = !!(previousTelemetry
-                        && !(quality.nodesPerSecond > (previousTelemetry.nodesPerSecond * 1.03))
-                        && !(quality.frontierQuality > (previousTelemetry.frontierQuality + 0.015))
-                        && !(quality.maxProgress > ((previousTelemetry.maxProgress || 0) + 0.02)));
-                    const adaptation = adaptNextAttempt(currentAttemptEntry, nextAttempt, {
-                        timeoutProne,
-                        portalInvolvedRun,
-                        portalRetryBiasToggle,
-                        consecutiveTimeoutStagnation,
-                        timeoutImprovement,
-                        healthyExpansionTimeout,
-                        timeoutFamilyDiversificationUsed,
-                        forceNoveltyDiversification,
-                        noveltyDiversificationReason,
-                        noveltyScore,
-                        noveltyImproved,
-                        noveltyBelowThreshold,
-                        lowNoveltySameFamilyRetries,
-                        lowNoveltySameFamilyRetryCap,
-                        allowBudgetEscalation,
-                        timeoutEscalationTier,
-                        telemetryStagnation,
-                        currentFamilyPolicy: attempt?.policyProfile || attempt?.orderingPolicy || null,
-                        quality
-                    });
-                    Object.assign(nextAttempt, adaptation?.nextPlan || {});
-                    switchedThisAttempt = !!adaptation?.switchedFamily;
-                    timeoutEscalationTier = adaptation?.stateUpdates?.timeoutEscalationTier ?? timeoutEscalationTier;
-                    timeoutFamilyDiversificationUsed = !!(adaptation?.stateUpdates?.timeoutFamilyDiversificationUsed || timeoutFamilyDiversificationUsed);
-                    portalRetryBiasToggle = adaptation?.stateUpdates?.portalRetryBiasToggle ?? portalRetryBiasToggle;
-                    if (currentAttemptEntry) {
-                        currentAttemptEntry.nextAttemptReason = adaptation?.decisionReason || currentAttemptEntry.nextAttemptReason || 'advance-ladder';
-                        currentAttemptEntry.adaptationReason = adaptation?.decisionReason || currentAttemptEntry.adaptationReason || null;
-                        currentAttemptEntry.decisionSource = adaptation?.decisionSource || null;
-                        currentAttemptEntry.decisionReason = adaptation?.decisionReason || null;
-                        currentAttemptEntry.adaptationPlan = adaptation?.adaptationPlan || null;
-                        if (adaptation?.adaptationPlan?.metadata && typeof adaptation.adaptationPlan.metadata === 'object') {
-                            Object.assign(currentAttemptEntry, adaptation.adaptationPlan.metadata);
+                    if (healthyExpansionTimeout && !timeoutFamilyDiversificationUsed) {
+                        const switched = this._switchAttemptStrategyFamily(nextAttempt, {
+                            constraintDeficit: quality.constraintDeficit,
+                            remainingMustPass: quality.remainingMustPass,
+                            remainingMustCross: quality.remainingMustCross,
+                            reason: 'healthy-expansion-timeout-diversification'
+                        }, profile, controlPlane);
+                        if (switched?.switched) {
+                            timeoutFamilyDiversificationUsed = true;
+                            switchedThisAttempt = true;
+                            if (currentAttemptEntry) {
+                                currentAttemptEntry.timeoutFamilyDiversificationUsed = true;
+                                currentAttemptEntry.strategyFamilySwitchReason = switched?.reason || 'healthy-expansion-timeout-diversification';
+                                currentAttemptEntry.switchedFrom = switched?.from || null;
+                                currentAttemptEntry.switchedTo = switched?.to || null;
+                            }
                         }
                     }
                     if (healthyExpansionTimeout) {
+                        const noveltyScore = Number.isFinite(attemptNoveltyScore) ? attemptNoveltyScore : null;
+                        const noveltyImproved = Number.isFinite(noveltyScore)
+                            && (!Number.isFinite(lastEscalationNoveltyScore) || noveltyScore > (lastEscalationNoveltyScore + escalationNoveltyImprovementEpsilon));
+                        const noveltyBelowThreshold = Number.isFinite(noveltyScore) && noveltyScore < escalationNoveltyThreshold;
+                        const sameFamilyAsCurrent = (String(nextAttempt?.policyProfile || nextAttempt?.orderingPolicy || '') === String(attempt?.policyProfile || attempt?.orderingPolicy || ''));
+                        lowNoveltySameFamilyRetries = (noveltyBelowThreshold && sameFamilyAsCurrent)
+                            ? (lowNoveltySameFamilyRetries + 1)
+                            : 0;
+                        const forceNoveltyDiversification = !noveltyImproved || noveltyBelowThreshold || lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap;
+                        if (forceNoveltyDiversification && nextAttempt) {
+                            const diversified = forceEscalationNoveltyDiversification(nextAttempt, attempt?.policyProfile || attempt?.orderingPolicy || null);
+                            switchedThisAttempt = true;
+                            nextAttempt.forcedFamilySwitch = true;
+                            nextAttempt.escalationReason = lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap
+                                ? 'healthy-expansion-timeout-novelty-family-cap'
+                                : 'healthy-expansion-timeout-novelty-diversification';
+                            if (currentAttemptEntry) {
+                                currentAttemptEntry.escalationDecision = lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap
+                                    ? 'novelty-low-family-cap-forced-diversification'
+                                    : 'novelty-gate-failed-forced-diversification';
+                                currentAttemptEntry.noveltyGate = compactDefined({
+                                    score: noveltyScore,
+                                    threshold: escalationNoveltyThreshold,
+                                    improved: noveltyImproved,
+                                    belowThreshold: noveltyBelowThreshold,
+                                    lowNoveltySameFamilyRetries,
+                                    forcedFamily: diversified?.forcedFamily || null,
+                                    forcedPortalUsagePolicy: diversified?.portalUsagePolicy || null,
+                                    forcedMemoStrictness: diversified?.memoStrictness || null
+                                });
+                            }
+                        }
+                        const allowBudgetEscalation = !!(timeoutImprovement
+                            && timeoutMaterialProgress
+                            && consecutiveTimeoutStagnation === 0
+                            && !switchedThisAttempt
+                            && noveltyImproved
+                            && !noveltyBelowThreshold);
+                        if (allowBudgetEscalation) {
+                            const nextTier = Math.min(maxTimeoutEscalationTier, timeoutEscalationTier + 1);
+                            if (nextTier > timeoutEscalationTier) {
+                                const tierRatio = timeoutEscalationRatios[nextTier - 1] || timeoutEscalationRatios[timeoutEscalationRatios.length - 1] || 0;
+                                const originalBudget = Math.max(1, Number(nextAttempt?.budgetMs) || 1);
+                                nextAttempt.budgetMs = Math.max(1, Math.min(strictMaxEscalatedAttemptBudgetMs, Math.floor(originalBudget * (1 + tierRatio))));
+                                nextAttempt.timeoutEscalationTier = nextTier;
+                                nextAttempt.escalationReason = 'healthy-expansion-timeout-more-time';
+                                timeoutEscalationTier = nextTier;
+                                setAdaptationReason('healthy-expansion-timeout-more-time', {
+                                    budgetEscalatedFrom: originalBudget,
+                                    budgetEscalatedTo: nextAttempt.budgetMs,
+                                    timeoutImprovement
+                                });
+                                if (currentAttemptEntry) currentAttemptEntry.escalationDecision = 'novelty-gate-pass-budget-escalated';
+                            }
+                        } else if (!switchedThisAttempt) {
+                            const nonImprovingSwitch = this._switchAttemptStrategyFamily(nextAttempt, {
+                                constraintDeficit: quality.constraintDeficit,
+                                remainingMustPass: quality.remainingMustPass,
+                                remainingMustCross: quality.remainingMustCross,
+                                reason: 'healthy-expansion-timeout-no-improvement-family-switch'
+                            }, profile, controlPlane);
+                            if (nonImprovingSwitch?.switched) {
+                                switchedThisAttempt = true;
+                                nextAttempt.forcedFamilySwitch = true;
+                                setAdaptationReason('healthy-expansion-timeout-no-improvement-family-switch', {
+                                    strategyFamilySwitchReason: nonImprovingSwitch?.reason || 'healthy-expansion-timeout-no-improvement-family-switch',
+                                    switchedFrom: nonImprovingSwitch?.from || null,
+                                    switchedTo: nonImprovingSwitch?.to || null,
+                                    timeoutImprovement
+                                });
+                                if (currentAttemptEntry && !currentAttemptEntry.escalationDecision) {
+                                    currentAttemptEntry.escalationDecision = 'budget-blocked-family-switch';
+                                }
+                            }
+                        }
+                        if (!switchedThisAttempt && !previousAttemptSwitchedFamily) {
+                            const forcedSwitch = this._switchAttemptStrategyFamily(nextAttempt, {
+                                constraintDeficit: quality.constraintDeficit,
+                                remainingMustPass: quality.remainingMustPass,
+                                remainingMustCross: quality.remainingMustCross,
+                                reason: 'healthy-expansion-timeout-forced-family-switch'
+                            }, profile, controlPlane);
+                            if (forcedSwitch?.switched) {
+                                switchedThisAttempt = true;
+                                nextAttempt.forcedFamilySwitch = true;
+                                setAdaptationReason('healthy-expansion-timeout-forced-family-switch', {
+                                    strategyFamilySwitchReason: forcedSwitch?.reason || 'healthy-expansion-timeout-forced-family-switch',
+                                    switchedFrom: forcedSwitch?.from || null,
+                                    switchedTo: forcedSwitch?.to || null
+                                });
+                            }
+                        }
                         const canAddEscalatedAttempt = allowBudgetEscalation
                             && timeoutEscalationTier >= 1
                             && escalatedAttemptsAdded < maxExtraEscalatedAttempts
@@ -11100,6 +11046,43 @@
                             lastEscalationNoveltyScore = noveltyScore;
                         }
                     }
+                    if (timeoutProne && quality.constraintDeficit > 0) {
+                        const switched = this._switchAttemptStrategyFamily(nextAttempt, {
+                            constraintDeficit: quality.constraintDeficit,
+                            remainingMustPass: quality.remainingMustPass,
+                            remainingMustCross: quality.remainingMustCross,
+                            reason: 'constraint-deficit-priority'
+                        }, profile, controlPlane);
+                        if (switched?.switched) switchedThisAttempt = true;
+                        if (switched?.switched && currentAttemptEntry) {
+                            currentAttemptEntry.strategyFamilySwitchReason = switched?.reason || 'constraint-deficit-priority';
+                            currentAttemptEntry.switchedFrom = switched?.from || null;
+                            currentAttemptEntry.switchedTo = switched?.to || null;
+                        }
+                    }
+                    if (previousTelemetry) {
+                        const nodesPerSecondImproved = quality.nodesPerSecond > (previousTelemetry.nodesPerSecond * 1.03);
+                        const frontierImproved = quality.frontierQuality > (previousTelemetry.frontierQuality + 0.015);
+                        const maxProgressImproved = quality.maxProgress > ((previousTelemetry.maxProgress || 0) + 0.02);
+                        if (!nodesPerSecondImproved && !frontierImproved && !maxProgressImproved) {
+                            const switched = this._switchAttemptStrategyFamily(nextAttempt, {
+                                constraintDeficit: quality.constraintDeficit,
+                                remainingMustPass: quality.remainingMustPass,
+                                remainingMustCross: quality.remainingMustCross,
+                                reason: 'telemetry-delta-stagnation'
+                            }, profile, controlPlane);
+                            if (switched?.switched) switchedThisAttempt = true;
+                            if (switched?.switched && currentAttemptEntry) {
+                                currentAttemptEntry.strategyFamilySwitchReason = switched?.reason || 'telemetry-delta-stagnation';
+                                currentAttemptEntry.switchedFrom = switched?.from || null;
+                                currentAttemptEntry.switchedTo = switched?.to || null;
+                            }
+                            if (switched && APP.State.ENGINE.flags?.refereeDebug) {
+                                const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
+                                console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] telemetry stagnation -> switched next strategy family`, switched);
+                            }
+                        }
+                    }
                     previousTelemetry = {
                         nodesPerSecond: quality.nodesPerSecond,
                         frontierQuality: quality.frontierQuality,
@@ -11111,6 +11094,9 @@
                             frontierQuality: quality.frontierQuality,
                             maxProgress: quality.maxProgress
                         };
+                    }
+                    if (currentAttemptEntry && nextAttempt && timeoutProne) {
+                        applyRootNoveltyPenalty(nextAttempt, 'timeout-retry-novelty-penalty', currentAttemptEntry);
                     }
                     if (timeoutProne && nextAttempt) {
                         const diversifiedRegistration = diversifyAndRegisterAttempt(nextAttempt, {
@@ -11135,6 +11121,7 @@
                         currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
                         currentAttemptEntry.nextAttemptReason = currentAttemptEntry.nextAttemptReason || (switchedThisAttempt ? 'strategy-family-switch' : 'advance-ladder');
                     }
+                    previousAttemptSwitchedFamily = switchedThisAttempt;
                 }
                 if (!attemptResult.ok && quality.maxProgress < 0.22) {
                     this.maybeSwitchHypothesis(controlPlane, 'low-progress');
