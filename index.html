@@ -15338,20 +15338,20 @@
                     }
 
                     if (isCaution) {
-                        const trace = () => {
+                        const trace = (targetCtx = ctx) => {
                             const start = APP.LevelUtils.UNPACK(pathArr[0]);
                             const sStart = getScreenPos(start.x, start.y);
-                            ctx.beginPath();
-                            ctx.moveTo(sStart.sx, sStart.sy);
-                            ctx.lineTo(sStart.sx, sStart.sy);
+                            targetCtx.beginPath();
+                            targetCtx.moveTo(sStart.sx, sStart.sy);
+                            targetCtx.lineTo(sStart.sx, sStart.sy);
                             for (let i = 1; i < pathArr.length; i++) {
                                 const p = APP.LevelUtils.UNPACK(pathArr[i]);
                                 const s = getScreenPos(p.x, p.y);
                                 if (isJumpSet.has(i)) {
-                                    ctx.moveTo(s.sx, s.sy);
-                                    ctx.lineTo(s.sx, s.sy);
+                                    targetCtx.moveTo(s.sx, s.sy);
+                                    targetCtx.lineTo(s.sx, s.sy);
                                 } else {
-                                    ctx.lineTo(s.sx, s.sy);
+                                    targetCtx.lineTo(s.sx, s.sy);
                                 }
                             }
                         };
@@ -15360,11 +15360,30 @@
                         trace();
                         ctx.stroke();
 
-                        ctx.strokeStyle = '#000000';
-                        ctx.setLineDash([width, width]);
-                        trace();
-                        ctx.stroke();
-                        ctx.setLineDash([]);
+                        const stripeCanvas = document.createElement('canvas');
+                        stripeCanvas.width = cvs.width;
+                        stripeCanvas.height = cvs.height;
+                        const stripeCtx = stripeCanvas.getContext('2d');
+                        if (stripeCtx) {
+                            stripeCtx.lineWidth = width;
+                            stripeCtx.lineCap = 'butt';
+                            stripeCtx.lineJoin = 'round';
+                            stripeCtx.strokeStyle = '#000000';
+                            trace(stripeCtx);
+                            stripeCtx.stroke();
+                            stripeCtx.globalCompositeOperation = 'source-in';
+                            stripeCtx.strokeStyle = '#000000';
+                            stripeCtx.lineWidth = Math.max(1, width * 0.45);
+                            const stripeGap = Math.max(4, width * 1.35);
+                            const diagonalSpan = Math.hypot(cvs.width, cvs.height);
+                            for (let offset = -diagonalSpan; offset <= diagonalSpan * 2; offset += stripeGap) {
+                                stripeCtx.beginPath();
+                                stripeCtx.moveTo(offset, -diagonalSpan);
+                                stripeCtx.lineTo(offset + diagonalSpan * 2, diagonalSpan);
+                                stripeCtx.stroke();
+                            }
+                            ctx.drawImage(stripeCanvas, 0, 0);
+                        }
 
                         getCautionSegmentEndpoints().forEach(({ sx, sy }) => {
                             drawDot(sx, sy, '#fbbf24');
