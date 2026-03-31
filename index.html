@@ -18293,6 +18293,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
                     updateHintLabel();
                     try {
+                        await delay0();
                         const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                         const normalized = APP.LevelUtils.deepCloneLevel(activeLevel);
                         const ladderResult = await runHintLadder(normalized, {
