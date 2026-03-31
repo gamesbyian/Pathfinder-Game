@@ -3909,6 +3909,20 @@
                             }
                         }
 
+                        const mandatoryPortalFamiliesGlobal = Array.isArray(profile?.portalHints?.mandatoryFamilies)
+                            ? profile.portalHints.mandatoryFamilies
+                            : [];
+                        const optionalPortalFamiliesGlobal = Array.isArray(profile?.portalHints?.optionalFamilies)
+                            ? profile.portalHints.optionalFamilies
+                            : [];
+                        const earlyPortalWindow = (l.reqLen > 0 ? (nLen / l.reqLen) : 1) <= 0.55;
+                        if (nextFamily >= 0 && mandatoryPortalFamiliesGlobal.length > 0 && earlyPortalWindow) {
+                            if (!mandatoryPortalFamiliesGlobal.includes(nextFamily) && optionalPortalFamiliesGlobal.includes(nextFamily)) {
+                                if (debugStats) debugStats.portalLockRejects = (debugStats.portalLockRejects || 0) + 1;
+                                return { nk, score: 1000000 };
+                            }
+                        }
+
                         if (isP && Number.isFinite(state.portal?.portalLastProgressValue) && state.portal?.portalLastProgressValue >= 0 && committedFamily >= 0) {
                             const progressNow = this._portalProgressValue(state);
                             const stagnated = progressNow >= state.portal?.portalLastProgressValue;
@@ -4249,9 +4263,16 @@
                             const mandatoryPortalFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies)
                                 ? profile.portalHints.mandatoryFamilies
                                 : [];
+                            const optionalPortalFamilies = Array.isArray(profile?.portalHints?.optionalFamilies)
+                                ? profile.portalHints.optionalFamilies
+                                : [];
                             if (mandatoryPortalFamilies.length > 0 && nextFamily >= 0) {
-                                if (mandatoryPortalFamilies.includes(nextFamily)) score -= 44;
+                                if (mandatoryPortalFamilies.includes(nextFamily)) score -= 68;
                                 else if (committedFamily >= 0 && nextFamily !== committedFamily) score += 28;
+                            }
+                            if (nextFamily >= 0 && optionalPortalFamilies.includes(nextFamily)) {
+                                const earlyExpansion = (l.reqLen > 0 ? (nLen / l.reqLen) : 1) <= 0.55;
+                                if (earlyExpansion) score += 84;
                             }
                         }
 
@@ -8849,6 +8870,7 @@
             const portalFamilies = [];
             const portalBridgeHints = [];
             const seenPortalPair = new Set();
+            const pairByFamilyId = new Map();
             if (level?.portalMap instanceof Map) {
                 level.portalMap.forEach((v, fromKey) => {
                     const toKey = v?.dest;
@@ -8865,6 +8887,7 @@
                         entries: [fromKey, toKey],
                         regions: [Number.isFinite(fromRegion) ? fromRegion : -1, Number.isFinite(toRegion) ? toRegion : -1]
                     });
+                    pairByFamilyId.set(familyId, { fromKey, toKey });
                     const fromDeg = degreeMap.get(fromKey) || 0;
                     const toDeg = degreeMap.get(toKey) || 0;
                     const objectiveNear = objectiveFeatures.some((obj) => {
@@ -8888,11 +8911,133 @@
                     }
                 });
             }
+            const mandatoryFamilySet = new Set(portalBridgeHints.filter((h) => h.mandatoryLike).map((h) => h.familyId));
+            const optionalFamilySet = new Set();
+            const walkableKeys = Array.isArray(topology.walkableKeys) ? topology.walkableKeys : [];
+            const walkableSet = (level?.blockSet instanceof Set)
+                ? new Set(walkableKeys)
+                : new Set(walkableKeys);
+            const reqLenParity = Math.max(0, Number(level?.reqLen) || 0) & 1;
+            const startStates = [];
+            const targetStateSet = new Set();
+            const stateKey = (k, parity) => `${k}:${parity}`;
+            const adjacency = new Map();
+            const reverseAdjacency = new Map();
+            const edgeMetaById = new Map();
+            const addState = (s) => {
+                if (!adjacency.has(s)) adjacency.set(s, []);
+                if (!reverseAdjacency.has(s)) reverseAdjacency.set(s, []);
+            };
+            const addEdge = (fromState, toState, meta) => {
+                addState(fromState);
+                addState(toState);
+                const edgeId = `${fromState}->${toState}`;
+                adjacency.get(fromState).push({ to: toState, edgeId });
+                reverseAdjacency.get(toState).push({ to: fromState, edgeId });
+                edgeMetaById.set(edgeId, meta);
+            };
+            const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+            for (const key of walkableKeys) {
+                const p = APP.LevelUtils.UNPACK(key);
+                for (let parity = 0; parity < 2; parity++) {
+                    const fromState = stateKey(key, parity);
+                    addState(fromState);
+                    for (let i = 0; i < dirs.length; i++) {
+                        const nx = p.x + dirs[i][0];
+                        const ny = p.y + dirs[i][1];
+                        if (nx < 0 || ny < 0 || nx >= level.grid.w || ny >= level.grid.h) continue;
+                        const nk = APP.LevelUtils.PACK(nx, ny);
+                        if (!walkableSet.has(nk)) continue;
+                        addEdge(fromState, stateKey(nk, 1 - parity), { type: 'walk', familyId: -1 });
+                    }
+                    const pEdge = level?.portalMap?.get(key);
+                    if (Number.isFinite(pEdge?.dest) && walkableSet.has(pEdge.dest)) {
+                        const fam = Number(level.portalFamilyByEntry?.get(key));
+                        addEdge(fromState, stateKey(pEdge.dest, 1 - parity), { type: 'portal', familyId: Number.isFinite(fam) ? fam : -1 });
+                    }
+                }
+            }
+            for (const gate of Array.isArray(level?.gates) ? level.gates : []) {
+                const gk = APP.LevelUtils.PACK((gate?.x || 1) - 1, (gate?.y || 1) - 1);
+                if (!walkableSet.has(gk)) continue;
+                startStates.push(stateKey(gk, 0));
+            }
+            const goalKey = APP.LevelUtils.PACK((level?.goal?.x || 1) - 1, (level?.goal?.y || 1) - 1);
+            if (walkableSet.has(goalKey)) targetStateSet.add(stateKey(goalKey, reqLenParity));
+            const bfsReach = (starts, adjMap, blockedFamilies = null, blockedStates = null) => {
+                const seen = new Set();
+                const q = [];
+                starts.forEach((s) => {
+                    if (!adjMap.has(s)) return;
+                    if (blockedStates?.has(s)) return;
+                    seen.add(s);
+                    q.push(s);
+                });
+                for (let qi = 0; qi < q.length; qi++) {
+                    const cur = q[qi];
+                    const edges = adjMap.get(cur) || [];
+                    for (let ei = 0; ei < edges.length; ei++) {
+                        const edge = edges[ei];
+                        const meta = edgeMetaById.get(edge.edgeId);
+                        if (blockedFamilies instanceof Set && meta?.type === 'portal' && blockedFamilies.has(meta.familyId)) continue;
+                        if (blockedStates?.has(edge.to)) continue;
+                        if (!seen.has(edge.to)) {
+                            seen.add(edge.to);
+                            q.push(edge.to);
+                        }
+                    }
+                }
+                return seen;
+            };
+            const baseFromStart = bfsReach(startStates, adjacency);
+            const targetStates = Array.from(targetStateSet);
+            const baseToTarget = bfsReach(targetStates, reverseAdjacency);
+            const feasibleStates = new Set();
+            for (const s of baseFromStart || []) {
+                if (baseToTarget?.has(s)) feasibleStates.add(s);
+            }
+            const hasFeasiblePath = (fromSet, toSet) => {
+                if (!(fromSet instanceof Set) || !(toSet instanceof Set)) return false;
+                for (const t of toSet) if (fromSet.has(t)) return true;
+                return false;
+            };
+            if (portalFamilies.length > 0 && feasibleStates.size > 0 && hasFeasiblePath(baseFromStart, targetStateSet)) {
+                for (let fam = 0; fam < portalFamilies.length; fam++) {
+                    const blocked = new Set([fam]);
+                    const reachWithoutFamily = bfsReach(startStates, adjacency, blocked, null);
+                    const cutMandatory = !hasFeasiblePath(reachWithoutFamily, targetStateSet);
+                    let endpointDominates = false;
+                    const pair = pairByFamilyId.get(fam);
+                    if (pair) {
+                        const blockedStates = new Set([
+                            stateKey(pair.fromKey, 0), stateKey(pair.fromKey, 1),
+                            stateKey(pair.toKey, 0), stateKey(pair.toKey, 1)
+                        ]);
+                        const reachWithoutEndpoints = bfsReach(startStates, adjacency, null, blockedStates);
+                        endpointDominates = !hasFeasiblePath(reachWithoutEndpoints, targetStateSet);
+                    }
+                    if (cutMandatory || endpointDominates) {
+                        mandatoryFamilySet.add(fam);
+                        portalBridgeHints.push({
+                            familyId: fam,
+                            mandatoryLike: true,
+                            reason: cutMandatory ? 'parity-cut-dominator' : 'parity-endpoint-dominator'
+                        });
+                    } else {
+                        optionalFamilySet.add(fam);
+                    }
+                }
+            } else {
+                for (let fam = 0; fam < portalFamilies.length; fam++) {
+                    if (!mandatoryFamilySet.has(fam)) optionalFamilySet.add(fam);
+                }
+            }
             return {
                 families: portalFamilies,
                 regionByKey,
                 bridgeHints: portalBridgeHints,
-                mandatoryFamilies: portalBridgeHints.filter((h) => h.mandatoryLike).map((h) => h.familyId)
+                mandatoryFamilies: Array.from(mandatoryFamilySet).sort((a, b) => a - b),
+                optionalFamilies: Array.from(optionalFamilySet).filter((f) => !mandatoryFamilySet.has(f)).sort((a, b) => a - b)
             };
         },
 
