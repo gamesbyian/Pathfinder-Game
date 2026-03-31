@@ -8245,10 +8245,18 @@
             globalThis.validatesolveattributionconsistency = validateSolveAttributionConsistency;
             globalThis.validatesolveattributionconsistenecy = validateSolveAttributionConsistency;
         }
+        const normalizeSolverExecutionMode = (modeLike, fallback = 'referee-with-compat-profiles') => {
+            const mode = typeof modeLike === 'string' ? modeLike.trim().toLowerCase() : '';
+            if (mode === 'referee-only' || mode === 'referee-with-compat-profiles') return mode;
+            return fallback;
+        };
         // Compatibility aliases are outward-facing only and must be derived in this single function.
         const deriveCompatibilityAliasesFromAttempts = (attemptsLike = [], options = {}) => {
             const attempts = Array.isArray(attemptsLike) ? attemptsLike : [];
-            const allowReferee = options.allowReferee !== undefined ? !!options.allowReferee : true;
+            const executionMode = normalizeSolverExecutionMode(
+                options.executionMode || options.executionPath,
+                'referee-with-compat-profiles'
+            );
             // Migration note: "legacy fallback" aliases are now synthesized from referee profile attempts.
             const compatAliasAttempts = attempts.filter(isCompatLegacyStageAttempt);
             const firstCompatAliasAttempt = compatAliasAttempts[0] || null;
@@ -8258,8 +8266,9 @@
                 finalStage: options.finalStage,
                 finalSolved: options.finalSolved
             });
-            const executionPath = options.executionPath
-                || (!allowReferee ? 'legacy-compat-only' : (compatAliasAttempts.length > 0 ? 'referee-with-compat-profiles' : 'referee-only'));
+            const executionPath = executionMode === 'referee-only'
+                ? 'referee-only'
+                : 'referee-with-compat-profiles';
             const totalSolveTimeMs = Number.isFinite(options.totalSolveTimeMs) ? options.totalSolveTimeMs : 0;
             return {
                 solverPath: executionPath,
@@ -13073,14 +13082,20 @@
                 level = SavedHintArchitecture.toHintBlindSolverLevel(level);
             const purpose = opts.purpose || 'solve';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
-            const allowReferee = opts.allowReferee !== undefined ? !!opts.allowReferee : !!APP.State.ENGINE.flags?.useRefereeSolver;
+            const requestedExecutionMode = typeof opts.executionMode === 'string' ? opts.executionMode : '';
+            const compatibilityRequestedRefereeOnly = opts.allowReferee === false || opts.disableLegacyFallback === true;
+            const executionMode = normalizeSolverExecutionMode(
+                requestedExecutionMode,
+                compatibilityRequestedRefereeOnly ? 'referee-only' : 'referee-with-compat-profiles'
+            );
             const requestedEscalationTierRaw = Number(opts.escalationTier ?? opts.tier);
             const requestedEscalationTier = Number.isFinite(requestedEscalationTierRaw) ? Math.max(0, Math.floor(requestedEscalationTierRaw)) : 0;
             const levelId = Number.isFinite(level?.id) ? level.id + 1 : null;
             const debug = opts.debug !== undefined ? !!opts.debug : true;
             const debugLevel = opts.debugLevel !== undefined ? opts.debugLevel : (typeof level?.id === 'number' ? level.id + 1 : null);
-            const requestedSolverPath = allowReferee ? 'referee' : 'referee-legacy-compat';
-            const defaultExecutionPath = allowReferee ? 'referee-only' : 'legacy-compat-only';
+            // Compatibility alias: this is now a fixed label because Referee.solve is always invoked.
+            const requestedSolverPath = 'referee';
+            const defaultExecutionPath = executionMode;
                 const attachDepthZeroAudit = (payload, statusPath = 'solver-wrapper', droppedBy = 'unknown') => {
                     if (!payload || typeof payload !== 'object') return payload;
                     const dbg = payload.debug || payload.stats?.debug || null;
@@ -13108,13 +13123,14 @@
                     return payload;
                 };
                 const baseReport = {
+                executionMode,
                 requestedSolverPath,
-                refereeAttempted: allowReferee,
+                refereeAttempted: true,
                 refereeStatus: null,
                 refereeSolved: false,
                 refereeTimeMs: null,
                 // Legacy compatibility fields are now derived from unified Referee attempt history.
-                legacyFallbackTried: false,
+                legacyFallbackTried: executionMode === 'referee-with-compat-profiles',
                 legacyFallbackStatus: null,
                 legacyFallbackSolved: false,
                 legacyFallbackTimeMs: null,
@@ -13151,12 +13167,8 @@
                     ? (purpose === 'hint' ? Math.min(2, hist.timesTried) : 1)
                     : 0;
                 const escalationTier = Math.max(requestedEscalationTier, autoTier);
-                if (allowReferee) {
-                    if (!opts.auditMode && escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
-                    if (!opts.auditMode && escalationTier >= 2) APP.UI.showMessage(purpose === 'hint' ? 'Deep hint search: diversified policy ladder active.' : 'Deep search on: extended search mode.', 'text-amber-700');
-                } else {
-                    if (!opts.auditMode) APP.UI.showMessage('Solving…', 'text-sky-600');
-                }
+                if (!opts.auditMode && escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
+                if (!opts.auditMode && escalationTier >= 2) APP.UI.showMessage(purpose === 'hint' ? 'Deep hint search: diversified policy ladder active.' : 'Deep search on: extended search mode.', 'text-amber-700');
                 const refereeStart = performance.now();
                 // Unified architecture: outer callers invoke Referee once and receive one normalized solve result.
                 let solverResult = await Referee.solve(level, {
@@ -13165,7 +13177,7 @@
                     tier: escalationTier,
                     forcePreExpansionRescue: !!opts.forcePreExpansionRescue,
                     fallbackDisabledPrunes: Array.isArray(opts.fallbackDisabledPrunes) ? opts.fallbackDisabledPrunes.slice() : null,
-                    allowRescueProfiles: !opts.disableLegacyFallback,
+                    allowRescueProfiles: executionMode === 'referee-with-compat-profiles',
                     onlyRescueProfiles: false,
                     auditMode: !!opts.auditMode,
                     onStage: ({ name, variant, budgetMs }) => {
@@ -13194,7 +13206,7 @@
                     finalStatus = 'no-solution-proven';
                 }
                 const compatAliases = deriveCompatibilityAliasesFromAttempts(solverResult.stagesTried || [], {
-                    allowReferee,
+                    executionMode,
                     executionPath: solverResult.executionPath,
                     totalSolveTimeMs,
                     finalStatus,
@@ -13211,7 +13223,7 @@
                 }, {
                     levelId,
                     purpose,
-                    allowReferee,
+                    executionMode,
                     stageCount: Array.isArray(solverResult.stagesTried) ? solverResult.stagesTried.length : 0,
                     auditMode: !!opts.auditMode
                 });
@@ -13242,8 +13254,9 @@
                     stage: solverResult.stage,
                     // Compatibility alias: final effective execution path, not the requested engine.
                     solverPath: compatAliases.solverPath,
+                    executionMode,
                     requestedSolverPath,
-                    refereeAttempted: allowReferee,
+                    refereeAttempted: true,
                     refereeStatus: finalStatus,
                     refereeSolved: !!solverResult.ok,
                     refereeTimeMs,
