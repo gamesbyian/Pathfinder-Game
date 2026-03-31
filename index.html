@@ -14896,7 +14896,7 @@
         ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
         ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, isHintExpanded: false, tapStartCoord: null, tapMoved: false }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
-        ,flags: { useRefereeSolver: true, refereeDebug: false }
+        ,flags: { useRefereeSolver: true, refereeDebug: false, warnNonCanonicalLevelFields: false }
     };
         return { ENGINE };
     })();
@@ -18299,6 +18299,52 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.UI.setInlineStyle(mainLabel, 'color', 'white');
             }
         };
+        const NEW_HINT_CANONICAL_LEVEL_KEYS = new Set([
+            'id', 'grid', 'reqLen', 'reqInt', 'goalKey', 'gateKeys',
+            'blockSet', 'gooseSet', 'falseGoalKeys', 'mustPassKeys', 'mustCrossKeys',
+            'portalMap', 'filterMap', 'flippingFilterMap'
+        ]);
+        const debugProbeNewHintLevelPurity = (activeLevel) => {
+            if (!APP.State.ENGINE.isDevMode || !activeLevel || typeof activeLevel !== 'object') return;
+            const activeLevelKeys = Object.keys(activeLevel);
+            const unexpectedKeys = activeLevelKeys.filter((key) => !NEW_HINT_CANONICAL_LEVEL_KEYS.has(key));
+            const getFieldCardinality = (value) => {
+                if (Array.isArray(value)) return value.length;
+                if (value instanceof Set || value instanceof Map) return value.size;
+                if (value && typeof value === 'object' && Number.isFinite(value.size)) return value.size;
+                return null;
+            };
+            const cardinalities = {};
+            activeLevelKeys.forEach((key) => {
+                const cardinality = getFieldCardinality(activeLevel[key]);
+                if (cardinality !== null) cardinalities[key] = cardinality;
+            });
+            const suspiciousCardinalities = {};
+            unexpectedKeys.forEach((key) => {
+                const cardinality = getFieldCardinality(activeLevel[key]);
+                if (cardinality !== null) suspiciousCardinalities[key] = cardinality;
+            });
+            console.log('[New Hint start] active level keys/purity probe', {
+                levelId: activeLevel.id,
+                activeLevelKeys,
+                unexpectedKeys,
+                cardinalities,
+                suspiciousCardinalities
+            });
+            if (activeLevel.id === 134) {
+                console.log('[New Hint start] Level 134 purity check', {
+                    isPureCanonical: unexpectedKeys.length === 0,
+                    unexpectedKeys
+                });
+            }
+            if (unexpectedKeys.length > 0 && APP.State.ENGINE.flags?.warnNonCanonicalLevelFields) {
+                console.warn('[New Hint start] Non-canonical fields present before canonical clone.', {
+                    levelId: activeLevel.id,
+                    unexpectedKeys,
+                    suspiciousCardinalities
+                });
+            }
+        };
         hintBtn.onclick = async (e) => {
             APP.UI.closeAllModals();
             if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
@@ -18326,6 +18372,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     await new Promise(requestAnimationFrame);
                     try {
                         const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                        debugProbeNewHintLevelPurity(activeLevel);
                         const normalized = APP.LevelUtils.canonicalCloneLevel(activeLevel);
                         const ladderResult = await runHintLadder(normalized, {
                             auditMode: false,
