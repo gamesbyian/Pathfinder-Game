@@ -3553,11 +3553,51 @@
                         mustCrossRejected: 0,
                         portalAutomatonRejected: 0,
                         parityRejected: 0,
+                        portalParityImpossibleRejected: 0,
+                        portalObligationSignatureImpossibleRejected: 0,
+                        portalOptionalNonImprovingRejected: 0,
                         memoRejected: 0,
                         topologyRejected: 0
                     } : null;
                     const startNeighborBoundSanity = depth === 0 ? { legalBranches: 0, satisfiedBranches: 0 } : null;
                     const gateToGateRejected = [];
+                    const optionalPortalFamilies = new Set(Array.isArray(l?.solverProfile?.portalHints?.optionalFamilies)
+                        ? l.solverProfile.portalHints.optionalFamilies
+                        : []);
+                    const mandatoryPortalFamilies = new Set(Array.isArray(l?.solverProfile?.portalHints?.mandatoryFamilies)
+                        ? l.solverProfile.portalHints.mandatoryFamilies
+                        : []);
+                    const obligationParityTable = options?.portalTriage?.obligationParityTable || null;
+                    const canReachByParityOnly = (key, parity) => {
+                        if (!obligationParityTable?.reachable || !obligationParityTable?.encode) return true;
+                        for (let b = 0; b < Math.max(1, obligationParityTable.bucketCount || 4); b++) {
+                            if (obligationParityTable.reachable.has(obligationParityTable.encode(key, parity, b))) return true;
+                        }
+                        return false;
+                    };
+                    const obligationBucketAfterMove = (nk) => {
+                        const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
+                        const crossIdx = l.mustCrossIndex ? l.mustCrossIndex.get(nk) : undefined;
+                        const nextMustMask = (mustIdx !== undefined)
+                            ? (state.mustMask & ~(1n << BigInt(mustIdx)))
+                            : state.mustMask;
+                        let nextCrossNeed = crossNeed;
+                        if (crossIdx !== undefined && state.mustCrossCounts) {
+                            const currentCrossCount = state.mustCrossCounts[crossIdx] || 0;
+                            if (currentCrossCount < 2) nextCrossNeed = Math.max(0, crossNeed - 1);
+                        }
+                        const nextMustCount = countMaskBits(nextMustMask, l);
+                        return this._computeObligationSignatureBucket(nextMustCount, nextCrossNeed);
+                    };
+                    const isOptionalPortalJump = (fromKey, toKey) => {
+                        if (!l?.portalMap?.has(fromKey)) return false;
+                        const pEdge = l.portalMap.get(fromKey);
+                        if (!Number.isFinite(pEdge?.dest) || pEdge.dest !== toKey) return false;
+                        const fam = Number(l.portalFamilyByEntry?.get(fromKey));
+                        if (!Number.isFinite(fam) || fam < 0) return false;
+                        if (mandatoryPortalFamilies.has(fam)) return false;
+                        return optionalPortalFamilies.size === 0 ? true : optionalPortalFamilies.has(fam);
+                    };
                     const originalGateSet = l.gateSet;
                     if (depth === 0 && l.gateSet?.size > 1) {
                         l.gateSet = new Set([state.path[0]]);
@@ -3590,7 +3630,43 @@
                         const isP = (portalDest === nk && portalForced);
                         const nLen = curLen + (isP ? 0 : 1);
                         const rSteps = l.reqLen - nLen;
+                        const nextParity = nLen & 1;
                         if (startNeighborBoundSanity) startNeighborBoundSanity.legalBranches++;
+                        if (isP && obligationParityTable?.reachable && obligationParityTable?.encode && isOptionalPortalJump(k, nk)) {
+                            const parityReachable = canReachByParityOnly(nk, nextParity);
+                            if (!parityReachable) {
+                                if (debugStats) debugStats.prune.portalParityImpossible = (debugStats.prune.portalParityImpossible || 0) + 1;
+                                if (startFilterBreakdown) startFilterBreakdown.portalParityImpossibleRejected = (startFilterBreakdown.portalParityImpossibleRejected || 0) + 1;
+                                if (debugStats && depth === 0) {
+                                    const dbg = ensureDepthZeroDebug(debugStats);
+                                    if (dbg && dbg.rootSuppressionLog.length < 20) dbg.rootSuppressionLog.push({ type: 'portal-obligation-parity', key: nk, depth: 1, reason: 'parity impossible' });
+                                }
+                                return false;
+                            }
+                            const bucket = obligationBucketAfterMove(nk);
+                            const bucketReachable = obligationParityTable.reachable.has(obligationParityTable.encode(nk, nextParity, bucket));
+                            if (!bucketReachable) {
+                                if (debugStats) debugStats.prune.portalObligationSignatureImpossible = (debugStats.prune.portalObligationSignatureImpossible || 0) + 1;
+                                if (startFilterBreakdown) startFilterBreakdown.portalObligationSignatureImpossibleRejected = (startFilterBreakdown.portalObligationSignatureImpossibleRejected || 0) + 1;
+                                if (debugStats && depth === 0) {
+                                    const dbg = ensureDepthZeroDebug(debugStats);
+                                    if (dbg && dbg.rootSuppressionLog.length < 20) dbg.rootSuppressionLog.push({ type: 'portal-obligation-parity', key: nk, depth: 1, reason: 'obligation-signature impossible' });
+                                }
+                                return false;
+                            }
+                            const currentBucket = this._computeObligationSignatureBucket(countMaskBits(state.mustMask, l), crossNeed);
+                            const curReachable = obligationParityTable.reachable.has(obligationParityTable.encode(k, curLen & 1, currentBucket));
+                            const improvesFeasibility = !curReachable && bucketReachable;
+                            if (!improvesFeasibility) {
+                                if (debugStats) debugStats.prune.portalOptionalNonImproving = (debugStats.prune.portalOptionalNonImproving || 0) + 1;
+                                if (startFilterBreakdown) startFilterBreakdown.portalOptionalNonImprovingRejected = (startFilterBreakdown.portalOptionalNonImprovingRejected || 0) + 1;
+                                if (debugStats && depth === 0) {
+                                    const dbg = ensureDepthZeroDebug(debugStats);
+                                    if (dbg && dbg.rootSuppressionLog.length < 20) dbg.rootSuppressionLog.push({ type: 'portal-obligation-parity', key: nk, depth: 1, reason: 'portal optional and non-improving' });
+                                }
+                                return false;
+                            }
+                        }
                         if (!disableDistanceBound) {
                             const d = distMap.get(nk);
                             const distanceRejected = (d === undefined || d > rSteps);
@@ -5532,7 +5608,7 @@
                             detailParts.push(`afterHazard=${fb.afterHazardPolicyCount ?? 0}`);
                             detailParts.push(`afterObjective=${fb.afterObjectiveHeuristicsCount ?? 0}`);
                             detailParts.push(`final=${fb.finalCandidateCount ?? 0}`);
-                            detailParts.push(`rej[illegal=${fb.illegalMoveRejected || 0},hazard=${fb.hazardRejected || 0},distance=${fb.falseGoalRejected || 0},mustPass=${fb.mustPassRejected || 0},mustCross=${fb.mustCrossRejected || 0},portalAutomaton=${debugStats?.prune?.portalAutomatonRejected || 0},parity=${fb.parityRejected || 0},memo=${fb.memoRejected || 0},topology=${fb.topologyRejected || 0}]`);
+                            detailParts.push(`rej[illegal=${fb.illegalMoveRejected || 0},hazard=${fb.hazardRejected || 0},distance=${fb.falseGoalRejected || 0},mustPass=${fb.mustPassRejected || 0},mustCross=${fb.mustCrossRejected || 0},portalAutomaton=${debugStats?.prune?.portalAutomatonRejected || 0},parity=${fb.parityRejected || 0},portalParityImpossible=${fb.portalParityImpossibleRejected || 0},portalObligationSignatureImpossible=${fb.portalObligationSignatureImpossibleRejected || 0},portalOptionalNonImproving=${fb.portalOptionalNonImprovingRejected || 0},memo=${fb.memoRejected || 0},topology=${fb.topologyRejected || 0}]`);
                         }
                         detailParts.push(`portalForced=${trace?.portalForced ? 'yes' : 'no'}`);
                         detailParts.push(`portalBiasMode=${options?.portalBiasMode || 'adaptiveMustCross'}`);
@@ -7590,6 +7666,9 @@
                             mustPassBound: debugStats.prune.mustPassBound || 0,
                             mustCrossBound: debugStats.prune.mustCrossBound || 0,
                             portalAutomatonRejected: debugStats.prune.portalAutomatonRejected || 0,
+                            portalParityImpossible: debugStats.prune.portalParityImpossible || 0,
+                            portalObligationSignatureImpossible: debugStats.prune.portalObligationSignatureImpossible || 0,
+                            portalOptionalNonImproving: debugStats.prune.portalOptionalNonImproving || 0,
                             failedStateHit: debugStats.prune.failedStateHit || 0,
                             minRemOverflow: debugStats.prune.minRemOverflow || 0,
                             deadEnd: debugStats.prune.deadEnd || 0
@@ -11547,6 +11626,81 @@
             };
         },
 
+        _computeObligationSignatureBucket(remainingMustPassCount = 0, remainingMustCrossNeed = 0) {
+            const mustPassParity = Math.abs(Number(remainingMustPassCount) || 0) & 1;
+            const mustCrossParity = Math.abs(Number(remainingMustCrossNeed) || 0) & 1;
+            return (mustCrossParity << 1) | mustPassParity;
+        },
+
+        _buildObligationParityReachabilityTable(level) {
+            const walkableKeys = (level?.solverProfile?.topology?.walkableKeys || []).filter((k) => !level?.blockSet?.has(k));
+            const walkableSet = new Set(walkableKeys);
+            const portalIncoming = new Map();
+            if (level?.portalMap instanceof Map) {
+                level.portalMap.forEach((edge, fromKey) => {
+                    const dest = Number(edge?.dest);
+                    if (!Number.isFinite(dest) || !walkableSet.has(fromKey) || !walkableSet.has(dest)) return;
+                    if (!portalIncoming.has(dest)) portalIncoming.set(dest, []);
+                    portalIncoming.get(dest).push(fromKey);
+                });
+            }
+            const encode = (k, parity, bucket) => `${k}|${parity}|${bucket}`;
+            const isMustPassKey = (k) => level?.mustPassIndex?.has(k);
+            const isMustCrossKey = (k) => level?.mustCrossIndex?.has(k);
+            const goalKey = Number(level?.goalKey);
+            const reqLenParity = Math.abs(Number(level?.reqLen) || 0) & 1;
+            const queue = [];
+            const seen = new Set();
+            const goalState = encode(goalKey, reqLenParity, 0);
+            if (Number.isFinite(goalKey) && walkableSet.has(goalKey)) {
+                seen.add(goalState);
+                queue.push({ key: goalKey, parity: reqLenParity, bucket: 0 });
+            }
+            const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+            for (let qi = 0; qi < queue.length; qi++) {
+                const cur = queue[qi];
+                const prevParity = cur.parity ^ 1;
+                const mustPassParity = cur.bucket & 1;
+                const mustCrossParity = (cur.bucket >> 1) & 1;
+                const prevBucketCandidates = new Set();
+                const addPrevBucket = (mpParity, mcParity) => {
+                    const b = ((mcParity & 1) << 1) | (mpParity & 1);
+                    prevBucketCandidates.add(b);
+                };
+                const addIncoming = (fromKey) => {
+                    if (!Number.isFinite(fromKey) || !walkableSet.has(fromKey)) return;
+                    const passTogglePossible = isMustPassKey(cur.key);
+                    const crossTogglePossible = isMustCrossKey(cur.key);
+                    const passOptions = passTogglePossible ? [mustPassParity, mustPassParity ^ 1] : [mustPassParity];
+                    const crossOptions = crossTogglePossible ? [mustCrossParity, mustCrossParity ^ 1] : [mustCrossParity];
+                    for (const mp of passOptions) {
+                        for (const mc of crossOptions) addPrevBucket(mp, mc);
+                    }
+                    for (const prevBucket of prevBucketCandidates) {
+                        const code = encode(fromKey, prevParity, prevBucket);
+                        if (seen.has(code)) continue;
+                        seen.add(code);
+                        queue.push({ key: fromKey, parity: prevParity, bucket: prevBucket });
+                    }
+                };
+                const p = APP.LevelUtils.UNPACK(cur.key);
+                for (let i = 0; i < dirs.length; i++) {
+                    const nx = p.x + dirs[i][0];
+                    const ny = p.y + dirs[i][1];
+                    if (nx < 0 || ny < 0 || nx >= level.grid.w || ny >= level.grid.h) continue;
+                    addIncoming(APP.LevelUtils.PACK(nx, ny));
+                }
+                const portalSources = portalIncoming.get(cur.key) || [];
+                for (let i = 0; i < portalSources.length; i++) addIncoming(portalSources[i]);
+            }
+            return {
+                reachable: seen,
+                bucketCount: 4,
+                encode,
+                reqLenParity
+            };
+        },
+
         analyzePortalTopology(level) {
             const hasPortals = (level?.portalMap?.size || 0) > 0;
             if (!hasPortals) {
@@ -11597,6 +11751,7 @@
                     }
                 };
             }
+            const obligationParityTable = this._buildObligationParityReachabilityTable(level);
             const classification = anyNoPortalCompatibleGoal
                 ? 'portal-optional'
                 : (anyFullCompatibleGoal ? 'portal-necessary' : 'goal-unreachable');
@@ -11611,7 +11766,8 @@
                     noPortalGoalReachable: anyNoPortalCompatibleGoal,
                     withPortalGoalReachable: anyFullCompatibleGoal,
                     gateReachability
-                }
+                },
+                obligationParityTable
             };
         },
 
@@ -11752,7 +11908,8 @@
                 goalReachableWithoutPortals: !!topology.goalReachableWithoutPortals,
                 portalUsefulness,
                 nonPortalFeasibility,
-                graphClassifier: topology.graphClassifier || null
+                graphClassifier: topology.graphClassifier || null,
+                obligationParityTable: topology.obligationParityTable || null
             };
         },
 
@@ -14275,7 +14432,10 @@
                         illegalMove: 0,
                         parity: 0,
                         other: 0,
-                        portalAutomatonRejected: 0
+                        portalAutomatonRejected: 0,
+                        portalParityImpossible: 0,
+                        portalObligationSignatureImpossible: 0,
+                        portalOptionalNonImproving: 0
                     },
                     notes: []
                 };
@@ -14939,7 +15099,7 @@
                     `Level ${levelNumber}: UNSOLVED (${(debug?.status || 'unknown').toUpperCase()})`,
                     `nodesExpanded=${debug?.nodesExpanded || 0} elapsedMs=${debug?.elapsedMs || 0} maxDepth=${debug?.maxDepth || 0} memoSize=${debug?.memoSize || 0} pass=${debug?.pass || 'primary'} failMemoUsed=${debug?.failMemoUsed ? 'yes' : 'no'} failMemoHitRate=${((debug?.failMemoHitRate || 0) * 100).toFixed(1)}% dominanceHitRate=${((debug?.dominanceMemoHitRate || 0) * 100).toFixed(1)}% disabledPrunes=${(debug?.disabledPrunes || []).join(',') || 'none'}`,
                     `sigBuild: hash=${debug?.signatureBuildCount || 0} calls/${(debug?.signatureBuildMs || 0).toFixed(2)}ms strict=${debug?.signatureStrictBuildCount || 0} calls/${(debug?.signatureStrictBuildMs || 0).toFixed(2)}ms collisions=${debug?.memoStrictCollisions || 0}`,
-                    `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`,
+                    `prune: lenOverflow=${prune.lenOverflow || 0} intsOverflow=${prune.intsOverflow || 0} mustPassBound=${prune.mustPassBound || 0} mustCrossBound=${prune.mustCrossBound || 0} parity=${prune.parity || 0} portalParityImpossible=${prune.portalParityImpossible || 0} portalObligationSignatureImpossible=${prune.portalObligationSignatureImpossible || 0} portalOptionalNonImproving=${prune.portalOptionalNonImproving || 0} failedStateHit=${prune.failedStateHit || 0} deadEnd=${prune.deadEnd || 0} other=${prune.other || 0}`,
                     `antiDither: ditherPenaltyHits=${debug?.ditherPenaltyHits || 0} earlyGoalApproachBlocked=${debug?.earlyGoalApproachBlocked || 0}`
                 ];
                 lines.push(`depth0Metrics: rootCandidateCountDepth0=${debug?.rootCandidateCountDepth0 ?? 'n/a'} lowBranchModeActivated=${debug?.lowBranchModeActivated ? 'yes' : 'no'} diversityFloor=${debug?.depth0DiversityFloorApplied ? (debug?.depth0DiversityFloorSize ?? 'yes') : 'no'} softBoundTotal=${debug?.softBoundActivations?.total ?? 0}`);
