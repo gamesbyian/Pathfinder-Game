@@ -13012,6 +13012,9 @@
         };
 
             const solveLevel = async (level, opts = {}) => {
+                level = APP.LevelUtils?.cloneCanonicalLevelForSolver
+                    ? APP.LevelUtils.cloneCanonicalLevelForSolver(level)
+                    : level;
                 level = SavedHintArchitecture.toHintBlindSolverLevel(level);
             const purpose = opts.purpose || 'solve';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
@@ -16282,7 +16285,88 @@
 
             function getGridCoord(e) { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / APP.State.ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / APP.State.ENGINE.viewport.cellH))); return APP.LevelUtils.inverseTransformPoint(tx, ty, APP.State.ENGINE.variant, l.grid.w, l.grid.h); }
 
-            function deepCloneLevel(src) { const l = JSON.parse(JSON.stringify(src)); l.blockSet = new Set(src.blockSet); l.gooseSet = new Set(src.gooseSet); l.falseGoalKeys = new Set(src.falseGoalKeys); l.portalMap = new Map(); if(src.portalMap) src.portalMap.forEach((v, k) => l.portalMap.set(k, v)); l.filterMap = new Map(); if(src.filterMap) src.filterMap.forEach((v, k) => l.filterMap.set(k, v)); l.flippingFilterMap = new Map(); if(src.flippingFilterMap) src.flippingFilterMap.forEach((v, k) => l.flippingFilterMap.set(k, v)); return l; }
+            const CANONICAL_SOLVER_LEVEL_KEYS = Object.freeze([
+                'id', 'grid', 'reqLen', 'reqInt',
+                'goal', 'goalKey',
+                'gates', 'gateKeys',
+                'falseGoals', 'falseGoalKeys',
+                'blocks', 'blockSet',
+                'geese', 'gooseSet',
+                'mustPass', 'mustPassKeys',
+                'mustCross', 'mustCrossKeys',
+                'filters', 'filterMap',
+                'flippingFilters', 'flippingFilterMap',
+                'portals', 'portalMap', 'portalVisuals',
+                'hints',
+                'hasParityBreaker'
+            ]);
+            const CANONICAL_SOLVER_LEVEL_KEY_SET = new Set(CANONICAL_SOLVER_LEVEL_KEYS);
+            function getNonCanonicalLevelKeys(level) {
+                if (!level || typeof level !== 'object') return [];
+                return Object.keys(level).filter((k) => !CANONICAL_SOLVER_LEVEL_KEY_SET.has(k));
+            }
+            function describeOwnValue(v) {
+                if (v === null) return 'null';
+                const t = typeof v;
+                if (t !== 'object') return t;
+                if (Array.isArray(v)) return `array(${v.length})`;
+                if (v instanceof Set) return `Set(${v.size})`;
+                if (v instanceof Map) return `Map(${v.size})`;
+                return 'plain object';
+            }
+            function logLiveLevelCloneDiagnostics(level, context = 'level-clone') {
+                if (!level || typeof level !== 'object') return;
+                const keys = Object.keys(level);
+                const levelId = Number.isFinite(level.id) ? level.id + 1 : 'unknown';
+                const keySummary = {};
+                for (const key of keys) keySummary[key] = describeOwnValue(level[key]);
+                const suspiciousKeys = getNonCanonicalLevelKeys(level);
+                console.info(`[HintDiag] ${context}: level=${levelId}, keys=${keys.length ? keys.join(',') : '(none)'}`);
+                console.info('[HintDiag] key-shapes', keySummary);
+                if (suspiciousKeys.length) console.warn('[HintDiag] suspicious live-level keys:', suspiciousKeys);
+            }
+            function cloneCanonicalLevelForSolver(src) {
+                if (!src || typeof src !== 'object') return src;
+                const l = {};
+                if (Object.prototype.hasOwnProperty.call(src, 'id')) l.id = src.id;
+                if (src.grid) l.grid = { w: src.grid.w, h: src.grid.h };
+                if (Object.prototype.hasOwnProperty.call(src, 'reqLen')) l.reqLen = src.reqLen;
+                if (Object.prototype.hasOwnProperty.call(src, 'reqInt')) l.reqInt = src.reqInt;
+                if (Object.prototype.hasOwnProperty.call(src, 'goal')) l.goal = src.goal ? { ...src.goal } : src.goal;
+                if (Object.prototype.hasOwnProperty.call(src, 'goalKey')) l.goalKey = src.goalKey;
+                if (Object.prototype.hasOwnProperty.call(src, 'gates')) l.gates = Array.isArray(src.gates) ? src.gates.map((g) => ({ ...g })) : src.gates;
+                if (Object.prototype.hasOwnProperty.call(src, 'gateKeys')) l.gateKeys = Array.isArray(src.gateKeys) ? src.gateKeys.slice() : [];
+                if (Object.prototype.hasOwnProperty.call(src, 'falseGoals')) l.falseGoals = Array.isArray(src.falseGoals) ? src.falseGoals.map((g) => ({ ...g })) : src.falseGoals;
+                if (Object.prototype.hasOwnProperty.call(src, 'falseGoalKeys')) l.falseGoalKeys = new Set(src.falseGoalKeys || []);
+                if (Object.prototype.hasOwnProperty.call(src, 'blocks')) l.blocks = Array.isArray(src.blocks) ? src.blocks.map((b) => ({ ...b })) : src.blocks;
+                if (Object.prototype.hasOwnProperty.call(src, 'blockSet')) l.blockSet = new Set(src.blockSet || []);
+                if (Object.prototype.hasOwnProperty.call(src, 'geese')) l.geese = Array.isArray(src.geese) ? src.geese.map((g) => ({ ...g })) : src.geese;
+                if (Object.prototype.hasOwnProperty.call(src, 'gooseSet')) l.gooseSet = new Set(src.gooseSet || []);
+                if (Object.prototype.hasOwnProperty.call(src, 'mustPass')) l.mustPass = Array.isArray(src.mustPass) ? src.mustPass.map((m) => ({ ...m })) : src.mustPass;
+                if (Object.prototype.hasOwnProperty.call(src, 'mustPassKeys')) l.mustPassKeys = Array.isArray(src.mustPassKeys) ? src.mustPassKeys.slice() : [];
+                if (Object.prototype.hasOwnProperty.call(src, 'mustCross')) l.mustCross = Array.isArray(src.mustCross) ? src.mustCross.map((m) => ({ ...m })) : src.mustCross;
+                if (Object.prototype.hasOwnProperty.call(src, 'mustCrossKeys')) l.mustCrossKeys = Array.isArray(src.mustCrossKeys) ? src.mustCrossKeys.slice() : [];
+                if (Object.prototype.hasOwnProperty.call(src, 'filters')) l.filters = Array.isArray(src.filters) ? src.filters.map((f) => ({ ...f })) : src.filters;
+                if (Object.prototype.hasOwnProperty.call(src, 'filterMap')) {
+                    l.filterMap = new Map();
+                    (src.filterMap || new Map()).forEach((v, k) => l.filterMap.set(k, v));
+                }
+                if (Object.prototype.hasOwnProperty.call(src, 'flippingFilters')) l.flippingFilters = Array.isArray(src.flippingFilters) ? src.flippingFilters.map((f) => ({ ...f })) : src.flippingFilters;
+                if (Object.prototype.hasOwnProperty.call(src, 'flippingFilterMap')) {
+                    l.flippingFilterMap = new Map();
+                    (src.flippingFilterMap || new Map()).forEach((v, k) => l.flippingFilterMap.set(k, v));
+                }
+                if (Object.prototype.hasOwnProperty.call(src, 'portals')) l.portals = Array.isArray(src.portals) ? src.portals.map((p) => ({ ...p })) : src.portals;
+                if (Object.prototype.hasOwnProperty.call(src, 'portalMap')) {
+                    l.portalMap = new Map();
+                    (src.portalMap || new Map()).forEach((v, k) => l.portalMap.set(k, v ? { ...v } : v));
+                }
+                if (Object.prototype.hasOwnProperty.call(src, 'portalVisuals')) l.portalVisuals = Array.isArray(src.portalVisuals) ? src.portalVisuals.map((pv) => ({ ...pv })) : [];
+                if (Object.prototype.hasOwnProperty.call(src, 'hints')) l.hints = Array.isArray(src.hints) ? src.hints.map((h) => Array.isArray(h) ? h.slice() : h) : [];
+                if (Object.prototype.hasOwnProperty.call(src, 'hasParityBreaker')) l.hasParityBreaker = !!src.hasParityBreaker;
+                return l;
+            }
+            function deepCloneLevel(src) { return cloneCanonicalLevelForSolver(src); }
             // ======================================================
             // C) Level / NormalizeAndCaches
             // ======================================================
@@ -16344,7 +16428,7 @@
 
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
-            transformAxis, getGridCoord, deepCloneLevel, normalizeLevel, denormalizeLevel,
+            transformAxis, getGridCoord, deepCloneLevel, cloneCanonicalLevelForSolver, logLiveLevelCloneDiagnostics, getNonCanonicalLevelKeys, normalizeLevel, denormalizeLevel,
             shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, getRawLevels, resolvePortal, isValidMove
         };
     })();
@@ -17793,7 +17877,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
 
         const runHintLadder = async (normalizedLevel, options = {}) => {
-            const normalized = APP.LevelUtils.deepCloneLevel(normalizedLevel);
+            const normalized = APP.LevelUtils.cloneCanonicalLevelForSolver(normalizedLevel);
             const auditMode = !!options.auditMode;
             const disableLegacyFallback = options.disableLegacyFallback !== undefined
                 ? !!options.disableLegacyFallback
@@ -17843,7 +17927,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const label = toAttemptLabel(attemptIndex);
                     const policy = buildHintAttemptPolicy({ attemptIndex, disableLegacyFallback });
                     const attemptStart = performance.now();
-                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), {
+                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.cloneCanonicalLevelForSolver(normalized), {
                         ...policy,
                         auditMode,
                         timeBudgetMs: remainingMs
@@ -17851,7 +17935,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     finalHintResult = hintRes || finalHintResult;
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath
-                        ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath))
+                        ? APP.Solver.validateCandidatePath(APP.LevelUtils.cloneCanonicalLevelForSolver(normalized), copyClone(producedPath))
                         : null;
                     const attemptStatus = classifyHintStatus(hintRes, hintValidation);
                     const attemptRecord = APP.Solver.toAuditAttemptSummary(hintRes, {
@@ -18293,8 +18377,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
                     updateHintLabel();
                     try {
+                        await new Promise((resolve) => requestAnimationFrame(resolve));
                         const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-                        const normalized = APP.LevelUtils.deepCloneLevel(activeLevel);
+                        APP.LevelUtils.logLiveLevelCloneDiagnostics(activeLevel, 'new-hint-preflight');
+                        const normalized = APP.LevelUtils.cloneCanonicalLevelForSolver(activeLevel);
                         const ladderResult = await runHintLadder(normalized, {
                             auditMode: false,
                             maxWallTimeMs: HINT_LADDER_CAP_MS
