@@ -15362,9 +15362,44 @@
 
                         ctx.strokeStyle = '#000000';
                         ctx.setLineDash([width, width]);
-                        trace();
-                        ctx.stroke();
+                        ctx.lineDashOffset = 0;
+                        const drawCautionStripeSegment = (fromIdx, toIdx) => {
+                            const from = APP.LevelUtils.UNPACK(pathArr[fromIdx]);
+                            const sFrom = getScreenPos(from.x, from.y);
+                            ctx.beginPath();
+                            ctx.moveTo(sFrom.sx, sFrom.sy);
+                            for (let i = fromIdx + 1; i <= toIdx; i++) {
+                                const p = APP.LevelUtils.UNPACK(pathArr[i]);
+                                const s = getScreenPos(p.x, p.y);
+                                ctx.lineTo(s.sx, s.sy);
+                            }
+                            ctx.stroke();
+                        };
+                        const drawCautionStripesWithTurnResets = () => {
+                            if (pathArr.length < 2) return;
+                            let segmentStart = 0;
+                            let prevDir = null;
+                            for (let i = 1; i < pathArr.length; i++) {
+                                if (isJumpSet.has(i)) {
+                                    if (i - 1 > segmentStart) drawCautionStripeSegment(segmentStart, i - 1);
+                                    segmentStart = i;
+                                    prevDir = null;
+                                    continue;
+                                }
+                                const prev = APP.LevelUtils.UNPACK(pathArr[i - 1]);
+                                const cur = APP.LevelUtils.UNPACK(pathArr[i]);
+                                const dir = `${Math.sign(cur.x - prev.x)},${Math.sign(cur.y - prev.y)}`;
+                                if (prevDir && dir !== prevDir) {
+                                    if (i - 1 > segmentStart) drawCautionStripeSegment(segmentStart, i - 1);
+                                    segmentStart = i - 1;
+                                }
+                                prevDir = dir;
+                            }
+                            if (pathArr.length - 1 > segmentStart) drawCautionStripeSegment(segmentStart, pathArr.length - 1);
+                        };
+                        drawCautionStripesWithTurnResets();
                         ctx.setLineDash([]);
+                        ctx.lineDashOffset = 0;
 
                         getCautionSegmentEndpoints().forEach(({ sx, sy }) => {
                             drawDot(sx, sy, '#fbbf24');
@@ -16065,7 +16100,7 @@
                     const hintBlinkCycleMs = 800;
                     const hintFadeDurationMs = 900;
 
-                    APP.State.ENGINE.hinter.index += 0.5;
+                    APP.State.ENGINE.hinter.index += 0.285;
 
                     if (APP.State.ENGINE.hinter.index >= hPath.length) {
                         APP.State.ENGINE.hinter.index = hPath.length;
