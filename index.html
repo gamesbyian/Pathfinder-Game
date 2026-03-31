@@ -15338,126 +15338,36 @@
                     }
 
                     if (isCaution) {
-                        const CAUTION_BASE = '#fbbf24';
-                        const CAUTION_STRIPE = '#000000';
-                        const CORNER_PATCH_RADIUS = width * 0.52;
-                        const CORNER_STRIPE_WIDTH = Math.max(1.25, width * 0.22);
-                        const CORNER_STRIPE_LENGTH = CORNER_PATCH_RADIUS * 1.05;
-                        const CORNER_STRIPE_OFFSET = CORNER_PATCH_RADIUS * 0.18;
-
-                        const buildCautionSegments = () => {
-                            const runs = [];
-                            let currentRun = [];
-                            for (let i = 0; i < pathArr.length; i++) {
+                        const trace = () => {
+                            const start = APP.LevelUtils.UNPACK(pathArr[0]);
+                            const sStart = getScreenPos(start.x, start.y);
+                            ctx.beginPath();
+                            ctx.moveTo(sStart.sx, sStart.sy);
+                            ctx.lineTo(sStart.sx, sStart.sy);
+                            for (let i = 1; i < pathArr.length; i++) {
                                 const p = APP.LevelUtils.UNPACK(pathArr[i]);
                                 const s = getScreenPos(p.x, p.y);
-                                if (!currentRun.length) {
-                                    currentRun.push(s);
-                                    continue;
-                                }
                                 if (isJumpSet.has(i)) {
-                                    if (currentRun.length) runs.push(currentRun);
-                                    currentRun = [s];
+                                    ctx.moveTo(s.sx, s.sy);
+                                    ctx.lineTo(s.sx, s.sy);
                                 } else {
-                                    currentRun.push(s);
+                                    ctx.lineTo(s.sx, s.sy);
                                 }
                             }
-                            if (currentRun.length) runs.push(currentRun);
-
-                            const segments = [];
-                            runs.forEach(run => {
-                                for (let i = 1; i < run.length; i++) {
-                                    segments.push({ start: run[i - 1], end: run[i] });
-                                }
-                            });
-                            return { runs, segments };
                         };
 
-                        const drawCautionSegmentBase = (segment) => {
-                            ctx.strokeStyle = CAUTION_BASE;
-                            ctx.beginPath();
-                            ctx.moveTo(segment.start.sx, segment.start.sy);
-                            ctx.lineTo(segment.end.sx, segment.end.sy);
-                            ctx.stroke();
-                        };
+                        ctx.strokeStyle = '#fbbf24';
+                        trace();
+                        ctx.stroke();
 
-                        const drawCautionSegmentStripes = (segment) => {
-                            ctx.strokeStyle = CAUTION_STRIPE;
-                            ctx.setLineDash([width, width]);
-                            ctx.beginPath();
-                            ctx.moveTo(segment.start.sx, segment.start.sy);
-                            ctx.lineTo(segment.end.sx, segment.end.sy);
-                            ctx.stroke();
-                        };
-
-                        const drawCautionCornerPatch = (corner, incomingDir, outgoingDir) => {
-                            const bisector = { x: incomingDir.x + outgoingDir.x, y: incomingDir.y + outgoingDir.y };
-                            const bisectorMag = Math.hypot(bisector.x, bisector.y) || 1;
-                            const axis = { x: bisector.x / bisectorMag, y: bisector.y / bisectorMag };
-                            const normal = { x: -axis.y, y: axis.x };
-
-                            ctx.save();
-                            ctx.beginPath();
-                            ctx.arc(corner.sx, corner.sy, CORNER_PATCH_RADIUS, 0, Math.PI * 2);
-                            ctx.fillStyle = CAUTION_BASE;
-                            ctx.fill();
-
-                            ctx.beginPath();
-                            ctx.arc(corner.sx, corner.sy, CORNER_PATCH_RADIUS, 0, Math.PI * 2);
-                            ctx.clip();
-
-                            ctx.strokeStyle = CAUTION_STRIPE;
-                            ctx.lineWidth = CORNER_STRIPE_WIDTH;
-                            ctx.lineCap = 'round';
-                            [-CORNER_STRIPE_OFFSET, CORNER_STRIPE_OFFSET].forEach(offset => {
-                                const ox = normal.x * offset;
-                                const oy = normal.y * offset;
-                                ctx.beginPath();
-                                ctx.moveTo(
-                                    corner.sx + ox - axis.x * CORNER_STRIPE_LENGTH,
-                                    corner.sy + oy - axis.y * CORNER_STRIPE_LENGTH
-                                );
-                                ctx.lineTo(
-                                    corner.sx + ox + axis.x * CORNER_STRIPE_LENGTH,
-                                    corner.sy + oy + axis.y * CORNER_STRIPE_LENGTH
-                                );
-                                ctx.stroke();
-                            });
-                            ctx.restore();
-                        };
-
-                        const isOrthogonalTurn = (incomingDir, outgoingDir) => {
-                            const dot = incomingDir.x * outgoingDir.x + incomingDir.y * outgoingDir.y;
-                            const sameDir = incomingDir.x === outgoingDir.x && incomingDir.y === outgoingDir.y;
-                            return Math.abs(dot) < 0.001 && !sameDir;
-                        };
-
-                        const { runs, segments } = buildCautionSegments();
-                        segments.forEach(drawCautionSegmentBase);
-                        segments.forEach(drawCautionSegmentStripes);
+                        ctx.strokeStyle = '#000000';
+                        ctx.setLineDash([width, width]);
+                        trace();
+                        ctx.stroke();
                         ctx.setLineDash([]);
 
-                        runs.forEach(run => {
-                            for (let i = 1; i < run.length - 1; i++) {
-                                const prev = run[i - 1];
-                                const corner = run[i];
-                                const next = run[i + 1];
-                                const incomingDir = {
-                                    x: Math.sign(corner.sx - prev.sx),
-                                    y: Math.sign(corner.sy - prev.sy)
-                                };
-                                const outgoingDir = {
-                                    x: Math.sign(next.sx - corner.sx),
-                                    y: Math.sign(next.sy - corner.sy)
-                                };
-                                if (isOrthogonalTurn(incomingDir, outgoingDir)) {
-                                    drawCautionCornerPatch(corner, incomingDir, outgoingDir);
-                                }
-                            }
-                        });
-
                         getCautionSegmentEndpoints().forEach(({ sx, sy }) => {
-                            drawDot(sx, sy, CAUTION_BASE);
+                            drawDot(sx, sy, '#fbbf24');
                         });
                     } else if (APP.State.ENGINE.rainbowActive) {
                         const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
