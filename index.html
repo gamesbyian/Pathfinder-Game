@@ -16282,7 +16282,37 @@
 
             function getGridCoord(e) { const canvas = APP.Renderer.getCanvas(); const rect = canvas.getBoundingClientRect(); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; if (!l) return {x:0, y:0}; const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w, gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h; const tx = Math.max(0, Math.min(gridW - 1, Math.floor((e.clientX - rect.left) * (canvas.width / rect.width) / APP.State.ENGINE.viewport.cellW))); const ty = Math.max(0, Math.min(gridH - 1, Math.floor((e.clientY - rect.top) * (canvas.height / rect.height) / APP.State.ENGINE.viewport.cellH))); return APP.LevelUtils.inverseTransformPoint(tx, ty, APP.State.ENGINE.variant, l.grid.w, l.grid.h); }
 
-            function deepCloneLevel(src) { const l = JSON.parse(JSON.stringify(src)); l.blockSet = new Set(src.blockSet); l.gooseSet = new Set(src.gooseSet); l.falseGoalKeys = new Set(src.falseGoalKeys); l.portalMap = new Map(); if(src.portalMap) src.portalMap.forEach((v, k) => l.portalMap.set(k, v)); l.filterMap = new Map(); if(src.filterMap) src.filterMap.forEach((v, k) => l.filterMap.set(k, v)); l.flippingFilterMap = new Map(); if(src.flippingFilterMap) src.flippingFilterMap.forEach((v, k) => l.flippingFilterMap.set(k, v)); return l; }
+            function canonicalCloneLevel(src, options = {}) {
+                const includeHints = !!options.includeHints;
+                const clone = {
+                    id: typeof src?.id === 'number' ? src.id : 0,
+                    grid: { w: Number(src?.grid?.w) || 0, h: Number(src?.grid?.h) || 0 },
+                    reqLen: Number(src?.reqLen) || 0,
+                    reqInt: Number(src?.reqInt) || 0,
+                    goalKey: typeof src?.goalKey === 'number' ? src.goalKey : -1,
+                    gateKeys: Array.isArray(src?.gateKeys) ? src.gateKeys.slice() : [],
+                    blockSet: new Set(src?.blockSet || []),
+                    gooseSet: new Set(src?.gooseSet || []),
+                    falseGoalKeys: new Set(src?.falseGoalKeys || []),
+                    mustPassKeys: Array.isArray(src?.mustPassKeys) ? src.mustPassKeys.slice() : [],
+                    mustCrossKeys: Array.isArray(src?.mustCrossKeys) ? src.mustCrossKeys.slice() : [],
+                    portalMap: new Map(),
+                    filterMap: new Map(),
+                    flippingFilterMap: new Map()
+                };
+                if (src?.portalMap?.forEach) src.portalMap.forEach((v, k) => clone.portalMap.set(k, v && typeof v === 'object' ? { dest: v.dest, color: v.color } : v));
+                if (src?.filterMap?.forEach) src.filterMap.forEach((axis, k) => clone.filterMap.set(k, axis));
+                if (src?.flippingFilterMap?.forEach) src.flippingFilterMap.forEach((axis, k) => clone.flippingFilterMap.set(k, axis));
+                if (includeHints) clone.hints = Array.isArray(src?.hints) ? src.hints.map(h => Array.isArray(h) ? h.slice() : h) : [];
+                return clone;
+            }
+
+            function deepCloneLevel(src) {
+                const l = canonicalCloneLevel(src, { includeHints: true });
+                l.portalVisuals = Array.isArray(src?.portalVisuals) ? src.portalVisuals.map((pv) => ({ k1: pv.k1, k2: pv.k2, color: pv.color })) : [];
+                l.hasParityBreaker = !!src?.hasParityBreaker;
+                return l;
+            }
             // ======================================================
             // C) Level / NormalizeAndCaches
             // ======================================================
@@ -16344,7 +16374,7 @@
 
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
-            transformAxis, getGridCoord, deepCloneLevel, normalizeLevel, denormalizeLevel,
+            transformAxis, getGridCoord, canonicalCloneLevel, deepCloneLevel, normalizeLevel, denormalizeLevel,
             shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, getRawLevels, resolvePortal, isValidMove
         };
     })();
@@ -17793,7 +17823,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
 
         const runHintLadder = async (normalizedLevel, options = {}) => {
-            const normalized = APP.LevelUtils.deepCloneLevel(normalizedLevel);
+            const normalized = APP.LevelUtils.canonicalCloneLevel(normalizedLevel);
             const auditMode = !!options.auditMode;
             const disableLegacyFallback = options.disableLegacyFallback !== undefined
                 ? !!options.disableLegacyFallback
@@ -17843,7 +17873,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const label = toAttemptLabel(attemptIndex);
                     const policy = buildHintAttemptPolicy({ attemptIndex, disableLegacyFallback });
                     const attemptStart = performance.now();
-                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.deepCloneLevel(normalized), {
+                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
                         ...policy,
                         auditMode,
                         timeBudgetMs: remainingMs
@@ -17851,7 +17881,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     finalHintResult = hintRes || finalHintResult;
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath
-                        ? APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(normalized), copyClone(producedPath))
+                        ? APP.Solver.validateCandidatePath(APP.LevelUtils.canonicalCloneLevel(normalized), copyClone(producedPath))
                         : null;
                     const attemptStatus = classifyHintStatus(hintRes, hintValidation);
                     const attemptRecord = APP.Solver.toAuditAttemptSummary(hintRes, {
@@ -18294,7 +18324,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     updateHintLabel();
                     try {
                         const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-                        const normalized = APP.LevelUtils.deepCloneLevel(activeLevel);
+                        const normalized = APP.LevelUtils.canonicalCloneLevel(activeLevel);
                         const ladderResult = await runHintLadder(normalized, {
                             auditMode: false,
                             maxWallTimeMs: HINT_LADDER_CAP_MS
