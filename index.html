@@ -256,7 +256,6 @@
             </div>
             <div id="searchIndicator" class="absolute inset-0 flex items-center justify-center bg-[var(--theme-search-overlay-bg)] backdrop-blur-sm hidden z-[65]">
                 <div class="flex flex-col items-center gap-4 w-full px-8">
-                    <div id="megaStatus" class="hidden text-[var(--theme-search-mega-status-text)] font-bold text-sm text-center animate-pulse whitespace-pre-line mb-2 tracking-widest border-b border-[var(--theme-search-mega-status-border)] pb-2 w-full"></div>
                     <div class="flex flex-col items-center gap-3">
                         <span id="searchLabel" class="text-sm font-black uppercase tracking-widest text-center text-[var(--theme-search-label)]">Finding Solutions...</span>
                         <span id="solverDetailLabel" class="text-[0.68rem] font-semibold tracking-wide text-center text-[var(--theme-search-label)] opacity-90">Preparing solver…</span>
@@ -319,27 +318,6 @@
                 </div>
             </div>
 
-            <div id="megaModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
-                <div id="megaModalContent" class="screen-modal-panel panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content">
-                    <div class="flex justify-between items-center mb-3 shrink-0">
-                        <div><h2 id="megaModalTitle" class="text-2xl font-black uppercase tracking-tighter text-[var(--theme-modal-accent)]">Mega Solver Results</h2><p id="megaModalSub" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-modal-muted)]">Bulk Solution Generation</p></div>
-                        <button id="closeMegaModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-2 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
-                    </div>
-                    <div class="flex-grow min-h-0 overflow-y-auto pr-1">
-                        <div id="megaSummary" class="text-xs font-bold uppercase tracking-widest text-[var(--theme-mega-desc-text)] mb-2">No run yet.</div>
-                        <div class="flex gap-2 items-stretch w-full mb-3">
-                            <textarea id="megaOutput" readonly class="flex-grow min-h-[8rem] h-[11rem] p-3 rounded-xl border text-[0.6rem] font-mono leading-tight resize-none" placeholder="Mega solver results will appear here..."></textarea>
-                            <button id="copyMegaDataBtn" class="w-24 shrink-0 rounded-lg border font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy</button>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            <div class="rounded-xl border p-2 border-[var(--theme-mega-primary-border)]/40"><button id="megaRetry30Btn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Quick Retry</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">30s per failed level. Same stage order.</p></div>
-                            <div class="rounded-xl border p-2 border-[var(--theme-mega-primary-border)]/40"><button id="megaRetry60Btn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Standard Retry</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">60s per failed level. Same strategy.</p></div>
-                            <div class="rounded-xl border p-2 border-[var(--theme-mega-primary-border)]/40"><button id="megaRetry120Btn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Deep Retry</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">120s per failed level for stubborn puzzles.</p></div>
-                            <div class="rounded-xl border p-2 border-[var(--theme-mega-secondary-border)]/40"><button id="megaRetryAltBtn" class="w-full text-left border px-3 py-2 rounded-lg font-black text-[0.68rem] uppercase tracking-wider transition">Alternate Order</button><p class="mt-1 text-[0.62rem] leading-tight text-[var(--theme-mega-desc-text)]">60s with a different stage order.</p></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <div id="auditModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content p-0">
                 <div id="auditModalContent" class="panel w-full h-full min-h-0 flex flex-col overflow-hidden modal-content px-[var(--ui-panel-pad)] py-[var(--ui-panel-pad)] rounded-none">
@@ -470,7 +448,6 @@
                 <button id="undoBtn" class="flex-1 h-10 bg-slate-600 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Undo</button>
                 <button id="whoaBtn" class="flex-1 h-10 bg-blue-500 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Whoa</button>
                 <button id="guideBtn" class="flex-1 h-10 bg-purple-600 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Guide</button>
-                <button id="megaSolverBtn" class="hidden flex-1 h-10 bg-fuchsia-600 font-black rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Mega</button>
                 <button id="modeToggleBtn" class="flex-1 h-10 bg-slate-900 font-black rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Edit</button>
             </div>
             <div id="editorButtonGrid" class="hidden flex gap-1.5">
@@ -633,7 +610,6 @@
             [
                 'loadingOverlay','loadPercent','loadProgressBar','loadStatusLabel','loadErrorMessage',
                 'message','searchIndicator','searchLabel','solverDetailLabel','solverCloseBtn','solverTimer','solverProgressBar','solverProgressPct',
-                'megaStatus','megaSummary','megaOutput','megaModal','megaSolverBtn',
                 'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
                 'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
                 'themeEditList','themeSelectView','themeEditView','dragGhost','auditModal','auditSummary','auditProgressLabel','auditReportRows','openAuditModalBtn','auditHintsBtn','auditNewHintBtn','auditBombsBtn','cancelAuditBtn','auditExportMode','copyAuditExportBtn'
@@ -785,13 +761,6 @@
             const exportAreaEl = resolveEl('winExportArea');
             if (exportAreaEl) exportAreaEl.classList.toggle('hidden', !showExportArea);
         };
-        const setMegaOutput = (value = '') => {
-            setFieldValue('megaOutput', value);
-            const el = resolveEl('megaOutput');
-            if (el) el.scrollTop = el.scrollHeight;
-        };
-        const appendMegaOutputLine = (line = '') => appendFieldLine('megaOutput', line);
-        const getMegaOutputText = () => getValue('megaOutput');
         const updateLevelDisplay = (index, isComplete = false) => {
             const lvlStr = `${index + 1}`;
             setModalContent('levelTitle', lvlStr, 'text');
@@ -1116,7 +1085,7 @@
             getEl('orientationToggleBtn').style.color = t.text.shellBtn || t.text.megaPrimary || '#ffffff';
             getEl('orientationToggleBtn').style.borderColor = t.grid;
 
-            getEl('megaSolverBtn').style.backgroundColor = t.btns.mega || t.btns.solve || '#c026d3'; getEl('hintBtn').style.backgroundColor = t.btns.hint || t.btns.guide || t.headerRight || '#cf6b17'; ['resetBtn','undoBtn','whoaBtn','guideBtn','megaSolverBtn','modeToggleBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editModeToggleBtn','editCopyMetrics','hintBtn'].forEach(id=>{const el=getEl(id); if(el) el.style.color=t.text.actionBtn;}); getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.text.utilityBtn; getEl('editCopyBtn').style.color = t.text.utilityBtn; getEl('devGenBtn').style.color = t.text.utilityBtnGen; getEl('editGenBtn').style.color = t.text.utilityBtnGen; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('megaOutput').style.backgroundColor = t.mega.outputBg; getEl('megaOutput').style.color = t.text.megaOutput; getEl('megaOutput').style.borderColor = t.mega.outputBorder; getEl('copyMegaDataBtn').style.backgroundColor = t.mega.copyBg; getEl('copyMegaDataBtn').style.color = t.text.megaCopy; getEl('copyMegaDataBtn').style.borderColor = t.mega.copyBorder; [['megaRetry30Btn','primary'],['megaRetry60Btn','primary'],['megaRetry120Btn','primary'],['megaRetryAltBtn','secondary']].forEach(([id,type]) => { const el = getEl(id); if (!el) return; el.style.backgroundColor = t.mega[`${type}Bg`]; el.style.color = t.text[`mega${type.charAt(0).toUpperCase()+type.slice(1)}`]; el.style.borderColor = t.mega[`${type}Border`]; }); getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
+            getEl('hintBtn').style.backgroundColor = t.btns.hint || t.btns.guide || t.headerRight || '#cf6b17'; ['resetBtn','undoBtn','whoaBtn','guideBtn','modeToggleBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editModeToggleBtn','editCopyMetrics','hintBtn'].forEach(id=>{const el=getEl(id); if(el) el.style.color=t.text.actionBtn;}); getEl('editResetGrid').style.backgroundColor = t.btns.editClear || t.btns.reset || '#dc2626'; getEl('editNewLevel').style.backgroundColor = t.btns.editNew || t.btns.saved || '#0a8a65'; getEl('editHelpBtn').style.backgroundColor = t.btns.guide; getEl('editMegaSolver').style.backgroundColor = t.btns.solve || t.headerRight || '#c026d3'; getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs || t.colors.goal || '#ef4444'; getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle || t.headerRight || '#1e293b'; const muteBtn = getEl('muteBtn'); muteBtn.style.backgroundColor = t.shell.muteBg; muteBtn.style.color = t.shell.muteText; muteBtn.style.borderColor = t.shell.muteBorder; getEl('muteIcon').style.color = t.shell.muteText; getEl('muteSlash').style.color = t.shell.muteText; getEl('devCopyBtn').style.backgroundColor = t.btns.copy; getEl('editCopyBtn').style.backgroundColor = t.btns.copy; getEl('devGenBtn').style.backgroundColor = t.btns.gen; getEl('editGenBtn').style.backgroundColor = t.btns.gen; getEl('devCopyBtn').style.color = t.text.utilityBtn; getEl('editCopyBtn').style.color = t.text.utilityBtn; getEl('devGenBtn').style.color = t.text.utilityBtnGen; getEl('editGenBtn').style.color = t.text.utilityBtnGen; getEl('exportLabel').style.color = t.text.metric; queryAll('.metric-label').forEach(el => el.style.color = t.text.metric); getEl('solutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('solutionOutput').style.color = t.text.output; getEl('solutionOutput').style.borderColor = t.modal.border; getEl('winSolutionOutput').style.backgroundColor = t.output?.bg || '#0f172a'; getEl('winSolutionOutput').style.color = t.text.output; getEl('winSolutionOutput').style.borderColor = t.modal.border; getEl('gridSizeMinusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizeMinusBtn').style.color = t.btns.muteIcon; getEl('gridSizeMinusBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizePlusBtn').style.backgroundColor = t.btns.copy; getEl('gridSizePlusBtn').style.color = t.btns.muteIcon; getEl('gridSizePlusBtn').style.borderColor = t.palette.itemBorder; getEl('gridRotateBtn').style.backgroundColor = t.btns.copy; getEl('gridRotateBtn').style.color = t.btns.muteIcon; getEl('gridRotateBtn').style.borderColor = t.palette.itemBorder; getEl('gridMirrorBtn').style.backgroundColor = t.btns.copy; getEl('gridMirrorBtn').style.color = t.btns.muteIcon; getEl('gridMirrorBtn').style.borderColor = t.palette.itemBorder; getEl('gridSizeLabel').style.color = t.btns.muteIcon;
             const gArea = getEl('gridControlArea'); if(gArea) { gArea.style.backgroundColor = t.ctrlArea?.bg || '#f8fafc'; gArea.style.borderColor = t.ctrlArea?.border || '#cbd5e1'; }
             const panel = getEl('editorLineGridPanel'); if (panel) { panel.style.borderTopColor = t.layout.editorPanelBorder; panel.style.borderRightColor = t.layout.editorPanelBorder; }
             const dragGhost = getEl('dragGhost'); if (dragGhost) dragGhost.style.borderColor = t.layout.mainBorder;
@@ -1124,7 +1093,7 @@
         };
 
         const closeAllModals = () => {
-            ['guideModal', 'editorHelpModal', 'winModal', 'megaModal', 'themeModal', 'unsavedModal', 'auditModal'].forEach(id => closeModal(id));
+            ['guideModal', 'editorHelpModal', 'winModal', 'themeModal', 'unsavedModal', 'auditModal'].forEach(id => closeModal(id));
         };
         const showMessageCompat = (text = '', className = '') => showMessage(text, className);
 
@@ -1619,7 +1588,7 @@
             return { update, getPaletteIconSVG, isPointerOverPalette };
         })();
 
-        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, setMegaOutput, appendMegaOutputLine, getMegaOutputText, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, setSolverDetailText, setSolverProgress, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, showSolverAlreadyRunning, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
+        return { initDom, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, setSolverDetailText, setSolverProgress, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, showSolverAlreadyRunning, reportError, setSolverAbortRequested, copyText, applyTheme, ThemeEditor, EditorDragGhost };
     })();
 
     const compactDefined = (obj = {}) => {
@@ -1701,8 +1670,7 @@
     // - active run timer/labels
     // - solver status flags
     // - solution application + output text
-    // - mega solver coordination
-    // Public API: isRunning, stop, runGameSolver, runMegaSolver, findTrapSpots.
+    // Public API: isRunning, stop, runGameSolver, findTrapSpots.
     // ======================================================
     APP.Solver = (() => {
         const SOLVER_TIMEOUT = Symbol("solver-timeout");
@@ -13364,92 +13332,6 @@
         }
     };
 
-        const Mega = {
-        active: false,
-        results: {},
-        meta: {},
-        getFailedLevels() {
-            return Object.entries(this.meta)
-                .filter(([, m]) => !['solved', 'no-solution-proven'].includes(m.status))
-                .map(([lvl]) => Number(lvl));
-        },
-        updateSummary() {
-            const values = Object.values(this.meta || {});
-            const solved = values.filter(v => v.status === 'solved').length;
-            const timeout = values.filter(v => v.status === 'timeout').length;
-            const inconclusive = values.filter(v => v.status === 'no-solution-inconclusive').length;
-            const proven = values.filter(v => v.status === 'no-solution-proven').length;
-            const errors = values.filter(v => ['error', 'cancelled'].includes(v.status)).length;
-            APP.UI.setModalContent('megaSummary', `Solved: ${solved} | Timeout: ${timeout} | Inconclusive: ${inconclusive} | Proven Unsat: ${proven} | Error: ${errors}`, 'text');
-        },
-        appendOutput(line) { APP.UI.appendMegaOutputLine(line); },
-        setProgress(text) {
-            APP.UI.openModal('megaStatus');
-            APP.UI.setModalContent('megaStatus', text, 'text');
-            APP.UI.setStatus(text, 'info');
-        },
-        clearProgress() {
-            APP.UI.closeModal('megaStatus');
-            APP.UI.setModalContent('megaStatus', '', 'text');
-        },
-        async run() { return this.runTargets({ targets: null, timeLimitMs: MEGA_DEFAULT_TIME_LIMIT_MS, variant: 'default' }); },
-        async runTargets({ targets = null, timeLimitMs = MEGA_DEFAULT_TIME_LIMIT_MS, variant = 'default' }) {
-            if (this.active || APP.Solver.isRunning()) return;
-            const levels = APP.LevelUtils.getRawLevels();
-            if (!targets) { this.results = {}; this.meta = {}; APP.UI.setMegaOutput(''); }
-            const toRun = targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
-            if (toRun.length === 0) {
-                APP.UI.showMessage('All levels have hints!', 'text-green-600');
-                return;
-            }
-            this.active = true;
-            APP.UI.showMessage(targets ? `Mega retry started (${Math.round(timeLimitMs / 1000)}s)…` : 'Mega solver started…', 'text-sky-600');
-            const orig = document.getElementById('megaSolverBtn')?.innerText || 'Mega Solver';
-            APP.UI.setButtonState('megaSolverBtn', { enabled: false });
-
-            try {
-                await APP.Solver.megaSolve(levels, {
-                    targets: toRun,
-                    timeLimitMs,
-                    variant,
-                    results: this.results,
-                    meta: this.meta,
-                    onProgress: ({ index, total, lvlNum, attempt }) => {
-                        this.setProgress(`MEGA ${index + 1}/${total} • Level ${lvlNum} • Attempt ${attempt}`);
-                    },
-                    onLevelResult: ({ lvlNum, attempt, res, timeLimitMs: budgetMs }) => {
-                        const stagesText = (res.stagesTried || []).map(st => `${st.name}/${st.variant}:${st.result}@${st.elapsedMs}ms`).join(' | ');
-                        this.appendOutput(`/* Level ${lvlNum} | status=${res.status} | attempts=${attempt} | lastBudgetMs=${budgetMs} | lastStage=${res.stage} */`);
-                        this.appendOutput(`/* stages: ${stagesText || 'none'} */`);
-                        if (res.ok) this.appendOutput(JSON.stringify(this.results[lvlNum]));
-                        else {
-                            this.appendOutput(`FAIL: ${res.message}${res.stats?.reason ? ` (${res.stats.reason})` : ''}`);
-                        }
-                        this.appendOutput('');
-                        this.updateSummary();
-                    }
-                });
-            } finally {
-                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                this.clearProgress();
-                this.showReport();
-                this.active = false;
-                APP.UI.setButtonLabel('megaSolverBtn', orig);
-                APP.UI.setButtonState('megaSolverBtn', { enabled: true });
-                APP.UI.showMessage('Mega solver finished…', 'text-emerald-600');
-            }
-        },
-        async retryFailed({ timeLimitMs = MEGA_RETRY_DEFAULT_TIME_LIMIT_MS, variant = 'default' }) {
-            const failed = this.getFailedLevels();
-            if (!failed.length) {
-                APP.UI.showMessage('Mega retry: no failed levels.', 'text-emerald-600');
-                return;
-            }
-            return this.runTargets({ targets: failed, timeLimitMs, variant });
-        },
-        showReport() { this.updateSummary(); APP.UI.openModal('megaModal'); }
-    };
-
         const startRun = ({ label = 'Solve search running…', mode = 'solve', estimatedMaxMs = 0, detail = 'Preparing solver…' } = {}) => {
             if (APP.State.ENGINE.activeSolverController) return null;
             APP.State.ENGINE.activeSolverController = new AbortController();
@@ -13506,6 +13388,7 @@
 
             const solveLevel = async (level, opts = {}) => {
                 level = SavedHintArchitecture.toHintBlindSolverLevel(level);
+            const guardSolveResult = (summary = {}, context = {}) => (typeof guardSolveResultSchema === 'function' ? guardSolveResultSchema(summary, context) : summary);
             const purpose = opts.purpose || 'solve';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
             const requestedExecutionMode = typeof opts.executionMode === 'string' ? opts.executionMode : '';
@@ -13582,7 +13465,7 @@
                     detail: opts.detailLabel || 'Preparing solver…'
                 });
                 if (!controller) {
-                return guardSolveResultSchema({
+                return guardSolveResult({
                     ok: false,
                     status: 'error',
                     rawStatus: 'already-running',
@@ -13672,7 +13555,7 @@
                 const solution = solverResult.ok ? solverResult.solution : [];
                 const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
                 const canonicalAndAliasPayload = makeSolveCompatibilityPayload(compatAliases);
-                return guardSolveResultSchema(attachDepthZeroAudit({
+                return guardSolveResult(attachDepthZeroAudit({
                     ok: !!solverResult.ok,
                     status: solverResult.status || 'error',
                     rawStatus: finalStatus,
@@ -13720,7 +13603,7 @@
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
                 if (err?.name === 'AbortError') {
-                    return guardSolveResultSchema({
+                    return guardSolveResult({
                         ok: false,
                         status: 'aborted',
                         rawStatus: 'aborted',
@@ -13749,7 +13632,7 @@
                     details: { name: err?.name || null }
                 });
                 finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
-                return guardSolveResultSchema(attachDepthZeroAudit({
+                return guardSolveResult(attachDepthZeroAudit({
                     ok: false,
                     status: 'error',
                     rawStatus: 'error',
@@ -13772,62 +13655,6 @@
             }
         };
 
-
-        // TEMP (2026-03-29): Mega solver time presets doubled a second time (now 4x original) for extended timeout investigation.
-        // Original baseline (for easy full revert): default 15000, retry default 60000, presets 30000/60000/120000, alt preset 60000.
-        // First doubling set: default 30000, retry default 120000, presets 60000/120000/240000, alt preset 120000.
-        // Current (second doubling) values below; restore baseline values above to fully revert.
-        const MEGA_DEFAULT_TIME_LIMIT_MS = 60000;
-        const MEGA_RETRY_DEFAULT_TIME_LIMIT_MS = 240000;
-        const MEGA_RETRY_PRESET_30_MS = 120000;
-        const MEGA_RETRY_PRESET_60_MS = 240000;
-        const MEGA_RETRY_PRESET_120_MS = 480000;
-        const MEGA_RETRY_PRESET_ALT_MS = 240000;
-
-        const megaSolve = async (levels, opts = {}) => {
-            if (APP.State.ENGINE.activeSolverController) return { cancelled: true };
-            const controller = startRun({ label: 'Mega solver running…', mode: 'mega' });
-            if (!controller) return { cancelled: true };
-            const toRun = opts.targets || levels.map((_, i) => i + 1).filter(i => !levels[i - 1].hints || levels[i - 1].hints.length === 0);
-            const timeLimitMs = opts.timeLimitMs ?? MEGA_DEFAULT_TIME_LIMIT_MS;
-            const variant = opts.variant || 'default';
-            const results = opts.results || {};
-            const meta = opts.meta || {};
-
-            try {
-                for (let i = 0; i < toRun.length; i++) {
-                    if (controller.signal.aborted) break;
-                    const lvlNum = toRun[i];
-                    const idx = lvlNum - 1;
-                    const l = SavedHintArchitecture.toHintBlindSolverLevel(APP.LevelUtils.normalizeLevel(idx));
-                    const prevMeta = meta[lvlNum] || { attempts: 0 };
-                    const attempt = prevMeta.attempts + 1;
-                    if (typeof opts.onProgress === 'function') opts.onProgress({ index: i, total: toRun.length, lvlNum, attempt });
-                    APP.UI.setModalContent('searchLabel', `Mega solving level ${lvlNum}/${toRun.length}…`, 'text');
-                    const res = await Referee.solve(l, {
-                        purpose: 'mega',
-                        timeBudgetMs: timeLimitMs,
-                            variant,
-                        onStage: ({ name, variant: stageVariant, budgetMs }) => {
-                            APP.UI.setModalContent('searchLabel', `${name} (${stageVariant}, ${Math.round(budgetMs / 1000)}s)`, 'text');
-                            if (APP.State.ENGINE.solverAbortRequested) APP.UI.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
-                        }
-                    });
-                    meta[lvlNum] = {
-                        status: res.status,
-                        attempts: attempt,
-                        lastBudgetMs: timeLimitMs,
-                        lastStageReached: res.stage,
-                        stagesTried: res.stagesTried || []
-                    };
-                    if (res.ok) results[lvlNum] = (res.solution || []).map(sv => sv.path);
-                    if (typeof opts.onLevelResult === 'function') opts.onLevelResult({ lvlNum, attempt, res, timeLimitMs, results, meta });
-                }
-                return { cancelled: controller.signal.aborted, results, meta };
-            } finally {
-                finishRun();
-            }
-        };
 
         const getTrapSpotBudgetMs = (level, opts = {}) => {
             const requestedBudget = Number(opts.timeLimit ?? opts.timeLimitMs);
@@ -15141,7 +14968,6 @@
 
         return {
             solveLevel,
-            megaSolve,
             findTrapSpots,
             getTrapSpotBudgetMs,
             applySolutionsToEngine,
@@ -15149,7 +14975,6 @@
             isRunning: () => !!APP.State.ENGINE.activeSolverController,
             getStatus: () => ({ ...status, active: !!APP.State.ENGINE.activeSolverController }),
             Referee,
-            Mega,
             runGameSolver: (...args) => runGameSolver(...args),
             getHint: (tier = 0) => runGameSolver('hint', tier),
             startHintAnimation,
@@ -15977,7 +15802,7 @@
 
             function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; const restoredLogicState = snap.logicState === APP.Core.HAZARD_TRIGGERED ? APP.Core.IDLE : snap.logicState; APP.Engine.setLogicState(APP.Core.IDLE); if (restoredLogicState !== APP.Core.IDLE) APP.Engine.setLogicState(restoredLogicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
 
-            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('megaSolverBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('modeToggleBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
+            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('openAuditModalBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('modeToggleBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
 
             function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.UI.setSolutionOutput(''); APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('openAuditModalBtn').classList.toggle('hidden', !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
 
@@ -17573,7 +17398,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const GAMEPAD_REPEAT_INITIAL = 220;
         const GAMEPAD_REPEAT_RATE = 100;
 
-        function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('megaModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal') || APP.UI.isModalOpen('auditModal'); }
+        function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal') || APP.UI.isModalOpen('auditModal'); }
 
         function getFocusableGroups() {
             const groups = [
@@ -18943,9 +18768,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (!isVisible) APP.UI.openModal('guideModal');
         };
         document.getElementById('closeGuideX').onclick = () => APP.UI.closeModal('guideModal');
-        document.getElementById('megaSolverBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.run(); };
-        document.getElementById('closeMegaModalBtn').onclick = () => { APP.UI.closeModal('megaModal'); };
-        document.getElementById('copyMegaDataBtn').onclick = async () => { const out = APP.UI.getMegaOutputText(); if (out) await APP.UI.copyText(out, { fallbackElId: 'megaOutput' }); };
         document.getElementById('openAuditModalBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode) return; APP.UI.closeAllModals(); auditModalOpen = true; renderAuditReport(); APP.UI.openModal('auditModal'); };
         document.getElementById('closeAuditModalBtn').onclick = () => { if (auditRunning) stopAuditRun(); auditModalOpen = false; APP.UI.closeModal('auditModal'); };
         document.getElementById('auditHintsBtn').onclick = () => { if (!APP.State.ENGINE.isDevMode || auditRunning) return; runAudit(AUDIT_RUN_TYPES.hints); };
@@ -18961,10 +18783,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             await APP.UI.copyText(out, { fallbackElId: 'auditReportRows' });
             APP.UI.showMessage(`Audit ${mode} copied.`, 'text-white font-black');
         };
-        document.getElementById('megaRetry30Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_30_MS, variant: 'default' }); };
-        document.getElementById('megaRetry60Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_60_MS, variant: 'default' }); };
-        document.getElementById('megaRetry120Btn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_120_MS, variant: 'default' }); };
-        document.getElementById('megaRetryAltBtn').onclick = () => { APP.UI.closeAllModals(); APP.Solver.Mega.retryFailed({ timeLimitMs: MEGA_RETRY_PRESET_ALT_MS, variant: 'altOrder' }); };
 
         const tModal = document.getElementById('themeModal');
         document.getElementById('openThemeModalBtn').onclick = () => {
