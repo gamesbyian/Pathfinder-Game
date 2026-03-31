@@ -3468,12 +3468,9 @@
 
                         if (portalAgnosticMode) {
                             const topology = options?.portalTriage?.nonPortalFeasibility || null;
-                            const graphClassifier = options?.portalTriage?.graphClassifier || null;
                             const stillViableWithoutPortal = topology && !topology.stronglySuggestsPortalRequired;
                             const noPortalViablePenalty = stillViableWithoutPortal ? 90 : 40;
                             bonus += noPortalViablePenalty;
-                            if (graphClassifier?.classification === 'portal-optional') bonus += 36;
-                            else if (graphClassifier?.classification === 'portal-necessary') bonus = Math.max(0, bonus - 24);
                             if (hasMustObligations) bonus += 12;
                             if (Number.isFinite(curGoalDist) && Number.isFinite(postGoalDist) && (curGoalDist - postGoalDist) >= 5) {
                                 bonus = Math.max(0, Math.floor(bonus * 0.55));
@@ -11344,88 +11341,16 @@
             return dist;
         },
 
-        _resolveTerminalParityTargets(level) {
-            const reqLenParity = Math.abs(Number(level?.reqLen) || 0) % 2;
-            let allowed = new Set([reqLenParity]);
-            const rawConstraint = level?.intersectionParityConstraint ?? level?.reqIntParityConstraint ?? null;
-            if (rawConstraint !== null && rawConstraint !== undefined) {
-                const normalized = typeof rawConstraint === 'string'
-                    ? rawConstraint.trim().toLowerCase()
-                    : rawConstraint;
-                let requiredParity = null;
-                if (normalized === 'even' || normalized === 0 || normalized === '0') requiredParity = 0;
-                else if (normalized === 'odd' || normalized === 1 || normalized === '1') requiredParity = 1;
-                if (requiredParity !== null) {
-                    allowed = new Set([...allowed].filter((p) => p === requiredParity));
-                }
-            }
-            return allowed;
-        },
-
-        _buildParityReachabilityFromGate(level, gateKey, { includePortals = true } = {}) {
-            const startKey = Number(gateKey);
-            if (!Number.isFinite(startKey) || level?.blockSet?.has(startKey)) {
-                return { visitedStateCount: 0, goalReachableParities: new Set(), reachableGoal: false };
-            }
-            const encode = (k, parity) => `${k}|${parity}`;
-            const seen = new Set();
-            const queue = [{ key: startKey, parity: 0 }];
-            seen.add(encode(startKey, 0));
-            const goalKey = Number(level?.goalKey);
-            const goalReachableParities = new Set();
-            for (let i = 0; i < queue.length; i++) {
-                const cur = queue[i];
-                if (cur.key === goalKey) goalReachableParities.add(cur.parity);
-                const nextParity = cur.parity ^ 1;
-                this._forEachNoPortalNeighbor(level, cur.key, (nk) => {
-                    const code = encode(nk, nextParity);
-                    if (seen.has(code)) return;
-                    seen.add(code);
-                    queue.push({ key: nk, parity: nextParity });
-                });
-                if (includePortals && level?.portalMap?.has(cur.key)) {
-                    const pd = level.portalMap.get(cur.key);
-                    const nk = Number(pd?.dest);
-                    if (Number.isFinite(nk) && !level?.blockSet?.has(nk)) {
-                        const code = encode(nk, nextParity);
-                        if (!seen.has(code)) {
-                            seen.add(code);
-                            queue.push({ key: nk, parity: nextParity });
-                        }
-                    }
-                }
-            }
-            return {
-                visitedStateCount: seen.size,
-                goalReachableParities,
-                reachableGoal: goalReachableParities.size > 0
-            };
-        },
-
         analyzePortalTopology(level) {
             const hasPortals = (level?.portalMap?.size || 0) > 0;
             if (!hasPortals) {
-                return {
-                    topologicallyNecessary: false,
-                    reachableGateCount: 0,
-                    goalReachableWithoutPortals: true,
-                    reachableCellCount: 0,
-                    graphClassifier: {
-                        classification: 'no-portals',
-                        compatibleGoalParities: [Math.abs(Number(level?.reqLen) || 0) % 2],
-                        gateReachability: {}
-                    }
-                };
+                return { topologicallyNecessary: false, reachableGateCount: 0, goalReachableWithoutPortals: true, reachableCellCount: 0 };
             }
             const gateKeys = Array.isArray(level?.gateKeys) ? level.gateKeys : [];
             const goalKey = level?.goalKey;
             let reachableGateCount = 0;
             let goalReachableWithoutPortals = false;
             let reachableCellCount = 0;
-            const parityTargets = this._resolveTerminalParityTargets(level);
-            const gateReachability = {};
-            let anyNoPortalCompatibleGoal = false;
-            let anyFullCompatibleGoal = false;
             for (const gateKey of gateKeys) {
                 const reach = this._collectNoPortalReachability(level, [gateKey]);
                 if (reach.size > 0) reachableGateCount++;
@@ -11433,40 +11358,12 @@
                 if (Number.isFinite(goalKey) && reach.has(goalKey)) {
                     goalReachableWithoutPortals = true;
                 }
-                const noPortalStateReach = this._buildParityReachabilityFromGate(level, gateKey, { includePortals: false });
-                const fullStateReach = this._buildParityReachabilityFromGate(level, gateKey, { includePortals: true });
-                const hasCompatibleNoPortalGoal = [...noPortalStateReach.goalReachableParities].some((p) => parityTargets.has(p));
-                const hasCompatibleFullGoal = [...fullStateReach.goalReachableParities].some((p) => parityTargets.has(p));
-                if (hasCompatibleNoPortalGoal) anyNoPortalCompatibleGoal = true;
-                if (hasCompatibleFullGoal) anyFullCompatibleGoal = true;
-                gateReachability[gateKey] = {
-                    noPortal: {
-                        compatibleGoalReachable: hasCompatibleNoPortalGoal,
-                        goalParities: [...noPortalStateReach.goalReachableParities],
-                        visitedStateCount: noPortalStateReach.visitedStateCount
-                    },
-                    withPortal: {
-                        compatibleGoalReachable: hasCompatibleFullGoal,
-                        goalParities: [...fullStateReach.goalReachableParities],
-                        visitedStateCount: fullStateReach.visitedStateCount
-                    }
-                };
             }
-            const classification = anyNoPortalCompatibleGoal
-                ? 'portal-optional'
-                : (anyFullCompatibleGoal ? 'portal-necessary' : 'goal-unreachable');
             return {
-                topologicallyNecessary: classification === 'portal-necessary' || !goalReachableWithoutPortals,
+                topologicallyNecessary: !goalReachableWithoutPortals,
                 reachableGateCount,
                 goalReachableWithoutPortals,
-                reachableCellCount,
-                graphClassifier: {
-                    classification,
-                    compatibleGoalParities: [...parityTargets],
-                    noPortalGoalReachable: anyNoPortalCompatibleGoal,
-                    withPortalGoalReachable: anyFullCompatibleGoal,
-                    gateReachability
-                }
+                reachableCellCount
             };
         },
 
@@ -11552,18 +11449,14 @@
             const reachableObjectiveRatio = objectiveKeys.length === 0
                 ? 1
                 : Math.max(0, (objectiveKeys.length - unreachableObjectiveCount) / totalObjectives);
-            const graphClass = topology?.graphClassifier?.classification;
-            const stronglyNeedsPortalByGraph = graphClass === 'portal-necessary';
-            if (topology.topologicallyNecessary || stronglyNeedsPortalByGraph || unreachableKeyCount > 0) {
+            if (topology.topologicallyNecessary || unreachableKeyCount > 0) {
                 return {
                     status: 'unlikely',
                     stronglySuggestsPortalRequired: true,
                     unreachableObjectiveCount,
                     unreachableKeyCount,
                     reachableObjectiveRatio: Number(reachableObjectiveRatio.toFixed(3)),
-                    reason: stronglyNeedsPortalByGraph
-                        ? 'parity-compatible-goal-only-reachable-with-portals'
-                        : (topology.topologicallyNecessary ? 'goal-not-reachable-without-portals' : 'required-obligation-unreachable-without-portals')
+                    reason: topology.topologicallyNecessary ? 'goal-not-reachable-without-portals' : 'required-obligation-unreachable-without-portals'
                 };
             }
             const weakPressure = (Number(level?.reqInt) || 0) <= 1 && mustCrossKeys.length === 0;
@@ -11606,8 +11499,7 @@
                 reachableGateCount: Number(topology.reachableGateCount) || 0,
                 goalReachableWithoutPortals: !!topology.goalReachableWithoutPortals,
                 portalUsefulness,
-                nonPortalFeasibility,
-                graphClassifier: topology.graphClassifier || null
+                nonPortalFeasibility
             };
         },
 
