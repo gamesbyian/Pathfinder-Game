@@ -1657,7 +1657,7 @@
     const logHeuristicFeatureFlagsResolverAuditErrorOnce = (code, detail = {}) => {
         if (heuristicFeatureFlagsResolverAuditLogged) return;
         heuristicFeatureFlagsResolverAuditLogged = true;
-        console.error('[audit][solver] heuristic feature flag helper degraded', {
+        console.error('[audit][solver] heuristic feature flag data-shape degraded', {
             code,
             helperName: 'deriveHeuristicFeatureFlags',
             degradedTelemetry: true,
@@ -1676,22 +1676,11 @@
             attemptOrdinal
         });
     };
-    const resolveHeuristicFeatureFlagsHelper = () => {
-        const helper = deriveHeuristicFeatureFlags;
-        if (typeof helper === 'function') return helper;
-        logHeuristicFeatureFlagsResolverAuditErrorOnce('helper-not-callable', {
-            expectedType: 'function',
-            actualType: typeof helper
-        });
-        return null;
-    };
     const deriveHeuristicFeatureFlagsSafely = (level = {}, context = {}) => {
-        const helper = resolveHeuristicFeatureFlagsHelper();
-        if (!helper) return buildSafeHeuristicFeatureFlags(context);
         try {
-            return helper(level, context);
+            return deriveHeuristicFeatureFlags(level, context);
         } catch (err) {
-            logHeuristicFeatureFlagsResolverAuditErrorOnce('helper-threw', {
+            logHeuristicFeatureFlagsResolverAuditErrorOnce('data-shape-threw', {
                 message: err?.message || String(err)
             });
             return buildSafeHeuristicFeatureFlags(context);
