@@ -14170,6 +14170,9 @@
                 if (!APP.State.ENGINE.hinter.pathList.length) return;
                 APP.Engine.setOverlayState(APP.Core.HINT_ANIMATING);
                 APP.State.ENGINE.hinter.alpha = 1; APP.State.ENGINE.hinter.index = 0;
+                APP.State.ENGINE.hinter.holdStartMs = 0;
+                APP.State.ENGINE.hinter.blinkStartMs = 0;
+                APP.State.ENGINE.hinter.fadeStartMs = 0;
                 APP.UI.showMessage(`Solution ${APP.State.ENGINE.hinter.currentPathIdx + 1}/${APP.State.ENGINE.hinter.pathList.length}`, "text-emerald-600");
             }
 
@@ -14178,6 +14181,9 @@
                 APP.State.ENGINE.hinter.currentPathIdx = 0;
                 APP.State.ENGINE.hinter.index = 0;
                 APP.State.ENGINE.hinter.alpha = 0;
+                APP.State.ENGINE.hinter.holdStartMs = 0;
+                APP.State.ENGINE.hinter.blinkStartMs = 0;
+                APP.State.ENGINE.hinter.fadeStartMs = 0;
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
             }
 
@@ -15212,7 +15218,7 @@
         resetStreak: 0,
         lastFlipTime: 0,
         cheatTimer: null,
-        hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none' },
+        hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none', holdStartMs: 0, blinkStartMs: 0, fadeStartMs: 0 },
         activeSolverController: null,
         solverAbortRequested: false,
         viewport: { cellW: 0, cellH: 0, swapped: false, lastWidth: 0, lastHeight: 0 },
@@ -15909,9 +15915,40 @@
 
             function loop() {
                 if (APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING && APP.State.ENGINE.hinter.pathList.length) {
-                    APP.State.ENGINE.hinter.index += 0.5; const hPath = APP.State.ENGINE.hinter.pathList[APP.State.ENGINE.hinter.currentPathIdx];
-                    if (APP.State.ENGINE.hinter.index >= hPath.length + 40) {
-                        APP.State.ENGINE.hinter.alpha -= 0.05;
+                    const hPath = APP.State.ENGINE.hinter.pathList[APP.State.ENGINE.hinter.currentPathIdx];
+                    const hintNowMs = Date.now();
+                    const hintHoldDurationMs = 2700;
+                    const hintBlinkCount = 3;
+                    const hintBlinkCycleMs = 800;
+                    const hintFadeDurationMs = 900;
+
+                    APP.State.ENGINE.hinter.index += 0.5;
+
+                    if (APP.State.ENGINE.hinter.index >= hPath.length) {
+                        APP.State.ENGINE.hinter.index = hPath.length;
+                        if (!APP.State.ENGINE.hinter.holdStartMs) APP.State.ENGINE.hinter.holdStartMs = hintNowMs;
+                    }
+
+                    const holdElapsedMs = APP.State.ENGINE.hinter.holdStartMs ? (hintNowMs - APP.State.ENGINE.hinter.holdStartMs) : 0;
+                    const holdComplete = APP.State.ENGINE.hinter.holdStartMs && holdElapsedMs >= hintHoldDurationMs;
+
+                    if (holdComplete && !APP.State.ENGINE.hinter.blinkStartMs) APP.State.ENGINE.hinter.blinkStartMs = hintNowMs;
+
+                    if (APP.State.ENGINE.hinter.blinkStartMs && !APP.State.ENGINE.hinter.fadeStartMs) {
+                        const blinkElapsedMs = hintNowMs - APP.State.ENGINE.hinter.blinkStartMs;
+                        const blinkWindowMs = hintBlinkCount * hintBlinkCycleMs;
+                        if (blinkElapsedMs < blinkWindowMs) {
+                            const blinkPhase = (blinkElapsedMs % hintBlinkCycleMs) / hintBlinkCycleMs;
+                            APP.State.ENGINE.hinter.alpha = 0.25 + (0.75 * (0.5 + 0.5 * Math.cos(blinkPhase * Math.PI * 2)));
+                        } else {
+                            APP.State.ENGINE.hinter.fadeStartMs = hintNowMs;
+                            APP.State.ENGINE.hinter.alpha = 1;
+                        }
+                    }
+
+                    if (APP.State.ENGINE.hinter.fadeStartMs) {
+                        const fadeElapsedMs = hintNowMs - APP.State.ENGINE.hinter.fadeStartMs;
+                        APP.State.ENGINE.hinter.alpha = Math.max(0, 1 - (fadeElapsedMs / hintFadeDurationMs));
                         if (APP.State.ENGINE.hinter.alpha <= 0) {
                             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                             APP.UI.showMessage("", "");
@@ -15991,6 +16028,9 @@
                 if (APP.State.ENGINE.overlayState === newState) return true;
                 if (APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING && newState !== APP.Core.HINT_ANIMATING) {
                     APP.State.ENGINE.hinter.alpha = 0;
+                    APP.State.ENGINE.hinter.holdStartMs = 0;
+                    APP.State.ENGINE.hinter.blinkStartMs = 0;
+                    APP.State.ENGINE.hinter.fadeStartMs = 0;
                 }
 
                 APP.State.ENGINE.overlayState = newState;
