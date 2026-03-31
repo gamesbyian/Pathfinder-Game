@@ -8236,6 +8236,20 @@
                 console.warn('[Solver attribution inconsistency] compatibility alias disagrees with winning stage', { summary, context });
             }
         };
+        const guardSolveResultSchema = (summary = {}, context = {}) => {
+            if (!summary || typeof summary !== 'object') return summary;
+            const finalStatus = `${summary.finalStatus || summary.rawStatus || summary.status || ''}`.trim();
+            const finalSolvedBy = `${summary.finalSolvedBy || ''}`.trim() || 'none';
+            const winningEngine = `${summary.winningEngine || ''}`.trim() || 'none';
+            const solvedState = finalStatus === 'solved' || summary.ok === true;
+            if (solvedState && finalSolvedBy === 'none') {
+                console.warn('[Solver schema guard] forbidden combo solved + finalSolvedBy=none', { summary, context });
+            }
+            if (winningEngine !== 'none' && finalSolvedBy !== winningEngine) {
+                console.warn('[Solver schema guard] winningEngine/finalSolvedBy mismatch', { summary, context });
+            }
+            return summary;
+        };
         // Backward-compat aliases: older audit hooks may invoke this validator using
         // a lower-cased name and a historical misspelling (`consistenecy`).
         const validatesolveattributionconsistency = validateSolveAttributionConsistency;
@@ -13109,6 +13123,22 @@
             // Compatibility alias: this is now a fixed label because Referee.solve is always invoked.
             const requestedSolverPath = 'referee';
             const defaultExecutionPath = executionMode;
+                const makeSolveCompatibilityPayload = (compatAliases = {}, overrides = {}) => ({
+                    executionPath: compatAliases.executionPath || defaultExecutionPath,
+                    // Compatibility alias: final effective execution path, not the requested engine.
+                    solverPath: compatAliases.solverPath || compatAliases.executionPath || defaultExecutionPath,
+                    legacyFallbackTried: !!compatAliases.legacyFallbackTried,
+                    legacyFallbackStatus: compatAliases.legacyFallbackStatus || null,
+                    legacyFallbackSolved: !!compatAliases.legacyFallbackSolved,
+                    legacyFallbackTimeMs: Number.isFinite(compatAliases.legacyFallbackTimeMs) ? compatAliases.legacyFallbackTimeMs : null,
+                    finalSolvedBy: compatAliases.finalSolvedBy || 'none',
+                    winningEngine: compatAliases.winningEngine || 'none',
+                    winningStage: compatAliases.winningStage || null,
+                    winningStageNumber: Number.isFinite(compatAliases.winningStageNumber) ? compatAliases.winningStageNumber : null,
+                    winningElapsedMs: Number.isFinite(compatAliases.winningElapsedMs) ? compatAliases.winningElapsedMs : null,
+                    refereeAttemptCount: Number.isFinite(compatAliases.refereeAttemptCount) ? compatAliases.refereeAttemptCount : 0,
+                    ...overrides
+                });
                 const attachDepthZeroAudit = (payload, statusPath = 'solver-wrapper', droppedBy = 'unknown') => {
                     if (!payload || typeof payload !== 'object') return payload;
                     const dbg = payload.debug || payload.stats?.debug || null;
@@ -13143,13 +13173,7 @@
                 refereeSolved: false,
                 refereeTimeMs: null,
                 // Legacy compatibility fields are now derived from unified Referee attempt history.
-                legacyFallbackTried: executionMode === 'referee-with-compat-profiles',
-                legacyFallbackStatus: null,
-                legacyFallbackSolved: false,
-                legacyFallbackTimeMs: null,
                 finalStatus: 'error',
-                finalSolvedBy: 'none',
-                executionPath: defaultExecutionPath,
                     totalSolveTimeMs: 0
                 };
                 const controller = startRun({
@@ -13158,19 +13182,23 @@
                     estimatedMaxMs: Number(opts.estimatedMaxMs) || 0,
                     detail: opts.detailLabel || 'Preparing solver…'
                 });
-            if (!controller) {
-                return {
+                if (!controller) {
+                return guardSolveResultSchema({
                     ok: false,
                     status: 'error',
                     rawStatus: 'already-running',
                     solution: [],
                     solutions: [],
                     stagesTried: [],
-                    solverPath: defaultExecutionPath,
                     ...baseReport,
+                    ...makeSolveCompatibilityPayload({}, {
+                        executionPath: defaultExecutionPath,
+                        solverPath: defaultExecutionPath,
+                        legacyFallbackTried: executionMode === 'referee-with-compat-profiles'
+                    }),
                     finalStatus: 'already-running',
                     totalSolveTimeMs: 0
-                };
+                }, { levelId, purpose, branch: 'already-running', auditMode: !!opts.auditMode });
             }
 
             const solveStart = performance.now();
@@ -13227,8 +13255,6 @@
                     finalSolved: !!solverResult.ok
                 });
                 const executionPath = compatAliases.executionPath;
-
-                solverResult.solverPath = compatAliases.solverPath;
                 validateSolveAttributionConsistency({
                     finalStatus,
                     finalSolvedBy: compatAliases.finalSolvedBy,
@@ -13246,7 +13272,8 @@
                 }
                 const solution = solverResult.ok ? solverResult.solution : [];
                 const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
-                return attachDepthZeroAudit({
+                const canonicalAndAliasPayload = makeSolveCompatibilityPayload(compatAliases);
+                return guardSolveResultSchema(attachDepthZeroAudit({
                     ok: !!solverResult.ok,
                     status: solverResult.status || 'error',
                     rawStatus: finalStatus,
@@ -13265,26 +13292,14 @@
                     stagesTried: solverResult.stagesTried || [],
                     attempts: Array.isArray(solverResult.attempts) ? solverResult.attempts : [],
                     stage: solverResult.stage,
-                    // Compatibility alias: final effective execution path, not the requested engine.
-                    solverPath: compatAliases.solverPath,
                     executionMode,
                     requestedSolverPath,
                     refereeAttempted: true,
                     refereeStatus: finalStatus,
                     refereeSolved: !!solverResult.ok,
                     refereeTimeMs,
-                    legacyFallbackTried: compatAliases.legacyFallbackTried,
-                    legacyFallbackStatus: compatAliases.legacyFallbackStatus,
-                    legacyFallbackSolved: compatAliases.legacyFallbackSolved,
-                    legacyFallbackTimeMs: compatAliases.legacyFallbackTimeMs,
                     finalStatus,
-                    finalSolvedBy: compatAliases.finalSolvedBy,
-                    winningEngine: compatAliases.winningEngine,
-                    winningStage: compatAliases.winningStage,
-                    winningStageNumber: compatAliases.winningStageNumber,
-                    winningElapsedMs: compatAliases.winningElapsedMs,
-                    refereeAttemptCount: compatAliases.refereeAttemptCount,
-                    executionPath: compatAliases.executionPath,
+                    ...canonicalAndAliasPayload,
                     totalSolveTimeMs,
                     message: solverResult.message || '',
                     diagnostics: solverResult.diagnostics || null,
@@ -13302,23 +13317,26 @@
                     // Compatibility aliases for audit/UI consumers.
                     stage11RescueDelta: solverResult.enduranceRescueDelta || solverResult.stage11RescueDelta || null,
                     legacyRescueSummary: solverResult.rescueProfileSummary || solverResult.legacyRescueSummary || null
-                }, compatAliases.executionPath, 'audit-normalizer');
+                }, compatAliases.executionPath, 'audit-normalizer'), { levelId, purpose, branch: 'normal', auditMode: !!opts.auditMode });
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);
                 if (err?.name === 'AbortError') {
-                    return {
+                    return guardSolveResultSchema({
                         ok: false,
                         status: 'aborted',
                         rawStatus: 'aborted',
                         solution: [],
                         solutions: [],
                         stagesTried: [],
-                        solverPath: defaultExecutionPath,
                         ...baseReport,
+                        ...makeSolveCompatibilityPayload({}, {
+                            executionPath: defaultExecutionPath,
+                            solverPath: defaultExecutionPath,
+                            legacyFallbackTried: executionMode === 'referee-with-compat-profiles'
+                        }),
                         finalStatus: 'aborted',
-                        executionPath: defaultExecutionPath,
                         totalSolveTimeMs
-                    };
+                    }, { levelId, purpose, branch: 'abort', auditMode: !!opts.auditMode });
                 }
                 console.error('[SOLVER CRASH]', err);
                 console.error('Solver error:', err);
@@ -13332,21 +13350,24 @@
                     details: { name: err?.name || null }
                 });
                 finalizeSolverDebugStats(thrownDebug, 'error', performance.now());
-                return attachDepthZeroAudit({
+                return guardSolveResultSchema(attachDepthZeroAudit({
                     ok: false,
                     status: 'error',
                     rawStatus: 'error',
                     solution: [],
                     solutions: [],
                     stagesTried: [],
-                    solverPath: defaultExecutionPath,
                     ...baseReport,
+                    ...makeSolveCompatibilityPayload({}, {
+                        executionPath: defaultExecutionPath,
+                        solverPath: defaultExecutionPath,
+                        legacyFallbackTried: executionMode === 'referee-with-compat-profiles'
+                    }),
                     finalStatus: 'error',
-                    executionPath: defaultExecutionPath,
                     totalSolveTimeMs,
                     message: err?.message || 'Solver error',
                     debug: thrownDebug
-                }, defaultExecutionPath, 'referee-wrapper');
+                }, defaultExecutionPath, 'referee-wrapper'), { levelId, purpose, branch: 'exception', auditMode: !!opts.auditMode });
             } finally {
                 finishRun();
             }
@@ -17449,6 +17470,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (ctx.triageSummary) out.triageSummary = ctx.triageSummary;
             return out;
         };
+        const resolveAuditFinalStatus = (newHint = {}) => newHint.finalStatus || newHint.rawStatus || newHint.status || 'unknown';
+        const resolveAuditFinalSolvedBy = (newHint = {}) => newHint.winningEngine || newHint.finalSolvedBy || 'none';
         const formatAuditLine = (r) => {
             const runType = auditLastRunType;
             const errSummary = r.error?.message || '';
@@ -17466,7 +17489,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ? ` | structural ${structural.family || 'other'}${structural.confidence ? `/${structural.confidence}` : ''}`
                 : '';
             const attemptCount = Array.isArray(r.newHint.attemptHistory) ? r.newHint.attemptHistory.length : (r.newHint.refereeAttemptCount || 0);
-            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} first=${r.newHint.firstPressOutcome || 'not-run'} eventual=${r.newHint.eventualOutcome || r.newHint.status || 'not-run'}<=${r.newHint.eventualOutcomeWithinPresses || 0} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${r.newHint.finalStatus || r.newHint.rawStatus || r.newHint.status} by=${r.newHint.finalSolvedBy || 'none'} attempts=${attemptCount} ladder=${r.newHint.ladderTotalWallTimeMs || 0}/${r.newHint.ladderTotalSolveTimeMs || 0}ms stop=${r.newHint.stopReason || 'unknown'} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${errSummary ? ` | ${errSummary}` : ''}`;
+            return `L${r.level}: new ${r.newHint.status} ${r.newHint.timeMs}ms${r.newHint.producedHintValid ? ' valid' : ''} first=${r.newHint.firstPressOutcome || 'not-run'} eventual=${r.newHint.eventualOutcome || r.newHint.status || 'not-run'}<=${r.newHint.eventualOutcomeWithinPresses || 0} req=${r.newHint.requestedSolverPath || 'unknown'} exec=${r.newHint.executionPath || 'unknown'} ref=${r.newHint.refereeStatus || (r.newHint.refereeAttempted ? 'unknown' : 'not-run')}(${r.newHint.refereeTimeMs ?? '-'}ms) leg=${r.newHint.legacyFallbackStatus || (r.newHint.legacyFallbackTried ? 'unknown' : 'not-run')}(${r.newHint.legacyFallbackTimeMs ?? '-'}ms) final=${resolveAuditFinalStatus(r.newHint)} by=${resolveAuditFinalSolvedBy(r.newHint)} attempts=${attemptCount} ladder=${r.newHint.ladderTotalWallTimeMs || 0}/${r.newHint.ladderTotalSolveTimeMs || 0}ms stop=${r.newHint.stopReason || 'unknown'} total=${r.newHint.totalSolveTimeMs || 0}ms${structuralSummary}${errSummary ? ` | ${errSummary}` : ''}`;
         };
         const hasAuditIssue = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
@@ -17502,8 +17525,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 newHint: {
                     status: r.newHint.status,
                     rawStatus: r.newHint.rawStatus,
-                    finalStatus: r.newHint.finalStatus,
-                    finalSolvedBy: r.newHint.finalSolvedBy,
+                    finalStatus: resolveAuditFinalStatus(r.newHint),
+                    finalSolvedBy: resolveAuditFinalSolvedBy(r.newHint),
                     timeMs: r.newHint.timeMs,
                     totalSolveTimeMs: r.newHint.totalSolveTimeMs,
                     ladderTotalWallTimeMs: r.newHint.ladderTotalWallTimeMs,
