@@ -15832,8 +15832,8 @@
                     if (neighbors.some(nk => l.blockSet.has(nk))) reasons.push(`Block touches MustCross at (${p.x + 1},${p.y + 1})`);
                     if (neighbors.some(nk => l.gooseSet.has(nk))) reasons.push(`Goose touches MustCross at (${p.x + 1},${p.y + 1})`);
                     const left = APP.LevelUtils.PACK(p.x-1,p.y), right = APP.LevelUtils.PACK(p.x+1,p.y), up = APP.LevelUtils.PACK(p.x,p.y-1), down = APP.LevelUtils.PACK(p.x,p.y+1);
-                    if ([left, right].some(nk => l.filterMap.get(nk) === APP.Core.V || l.flippingFilterMap.get(nk) === APP.Core.V)) reasons.push(`Vertical Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
-                    if ([up, down].some(nk => l.filterMap.get(nk) === APP.Core.H || l.flippingFilterMap.get(nk) === APP.Core.H)) reasons.push(`Horizontal Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([left, right].some(nk => l.filterMap.get(nk) === APP.Core.V)) reasons.push(`Vertical Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([up, down].some(nk => l.filterMap.get(nk) === APP.Core.H)) reasons.push(`Horizontal Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
                 }
 
 
