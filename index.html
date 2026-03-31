@@ -6399,34 +6399,92 @@
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
-                    const validity = APP.Editor.validateLevelDetailed(level, { allowGateLess: true });
                     const debugStats = debug ? createSolverDebugStats(debugLevel ?? ((typeof level.id === "number") ? level.id + 1 : null)) : null;
                     foundSolutions.timedOut = false;
-                    if (!validity.ok) {
+                    const preflightWarnings = [];
+                    const pushPreflightWarning = (message) => {
+                        if (typeof message === 'string' && message.trim()) preflightWarnings.push(message.trim());
+                    };
+                    if (!level || typeof level !== 'object') {
                         if (debugStats) {
-                            debugStats.invalidReasons = validity.reasons || [];
                             setPreExpansionAbort(debugStats, {
-                                code: 'invalid-start-state',
-                                message: (validity.reasons || []).join('; ') || 'Level validation failed before solver expansion.',
-                                phase: 'preflight-validation',
-                                source: 'PathfinderSolver.solve',
-                                details: { reasons: validity.reasons || [] }
+                                code: 'invalid-level-payload',
+                                message: 'Solver received an invalid level payload.',
+                                phase: 'preflight-sanity',
+                                source: 'PathfinderSolver.solve'
                             });
-                            appendReachabilitySanityNote(level, debugStats, "invalid");
                             finalizeSolverDebugStats(debugStats, "invalid", perfStart);
-                            if (debugStats) {
-                                debugStats.preExpansionAbort = debugStats.preExpansionAbort || 'invalid-start-state';
-                                debugStats.nodesExpanded = debugStats.nodesExpanded ?? 0;
-                                debugStats.rootCandidatesGenerated = debugStats.rootCandidatesGenerated ?? 0;
-                            }
                             return { ok: false, solution: null, debug: debugStats };
                         }
+                        return [];
+                    }
+                    if (!level.grid || typeof level.grid !== 'object') level.grid = {};
+                    const gridW = Math.floor(Number(level.grid.w));
+                    const gridH = Math.floor(Number(level.grid.h));
+                    if (!Number.isFinite(gridW) || !Number.isFinite(gridH) || gridW <= 0 || gridH <= 0) {
                         if (debugStats) {
-                            debugStats.preExpansionAbort = debugStats.preExpansionAbort || 'invalid-start-state';
-                            debugStats.nodesExpanded = debugStats.nodesExpanded ?? 0;
-                            debugStats.rootCandidatesGenerated = debugStats.rootCandidatesGenerated ?? 0;
+                            setPreExpansionAbort(debugStats, {
+                                code: 'invalid-grid-shape',
+                                message: 'Solver requires a positive grid size.',
+                                phase: 'preflight-sanity',
+                                source: 'PathfinderSolver.solve',
+                                details: { grid: level.grid || null }
+                            });
+                            finalizeSolverDebugStats(debugStats, "invalid", perfStart);
+                            return { ok: false, solution: null, debug: debugStats };
                         }
                         return [];
+                    }
+                    level.grid.w = gridW;
+                    level.grid.h = gridH;
+                    if (!(level.blockSet instanceof Set)) level.blockSet = new Set(level.blockSet || []);
+                    if (!(level.gateSet instanceof Set)) level.gateSet = new Set(level.gateSet || []);
+                    if (!(level.gooseSet instanceof Set)) level.gooseSet = new Set(level.gooseSet || []);
+                    if (!(level.falseGoalKeys instanceof Set)) level.falseGoalKeys = new Set(level.falseGoalKeys || []);
+                    if (!Array.isArray(level.gateKeys)) level.gateKeys = Array.from(level.gateSet || []);
+                    if (!Array.isArray(level.mustPassKeys)) level.mustPassKeys = [];
+                    if (!Array.isArray(level.mustCrossKeys)) level.mustCrossKeys = [];
+                    if (!Array.isArray(level.filters)) level.filters = [];
+                    if (!Number.isFinite(level.reqLen)) {
+                        pushPreflightWarning(`reqLen missing/invalid (${level.reqLen}); defaulting to 0 for solver safety.`);
+                        level.reqLen = 0;
+                    }
+                    if (!Number.isFinite(level.reqInts)) {
+                        pushPreflightWarning(`reqInts missing/invalid (${level.reqInts}); defaulting to 0 for solver safety.`);
+                        level.reqInts = 0;
+                    }
+                    const keyInBounds = (key) => {
+                        if (!Number.isFinite(Number(key))) return false;
+                        const p = APP.LevelUtils.UNPACK(Number(key));
+                        return APP.LevelUtils.inBounds(p.x, p.y, level.grid.w, level.grid.h);
+                    };
+                    if (!Number.isFinite(Number(level.goalKey)) || !keyInBounds(level.goalKey)) {
+                        if (debugStats) {
+                            setPreExpansionAbort(debugStats, {
+                                code: 'invalid-goal-key',
+                                message: `Goal key is missing or out of bounds: ${level.goalKey}`,
+                                phase: 'preflight-sanity',
+                                source: 'PathfinderSolver.solve',
+                                details: { goalKey: level.goalKey, grid: level.grid }
+                            });
+                            finalizeSolverDebugStats(debugStats, "invalid", perfStart);
+                            return { ok: false, solution: null, debug: debugStats };
+                        }
+                        return [];
+                    }
+                    if (!Array.isArray(level.gateKeys) || level.gateKeys.length === 0) {
+                        pushPreflightWarning('No gate keys supplied; solver will continue and likely return no solution.');
+                    } else {
+                        const outOfBoundsGates = level.gateKeys.filter((k) => !keyInBounds(k));
+                        if (outOfBoundsGates.length > 0) {
+                            pushPreflightWarning(`Ignored ${outOfBoundsGates.length} out-of-bounds gate key(s) during solver preflight.`);
+                            level.gateKeys = level.gateKeys.filter((k) => keyInBounds(k));
+                            level.gateSet = new Set(level.gateKeys);
+                        }
+                    }
+                    if (preflightWarnings.length > 0 && debugStats) {
+                        if (!Array.isArray(debugStats.notes)) debugStats.notes = [];
+                        debugStats.notes.push(...preflightWarnings.map((msg) => `PREFLIGHT WARNING: ${msg}`));
                     }
                     if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
                     onStateUpdate("Analyzing Bipartite Parity...");
