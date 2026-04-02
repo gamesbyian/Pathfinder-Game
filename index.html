@@ -15338,8 +15338,7 @@
                     }
 
                     if (isCaution) {
-                        // Yellow base layer — unchanged: full connected path, round join fills corners
-                        const traceYellow = () => {
+                        const trace = () => {
                             const start = APP.LevelUtils.UNPACK(pathArr[0]);
                             const sStart = getScreenPos(start.x, start.y);
                             ctx.beginPath();
@@ -15356,37 +15355,16 @@
                                 }
                             }
                         };
+
                         ctx.strokeStyle = '#fbbf24';
-                        traceYellow();
+                        trace();
                         ctx.stroke();
 
-                        // Black dash layer: segment-by-segment with phase continuity
                         ctx.strokeStyle = '#000000';
                         ctx.setLineDash([width, width]);
-                        let cumulativeLength = 0;
-
-                        for (let i = 1; i < pathArr.length; i++) {
-                            if (isJumpSet.has(i)) {
-                                cumulativeLength = 0; // reset phase for each sub-path after a jump
-                                continue;
-                            }
-                            const p1 = APP.LevelUtils.UNPACK(pathArr[i - 1]);
-                            const p2 = APP.LevelUtils.UNPACK(pathArr[i]);
-                            const s1 = getScreenPos(p1.x, p1.y);
-                            const s2 = getScreenPos(p2.x, p2.y);
-                            const segLen = Math.hypot(s2.sx - s1.sx, s2.sy - s1.sy);
-
-                            ctx.lineDashOffset = -(cumulativeLength % (2 * width));
-                            ctx.beginPath();
-                            ctx.moveTo(s1.sx, s1.sy);
-                            ctx.lineTo(s2.sx, s2.sy);
-                            ctx.stroke();
-
-                            cumulativeLength += segLen;
-                        }
-
+                        trace();
+                        ctx.stroke();
                         ctx.setLineDash([]);
-                        ctx.lineDashOffset = 0;
 
                         getCautionSegmentEndpoints().forEach(({ sx, sy }) => {
                             drawDot(sx, sy, '#fbbf24');
