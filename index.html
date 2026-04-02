@@ -5671,6 +5671,25 @@
                         maybeEmitAdaptiveTelemetry(phaseDerived);
                         if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
                         captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l });
+                        // Plateau velocity-collapse early abort: detects exponential stall pattern (e.g. Level 134)
+                        // Fires when node expansion rate collapses to <4% of initial rate after >=6 samples and >3s elapsed
+                        if (debugStats && Array.isArray(debugStats.progressSamples) && debugStats.progressSamples.length >= 6) {
+                            const _ps = debugStats.progressSamples;
+                            const _tLast = _ps[_ps.length - 1].tMs;
+                            if (_tLast > 3000) {
+                                const _s0 = _ps[0], _s1 = _ps[1];
+                                const _sPrev = _ps[_ps.length - 2], _sLast = _ps[_ps.length - 1];
+                                const _rate0 = Math.max(0, _s1.nodesExpanded - _s0.nodesExpanded) / Math.max(1, _s1.tMs - _s0.tMs);
+                                const _rateLast = Math.max(0, _sLast.nodesExpanded - _sPrev.nodesExpanded) / Math.max(1, _sLast.tMs - _sPrev.tMs);
+                                if (_rate0 > 10 && _rateLast / _rate0 < 0.04) {
+                                    debugStats.plateauEarlyAbortTriggered = true;
+                                    captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
+                                    snapshotTimeoutFrontierDiagnostics(debugStats, stack);
+                                    recordPhaseAttempt('timeout');
+                                    return SOLVER_TIMEOUT;
+                                }
+                            }
+                        }
                         if (realLen > l.reqLen) {
                             if (debugStats) debugStats.prune.lenOverflow++;
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
@@ -10276,7 +10295,8 @@
             let previousTimeoutTelemetry = null;
             let consecutiveTimeoutStagnation = 0;
             let portalRetryBiasToggle = 0;
-            let broadStagnationRescueUsed = false;
+            let broadStagnationRescueCount = 0;
+            let nearSolutionFloodRescueUsed = false;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
             const canonicalizeDisabledPrunes = (prunes = []) => {
@@ -10324,7 +10344,9 @@
                 { rootOrderingProfile: 'objectiveFirst', orderingPolicy: 'objectiveFirst', beamCompositionRule: 'floor-2-wide', rootExpansionFloorCount: 2, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: [] },
                 { rootOrderingProfile: 'knotBuilder', orderingPolicy: 'knotBuilder', beamCompositionRule: 'floor-3-objective', rootExpansionFloorCount: 3, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'off', disabledPrunes: ['mustPassBound'] },
                 { rootOrderingProfile: 'portalFirstTransfer', orderingPolicy: 'portalFirstTransfer', beamCompositionRule: 'adaptive-relaxed', rootExpansionFloorCount: 1, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'agnostic', disabledPrunes: ['mustCrossBound'] },
-                { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] }
+                { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
+                // 5th entry: maximum pruning relaxation for near-solution flood / must-cross deadlock patterns
+                { rootOrderingProfile: 'endurance', orderingPolicy: 'endurance', beamCompositionRule: 'floor-4-endurance', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['mustPassBound', 'mustCrossBound'] }
             ];
             const applyDeterministicDiversificationMatrix = (attempt, context = {}) => {
                 if (!attempt) return null;
@@ -11153,7 +11175,7 @@
                     const nonPortalBroadSearch = !portalInvolvedRun && (level?.portalMap?.size || 0) === 0;
                     const broadStagnationDetected = timeoutProne
                         && nonPortalBroadSearch
-                        && !broadStagnationRescueUsed
+                        && broadStagnationRescueCount < 3
                         && sustainedHighExpansion
                         && depthSeries.length >= 2
                         && depthPlateauBand <= 2
@@ -11176,7 +11198,7 @@
                             highExpansionFloor,
                             noveltyAvoidedRootKeys: noveltyKeys || null
                         });
-                        broadStagnationRescueUsed = true;
+                        broadStagnationRescueCount++;
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'broad-stagnation-novelty-rescue';
                             currentAttemptEntry.broadStagnationDetected = true;
@@ -11186,6 +11208,34 @@
                                 depthPlateauBand
                             };
                             currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
+                        }
+                        continue;
+                    }
+                    // Near-solution flood rescue: targets "final-mile deadlock" (e.g. Level 108)
+                    // Detects thousands of frontier states needing exactly 1 more step but never completing
+                    const nearSolutionFloodDetected = timeoutProne
+                        && !nearSolutionFloodRescueUsed
+                        && (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= 2000
+                        && Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
+                        && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= 1;
+                    if (nearSolutionFloodDetected && nextAttempt) {
+                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', ...(nextAttempt.disabledPrunes || [])]);
+                        nextAttempt.memoStrictness = Math.min(0.5, Number(nextAttempt.memoStrictness) || 0.5);
+                        nextAttempt.rootExpansionFloorCount = Math.max(4, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                        nextAttempt.forceRootExpansionFloor = true;
+                        nextAttempt.relaxRootSuppressionFirstLayer = true;
+                        nextAttempt.policyProfile = 'endurance';
+                        nextAttempt.orderingPolicy = 'endurance';
+                        nextAttempt.retryTag = 'near-solution-flood-rescue';
+                        nextAttempt.escalationReason = 'near-solution-flood-rescue';
+                        nearSolutionFloodRescueUsed = true;
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = 'near-solution-flood-rescue';
+                            currentAttemptEntry.nearSolutionFloodDetected = true;
+                            currentAttemptEntry.nearSolutionFloodWindow = {
+                                nearSolutionStates: attemptResult.debug.timeoutDiagnostics.nearSolutionStates,
+                                bestLowerBound: attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution
+                            };
                         }
                         continue;
                     }
