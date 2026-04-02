@@ -1754,15 +1754,16 @@
                     lengthHarvest:       { direction: { goalAttractionWeight: 0.7,  objectiveAttractionWeight: 0.95, finishCommitmentWeight: 0.55, portalSetupWeight: 0.95, portalCommitmentWeight: 0.8  }, coverage: { perimeterBiasWeight: 1.45, slackPreservationWeight: 1.35 }, urgency: { mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1,    intersectionSetupWeight: 1.05 }, pathology: { antiDeadCorridorWeight: 1.15, antiDitherWeight: 0.85, revisitPenaltyWeight: 0.85 } },
                     knotBuilder:         { direction: { goalAttractionWeight: 0.8,  objectiveAttractionWeight: 1,    finishCommitmentWeight: 0.7,  portalSetupWeight: 1,    portalCommitmentWeight: 0.9  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 1.1  }, urgency: { mustPassUrgencyWeight: 1.1,  mustCrossUrgencyWeight: 1.35, intersectionSetupWeight: 1.9  }, pathology: { antiDeadCorridorWeight: 1,    antiDitherWeight: 0.9,  revisitPenaltyWeight: 0.8  } },
                     portalCommitted:     { direction: { goalAttractionWeight: 0.95, objectiveAttractionWeight: 1.2,  finishCommitmentWeight: 1,    portalSetupWeight: 1.95, portalCommitmentWeight: 2    }, coverage: { perimeterBiasWeight: 0.9,  slackPreservationWeight: 1.1  }, urgency: { mustPassUrgencyWeight: 1.2,  mustCrossUrgencyWeight: 1.3,  intersectionSetupWeight: 1    }, pathology: { antiDeadCorridorWeight: 1.15, antiDitherWeight: 1.25, revisitPenaltyWeight: 1.1  } },
-                    endurance:           { direction: { goalAttractionWeight: 0.85, objectiveAttractionWeight: 1.05, finishCommitmentWeight: 0.8,  portalSetupWeight: 1.1,  portalCommitmentWeight: 1.1  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 1.2  }, urgency: { mustPassUrgencyWeight: 1,    mustCrossUrgencyWeight: 1,    intersectionSetupWeight: 1.15 }, pathology: { antiDeadCorridorWeight: 0.9,  antiDitherWeight: 0.75, revisitPenaltyWeight: 0.75 } }
+                    endurance:           { direction: { goalAttractionWeight: 0.85, objectiveAttractionWeight: 1.05, finishCommitmentWeight: 0.8,  portalSetupWeight: 1.1,  portalCommitmentWeight: 1.1  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 1.2  }, urgency: { mustPassUrgencyWeight: 1,    mustCrossUrgencyWeight: 1,    intersectionSetupWeight: 1.15 }, pathology: { antiDeadCorridorWeight: 0.9,  antiDitherWeight: 0.75, revisitPenaltyWeight: 0.75 } },
+                    mustCrossFirst:      { direction: { goalAttractionWeight: 0.65, objectiveAttractionWeight: 1.5,  finishCommitmentWeight: 0.6,  portalSetupWeight: 1.0,  portalCommitmentWeight: 0.9  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 1.05 }, urgency: { mustPassUrgencyWeight: 1.6,  mustCrossUrgencyWeight: 2.4,  intersectionSetupWeight: 1.1  }, pathology: { antiDeadCorridorWeight: 1.05, antiDitherWeight: 0.9,  revisitPenaltyWeight: 0.85 } }
                 },
                 // Phase multipliers apply on top of the base profile. Keys must match active weight names.
                 // lengthHarvestWeight and antiTrapWeight entries removed (dead weights).
                 SOLVER_POLICY_PHASE_MULTIPLIERS: {
-                    harvest:    { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, lengthHarvest: { perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 } },
-                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 } },
-                    knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 } },
-                    finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 } }
+                    harvest:    { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, lengthHarvest: { perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.15, goalAttractionWeight: 0.75 } },
+                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.15, objectiveAttractionWeight: 1.1 } },
+                    knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.1, intersectionSetupWeight: 1.15 } },
+                    finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 }, mustCrossFirst: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.2 } }
                 },
                 getPolicyProfile(policyName = 'default', phase = 'harvest', urgencyScalar = null) {
                     const canonicalName = this.SOLVER_POLICY_PROFILES[policyName] ? policyName : 'default';
@@ -2902,8 +2903,16 @@
                         baseBound = this._mstBoundFromNodes(nodes, l.mustCrossPairDist, l.mustCrossToGoalDist, nearest);
                     }
                     if (baseBound === Infinity) return Infinity;
-                    const legacyExtraVisitsLB = this._mustCrossExtraVisitsLowerBound(mask, crossNeed, l).extraVisitsLB;
-                    return baseBound + legacyExtraVisitsLB;
+                    const { extraVisitsLB: legacyExtraVisitsLB } = this._mustCrossExtraVisitsLowerBound(mask, crossNeed, l);
+                    const dpBound = baseBound + legacyExtraVisitsLB;
+                    // When there are unvisited must-cross cells (need=2, so extraVisitsLB>0),
+                    // the demand-flow bound is tighter because it uses actual transit-detour
+                    // distances for double-visit requirements rather than a count-based fallback.
+                    if (legacyExtraVisitsLB > 0) {
+                        const demandFlowBound = this._estimateMustCrossDemandFlowBoundFrom(key, state, l);
+                        if (Number.isFinite(demandFlowBound) && demandFlowBound > dpBound) return demandFlowBound;
+                    }
+                    return dpBound;
                 },
                 _hazardDecisionForKey(key, state, l, options = {}) {
                     if (!l.gooseSet.has(key)) return { allowed: true, terminal: false };
@@ -10088,6 +10097,7 @@
                     scoringMode: 'modern',
                     portalBiasMode: 'off',
                     forbidPortals: true,
+                    blockPortalEntryCells: true,
                     structuralMode: true,
                     phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
                     objectiveTrack: defaultTrack,
@@ -10107,12 +10117,35 @@
                     scoringMode: 'endurance',
                     portalBiasMode: 'off',
                     forbidPortals: true,
+                    blockPortalEntryCells: true,
                     structuralMode: true,
                     phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
                     policyProfile: 'knotBuilder',
                     commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.2)) },
                     memoStrictness: 1.25,
                     portalUsagePolicy: resolvePortalUsagePolicy({ forbidPortals: true })
+                });
+            }
+            // Add a must-cross horizon attempt when the level has must-cross cells and the
+            // level is complex enough to warrant endurance budget (allowEnduranceLongpath).
+            // This attempt uses the mustCrossFirst profile (mustCrossUrgencyWeight=2.4x) to
+            // bias search toward visiting must-cross cells early in path construction,
+            // addressing the failure class where paths defer must-cross visits until too few
+            // steps remain to close them.
+            const mustCrossHorizonEligible = ((level?.mustCrossKeys?.length > 0) || (Array.isArray(level?.mustCross) && level.mustCross.length > 0)) && allowEnduranceLongpath;
+            if (mustCrossHorizonEligible) {
+                const mustCrossHorizonBudget = Math.max(1, Math.floor(total * 0.10));
+                attempts.push({
+                    label: 'must-cross-horizon',
+                    budgetMs: mustCrossHorizonBudget,
+                    scoringMode: 'endurance',
+                    portalBiasMode: 'off',
+                    structuralMode: true,
+                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'harvestThenFinish' }),
+                    policyProfile: 'mustCrossFirst',
+                    commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
+                    memoStrictness: 1.1,
+                    portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
             if (!modernStructuralGuidanceNotNeeded) {
@@ -10674,7 +10707,14 @@
                 );
                 const resolvedPortalUsagePolicy = attemptOpts.portalUsagePolicy
                     || (attemptForbidPortals ? 'optional-off' : (portalTraversalRequiredForAttempt ? 'required' : 'optional-on'));
-                const r = await PathfinderSolver.solve(level, {
+                // When blockPortalEntryCells is requested (for optional-portal no-portal attempts),
+                // add all portal entry cells to blockSet so the solver treats them as walls.
+                // PathfinderSolver.solve() does Object.create(level) internally and rebuilds all
+                // distance maps fresh, so this modified level is safe to pass.
+                const solveLevel = (attemptOpts.blockPortalEntryCells && attemptForbidPortals && level?.portalMap instanceof Map && level.portalMap.size > 0)
+                    ? Object.assign(Object.create(level), { blockSet: new Set([...level.blockSet, ...level.portalMap.keys()]) })
+                    : level;
+                const r = await PathfinderSolver.solve(solveLevel, {
                     timeLimit: attemptBudgetMs,
                     debug: true,
                     debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
