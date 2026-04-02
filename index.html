@@ -10296,7 +10296,7 @@
             let consecutiveTimeoutStagnation = 0;
             let portalRetryBiasToggle = 0;
             let broadStagnationRescueCount = 0;
-            let nearSolutionFloodRescueUsed = false;
+            let nearSolutionFloodRescueCount = 0;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
             const canonicalizeDisabledPrunes = (prunes = []) => {
@@ -11168,8 +11168,9 @@
                     const depthPlateauBand = depthSeries.length >= 2
                         ? (Math.max(...depthSeries) - Math.min(...depthSeries))
                         : Infinity;
-                    const noSoftBoundActivity = recentTimeoutAttempts.length >= 2
-                        && recentTimeoutAttempts.every(entry => Math.max(0, Number(entry?.softBoundActivations?.total) || 0) === 0);
+                    const recentWithSoftBoundData = recentTimeoutAttempts.filter(entry => entry?.softBoundActivations != null);
+                    const noSoftBoundActivity = recentWithSoftBoundData.length >= 2
+                        && recentWithSoftBoundData.every(entry => Math.max(0, Number(entry.softBoundActivations.total) || 0) === 0);
                     const sustainedHighExpansion = recentTimeoutAttempts.length >= 2
                         && recentTimeoutAttempts.every(entry => Math.max(0, Number(entry?.quality?.nodesExpanded) || 0) >= highExpansionFloor);
                     const nonPortalBroadSearch = !portalInvolvedRun && (level?.portalMap?.size || 0) === 0;
@@ -11180,6 +11181,38 @@
                         && depthSeries.length >= 2
                         && depthPlateauBand <= 2
                         && noSoftBoundActivity;
+                    // Near-solution flood rescue: targets "final-mile deadlock" (e.g. Level 108)
+                    // Detects thousands of frontier states needing exactly 1 more step but never completing.
+                    // Checked before broadStagnation so the more-specific pattern wins when both are present.
+                    const nearSolutionFloodDetected = timeoutProne
+                        && nearSolutionFloodRescueCount < 2
+                        && (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= 2000
+                        && Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
+                        && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= 1;
+                    if (nearSolutionFloodDetected && nextAttempt) {
+                        const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
+                        const existingMemo = Number(nextAttempt.memoStrictness);
+                        nextAttempt.budgetMs = priorBudget;
+                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', ...(nextAttempt.disabledPrunes || [])]);
+                        nextAttempt.memoStrictness = Number.isFinite(existingMemo) ? Math.min(0.5, existingMemo) : 0.5;
+                        nextAttempt.rootExpansionFloorCount = Math.max(4, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                        nextAttempt.forceRootExpansionFloor = true;
+                        nextAttempt.relaxRootSuppressionFirstLayer = true;
+                        nextAttempt.policyProfile = 'endurance';
+                        nextAttempt.orderingPolicy = 'endurance';
+                        nextAttempt.retryTag = 'near-solution-flood-rescue';
+                        nextAttempt.escalationReason = 'near-solution-flood-rescue';
+                        nearSolutionFloodRescueCount++;
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = 'near-solution-flood-rescue';
+                            currentAttemptEntry.nearSolutionFloodDetected = true;
+                            currentAttemptEntry.nearSolutionFloodWindow = {
+                                nearSolutionStates: attemptResult.debug.timeoutDiagnostics.nearSolutionStates,
+                                bestLowerBound: attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution
+                            };
+                        }
+                        continue;
+                    }
                     if (broadStagnationDetected && nextAttempt) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         const noveltyKeys = applyRootNoveltyPenalty(nextAttempt, 'broad-stagnation-novelty-rescue', attemptsUsed[attemptsUsed.length - 1] || null);
@@ -11208,34 +11241,6 @@
                                 depthPlateauBand
                             };
                             currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
-                        }
-                        continue;
-                    }
-                    // Near-solution flood rescue: targets "final-mile deadlock" (e.g. Level 108)
-                    // Detects thousands of frontier states needing exactly 1 more step but never completing
-                    const nearSolutionFloodDetected = timeoutProne
-                        && !nearSolutionFloodRescueUsed
-                        && (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= 2000
-                        && Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
-                        && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= 1;
-                    if (nearSolutionFloodDetected && nextAttempt) {
-                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', ...(nextAttempt.disabledPrunes || [])]);
-                        nextAttempt.memoStrictness = Math.min(0.5, Number(nextAttempt.memoStrictness) || 0.5);
-                        nextAttempt.rootExpansionFloorCount = Math.max(4, Number(nextAttempt.rootExpansionFloorCount) || 0);
-                        nextAttempt.forceRootExpansionFloor = true;
-                        nextAttempt.relaxRootSuppressionFirstLayer = true;
-                        nextAttempt.policyProfile = 'endurance';
-                        nextAttempt.orderingPolicy = 'endurance';
-                        nextAttempt.retryTag = 'near-solution-flood-rescue';
-                        nextAttempt.escalationReason = 'near-solution-flood-rescue';
-                        nearSolutionFloodRescueUsed = true;
-                        if (currentAttemptEntry) {
-                            currentAttemptEntry.nextAttemptReason = 'near-solution-flood-rescue';
-                            currentAttemptEntry.nearSolutionFloodDetected = true;
-                            currentAttemptEntry.nearSolutionFloodWindow = {
-                                nearSolutionStates: attemptResult.debug.timeoutDiagnostics.nearSolutionStates,
-                                bestLowerBound: attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution
-                            };
                         }
                         continue;
                     }
