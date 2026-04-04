@@ -214,6 +214,8 @@ const printTimeoutDiagnosticsSummary = () => {
     let timeoutAttemptsWithDiag = 0;
     let nearSolutionStates = 0;
     let bestLowerBound = null;
+    let mustCrossInfeasibleFrontierTotal = 0;
+    let nonImprovingPortalTotal = 0;
 
     audit.failed.forEach((level) => {
       const diagnostics = collectLevelTimeoutDiagnostics(level);
@@ -223,6 +225,8 @@ const printTimeoutDiagnosticsSummary = () => {
         mergeHistogram(interactionDist, diag.frontierInteractionDeficitDistribution);
         mergeHistogram(nearSolutionByDimension, diag.nearSolutionByDimension);
         nearSolutionStates += Number(diag.nearSolutionStates) || 0;
+        mustCrossInfeasibleFrontierTotal += Number(diag.mustCrossScheduleInfeasibleFrontierStates) || 0;
+        nonImprovingPortalTotal += Number(diag.nonImprovingPortalTransitionsExpanded) || 0;
         const lb = Number(diag.bestLowerBoundToValidSolution);
         if (Number.isFinite(lb)) {
           bestLowerBound = bestLowerBound === null ? lb : Math.min(bestLowerBound, lb);
@@ -235,6 +239,32 @@ const printTimeoutDiagnosticsSummary = () => {
     console.log(`  frontierInteractionDeficitDistribution=${summarizeHistogram(interactionDist)}`);
     console.log(`  bestLowerBoundToValidSolution=${bestLowerBound === null ? 'n/a' : bestLowerBound}`);
     console.log(`  nearSolutionStates=${nearSolutionStates}; nearSolutionByDimension=${summarizeHistogram(nearSolutionByDimension)}`);
+    console.log(`  mustCrossScheduleInfeasibleFrontierStates=${mustCrossInfeasibleFrontierTotal}; nonImprovingPortalTransitionsExpanded=${nonImprovingPortalTotal}`);
+  }
+  console.log('');
+};
+
+const printPerLevelAttemptBreakdown = () => {
+  const targetLevels = [92, 108, 134];
+  const latest = audits[audits.length - 1];
+  if (!latest) return;
+  console.log('Per-attempt breakdown for persistent failures (latest audit):');
+  for (const levelNum of targetLevels) {
+    const level = latest.levels.find((l) => l.level === levelNum);
+    if (!level) { console.log(`- Level ${levelNum}: not found`); continue; }
+    console.log(`- Level ${levelNum}: status=${level.finalStatus} nodes=${level.nodesExpanded} attempts=${level.attemptCount}`);
+    const attempts = Array.isArray(level.attempts) ? level.attempts : [];
+    for (const a of attempts) {
+      const td = a?.timeoutDiagnostics || {};
+      const p = a?.prunes || {};
+      const policyStr = `policy=${a.policyProfile || 'unknown'} ordering=${a.orderingPolicy || 'unknown'}`;
+      const pruneStr = `mustPassBound=${p.mustPassBound || 0} mustCrossBound=${p.mustCrossBound || 0} portalOptNI=${p.portalOptionalNonImproving || 0} nonImpPortal=${p.nonImprovingPortalTransitionsExpanded || 0}`;
+      const diagStr = `bestLB=${td.bestLowerBoundToValidSolution ?? 'n/a'} nearSol=${td.nearSolutionStates ?? 0} mcInfeas=${td.mustCrossScheduleInfeasibleFrontierStates ?? 0}`;
+      console.log(`  ${a.label}: nodes=${a.nodesExpanded} maxDepth=${a.maxDepth} lengthDeficit=${a.lengthDeficitAtTimeout ?? 'n/a'}`);
+      console.log(`    ${policyStr}`);
+      console.log(`    ${pruneStr}`);
+      console.log(`    ${diagStr}`);
+    }
   }
   console.log('');
 };
@@ -244,3 +274,4 @@ printWindowTransitions();
 printCollapseFamilySummary();
 printTimeoutDiagnosticsSummary();
 printLevel50Trajectory();
+printPerLevelAttemptBreakdown();

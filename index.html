@@ -5888,6 +5888,19 @@
                             continue;
                         }
                         const neighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, l, options, scratch, searchCtx, debugStats);
+                        if (isP && debugStats) {
+                            // Count portal jumps that don't improve any objective lower bound.
+                            // Uses must-pass and interaction deficit from the parent frame as a proxy.
+                            const prevMustPass = top.remainingMustPass || 0;
+                            const prevInteraction = top.remainingInteractionDeficit || 0;
+                            const prevMustCross = top.remainingMustCross || 0;
+                            if (remainingMustPass >= prevMustPass
+                                && interactionDeficit >= prevInteraction
+                                && crossNeeds >= prevMustCross) {
+                                debugStats.nonImprovingPortalTransitionsExpanded =
+                                    (debugStats.nonImprovingPortalTransitionsExpanded || 0) + 1;
+                            }
+                        }
                         stack.push({
                             k: nextKey,
                             neighbors,
@@ -5895,7 +5908,9 @@
                             sig: stateSig,
                             depth: top.depth + 1,
                             remainingMustPass,
-                            remainingInteractionDeficit: interactionDeficit
+                            remainingInteractionDeficit: interactionDeficit,
+                            remainingMustCross: crossNeeds,
+                            remainingSteps: rSteps
                         });
                     }
                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
@@ -6485,6 +6500,7 @@
                     const perfStart = performance.now();
                     const foundSolutions = [];
                     const debugStats = debug ? createSolverDebugStats(debugLevel ?? ((typeof level.id === "number") ? level.id + 1 : null)) : null;
+                    if (debugStats && Number.isFinite(level?.reqLen)) debugStats.reqLen = level.reqLen;
                     foundSolutions.timedOut = false;
                     const preflightWarnings = [];
                     const pushPreflightWarning = (message) => {
@@ -7841,7 +7857,8 @@
                 routingDecision: partial.routingDecision || null,
                 orderingPolicySummary: partial.orderingPolicySummary || null,
                 enduranceRescueDelta: partial.enduranceRescueDelta || partial.stage11RescueDelta || null,
-                engine: partial.engine || 'referee'
+                engine: partial.engine || 'referee',
+                attempts: Array.isArray(partial.attempts) ? partial.attempts : []
             };
         };
         const normalizeProfileSolveResult = (profileResult, fallbackStatus = 'error', context = {}) => {
@@ -8151,7 +8168,8 @@
                         pruningHitRates: instrumentation?.pruningHitRates || null
                     }),
                     progressSamples: Array.isArray(entry?.progressSamples) ? entry.progressSamples : null,
-                    progressSummary: entry?.progressSummary || null
+                    progressSummary: entry?.progressSummary || null,
+                    cumulativePrunes: (entry?.cumulativePrunes && typeof entry.cumulativePrunes === 'object') ? { ...entry.cumulativePrunes } : null
                 });
             });
         };
@@ -8209,7 +8227,13 @@
                         nearSolutionStates: Number.isFinite(debug.timeoutDiagnostics.nearSolutionStates)
                             ? debug.timeoutDiagnostics.nearSolutionStates
                             : null,
-                        nearSolutionByDimension: debug.timeoutDiagnostics.nearSolutionByDimension || null
+                        nearSolutionByDimension: debug.timeoutDiagnostics.nearSolutionByDimension || null,
+                        mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(debug.timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates)
+                            ? debug.timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
+                            : null,
+                        nonImprovingPortalTransitionsExpanded: Number.isFinite(debug?.nonImprovingPortalTransitionsExpanded)
+                            ? debug.nonImprovingPortalTransitionsExpanded
+                            : null
                     })
                     : null,
                 refereeAttemptHistory: toAuditRefereeAttemptHistory(attempt?.attempts),
@@ -11025,6 +11049,25 @@
                         ? attemptResult.debug.lengthDeficitAtTimeout
                         : null,
                     timeoutDiagnostics: attemptResult?.debug?.timeoutDiagnostics || null,
+                    cumulativePrunes: (attemptResult?.debug?.prune && typeof attemptResult.debug.prune === 'object')
+                        ? {
+                            lenOverflow: Number(attemptResult.debug.prune.lenOverflow) || 0,
+                            intsOverflow: Number(attemptResult.debug.prune.intsOverflow) || 0,
+                            mustPassBound: Number(attemptResult.debug.prune.mustPassBound) || 0,
+                            mustCrossBound: Number(attemptResult.debug.prune.mustCrossBound) || 0,
+                            parity: Number(attemptResult.debug.prune.parity) || 0,
+                            topology: Number(attemptResult.debug.prune.topology) || 0,
+                            deadEnd: Number(attemptResult.debug.prune.deadEnd) || 0,
+                            failedStateHit: Number(attemptResult.debug.prune.failedStateHit) || 0,
+                            portalParityImpossible: Number(attemptResult.debug.prune.portalParityImpossible) || 0,
+                            portalObligationSignatureImpossible: Number(attemptResult.debug.prune.portalObligationSignatureImpossible) || 0,
+                            portalOptionalNonImproving: Number(attemptResult.debug.prune.portalOptionalNonImproving) || 0,
+                            portalAutomatonRejected: Number(attemptResult.debug.prune.portalAutomatonRejected) || 0,
+                            minRemOverflow: Number(attemptResult.debug.prune.minRemOverflow) || 0,
+                            other: Number(attemptResult.debug.prune.other) || 0,
+                            nonImprovingPortalTransitionsExpanded: Number(attemptResult.debug?.nonImprovingPortalTransitionsExpanded) || 0
+                        }
+                        : null,
                     preExpansionAbort: attemptResult?.preExpansionAbort || attemptResult?.debug?.preExpansionAbort || null,
                     contradictionRecoveryActivated: !!attemptResult?.contradictionRecoveryActivated,
                     failureCategory: attemptResult?.failureTaxonomy?.category || null,
@@ -14367,6 +14410,7 @@
                     lengthPressureActive: false,
                     targetDepthByPhase: null,
                     lengthDeficitAtTimeout: null,
+                    nonImprovingPortalTransitionsExpanded: 0,
                     timeoutDiagnostics: null,
                     phaseTimeline: [],
                     progressSamples: [],
@@ -14404,7 +14448,8 @@
                         frontierInteractionDeficitDistribution: {},
                         bestLowerBoundToValidSolution: null,
                         nearSolutionStates: 0,
-                        nearSolutionByDimension: {}
+                        nearSolutionByDimension: {},
+                        mustCrossScheduleInfeasibleFrontierStates: 0
                     };
                 }
                 return debugStats.timeoutDiagnostics;
@@ -14441,6 +14486,16 @@
                     if (pending <= 0) continue;
                     bumpTimeoutDiagBucket(diag.frontierMustPassDistribution, frame?.remainingMustPass, pending);
                     bumpTimeoutDiagBucket(diag.frontierInteractionDeficitDistribution, frame?.remainingInteractionDeficit, pending);
+                    // Count frontier frames where must-cross deficit exceeds remaining steps —
+                    // these represent states where must-cross scheduling is infeasible from this
+                    // point, indicating the search has committed to paths that can't satisfy all
+                    // must-cross obligations.
+                    const mustCrossNeed = Number(frame?.remainingMustCross) || 0;
+                    const stepsLeft = Number(frame?.remainingSteps) || 0;
+                    if (mustCrossNeed > 0 && mustCrossNeed > stepsLeft) {
+                        diag.mustCrossScheduleInfeasibleFrontierStates =
+                            (diag.mustCrossScheduleInfeasibleFrontierStates || 0) + pending;
+                    }
                 }
             };
 
@@ -14707,6 +14762,7 @@
                     const phaseTargets = (debugStats?.targetDepthByPhase && typeof debugStats.targetDepthByPhase === 'object')
                         ? debugStats.targetDepthByPhase
                         : null;
+                    const reached = Math.max(0, Number(debugStats?.maxDepth) || 0);
                     if (phaseTargets) {
                         const phaseOrder = ['late', 'mid', 'early'];
                         let targetDepth = 0;
@@ -14714,8 +14770,12 @@
                             const candidate = Number(phaseTargets?.[phase]);
                             if (Number.isFinite(candidate) && candidate > targetDepth) targetDepth = candidate;
                         }
-                        const reached = Math.max(0, Number(debugStats?.maxDepth) || 0);
                         debugStats.lengthDeficitAtTimeout = Math.max(0, targetDepth - reached);
+                    } else if (Number.isFinite(debugStats?.reqLen) && reached < debugStats.reqLen) {
+                        // Fallback: use reqLen directly when phase targets are not available.
+                        // This covers long-path levels (e.g. reqLen=99) where targetDepthByPhase
+                        // was never set but the path clearly stopped short.
+                        debugStats.lengthDeficitAtTimeout = debugStats.reqLen - reached;
                     } else {
                         debugStats.lengthDeficitAtTimeout = null;
                     }
@@ -18212,7 +18272,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const budgetMs = Number.isFinite(attempt?.budgetMs)
                 ? attempt.budgetMs
                 : (Number.isFinite(attempt?.attemptBudgetMs) ? attempt.attemptBudgetMs : 0);
-            const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
+            const prunes = attempt?.cumulativePrunes || attempt?.prunes || {};
             const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
             const progressSummary = attempt?.progressSummary || {};
             const timeoutDiagnostics = attempt?.timeoutDiagnostics && typeof attempt.timeoutDiagnostics === 'object'
@@ -18260,8 +18320,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     intsOverflow: Number.isFinite(prunes?.intsOverflow) ? prunes.intsOverflow : 0,
                     mustPassBound: Number.isFinite(prunes?.mustPassBound) ? prunes.mustPassBound : 0,
                     mustCrossBound: Number.isFinite(prunes?.mustCrossBound) ? prunes.mustCrossBound : 0,
+                    parity: Number.isFinite(prunes?.parity) ? prunes.parity : 0,
+                    topology: Number.isFinite(prunes?.topology) ? prunes.topology : 0,
+                    deadEnd: Number.isFinite(prunes?.deadEnd) ? prunes.deadEnd : 0,
                     failedStateHit: Number.isFinite(prunes?.failedStateHit) ? prunes.failedStateHit : 0,
-                    deadEnd: Number.isFinite(prunes?.deadEnd) ? prunes.deadEnd : 0
+                    minRemOverflow: Number.isFinite(prunes?.minRemOverflow) ? prunes.minRemOverflow : 0,
+                    portalParityImpossible: Number.isFinite(prunes?.portalParityImpossible) ? prunes.portalParityImpossible : 0,
+                    portalObligationSignatureImpossible: Number.isFinite(prunes?.portalObligationSignatureImpossible) ? prunes.portalObligationSignatureImpossible : 0,
+                    portalOptionalNonImproving: Number.isFinite(prunes?.portalOptionalNonImproving) ? prunes.portalOptionalNonImproving : 0,
+                    portalAutomatonRejected: Number.isFinite(prunes?.portalAutomatonRejected) ? prunes.portalAutomatonRejected : 0,
+                    nonImprovingPortalTransitionsExpanded: Number.isFinite(prunes?.nonImprovingPortalTransitionsExpanded) ? prunes.nonImprovingPortalTransitionsExpanded : 0,
+                    other: Number.isFinite(prunes?.other) ? prunes.other : 0
                 },
                 progressSamples,
                 progressSummary: {
@@ -18284,7 +18353,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     nearSolutionStates: Number.isFinite(timeoutDiagnostics?.nearSolutionStates)
                         ? timeoutDiagnostics.nearSolutionStates
                         : null,
-                    nearSolutionByDimension: timeoutDiagnostics?.nearSolutionByDimension || null
+                    nearSolutionByDimension: timeoutDiagnostics?.nearSolutionByDimension || null,
+                    mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates)
+                        ? timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
+                        : null,
+                    nonImprovingPortalTransitionsExpanded: Number.isFinite(timeoutDiagnostics?.nonImprovingPortalTransitionsExpanded)
+                        ? timeoutDiagnostics.nonImprovingPortalTransitionsExpanded
+                        : null
                 })
             };
         };
