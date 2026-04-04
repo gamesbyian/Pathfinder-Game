@@ -9976,6 +9976,7 @@
             const routePressure = Math.max(0, profile?.routePressure || 0);
             const objectiveCount = Math.max(0, profile?.objectiveCount || 0);
             const portalCommitment = Math.max(0, Math.min(1, profile?.portalCommitment || 0));
+            const openness = Math.max(0, Math.min(1, Number(profile?.openness) || 0));
             const portalTriage = opts.portalTriage || this.analyzePortalNeedAndUsefulness(level);
             const explicitPortalCount = Array.isArray(level?.portals) ? level.portals.length : 0;
             const portalTerminalCount = Math.max(explicitPortalCount, Number(level?.portalMap?.size) || 0);
@@ -10125,14 +10126,40 @@
                     memoStrictness: 1.25,
                     portalUsagePolicy: resolvePortalUsagePolicy({ forbidPortals: true })
                 });
+                // On open boards (openness >= 0.52), portal entry cells used as length-matching
+                // waypoints produce many near-solution states with the wrong intersection count.
+                // A perimeterSweep attempt (low goal-attraction, high perimeter-bias) breaks the
+                // symmetry by forcing exploration along the board boundary — matching the structure
+                // of the valid hint solutions for these levels.
+                if (openness >= 0.52) {
+                    const noPortalPerimeterBudget = Math.max(1, Math.floor(total * 0.12));
+                    attempts.push({
+                        label: 'portal-optional-perimeter-no-portal',
+                        budgetMs: noPortalPerimeterBudget,
+                        scoringMode: 'modern',
+                        portalBiasMode: 'off',
+                        forbidPortals: true,
+                        blockPortalEntryCells: true,
+                        structuralMode: true,
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'perimeterSweep' }),
+                        policyProfile: 'perimeterSweep',
+                        commitmentPlan: { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
+                        memoStrictness: 0.9,
+                        portalUsagePolicy: resolvePortalUsagePolicy({ forbidPortals: true })
+                    });
+                }
             }
-            // Add a must-cross horizon attempt when the level has must-cross cells and the
-            // level is complex enough to warrant endurance budget (allowEnduranceLongpath).
+            // Add a must-cross horizon attempt for any level that has must-cross cells.
             // This attempt uses the mustCrossFirst profile (mustCrossUrgencyWeight=2.4x) to
             // bias search toward visiting must-cross cells early in path construction,
             // addressing the failure class where paths defer must-cross visits until too few
             // steps remain to close them.
-            const mustCrossHorizonEligible = ((level?.mustCrossKeys?.length > 0) || (Array.isArray(level?.mustCross) && level.mustCross.length > 0)) && allowEnduranceLongpath;
+            const hasMustCrossKeys = (level?.mustCrossKeys?.length > 0) || (Array.isArray(level?.mustCross) && level.mustCross.length > 0);
+            // Previously required allowEnduranceLongpath (which is false for purpose='hint'),
+            // so this attempt never ran during hint/audit solves. Any level with must-cross
+            // cells needs early-visit guidance regardless of purpose; the 10% budget overhead
+            // is justified by the must-cross failure class it addresses.
+            const mustCrossHorizonEligible = hasMustCrossKeys;
             if (mustCrossHorizonEligible) {
                 const mustCrossHorizonBudget = Math.max(1, Math.floor(total * 0.10));
                 attempts.push({
