@@ -3610,20 +3610,22 @@
                         const nextParity = nLen & 1;
                         if (startNeighborBoundSanity) startNeighborBoundSanity.legalBranches++;
                         // Unconditional optional portal bound gate.
-                        // When a portal is optional and outstanding obligations exist, suppress
-                        // the jump unless it strictly improves at least one obligation lower bound.
-                        // Unlike the parity-table gate below, this fires regardless of whether
-                        // an obligationParityTable has been computed — fixing the Level 108 pattern
-                        // where optional portals flood the frontier without advancing must-pass or
-                        // must-cross progress.
+                        // Suppress optional portal jumps where EVERY active obligation lower bound
+                        // strictly worsens at the destination (dest bound > src bound).
+                        // Equal bounds are NOT suppressed: a free jump to an equidistant position
+                        // is always at least as good as a 1-step non-portal move.
+                        // This fires regardless of whether an obligationParityTable exists,
+                        // catching the Level 108 pattern where portal (4,4)→(8,4) strictly
+                        // worsens the must-pass bound (11 > 10) without advancing any obligation.
                         if (isP && isOptionalPortalJump(k, nk) && (hasMust || crossNeed > 0)) {
                             const mustBoundSrc  = hasMust     ? getMustBound(k)  : Infinity;
                             const mustBoundDest = hasMust     ? getMustBound(nk) : Infinity;
                             const crossBoundSrc  = crossNeed > 0 ? getCrossBound(k)  : Infinity;
                             const crossBoundDest = crossNeed > 0 ? getCrossBound(nk) : Infinity;
-                            const mustImproves  = hasMust     && Number.isFinite(mustBoundDest)  && mustBoundDest  < mustBoundSrc;
-                            const crossImproves = crossNeed > 0 && Number.isFinite(crossBoundDest) && crossBoundDest < crossBoundSrc;
-                            if (!mustImproves && !crossImproves) {
+                            // "sound" = destination bound is no worse than source (≤, not strict <)
+                            const mustSound  = hasMust     && Number.isFinite(mustBoundDest)  && mustBoundDest  <= mustBoundSrc;
+                            const crossSound = crossNeed > 0 && Number.isFinite(crossBoundDest) && crossBoundDest <= crossBoundSrc;
+                            if (!mustSound && !crossSound) {
                                 if (debugStats) debugStats.prune.portalOptionalBoundNonImproving = (debugStats.prune.portalOptionalBoundNonImproving || 0) + 1;
                                 if (startFilterBreakdown) startFilterBreakdown.portalOptionalBoundNonImprovingRejected = (startFilterBreakdown.portalOptionalBoundNonImprovingRejected || 0) + 1;
                                 return false;
@@ -7439,11 +7441,12 @@
                             ? [{ passName: 'pass-4-flipper-relaxed', weight: isLargeGrid ? 0.13 : 0.11, minimumBudgetRatio: 0.11, variant: 'random', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'portalAutomaton'], passPortalBiasMode: 'off', statusLabel: `Solving (${validGates.length} viable gates, flipper-relaxed)...` }]
                             : []),
                         // Dedicated must-cross-first pass: activated when the level has must-cross
-                        // obligations (the dominant failure mode for levels 92 and 134). Uses the
-                        // mustCrossFirst policy profile (mustCrossUrgencyWeight: 2.4) to force
-                        // the search to plan crossing paths early before parity deadlock occurs.
-                        ...((level?.mustCrossKeys?.length || 0) > 0
-                            ? [{ passName: 'pass-mustcross-focused', weight: isLargeGrid ? 0.12 : 0.10, minimumBudgetRatio: 0.07, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'mustCrossFirst', statusLabel: `Solving (${validGates.length} viable gates, must-cross priority)...` }]
+                        // obligations AND a high interaction requirement — the specific signature
+                        // of levels 92 and 134 (cross-scheduling deadlock under tight step budgets).
+                        // Weight and minimum are kept small to avoid stealing budget from the early
+                        // passes that solve the many simpler must-cross levels.
+                        ...((level?.mustCrossKeys?.length || 0) > 0 && level.reqInt >= 2
+                            ? [{ passName: 'pass-mustcross-focused', weight: isLargeGrid ? 0.08 : 0.07, minimumBudgetRatio: 0.04, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'mustCrossFirst', statusLabel: `Solving (${validGates.length} viable gates, must-cross priority)...` }]
                             : []),
                         { passName: 'pass-3-fallback', weight: 0.14, minimumBudgetRatio: 0.2, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
