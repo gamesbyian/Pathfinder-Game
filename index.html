@@ -3609,6 +3609,26 @@
                         const rSteps = l.reqLen - nLen;
                         const nextParity = nLen & 1;
                         if (startNeighborBoundSanity) startNeighborBoundSanity.legalBranches++;
+                        // Unconditional optional portal bound gate.
+                        // When a portal is optional and outstanding obligations exist, suppress
+                        // the jump unless it strictly improves at least one obligation lower bound.
+                        // Unlike the parity-table gate below, this fires regardless of whether
+                        // an obligationParityTable has been computed — fixing the Level 108 pattern
+                        // where optional portals flood the frontier without advancing must-pass or
+                        // must-cross progress.
+                        if (isP && isOptionalPortalJump(k, nk) && (hasMust || crossNeed > 0)) {
+                            const mustBoundSrc  = hasMust     ? getMustBound(k)  : Infinity;
+                            const mustBoundDest = hasMust     ? getMustBound(nk) : Infinity;
+                            const crossBoundSrc  = crossNeed > 0 ? getCrossBound(k)  : Infinity;
+                            const crossBoundDest = crossNeed > 0 ? getCrossBound(nk) : Infinity;
+                            const mustImproves  = hasMust     && Number.isFinite(mustBoundDest)  && mustBoundDest  < mustBoundSrc;
+                            const crossImproves = crossNeed > 0 && Number.isFinite(crossBoundDest) && crossBoundDest < crossBoundSrc;
+                            if (!mustImproves && !crossImproves) {
+                                if (debugStats) debugStats.prune.portalOptionalBoundNonImproving = (debugStats.prune.portalOptionalBoundNonImproving || 0) + 1;
+                                if (startFilterBreakdown) startFilterBreakdown.portalOptionalBoundNonImprovingRejected = (startFilterBreakdown.portalOptionalBoundNonImprovingRejected || 0) + 1;
+                                return false;
+                            }
+                        }
                         if (isP && obligationParityTable?.reachable && obligationParityTable?.encode && isOptionalPortalJump(k, nk)) {
                             const parityReachable = canReachByParityOnly(nk, nextParity);
                             if (!parityReachable) {
@@ -5617,6 +5637,7 @@
                         sig: startSig,
                         depth: 0,
                         remainingMustPass: countMaskBits(state.mustMask, l),
+                        remainingMustCross: Math.max(0, this._crossNeeds(state)),
                         remainingInteractionDeficit: Math.max(0, l.reqInt - state.ints)
                     }];
                     const progressStartTimeMs = Date.now();
@@ -5782,6 +5803,7 @@
                         if (interactionDeficit > 0) missingDimensions.push('interaction');
                         recordTimeoutStateDiagnostics(debugStats, {
                             remainingMustPass,
+                            remainingMustCross: crossNeeds,
                             remainingInteractionDeficit: interactionDeficit,
                             lowerBoundToValidSolution,
                             nearSolutionMissingDimension: missingDimensions.length === 1 ? missingDimensions[0] : null
@@ -5895,6 +5917,7 @@
                             sig: stateSig,
                             depth: top.depth + 1,
                             remainingMustPass,
+                            remainingMustCross: crossNeeds,
                             remainingInteractionDeficit: interactionDeficit
                         });
                     }
@@ -7415,9 +7438,16 @@
                         ...((level?.flippingFilterMap?.size || 0) > 0
                             ? [{ passName: 'pass-4-flipper-relaxed', weight: isLargeGrid ? 0.13 : 0.11, minimumBudgetRatio: 0.11, variant: 'random', beamTopK: 0, debugVariant: false, disabledPrunes: ['mustPassBound', 'portalAutomaton'], passPortalBiasMode: 'off', statusLabel: `Solving (${validGates.length} viable gates, flipper-relaxed)...` }]
                             : []),
+                        // Dedicated must-cross-first pass: activated when the level has must-cross
+                        // obligations (the dominant failure mode for levels 92 and 134). Uses the
+                        // mustCrossFirst policy profile (mustCrossUrgencyWeight: 2.4) to force
+                        // the search to plan crossing paths early before parity deadlock occurs.
+                        ...((level?.mustCrossKeys?.length || 0) > 0
+                            ? [{ passName: 'pass-mustcross-focused', weight: isLargeGrid ? 0.12 : 0.10, minimumBudgetRatio: 0.07, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'mustCrossFirst', statusLabel: `Solving (${validGates.length} viable gates, must-cross priority)...` }]
+                            : []),
                         { passName: 'pass-3-fallback', weight: 0.14, minimumBudgetRatio: 0.2, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
-                    const exploratoryPassNames = new Set(['pass-4-filter-relaxed', 'pass-4c-filter-axis-relaxed', 'pass-4-flipper-relaxed', 'pass-3-fallback']);
+                    const exploratoryPassNames = new Set(['pass-4-filter-relaxed', 'pass-4c-filter-axis-relaxed', 'pass-4-flipper-relaxed', 'pass-mustcross-focused', 'pass-3-fallback']);
                     const dynamicPassBudgets = (() => {
                         const entries = stagedHintPasses.map((pass) => ({
                             passName: pass.passName,
@@ -14390,7 +14420,8 @@
                         portalAutomatonRejected: 0,
                         portalParityImpossible: 0,
                         portalObligationSignatureImpossible: 0,
-                        portalOptionalNonImproving: 0
+                        portalOptionalNonImproving: 0,
+                        portalOptionalBoundNonImproving: 0
                     },
                     notes: []
                 };
@@ -14401,10 +14432,12 @@
                 if (!debugStats.timeoutDiagnostics || typeof debugStats.timeoutDiagnostics !== 'object') {
                     debugStats.timeoutDiagnostics = {
                         frontierMustPassDistribution: {},
+                        frontierMustCrossDistribution: {},
                         frontierInteractionDeficitDistribution: {},
                         bestLowerBoundToValidSolution: null,
                         nearSolutionStates: 0,
-                        nearSolutionByDimension: {}
+                        nearSolutionByDimension: {},
+                        mustCrossScheduleInfeasibleStates: 0
                     };
                 }
                 return debugStats.timeoutDiagnostics;
@@ -14418,9 +14451,16 @@
                 const diag = ensureTimeoutDiagnostics(debugStats);
                 if (!diag) return;
                 const mustPass = Math.max(0, Math.floor(Number(sample.remainingMustPass) || 0));
+                const mustCross = Math.max(0, Math.floor(Number(sample.remainingMustCross) || 0));
                 const interactionDeficit = Math.max(0, Math.floor(Number(sample.remainingInteractionDeficit) || 0));
                 bumpTimeoutDiagBucket(diag.frontierMustPassDistribution, mustPass, 1);
+                bumpTimeoutDiagBucket(diag.frontierMustCrossDistribution, mustCross, 1);
                 bumpTimeoutDiagBucket(diag.frontierInteractionDeficitDistribution, interactionDeficit, 1);
+                // Track states where must-cross is the sole or primary blocker
+                // (all must-pass satisfied, interaction met, only cross obligations remain).
+                if (mustCross > 0 && mustPass === 0 && interactionDeficit === 0) {
+                    diag.mustCrossScheduleInfeasibleStates = (diag.mustCrossScheduleInfeasibleStates || 0) + 1;
+                }
                 const lowerBound = Number(sample.lowerBoundToValidSolution);
                 if (Number.isFinite(lowerBound)) {
                     if (!Number.isFinite(diag.bestLowerBoundToValidSolution) || lowerBound < diag.bestLowerBoundToValidSolution) {
@@ -14440,6 +14480,7 @@
                     const pending = Math.max(0, Number(frame?.neighbors?.length) || 0);
                     if (pending <= 0) continue;
                     bumpTimeoutDiagBucket(diag.frontierMustPassDistribution, frame?.remainingMustPass, pending);
+                    bumpTimeoutDiagBucket(diag.frontierMustCrossDistribution, frame?.remainingMustCross, pending);
                     bumpTimeoutDiagBucket(diag.frontierInteractionDeficitDistribution, frame?.remainingInteractionDeficit, pending);
                 }
             };
