@@ -3428,6 +3428,33 @@
                         if (!portalBiasEnabled || !l.portalMap?.size) return 0;
                         const portalFrom = APP.LevelUtils.resolvePortal(l, fromKey);
                         if (!portalFrom || portalFrom.dest !== toKey) return 0;
+                        // Scoring suppression: optional portals that don't strictly improve any
+                        // obligation bound get zero bonus. Uses strict < (not <=): a portal that
+                        // merely preserves distance provides no advantage over a regular step, and
+                        // pulling the frontier toward it wastes budget. This is the scoring-side
+                        // counterpart to the hard prune gate in _filterCandidates; together they
+                        // address Level 108's equal-bound portals that the ≤ gate can't suppress.
+                        if (hasMust || crossNeed > 0) {
+                            const pfam = Number(l.portalFamilyByEntry?.get(fromKey));
+                            if (Number.isFinite(pfam) && pfam >= 0) {
+                                const mandFams = l?.solverProfile?.portalHints?.mandatoryFamilies;
+                                const optFams  = l?.solverProfile?.portalHints?.optionalFamilies;
+                                const isMandatory = Array.isArray(mandFams) && mandFams.includes(pfam);
+                                if (!isMandatory) {
+                                    const optArr   = Array.isArray(optFams) ? optFams : [];
+                                    const isOptional = optArr.length === 0 || optArr.includes(pfam);
+                                    if (isOptional) {
+                                        const mustBoundSrc  = hasMust      ? getMustBound(fromKey)  : Infinity;
+                                        const mustBoundDest = hasMust      ? getMustBound(toKey)    : Infinity;
+                                        const crossBoundSrc  = crossNeed > 0 ? getCrossBound(fromKey) : Infinity;
+                                        const crossBoundDest = crossNeed > 0 ? getCrossBound(toKey)   : Infinity;
+                                        const mustImproves  = hasMust      && Number.isFinite(mustBoundDest)  && mustBoundDest  < mustBoundSrc;
+                                        const crossImproves = crossNeed > 0 && Number.isFinite(crossBoundDest) && crossBoundDest < crossBoundSrc;
+                                        if (!mustImproves && !crossImproves) return 0;
+                                    }
+                                }
+                            }
+                        }
                         const curGoalDist = distMap.get(fromKey) ?? Infinity;
                         const postGoalDist = distMap.get(toKey) ?? Infinity;
                         let bonus = portalBiasWeight;
@@ -7448,9 +7475,20 @@
                         ...((level?.mustCrossKeys?.length || 0) > 0 && level.reqInt >= 2
                             ? [{ passName: 'pass-mustcross-focused', weight: isLargeGrid ? 0.08 : 0.07, minimumBudgetRatio: 0.04, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'mustCrossFirst', statusLabel: `Solving (${validGates.length} viable gates, must-cross priority)...` }]
                             : []),
+                        // Dedicated knot-builder pass: for any level requiring ≥1 crossing, uses the
+                        // knotBuilder profile (intersectionSetupWeight: 1.9, goalAttractionWeight: 0.8)
+                        // to build the required intersection topology early rather than rushing toward
+                        // the goal. Targets the core scoring failure in Levels 92 (reqInt=8),
+                        // 108 (reqInt=1), and 134 (reqInt=5) where the default profile's high
+                        // goalAttractionWeight causes the path to approach the goal before crossings
+                        // are established. Weight kept small to avoid stealing from main passes on
+                        // the many simpler intersection levels.
+                        ...(level.reqInt >= 1
+                            ? [{ passName: 'pass-knotbuilder', weight: isLargeGrid ? 0.08 : 0.07, minimumBudgetRatio: 0.04, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'knotBuilder', statusLabel: `Solving (${validGates.length} viable gates, knot-builder)...` }]
+                            : []),
                         { passName: 'pass-3-fallback', weight: 0.14, minimumBudgetRatio: 0.2, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
-                    const exploratoryPassNames = new Set(['pass-4-filter-relaxed', 'pass-4c-filter-axis-relaxed', 'pass-4-flipper-relaxed', 'pass-mustcross-focused', 'pass-3-fallback']);
+                    const exploratoryPassNames = new Set(['pass-4-filter-relaxed', 'pass-4c-filter-axis-relaxed', 'pass-4-flipper-relaxed', 'pass-mustcross-focused', 'pass-knotbuilder', 'pass-3-fallback']);
                     const dynamicPassBudgets = (() => {
                         const entries = stagedHintPasses.map((pass) => ({
                             passName: pass.passName,
