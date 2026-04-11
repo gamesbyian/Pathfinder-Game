@@ -7877,7 +7877,6 @@
                 solution: ok ? canonical : [],
                 solutions: ok ? canonical : [],
                 stagesTried: Array.isArray(partial.stagesTried) ? partial.stagesTried : [],
-                attempts: Array.isArray(partial.attempts) ? partial.attempts : [],
                 message: partial.message || '',
                 elapsedMs: Number.isFinite(partial.elapsedMs) ? partial.elapsedMs : null,
                 diagnostics: partial.diagnostics || null,
@@ -8203,8 +8202,7 @@
                         pruningHitRates: instrumentation?.pruningHitRates || null
                     }),
                     progressSamples: Array.isArray(entry?.progressSamples) ? entry.progressSamples : null,
-                    progressSummary: entry?.progressSummary || null,
-                    pruneCounters: entry?.pruneCounters && typeof entry.pruneCounters === 'object' ? compactDefined(entry.pruneCounters) : null
+                    progressSummary: entry?.progressSummary || null
                 });
             });
         };
@@ -11059,7 +11057,6 @@
                     depthReached: Number.isFinite(quality?.depthReached) ? quality.depthReached : (Number.isFinite(attemptResult?.debug?.maxDepth) ? attemptResult.debug.maxDepth : null),
                     softBoundActivations: attemptResult?.debug?.softBoundActivations || null,
                     lowBranchModeActivated: !!(attemptResult?.debug?.lowBranchModeActivated || attemptResult?.debug?.lowBranchMode),
-                    pruneCounters: attemptResult?.debug?.prune ? { ...attemptResult.debug.prune } : null,
                     depth0DiversityFloorApplied: !!attemptResult?.debug?.depth0DiversityFloorApplied,
                     depth0DiversityFloorSize: Number.isFinite(attemptResult?.debug?.depth0DiversityFloorSize) ? attemptResult.debug.depth0DiversityFloorSize : null,
                     forcedRootDiversity: !!attemptResult?.debug?.forcedRootDiversity,
@@ -14605,8 +14602,6 @@
                 const elapsedMs = Math.max(0, now - Number(startTimeMs || now));
                 const remainingMust = countMaskBits(state.mustMask, level);
                 const totalMust = Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0;
-                const remainingMustCross = countMaskBits(state.mustCrossMask, level);
-                const totalMustCross = Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0;
                 const activeBranchCount = stack.length;
                 const sample = {
                     tMs: elapsedMs,
@@ -14616,11 +14611,8 @@
                     currentPathLength: Math.max(0, Number(state.path?.length || 0) - 1 - Number(state.isJump?.size || 0)),
                     intersectionsSoFar: Math.max(0, Number(state.ints) || 0),
                     mustPassVisited: Math.max(0, totalMust - remainingMust),
-                    mustCrossVisited: Math.max(0, totalMustCross - remainingMustCross),
                     frontierSize: Math.max(0, stack.length),
-                    activeBranchCount: Math.max(0, activeBranchCount),
-                    phaseArchetype: state?.phasePolicy?.archetype || null,
-                    urgencyScalar: Number.isFinite(state?.urgencyScalar) ? Number(state.urgencyScalar.toFixed(3)) : null
+                    activeBranchCount: Math.max(0, activeBranchCount)
                 };
                 if (!lastSample || sample.tMs > lastSample.tMs || sample.nodesExpanded !== lastSample.nodesExpanded) {
                     samples.push(sample);
@@ -14772,18 +14764,6 @@
                         failedStateHit: Number((Math.max(0, Number(prune.failedStateHit) || 0) / totalPruneDenom).toFixed(4))
                     })
                 });
-                // Recompute softBoundActivations from final prune counters.
-                // The depth-0 snapshot set earlier is stale — the shallowSoftened counts
-                // accumulate throughout the search and are only reliable here at finalization.
-                const finalMinRemSoft = Number(prune?.minRemOverflowShallowSoftened) || 0;
-                const finalMustPassSoft = Number(prune?.mustPassBoundShallowSoftened) || 0;
-                const finalMustCrossSoft = Number(prune?.mustCrossBoundShallowSoftened) || 0;
-                debugStats.softBoundActivations = {
-                    total: finalMinRemSoft + finalMustPassSoft + finalMustCrossSoft,
-                    minRemOverflow: finalMinRemSoft,
-                    mustPassBound: finalMustPassSoft,
-                    mustCrossBound: finalMustCrossSoft
-                };
                 if (status === 'timeout') {
                     ensureTimeoutDiagnostics(debugStats);
                     const phaseTargets = (debugStats?.targetDepthByPhase && typeof debugStats.targetDepthByPhase === 'object')
@@ -18281,12 +18261,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     nodesExpanded: Number.isFinite(sample?.nodesExpanded) ? sample.nodesExpanded : 0,
                     depth: Number.isFinite(sample?.depth)
                         ? sample.depth
-                        : (Number.isFinite(sample?.maxDepthReached) ? sample.maxDepthReached : 0),
-                    interactionsMade: Number.isFinite(sample?.intersectionsSoFar) ? sample.intersectionsSoFar : 0,
-                    mustPassVisited: Number.isFinite(sample?.mustPassVisited) ? sample.mustPassVisited : 0,
-                    mustCrossVisited: Number.isFinite(sample?.mustCrossVisited) ? sample.mustCrossVisited : 0,
-                    phaseArchetype: sample?.phaseArchetype || null,
-                    urgencyScalar: Number.isFinite(sample?.urgencyScalar) ? sample.urgencyScalar : null
+                        : (Number.isFinite(sample?.maxDepthReached) ? sample.maxDepthReached : 0)
                 });
                 priorTimeMs = adjustedTimeMs;
             }
