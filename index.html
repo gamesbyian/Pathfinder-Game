@@ -6185,9 +6185,13 @@
                 // - Mega solver may consult saved-hint PRESENCE only to skip already-covered levels.
                 toHintBlindSolverLevel(level) {
                     if (!level || typeof level !== 'object') return level;
-                    return Array.isArray(level.hints) && level.hints.length > 0
-                        ? { ...level, hints: [] }
-                        : level;
+                    const hasHints = Array.isArray(level.hints) && level.hints.length > 0;
+                    const hasSolverProfile = Object.prototype.hasOwnProperty.call(level, 'solverProfile');
+                    if (!hasHints && !hasSolverProfile) return level;
+                    const stripped = { ...level };
+                    if (hasHints) stripped.hints = [];
+                    if (hasSolverProfile) delete stripped.solverProfile;
+                    return stripped;
                 },
                 makePassCellUsageSeed() {
                     // Intentionally blank: solver ordering may only learn from paths found during this run.
