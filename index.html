@@ -8860,8 +8860,9 @@
             const reqInt = level?.reqInt || 0;
             const extraCount = Math.max(0, reqInt - existingMustCrossCount);
             if (extraCount === 0) return [];
-            // Cap at 6 minus existing must-cross to keep within exact-DP range (n <= 6 in preprocessing)
-            const maxBlueprint = Math.max(0, Math.min(extraCount, 6 - existingMustCrossCount));
+            // Do not cap to n<=6; when combined must-cross count exceeds 6, the existing
+            // MST lower-bound fallback in _estimateMustCrossBoundFrom takes over automatically.
+            const maxBlueprint = Math.max(0, extraCount);
             if (maxBlueprint === 0) return [];
 
             const w = level?.grid?.w || 0;
@@ -8969,6 +8970,8 @@
             if (secondaryCells.length > 0 && secondaryCells.join(',') !== primaryCells.join(',')) {
                 variants.push(secondaryCells.slice());
             }
+            // Variant 3: explicit vanilla fallback (empty blueprint)
+            variants.push([]);
 
             return { variants, extraCount };
         },
@@ -9114,8 +9117,10 @@
                 level,
                 purpose,
                 controlPlane,
-                derived: { enduranceBudget, strategyMetadata }
+                derived: { enduranceBudget, strategyMetadata },
+                flags: { enableBlueprintPlanning = true } = {}
             } = solveContext;
+            if (!enableBlueprintPlanning) return last;
 
             const blueprintVariants = level?.solverProfile?.blueprintVariants;
             const blueprintExtraCount = level?.solverProfile?.blueprintExtraCount || 0;
@@ -9125,6 +9130,7 @@
 
             const nonEmptyVariants = blueprintVariants.filter(v => Array.isArray(v) && v.length > 0);
             if (nonEmptyVariants.length === 0) return last;
+            const perVariantBudget = Math.max(750, Math.floor(enduranceBudget / Math.max(1, nonEmptyVariants.length)));
 
             let stageIdx = 20;
             for (const variant of nonEmptyVariants) {
@@ -9137,8 +9143,8 @@
                     stage: stageIdx++,
                     name: 'Blueprint Stage',
                     variant: `blueprint-${variant.length}-extra-crossings`,
-                    budgetMs: enduranceBudget,
-                    run: () => this.runBaselinePolicySweep(augLevel, enduranceBudget, {
+                    budgetMs: perVariantBudget,
+                    run: () => this.runBaselinePolicySweep(augLevel, perVariantBudget, {
                         orderingPolicy: strategyMetadata.orderingPolicy,
                         portalBiasMode: strategyMetadata.portalBiasMode,
                         profile: augProfile,
@@ -12483,6 +12489,7 @@
                 : [scaleSolverBudget(15000), scaleSolverBudget(60000), scaleSolverBudget(180000)];
             const allowRandomizedExploration = !!opts.allowRandomizedExploration;
             const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
+            const enableBlueprintPlanning = opts.enableBlueprintPlanning !== false;
             const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
             const forcePreExpansionRescue = !!opts.forcePreExpansionRescue;
             const solveStartTime = Date.now();
@@ -12521,6 +12528,7 @@
                 tierBudgets,
                 allowRandomizedExploration,
                 allowRandomizedExplorationOnExpensiveTiers,
+                enableBlueprintPlanning,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
                 stagesTried,
@@ -13307,7 +13315,7 @@
                     resolvedPhasePolicy,
                     solveStartTime
                 },
-                flags: { objectivesAreInteriorDominant, allowRandomizedExploration }
+                flags: { objectivesAreInteriorDominant, allowRandomizedExploration, enableBlueprintPlanning }
             } = solveContext;
 
             let {
@@ -13433,80 +13441,92 @@
                     && (Date.now() - solveStartTime) < 150;
 
                 if (!last.ok && last.status !== 'no-solution-proven') {
-                    const failureTaxonomy = classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) });
-                    last.failureTaxonomy = failureTaxonomy;
-                    const rapidCollapseSignature = detectRapidCollapseSignature({ baselineResult: last });
-                    if (rapidCollapseSignature.rapidCollapse) {
-                        const recoveryDisabledPrunes = Array.from(new Set([
-                            ...(Array.isArray(fallbackDisabledPrunes) ? fallbackDisabledPrunes : (complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [])),
-                            'mustPassBound',
-                            'mustCrossBound',
-                            'connectivity',
-                            'portalAutomaton'
-                        ]));
-                        rapidCollapseRecoveryDiagnostics = {
-                            attempted: true,
-                            activated: true,
-                            selectedBy: rapidCollapseSignature.reason.slice(),
-                            notSelectedBy: rapidCollapseSignature.whyNotTriggered || [],
-                            activationPredicates: rapidCollapseSignature.predicates || {},
-                            trigger: 'stage0-rapid-collapse-signature',
-                            prior: rapidCollapseSignature,
-                            recovery: {
-                                disabledPrunes: recoveryDisabledPrunes,
-                                rootCandidateGeneratorVariant: 'interaction-fallback',
-                                orderingPolicy: 'memoRelaxed'
-                            }
-                        };
-                        last = await runStage({
-                            stage: 1,
-                            name: 'Stage 1',
-                            variant: 'rapid-collapse-recovery',
-                            budgetMs: recoveryBudget,
-                            run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
-                                orderingPolicy: 'memoRelaxed',
-                                portalBiasMode: 'off',
-                                phasePolicy: null,
-                                disabledPrunes: recoveryDisabledPrunes,
-                                profile: level.solverProfile,
-                                controlPlane,
-                                refereeRootDiversification: true,
-                                scoringMode: 'endurance',
-                                structuralMode: true,
-                                enableEnduranceLongpath: true,
-                                allowRandomizedExploration: false,
-                                purpose,
-                                preferMacroSkeleton: true,
-                                rootCandidateGeneratorVariant: 'interaction-fallback'
-                            })
+                    if (enableBlueprintPlanning) {
+                        const blueprintFirstResult = await this._runBlueprintPlanningStage({
+                            last,
+                            solveContext,
+                            stageHelpers
                         });
-                        if (!last.ok) {
-                            last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
-                        }
-                    } else {
-                        rapidCollapseRecoveryDiagnostics = {
-                            attempted: true,
-                            activated: false,
-                            selectedBy: [],
-                            notSelectedBy: rapidCollapseSignature.whyNotTriggered || ['rapid-collapse-not-detected'],
-                            activationPredicates: rapidCollapseSignature.predicates || {},
-                            trigger: 'stage0-no-rapid-collapse-signature',
-                            prior: rapidCollapseSignature,
-                            recovery: null
-                        };
+                        last = blueprintFirstResult;
                     }
                     if (last.ok || last.status === 'no-solution-proven') {
-                        last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
+                        // already resolved by blueprint-first pass
+                    } else {
+                        const failureTaxonomy = classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) });
+                        last.failureTaxonomy = failureTaxonomy;
+                        const rapidCollapseSignature = detectRapidCollapseSignature({ baselineResult: last });
+                        if (rapidCollapseSignature.rapidCollapse) {
+                            const recoveryDisabledPrunes = Array.from(new Set([
+                                ...(Array.isArray(fallbackDisabledPrunes) ? fallbackDisabledPrunes : (complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [])),
+                                'mustPassBound',
+                                'mustCrossBound',
+                                'connectivity',
+                                'portalAutomaton'
+                            ]));
+                            rapidCollapseRecoveryDiagnostics = {
+                                attempted: true,
+                                activated: true,
+                                selectedBy: rapidCollapseSignature.reason.slice(),
+                                notSelectedBy: rapidCollapseSignature.whyNotTriggered || [],
+                                activationPredicates: rapidCollapseSignature.predicates || {},
+                                trigger: 'stage0-rapid-collapse-signature',
+                                prior: rapidCollapseSignature,
+                                recovery: {
+                                    disabledPrunes: recoveryDisabledPrunes,
+                                    rootCandidateGeneratorVariant: 'interaction-fallback',
+                                    orderingPolicy: 'memoRelaxed'
+                                }
+                            };
+                            last = await runStage({
+                                stage: 1,
+                                name: 'Stage 1',
+                                variant: 'rapid-collapse-recovery',
+                                budgetMs: recoveryBudget,
+                                run: () => this.runBaselinePolicySweep(level, recoveryBudget, {
+                                    orderingPolicy: 'memoRelaxed',
+                                    portalBiasMode: 'off',
+                                    phasePolicy: null,
+                                    disabledPrunes: recoveryDisabledPrunes,
+                                    profile: level.solverProfile,
+                                    controlPlane,
+                                    refereeRootDiversification: true,
+                                    scoringMode: 'endurance',
+                                    structuralMode: true,
+                                    enableEnduranceLongpath: true,
+                                    allowRandomizedExploration: false,
+                                    purpose,
+                                    preferMacroSkeleton: true,
+                                    rootCandidateGeneratorVariant: 'interaction-fallback'
+                                })
+                            });
+                            if (!last.ok) {
+                                last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
+                            }
+                        } else {
+                            rapidCollapseRecoveryDiagnostics = {
+                                attempted: true,
+                                activated: false,
+                                selectedBy: [],
+                                notSelectedBy: rapidCollapseSignature.whyNotTriggered || ['rapid-collapse-not-detected'],
+                                activationPredicates: rapidCollapseSignature.predicates || {},
+                                trigger: 'stage0-no-rapid-collapse-signature',
+                                prior: rapidCollapseSignature,
+                                recovery: null
+                            };
+                        }
+                        if (last.ok || last.status === 'no-solution-proven') {
+                            last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
+                        }
+                        const failureCategory = failureTaxonomy?.category || 'low-expansion-collapse';
+                        last = await this._runFailureCategoryRecovery({
+                            failureCategory,
+                            last,
+                            solveContext,
+                            stageHelpers,
+                            overrides: { enableDiversifiedRootPass }
+                        });
+                        if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                     }
-                    const failureCategory = failureTaxonomy?.category || 'low-expansion-collapse';
-                    last = await this._runFailureCategoryRecovery({
-                        failureCategory,
-                        last,
-                        solveContext,
-                        stageHelpers,
-                        overrides: { enableDiversifiedRootPass }
-                    });
-                    if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                 }
             }
 
