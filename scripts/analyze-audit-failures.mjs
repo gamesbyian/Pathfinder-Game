@@ -239,8 +239,71 @@ const printTimeoutDiagnosticsSummary = () => {
   console.log('');
 };
 
+const summarizeNumberSeries = (values) => {
+  const nums = values
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value));
+  if (nums.length === 0) return { min: null, max: null, avg: null };
+  const sum = nums.reduce((acc, value) => acc + value, 0);
+  return {
+    min: Math.min(...nums),
+    max: Math.max(...nums),
+    avg: Number((sum / nums.length).toFixed(2))
+  };
+};
+
+const printPersistentFailureProfiles = () => {
+  const persistent = audits
+    .map((audit) => new Set(audit.failed.map((row) => row.level)))
+    .reduce((acc, set) => new Set([...acc].filter((level) => set.has(level))));
+
+  const ordered = [...persistent].sort((a, b) => a - b);
+  console.log('Persistent hard-level profiles (failed in every selected audit):');
+  if (ordered.length === 0) {
+    console.log('- none');
+    console.log('');
+    return;
+  }
+
+  for (const levelNumber of ordered) {
+    const rows = audits
+      .map((audit) => ({ audit, row: audit.levels.find((entry) => entry.level === levelNumber) }))
+      .filter(({ row }) => !!row)
+      .map(({ audit, row }) => ({ file: audit.file, row }));
+
+    const statusSet = new Set(rows.map(({ row }) => row.finalStatus || row.status || 'unknown'));
+    const categorySet = new Set(rows.map(({ row }) => row.failureCategory || 'unknown'));
+    const nodesSummary = summarizeNumberSeries(rows.map(({ row }) => row.nodesExpanded));
+    const rootSummary = summarizeNumberSeries(rows.map(({ row }) => getRootCandidateDepth0(row)));
+    const bestLbValues = [];
+    const nearDimHistogram = {};
+    let timeoutAttempts = 0;
+
+    rows.forEach(({ row }) => {
+      const diagnostics = collectLevelTimeoutDiagnostics(row);
+      diagnostics.forEach((diag) => {
+        timeoutAttempts += 1;
+        const lb = Number(diag.bestLowerBoundToValidSolution);
+        if (Number.isFinite(lb)) bestLbValues.push(lb);
+        mergeHistogram(nearDimHistogram, diag.nearSolutionByDimension);
+      });
+    });
+
+    const bestLbSummary = summarizeNumberSeries(bestLbValues);
+    console.log(`- L${levelNumber}: statuses=[${[...statusSet].join(', ')}]; categories=[${[...categorySet].join(', ')}]`);
+    console.log(`  nodesExpanded avg=${nodesSummary.avg ?? 'n/a'} min=${nodesSummary.min ?? 'n/a'} max=${nodesSummary.max ?? 'n/a'}; rootDepth0 avg=${rootSummary.avg ?? 'n/a'} min=${rootSummary.min ?? 'n/a'} max=${rootSummary.max ?? 'n/a'}`);
+    console.log(`  timeoutDiagnostics attempts=${timeoutAttempts}; bestLowerBoundToValidSolution avg=${bestLbSummary.avg ?? 'n/a'} min=${bestLbSummary.min ?? 'n/a'} max=${bestLbSummary.max ?? 'n/a'}`);
+    console.log(`  nearSolutionByDimension=${summarizeHistogram(nearDimHistogram)}`);
+    rows.forEach(({ file, row }) => {
+      console.log(`  • ${file}: stopReason=${row.stopReason || 'n/a'} attempts=${row.attemptCount || 0} nodes=${row.nodesExpanded || 0} rootExpanded=${row.rootCandidatesExpanded || 0}`);
+    });
+  }
+  console.log('');
+};
+
 printFailureSummary();
 printWindowTransitions();
 printCollapseFamilySummary();
 printTimeoutDiagnosticsSummary();
+printPersistentFailureProfiles();
 printLevel50Trajectory();
