@@ -1,100 +1,148 @@
-# Solver failure elimination plan (audit batch dated 2026-03-30)
+# Solver failure elimination plan (revised 2026-04-12)
 
-## Inputs reviewed
+> This document **replaces** the previous 2026-03-30 version while keeping the same filename for continuity.
 
-- `node scripts/analyze-audit-failures.mjs` summary across latest windows shows stable failures on levels **92, 108, 134**, with level **61** newly regressed in the latest run. Collapse-family diagnostics are not implicated (`collapseFailures=0`), and all failures are timeout-class, not contradiction/pre-expansion aborts.  
-- Latest raw export (`audits/raw/latest.json`) has 4 failing levels (61, 92, 108, 134), all with `failureCategory=healthy-expansion-timeout`.  
-- Level definitions and saved hint paths in `levels.js` were compared for 92/108 and their non-portal counterparts 134/135.
+## 1) Current state (validated on latest audit windows)
 
-## Core observations from the latest batch
+Using the most recent raw exports and analyzer output, the persistent unsolved set is stable:
 
-1. **Level 108 is one move from feasibility under timeout diagnostics, while level 135 solves directly.**
-   - Level 108 timeout diagnostics repeatedly report `bestLowerBoundToValidSolution=1`, with high near-solution counts in `interaction` and `must-pass`. This indicates search is close but ordering/selection is missing a narrow branch.
-   - Level 135 (portal→wall counterpart of 108) solves in one attempt.
+- Failing (timeout): **92, 108, 134**
+- Solved counterpart in the same family: **135**
+- Failure class remains `healthy-expansion-timeout` (not contradiction/pre-expansion collapse)
 
-2. **Level 92 and level 134 fail for the same reason pattern (must-cross deficit), so this pair is not primarily a portal issue.**
-   - Level 92 timeout diagnostics end with `bestLowerBoundToValidSolution=14` and near-solution mass only in `must-cross`.
-   - Level 134 (portal→wall counterpart of 92) also times out, with `bestLowerBoundToValidSolution=10`, near-solution mass likewise in `must-cross`.
-   - Therefore, replacing portals with walls does **not** fix this family; the dominant weakness is long-horizon must-cross scheduling under high length/intersection constraints.
+This indicates the problem is still search quality/completeness under budget, not invalid-level detection.
 
-3. **Saved hints imply portals are not needed for level 108-style successes.**
-   - Level 108’s saved hint paths do not visit portal endpoints.
-   - Level 135’s saved hints are essentially the same shape and solve without portal mechanics, supporting the conclusion that optional portals are distracting search rather than enabling required progress in this family.
+## 2) What changed since the prior plan
 
-## Logical deduction about portals from 108→135 and 92→134
+Several ideas from the original plan now appear in code (at least partially):
 
-- **Deduction A (108→135):** If converting optional portals to walls changes timeout→solve, the solver likely needs a stronger policy for *optional portal suppression* (avoid entering portals that are not obligation-improving), because walls implicitly remove these branches and reduce entropy.
-- **Deduction B (92→134):** If converting portals to walls still fails, the dominant issue is *not* portal transition handling but objective scheduling (must-cross and long-path feasibility). Portal policy improvements alone will not eliminate this failure class.
+- Optional non-improving portal filtering instrumentation and rejection path are present.
+- Must-cross demand-flow estimate is integrated into must-cross bound diagnostics/pruning context.
+- Root suppression / memo / dominance controls are active at depth 0-1.
 
-Together, this means the solver needs **two independent upgrades**:
-1) optional-portal branch suppression for low-obligation portal levels (108-class), and
-2) deeper must-cross scheduling/progress scoring for long constrained levels (92/134-class).
+Despite these additions, the persistent failure set did not clear, so remaining work is about **coverage and ordering efficacy**, not only adding more rules.
 
-## Plan to eliminate current failure classes
+## 3) Updated diagnosis by failure family
 
-## Phase 1 — Optional portal suppression (target: level 108 class)
+### Family A — Level 108 (near-solution timeout)
 
-### 1.1 Add an optional-portal admissibility gate at candidate filtering
-At candidate generation/filter time, reject (or strongly de-prioritize) a portal transition when all of the following hold:
-- no mandatory portal family obligation is active,
-- portal use does not improve nearest outstanding must-pass/must-cross lower bound,
-- portal use does not reduce objective-track distance,
-- and current slack does not require portal compression.
+Observed pattern:
 
-This should be implemented as a general rule derived from state metrics, not level IDs.
+- Consistently times out at cap.
+- Reaches large near-solution frontier mass but fails to close final branch.
 
-### 1.2 Add a “portal-opportunity debt” feature to scoring
-Extend scoring with a debt term that accumulates for non-improving portal hops and is only discharged by measurable obligation progress. This is stronger than one-step oscillation penalties and should reduce repeated portal detours that stay near-solvable but fail to close.
+Interpretation:
 
-### 1.3 Acceptance checks
-- Level 108 transitions from timeout to solved in full newHint audit.
-- Level 135 remains solved.
-- Portal-required levels do not regress (watch portal-family signatures with high mandatory usage).
+- This is primarily a **branch ordering + rescue coverage** issue.
+- Existing portal filtering helps, but current attempt ladder still misses at least one decisive branch under budget.
 
-## Phase 2 — Must-cross horizon planning (target: levels 92 and 134)
+### Family B — Levels 92 and 134 (must-cross schedule pressure)
 
-### 2.1 Add a multi-objective reachability budget bound
-Introduce a forward-feasibility estimate that combines:
-- remaining must-pass count,
-- remaining must-cross deficits,
-- required intersections,
-- and path-length slack,
-into one conservative schedule bound (not just independent local bounds).
+Observed pattern:
 
-Use this in root ordering and depth-limited pruning to avoid branches that cannot satisfy all obligations within remaining steps.
+- Both remain timeout-class under high node counts.
+- Portal removal alone does not explain resolution (134 still fails while 135 solves).
 
-### 2.2 Prioritize “must-cross unlock” moves early in long slack regimes
-When `bestLowerBoundToValidSolution` is dominated by must-cross deficits, increase score pressure toward moves that reduce *future must-cross feasibility risk* (e.g., preserving access corridors and parity-compatible approach lanes), even if immediate must-pass distance is flat.
+Interpretation:
 
-### 2.3 Add timeout rescue variant focused on must-cross closure
-Add one late pass variant that relaxes portal-related biases and increases must-cross urgency + connectivity preservation, then reorders root candidates by estimated must-cross closure potential.
+- Primary issue remains **long-horizon must-cross scheduling**, especially interaction between remaining steps, must-cross revisit obligations, and intersection constraints.
 
-### 2.4 Acceptance checks
-- Levels 92 and 134 both solve in full newHint audits.
-- No regressions on existing long non-portal must-cross levels.
+## 4) Replacement execution plan
 
-## Phase 3 — Instrumentation upgrades to keep this robust as level sets change
+## Phase 0 — Stabilize and baseline (mandatory first)
 
-### 3.1 Add two diagnostic counters to timeout diagnostics
-- `nonImprovingPortalTransitionsExpanded`
+0.1 Freeze validation protocol:
+
+1. `npm run audit:newhint:full`
+2. `node scripts/analyze-audit-failures.mjs`
+3. Save both artifacts and compare against previous run.
+
+0.2 Treat 92/108/134 as a permanent gate in CI-like checks:
+
+- Add a targeted script/check that fails if any of these regress from solved→timeout or remain timeout after intended fix phase.
+
+Success criteria:
+
+- Every solver change reports explicit before/after for these three levels.
+
+## Phase 1 — Level 108 closure reliability
+
+1.1 Add deterministic root diversification contract:
+
+- Guarantee each distinct depth-0 candidate family receives budget before deepening any one family.
+- Prevent early root starvation by memo/dominance interactions in first ply.
+
+1.2 Add “close-the-last-gap” rescue profile:
+
+- Trigger when timeout diagnostics show low lower-bound (e.g., near-closing condition) but no solve.
+- Temporarily rebalance scoring toward terminal feasibility and obligation completion over exploration breadth.
+
+1.3 Add audit-visible counters:
+
+- `rescueTriggeredNearClosure`
+- `rootFamiliesAttemptedBeforeTimeout`
+- `rootFamiliesStarved`
+
+Success criteria:
+
+- Level 108 reaches solved in full audit with no regression on 135.
+
+## Phase 2 — Must-cross schedule solver for 92/134
+
+2.1 Replace independent local lower-bounds with schedule-aware joint bound:
+
+- Build a conservative bound combining:
+  - remaining must-pass obligations,
+  - must-cross revisit demand,
+  - interaction deficit,
+  - and path-length slack.
+
+2.2 Introduce must-cross unlock scoring term:
+
+- Score moves by expected reduction in future must-cross infeasibility, not just immediate deficit.
+- Reward preserving/reopening corridors required for second visits.
+
+2.3 Add must-cross-specific timeout rescue attempt:
+
+- Late-stage profile that reduces portal bias and maximizes must-cross closure pressure + corridor preservation.
+
+2.4 Add audit-visible counters:
+
 - `mustCrossScheduleInfeasibleFrontierStates`
+- `mustCrossUnlockProgressEvents`
+- `mustCrossRescueTriggered`
 
-These metrics make future regressions attributable without level-specific assumptions.
+Success criteria:
 
-### 3.2 Add feature-signature audit slices
-Track solve/fail rates by derived topology buckets (e.g., optional-portal + must-cross-heavy + long-length) so future level reorderings/new levels remain covered by behavior-based tuning.
+- Levels 92 and 134 solve in full audit.
+- No regressions on currently solved high-length / must-cross levels.
 
-## Phase 4 — Regression protocol
+## Phase 3 — Ensure changes are robust (not level-specific overfit)
 
-1. Run `npm run audit:newhint:full` and `npm run audit:analyze-failures`.
-2. Confirm no timeout failures on 61/92/108/134.
-3. Confirm no statistically meaningful regressions on portal-required and high-intersection signatures.
-4. Lock gains with targeted smoke checks for:
-   - optional portal present but non-mandatory,
-   - portal mandatory family,
-   - high must-cross + high reqLen levels.
+3.1 Feature-signature slices in analyzer output:
 
-## Non-goals / constraints respected
+- Report solve/fail deltas by topology bucket (portal optionality, must-cross density, required intersections, long-length class).
 
-- **No hint seeding**: saved hints were only used as comparative inspiration, not runtime guidance.
-- **No level-specific logic**: all proposed changes are state/feature based and remain valid if level ordering/content changes.
+3.2 Stability checks over rolling windows:
+
+- Require improvements to hold across at least 3 consecutive full audits.
+
+Success criteria:
+
+- Persistent hard-level set is empty for 3 windows.
+
+## 5) Guardrails / non-goals
+
+- No hardcoded level IDs in solver decision logic.
+- No hint seeding from known solution paths.
+- Avoid adding heavy brute-force fallbacks that only pass by raising time cap.
+
+## 6) Immediate next implementation order
+
+1. Phase 1.1 root diversification contract
+2. Phase 1.2 near-closure rescue profile
+3. Phase 2.1 joint schedule bound
+4. Phase 2.3 must-cross rescue profile
+5. Phase 3 analyzer slice reporting
+
+This order prioritizes converting 108 quickly while building the machinery needed for 92/134.
