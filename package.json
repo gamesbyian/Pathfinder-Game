@@ -9,7 +9,9 @@
     "ci": "npm run lint:solver && npm run test:solver-smoke && npm run test:startup-smoke",
     "test:startup-smoke": "node scripts/startup-smoke-test.mjs",
     "audit:newhint:full": "node scripts/run-audit-export.mjs",
-    "audit:analyze-failures": "node scripts/analyze-audit-failures.mjs"
+    "audit:analyze-failures": "node scripts/analyze-audit-failures.mjs",
+    "audit:check-hard-levels": "node scripts/check-persistent-hard-levels.mjs",
+    "audit:check-hard-levels:strict": "node scripts/check-persistent-hard-levels.mjs --enforce-solved"
   },
   "devDependencies": {
     "playwright": "^1.54.2"

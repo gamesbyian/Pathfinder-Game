@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 
 const rawDir = path.resolve('audits/raw');
 const explicitFiles = process.argv.slice(2).filter(Boolean);
@@ -96,6 +97,33 @@ const collectLevelTimeoutDiagnostics = (level) => {
     .filter((attempt) => `${attempt?.status || ''}`.toLowerCase() === 'timeout')
     .map((attempt) => getAttemptTimeoutDiagnostics(attempt))
     .filter(Boolean);
+};
+
+const loadLevelMetadata = () => {
+  const levelsPath = path.resolve('levels.js');
+  if (!fs.existsSync(levelsPath)) return new Map();
+  const src = fs.readFileSync(levelsPath, 'utf8');
+  const context = { window: {} };
+  vm.createContext(context);
+  vm.runInContext(src, context, { filename: 'levels.js' });
+  const raw = Array.isArray(context?.window?.RAW_LEVELS) ? context.window.RAW_LEVELS : [];
+  return new Map(raw.map((level, idx) => [idx + 1, level]));
+};
+
+const levelMetadata = loadLevelMetadata();
+
+const getTopologySlices = (levelNumber) => {
+  const meta = levelMetadata.get(Number(levelNumber)) || {};
+  const portals = Math.max(0, Number(meta?.portals?.length) || 0);
+  const mustCross = Math.max(0, Number(meta?.mustCross?.length) || 0);
+  const reqInt = Math.max(0, Number(meta?.reqInt) || 0);
+  const reqLen = Math.max(0, Number(meta?.reqLen) || 0);
+  return {
+    portalOptionality: portals > 0 ? 'portal-present' : 'portal-none',
+    mustCrossDensity: mustCross >= 3 ? 'must-cross-high' : (mustCross >= 1 ? 'must-cross-some' : 'must-cross-none'),
+    requiredIntersections: reqInt >= 3 ? 'intersections-high' : (reqInt >= 1 ? 'intersections-some' : 'intersections-none'),
+    lengthClass: reqLen >= 45 ? 'length-long' : (reqLen >= 30 ? 'length-medium' : 'length-short')
+  };
 };
 
 const audits = selectedFiles.map(readAudit);
@@ -301,9 +329,44 @@ const printPersistentFailureProfiles = () => {
   console.log('');
 };
 
+const printFeatureSliceDeltas = () => {
+  if (audits.length < 2) return;
+  const baseline = audits[0];
+  const latest = audits[audits.length - 1];
+  const buckets = new Map();
+  const ensureBucket = (slice, label) => {
+    const key = `${slice}:${label}`;
+    if (!buckets.has(key)) buckets.set(key, { slice, label, baselineFailed: 0, latestFailed: 0, delta: 0 });
+    return buckets.get(key);
+  };
+  const addCounts = (audit, field) => {
+    for (const row of audit.failed) {
+      const slices = getTopologySlices(row.level);
+      const value = slices[field];
+      const bucket = ensureBucket(field, value);
+      if (audit === baseline) bucket.baselineFailed += 1;
+      if (audit === latest) bucket.latestFailed += 1;
+    }
+  };
+  ['portalOptionality', 'mustCrossDensity', 'requiredIntersections', 'lengthClass'].forEach((field) => {
+    addCounts(baseline, field);
+    addCounts(latest, field);
+  });
+  for (const bucket of buckets.values()) {
+    bucket.delta = bucket.latestFailed - bucket.baselineFailed;
+  }
+  console.log('Feature-signature slice deltas (baseline -> latest):');
+  const ordered = [...buckets.values()].sort((a, b) => (a.slice === b.slice ? a.label.localeCompare(b.label) : a.slice.localeCompare(b.slice)));
+  for (const bucket of ordered) {
+    console.log(`- ${bucket.slice}/${bucket.label}: baselineFailed=${bucket.baselineFailed}; latestFailed=${bucket.latestFailed}; delta=${bucket.delta >= 0 ? `+${bucket.delta}` : bucket.delta}`);
+  }
+  console.log('');
+};
+
 printFailureSummary();
 printWindowTransitions();
 printCollapseFamilySummary();
 printTimeoutDiagnosticsSummary();
 printPersistentFailureProfiles();
+printFeatureSliceDeltas();
 printLevel50Trajectory();

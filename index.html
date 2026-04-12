@@ -3914,6 +3914,9 @@
                             const currentCrossCount = state.mustCrossCounts[crossIdx] || 0;
                             if (currentCrossCount < 2) projectedCrossNeed = Math.max(0, crossNeed - 1);
                         }
+                        if (depth === 0 && debugStats && projectedCrossNeed < crossNeed) {
+                            debugStats.mustCrossUnlockProgressEvents = (debugStats.mustCrossUnlockProgressEvents || 0) + 1;
+                        }
                         const obligationsSatisfiableInRemainingSteps = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) <= remainingStepsAfterMove;
                         const goalReadyAfterMove = obligationsSatisfiableInRemainingSteps
                             && remainingMustAfterMove === 0
@@ -5641,10 +5644,28 @@
                         log: [],
                         sig: startSig,
                         depth: 0,
+                        rootSeedKey: null,
                         remainingMustPass: countMaskBits(state.mustMask, l),
                         remainingMustCross: Math.max(0, this._crossNeeds(state)),
                         remainingInteractionDeficit: Math.max(0, l.reqInt - state.ints)
                     }];
+                    const rootDiversificationFamilyByKey = new Map();
+                    const startPos = APP.LevelUtils.UNPACK(startKey);
+                    const resolveRootFamily = (nk) => {
+                        if (l.portalFamilyByEntry instanceof Map && l.portalFamilyByEntry.has(nk)) {
+                            const portalFamily = Number(l.portalFamilyByEntry.get(nk));
+                            return Number.isFinite(portalFamily) ? `portal-family:${portalFamily}` : 'portal-family:unknown';
+                        }
+                        const pos = APP.LevelUtils.UNPACK(nk);
+                        const dx = Math.sign(pos.x - startPos.x);
+                        const dy = Math.sign(pos.y - startPos.y);
+                        return `dir:${dx},${dy}`;
+                    };
+                    for (const nk of startNeighbors) {
+                        rootDiversificationFamilyByKey.set(nk, resolveRootFamily(nk));
+                    }
+                    const rootDiversificationPendingFamilies = new Set(rootDiversificationFamilyByKey.values());
+                    const rootDiversificationAttemptedFamilies = new Set();
                     const progressStartTimeMs = Date.now();
                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     let steps = 0;
@@ -5652,6 +5673,10 @@
                         if (options.signal?.aborted) {
                             captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                             recordPhaseAttempt('aborted');
+                            if (debugStats) {
+                                debugStats.rootFamiliesAttemptedBeforeTimeout = rootDiversificationAttemptedFamilies.size;
+                                debugStats.rootFamiliesStarved = Math.max(0, rootDiversificationPendingFamilies.size);
+                            }
                             if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
                                 setDepthZeroReason(debugStats, 'returned-without-expansion', { returnedBeforeExpansion: true, aborted: true });
                             }
@@ -5661,6 +5686,10 @@
                             captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                             snapshotTimeoutFrontierDiagnostics(debugStats, stack);
                             recordPhaseAttempt('timeout');
+                            if (debugStats) {
+                                debugStats.rootFamiliesAttemptedBeforeTimeout = rootDiversificationAttemptedFamilies.size;
+                                debugStats.rootFamiliesStarved = Math.max(0, rootDiversificationPendingFamilies.size);
+                            }
                             if (debugStats && (debugStats.nodesExpanded || 0) === 0) {
                                 setDepthZeroReason(debugStats, 'returned-without-expansion', { returnedBeforeExpansion: true, timeout: true });
                             }
@@ -5679,7 +5708,19 @@
                             continue;
                         }
                         let nextKey;
-                        if (lowBranchMode && top.depth === 0 && rootInterleavePool.length > 0) {
+                        if (top.depth === 0 && rootDiversificationPendingFamilies.size > 0) {
+                            let chosen = null;
+                            for (let i = top.neighbors.length - 1; i >= 0; i--) {
+                                const candidate = top.neighbors[i];
+                                const familyKey = rootDiversificationFamilyByKey.get(candidate) || `${candidate}`;
+                                if (rootDiversificationPendingFamilies.has(familyKey)) {
+                                    chosen = candidate;
+                                    top.neighbors.splice(i, 1);
+                                    break;
+                                }
+                            }
+                            nextKey = chosen ?? top.neighbors.pop();
+                        } else if (lowBranchMode && top.depth === 0 && rootInterleavePool.length > 0) {
                             nextKey = rootInterleavePool.shift();
                             const idx = top.neighbors.lastIndexOf(nextKey);
                             if (idx >= 0) top.neighbors.splice(idx, 1);
@@ -5702,6 +5743,13 @@
                             continue;
                         }
                         const realLen = state.path.length - 1 - state.isJump.size;
+                        if (realLen === 1) {
+                            const familyKey = rootDiversificationFamilyByKey.get(nextKey) || `${nextKey}`;
+                            if (rootDiversificationPendingFamilies.has(familyKey)) {
+                                rootDiversificationPendingFamilies.delete(familyKey);
+                            }
+                            rootDiversificationAttemptedFamilies.add(familyKey);
+                        }
                         const phaseDerived = this._updateSolverPhase(state, lastK, l, distMap, debugStats);
                         maybeEmitAdaptiveTelemetry(phaseDerived);
                         if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
@@ -5721,6 +5769,8 @@
                                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                                     snapshotTimeoutFrontierDiagnostics(debugStats, stack);
                                     recordPhaseAttempt('timeout');
+                                    debugStats.rootFamiliesAttemptedBeforeTimeout = rootDiversificationAttemptedFamilies.size;
+                                    debugStats.rootFamiliesStarved = Math.max(0, rootDiversificationPendingFamilies.size);
                                     return SOLVER_TIMEOUT;
                                 }
                             }
@@ -5921,6 +5971,7 @@
                             log: transLog,
                             sig: stateSig,
                             depth: top.depth + 1,
+                            rootSeedKey: top.depth === 0 ? nextKey : top.rootSeedKey,
                             remainingMustPass,
                             remainingMustCross: crossNeeds,
                             remainingInteractionDeficit: interactionDeficit
@@ -5928,6 +5979,8 @@
                     }
                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     if (debugStats) {
+                        debugStats.rootFamiliesAttemptedBeforeTimeout = rootDiversificationAttemptedFamilies.size;
+                        debugStats.rootFamiliesStarved = Math.max(0, rootDiversificationPendingFamilies.size);
                         debugStats.memoSize = useFailMemo ? failMemo.size : 0;
                         const domChecks = debugStats.dominanceMemoChecks || 0;
                         const domHits = debugStats.dominanceMemoHits || 0;
@@ -8243,12 +8296,18 @@
                 rootCandidatesSuppressedByMemo: Number.isFinite(debug?.rootCandidatesSuppressedByMemo) ? debug.rootCandidatesSuppressedByMemo : null,
                 rootCandidatesSuppressedByDominance: Number.isFinite(debug?.rootCandidatesSuppressedByDominance) ? debug.rootCandidatesSuppressedByDominance : null,
                 rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
+                rootFamiliesAttemptedBeforeTimeout: Number.isFinite(debug?.rootFamiliesAttemptedBeforeTimeout) ? debug.rootFamiliesAttemptedBeforeTimeout : null,
+                rootFamiliesStarved: Number.isFinite(debug?.rootFamiliesStarved) ? debug.rootFamiliesStarved : null,
+                rescueTriggeredNearClosure: debug?.rescueTriggeredNearClosure === true ? true : null,
+                mustCrossRescueTriggered: debug?.mustCrossRescueTriggered === true ? true : null,
+                mustCrossUnlockProgressEvents: Number.isFinite(debug?.mustCrossUnlockProgressEvents) ? debug.mustCrossUnlockProgressEvents : null,
                 attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
                 progressSamples: Array.isArray(debug?.progressSamples) ? debug.progressSamples : null,
                 progressSummary: debug?.progressSummary || null,
                 timeoutDiagnostics: debug?.timeoutDiagnostics && typeof debug.timeoutDiagnostics === 'object'
                     ? compactDefined({
                         frontierMustPassDistribution: debug.timeoutDiagnostics.frontierMustPassDistribution || null,
+                        frontierMustCrossDistribution: debug.timeoutDiagnostics.frontierMustCrossDistribution || null,
                         frontierInteractionDeficitDistribution: debug.timeoutDiagnostics.frontierInteractionDeficitDistribution || null,
                         bestLowerBoundToValidSolution: Number.isFinite(debug.timeoutDiagnostics.bestLowerBoundToValidSolution)
                             ? debug.timeoutDiagnostics.bestLowerBoundToValidSolution
@@ -8256,7 +8315,13 @@
                         nearSolutionStates: Number.isFinite(debug.timeoutDiagnostics.nearSolutionStates)
                             ? debug.timeoutDiagnostics.nearSolutionStates
                             : null,
-                        nearSolutionByDimension: debug.timeoutDiagnostics.nearSolutionByDimension || null
+                        nearSolutionByDimension: debug.timeoutDiagnostics.nearSolutionByDimension || null,
+                        mustCrossScheduleInfeasibleStates: Number.isFinite(debug.timeoutDiagnostics.mustCrossScheduleInfeasibleStates)
+                            ? debug.timeoutDiagnostics.mustCrossScheduleInfeasibleStates
+                            : null,
+                        mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(debug.timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates)
+                            ? debug.timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
+                            : null
                     })
                     : null,
                 refereeAttemptHistory: toAuditRefereeAttemptHistory(attempt?.attempts),
@@ -10720,6 +10785,7 @@
             let portalRetryBiasToggle = 0;
             let broadStagnationRescueCount = 0;
             let nearSolutionFloodRescueCount = 0;
+            let mustCrossScheduleRescueCount = 0;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
             const canonicalizeDisabledPrunes = (prunes = []) => {
@@ -11619,6 +11685,10 @@
                         && (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= 2000
                         && Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= 1;
+                    const mustCrossScheduleRescueDetected = timeoutProne
+                        && mustCrossScheduleRescueCount < 2
+                        && (Number(attemptResult?.quality?.remainingMustCross) || 0) > 0
+                        && (Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0) >= 60;
                     if (nearSolutionFloodDetected && nextAttempt) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         const existingMemo = Number(nextAttempt.memoStrictness);
@@ -11633,6 +11703,7 @@
                         nextAttempt.retryTag = 'near-solution-flood-rescue';
                         nextAttempt.escalationReason = 'near-solution-flood-rescue';
                         nearSolutionFloodRescueCount++;
+                        if (attemptResult?.debug) attemptResult.debug.rescueTriggeredNearClosure = true;
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'near-solution-flood-rescue';
                             currentAttemptEntry.nearSolutionFloodDetected = true;
@@ -11640,6 +11711,29 @@
                                 nearSolutionStates: attemptResult.debug.timeoutDiagnostics.nearSolutionStates,
                                 bestLowerBound: attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution
                             };
+                        }
+                        continue;
+                    }
+                    if (mustCrossScheduleRescueDetected && nextAttempt) {
+                        const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
+                        nextAttempt.budgetMs = priorBudget;
+                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes((nextAttempt.disabledPrunes || []).filter(prune => prune !== 'mustCrossBound'));
+                        nextAttempt.policyProfile = 'mustCrossFirst';
+                        nextAttempt.orderingPolicy = 'mustCrossFirst';
+                        nextAttempt.passPortalBiasMode = 'off';
+                        nextAttempt.retryTag = 'must-cross-schedule-rescue';
+                        nextAttempt.escalationReason = 'must-cross-schedule-rescue';
+                        nextAttempt.orderingTweaks = compactDefined({
+                            ...(nextAttempt.orderingTweaks || {}),
+                            stage: 'timeout-rescue-second-stage',
+                            mode: 'must-cross-schedule-rescue',
+                            mustCrossScheduleInfeasibleFrontierStates: Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0
+                        });
+                        mustCrossScheduleRescueCount++;
+                        if (attemptResult?.debug) attemptResult.debug.mustCrossRescueTriggered = true;
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = 'must-cross-schedule-rescue';
+                            currentAttemptEntry.mustCrossScheduleRescueDetected = true;
                         }
                         continue;
                     }
@@ -14734,6 +14828,11 @@
                     rootCandidatesSuppressedByMemo: 0,
                     rootCandidatesSuppressedByDominance: 0,
                     rootCandidatesExpanded: 0,
+                    rootFamiliesAttemptedBeforeTimeout: 0,
+                    rootFamiliesStarved: 0,
+                    rescueTriggeredNearClosure: false,
+                    mustCrossRescueTriggered: false,
+                    mustCrossUnlockProgressEvents: 0,
                     signatureBuildCount: 0,
                     signatureBuildMs: 0,
                     signatureStrictBuildCount: 0,
@@ -14795,7 +14894,8 @@
                         bestLowerBoundToValidSolution: null,
                         nearSolutionStates: 0,
                         nearSolutionByDimension: {},
-                        mustCrossScheduleInfeasibleStates: 0
+                        mustCrossScheduleInfeasibleStates: 0,
+                        mustCrossScheduleInfeasibleFrontierStates: 0
                     };
                 }
                 return debugStats.timeoutDiagnostics;
@@ -14837,9 +14937,15 @@
                 for (const frame of stack) {
                     const pending = Math.max(0, Number(frame?.neighbors?.length) || 0);
                     if (pending <= 0) continue;
+                    const remMust = Math.max(0, Number(frame?.remainingMustPass) || 0);
+                    const remCross = Math.max(0, Number(frame?.remainingMustCross) || 0);
+                    const remInt = Math.max(0, Number(frame?.remainingInteractionDeficit) || 0);
                     bumpTimeoutDiagBucket(diag.frontierMustPassDistribution, frame?.remainingMustPass, pending);
                     bumpTimeoutDiagBucket(diag.frontierMustCrossDistribution, frame?.remainingMustCross, pending);
                     bumpTimeoutDiagBucket(diag.frontierInteractionDeficitDistribution, frame?.remainingInteractionDeficit, pending);
+                    if (remCross > 0 && remMust === 0 && remInt === 0) {
+                        diag.mustCrossScheduleInfeasibleFrontierStates = (diag.mustCrossScheduleInfeasibleFrontierStates || 0) + pending;
+                    }
                 }
             };
 
