@@ -8850,6 +8850,311 @@
             return { knotCandidates: rankedKnotCandidates, knotZone };
         },
 
+        // Returns an ordered list of up to `extraCount` candidate cell keys to use as blueprint
+        // crossing points (intersections that the solver will treat as virtual mustCross entries).
+        // Applies geometric exclusion: perimeter cells, low-effective-degree cells (corridors),
+        // cells adjacent to non-origin gates, and already-designated must-cross / gate / goal cells.
+        // additionalExclusions: optional Set of extra keys to exclude (used for secondary selection).
+        _selectBlueprintCrossingCells(level, topology, knotCandidates, gateKey, additionalExclusions = null) {
+            const existingMustCrossCount = level?.mustCrossKeys?.length || 0;
+            const reqInt = level?.reqInt || 0;
+            const extraCount = Math.max(0, reqInt - existingMustCrossCount);
+            if (extraCount === 0) return [];
+            // Cap at 6 minus existing must-cross to keep within exact-DP range (n <= 6 in preprocessing)
+            const maxBlueprint = Math.max(0, Math.min(extraCount, 6 - existingMustCrossCount));
+            if (maxBlueprint === 0) return [];
+
+            const w = level?.grid?.w || 0;
+            const h = level?.grid?.h || 0;
+            const walkableSet = topology.walkableSet || new Set();
+            const adjacency = topology.adjacency || new Map();
+            const chokeScoreMap = topology.chokeScoreMap || new Map();
+            const mustCrossSet = new Set(level?.mustCrossKeys || []);
+            const gateSet = new Set(level?.gateKeys || []);
+            const goalKey = level?.goalKey;
+            const gooseSet = level?.gooseSet instanceof Set ? level.gooseSet : new Set();
+
+            // Build exclusion set: must-cross cells, gates, goal, and geometric bad candidates
+            const excluded = new Set(mustCrossSet);
+            if (Number.isFinite(goalKey)) excluded.add(goalKey);
+            for (const k of gateSet) excluded.add(k);
+            if (additionalExclusions) {
+                for (const k of additionalExclusions) excluded.add(k);
+            }
+
+            // 1. Exclude perimeter cells (0-indexed: x=0, x=w-1, y=0, y=h-1)
+            //    Corner cells have degree 2 and can only be traversed via the same two edges;
+            //    even non-corner edge cells have severely limited re-entry flexibility.
+            for (const key of walkableSet) {
+                const p = APP.LevelUtils.UNPACK(key);
+                if (p.x === 0 || p.x === w - 1 || p.y === 0 || p.y === h - 1) excluded.add(key);
+            }
+
+            // 2. Exclude cells adjacent to non-origin gates.
+            //    Gate cells are dead for intersection counting (gated from counting at line ~2594),
+            //    so their adjacent cells have a reduced effective degree and risky routing.
+            if (Number.isFinite(gateKey)) {
+                for (const gk of (level?.gateKeys || [])) {
+                    if (gk === gateKey) continue;
+                    for (const nk of (adjacency.get(gk) || [])) excluded.add(nk);
+                }
+            }
+
+            // 3. Exclude low effective degree cells (corridors: ≤2 passable neighbors after geese).
+            //    A cell with effective degree ≤ 2 can only be entered/exited in one axis,
+            //    making a self-crossing nearly impossible without forced same-edge backtracking.
+            for (const key of walkableSet) {
+                if (excluded.has(key)) continue;
+                const neighbors = adjacency.get(key) || [];
+                const eff = neighbors.filter(nk => !gooseSet.has(nk)).length;
+                if (eff <= 2) excluded.add(key);
+            }
+
+            const scoreCell = (key) => {
+                const neighbors = adjacency.get(key) || [];
+                const eff = neighbors.filter(nk => !gooseSet.has(nk)).length;
+                return (chokeScoreMap.get(key) || 0) * 2 + Math.max(0, eff - 2);
+            };
+
+            // Pick best cell per knot zone; two passes for primary then fallback secondary
+            const selected = [];
+            const selectedSet = new Set();
+            for (let pass = 0; pass < 2 && selected.length < maxBlueprint; pass++) {
+                for (const candidate of knotCandidates) {
+                    if (selected.length >= maxBlueprint) break;
+                    let best = null;
+                    let bestScore = -Infinity;
+                    for (const key of (candidate.cells instanceof Set ? candidate.cells : [])) {
+                        if (excluded.has(key) || selectedSet.has(key)) continue;
+                        if (!walkableSet.has(key)) continue;
+                        const s = scoreCell(key);
+                        if (s > bestScore) { bestScore = s; best = key; }
+                    }
+                    if (best !== null) {
+                        selected.push(best);
+                        selectedSet.add(best);
+                    }
+                }
+            }
+
+            // Sort ascending by BFS distance from gate: closer cells get processed first in DFS,
+            // giving the tightest lower-bound pruning at the earliest search depth.
+            if (Number.isFinite(gateKey) && selected.length > 1) {
+                const gateDistMap = SolverCore._buildOptimisticDistMap(level, [gateKey]);
+                selected.sort((a, b) => (gateDistMap.get(a) ?? Infinity) - (gateDistMap.get(b) ?? Infinity));
+            }
+            return selected;
+        },
+
+        // Generates an array of blueprint variants (each an ordered list of extra crossing cell keys)
+        // to try in sequence. Variant 0 = primary (BFS-ascending), 1 = reversed, 2 = secondary cells.
+        // Returns { variants: number[][], extraCount: number }.
+        _generateBlueprintPermutations(level, topology, knotCandidates, gateKey) {
+            const existingMustCrossCount = level?.mustCrossKeys?.length || 0;
+            const reqInt = level?.reqInt || 0;
+            const extraCount = Math.max(0, reqInt - existingMustCrossCount);
+            if (extraCount === 0) return { variants: [], extraCount: 0 };
+
+            const primaryCells = this._selectBlueprintCrossingCells(level, topology, knotCandidates, gateKey, null);
+            if (primaryCells.length === 0) return { variants: [], extraCount };
+
+            const variants = [];
+            // Variant 0: primary cells in BFS-ascending order (tightest lower bounds fire earliest)
+            variants.push(primaryCells.slice());
+            // Variant 1: primary cells reversed (different pruning pressure ordering)
+            const reversed = primaryCells.slice().reverse();
+            if (reversed.join(',') !== primaryCells.join(',')) variants.push(reversed);
+            // Variant 2: secondary cells (different candidate set from alternate zone picks)
+            const secondaryCells = this._selectBlueprintCrossingCells(level, topology, knotCandidates, gateKey, new Set(primaryCells));
+            if (secondaryCells.length > 0 && secondaryCells.join(',') !== primaryCells.join(',')) {
+                variants.push(secondaryCells.slice());
+            }
+
+            return { variants, extraCount };
+        },
+
+        // Creates a shallow level copy with blueprintKeys appended to mustCrossKeys and all
+        // mustCross-derived structures rebuilt. The augmented level inherits all read-only fields
+        // (grid, blockSet, walkableSet, portalMap, solverProfile, etc.) via prototype chain.
+        // The DFS core (_solveInstance) uses l.mustCrossKeys.length and l.mustCrossIndex directly,
+        // so blueprint cells participate in all existing pruning with zero DFS changes.
+        _augmentLevelWithBlueprint(level, blueprintKeys) {
+            if (!Array.isArray(blueprintKeys) || blueprintKeys.length === 0) return level;
+            const aug = Object.create(level);
+            aug.mustCrossKeys = [...(level.mustCrossKeys || []), ...blueprintKeys];
+            const distMap = level.distMapForSolver || new Map();
+
+            // Rebuild mustCross structures — mirrors the mustCross preprocessing block
+            // in _prepareSolveContext (lines ~6667-6748).
+            aug.mustCrossIndex = new Map();
+            aug.mustCrossDistMaps = [];
+            aug.mustCrossToGoalDist = [];
+            aug.mustCrossPairDist = [];
+            aug.mustCrossKeyMaskCache = new Map();
+            aug.mustCrossTransit = { ready: false, keys: [], keyToIdx: new Map(), matrix: [], distMapsByKey: new Map() };
+            aug.mustCrossDpMode = 'none';
+            aug.mustCrossDp = () => Infinity;
+
+            const n = aug.mustCrossKeys.length;
+            for (let i = 0; i < n; i++) {
+                const crossKey = aug.mustCrossKeys[i];
+                aug.mustCrossIndex.set(crossKey, i);
+                aug.mustCrossDistMaps.push(SolverCore._buildOptimisticDistMap(aug, [crossKey]));
+                aug.mustCrossToGoalDist.push(distMap.get(crossKey) ?? Infinity);
+            }
+            aug.mustCrossPairDist = Array.from({ length: n }, () => Array(n).fill(Infinity));
+            for (let i = 0; i < n; i++) {
+                aug.mustCrossPairDist[i][i] = 0;
+                for (let j = i + 1; j < n; j++) {
+                    const d = aug.mustCrossDistMaps[i].get(aug.mustCrossKeys[j]);
+                    const val = d === undefined ? Infinity : d;
+                    aug.mustCrossPairDist[i][j] = val;
+                    aug.mustCrossPairDist[j][i] = val;
+                }
+            }
+            if (n <= 6) {
+                aug.mustCrossDpMode = 'exact';
+                const dpMemo = new Map();
+                aug.mustCrossDp = (mask, lastIdx) => {
+                    if (mask === 0n) return aug.mustCrossToGoalDist[lastIdx];
+                    const key = `${mask.toString()}|${lastIdx}`;
+                    const cached = dpMemo.get(key);
+                    if (cached !== undefined) return cached;
+                    let best = Infinity;
+                    for (let nxt = 0; nxt < n; nxt++) {
+                        const bit = 1n << BigInt(nxt);
+                        if ((mask & bit) === 0n) continue;
+                        const d = aug.mustCrossPairDist[lastIdx][nxt];
+                        if (d === Infinity) continue;
+                        const rest = aug.mustCrossDp(mask ^ bit, nxt);
+                        if (rest === Infinity) continue;
+                        const total = d + rest;
+                        if (total < best) best = total;
+                    }
+                    dpMemo.set(key, best);
+                    return best;
+                };
+            }
+
+            const transitKeys = [];
+            const seenTransit = new Set();
+            const pushTransit = (k) => {
+                if (!Number.isFinite(k) || seenTransit.has(k)) return;
+                seenTransit.add(k);
+                transitKeys.push(k);
+            };
+            aug.mustCrossKeys.forEach(pushTransit);
+            pushTransit(aug.goalKey);
+            if (aug.portalMap instanceof Map) aug.portalMap.forEach((_, pk) => pushTransit(pk));
+            const transitDistMaps = transitKeys.map(k => SolverCore._buildOptimisticDistMap(aug, [k]));
+            const transitKeyToIdx = new Map();
+            for (let i = 0; i < transitKeys.length; i++) transitKeyToIdx.set(transitKeys[i], i);
+            const transitMatrix = Array.from({ length: transitKeys.length }, () => Array(transitKeys.length).fill(Infinity));
+            for (let i = 0; i < transitKeys.length; i++) {
+                transitMatrix[i][i] = 0;
+                for (let j = i + 1; j < transitKeys.length; j++) {
+                    const d = transitDistMaps[i].get(transitKeys[j]);
+                    const val = Number.isFinite(d) ? d : Infinity;
+                    transitMatrix[i][j] = val;
+                    transitMatrix[j][i] = val;
+                }
+            }
+            aug.mustCrossTransit = {
+                ready: transitKeys.length > 0,
+                keys: transitKeys,
+                keyToIdx: transitKeyToIdx,
+                matrix: transitMatrix,
+                distMapsByKey: new Map(transitKeys.map((k, i) => [k, transitDistMaps[i]]))
+            };
+
+            // Rebuild objectiveNodes and objectiveDistMaps to include blueprint entries
+            aug.objectiveNodes = [];
+            for (let i = 0; i < (aug.mustPassKeys || []).length; i++) {
+                aug.objectiveNodes.push({ key: aug.mustPassKeys[i], type: 'mustPass', localIdx: i });
+            }
+            for (let i = 0; i < aug.mustCrossKeys.length; i++) {
+                aug.objectiveNodes.push({ key: aug.mustCrossKeys[i], type: 'mustCross', localIdx: i });
+            }
+            aug.objectiveDistMaps = aug.objectiveNodes.map(node => SolverCore._buildOptimisticDistMap(aug, [node.key]));
+            aug.objectiveToGoalDist = aug.objectiveNodes.map(node => distMap.get(node.key) ?? Infinity);
+            aug.objectiveGateMinDist = aug.objectiveNodes.map((_, idx) => {
+                let best = Infinity;
+                for (const gk of (aug.gateKeys || [])) {
+                    const d = aug.objectiveDistMaps[idx].get(gk);
+                    if (d !== undefined && d < best) best = d;
+                }
+                return best;
+            });
+            const objCount = aug.objectiveNodes.length;
+            aug.objectivePairDist = Array.from({ length: objCount }, () => Array(objCount).fill(Infinity));
+            for (let i = 0; i < objCount; i++) {
+                aug.objectivePairDist[i][i] = 0;
+                for (let j = i + 1; j < objCount; j++) {
+                    const d = aug.objectiveDistMaps[i].get(aug.objectiveNodes[j].key);
+                    const val = d === undefined ? Infinity : d;
+                    aug.objectivePairDist[i][j] = val;
+                    aug.objectivePairDist[j][i] = val;
+                }
+            }
+
+            return aug;
+        },
+
+        // Runs blueprint planning attempts when Stage 0 fails and the level has unconstrained
+        // intersections (reqInt > mustCrossKeys.length). Each blueprint variant injects extra
+        // cells as virtual mustCross entries, activating the full mustCross lower-bound machinery.
+        async _runBlueprintPlanningStage({
+            last,
+            solveContext,
+            stageHelpers
+        }) {
+            if (last.ok || last.status === 'no-solution-proven') return last;
+            const { runStage } = stageHelpers;
+            const {
+                level,
+                purpose,
+                controlPlane,
+                derived: { enduranceBudget, strategyMetadata }
+            } = solveContext;
+
+            const blueprintVariants = level?.solverProfile?.blueprintVariants;
+            const blueprintExtraCount = level?.solverProfile?.blueprintExtraCount || 0;
+            if (!Array.isArray(blueprintVariants) || blueprintVariants.length === 0 || blueprintExtraCount <= 0) {
+                return last;
+            }
+
+            const nonEmptyVariants = blueprintVariants.filter(v => Array.isArray(v) && v.length > 0);
+            if (nonEmptyVariants.length === 0) return last;
+
+            let stageIdx = 20;
+            for (const variant of nonEmptyVariants) {
+                const augLevel = this._augmentLevelWithBlueprint(level, variant);
+                // Pass updated mustCrossCount so profile-driven heuristics reflect the augmentation
+                const augProfile = Object.assign(Object.create(level.solverProfile || {}), {
+                    mustCrossCount: augLevel.mustCrossKeys.length
+                });
+                const blueprintResult = await runStage({
+                    stage: stageIdx++,
+                    name: 'Blueprint Stage',
+                    variant: `blueprint-${variant.length}-extra-crossings`,
+                    budgetMs: enduranceBudget,
+                    run: () => this.runBaselinePolicySweep(augLevel, enduranceBudget, {
+                        orderingPolicy: strategyMetadata.orderingPolicy,
+                        portalBiasMode: strategyMetadata.portalBiasMode,
+                        profile: augProfile,
+                        controlPlane,
+                        refereeRootDiversification: false,
+                        allowRandomizedExploration: false,
+                        purpose
+                    })
+                });
+                if (blueprintResult.ok) return blueprintResult;
+                if (blueprintResult.status === 'no-solution-proven') return blueprintResult;
+                last = blueprintResult;
+            }
+            return last;
+        },
+
         _detectSymmetry(level) {
             const w = level?.grid?.w || 0;
             const h = level?.grid?.h || 0;
@@ -9181,6 +9486,7 @@
             const topology = this._computeTopology(level);
             const objectiveModel = this._computeObjectiveModel(level, topology);
             const knotAnalysis = this._findKnotCandidates(level, topology, objectiveModel);
+            const blueprintAnalysis = this._generateBlueprintPermutations(level, topology, knotAnalysis.knotCandidates, level.gateKeys?.[0]);
             const symmetryModel = this._detectSymmetry(level);
             const portalHintModel = this._buildPortalHintModel(level, topology, objectiveModel);
 
@@ -9297,7 +9603,9 @@
                 hypothesisModel,
                 phasePolicy: SolverCore._phasePolicyFromArchetype(archetype),
                 templateLibrary,
-                templateCandidates
+                templateCandidates,
+                blueprintVariants: blueprintAnalysis.variants,
+                blueprintExtraCount: blueprintAnalysis.extraCount
             };
         },
 
@@ -9603,7 +9911,9 @@
                         activeArchetype: safe.hypothesisModel?.primaryArchetype || safe.archetype || 'harvestThenFinish'
                     }),
                 templateLibrary,
-                templateCandidates
+                templateCandidates,
+                blueprintVariants: Array.isArray(safe.blueprintVariants) ? safe.blueprintVariants : [],
+                blueprintExtraCount: Number.isFinite(safe.blueprintExtraCount) ? safe.blueprintExtraCount : 0
             };
         },
 
@@ -13198,6 +13508,17 @@
                     });
                     if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                 }
+            }
+
+            // Blueprint planning stage: tries variants with virtual mustCross entries for
+            // unconstrained intersections (reqInt > mustCrossKeys.length). Activates only when
+            // blueprintExtraCount > 0, so levels without unconstrained intersections are unaffected.
+            if (!last.ok && last.status !== 'no-solution-proven') {
+                last = await this._runBlueprintPlanningStage({
+                    last,
+                    solveContext,
+                    stageHelpers
+                });
             }
 
             last = await this._runRescueProfileStage({
