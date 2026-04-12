@@ -17360,7 +17360,7 @@
                 if (mode !== APP.Core.EDITOR) {
                     if (lastK === level.goalKey) return setReason('invalid-after-goal');
                     if (checkFalseGoals && armedFalseGoals?.has(lastK)) return setReason('invalid-false-goal-lock');
-                    if (!isPortalJumpCandidate && level.gateKeys.includes(targetKey)) return setReason('invalid-gate-reentry');
+                    if (level.gateKeys.includes(targetKey)) return setReason('invalid-gate-reentry');
                 } else if (path.length > 1 && level.gateKeys.includes(lastK)) {
                     return setReason('invalid-editor-gate-reentry');
                 }
