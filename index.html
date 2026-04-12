@@ -5795,6 +5795,27 @@
                                 continue;
                             }
                         }
+                        // Combined intersection+goal schedule lower bound.
+                        // Making K more intersections requires at least K revisit steps, plus the path
+                        // must still reach the goal. Prune when interactionDeficit + goalDist > rSteps.
+                        // Occasional false positives exist (when visited cells lie exactly on the BFS
+                        // goal-path, enabling intersections "for free"), but they are rare in practice
+                        // because the BFS goal-path mostly traverses unvisited cells early in the search
+                        // and the forced-crossing probe provides structural insurance for late-path states.
+                        // Primary targets: L108 (reqInt=1 with 0 crossings near reqLen-1),
+                        // L92/L134 (large deficit accumulates as reqLen approaches with no crossings).
+                        // Disable via disabledPrunes: ['intersectionBound'] if regressions appear.
+                        if (interactionDeficit > 0 && !runtimeDisabledPrunes.has('intersectionBound')) {
+                            const iGoalDist = distMap.get(lastK);
+                            if (Number.isFinite(iGoalDist) && (interactionDeficit + iGoalDist) > rSteps) {
+                                if (debugStats) {
+                                    debugStats.prune.intersectionBound = (debugStats.prune.intersectionBound || 0) + 1;
+                                    if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'intersectionBound', `intDeficit=${interactionDeficit} goalDist=${iGoalDist} rSteps=${rSteps}`);
+                                }
+                                this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
+                                continue;
+                            }
+                        }
                         const minRemForLowerBound = distMap.get(lastK) || Infinity;
                         const lowerBoundToValidSolution = Math.max(
                             Number.isFinite(minRemForLowerBound) ? minRemForLowerBound : Infinity,
@@ -10263,6 +10284,66 @@
                     portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
+            // Forced-crossing probe: for levels where reqInt > mustCrossKeys.length (free intersections),
+            // add attempts that pin a synthetic must-cross anchor cell. The intersection schedule LB
+            // prune (interactionDeficit + goalDist > rSteps) drives early backtracking in the DFS,
+            // but the path still needs a concrete plan for WHERE to cross. These probes force the
+            // solver to commit to one high-value crossing location per attempt, breaking the L108-class
+            // failure where the DFS exhausts all zero-crossing paths before ever creating one crossing.
+            // Also helps L134/L92: forcing 1 anchor crossing gives the solver a structural anchor
+            // around which to distribute the remaining free intersections.
+            const freeIntersections = Math.max(0, (level.reqInt || 0) - (Array.isArray(level.mustCrossKeys) ? level.mustCrossKeys.length : 0));
+            if (freeIntersections > 0) {
+                const { w, h } = level.grid;
+                const cx = (w - 1) / 2;
+                const cy = (h - 1) / 2;
+                const blockSet = level.blockSet instanceof Set ? level.blockSet : new Set();
+                const gateSet = level.gateSet instanceof Set ? level.gateSet : new Set();
+                const portalSet = level.portalMap instanceof Map ? new Set(level.portalMap.keys()) : new Set();
+                const mustCrossSet = new Set(Array.isArray(level.mustCrossKeys) ? level.mustCrossKeys : []);
+                const anchorCandidates = [];
+                for (let y = 0; y < h; y++) {
+                    for (let x = 0; x < w; x++) {
+                        const key = APP.LevelUtils.PACK(x, y);
+                        if (blockSet.has(key) || gateSet.has(key) || portalSet.has(key)) continue;
+                        if (key === level.goalKey) continue;
+                        if (mustCrossSet.has(key)) continue;
+                        let degree = 0;
+                        if (x > 0 && !blockSet.has(APP.LevelUtils.PACK(x - 1, y))) degree++;
+                        if (x < w - 1 && !blockSet.has(APP.LevelUtils.PACK(x + 1, y))) degree++;
+                        if (y > 0 && !blockSet.has(APP.LevelUtils.PACK(x, y - 1))) degree++;
+                        if (y < h - 1 && !blockSet.has(APP.LevelUtils.PACK(x, y + 1))) degree++;
+                        if (degree < 2) continue;
+                        const distFromCenter = Math.abs(x - cx) + Math.abs(y - cy);
+                        anchorCandidates.push({ key, degree, distFromCenter });
+                    }
+                }
+                // Rank by degree desc (more-connected = easier to cross), then proximity to center.
+                anchorCandidates.sort((a, b) => b.degree - a.degree || a.distFromCenter - b.distFromCenter);
+                // Up to 4 probes, each pinning a different anchor cell. Budget ~7% of total each.
+                const probeCount = Math.min(4, anchorCandidates.length);
+                const probeBudgetEach = Math.max(1, Math.floor(total * 0.07));
+                for (let pi = 0; pi < probeCount; pi++) {
+                    const anchor = anchorCandidates[pi];
+                    attempts.push({
+                        label: `forced-crossing-probe-${pi}`,
+                        budgetMs: probeBudgetEach,
+                        syntheticMustCrossKey: anchor.key,
+                        scoringMode: 'modern',
+                        portalBiasMode: 'adaptiveMustCross',
+                        structuralMode: true,
+                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
+                        policyProfile: 'knotBuilder',
+                        knotBudgetPolicy: {
+                            knotCrossBudget: Math.max(1, level.reqInt || 1),
+                            nonKnotCrossCap: Math.max(0, Math.floor(((level.reqInt || 1) - 1) * 0.5))
+                        },
+                        commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.20)) },
+                        memoStrictness: 1.2,
+                        portalUsagePolicy: resolvePortalUsagePolicy()
+                    });
+                }
+            }
             return attempts;
         },
 
@@ -10377,6 +10458,7 @@
                         total: Number((totalPruneHits / pruneDenominator).toFixed(4)),
                         mustPassBound: Number((Math.max(0, Number(prune?.mustPassBound) || 0) / pruneDenominator).toFixed(4)),
                         mustCrossBound: Number((Math.max(0, Number(prune?.mustCrossBound) || 0) / pruneDenominator).toFixed(4)),
+                        intersectionBound: Number((Math.max(0, Number(prune?.intersectionBound) || 0) / pruneDenominator).toFixed(4)),
                         portalAutomatonRejected: Number((Math.max(0, Number(prune?.portalAutomatonRejected) || 0) / pruneDenominator).toFixed(4)),
                         failedStateHit: Number((Math.max(0, Number(prune?.failedStateHit) || 0) / pruneDenominator).toFixed(4))
                     }),
@@ -10455,9 +10537,12 @@
                 { rootOrderingProfile: 'objectiveFirst', orderingPolicy: 'objectiveFirst', beamCompositionRule: 'floor-2-wide', rootExpansionFloorCount: 2, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: [] },
                 { rootOrderingProfile: 'knotBuilder', orderingPolicy: 'knotBuilder', beamCompositionRule: 'floor-3-objective', rootExpansionFloorCount: 3, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'off', disabledPrunes: ['mustPassBound'] },
                 { rootOrderingProfile: 'portalFirstTransfer', orderingPolicy: 'portalFirstTransfer', beamCompositionRule: 'adaptive-relaxed', rootExpansionFloorCount: 1, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'agnostic', disabledPrunes: ['mustCrossBound'] },
-                { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
-                // 5th entry: maximum pruning relaxation for near-solution flood / must-cross deadlock patterns
-                { rootOrderingProfile: 'endurance', orderingPolicy: 'endurance', beamCompositionRule: 'floor-4-endurance', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['mustPassBound', 'mustCrossBound'] }
+                // Entries 4-5: disable intersectionBound in addition to mustPass/mustCross bounds.
+                // These are the fallback entries for levels where the intersectionBound prune
+                // may be producing false-positives (valid late-crossing solutions pruned away).
+                { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'intersectionBound'] },
+                // 5th entry: maximum pruning relaxation for near-solution flood / must-cross / intersection deadlock patterns
+                { rootOrderingProfile: 'endurance', orderingPolicy: 'endurance', beamCompositionRule: 'floor-4-endurance', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'intersectionBound'] }
             ];
             const applyDeterministicDiversificationMatrix = (attempt, context = {}) => {
                 if (!attempt) return null;
@@ -10789,9 +10874,21 @@
                 // add all portal entry cells to blockSet so the solver treats them as walls.
                 // PathfinderSolver.solve() does Object.create(level) internally and rebuilds all
                 // distance maps fresh, so this modified level is safe to pass.
-                const solveLevel = (attemptOpts.blockPortalEntryCells && attemptForbidPortals && level?.portalMap instanceof Map && level.portalMap.size > 0)
+                let solveLevel = (attemptOpts.blockPortalEntryCells && attemptForbidPortals && level?.portalMap instanceof Map && level.portalMap.size > 0)
                     ? Object.assign(Object.create(level), { blockSet: new Set([...level.blockSet, ...level.portalMap.keys()]) })
                     : level;
+                // Forced-crossing probe: if the attempt specifies a synthetic must-cross anchor,
+                // create a level variant with that cell appended to mustCrossKeys. PathfinderSolver.solve
+                // rebuilds all mustCross distance maps on each call, so this is safe. The extra
+                // mustCross key forces the DFS to plan at least one crossing at the anchor cell,
+                // guaranteeing at least 1 intersection from that location.
+                if (Number.isFinite(attemptOpts.syntheticMustCrossKey)) {
+                    const synthKey = attemptOpts.syntheticMustCrossKey;
+                    const baseMCK = Array.isArray(solveLevel.mustCrossKeys) ? solveLevel.mustCrossKeys : [];
+                    if (!baseMCK.includes(synthKey)) {
+                        solveLevel = Object.assign(Object.create(solveLevel), { mustCrossKeys: [...baseMCK, synthKey] });
+                    }
+                }
                 const r = await PathfinderSolver.solve(solveLevel, {
                     timeLimit: attemptBudgetMs,
                     debug: true,
@@ -14442,7 +14539,8 @@
                         portalParityImpossible: 0,
                         portalObligationSignatureImpossible: 0,
                         portalOptionalNonImproving: 0,
-                        portalOptionalBoundNonImproving: 0
+                        portalOptionalBoundNonImproving: 0,
+                        intersectionBound: 0
                     },
                     notes: []
                 };
@@ -14760,6 +14858,7 @@
                         total: Number((totalPruneHits / totalPruneDenom).toFixed(4)),
                         mustPassBound: Number((Math.max(0, Number(prune.mustPassBound) || 0) / totalPruneDenom).toFixed(4)),
                         mustCrossBound: Number((Math.max(0, Number(prune.mustCrossBound) || 0) / totalPruneDenom).toFixed(4)),
+                        intersectionBound: Number((Math.max(0, Number(prune.intersectionBound) || 0) / totalPruneDenom).toFixed(4)),
                         portalAutomatonRejected: Number((Math.max(0, Number(prune.portalAutomatonRejected) || 0) / totalPruneDenom).toFixed(4)),
                         failedStateHit: Number((Math.max(0, Number(prune.failedStateHit) || 0) / totalPruneDenom).toFixed(4))
                     })
