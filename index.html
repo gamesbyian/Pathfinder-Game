@@ -8194,29 +8194,32 @@
             if (!Array.isArray(attempts) || attempts.length === 0) return [];
             return attempts.map((entry, idx) => {
                 const quality = entry?.quality || {};
+                const strategy = entry?.strategy || {};
                 const instrumentation = entry?.attemptInstrumentation || {};
                 const rootSuppressionLog = compactRootSuppressionLog(entry?.rootSuppressionLog || entry?.debug?.rootSuppressionLog, 10);
                 return compactDefined({
                     index: idx + 1,
                     label: entry?.label || null,
                     stageType: 'referee-attempt',
-                    attemptFamily: entry?.policyProfile || null,
+                    attemptFamily: entry?.policyProfile || strategy?.policyProfile || null,
                     startWallTimeMs: Number.isFinite(entry?.startWallTimeMs) ? entry.startWallTimeMs : null,
                     elapsedWallTimeMs: Number.isFinite(entry?.elapsedMs) ? entry.elapsedMs : null,
                     solveTimeMs: Number.isFinite(entry?.elapsedMs) ? entry.elapsedMs : null,
                     budgetMs: Number.isFinite(entry?.budgetMs)
                         ? entry.budgetMs
-                        : (Number.isFinite(entry?.strategy?.budgetMs) ? entry.strategy.budgetMs : null),
-                    policyProfile: entry?.policyProfile || null,
-                    orderingPolicy: entry?.orderingPolicy || null,
-                    scoringMode: entry?.scoringMode || null,
-                    portalBiasMode: entry?.portalBiasMode || null,
+                        : (Number.isFinite(strategy?.budgetMs) ? strategy.budgetMs : null),
+                    policyProfile: entry?.policyProfile || strategy?.policyProfile || null,
+                    orderingPolicy: entry?.orderingPolicy || strategy?.orderingPolicy || null,
+                    scoringMode: entry?.scoringMode || strategy?.scoringMode || null,
+                    portalBiasMode: entry?.portalBiasMode || strategy?.portalBiasMode || null,
                     portalUsagePolicy: entry?.portalUsagePolicy || null,
                     phasePolicy: compactPhasePolicyForAudit(entry?.phasePolicy),
                     structuralMode: entry?.structuralMode === true,
                     compatLegacyOutputAlias: !!entry?.compatLegacyOutputAlias,
                     memoStrictness: Number.isFinite(entry?.memoStrictness) ? entry.memoStrictness : null,
-                    disabledPrunes: Array.isArray(entry?.disabledPrunes) ? entry.disabledPrunes.slice(0, 10) : null,
+                    disabledPrunes: Array.isArray(entry?.disabledPrunes)
+                        ? entry.disabledPrunes.slice(0, 10)
+                        : (Array.isArray(strategy?.disabledPrunes) ? strategy.disabledPrunes.slice(0, 10) : null),
                     rootExpansionFloorCount: Number.isFinite(entry?.rootExpansionFloorCount) ? entry.rootExpansionFloorCount : null,
                     forceRootExpansionFloor: entry?.forceRootExpansionFloor === true ? true : null,
                     relaxRootSuppressionFirstLayer: entry?.relaxRootSuppressionFirstLayer === true ? true : null,
@@ -8258,7 +8261,9 @@
                     depth0PruneBreakdown: entry?.depth0PruneBreakdown || null,
                     rootSuppressionSummary: entry?.rootSuppressionSummary || null,
                     rootSuppressionLog,
-                    memoHits: Number.isFinite(quality?.memoHits) ? quality.memoHits : null,
+                    memoHits: Number.isFinite(quality?.memoHits)
+                        ? quality.memoHits
+                        : (Number.isFinite(entry?.memoHits) ? entry.memoHits : null),
                     failedStateHits: Number.isFinite(quality?.failedStateHits) ? quality.failedStateHits : null,
                     nextAttemptInserted: entry?.nextAttemptInserted === true ? true : null,
                     nextAttemptReason: entry?.nextAttemptReason || null,
@@ -18745,12 +18750,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const toCanonicalAttemptRecord = (attempt = {}, attemptIndex = 0) => {
             const status = normalizeAuditAttemptStatus(attempt);
             const termination = normalizeAuditTermination(attempt, status);
+            const strategy = attempt?.strategy || attempt?.strategyMetadata || {};
             const elapsedWallTimeMs = Number.isFinite(attempt?.elapsedWallTimeMs) ? attempt.elapsedWallTimeMs : (Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : 0);
             const budgetMs = Number.isFinite(attempt?.budgetMs)
                 ? attempt.budgetMs
                 : (Number.isFinite(attempt?.attemptBudgetMs)
                     ? attempt.attemptBudgetMs
-                    : (Number.isFinite(attempt?.strategy?.budgetMs) ? attempt.strategy.budgetMs : 0));
+                    : (Number.isFinite(strategy?.budgetMs) ? strategy.budgetMs : 0));
             const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
             const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
             const progressSummary = attempt?.progressSummary || {};
@@ -18771,12 +18777,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             return {
                 label: attempt?.label || toAttemptLabel(attemptIndex),
                 attemptIndex,
-                attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || 'main',
-                policyProfile: attempt?.policyProfile || attempt?.attemptFamily || 'unknown',
+                attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || strategy?.policyProfile || 'main',
+                policyProfile: attempt?.policyProfile || attempt?.attemptFamily || strategy?.policyProfile || 'unknown',
                 retryTag: attempt?.retryTag || null,
-                scoringMode: attempt?.scoringMode || attempt?.mode || 'unknown',
-                orderingPolicy: attempt?.orderingPolicy || attempt?.policy || 'unknown',
-                portalBiasMode: attempt?.portalBiasMode || attempt?.portalMode || 'unknown',
+                scoringMode: attempt?.scoringMode || attempt?.mode || strategy?.scoringMode || 'unknown',
+                orderingPolicy: attempt?.orderingPolicy || attempt?.policy || strategy?.orderingPolicy || 'unknown',
+                portalBiasMode: attempt?.portalBiasMode || attempt?.portalMode || strategy?.portalBiasMode || 'unknown',
                 portalUsagePolicy: attempt?.portalUsagePolicy || (attempt?.forbidPortals ? 'optional-off' : null),
                 structuralMode,
                 phasePolicy,
@@ -18802,8 +18808,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     failedStateHit: Number.isFinite(prunes?.failedStateHit) ? prunes.failedStateHit : 0,
                     deadEnd: Number.isFinite(prunes?.deadEnd) ? prunes.deadEnd : 0
                 },
-                memoHits: Number.isFinite(attempt?.memoHits) ? attempt.memoHits : 0,
-                disabledPrunes: Array.isArray(attempt?.disabledPrunes) ? attempt.disabledPrunes.slice(0, 16) : [],
+                memoHits: Number.isFinite(attempt?.memoHits)
+                    ? attempt.memoHits
+                    : (Number.isFinite(attempt?.quality?.memoHits) ? attempt.quality.memoHits : 0),
+                disabledPrunes: Array.isArray(attempt?.disabledPrunes)
+                    ? attempt.disabledPrunes.slice(0, 16)
+                    : (Array.isArray(strategy?.disabledPrunes) ? strategy.disabledPrunes.slice(0, 16) : []),
                 progressSamples,
                 progressSummary: {
                     plateauDetected: !!progressSummary?.plateauDetected,
@@ -18845,12 +18855,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         solved: attempt?.solved === true,
                         stopReason: attempt?.status || null,
                         elapsedWallTimeMs: Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : null,
-                        budgetMs: Number.isFinite(attempt?.budgetMs) ? attempt.budgetMs : null,
-                        policyProfile: attempt?.policyProfile || null,
+                        budgetMs: Number.isFinite(attempt?.budgetMs)
+                            ? attempt.budgetMs
+                            : (Number.isFinite(attempt?.strategyMetadata?.budgetMs) ? attempt.strategyMetadata.budgetMs : null),
+                        policyProfile: attempt?.policyProfile || attempt?.strategyMetadata?.policyProfile || null,
                         retryTag: attempt?.retryTag || null,
-                        orderingPolicy: attempt?.orderingPolicy || null,
-                        scoringMode: attempt?.scoringMode || null,
-                        portalBiasMode: attempt?.portalBiasMode || null,
+                        orderingPolicy: attempt?.orderingPolicy || attempt?.strategyMetadata?.orderingPolicy || null,
+                        scoringMode: attempt?.scoringMode || attempt?.strategyMetadata?.scoringMode || null,
+                        portalBiasMode: attempt?.portalBiasMode || attempt?.strategyMetadata?.portalBiasMode || null,
+                        strategy: attempt?.strategyMetadata || null,
                         phasePolicy: attempt?.phasePolicy || null,
                         lengthPressureActive: attempt?.lengthPressureActive === true ? true : null,
                         targetDepthByPhase: (attempt?.targetDepthByPhase && typeof attempt.targetDepthByPhase === 'object') ? { ...attempt.targetDepthByPhase } : null,
