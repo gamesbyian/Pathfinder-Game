@@ -5864,11 +5864,13 @@
                             }
                         }
                         const minRemForLowerBound = distMap.get(lastK) || Infinity;
+                        const remainingLengthLB = Math.max(0, l.reqLen - realLen);
                         const lowerBoundToValidSolution = Math.max(
                             Number.isFinite(minRemForLowerBound) ? minRemForLowerBound : Infinity,
                             Number.isFinite(mustPassBoundEstimate) ? mustPassBoundEstimate : Infinity,
                             Number.isFinite(mustCrossBoundEstimate) ? mustCrossBoundEstimate : Infinity,
-                            interactionDeficit
+                            interactionDeficit,
+                            remainingLengthLB
                         );
                         const missingDimensions = [];
                         if (remainingMustPass > 0) missingDimensions.push('must-pass');
@@ -7962,7 +7964,8 @@
                 routingDecision: partial.routingDecision || null,
                 orderingPolicySummary: partial.orderingPolicySummary || null,
                 enduranceRescueDelta: partial.enduranceRescueDelta || partial.stage11RescueDelta || null,
-                engine: partial.engine || 'referee'
+                engine: partial.engine || 'referee',
+                attempts: partial.attempts || []
             };
         };
         const normalizeProfileSolveResult = (profileResult, fallbackStatus = 'error', context = {}) => {
