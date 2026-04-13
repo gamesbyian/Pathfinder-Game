@@ -139,6 +139,11 @@
         #exportArea { margin-top: 0.75rem; }
         #exportDivider { border-top-color: var(--theme-export-border); margin: 0 0 0.5rem; border-top-width: 1px; }
         #editorLineGridPanel { border-top-color: var(--theme-editor-panel-border); }
+        #editorLineGridPanel { flex-wrap: wrap; row-gap: var(--ui-gap-tight); }
+        #lineGridTools { flex: 0 1 auto; min-width: 0; }
+        #gridControlArea { flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: wrap; }
+        #gridLabelRow, #gridSizeButtonsRow, #gridRotateMirrorRow { flex: 0 0 auto; }
+        .landscape-editor-tools #editorLineGridPanel { flex-wrap: nowrap; row-gap: 0; }
         #hintTopHalf { border-bottom-color: var(--theme-hint-divider); }
         #hintTopHalf:hover, #hintBottomHalf:hover, .export-action-btn:hover { background: var(--theme-hint-hover); }
         .action-btn-group button, #hintBtn, #editCopyMetrics { color: var(--theme-action-btn-text); }
