@@ -8196,6 +8196,11 @@
                 const quality = entry?.quality || {};
                 const strategy = entry?.strategy || {};
                 const instrumentation = entry?.attemptInstrumentation || {};
+                const timeoutDiagnostics = (entry?.timeoutDiagnostics && typeof entry.timeoutDiagnostics === 'object')
+                    ? entry.timeoutDiagnostics
+                    : ((entry?.debug?.timeoutDiagnostics && typeof entry.debug.timeoutDiagnostics === 'object')
+                        ? entry.debug.timeoutDiagnostics
+                        : {});
                 const rootSuppressionLog = compactRootSuppressionLog(entry?.rootSuppressionLog || entry?.debug?.rootSuppressionLog, 10);
                 return compactDefined({
                     index: idx + 1,
@@ -8264,6 +8269,9 @@
                     memoHits: Number.isFinite(quality?.memoHits)
                         ? quality.memoHits
                         : (Number.isFinite(entry?.memoHits) ? entry.memoHits : null),
+                    mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates)
+                        ? timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
+                        : null,
                     failedStateHits: Number.isFinite(quality?.failedStateHits) ? quality.failedStateHits : null,
                     nextAttemptInserted: entry?.nextAttemptInserted === true ? true : null,
                     nextAttemptReason: entry?.nextAttemptReason || null,
