@@ -3055,9 +3055,13 @@
                     const reqInt = profile?.reqInt ?? levelHints?.reqInt ?? 0;
                     const reqLen = profile?.reqLen ?? levelHints?.reqLen ?? 1;
                     const intDensity = reqInt / Math.max(1, reqLen);
-                    if (reqInt >= 4) {
-                        thresholds.transitionProgress = Math.max(0.12, thresholds.transitionProgress - intDensity * 0.8);
-                        thresholds.knotProgress = Math.max(0.25, thresholds.knotProgress - intDensity * 1.2);
+                    if (reqInt >= 1) {
+                        // Pull phase thresholds earlier for any level requiring intersections so that
+                        // intersection-aware scoring activates before the path topology is committed.
+                        // reqInt >= 4 gets the full pull; lower counts get a gentler adjustment.
+                        const densityScale = reqInt >= 4 ? 1.0 : 0.5;
+                        thresholds.transitionProgress = Math.max(0.12, thresholds.transitionProgress - intDensity * 0.8 * densityScale);
+                        thresholds.knotProgress = Math.max(0.25, thresholds.knotProgress - intDensity * 1.2 * densityScale);
                     }
                     const hysteresis = { ...base.hysteresis };
                     hysteresis.minNodeWindow = Math.max(4, Math.min(14,
@@ -4272,8 +4276,24 @@
                                 }
                             }
 
-                            if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
-                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * pw('intersectionSetupWeight');
+                            if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activeKnotTarget?.candidate?.cells instanceof Set) {
+                                // Intersection waypoints must guide moves from the very first step,
+                                // not just after 58-67% of the path is already committed. A human
+                                // player immediately considers where crossings will occur and routes
+                                // accordingly; the solver must do the same.
+                                //
+                                // Scale by urgency so the signal is present but gentle in harvest
+                                // (25% weight) and ramps to full strength by the time urgency reaches
+                                // the knot threshold (~0.67). This keeps early-game signals (perimeter,
+                                // objectives, anti-dither) from being overridden while still giving the
+                                // path topology the intersection-aware shape it needs from the start.
+                                const urgency = state.urgencyScalar ?? 0;
+                                const phaseScale = urgency < 0.33
+                                    ? 0.25
+                                    : urgency < 0.67
+                                        ? 0.25 + ((urgency - 0.33) / 0.34) * 0.75
+                                        : 1.0;
+                                const knotWeight = phaseScale * Math.max(0.1, phaseProfile.knotPull || 1) * pw('intersectionSetupWeight');
                                 const candidate = activeKnotTarget.candidate;
                                 const targetDist = candidate.distMap instanceof Map ? candidate.distMap.get(nk) : undefined;
                                 const currentTargetDist = candidate.distMap instanceof Map ? candidate.distMap.get(k) : undefined;
