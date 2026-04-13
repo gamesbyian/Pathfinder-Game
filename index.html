@@ -141,8 +141,12 @@
         #editorLineGridPanel { border-top-color: var(--theme-editor-panel-border); }
         #editorLineGridPanel { flex-wrap: wrap; row-gap: var(--ui-gap-tight); }
         #lineGridTools { flex: 0 1 auto; min-width: 0; }
-        #gridControlArea { flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: wrap; }
+        #gridControlArea { flex: 1 1 12rem; min-width: 0; max-width: 100%; flex-wrap: nowrap; gap: var(--ui-gap-tight); }
         #gridLabelRow, #gridSizeButtonsRow, #gridRotateMirrorRow { flex: 0 0 auto; }
+        #gridLabelRow { padding-inline: 0.3rem; }
+        #gridSizeLabel { margin-right: 0.35rem; }
+        #gridSizeButtonsRow { padding-inline: 0.25rem; }
+        #gridRotateMirrorRow { padding-right: 0.25rem; }
         .landscape-editor-tools #editorLineGridPanel { flex-wrap: nowrap; row-gap: 0; }
         #hintTopHalf { border-bottom-color: var(--theme-hint-divider); }
         #hintTopHalf:hover, #hintBottomHalf:hover, .export-action-btn:hover { background: var(--theme-hint-hover); }
