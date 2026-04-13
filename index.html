@@ -1731,7 +1731,18 @@
                     const portalLock = policy.portalLockState || '';
                     const orderingPolicy = policy.orderingPolicy || '';
                     const nonZeroUsage = Number.isFinite(policy.nonZeroUsage) ? policy.nonZeroUsage : -1;
-                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage].join('|');
+                    // Dim 21: which portal families have been used (used terminals become permanent walls)
+                    let usedPortalMask = 0n;
+                    if (policy.level?.portalFamilyByEntry?.size && state.isJump?.size) {
+                        const p = state.path;
+                        for (const idx of state.isJump) {
+                            const src = p[idx - 1];
+                            const dst = p[idx];
+                            if (src !== undefined) { const f = policy.level.portalFamilyByEntry.get(src); if (Number.isFinite(f) && f >= 0) usedPortalMask |= (1n << BigInt(f)); }
+                            if (dst !== undefined) { const f = policy.level.portalFamilyByEntry.get(dst); if (Number.isFinite(f) && f >= 0) usedPortalMask |= (1n << BigInt(f)); }
+                        }
+                    }
+                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage, usedPortalMask.toString()].join('|');
                 }
             };
 
@@ -15833,6 +15844,7 @@
         level: null,
         path: [],
         isPortalJump: new Set(),
+        usedPortalKeys: new Set(),
         visitedCounts: new Map(),
         cellUsage: new Map(),
         intersections: 0,
@@ -16417,6 +16429,7 @@
                 mode: state.mode,
                 path: [...state.path],
                 isPortalJump: new Set(state.isPortalJump),
+                usedPortalKeys: new Set(state.usedPortalKeys || []),
                 visitedCounts: new Map(state.visitedCounts),
                 cellUsage: new Map(Array.from(state.cellUsage.entries(), ([k, u]) => [k, { h: !!u.h, v: !!u.v }])),
                 intersections: state.intersections,
@@ -16432,10 +16445,11 @@
                 state.intersections = 0;
                 state.flipCount = 0;
                 state.crossedFlippingFilters = new Map();
+                state.usedPortalKeys = new Set();
                 for (let i = 0; i < state.path.length; i++) {
                     const k = state.path[i];
                     const c = state.visitedCounts.get(k) || 0;
-                    if (c > 0 && k !== state.activeGateKey && (level && k !== level.goalKey)) state.intersections++;
+                    if (c > 0 && k !== state.activeGateKey && (level && k !== level.goalKey) && !(level?.portalMap?.has(k))) state.intersections++;
                     state.visitedCounts.set(k, c + 1);
                     if (i > 0 && !state.isPortalJump.has(i)) {
                         const prevK = state.path[i - 1];
@@ -16448,6 +16462,10 @@
                         };
                         mark(prevK, axis);
                         mark(k, axis);
+                    } else if (i > 0 && state.isPortalJump.has(i) && level?.portalMap) {
+                        const prevK = state.path[i - 1];
+                        if (level.portalMap.has(prevK)) state.usedPortalKeys.add(prevK);
+                        if (level.portalMap.has(k)) state.usedPortalKeys.add(k);
                     }
                     if (level && level.flippingFilterMap.has(k) && !state.crossedFlippingFilters.has(k)) {
                         state.crossedFlippingFilters.set(k, state.flipCount);
@@ -16465,10 +16483,17 @@
                     mark(lastK, axis); mark(key, axis);
                 }
                 const count = state.visitedCounts.get(key) || 0;
-                if (count > 0 && key !== state.activeGateKey && (level && key !== level.goalKey)) state.intersections++;
+                if (count > 0 && key !== state.activeGateKey && (level && key !== level.goalKey) && !(level?.portalMap?.has(key))) state.intersections++;
                 state.visitedCounts.set(key, count + 1);
                 state.path.push(key);
-                if (isJump) state.isPortalJump.add(state.path.length - 1);
+                if (isJump) {
+                    state.isPortalJump.add(state.path.length - 1);
+                    if (level?.portalMap) {
+                        if (!state.usedPortalKeys) state.usedPortalKeys = new Set();
+                        if (lastK !== undefined && level.portalMap.has(lastK)) state.usedPortalKeys.add(lastK);
+                        if (level.portalMap.has(key)) state.usedPortalKeys.add(key);
+                    }
+                }
                 if (level && level.flippingFilterMap.has(key) && !state.crossedFlippingFilters.has(key)) {
                     state.crossedFlippingFilters.set(key, state.flipCount);
                     state.flipCount++;
@@ -17354,6 +17379,14 @@
                 if (!inBounds(x, y, w, h)) return setReason('invalid-oob');
                 if (level.blockSet.has(targetKey)) return setReason('invalid-blocked');
                 if (forbidPortals && level.portalMap?.has(targetKey)) return setReason('invalid-portal-legality', 'portal-terminal-forbidden');
+                // Portal terminals become impassable once used — both the jump source and its destination are permanently blocked
+                if (level.portalMap?.has(targetKey)) {
+                    for (const idx of jumpSet) {
+                        if (path[idx] === targetKey || (idx > 0 && path[idx - 1] === targetKey)) {
+                            return setReason('invalid-used-portal');
+                        }
+                    }
+                }
 
                 if (mode === APP.Core.EDITOR && checkHazards && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
 
