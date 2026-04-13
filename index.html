@@ -117,16 +117,16 @@
         .screen-modal-top { z-index: 75; }
         .screen-modal-panel { width: 100%; height: 100%; border-radius: var(--ui-radius); padding: var(--ui-panel-pad); }
         #editorPalette { --palette-cell-size: clamp(2.35rem, 5vw, 2.95rem); }
-        #editorItemPalettePanel { display: grid; grid-template-columns: max-content var(--palette-cell-size); gap: 0; justify-content: center; }
-        .palette-grid { display: grid; grid-template-columns: repeat(6, var(--palette-cell-size)); gap: var(--ui-gap-tight); width: max-content; max-width: 100%; margin-inline: 0; }
+        #editorItemPalettePanel { display: flex; align-items: stretch; gap: var(--ui-gap-tight); width: 100%; }
+        .palette-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--ui-gap-tight); flex: 1 1 0; min-width: 0; margin-inline: 0; }
         .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); border-radius: var(--ui-radius); display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e1; transition: transform 0.1s, border-color 0.2s, background-color 0.2s; touch-action: none; }
         .palette-grid .palette-item { width: 100%; height: auto; aspect-ratio: 1 / 1; }
         .palette-item svg { width: 72%; height: 72%; }
         .palette-item.selected { border-color: var(--theme-gate); box-shadow: var(--theme-editor-palette-shadow); }
         .palette-item:active { transform: scale(0.95); }
-        #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--ui-gap-tight))) !important; }
+        #editUndoGridBtn { width: var(--palette-cell-size) !important; height: 100% !important; }
         .landscape-editor-tools #editorItemPalettePanel { display: flex; }
-        .landscape-editor-tools .palette-grid { width: max-content; grid-template-columns: repeat(4, var(--palette-cell-size)); }
+        .landscape-editor-tools .palette-grid { flex: none; width: max-content; grid-template-columns: repeat(4, var(--palette-cell-size)); }
         .landscape-editor-tools .palette-grid .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); aspect-ratio: auto; }
 
         .editor-input { background: var(--theme-editor-input-bg); color: var(--theme-editor-input-text); border: 1px solid var(--theme-editor-input-border); border-radius: 0.5rem; width: 4rem; text-align: center; font-weight: 800; font-size: 1.5rem; line-height: 1; padding: 0.25rem 0; outline: none; transition: border-color 0.2s; }
@@ -405,7 +405,7 @@
                     <div class="palette-item" data-type="flipH" title="Flip-H"><svg viewBox="0 0 100 100" style="color: var(--theme-filter)"><use href="#def-flipH"/></svg></div>
                     <div class="palette-item" data-type="flipV" title="Flip-V"><svg viewBox="0 0 100 100" style="color: var(--theme-filter)"><use href="#def-flipV"/></svg></div>
                 </div>
-                <div class="w-12 flex-shrink-0 flex items-center justify-center">
+                <div class="flex-shrink-0 flex items-center justify-center">
                     <div id="editUndoGridBtn" class="palette-item palette-tool" title="Undo Grid Action"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="editor-tool-icon"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg></div>
                 </div>
             </div>
