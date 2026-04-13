@@ -5874,6 +5874,9 @@
                         if (remainingMustPass > 0) missingDimensions.push('must-pass');
                         if (crossNeeds > 0) missingDimensions.push('must-cross');
                         if (interactionDeficit > 0) missingDimensions.push('interaction');
+                        if (missingDimensions.length === 0 && lowerBoundToValidSolution >= 1) {
+                            missingDimensions.push('closure');
+                        }
                         recordTimeoutStateDiagnostics(debugStats, {
                             remainingMustPass,
                             remainingMustCross: crossNeeds,
@@ -8201,7 +8204,9 @@
                     startWallTimeMs: Number.isFinite(entry?.startWallTimeMs) ? entry.startWallTimeMs : null,
                     elapsedWallTimeMs: Number.isFinite(entry?.elapsedMs) ? entry.elapsedMs : null,
                     solveTimeMs: Number.isFinite(entry?.elapsedMs) ? entry.elapsedMs : null,
-                    budgetMs: Number.isFinite(entry?.budgetMs) ? entry.budgetMs : null,
+                    budgetMs: Number.isFinite(entry?.budgetMs)
+                        ? entry.budgetMs
+                        : (Number.isFinite(entry?.strategy?.budgetMs) ? entry.strategy.budgetMs : null),
                     policyProfile: entry?.policyProfile || null,
                     orderingPolicy: entry?.orderingPolicy || null,
                     scoringMode: entry?.scoringMode || null,
@@ -8381,6 +8386,9 @@
             budgetMs: Number.isFinite(budgetMs) ? budgetMs : null,
             elapsedMs: Number.isFinite(elapsedMs) ? elapsedMs : null,
             result: toStageResultStatus(normalized.rawStatus || normalized.status || 'error'),
+            policyProfile: meta.policyProfile || normalized.policyProfile || null,
+            orderingPolicy: meta.orderingPolicy || normalized.orderingPolicy || null,
+            portalBiasMode: meta.portalBiasMode || normalized.portalBiasMode || null,
             preExpansionAbort: normalized.preExpansionAbort || null,
             zeroExpansionSummary: normalized.zeroExpansionSummary || null,
             rootSearchSummary: normalized.rootSearchSummary || null,
@@ -13714,14 +13722,20 @@
                 stagesTried.push(stageSummary);
             };
 
-            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee', run, compatLegacyOutputAlias = false }) => {
+            const runStage = async ({ stage, name, variant, budgetMs: stageBudgetMs, engine = 'referee', run, compatLegacyOutputAlias = false, policyMeta = null }) => {
                 if (APP.State.ENGINE.activeSolverController?.signal?.aborted) {
                     return { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
                 }
                 if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: stageBudgetMs });
                 const startedAt = Date.now();
                 const result = await run();
-                markStage(stage, name, variant, stageBudgetMs, startedAt, result, { engine, compatLegacyOutputAlias });
+                markStage(stage, name, variant, stageBudgetMs, startedAt, result, {
+                    engine,
+                    compatLegacyOutputAlias,
+                    policyProfile: policyMeta?.policyProfile || result?.policyProfile || null,
+                    orderingPolicy: policyMeta?.orderingPolicy || result?.orderingPolicy || null,
+                    portalBiasMode: policyMeta?.portalBiasMode || result?.portalBiasMode || null
+                });
                 const normalized = createCanonicalSolveResult(result || {});
                 normalized.stage = stage;
                 normalized.variant = variant;
@@ -18734,7 +18748,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const elapsedWallTimeMs = Number.isFinite(attempt?.elapsedWallTimeMs) ? attempt.elapsedWallTimeMs : (Number.isFinite(attempt?.elapsedMs) ? attempt.elapsedMs : 0);
             const budgetMs = Number.isFinite(attempt?.budgetMs)
                 ? attempt.budgetMs
-                : (Number.isFinite(attempt?.attemptBudgetMs) ? attempt.attemptBudgetMs : 0);
+                : (Number.isFinite(attempt?.attemptBudgetMs)
+                    ? attempt.attemptBudgetMs
+                    : (Number.isFinite(attempt?.strategy?.budgetMs) ? attempt.strategy.budgetMs : 0));
             const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
             const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
             const progressSummary = attempt?.progressSummary || {};
@@ -18786,6 +18802,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     failedStateHit: Number.isFinite(prunes?.failedStateHit) ? prunes.failedStateHit : 0,
                     deadEnd: Number.isFinite(prunes?.deadEnd) ? prunes.deadEnd : 0
                 },
+                memoHits: Number.isFinite(attempt?.memoHits) ? attempt.memoHits : 0,
+                disabledPrunes: Array.isArray(attempt?.disabledPrunes) ? attempt.disabledPrunes.slice(0, 16) : [],
                 progressSamples,
                 progressSummary: {
                     plateauDetected: !!progressSummary?.plateauDetected,
@@ -18807,7 +18825,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     nearSolutionStates: Number.isFinite(timeoutDiagnostics?.nearSolutionStates)
                         ? timeoutDiagnostics.nearSolutionStates
                         : null,
-                    nearSolutionByDimension: timeoutDiagnostics?.nearSolutionByDimension || null
+                    nearSolutionByDimension: timeoutDiagnostics?.nearSolutionByDimension || null,
+                    mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates)
+                        ? timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
+                        : null
                 })
             };
         };

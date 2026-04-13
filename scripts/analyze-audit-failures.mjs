@@ -98,6 +98,31 @@ const collectLevelTimeoutDiagnostics = (level) => {
     .map((attempt) => getAttemptTimeoutDiagnostics(attempt))
     .filter(Boolean);
 };
+const collectAttemptFingerprints = (level) => {
+  const attempts = Array.isArray(level?.attempts) ? level.attempts : [];
+  return attempts.map((attempt, idx) => ({
+    idx: idx + 1,
+    label: attempt?.label || `A${idx + 1}`,
+    nodes: Number(attempt?.nodesExpanded) || 0,
+    depth: Number(attempt?.maxDepth) || 0
+  }));
+};
+
+const findConsecutiveDuplicateFingerprints = (level) => {
+  const prints = collectAttemptFingerprints(level);
+  const dupes = [];
+  for (let i = 1; i < prints.length; i += 1) {
+    const prev = prints[i - 1];
+    const cur = prints[i];
+    if (prev.nodes === cur.nodes && prev.depth === cur.depth) {
+      dupes.push({
+        first: prev,
+        second: cur
+      });
+    }
+  }
+  return dupes;
+};
 
 const loadLevelMetadata = () => {
   const levelsPath = path.resolve('levels.js');
@@ -242,6 +267,7 @@ const printTimeoutDiagnosticsSummary = () => {
     let timeoutAttemptsWithDiag = 0;
     let nearSolutionStates = 0;
     let bestLowerBound = null;
+    let mustCrossScheduleInfeasibleFrontierStates = 0;
 
     audit.failed.forEach((level) => {
       const diagnostics = collectLevelTimeoutDiagnostics(level);
@@ -251,6 +277,7 @@ const printTimeoutDiagnosticsSummary = () => {
         mergeHistogram(interactionDist, diag.frontierInteractionDeficitDistribution);
         mergeHistogram(nearSolutionByDimension, diag.nearSolutionByDimension);
         nearSolutionStates += Number(diag.nearSolutionStates) || 0;
+        mustCrossScheduleInfeasibleFrontierStates += Number(diag.mustCrossScheduleInfeasibleFrontierStates) || 0;
         const lb = Number(diag.bestLowerBoundToValidSolution);
         if (Number.isFinite(lb)) {
           bestLowerBound = bestLowerBound === null ? lb : Math.min(bestLowerBound, lb);
@@ -263,6 +290,7 @@ const printTimeoutDiagnosticsSummary = () => {
     console.log(`  frontierInteractionDeficitDistribution=${summarizeHistogram(interactionDist)}`);
     console.log(`  bestLowerBoundToValidSolution=${bestLowerBound === null ? 'n/a' : bestLowerBound}`);
     console.log(`  nearSolutionStates=${nearSolutionStates}; nearSolutionByDimension=${summarizeHistogram(nearSolutionByDimension)}`);
+    console.log(`  mustCrossScheduleInfeasibleFrontierStates=${mustCrossScheduleInfeasibleFrontierStates}`);
   }
   console.log('');
 };
@@ -306,6 +334,7 @@ const printPersistentFailureProfiles = () => {
     const bestLbValues = [];
     const nearDimHistogram = {};
     let timeoutAttempts = 0;
+    let mustCrossScheduleInfeasibleFrontierStates = 0;
 
     rows.forEach(({ row }) => {
       const diagnostics = collectLevelTimeoutDiagnostics(row);
@@ -314,6 +343,7 @@ const printPersistentFailureProfiles = () => {
         const lb = Number(diag.bestLowerBoundToValidSolution);
         if (Number.isFinite(lb)) bestLbValues.push(lb);
         mergeHistogram(nearDimHistogram, diag.nearSolutionByDimension);
+        mustCrossScheduleInfeasibleFrontierStates += Number(diag.mustCrossScheduleInfeasibleFrontierStates) || 0;
       });
     });
 
@@ -321,9 +351,53 @@ const printPersistentFailureProfiles = () => {
     console.log(`- L${levelNumber}: statuses=[${[...statusSet].join(', ')}]; categories=[${[...categorySet].join(', ')}]`);
     console.log(`  nodesExpanded avg=${nodesSummary.avg ?? 'n/a'} min=${nodesSummary.min ?? 'n/a'} max=${nodesSummary.max ?? 'n/a'}; rootDepth0 avg=${rootSummary.avg ?? 'n/a'} min=${rootSummary.min ?? 'n/a'} max=${rootSummary.max ?? 'n/a'}`);
     console.log(`  timeoutDiagnostics attempts=${timeoutAttempts}; bestLowerBoundToValidSolution avg=${bestLbSummary.avg ?? 'n/a'} min=${bestLbSummary.min ?? 'n/a'} max=${bestLbSummary.max ?? 'n/a'}`);
-    console.log(`  nearSolutionByDimension=${summarizeHistogram(nearDimHistogram)}`);
+    console.log(`  nearSolutionByDimension=${summarizeHistogram(nearDimHistogram)}; mustCrossScheduleInfeasibleFrontierStates=${mustCrossScheduleInfeasibleFrontierStates}`);
     rows.forEach(({ file, row }) => {
+      const attempts = Array.isArray(row?.attempts) ? row.attempts : [];
+      const policyBreakdown = attempts
+        .map((attempt, idx) => {
+          const policyProfile = attempt?.policyProfile || 'unknown';
+          const orderingPolicy = attempt?.orderingPolicy || 'unknown';
+          return `A${idx + 1}:${policyProfile}/${orderingPolicy}`;
+        })
+        .join(', ') || 'none';
+      const nearByAttempt = attempts
+        .map((attempt, idx) => {
+          const byDim = summarizeHistogram(attempt?.timeoutDiagnostics?.nearSolutionByDimension || {});
+          return `A${idx + 1}:${byDim}`;
+        })
+        .join(' | ') || 'none';
       console.log(`  • ${file}: stopReason=${row.stopReason || 'n/a'} attempts=${row.attemptCount || 0} nodes=${row.nodesExpanded || 0} rootExpanded=${row.rootCandidatesExpanded || 0}`);
+      console.log(`    policies=${policyBreakdown}`);
+      console.log(`    nearSolutionByDimensionByAttempt=${nearByAttempt}`);
+    });
+  }
+  console.log('');
+};
+
+const printDuplicateAttemptFingerprints = () => {
+  console.log('Consecutive duplicate attempt fingerprint check (nodesExpanded,maxDepth):');
+  for (const audit of audits) {
+    const flagged = [];
+    for (const level of audit.failed) {
+      const duplicates = findConsecutiveDuplicateFingerprints(level);
+      if (duplicates.length >= 2) {
+        flagged.push({
+          level: level.level,
+          duplicates
+        });
+      }
+    }
+    if (flagged.length === 0) {
+      console.log(`- ${audit.file}: none`);
+      continue;
+    }
+    console.log(`- ${audit.file}:`);
+    flagged.forEach(({ level, duplicates }) => {
+      const summary = duplicates
+        .map((pair) => `${pair.first.label}->${pair.second.label}(${pair.second.nodes},${pair.second.depth})`)
+        .join(', ');
+      console.log(`  L${level}: ${summary}`);
     });
   }
   console.log('');
@@ -368,5 +442,6 @@ printWindowTransitions();
 printCollapseFamilySummary();
 printTimeoutDiagnosticsSummary();
 printPersistentFailureProfiles();
+printDuplicateAttemptFingerprints();
 printFeatureSliceDeltas();
 printLevel50Trajectory();
