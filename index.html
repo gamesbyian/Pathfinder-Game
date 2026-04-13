@@ -4276,24 +4276,8 @@
                                 }
                             }
 
-                            if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activeKnotTarget?.candidate?.cells instanceof Set) {
-                                // Intersection waypoints must guide moves from the very first step,
-                                // not just after 58-67% of the path is already committed. A human
-                                // player immediately considers where crossings will occur and routes
-                                // accordingly; the solver must do the same.
-                                //
-                                // Scale by urgency so the signal is present but gentle in harvest
-                                // (25% weight) and ramps to full strength by the time urgency reaches
-                                // the knot threshold (~0.67). This keeps early-game signals (perimeter,
-                                // objectives, anti-dither) from being overridden while still giving the
-                                // path topology the intersection-aware shape it needs from the start.
-                                const urgency = state.urgencyScalar ?? 0;
-                                const phaseScale = urgency < 0.33
-                                    ? 0.25
-                                    : urgency < 0.67
-                                        ? 0.25 + ((urgency - 0.33) / 0.34) * 0.75
-                                        : 1.0;
-                                const knotWeight = phaseScale * Math.max(0.1, phaseProfile.knotPull || 1) * pw('intersectionSetupWeight');
+                            if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
+                                const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * pw('intersectionSetupWeight');
                                 const candidate = activeKnotTarget.candidate;
                                 const targetDist = candidate.distMap instanceof Map ? candidate.distMap.get(nk) : undefined;
                                 const currentTargetDist = candidate.distMap instanceof Map ? candidate.distMap.get(k) : undefined;
@@ -5728,7 +5712,21 @@
                             continue;
                         }
                         let nextKey;
-                        if (top.depth === 0 && rootDiversificationPendingFamilies.size > 0) {
+                        if (lowBranchMode && top.depth === 0 && rootInterleavePool.length > 0) {
+                            // lowBranchMode interleave takes priority: cycles through root candidates
+                            // worst-to-best so that diverse directions are guaranteed exploration
+                            // before the best-scored candidate monopolises all early budget.
+                            nextKey = rootInterleavePool.shift();
+                            const idx = top.neighbors.lastIndexOf(nextKey);
+                            if (idx >= 0) top.neighbors.splice(idx, 1);
+                            if (rootInterleavePool.length === 0) {
+                                for (let i = Math.max(0, top.neighbors.length - 3); i < top.neighbors.length; i++) {
+                                    rootInterleavePool.push(top.neighbors[i]);
+                                }
+                            }
+                        } else if (top.depth === 0 && rootDiversificationPendingFamilies.size > 0) {
+                            // For non-lowBranchMode levels (4+ root neighbors), ensure every
+                            // direction family gets at least one attempt before revisiting.
                             let chosen = null;
                             for (let i = top.neighbors.length - 1; i >= 0; i--) {
                                 const candidate = top.neighbors[i];
@@ -5740,15 +5738,6 @@
                                 }
                             }
                             nextKey = chosen ?? top.neighbors.pop();
-                        } else if (lowBranchMode && top.depth === 0 && rootInterleavePool.length > 0) {
-                            nextKey = rootInterleavePool.shift();
-                            const idx = top.neighbors.lastIndexOf(nextKey);
-                            if (idx >= 0) top.neighbors.splice(idx, 1);
-                            if (rootInterleavePool.length === 0) {
-                                for (let i = Math.max(0, top.neighbors.length - 3); i < top.neighbors.length; i++) {
-                                    rootInterleavePool.push(top.neighbors[i]);
-                                }
-                            }
                         } else {
                             nextKey = top.neighbors.pop();
                         }
