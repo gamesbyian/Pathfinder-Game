@@ -11719,9 +11719,10 @@
                     // Near-solution flood rescue: targets "final-mile deadlock" (e.g. Level 108)
                     // Detects thousands of frontier states needing exactly 1 more step but never completing.
                     // Checked before broadStagnation so the more-specific pattern wins when both are present.
+                    const nearSolutionFloodThreshold = Math.max(300, 2000 - (i * 300));
                     const nearSolutionFloodDetected = timeoutProne
-                        && nearSolutionFloodRescueCount < 2
-                        && (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= 2000
+                        && nearSolutionFloodRescueCount < 3
+                        && (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= nearSolutionFloodThreshold
                         && Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= 1;
                     const mustCrossScheduleRescueDetected = timeoutProne
@@ -11732,13 +11733,13 @@
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         const existingMemo = Number(nextAttempt.memoStrictness);
                         nextAttempt.budgetMs = priorBudget;
-                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', ...(nextAttempt.disabledPrunes || [])]);
+                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(nextAttempt.disabledPrunes || [])]);
                         nextAttempt.memoStrictness = Number.isFinite(existingMemo) ? Math.min(0.5, existingMemo) : 0.5;
                         nextAttempt.rootExpansionFloorCount = Math.max(4, Number(nextAttempt.rootExpansionFloorCount) || 0);
                         nextAttempt.forceRootExpansionFloor = true;
                         nextAttempt.relaxRootSuppressionFirstLayer = true;
-                        nextAttempt.policyProfile = 'endurance';
-                        nextAttempt.orderingPolicy = 'endurance';
+                        nextAttempt.policyProfile = 'finishFirst';
+                        nextAttempt.orderingPolicy = 'finishFirst';
                         nextAttempt.retryTag = 'near-solution-flood-rescue';
                         nextAttempt.escalationReason = 'near-solution-flood-rescue';
                         nearSolutionFloodRescueCount++;
