@@ -10436,6 +10436,26 @@
                 })
             });
         },
+        async ensureHardClusterGatingLoaded() {
+            if (!this._hardClusterGatingPromise) {
+                this._hardClusterGatingPromise = (async () => {
+                    try {
+                        const resp = await fetch('audits/metrics/latest.json', { cache: 'no-store' });
+                        if (!resp.ok) return null;
+                        const parsed = await resp.json();
+                        return parsed?.hardClusterGating && typeof parsed.hardClusterGating === 'object'
+                            ? parsed.hardClusterGating
+                            : null;
+                    } catch {
+                        return null;
+                    }
+                })();
+            }
+            if (!this._hardClusterGatingResolved) {
+                this._hardClusterGatingResolved = await this._hardClusterGatingPromise;
+            }
+            return this._hardClusterGatingResolved;
+        },
 
 
         _buildAttemptPlan({ level, budgetMs, profile, opts = {}, controlPlane }) {
@@ -10679,7 +10699,28 @@
                     portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
-            return attempts;
+            const levelNumber = Number(level?.id) || Number(level?.levelId) || Number(level?.level) || null;
+            const hardClusterGating = opts?.hardClusterGating && typeof opts.hardClusterGating === 'object'
+                ? opts.hardClusterGating
+                : null;
+            const orderedPasses = levelNumber && hardClusterGating?.passOrderByLevel && Array.isArray(hardClusterGating.passOrderByLevel[levelNumber])
+                ? hardClusterGating.passOrderByLevel[levelNumber]
+                : null;
+            const budgetMultiplier = levelNumber && hardClusterGating?.budgetByLevel && Number.isFinite(hardClusterGating.budgetByLevel[levelNumber])
+                ? Math.max(1, Math.min(1.5, Number(hardClusterGating.budgetByLevel[levelNumber])))
+                : 1;
+            const withAdjustedBudgets = attempts.map((attempt) => ({
+                ...attempt,
+                budgetMs: Math.max(1, Math.floor((Number(attempt?.budgetMs) || 1) * budgetMultiplier))
+            }));
+            if (!orderedPasses || orderedPasses.length === 0) return withAdjustedBudgets;
+            const ranking = new Map(orderedPasses.map((label, idx) => [label, idx]));
+            return withAdjustedBudgets.slice().sort((a, b) => {
+                const aRank = ranking.has(a?.label) ? ranking.get(a.label) : Number.MAX_SAFE_INTEGER;
+                const bRank = ranking.has(b?.label) ? ranking.get(b.label) : Number.MAX_SAFE_INTEGER;
+                if (aRank !== bRank) return aRank - bRank;
+                return 0;
+            });
         },
 
         _switchAttemptStrategyFamily(nextAttempt = {}, context = {}, profile = {}, controlPlane = null) {
@@ -10727,7 +10768,8 @@
             const escalationNoveltyImprovementEpsilon = 0.03;
             const lowNoveltySameFamilyRetryCap = 1;
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
-            const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts, controlPlane });
+            const hardClusterGating = await this.ensureHardClusterGatingLoaded();
+            const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts: { ...opts, hardClusterGating }, controlPlane });
 
             const getSearchQuality = (attemptResult) => {
                 const debug = attemptResult?.debug || {};
@@ -18901,6 +18943,86 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 totalTimeMs: list.reduce((sum, entry) => sum + (Number(entry?.elapsedWallTimeMs) || 0), 0)
             };
         };
+        const deriveAttemptCausality = (attempt = {}, context = {}) => {
+            const samples = Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : [];
+            const timeoutDiagnostics = attempt?.timeoutDiagnostics && typeof attempt.timeoutDiagnostics === 'object'
+                ? attempt.timeoutDiagnostics
+                : {};
+            const mustPassDistribution = timeoutDiagnostics?.frontierMustPassDistribution && typeof timeoutDiagnostics.frontierMustPassDistribution === 'object'
+                ? timeoutDiagnostics.frontierMustPassDistribution
+                : {};
+            const interactionDeficitDistribution = timeoutDiagnostics?.frontierInteractionDeficitDistribution && typeof timeoutDiagnostics.frontierInteractionDeficitDistribution === 'object'
+                ? timeoutDiagnostics.frontierInteractionDeficitDistribution
+                : {};
+            const firstDepth = Number.isFinite(samples?.[0]?.depth) ? samples[0].depth : 0;
+            const lastDepth = Number.isFinite(samples?.[samples.length - 1]?.depth) ? samples[samples.length - 1].depth : firstDepth;
+            const elapsedMs = Math.max(1, Number(attempt?.elapsedWallTimeMs) || Number(attempt?.budgetMs) || 1);
+            const obligationReductionSlope = Number(((lastDepth - firstDepth) / elapsedMs).toFixed(6));
+            const memoHits = Math.max(0, Number(attempt?.memoHits) || 0);
+            const nodesExpanded = Math.max(1, Number(attempt?.nodesExpanded) || 0);
+            const repeatedStateRatio = Number((memoHits / nodesExpanded).toFixed(5));
+            const frontierMustPassKeys = Object.keys(mustPassDistribution);
+            const frontierDiversity = frontierMustPassKeys.length;
+            const previousFrontierDiversity = Number.isFinite(context?.previousFrontierDiversity) ? context.previousFrontierDiversity : frontierDiversity;
+            const frontierDiversityDelta = frontierDiversity - previousFrontierDiversity;
+            const previousPortalPolicy = `${context?.previousPortalPolicy || ''}`;
+            const currentPortalPolicy = `${attempt?.portalUsagePolicy || attempt?.portalBiasMode || ''}`;
+            const portalCommitmentChurn = previousPortalPolicy && currentPortalPolicy && previousPortalPolicy !== currentPortalPolicy ? 1 : 0;
+            const weightedDeficit = Object.entries(interactionDeficitDistribution).reduce((acc, [bucket, count]) => {
+                const deficit = Number(bucket);
+                const freq = Number(count) || 0;
+                if (!Number.isFinite(deficit) || !Number.isFinite(freq) || freq <= 0) return acc;
+                return acc + (deficit * freq);
+            }, 0);
+            const totalDeficitMass = Object.values(interactionDeficitDistribution).reduce((acc, count) => acc + (Number(count) || 0), 0);
+            const avgDeficit = totalDeficitMass > 0 ? weightedDeficit / totalDeficitMass : null;
+            const previousAvgDeficit = Number.isFinite(context?.previousAvgIntersectionDeficit)
+                ? context.previousAvgIntersectionDeficit
+                : avgDeficit;
+            const intersectionScheduleProgress = avgDeficit === null || previousAvgDeficit === null
+                ? 0
+                : Number((previousAvgDeficit - avgDeficit).toFixed(5));
+            return compactDefined({
+                obligationReductionSlope,
+                frontierDiversityDelta,
+                repeatedStateRatio,
+                portalCommitmentChurn,
+                intersectionScheduleProgress
+            });
+        };
+        const enrichAttemptsWithCausality = (attempts = []) => {
+            const enriched = [];
+            let previousFrontierDiversity = null;
+            let previousPortalPolicy = null;
+            let previousAvgIntersectionDeficit = null;
+            attempts.forEach((attempt) => {
+                const causality = deriveAttemptCausality(attempt, {
+                    previousFrontierDiversity,
+                    previousPortalPolicy,
+                    previousAvgIntersectionDeficit
+                });
+                const timeoutDiagnostics = attempt?.timeoutDiagnostics || {};
+                const frontierDiversity = timeoutDiagnostics?.frontierMustPassDistribution
+                    ? Object.keys(timeoutDiagnostics.frontierMustPassDistribution).length
+                    : previousFrontierDiversity;
+                const interactionDeficitDistribution = timeoutDiagnostics?.frontierInteractionDeficitDistribution || {};
+                const weightedDeficit = Object.entries(interactionDeficitDistribution).reduce((acc, [bucket, count]) => {
+                    const deficit = Number(bucket);
+                    const freq = Number(count) || 0;
+                    if (!Number.isFinite(deficit) || !Number.isFinite(freq) || freq <= 0) return acc;
+                    return acc + (deficit * freq);
+                }, 0);
+                const totalDeficitMass = Object.values(interactionDeficitDistribution).reduce((acc, count) => acc + (Number(count) || 0), 0);
+                previousAvgIntersectionDeficit = totalDeficitMass > 0 ? weightedDeficit / totalDeficitMass : previousAvgIntersectionDeficit;
+                previousPortalPolicy = attempt?.portalUsagePolicy || attempt?.portalBiasMode || previousPortalPolicy;
+                previousFrontierDiversity = Number.isFinite(frontierDiversity) ? frontierDiversity : previousFrontierDiversity;
+                enriched.push({
+                    ...attempt,
+                    causality: causality || null
+                });
+            });
+            return enriched;
+        };
         const createAuditCompactLevel = (r) => {
             if (auditLastRunType === AUDIT_RUN_TYPES.hints) {
                 return {
@@ -18922,7 +19044,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 };
             }
             const metrics = r?.newHint?.failureProfile?.metrics || {};
-            const attempts = buildFullExportAttempts(r?.newHint?.attemptHistory);
+            const attempts = enrichAttemptsWithCausality(buildFullExportAttempts(r?.newHint?.attemptHistory));
             return {
                 level: r.level,
                 featureSignature: r?.newHint?.featureSignature || null,
