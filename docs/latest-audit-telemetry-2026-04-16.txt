@@ -1,0 +1,113 @@
+Failure counts and failing levels:
+- 2026-04-16T03-06-15Z-713b8daed2bc.json: failures=4; levels=[61, 92, 108, 134]
+- 2026-04-16T04-39-08Z-61d7d009d287.json: failures=3; levels=[92, 108, 134]
+- 2026-04-16T05-06-56Z-ed7bc20c68ad.json: failures=4; levels=[7, 92, 108, 134]
+
+Window-to-window failure-set transitions:
+- 2026-04-16T03-06-15Z-713b8daed2bc.json -> 2026-04-16T04-39-08Z-61d7d009d287.json
+  introduced=[] recovered=[61]
+- 2026-04-16T04-39-08Z-61d7d009d287.json -> 2026-04-16T05-06-56Z-ed7bc20c68ad.json
+  introduced=[7] recovered=[]
+
+Collapse-family summary (new metrics):
+- 2026-04-16T03-06-15Z-713b8daed2bc.json: collapseFailures=0/4
+  avgRootCandidateCountDepth0=n/a; softBoundActivations=0; lowBranchModeActivated=0
+  rootSuppressionTypes=none
+- 2026-04-16T04-39-08Z-61d7d009d287.json: collapseFailures=0/3
+  avgRootCandidateCountDepth0=n/a; softBoundActivations=0; lowBranchModeActivated=0
+  rootSuppressionTypes=none
+- 2026-04-16T05-06-56Z-ed7bc20c68ad.json: collapseFailures=1/4
+  avgRootCandidateCountDepth0=3.00; softBoundActivations=0; lowBranchModeActivated=1
+  rootSuppressionTypes=none
+
+Timeout diagnostics summary (failed levels):
+- 2026-04-16T03-06-15Z-713b8daed2bc.json: timeoutAttemptsWithDiag=34
+  frontierMustPassDistribution=0:191935, 1:207189, 2:60094
+  frontierInteractionDeficitDistribution=0:45972, 1:82102, 2:29242, 3:14396, 4:10196, 5:21642
+  bestLowerBoundToValidSolution=1
+  nearSolutionStates=162200; nearSolutionByDimension=closure:24792, interaction:125236, must-cross:4581, must-pass:7591
+  mustCrossScheduleInfeasibleFrontierStates=5
+  rescueTriggeredNearClosure=0; rootFamiliesAttemptedBeforeTimeout=0; rootFamiliesStarved=0; retryFingerprintDupes=0; mustCrossRescueTriggered=0
+- 2026-04-16T04-39-08Z-61d7d009d287.json: timeoutAttemptsWithDiag=22
+  frontierMustPassDistribution=0:86873, 1:100901, 2:37451
+  frontierInteractionDeficitDistribution=0:44278, 1:78850, 2:26792, 3:12028, 4:4538, 5:7835
+  bestLowerBoundToValidSolution=1
+  nearSolutionStates=59295; nearSolutionByDimension=closure:27185, interaction:21280, must-cross:2448, must-pass:8382
+  mustCrossScheduleInfeasibleFrontierStates=8
+  rescueTriggeredNearClosure=0; rootFamiliesAttemptedBeforeTimeout=0; rootFamiliesStarved=0; retryFingerprintDupes=0; mustCrossRescueTriggered=0
+- 2026-04-16T05-06-56Z-ed7bc20c68ad.json: timeoutAttemptsWithDiag=54
+  frontierMustPassDistribution=0:74951, 1:100739, 2:32637
+  frontierInteractionDeficitDistribution=0:36859, 1:64610, 2:29252, 3:9963, 4:999, 5:3259
+  bestLowerBoundToValidSolution=1
+  nearSolutionStates=44438; nearSolutionByDimension=closure:12014, interaction:21738, must-cross:5312, must-pass:5374
+  mustCrossScheduleInfeasibleFrontierStates=3
+  rescueTriggeredNearClosure=0; rootFamiliesAttemptedBeforeTimeout=0; rootFamiliesStarved=0; retryFingerprintDupes=0; mustCrossRescueTriggered=0
+
+Persistent hard-level profiles (failed in every selected audit):
+- L92: statuses=[timeout]; categories=[healthy-expansion-timeout]
+  nodesExpanded avg=5856.33 min=5272 max=6242; rootDepth0 avg=4 min=4 max=4
+  timeoutDiagnostics attempts=21; bestLowerBoundToValidSolution avg=19.33 min=17 max=24
+  nearSolutionByDimension=must-cross:16; mustCrossScheduleInfeasibleFrontierStates=0
+  rescueTriggeredNearClosure=0; rootFamiliesAttemptedBeforeTimeout=0; rootFamiliesStarved=0; retryFingerprintDupes=0; mustCrossRescueTriggered=0
+  • 2026-04-16T03-06-15Z-713b8daed2bc.json: stopReason=cap-reached attempts=7 nodes=6055 rootExpanded=4
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown, A7:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:none | A2:none | A3:none | A4:must-cross:2 | A5:must-cross:2 | A6:must-cross:2 | A7:must-cross:2
+  • 2026-04-16T04-39-08Z-61d7d009d287.json: stopReason=cap-reached attempts=7 nodes=6242 rootExpanded=4
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown, A7:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:none | A2:none | A3:none | A4:must-cross:2 | A5:must-cross:2 | A6:must-cross:2 | A7:must-cross:2
+  • 2026-04-16T05-06-56Z-ed7bc20c68ad.json: stopReason=cap-reached attempts=7 nodes=5272 rootExpanded=4
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown, A7:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:none | A2:none | A3:none | A4:none | A5:none | A6:none | A7:none
+- L108: statuses=[timeout]; categories=[healthy-expansion-timeout]
+  nodesExpanded avg=18998.67 min=18320 max=20032; rootDepth0 avg=4 min=4 max=4
+  timeoutDiagnostics attempts=20; bestLowerBoundToValidSolution avg=1 min=1 max=1
+  nearSolutionByDimension=closure:62803, interaction:63156, must-cross:11877, must-pass:21227; mustCrossScheduleInfeasibleFrontierStates=16
+  rescueTriggeredNearClosure=0; rootFamiliesAttemptedBeforeTimeout=0; rootFamiliesStarved=0; retryFingerprintDupes=0; mustCrossRescueTriggered=0
+  • 2026-04-16T03-06-15Z-713b8daed2bc.json: stopReason=cap-reached attempts=7 nodes=18320 rootExpanded=4
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown, A7:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:closure:38, must-cross:1012 | A2:closure:111, must-cross:1877 | A3:closure:46, must-cross:1540 | A4:closure:6389, interaction:5236, must-pass:2077 | A5:closure:6096, interaction:5236, must-pass:2006 | A6:closure:5938, interaction:5236, must-pass:1788 | A7:closure:5794, interaction:5113, must-pass:1685
+  • 2026-04-16T04-39-08Z-61d7d009d287.json: stopReason=cap-reached attempts=7 nodes=20032 rootExpanded=4
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown, A7:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:closure:38, must-cross:766 | A2:closure:38, must-cross:342 | A3:closure:38, must-cross:1204 | A4:closure:6736, interaction:5236, must-pass:2088 | A5:closure:6827, interaction:5236, must-pass:2094 | A6:closure:6715, interaction:5236, must-pass:2088 | A7:closure:6442, interaction:5236, must-pass:2082
+  • 2026-04-16T05-06-56Z-ed7bc20c68ad.json: stopReason=cap-reached attempts=6 nodes=18644 rootExpanded=4
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:closure:191, must-cross:4339, must-pass:8 | A2:closure:18, must-cross:294, must-pass:11 | A3:closure:23, must-cross:503, must-pass:12 | A4:closure:3915, interaction:7738, must-pass:1764 | A5:closure:3709, interaction:6873, must-pass:1762 | A6:closure:3701, interaction:6780, must-pass:1762
+- L134: statuses=[timeout]; categories=[healthy-expansion-timeout]
+  nodesExpanded avg=5124.33 min=4894 max=5328; rootDepth0 avg=4 min=4 max=4
+  timeoutDiagnostics attempts=26; bestLowerBoundToValidSolution avg=1.65 min=1 max=4
+  nearSolutionByDimension=closure:1188, interaction:1086, must-cross:448, must-pass:120; mustCrossScheduleInfeasibleFrontierStates=0
+  rescueTriggeredNearClosure=0; rootFamiliesAttemptedBeforeTimeout=0; rootFamiliesStarved=0; retryFingerprintDupes=0; mustCrossRescueTriggered=0
+  • 2026-04-16T03-06-15Z-713b8daed2bc.json: stopReason=cap-reached attempts=9 nodes=5151 rootExpanded=2
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown, A7:unknown/unknown, A8:unknown/unknown, A9:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:none | A2:none | A3:none | A4:closure:47, interaction:67, must-cross:16, must-pass:5 | A5:closure:79, interaction:56, must-cross:32, must-pass:10 | A6:closure:80, interaction:70, must-cross:32, must-pass:5 | A7:closure:47, interaction:76, must-cross:16, must-pass:5 | A8:closure:47, interaction:67, must-cross:16, must-pass:5 | A9:closure:80, interaction:67, must-cross:32, must-pass:5
+  • 2026-04-16T04-39-08Z-61d7d009d287.json: stopReason=cap-reached attempts=8 nodes=4894 rootExpanded=2
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown, A7:unknown/unknown, A8:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:none | A2:none | A3:none | A4:closure:47, interaction:79, must-cross:16, must-pass:5 | A5:closure:79, interaction:56, must-cross:32, must-pass:10 | A6:closure:80, interaction:67, must-cross:32, must-pass:5 | A7:closure:80, interaction:67, must-cross:32, must-pass:5 | A8:closure:65, interaction:67, must-cross:16, must-pass:5
+  • 2026-04-16T05-06-56Z-ed7bc20c68ad.json: stopReason=cap-reached attempts=9 nodes=5328 rootExpanded=2
+    policies=A1:unknown/unknown, A2:unknown/unknown, A3:unknown/unknown, A4:unknown/unknown, A5:unknown/unknown, A6:unknown/unknown, A7:unknown/unknown, A8:unknown/unknown, A9:unknown/unknown
+    nearSolutionByDimensionByAttempt=A1:none | A2:none | A3:none | A4:closure:79, interaction:56, must-cross:32, must-pass:10 | A5:closure:79, interaction:56, must-cross:32, must-pass:10 | A6:closure:79, interaction:56, must-cross:32, must-pass:10 | A7:closure:80, interaction:67, must-cross:32, must-pass:5 | A8:closure:61, interaction:56, must-cross:16, must-pass:10 | A9:closure:79, interaction:56, must-cross:32, must-pass:10
+
+Consecutive duplicate attempt fingerprint check (nodesExpanded,maxDepth):
+- 2026-04-16T03-06-15Z-713b8daed2bc.json:
+  L134: A->B(5468,49), B->C(5468,49)
+- 2026-04-16T04-39-08Z-61d7d009d287.json:
+  L134: A->B(5468,49), B->C(5468,49)
+- 2026-04-16T05-06-56Z-ed7bc20c68ad.json:
+  L134: A->B(5468,49), B->C(5468,49)
+
+Feature-signature slice deltas (baseline -> latest):
+- lengthClass/length-long: baselineFailed=3; latestFailed=2; delta=-1
+- lengthClass/length-medium: baselineFailed=1; latestFailed=1; delta=+0
+- lengthClass/length-short: baselineFailed=0; latestFailed=1; delta=+1
+- mustCrossDensity/must-cross-none: baselineFailed=2; latestFailed=2; delta=+0
+- mustCrossDensity/must-cross-some: baselineFailed=2; latestFailed=2; delta=+0
+- portalOptionality/portal-none: baselineFailed=1; latestFailed=1; delta=+0
+- portalOptionality/portal-present: baselineFailed=3; latestFailed=3; delta=+0
+- requiredIntersections/intersections-high: baselineFailed=3; latestFailed=2; delta=-1
+- requiredIntersections/intersections-some: baselineFailed=1; latestFailed=2; delta=+1
+
+Level 50 trajectory:
+- 2026-04-16T03-06-15Z-713b8daed2bc.json: status=solved; category=solved-direct; totalSolveTimeMs=6803; nodes=6236; rootDepth0=2; softBounds=0; lowBranch=true
+- 2026-04-16T04-39-08Z-61d7d009d287.json: status=solved; category=solved-direct; totalSolveTimeMs=6520; nodes=4410; rootDepth0=2; softBounds=0; lowBranch=true
+- 2026-04-16T05-06-56Z-ed7bc20c68ad.json: status=solved; category=solved-direct; totalSolveTimeMs=4759; nodes=5660; rootDepth0=2; softBounds=0; lowBranch=true
+- solved=3/3; failed=0/3
