@@ -10811,6 +10811,31 @@
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
             const hardClusterGating = await this.ensureHardClusterGatingLoaded();
             const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts: { ...opts, hardClusterGating }, controlPlane });
+            const buildStageDebugSummary = (fallbackDebug = {}) => {
+                const timeoutLikeAttempts = attemptsUsed.filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`));
+                const attemptedFamilies = timeoutLikeAttempts
+                    .map(entry => Number(entry?.rootFamiliesAttemptedBeforeTimeout))
+                    .filter(v => Number.isFinite(v));
+                const starvedFamilies = timeoutLikeAttempts
+                    .map(entry => Number(entry?.rootFamiliesStarved))
+                    .filter(v => Number.isFinite(v));
+                const activatedNearClosure = attemptsUsed.some(entry =>
+                    entry?.nearClosureRescueActivated
+                    || entry?.nextAttemptReason === 'near-solution-flood-rescue'
+                    || entry?.nextAttemptReason === 'near-closure-rescue'
+                );
+                const activatedMustCrossRescue = attemptsUsed.some(entry =>
+                    entry?.mustCrossScheduleRescueDetected
+                    || entry?.nextAttemptReason === 'must-cross-schedule-rescue'
+                );
+                return {
+                    ...(fallbackDebug || {}),
+                    rescueTriggeredNearClosure: activatedNearClosure,
+                    mustCrossRescueTriggered: activatedMustCrossRescue,
+                    rootFamiliesAttemptedBeforeTimeout: attemptedFamilies.length > 0 ? Math.max(...attemptedFamilies) : 0,
+                    rootFamiliesStarved: starvedFamilies.length > 0 ? Math.max(...starvedFamilies) : 0
+                };
+            };
 
             const getSearchQuality = (attemptResult) => {
                 const debug = attemptResult?.debug || {};
@@ -11554,6 +11579,12 @@
                     rootCandidatesGenerated: Number.isFinite(attemptResult?.debug?.rootCandidatesGenerated) ? attemptResult.debug.rootCandidatesGenerated : null,
                     rootCandidatesExpanded: Number.isFinite(attemptResult?.debug?.rootCandidatesExpanded) ? attemptResult.debug.rootCandidatesExpanded : null,
                     rootCandidateCountDepth0: Number.isFinite(attemptResult?.debug?.rootCandidateCountDepth0) ? attemptResult.debug.rootCandidateCountDepth0 : null,
+                    rootFamiliesAttemptedBeforeTimeout: Number.isFinite(attemptResult?.debug?.rootFamiliesAttemptedBeforeTimeout)
+                        ? attemptResult.debug.rootFamiliesAttemptedBeforeTimeout
+                        : null,
+                    rootFamiliesStarved: Number.isFinite(attemptResult?.debug?.rootFamiliesStarved)
+                        ? attemptResult.debug.rootFamiliesStarved
+                        : null,
                     depthReached: Number.isFinite(quality?.depthReached) ? quality.depthReached : (Number.isFinite(attemptResult?.debug?.maxDepth) ? attemptResult.debug.maxDepth : null),
                     softBoundActivations: attemptResult?.debug?.softBoundActivations || null,
                     lowBranchModeActivated: !!(attemptResult?.debug?.lowBranchModeActivated || attemptResult?.debug?.lowBranchMode),
@@ -11623,7 +11654,7 @@
                         solution: attemptResult.solution,
                         solutions: attemptResult.solution,
                         elapsedMs,
-                        stats: { debug: attemptResult.debug, templateDiagnostics },
+                        stats: { debug: buildStageDebugSummary(attemptResult.debug), templateDiagnostics },
                         scoringMode: attempt.scoringMode,
                         attempts: attemptsUsed,
                         templateDiagnostics,
@@ -11812,9 +11843,12 @@
                     // Detects thousands of frontier states needing exactly 1 more step but never completing.
                     // Checked before broadStagnation so the more-specific pattern wins when both are present.
                     const nearSolutionFloodThreshold = Math.max(120, 800 - (i * 120));
-                    const nearSolutionFloodLowerBoundThreshold = 2;
+                    const nearSolutionFloodLowerBoundThreshold = 1;
+                    const repeatedTimeoutOutcome = recentTimeoutAttempts.length >= 2
+                        && recentTimeoutAttempts.every(entry => `${entry?.status || ''}` === 'timeout');
                     const nearSolutionFloodDetected = timeoutProne
                         && nearSolutionFloodRescueCount < 3
+                        && repeatedTimeoutOutcome
                         && (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= nearSolutionFloodThreshold
                         && Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= nearSolutionFloodLowerBoundThreshold;
@@ -11827,21 +11861,20 @@
                         && mustCrossScheduleRescueCount < 2
                         && (Number(attemptResult?.quality?.remainingMustCross) || 0) > 0
                         && (Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0) >= 60;
-                    if (nearSolutionFloodDetected && nextAttempt) {
-                        const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
-                        const existingMemo = Number(nextAttempt.memoStrictness);
-                        nextAttempt.budgetMs = priorBudget;
-                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(nextAttempt.disabledPrunes || [])]);
-                        nextAttempt.memoStrictness = Number.isFinite(existingMemo) ? Math.min(0.5, existingMemo) : 0.5;
-                        nextAttempt.rootExpansionFloorCount = Math.max(4, Number(nextAttempt.rootExpansionFloorCount) || 0);
-                        nextAttempt.forceRootExpansionFloor = true;
-                        nextAttempt.relaxRootSuppressionFirstLayer = true;
-                        nextAttempt.policyProfile = 'nearClosureRescue';
-                        nextAttempt.orderingPolicy = 'nearClosureRescue';
-                        nextAttempt.retryTag = 'near-solution-flood-rescue';
-                        nextAttempt.escalationReason = 'near-closure-rescue';
-                        nextAttempt.orderingTweaks = compactDefined({
-                            ...(nextAttempt.orderingTweaks || {}),
+                    const configureNearClosureRescueAttempt = (targetAttempt = {}, budgetHint = 1) => {
+                        const existingMemo = Number(targetAttempt.memoStrictness);
+                        targetAttempt.budgetMs = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
+                        targetAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(targetAttempt.disabledPrunes || [])]);
+                        targetAttempt.memoStrictness = Number.isFinite(existingMemo) ? Math.min(0.5, existingMemo) : 0.5;
+                        targetAttempt.rootExpansionFloorCount = Math.max(4, Number(targetAttempt.rootExpansionFloorCount) || 0);
+                        targetAttempt.forceRootExpansionFloor = true;
+                        targetAttempt.relaxRootSuppressionFirstLayer = true;
+                        targetAttempt.policyProfile = 'nearClosureRescue';
+                        targetAttempt.orderingPolicy = 'nearClosureRescue';
+                        targetAttempt.retryTag = 'near-solution-flood-rescue';
+                        targetAttempt.escalationReason = 'near-closure-rescue';
+                        targetAttempt.orderingTweaks = compactDefined({
+                            ...(targetAttempt.orderingTweaks || {}),
                             stage: 'timeout-rescue-second-stage',
                             mode: 'near-closure-rescue',
                             scoringProfile: 'nearClosureRescue',
@@ -11851,6 +11884,11 @@
                                 ? attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution
                                 : null
                         });
+                        return targetAttempt;
+                    };
+                    if (nearSolutionFloodDetected && nextAttempt) {
+                        const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
+                        configureNearClosureRescueAttempt(nextAttempt, priorBudget);
                         nearSolutionFloodRescueCount++;
                         if (attemptResult?.debug) {
                             attemptResult.debug.rescueTriggeredNearClosure = true;
@@ -11866,6 +11904,42 @@
                             };
                         }
                         continue;
+                    }
+                    if (nearSolutionFloodDetected && !nextAttempt) {
+                        const rescueAttempt = configureNearClosureRescueAttempt({
+                            ...(attempt || {}),
+                            label: `${attempt?.label || 'attempt'}-near-closure-rescue`
+                        }, Number(attempt?.budgetMs) || 1);
+                        const rescueRegistration = diversifyAndRegisterAttempt(rescueAttempt, {
+                            timeoutLikeAttemptsSoFar,
+                            timeoutEscalationTier,
+                            timeoutFamilyDiversificationUsed
+                        }, { markDuplicate: true });
+                        nearSolutionFloodRescueCount++;
+                        if (attemptResult?.debug) {
+                            attemptResult.debug.rescueTriggeredNearClosure = true;
+                            attemptResult.debug.nearClosureRescueActivated = true;
+                            attemptResult.debug.nearClosureRescueProfile = 'nearClosureRescue';
+                        }
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = 'near-closure-rescue';
+                            currentAttemptEntry.nearSolutionFloodDetected = true;
+                            currentAttemptEntry.nearSolutionFloodWindow = {
+                                nearSolutionStates: Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0,
+                                bestLowerBound: Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
+                                    ? attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution
+                                    : null
+                            };
+                        }
+                        if (rescueRegistration.allowed) {
+                            attempts.push(rescueAttempt);
+                            if (currentAttemptEntry) currentAttemptEntry.nextAttemptInserted = true;
+                            continue;
+                        }
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptInserted = false;
+                            currentAttemptEntry.nextAttemptBlockedReason = rescueRegistration.reason || 'duplicate-signature';
+                        }
                     }
                     if (mustCrossScheduleRescueDetected && nextAttempt) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
@@ -12077,7 +12151,7 @@
                 ok: false,
                 status: lastAttempt ? lastAttempt.status : 'error',
                 elapsedMs,
-                stats: { debug: lastAttempt ? lastAttempt.debug : {}, templateDiagnostics },
+                stats: { debug: buildStageDebugSummary(lastAttempt ? lastAttempt.debug : {}), templateDiagnostics },
                 attempts: attemptsUsed,
                 scoringMode: lastAttempt ? lastAttempt.scoringMode : 'modern',
                 templateDiagnostics,
