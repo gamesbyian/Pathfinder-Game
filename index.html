@@ -8306,6 +8306,9 @@
                     failedStateHits: Number.isFinite(quality?.failedStateHits) ? quality.failedStateHits : null,
                     nextAttemptInserted: entry?.nextAttemptInserted === true ? true : null,
                     nextAttemptReason: entry?.nextAttemptReason || null,
+                    retryFingerprint: entry?.retryFingerprint || null,
+                    retryFingerprintDuplicate: entry?.retryFingerprintDuplicate === true ? true : null,
+                    retryFingerprintMatchedPrior: entry?.retryFingerprintMatchedPrior || null,
                     strategyFamilySwitchReason: entry?.strategyFamilySwitchReason || null,
                     timeoutFamilyDiversificationUsed: entry?.timeoutFamilyDiversificationUsed === true ? true : null,
                     lowExpansionRecoveryAdded: entry?.lowExpansionRecoveryAdded === true ? true : null,
@@ -8365,6 +8368,9 @@
                 rootCandidatesExpanded: Number.isFinite(debug?.rootCandidatesExpanded) ? debug.rootCandidatesExpanded : null,
                 rootFamiliesAttemptedBeforeTimeout: Number.isFinite(debug?.rootFamiliesAttemptedBeforeTimeout) ? debug.rootFamiliesAttemptedBeforeTimeout : null,
                 rootFamiliesStarved: Number.isFinite(debug?.rootFamiliesStarved) ? debug.rootFamiliesStarved : null,
+                retryFingerprintDupes: Number.isFinite(attempt?.retryFingerprintDupes)
+                    ? attempt.retryFingerprintDupes
+                    : (Number.isFinite(debug?.retryFingerprintDupes) ? debug.retryFingerprintDupes : null),
                 depth0FamilyCoverageEnforced: debug?.depth0FamilyCoverageEnforced === true ? true : null,
                 depth0FamilyCount: Number.isFinite(debug?.depth0FamilyCount) ? debug.depth0FamilyCount : null,
                 depth0FamilyCoverageSelections: Number.isFinite(debug?.depth0FamilyCoverageSelections) ? debug.depth0FamilyCoverageSelections : null,
@@ -11461,6 +11467,7 @@
             let previousTelemetry = null;
             let bestTemplate = null;
             let bestTemplateScore = -Infinity;
+            let retryFingerprintDupes = 0;
             for (let planIdx = 0; planIdx < attempts.length; planIdx++) {
                 const plannedAttempt = attempts[planIdx];
                 if (!plannedAttempt) continue;
@@ -11473,6 +11480,26 @@
                 const objectiveBonus = Number.isFinite(quality.finalObjectives) ? Math.max(0, 2 - quality.finalObjectives) * 0.2 : 0;
                 const statusBonus = result?.status === 'timeout' ? -0.05 : (result?.status === 'no-solution-proven' ? 0.4 : 0);
                 return (quality.maxProgress * 1.35) + (quality.targetProgressGood ? 0.45 : 0) + objectiveBonus - (quality.branchFactor * 0.05) + statusBonus;
+            };
+            const buildRetryFingerprint = (entry = null) => {
+                if (!entry || typeof entry !== 'object') return null;
+                const nodes = Math.max(0, Number(entry?.quality?.nodesExpanded) || Number(entry?.nodesExpanded) || 0);
+                const depth = Math.max(0, Number(entry?.depthReached) || 0);
+                const nearByDimension = (entry?.timeoutDiagnostics?.nearSolutionByDimension && typeof entry.timeoutDiagnostics.nearSolutionByDimension === 'object')
+                    ? entry.timeoutDiagnostics.nearSolutionByDimension
+                    : {};
+                const nearDimSignature = Object.entries(nearByDimension)
+                    .map(([k, v]) => [String(k), Math.max(0, Number(v) || 0)])
+                    .filter(([, v]) => v > 0)
+                    .sort((a, b) => a[0].localeCompare(b[0]))
+                    .map(([k, v]) => `${k}:${v}`)
+                    .join('|');
+                return {
+                    nodes,
+                    depth,
+                    nearDimSignature,
+                    signature: `${nodes}:${depth}:${nearDimSignature || 'none'}`
+                };
             };
             for (let i = 0; i < attempts.length; i++) {
                 const attempt = attempts[i];
@@ -11686,6 +11713,48 @@
                             nextAttempt.escalationReason = reason;
                         }
                     };
+                    const currentFingerprint = buildRetryFingerprint(currentAttemptEntry);
+                    if (currentFingerprint && currentAttemptEntry) {
+                        currentAttemptEntry.retryFingerprint = currentFingerprint.signature;
+                    }
+                    const recentComparableAttempts = attemptsUsed
+                        .slice(0, -1)
+                        .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
+                        .map((entry) => ({ entry, fp: buildRetryFingerprint(entry) }))
+                        .filter(item => !!item.fp)
+                        .slice(-2);
+                    const duplicateFingerprintMatch = !!(timeoutProne
+                        && currentFingerprint
+                        && recentComparableAttempts.some(item => item.fp.signature === currentFingerprint.signature));
+                    if (duplicateFingerprintMatch && nextAttempt) {
+                        retryFingerprintDupes += 1;
+                        const matchedPrior = recentComparableAttempts.find(item => item.fp.signature === currentFingerprint.signature);
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.retryFingerprintDuplicate = true;
+                            currentAttemptEntry.retryFingerprintDupes = retryFingerprintDupes;
+                            currentAttemptEntry.retryFingerprintMatchedPrior = matchedPrior?.entry?.label || null;
+                        }
+                        if (attemptResult?.debug) {
+                            attemptResult.debug.retryFingerprintDupes = retryFingerprintDupes;
+                        }
+                        nextAttempt.policyProfile = 'objectiveFirst';
+                        nextAttempt.orderingPolicy = 'objectiveFirst';
+                        nextAttempt.portalBiasMode = 'off';
+                        nextAttempt.retryTag = 'retry-fingerprint-dedupe-guard';
+                        nextAttempt.escalationReason = 'retry-fingerprint-dedupe-guard';
+                        nextAttempt.orderingTweaks = compactDefined({
+                            ...(nextAttempt.orderingTweaks || {}),
+                            stage: 'timeout-rescue-second-stage',
+                            mode: 'retry-fingerprint-dedupe-guard',
+                            duplicateFingerprint: currentFingerprint.signature
+                        });
+                        setAdaptationReason('retry-fingerprint-dedupe-guard', {
+                            retryFingerprintDuplicate: true,
+                            retryFingerprintDupes,
+                            retryFingerprintMatchedPrior: matchedPrior?.entry?.label || null
+                        });
+                        continue;
+                    }
                     const timeoutLikeAttemptsSoFar = attemptsUsed.reduce((count, usedAttempt) => {
                         return count + (['timeout', 'no-solution-inconclusive'].includes(usedAttempt?.status) ? 1 : 0);
                     }, 0);
@@ -12147,12 +12216,16 @@
             }
 
             const elapsedMs = Date.now() - started;
+            if (lastAttempt?.debug) {
+                lastAttempt.debug.retryFingerprintDupes = retryFingerprintDupes;
+            }
             return {
                 ok: false,
                 status: lastAttempt ? lastAttempt.status : 'error',
                 elapsedMs,
                 stats: { debug: buildStageDebugSummary(lastAttempt ? lastAttempt.debug : {}), templateDiagnostics },
                 attempts: attemptsUsed,
+                retryFingerprintDupes,
                 scoringMode: lastAttempt ? lastAttempt.scoringMode : 'modern',
                 templateDiagnostics,
                 controlPlane,
@@ -15063,6 +15136,7 @@
                     rootCandidatesExpanded: 0,
                     rootFamiliesAttemptedBeforeTimeout: 0,
                     rootFamiliesStarved: 0,
+                    retryFingerprintDupes: 0,
                     depth0FamilyCoverageEnforced: false,
                     depth0FamilyCount: 0,
                     depth0FamilyCoverageSelections: 0,
@@ -19238,6 +19312,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 nearClosureRescueThreshold: Number.isFinite(r?.newHint?.nearClosureRescueThreshold) ? r.newHint.nearClosureRescueThreshold : null,
                 nearClosureRescueLowerBoundThreshold: Number.isFinite(r?.newHint?.nearClosureRescueLowerBoundThreshold) ? r.newHint.nearClosureRescueLowerBoundThreshold : null,
                 nearClosureRescueProfile: r?.newHint?.nearClosureRescueProfile || null,
+                retryFingerprintDupes: Number.isFinite(r?.newHint?.retryFingerprintDupes) ? r.newHint.retryFingerprintDupes : 0,
                 rootCandidatesExpanded: Number.isFinite(r?.newHint?.rootCandidatesExpanded) ? r.newHint.rootCandidatesExpanded : null,
                 rootSuppressionLog: Array.isArray(r?.newHint?.rootSuppressionLog) ? r.newHint.rootSuppressionLog.slice(0, 12) : null,
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
@@ -19288,7 +19363,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const buildAuditLevelEntry = (levelNum) => ({
             level: levelNum,
             savedHints: { total: 0, valid: 0, invalid: 0, invalidReasons: [] },
-            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, ladderTotalWallTimeMs: 0, ladderTotalSolveTimeMs: 0, stopReason: null, attemptCount: 0, attemptLabelsTried: [], firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, depth0DiversityFloorApplied: false, depth0DiversityFloorSize: null, forcedRootDiversity: false, forcedRootBeamSize: null, forcedRootSelectedKeys: null, depth0FamilyCoverageEnforced: false, depth0FamilyCount: null, depth0FamilyCoverageSelections: null, depth0FamilyRepeatSelections: null, nearClosureRescueEligible: false, nearClosureRescueActivated: false, nearClosureRescueThreshold: null, nearClosureRescueLowerBoundThreshold: null, nearClosureRescueProfile: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
+            newHint: { status: 'not-run', rawStatus: 'not-run', timeMs: 0, producedHintValid: false, solverPath: 'not-run', requestedSolverPath: 'not-run', executionPath: 'not-run', refereeAttempted: false, refereeStatus: null, refereeSolved: false, refereeTimeMs: null, legacyFallbackTried: false, legacyFallbackStatus: null, legacyFallbackSolved: false, legacyFallbackTimeMs: null, finalStatus: 'not-run', finalSolvedBy: 'none', winningEngine: null, winningStage: null, winningStageNumber: null, refereeAttemptCount: 0, totalSolveTimeMs: 0, ladderTotalWallTimeMs: 0, ladderTotalSolveTimeMs: 0, stopReason: null, attemptCount: 0, attemptLabelsTried: [], firstPressOutcome: 'not-run', eventualOutcome: 'not-run', eventualOutcomeWithinPresses: 0, preExpansionAbort: null, zeroExpansionSummary: null, rootSearchSummary: null, rootCandidatesGenerated: null, rootCandidateCountDepth0: null, depth0PruneBreakdown: null, softBoundActivations: null, lowBranchModeActivated: false, depth0DiversityFloorApplied: false, depth0DiversityFloorSize: null, forcedRootDiversity: false, forcedRootBeamSize: null, forcedRootSelectedKeys: null, depth0FamilyCoverageEnforced: false, depth0FamilyCount: null, depth0FamilyCoverageSelections: null, depth0FamilyRepeatSelections: null, nearClosureRescueEligible: false, nearClosureRescueActivated: false, nearClosureRescueThreshold: null, nearClosureRescueLowerBoundThreshold: null, nearClosureRescueProfile: null, retryFingerprintDupes: null, rootCandidatesSuppressedByMemo: null, rootCandidatesSuppressedByDominance: null, rootCandidatesExpanded: null, rootMoveOrder: null, rootMoveScores: null, rootSuppressionLog: null, diagnosticsSummary: null, failureSummary: null, failureTaxonomy: null, failureProfile: null, structuralProfile: null, contradictionRecoveryActivated: false, routingDecision: null, orderingPolicySummary: null, enduranceRescueDelta: null, rescueProfileSummary: null, stage11RescueDelta: null, legacyRescueSummary: null, featureFlags: null, featureSignature: null, attemptHistory: [] },
             bombs: { status: 'not-run', count: 0 },
             error: null,
             diagnostics: { inconclusiveTriageSummary: null }
@@ -19593,6 +19668,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.nearClosureRescueThreshold = Number.isFinite(finalAttempt?.nearClosureRescueThreshold) ? finalAttempt.nearClosureRescueThreshold : null;
             levelEntry.newHint.nearClosureRescueLowerBoundThreshold = Number.isFinite(finalAttempt?.nearClosureRescueLowerBoundThreshold) ? finalAttempt.nearClosureRescueLowerBoundThreshold : null;
             levelEntry.newHint.nearClosureRescueProfile = finalAttempt?.nearClosureRescueProfile || null;
+            levelEntry.newHint.retryFingerprintDupes = Number.isFinite(finalAttempt?.retryFingerprintDupes)
+                ? finalAttempt.retryFingerprintDupes
+                : attemptHistory.reduce((max, entry) => Math.max(max, Number(entry?.retryFingerprintDupes) || 0), 0);
             levelEntry.newHint.rootCandidatesSuppressedByMemo = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByMemo) ? finalAttempt.rootCandidatesSuppressedByMemo : null;
             levelEntry.newHint.rootCandidatesSuppressedByDominance = Number.isFinite(finalAttempt?.rootCandidatesSuppressedByDominance) ? finalAttempt.rootCandidatesSuppressedByDominance : null;
             levelEntry.newHint.rootCandidatesExpanded = Number.isFinite(finalAttempt?.rootCandidatesExpanded) ? finalAttempt.rootCandidatesExpanded : null;
