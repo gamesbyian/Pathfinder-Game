@@ -60,6 +60,7 @@ Interpretation:
 0.2 Treat 92/108/134 as a permanent gate in CI-like checks:
 
 - Add a targeted script/check that fails if any of these regress from solved→timeout or remain timeout after intended fix phase.
+- Add a collapse-family regression guard for **L7** over rolling windows (fail when L7 is unsolved in 2 consecutive full audits).
 
 Success criteria:
 
