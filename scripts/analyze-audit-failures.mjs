@@ -268,8 +268,18 @@ const printTimeoutDiagnosticsSummary = () => {
     let nearSolutionStates = 0;
     let bestLowerBound = null;
     let mustCrossScheduleInfeasibleFrontierStates = 0;
+    let rescueTriggeredNearClosure = 0;
+    let rootFamiliesAttemptedBeforeTimeout = 0;
+    let rootFamiliesStarved = 0;
+    let retryFingerprintDupes = 0;
+    let mustCrossRescueTriggered = 0;
 
     audit.failed.forEach((level) => {
+      rescueTriggeredNearClosure += level?.rescueTriggeredNearClosure ? 1 : 0;
+      rootFamiliesAttemptedBeforeTimeout += Number(level?.rootFamiliesAttemptedBeforeTimeout) || 0;
+      rootFamiliesStarved += Number(level?.rootFamiliesStarved) || 0;
+      retryFingerprintDupes += Number(level?.retryFingerprintDupes) || 0;
+      mustCrossRescueTriggered += level?.mustCrossRescueTriggered ? 1 : 0;
       const diagnostics = collectLevelTimeoutDiagnostics(level);
       diagnostics.forEach((diag) => {
         timeoutAttemptsWithDiag += 1;
@@ -291,6 +301,9 @@ const printTimeoutDiagnosticsSummary = () => {
     console.log(`  bestLowerBoundToValidSolution=${bestLowerBound === null ? 'n/a' : bestLowerBound}`);
     console.log(`  nearSolutionStates=${nearSolutionStates}; nearSolutionByDimension=${summarizeHistogram(nearSolutionByDimension)}`);
     console.log(`  mustCrossScheduleInfeasibleFrontierStates=${mustCrossScheduleInfeasibleFrontierStates}`);
+    console.log(
+      `  rescueTriggeredNearClosure=${rescueTriggeredNearClosure}; rootFamiliesAttemptedBeforeTimeout=${rootFamiliesAttemptedBeforeTimeout}; rootFamiliesStarved=${rootFamiliesStarved}; retryFingerprintDupes=${retryFingerprintDupes}; mustCrossRescueTriggered=${mustCrossRescueTriggered}`
+    );
   }
   console.log('');
 };
@@ -335,8 +348,18 @@ const printPersistentFailureProfiles = () => {
     const nearDimHistogram = {};
     let timeoutAttempts = 0;
     let mustCrossScheduleInfeasibleFrontierStates = 0;
+    let rescueTriggeredNearClosure = 0;
+    let rootFamiliesAttemptedBeforeTimeout = 0;
+    let rootFamiliesStarved = 0;
+    let retryFingerprintDupes = 0;
+    let mustCrossRescueTriggered = 0;
 
     rows.forEach(({ row }) => {
+      rescueTriggeredNearClosure += row?.rescueTriggeredNearClosure ? 1 : 0;
+      rootFamiliesAttemptedBeforeTimeout += Number(row?.rootFamiliesAttemptedBeforeTimeout) || 0;
+      rootFamiliesStarved += Number(row?.rootFamiliesStarved) || 0;
+      retryFingerprintDupes += Number(row?.retryFingerprintDupes) || 0;
+      mustCrossRescueTriggered += row?.mustCrossRescueTriggered ? 1 : 0;
       const diagnostics = collectLevelTimeoutDiagnostics(row);
       diagnostics.forEach((diag) => {
         timeoutAttempts += 1;
@@ -352,6 +375,9 @@ const printPersistentFailureProfiles = () => {
     console.log(`  nodesExpanded avg=${nodesSummary.avg ?? 'n/a'} min=${nodesSummary.min ?? 'n/a'} max=${nodesSummary.max ?? 'n/a'}; rootDepth0 avg=${rootSummary.avg ?? 'n/a'} min=${rootSummary.min ?? 'n/a'} max=${rootSummary.max ?? 'n/a'}`);
     console.log(`  timeoutDiagnostics attempts=${timeoutAttempts}; bestLowerBoundToValidSolution avg=${bestLbSummary.avg ?? 'n/a'} min=${bestLbSummary.min ?? 'n/a'} max=${bestLbSummary.max ?? 'n/a'}`);
     console.log(`  nearSolutionByDimension=${summarizeHistogram(nearDimHistogram)}; mustCrossScheduleInfeasibleFrontierStates=${mustCrossScheduleInfeasibleFrontierStates}`);
+    console.log(
+      `  rescueTriggeredNearClosure=${rescueTriggeredNearClosure}; rootFamiliesAttemptedBeforeTimeout=${rootFamiliesAttemptedBeforeTimeout}; rootFamiliesStarved=${rootFamiliesStarved}; retryFingerprintDupes=${retryFingerprintDupes}; mustCrossRescueTriggered=${mustCrossRescueTriggered}`
+    );
     rows.forEach(({ file, row }) => {
       const attempts = Array.isArray(row?.attempts) ? row.attempts : [];
       const policyBreakdown = attempts

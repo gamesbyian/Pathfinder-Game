@@ -190,6 +190,13 @@ const normalizeLevelRow = (row = {}) => {
       ? softBounds.total
       : ((Number(softBounds?.minRemOverflow) || 0) + (Number(softBounds?.mustPassBound) || 0) + (Number(softBounds?.mustCrossBound) || 0)),
     lowBranchModeActivated: Boolean(row?.lowBranchModeActivated),
+    rescueTriggeredNearClosure: Boolean(row?.rescueTriggeredNearClosure),
+    rootFamiliesAttemptedBeforeTimeout: Number.isFinite(row?.rootFamiliesAttemptedBeforeTimeout)
+      ? row.rootFamiliesAttemptedBeforeTimeout
+      : null,
+    rootFamiliesStarved: Number.isFinite(row?.rootFamiliesStarved) ? row.rootFamiliesStarved : null,
+    retryFingerprintDupes: Number.isFinite(row?.retryFingerprintDupes) ? row.retryFingerprintDupes : null,
+    mustCrossRescueTriggered: Boolean(row?.mustCrossRescueTriggered),
     rootSuppressionLog: Array.isArray(row?.rootSuppressionLog) ? row.rootSuppressionLog.slice(0, 12) : null,
     rootSuppressionSummary: summarizeRootSuppressionLog(row?.rootSuppressionLog)
   };
