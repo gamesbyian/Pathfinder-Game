@@ -96,6 +96,62 @@ const resolveLevelNumber = (row, index) =>
   toFiniteNumber(row?.id) ??
   index + 1;
 
+const toCausalityShape = (attempt = {}) => {
+  const causality = attempt?.causality && typeof attempt.causality === 'object' ? attempt.causality : {};
+  return {
+    obligationReductionSlope: Number.isFinite(causality?.obligationReductionSlope) ? causality.obligationReductionSlope : 0,
+    frontierDiversityDelta: Number.isFinite(causality?.frontierDiversityDelta) ? causality.frontierDiversityDelta : 0,
+    repeatedStateRatio: Number.isFinite(causality?.repeatedStateRatio) ? causality.repeatedStateRatio : 0,
+    portalCommitmentChurn: Number.isFinite(causality?.portalCommitmentChurn) ? causality.portalCommitmentChurn : 0,
+    intersectionScheduleProgress: Number.isFinite(causality?.intersectionScheduleProgress) ? causality.intersectionScheduleProgress : 0
+  };
+};
+
+const average = (values = []) => {
+  const finite = values.filter((v) => Number.isFinite(v));
+  if (!finite.length) return 0;
+  return finite.reduce((sum, v) => sum + v, 0) / finite.length;
+};
+
+const deriveLevelFailureSignature = (levelRow = {}) => {
+  const attempts = Array.isArray(levelRow?.attempts) ? levelRow.attempts : [];
+  const causalityRows = attempts.map(toCausalityShape);
+  const failedAttempts = attempts.filter((attempt) => `${attempt?.status || ''}` !== 'success').length;
+  const hardFailure = `${levelRow?.finalStatus || levelRow?.status || ''}` !== 'success';
+  const signature = {
+    level: Number(levelRow?.level) || null,
+    finalStatus: levelRow?.finalStatus || levelRow?.status || 'unknown',
+    failureCategory: levelRow?.failureCategory || null,
+    passCount: attempts.length,
+    failedPassCount: failedAttempts,
+    causality: {
+      obligationReductionSlope: Number(average(causalityRows.map((r) => r.obligationReductionSlope)).toFixed(6)),
+      frontierDiversityDelta: Number(average(causalityRows.map((r) => r.frontierDiversityDelta)).toFixed(4)),
+      repeatedStateRatio: Number(average(causalityRows.map((r) => r.repeatedStateRatio)).toFixed(5)),
+      portalCommitmentChurn: Number(average(causalityRows.map((r) => r.portalCommitmentChurn)).toFixed(5)),
+      intersectionScheduleProgress: Number(average(causalityRows.map((r) => r.intersectionScheduleProgress)).toFixed(5))
+    }
+  };
+  signature.signatureScore = Number((
+    (signature.causality.repeatedStateRatio * 1.8)
+    + (Math.max(0, -signature.causality.obligationReductionSlope) * 6.5)
+    + (Math.max(0, -signature.causality.intersectionScheduleProgress) * 3.5)
+    + (signature.causality.portalCommitmentChurn * 0.8)
+    + (hardFailure ? 1.5 : 0)
+  ).toFixed(5));
+  signature.knownHardCluster = signature.signatureScore >= 2.15;
+  signature.recommendedGating = signature.knownHardCluster
+    ? {
+        passOrder: ['must-cross-horizon', 'structural-modern', 'portal-optional-modern-no-portal', 'structural-conservative', 'endurance-longpath'],
+        budgetMultiplier: Number((1.15 + Math.min(0.35, signature.signatureScore * 0.08)).toFixed(3))
+      }
+    : {
+        passOrder: null,
+        budgetMultiplier: 1
+      };
+  return signature;
+};
+
 const deriveFailureFamily = (row) => {
   const status = `${row?.status || ''}`;
   const hasError = Boolean(row?.error);
@@ -382,7 +438,28 @@ const summarizeMetrics = (payload, commitSha) => {
       hintTimeMsAvg: timeVals.length ? Math.round(timeVals.reduce((a, b) => a + b, 0) / timeVals.length) : null,
       totalSolveTimeMsAvg: solveVals.length ? Math.round(solveVals.reduce((a, b) => a + b, 0) / solveVals.length) : null,
       maxSolveTimeMs: solveVals.length ? Math.max(...solveVals) : null
-    }
+    },
+    levelFailureSignatures: levels
+      .map((row) => deriveLevelFailureSignature(row))
+      .sort((a, b) => (b.signatureScore - a.signatureScore) || ((a.level || 0) - (b.level || 0)))
+  };
+
+  const knownHardClusterLevels = summary.levelFailureSignatures
+    .filter((row) => row.knownHardCluster)
+    .map((row) => row.level)
+    .filter((level) => Number.isFinite(level));
+  summary.hardClusterGating = {
+    knownHardLevels: knownHardClusterLevels,
+    budgetByLevel: Object.fromEntries(
+      summary.levelFailureSignatures
+        .filter((row) => Number.isFinite(row.level))
+        .map((row) => [row.level, row.recommendedGating?.budgetMultiplier || 1])
+    ),
+    passOrderByLevel: Object.fromEntries(
+      summary.levelFailureSignatures
+        .filter((row) => Number.isFinite(row.level) && Array.isArray(row.recommendedGating?.passOrder))
+        .map((row) => [row.level, row.recommendedGating.passOrder])
+    )
   };
 
   if (includeLevels) {
