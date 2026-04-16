@@ -146,3 +146,51 @@ Success criteria:
 5. Phase 3 analyzer slice reporting
 
 This order prioritizes converting 108 quickly while building the machinery needed for 92/134.
+
+---
+
+## 7) Proposal in response to latest telemetry review (2026-04-16)
+
+To address review feedback, I propose we stop adding one-off telemetry dump files to `docs/` and instead land focused, testable solver changes in small PRs with before/after metrics.
+
+### Proposed execution slices
+
+### Slice A (first): make diversification/rescue actually fire on L108
+
+Implementation:
+- Enforce a strict round-robin first-pass over depth-0 root families before any family gets additional deepening budget.
+- Add a hard trigger for the near-closure rescue profile when timeout diagnostics report `bestLowerBoundToValidSolution <= 1` with repeated timeout outcome.
+- Log per-attempt activation reason so we can verify rescue engagement instead of inferring from final timeout counters.
+
+Success criteria:
+- In 3 consecutive full audits, L108 solves at least once per run and no regression appears on L135.
+- `rescueTriggeredNearClosure` becomes non-zero on at least one L108 attempt in those runs.
+
+### Slice B: reduce redundant early attempts on L134
+
+Implementation:
+- Add a retry de-duplication guard that blocks scheduling a profile if `(nodesExpanded,maxDepth,nearSolutionByDimension fingerprint)` matches any of the last two attempts.
+- If blocked, force next attempt to use an alternate ordering policy with reduced portal preference.
+
+Success criteria:
+- Duplicate fingerprint pattern `A->B, B->C` disappears in analyzer output for L134.
+- L134 node budget is reallocated to non-duplicate attempts (measurable by increased unique attempt fingerprints).
+
+### Slice C: must-cross schedule pressure for L92
+
+Implementation:
+- Introduce a schedule-aware must-cross feasibility scorer in attempt ranking (penalize states likely to trap second-visit obligations).
+- Trigger a must-cross rescue attempt when `mustCrossScheduleInfeasibleFrontierStates` grows while lower-bound does not improve.
+
+Success criteria:
+- L92 best lower bound trends downward across attempts/runs.
+- `mustCrossRescueTriggered` becomes non-zero in failing runs; eventual solve in rolling 3-run window.
+
+### Reporting format for each slice
+
+For each slice PR, include:
+1. Exact analyzer command used.
+2. Before vs after for levels 92/108/134 only.
+3. One short conclusion: solved, improved-but-not-solved, or no improvement.
+
+This keeps telemetry evidence reproducible while avoiding large static log artifacts in source control.
