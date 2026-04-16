@@ -6,7 +6,7 @@ const args = new Set(process.argv.slice(2));
 const enforceSolved = args.has('--enforce-solved');
 const sourceArg = [...args].find((arg) => arg.startsWith('--file='));
 const sourceFile = sourceArg ? sourceArg.slice('--file='.length) : 'audits/raw/latest.json';
-const hardLevels = [92, 108, 134];
+const hardLevels = [61, 92, 108, 134];
 
 const fullPath = path.resolve(sourceFile);
 if (!fs.existsSync(fullPath)) {
