@@ -10837,6 +10837,15 @@
             const started = Date.now();
             const profile = opts.profile || level?.solverProfile || null;
             const controlPlane = opts.controlPlane || this.createControlPlane(profile || {});
+            const sharedHintLadderState = opts?.hintLadderState && typeof opts.hintLadderState === 'object'
+                ? opts.hintLadderState
+                : null;
+            const carriedTimeoutAttempts = Array.isArray(sharedHintLadderState?.recentTimeoutAttempts)
+                ? sharedHintLadderState.recentTimeoutAttempts
+                    .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
+                    .slice(-3)
+                    .map(entry => ({ ...entry, __carriedFromHintLadder: true }))
+                : [];
             const randomExplorationEnabled = !!opts.allowRandomizedExploration;
             const timeoutEscalationRatios = [0.2, 0.35];
             const maxTimeoutEscalationTier = timeoutEscalationRatios.length;
@@ -10848,6 +10857,25 @@
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
             const hardClusterGating = await this.ensureHardClusterGatingLoaded();
             const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts: { ...opts, hardClusterGating }, controlPlane });
+            const rootTieSeedOffset = Number.isFinite(opts?.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null;
+            const rootOrderingVariant = typeof opts?.rootOrderingVariant === 'string' ? opts.rootOrderingVariant : null;
+            if (Number.isFinite(rootTieSeedOffset) || rootOrderingVariant) {
+                attempts.forEach((attempt, idx) => {
+                    if (!attempt || typeof attempt !== 'object') return;
+                    if (Number.isFinite(rootTieSeedOffset)) {
+                        const baseSeed = Number.isFinite(attempt.rootTieSeed)
+                            ? Number(attempt.rootTieSeed)
+                            : ((typeof attempt.label === 'string' ? attempt.label.length : 0) + ((idx + 1) * 17));
+                        attempt.rootTieSeed = (baseSeed ^ ((rootTieSeedOffset + ((idx + 1) * 131)) >>> 0)) >>> 0;
+                    }
+                    if (rootOrderingVariant === 'objective-first-bias' && !attempt.orderingPolicy) {
+                        attempt.orderingPolicy = 'objectiveFirst';
+                    }
+                    if (rootOrderingVariant === 'knot-first-bias' && !attempt.orderingPolicy) {
+                        attempt.orderingPolicy = 'knotBuilder';
+                    }
+                });
+            }
             const buildStageDebugSummary = (fallbackDebug = {}) => {
                 const timeoutLikeAttempts = attemptsUsed.filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`));
                 const attemptedFamilies = timeoutLikeAttempts
@@ -11048,7 +11076,11 @@
                     disabledPruneSet: attempt.disabledPrunes.slice()
                 });
             };
-            const queuedAttemptSignatures = new Set();
+            const queuedAttemptSignatures = new Set(
+                Array.isArray(sharedHintLadderState?.queuedAttemptSignatureHashes)
+                    ? sharedHintLadderState.queuedAttemptSignatureHashes.filter(Boolean).slice(-64)
+                    : []
+            );
             const registerAttemptSignature = (attempt, options = {}) => {
                 if (!attempt) return { allowed: false, reason: 'missing-attempt' };
                 const signature = applyAttemptSignature(attempt);
@@ -11493,12 +11525,32 @@
                     featureSignature
                 };
             };
-            let attemptsUsed = [];
+            let attemptsUsed = carriedTimeoutAttempts.slice();
             let lastAttempt = null;
             let previousTelemetry = null;
             let bestTemplate = null;
             let bestTemplateScore = -Infinity;
-            let retryFingerprintDupes = 0;
+            let retryFingerprintDupes = Number.isFinite(sharedHintLadderState?.retryFingerprintDupes)
+                ? Math.max(0, Number(sharedHintLadderState.retryFingerprintDupes))
+                : 0;
+            const persistHintLadderState = () => {
+                if (!sharedHintLadderState || typeof sharedHintLadderState !== 'object') return;
+                const localTimeoutAttempts = attemptsUsed
+                    .filter(entry => !entry?.__carriedFromHintLadder)
+                    .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
+                    .slice(-3)
+                    .map(entry => ({
+                        status: entry?.status || null,
+                        label: entry?.label || null,
+                        depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
+                        rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
+                        timeoutDiagnostics: entry?.timeoutDiagnostics || null,
+                        quality: entry?.quality || null
+                    }));
+                sharedHintLadderState.recentTimeoutAttempts = localTimeoutAttempts;
+                sharedHintLadderState.queuedAttemptSignatureHashes = Array.from(queuedAttemptSignatures).slice(-64);
+                sharedHintLadderState.retryFingerprintDupes = retryFingerprintDupes;
+            };
             for (let planIdx = 0; planIdx < attempts.length; planIdx++) {
                 const plannedAttempt = attempts[planIdx];
                 if (!plannedAttempt) continue;
@@ -11724,6 +11776,7 @@
                 }
                 if (attemptResult.ok) {
                     const elapsedMs = Date.now() - started;
+                    persistHintLadderState();
                     return {
                         ok: true,
                         status: 'solved',
@@ -11732,7 +11785,7 @@
                         elapsedMs,
                         stats: { debug: buildStageDebugSummary(attemptResult.debug), templateDiagnostics },
                         scoringMode: attempt.scoringMode,
-                        attempts: attemptsUsed,
+                        attempts: attemptsUsed.filter(entry => !entry?.__carriedFromHintLadder),
                         templateDiagnostics,
                         controlPlane,
                         activeProfile: attempt.policyProfile || 'standard',
@@ -12364,12 +12417,13 @@
             if (lastAttempt?.debug) {
                 lastAttempt.debug.retryFingerprintDupes = retryFingerprintDupes;
             }
+            persistHintLadderState();
             return {
                 ok: false,
                 status: lastAttempt ? lastAttempt.status : 'error',
                 elapsedMs,
                 stats: { debug: buildStageDebugSummary(lastAttempt ? lastAttempt.debug : {}), templateDiagnostics },
-                attempts: attemptsUsed,
+                attempts: attemptsUsed.filter(entry => !entry?.__carriedFromHintLadder),
                 retryFingerprintDupes,
                 scoringMode: lastAttempt ? lastAttempt.scoringMode : 'modern',
                 templateDiagnostics,
@@ -13031,6 +13085,9 @@
             const enableBlueprintPlanning = opts.enableBlueprintPlanning !== false;
             const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
             const forcePreExpansionRescue = !!opts.forcePreExpansionRescue;
+            const hintLadderState = opts.hintLadderState && typeof opts.hintLadderState === 'object' ? opts.hintLadderState : null;
+            const rootTieSeedOffset = Number.isFinite(opts.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null;
+            const rootOrderingVariant = opts.rootOrderingVariant || null;
             const solveStartTime = Date.now();
             const controlPlane = this.createControlPlane(level.solverProfile || {});
             const lowComplexityLevel = (level.solverProfile?.objectiveCount || 0) <= 1
@@ -13070,6 +13127,9 @@
                 enableBlueprintPlanning,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
+                hintLadderState,
+                rootTieSeedOffset,
+                rootOrderingVariant,
                 stagesTried,
                 solveStartTime,
                 controlPlane,
@@ -13852,7 +13912,10 @@
                     complexityStrategy,
                     key,
                     resolvedPhasePolicy,
-                    solveStartTime
+                    solveStartTime,
+                    hintLadderState,
+                    rootTieSeedOffset,
+                    rootOrderingVariant
                 },
                 flags: { objectivesAreInteriorDominant, allowRandomizedExploration, enableBlueprintPlanning }
             } = solveContext;
@@ -13972,7 +14035,10 @@
                         suppressPerimeterBias: objectivesAreInteriorDominant,
                         purpose,
                         portalTriage,
-                        rootTieProfile: 'stable-diversified'
+                        rootTieProfile: 'stable-diversified',
+                        hintLadderState,
+                        rootTieSeedOffset,
+                        rootOrderingVariant
                     })
                 });
                 stage0ZeroExpansion = !last.ok
@@ -14555,6 +14621,9 @@
                     tier: escalationTier,
                     forcePreExpansionRescue: !!opts.forcePreExpansionRescue,
                     fallbackDisabledPrunes: Array.isArray(opts.fallbackDisabledPrunes) ? opts.fallbackDisabledPrunes.slice() : null,
+                    hintLadderState: opts.hintLadderState && typeof opts.hintLadderState === 'object' ? opts.hintLadderState : null,
+                    rootTieSeedOffset: Number.isFinite(opts.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null,
+                    rootOrderingVariant: opts.rootOrderingVariant || null,
                     allowRescueProfiles: executionMode === 'referee-with-compat-profiles',
                     onlyRescueProfiles: false,
                     auditMode: !!opts.auditMode,
@@ -18891,7 +18960,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const idx = Math.max(0, Math.floor(Number(attemptIndex) || 0));
             const tierCycle = [0, 1, 2, 3, 3, 3];
             const tier = tierCycle[idx % tierCycle.length];
-            const variation = idx % 8;
+            const variation = idx % 16;
             const policy = {
                 purpose: 'hint',
                 allowReferee: true,
@@ -18899,12 +18968,16 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 escalationTier: tier,
                 variant: `policy-${variation}`
             };
-            if (variation === 4 || variation === 6) {
+            if (variation === 4 || variation === 6 || variation === 10 || variation === 14) {
                 policy.forcePreExpansionRescue = true;
                 policy.fallbackDisabledPrunes = HINT_RESCUE_DISABLED_PRUNES.slice();
             }
-            if (variation === 5 || variation === 7) {
+            if (variation === 5 || variation === 7 || variation === 11 || variation === 15) {
                 policy.disableLegacyFallback = false;
+            }
+            if (variation >= 8) {
+                policy.rootTieSeedOffset = variation * 7919;
+                policy.rootOrderingVariant = variation % 2 === 0 ? 'objective-first-bias' : 'knot-first-bias';
             }
             return policy;
         };
@@ -19554,6 +19627,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             let cancelled = false;
             let solved = false;
             let provenNoSolution = false;
+            const ladderAttemptPolicySignatures = new Set();
+            const hintLadderState = {
+                recentTimeoutAttempts: [],
+                queuedAttemptSignatureHashes: [],
+                retryFingerprintDupes: 0
+            };
 
             const classifyHintStatus = (hintRes, hintValidation) => {
                 if (hintRes?.ok && hintValidation?.ok) return 'success';
@@ -19587,13 +19666,64 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }
                     const label = toAttemptLabel(attemptIndex);
                     const policy = buildHintAttemptPolicy({ attemptIndex, disableLegacyFallback });
+                    const policySignature = JSON.stringify({
+                        variant: policy.variant || null,
+                        escalationTier: Number.isFinite(policy.escalationTier) ? policy.escalationTier : null,
+                        disableLegacyFallback: !!policy.disableLegacyFallback,
+                        forcePreExpansionRescue: !!policy.forcePreExpansionRescue,
+                        fallbackDisabledPrunes: Array.isArray(policy.fallbackDisabledPrunes) ? policy.fallbackDisabledPrunes.slice().sort() : [],
+                        rootTieSeedOffset: Number.isFinite(policy.rootTieSeedOffset) ? policy.rootTieSeedOffset : null,
+                        rootOrderingVariant: policy.rootOrderingVariant || null
+                    });
+                    if (ladderAttemptPolicySignatures.has(policySignature)) {
+                        attemptHistory.push({
+                            attempt: label,
+                            variant: policy.variant || 'default',
+                            status: 'skipped-duplicate-policy',
+                            rawStatus: 'skipped-duplicate-policy',
+                            elapsedMs: 0,
+                            producedHintValid: false,
+                            diagnosticsSummary: null
+                        });
+                        continue;
+                    }
+                    ladderAttemptPolicySignatures.add(policySignature);
                     const attemptStart = performance.now();
                     const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
                         ...policy,
                         auditMode,
-                        timeBudgetMs: remainingMs
+                        timeBudgetMs: remainingMs,
+                        hintLadderState
                     });
                     finalHintResult = hintRes || finalHintResult;
+                    const attemptedTimeoutEntries = Array.isArray(hintRes?.attempts)
+                        ? hintRes.attempts.filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`)).slice(-3)
+                        : [];
+                    hintLadderState.recentTimeoutAttempts = attemptedTimeoutEntries.map((entry) => ({
+                        status: entry?.status || null,
+                        label: entry?.label || null,
+                        depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
+                        rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
+                        timeoutDiagnostics: entry?.timeoutDiagnostics || null,
+                        quality: entry?.quality || null
+                    }));
+                    if (Array.isArray(hintRes?.attempts)) {
+                        const hashes = hintRes.attempts
+                            .map(entry => `${entry?.attemptSignatureHash || ''}`.trim())
+                            .filter(Boolean);
+                        if (hashes.length) {
+                            hintLadderState.queuedAttemptSignatureHashes = Array.from(new Set([
+                                ...hintLadderState.queuedAttemptSignatureHashes,
+                                ...hashes
+                            ])).slice(-64);
+                        }
+                    }
+                    if (Number.isFinite(hintRes?.retryFingerprintDupes)) {
+                        hintLadderState.retryFingerprintDupes = Math.max(
+                            Number(hintLadderState.retryFingerprintDupes) || 0,
+                            Number(hintRes.retryFingerprintDupes) || 0
+                        );
+                    }
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath
                         ? APP.Solver.validateCandidatePath(APP.LevelUtils.canonicalCloneLevel(normalized), copyClone(producedPath))
