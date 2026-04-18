@@ -8309,6 +8309,12 @@
                     memoHits: Number.isFinite(quality?.memoHits)
                         ? quality.memoHits
                         : (Number.isFinite(entry?.memoHits) ? entry.memoHits : null),
+                    pruneBreakdown: entry?.pruneBreakdown || null,
+                    memoHitRate: Number.isFinite(entry?.memoHitRate) ? entry.memoHitRate : null,
+                    dominanceHitRate: Number.isFinite(entry?.dominanceHitRate) ? entry.dominanceHitRate : null,
+                    nogoodHitRate: Number.isFinite(entry?.nogoodHitRate) ? entry.nogoodHitRate : null,
+                    counterIntegrityStatus: entry?.counterIntegrityStatus || null,
+                    statsProvenance: entry?.statsProvenance || null,
                     mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates)
                         ? timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
                         : null,
@@ -8333,6 +8339,19 @@
         };
         const toAuditAttemptSummary = (attempt = {}, options = {}) => {
             const debug = attempt?.debug || attempt?.stats?.debug || {};
+            const pruneBreakdown = computePruneBreakdown(debug);
+            const failMemoChecks = Math.max(0, Number(debug?.failMemoChecks) || 0);
+            const failMemoHits = Math.max(0, Number(debug?.failMemoHits) || 0);
+            const dominanceMemoChecks = Math.max(0, Number(debug?.dominanceMemoChecks) || 0);
+            const dominanceMemoHits = Math.max(0, Number(debug?.dominanceMemoHits) || 0);
+            const branchesGenerated = Math.max(0, Number(debug?.branchesTried) || 0);
+            const nogoodRejected = Math.max(0, Number(debug?.prune?.nogoodRejected) || 0);
+            const counterIntegrityStatus = evaluateCounterIntegrity(debug, {
+                expandedNodes: Math.max(0, Number(debug?.nodesExpanded) || 0),
+                generatedNodes: branchesGenerated,
+                pruneTotal: Math.max(0, Number(pruneBreakdown?.total) || 0),
+                pruneBreakdown
+            });
             const summary = compactDefined({
                 attempt: options.attemptLabel || null,
                 variant: options.variant || null,
@@ -8424,6 +8443,12 @@
                         : null)
                     || null,
                 attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
+                pruneBreakdown,
+                memoHitRate: failMemoChecks > 0 ? Number((failMemoHits / failMemoChecks).toFixed(5)) : 0,
+                dominanceHitRate: dominanceMemoChecks > 0 ? Number((dominanceMemoHits / dominanceMemoChecks).toFixed(5)) : 0,
+                nogoodHitRate: branchesGenerated > 0 ? Number((nogoodRejected / branchesGenerated).toFixed(5)) : 0,
+                counterIntegrityStatus,
+                statsProvenance: debug?.statsProvenance || buildStatsProvenance(debug),
                 progressSamples: Array.isArray(debug?.progressSamples) ? debug.progressSamples : null,
                 progressSummary: debug?.progressSummary || null,
                 timeoutDiagnostics: debug?.timeoutDiagnostics && typeof debug.timeoutDiagnostics === 'object'
@@ -11468,6 +11493,11 @@
                 debug.strategySubtypeSignals = profile?.strategySubtypeSignals || null;
                 debug.heuristicFeatureFlags = heuristicFeatureFlags;
                 debug.featureSignature = featureSignature;
+                debug.statsProvenance = buildStatsProvenance(debug, {
+                    sourceModule: 'SolverCore',
+                    sourceFunction: '_solveInstance',
+                    version: '2026-04-18.prune-integrity.v1'
+                });
                 debug.timeoutEscalationTier = Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : 0;
                 debug.forcedFamilySwitch = !!attemptOpts?.forcedFamilySwitch;
                 debug.escalationReason = attemptOpts?.escalationReason || null;
@@ -11670,6 +11700,33 @@
                         templateDiagnostics.reallocatedBudgetMs += Math.floor(attempt.budgetMs * 0.25);
                     }
                 }
+                const pruneBreakdown = computePruneBreakdown(attemptResult?.debug || {});
+                const failMemoChecks = Math.max(0, Number(attemptResult?.debug?.failMemoChecks) || 0);
+                const failMemoHits = Math.max(0, Number(attemptResult?.debug?.failMemoHits) || 0);
+                const dominanceMemoChecks = Math.max(0, Number(attemptResult?.debug?.dominanceMemoChecks) || 0);
+                const dominanceMemoHits = Math.max(0, Number(attemptResult?.debug?.dominanceMemoHits) || 0);
+                const nogoodRejected = Math.max(0, Number(attemptResult?.debug?.prune?.nogoodRejected) || 0);
+                const branchesGenerated = Math.max(0, Number(attemptResult?.debug?.branchesTried) || 0);
+                const nodesExpanded = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
+                const counterIntegrityStatus = evaluateCounterIntegrity(attemptResult?.debug || {}, {
+                    expandedNodes: nodesExpanded,
+                    generatedNodes: branchesGenerated,
+                    pruneTotal: Math.max(0, Number(pruneBreakdown?.total) || 0),
+                    pruneBreakdown
+                });
+                if (counterIntegrityStatus?.status && counterIntegrityStatus.status !== 'ok' && attemptResult?.debug) {
+                    attemptResult.debug.telemetryFlags = Array.isArray(attemptResult.debug.telemetryFlags)
+                        ? attemptResult.debug.telemetryFlags
+                        : [];
+                    for (const flag of (counterIntegrityStatus.telemetryFlags || [])) {
+                        if (!attemptResult.debug.telemetryFlags.includes(flag)) attemptResult.debug.telemetryFlags.push(flag);
+                    }
+                    if (Array.isArray(counterIntegrityStatus.violations)) {
+                        for (const violation of counterIntegrityStatus.violations) {
+                            if (!attemptResult.debug.telemetryFlags.includes(violation)) attemptResult.debug.telemetryFlags.push(violation);
+                        }
+                    }
+                }
                 attemptsUsed.push({
                     label: attempt.label || null,
                     featureFlags: attemptResult?.heuristicFeatureFlags || null,
@@ -11704,6 +11761,12 @@
                     phaseTimeline: attemptResult?.debug?.phaseTimeline || [],
                     quality,
                     attemptInstrumentation,
+                    pruneBreakdown,
+                    memoHitRate: failMemoChecks > 0 ? Number((failMemoHits / failMemoChecks).toFixed(5)) : 0,
+                    dominanceHitRate: dominanceMemoChecks > 0 ? Number((dominanceMemoHits / dominanceMemoChecks).toFixed(5)) : 0,
+                    nogoodHitRate: branchesGenerated > 0 ? Number((nogoodRejected / branchesGenerated).toFixed(5)) : 0,
+                    counterIntegrityStatus,
+                    statsProvenance: attemptResult?.debug?.statsProvenance || null,
                     retryEscalation: attempt.orderingTweaks || null,
                     diversificationMatrix: attempt.diversificationMatrix || null,
                     attemptSignatureHash: attempt.attemptSignatureHash || null,
@@ -15425,6 +15488,12 @@
                     interactionDeficitAtReqLen: 0,
                     failMemoHitRate: 0,
                     dominanceMemoHitRate: 0,
+                    memoHitRate: 0,
+                    dominanceHitRate: 0,
+                    nogoodHitRate: 0,
+                    pruneBreakdown: null,
+                    counterIntegrityStatus: null,
+                    statsProvenance: null,
                     rootMoveOrder: [],
                     rootMoveScores: [],
                     rootPolicySummary: null,
@@ -15784,6 +15853,31 @@
                         failedStateHit: Number((Math.max(0, Number(prune.failedStateHit) || 0) / totalPruneDenom).toFixed(4))
                     })
                 });
+                debugStats.statsProvenance = debugStats.statsProvenance || buildStatsProvenance(debugStats, {
+                    sourceModule: 'SolverCore',
+                    sourceFunction: '_solveInstance',
+                    version: '2026-04-18.prune-integrity.v1'
+                });
+                debugStats.pruneBreakdown = computePruneBreakdown(debugStats);
+                debugStats.memoHitRate = Math.max(0, Number(debugStats?.failMemoHitRate) || 0);
+                debugStats.dominanceHitRate = Math.max(0, Number(debugStats?.dominanceMemoHitRate) || 0);
+                const nogoodRejected = Math.max(0, Number(debugStats?.prune?.nogoodRejected) || 0);
+                debugStats.nogoodHitRate = branchesTried > 0 ? Number((nogoodRejected / branchesTried).toFixed(5)) : 0;
+                debugStats.counterIntegrityStatus = evaluateCounterIntegrity(debugStats, {
+                    expandedNodes: nodesExpanded,
+                    generatedNodes: branchesTried,
+                    pruneTotal: Math.max(0, Number(debugStats.pruneBreakdown?.total) || 0),
+                    pruneBreakdown: debugStats.pruneBreakdown
+                });
+                if (debugStats.counterIntegrityStatus?.status && debugStats.counterIntegrityStatus.status !== 'ok') {
+                    debugStats.telemetryFlags = Array.isArray(debugStats.telemetryFlags) ? debugStats.telemetryFlags : [];
+                    for (const flag of (debugStats.counterIntegrityStatus.telemetryFlags || [])) {
+                        if (!debugStats.telemetryFlags.includes(flag)) debugStats.telemetryFlags.push(flag);
+                    }
+                    for (const violation of (debugStats.counterIntegrityStatus.violations || [])) {
+                        if (!debugStats.telemetryFlags.includes(violation)) debugStats.telemetryFlags.push(violation);
+                    }
+                }
                 if (status === 'timeout') {
                     ensureTimeoutDiagnostics(debugStats);
                     const phaseTargets = (debugStats?.targetDepthByPhase && typeof debugStats.targetDepthByPhase === 'object')
@@ -15835,6 +15929,110 @@
                     preExpansionExit,
                     disabledPrunesApplied
                 };
+            }
+
+            function hashStatsProvenanceToken(raw = '') {
+                const src = String(raw || '');
+                let hash = 0x811c9dc5;
+                for (let i = 0; i < src.length; i++) {
+                    hash ^= src.charCodeAt(i);
+                    hash = Math.imul(hash, 0x01000193);
+                }
+                return `sp-${(hash >>> 0).toString(16).padStart(8, '0')}`;
+            }
+
+            function computePruneBreakdown(debug = {}) {
+                const prune = (debug?.prune && typeof debug.prune === 'object') ? debug.prune : {};
+                const pruneEntries = Object.entries(prune);
+                const pruneTotal = pruneEntries.reduce((sum, [, value]) => sum + Math.max(0, Number(value) || 0), 0);
+                const boundPrunes = compactDefined({
+                    lenOverflow: Math.max(0, Number(prune?.lenOverflow) || 0),
+                    intsOverflow: Math.max(0, Number(prune?.intsOverflow) || 0),
+                    minRemOverflow: Math.max(0, Number(prune?.minRemOverflow) || 0),
+                    mustPassBound: Math.max(0, Number(prune?.mustPassBound) || 0),
+                    mustCrossBound: Math.max(0, Number(prune?.mustCrossBound) || 0)
+                });
+                const memoPrunes = compactDefined({
+                    failedStateHit: Math.max(0, Number(prune?.failedStateHit) || 0),
+                    failedStateHitSignature: Math.max(0, Number(prune?.failedStateHitSignature) || 0),
+                    failMemoHits: Math.max(0, Number(debug?.failMemoHits) || 0),
+                    failMemoChecks: Math.max(0, Number(debug?.failMemoChecks) || 0),
+                    memoHits: Math.max(0, Number(debug?.memoHits) || 0)
+                });
+                const dominancePrunes = compactDefined({
+                    dominanceMemoHits: Math.max(0, Number(debug?.dominanceMemoHits) || 0),
+                    dominanceMemoChecks: Math.max(0, Number(debug?.dominanceMemoChecks) || 0),
+                    rootSuppressed: Math.max(0, Number(debug?.rootCandidatesSuppressedByDominance) || 0)
+                });
+                const nogoodPrunes = compactDefined({
+                    nogoodRejected: Math.max(0, Number(prune?.nogoodRejected) || 0)
+                });
+                return compactDefined({
+                    total: pruneTotal,
+                    bound: compactDefined({ ...boundPrunes, total: Object.values(boundPrunes).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0) }),
+                    memo: compactDefined({ ...memoPrunes, total: Math.max(0, Number(memoPrunes.failedStateHit) || 0) }),
+                    dominance: compactDefined({ ...dominancePrunes, total: Math.max(0, Number(dominancePrunes.dominanceMemoHits) || 0) }),
+                    nogood: compactDefined({ ...nogoodPrunes, total: Math.max(0, Number(nogoodPrunes.nogoodRejected) || 0) }),
+                    other: compactDefined({
+                        deadEnd: Math.max(0, Number(prune?.deadEnd) || 0),
+                        illegalMove: Math.max(0, Number(prune?.illegalMove) || 0),
+                        parity: Math.max(0, Number(prune?.parity) || 0),
+                        portalAutomatonRejected: Math.max(0, Number(prune?.portalAutomatonRejected) || 0),
+                        topology: Math.max(0, Number(prune?.topology) || 0),
+                        other: Math.max(0, Number(prune?.other) || 0)
+                    })
+                });
+            }
+
+            function buildStatsProvenance(debug = {}, context = {}) {
+                const sourceModule = String(context?.sourceModule || 'SolverCore');
+                const sourceFunction = String(context?.sourceFunction || '_solveInstance');
+                const explicitVersion = String(context?.version || '2026-04-18.prune-integrity.v1');
+                const producerToken = [
+                    sourceModule,
+                    sourceFunction,
+                    explicitVersion,
+                    Object.keys(debug?.prune || {}).sort().join(',')
+                ].join('|');
+                return {
+                    sourceModule,
+                    sourceFunction,
+                    producerVersion: explicitVersion,
+                    versionHash: hashStatsProvenanceToken(producerToken)
+                };
+            }
+
+            function evaluateCounterIntegrity(debug = {}, exported = {}) {
+                const initialState = { expandedNodes: 0, generatedNodes: 0, pruneTotal: 0 };
+                const expandedNodes = Math.max(0, Number(exported?.expandedNodes ?? debug?.nodesExpanded) || 0);
+                const generatedNodes = Math.max(0, Number(exported?.generatedNodes ?? debug?.branchesTried) || 0);
+                const pruneTotal = Math.max(0, Number(exported?.pruneTotal ?? computePruneBreakdown(debug)?.total) || 0);
+                const internalMemoPrunes = Math.max(0, Number(debug?.prune?.failedStateHit) || 0) + Math.max(0, Number(debug?.failMemoHits) || 0);
+                const internalDominancePrunes = Math.max(0, Number(debug?.dominanceMemoHits) || 0) + Math.max(0, Number(debug?.rootCandidatesSuppressedByDominance) || 0);
+                const internalNogoodPrunes = Math.max(0, Number(debug?.prune?.nogoodRejected) || 0);
+                const exportedMemoPrunes = Math.max(0, Number(exported?.pruneBreakdown?.memo?.total) || 0);
+                const exportedDominancePrunes = Math.max(0, Number(exported?.pruneBreakdown?.dominance?.total) || 0);
+                const exportedNogoodPrunes = Math.max(0, Number(exported?.pruneBreakdown?.nogood?.total) || 0);
+                const violations = [];
+                const telemetryFlags = [];
+                const changedFromInitial = expandedNodes !== initialState.expandedNodes
+                    || generatedNodes !== initialState.generatedNodes
+                    || pruneTotal !== initialState.pruneTotal;
+                if (expandedNodes > 0 && !changedFromInitial) {
+                    violations.push('expansion-progress-invariant-violation');
+                }
+                if (internalMemoPrunes > 0 && exportedMemoPrunes === 0) telemetryFlags.push('memo-prune-export-mismatch');
+                if (internalDominancePrunes > 0 && exportedDominancePrunes === 0) telemetryFlags.push('dominance-prune-export-mismatch');
+                if (internalNogoodPrunes > 0 && exportedNogoodPrunes === 0) telemetryFlags.push('nogood-prune-export-mismatch');
+                return compactDefined({
+                    ok: violations.length === 0 && telemetryFlags.length === 0,
+                    status: (violations.length === 0 && telemetryFlags.length === 0) ? 'ok' : (violations.length > 0 ? 'invariant-violation' : 'telemetry-error'),
+                    violations: violations.length > 0 ? violations : null,
+                    telemetryFlags: telemetryFlags.length > 0 ? telemetryFlags : null,
+                    expandedNodes,
+                    generatedNodes,
+                    pruneTotal
+                });
             }
 
 
@@ -19302,6 +19500,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     ? attempt.attemptBudgetMs
                     : (Number.isFinite(strategy?.budgetMs) ? strategy.budgetMs : 0));
             const prunes = attempt?.depth0PruneBreakdown || attempt?.prunes || {};
+            const pruneBreakdown = attempt?.pruneBreakdown || null;
             const progressSamples = toCanonicalProgressSamples(attempt?.progressSamples);
             const progressSummary = attempt?.progressSummary || {};
             const timeoutDiagnostics = attempt?.timeoutDiagnostics && typeof attempt.timeoutDiagnostics === 'object'
@@ -19355,6 +19554,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 memoHits: Number.isFinite(attempt?.memoHits)
                     ? attempt.memoHits
                     : (Number.isFinite(attempt?.quality?.memoHits) ? attempt.quality.memoHits : 0),
+                pruneBreakdown: pruneBreakdown || null,
+                memoHitRate: Number.isFinite(attempt?.memoHitRate) ? attempt.memoHitRate : null,
+                dominanceHitRate: Number.isFinite(attempt?.dominanceHitRate) ? attempt.dominanceHitRate : null,
+                nogoodHitRate: Number.isFinite(attempt?.nogoodHitRate) ? attempt.nogoodHitRate : null,
+                counterIntegrityStatus: attempt?.counterIntegrityStatus || null,
+                statsProvenance: attempt?.statsProvenance || null,
                 disabledPrunes: Array.isArray(attempt?.disabledPrunes)
                     ? attempt.disabledPrunes.slice(0, 16)
                     : (Array.isArray(strategy?.disabledPrunes) ? strategy.disabledPrunes.slice(0, 16) : []),
