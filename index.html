@@ -3160,7 +3160,7 @@
                     const maxCoverageGain = Math.max(0.005, Number(tuning.maxCoverageGain) || 0.03);
                     const objectiveCollapseFast = objCollapse >= minObjectiveCollapse && objCollapse > (coverageGain * collapseGainRatio);
                     const stillLengthFeasible = derived.rSteps >= 0 && (Number.isFinite(derived.goalDist) ? derived.goalDist <= (derived.rSteps + Math.max(1, Math.ceil((l.reqLen || 0) * 0.05))) : true);
-                    const intBudgetSlack = Math.max(0, derived.rSteps - derived.remainingIntersections);
+                    const intBudgetSlack = derived.rSteps - derived.remainingIntersections;
                     const intStillFeasible = derived.remainingIntersections <= 1 || intBudgetSlack >= 0;
                     const objectiveWindow = derived.remainingObjectives > 0 && derived.remainingObjectives <= Math.max(4, Math.ceil((l.reqLen || 1) * 0.18));
                     const bridgeState = !!(stillLengthFeasible
@@ -5849,7 +5849,7 @@
                         const disableMustCrossBoundNow = runtimeDisabledPrunes.has('mustCrossBound');
                         const rSteps = l.reqLen - realLen;
                         state.remainingSteps = rSteps;
-                        const maxFutureInts = l.portalMap.size > 0 ? rSteps * 2 : rSteps;
+                        const maxFutureInts = rSteps;
                         if ((l.reqInt - state.ints) > maxFutureInts) {
                             if (debugStats) debugStats.prune.intsOverflow++;
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
@@ -5938,6 +5938,12 @@
                         if (!runtimeDisabledPrunes.has('distance') && !runtimeDisabledPrunes.has('minRemOverflow') && realLen + minRem > l.reqLen) {
                             if (debugStats) debugStats.prune.minRemOverflow++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'minRemOverflow', `minRem=${minRem} realLen=${realLen} reqLen=${l.reqLen}`);
+                            this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
+                            continue;
+                        }
+                        if (interactionDeficit > 0 && !runtimeDisabledPrunes.has('intGoalBound') && Number.isFinite(minRem) && interactionDeficit + minRem > rSteps) {
+                            if (debugStats) debugStats.prune.intsOverflow++;
+                            if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'intGoalBound', `interactionDeficit=${interactionDeficit} minRem=${minRem} rSteps=${rSteps}`);
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                             continue;
                         }
