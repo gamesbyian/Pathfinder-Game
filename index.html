@@ -3160,7 +3160,7 @@
                     const maxCoverageGain = Math.max(0.005, Number(tuning.maxCoverageGain) || 0.03);
                     const objectiveCollapseFast = objCollapse >= minObjectiveCollapse && objCollapse > (coverageGain * collapseGainRatio);
                     const stillLengthFeasible = derived.rSteps >= 0 && (Number.isFinite(derived.goalDist) ? derived.goalDist <= (derived.rSteps + Math.max(1, Math.ceil((l.reqLen || 0) * 0.05))) : true);
-                    const intBudgetSlack = Math.max(0, derived.rSteps - derived.remainingIntersections);
+                    const intBudgetSlack = derived.rSteps - derived.remainingIntersections;
                     const intStillFeasible = derived.remainingIntersections <= 1 || intBudgetSlack >= 0;
                     const objectiveWindow = derived.remainingObjectives > 0 && derived.remainingObjectives <= Math.max(4, Math.ceil((l.reqLen || 1) * 0.18));
                     const bridgeState = !!(stillLengthFeasible
@@ -5849,11 +5849,23 @@
                         const disableMustCrossBoundNow = runtimeDisabledPrunes.has('mustCrossBound');
                         const rSteps = l.reqLen - realLen;
                         state.remainingSteps = rSteps;
-                        const maxFutureInts = l.portalMap.size > 0 ? rSteps * 2 : rSteps;
+                        const goalDist = distMap.get(lastK) || Infinity;
+                        const maxFutureInts = rSteps;
                         if ((l.reqInt - state.ints) > maxFutureInts) {
                             if (debugStats) debugStats.prune.intsOverflow++;
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                             continue;
+                        }
+                        // Goal-distance-coupled intersection feasibility check:
+                        // if we still need K intersections but only N non-goal-converging
+                        // steps remain, prune when K > N.
+                        if (Number.isFinite(goalDist)) {
+                            const maxFutureIntsWithGoalCoupling = Math.max(0, rSteps - goalDist);
+                            if ((l.reqInt - state.ints) > maxFutureIntsWithGoalCoupling) {
+                                if (debugStats) debugStats.prune.intsOverflow++;
+                                this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
+                                continue;
+                            }
                         }
                         const remainingMustPass = countMaskBits(state.mustMask, l);
                         const interactionDeficit = Math.max(0, l.reqInt - state.ints);
@@ -5890,7 +5902,7 @@
                                 continue;
                             }
                         }
-                        const minRemForLowerBound = distMap.get(lastK) || Infinity;
+                        const minRemForLowerBound = goalDist;
                         const lowerBoundToValidSolution = Math.max(
                             Number.isFinite(minRemForLowerBound) ? minRemForLowerBound : Infinity,
                             Number.isFinite(mustPassBoundEstimate) ? mustPassBoundEstimate : Infinity,
