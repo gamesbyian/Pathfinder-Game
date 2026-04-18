@@ -19489,6 +19489,75 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             return canonical;
         };
+        const buildFallbackPruneBreakdown = (attempt = {}) => {
+            const depth0 = attempt?.depth0PruneBreakdown && typeof attempt.depth0PruneBreakdown === 'object'
+                ? attempt.depth0PruneBreakdown
+                : {};
+            const lenOverflow = Math.max(0, Number(depth0?.lenOverflow) || 0);
+            const intsOverflow = Math.max(0, Number(depth0?.intsOverflow) || 0);
+            const mustPassBound = Math.max(0, Number(depth0?.mustPassBound) || 0);
+            const mustCrossBound = Math.max(0, Number(depth0?.mustCrossBound) || 0);
+            const failedStateHit = Math.max(0, Number(depth0?.failedStateHit) || 0);
+            const deadEnd = Math.max(0, Number(depth0?.deadEnd) || 0);
+            const boundTotal = lenOverflow + intsOverflow + mustPassBound + mustCrossBound;
+            const memoTotal = failedStateHit;
+            const otherTotal = deadEnd;
+            const total = boundTotal + memoTotal + otherTotal;
+            return {
+                total,
+                bound: {
+                    lenOverflow,
+                    intsOverflow,
+                    mustPassBound,
+                    mustCrossBound,
+                    total: boundTotal
+                },
+                memo: {
+                    failedStateHit,
+                    total: memoTotal
+                },
+                dominance: { total: 0 },
+                nogood: { total: 0 },
+                other: {
+                    deadEnd,
+                    total: otherTotal
+                }
+            };
+        };
+        const ensureCanonicalAttemptTelemetry = (attempt = {}, normalized = {}) => {
+            if (!normalized.pruneBreakdown || typeof normalized.pruneBreakdown !== 'object') {
+                normalized.pruneBreakdown = buildFallbackPruneBreakdown(attempt);
+            }
+            if (!Number.isFinite(normalized.memoHitRate)) normalized.memoHitRate = 0;
+            if (!Number.isFinite(normalized.dominanceHitRate)) normalized.dominanceHitRate = 0;
+            if (!Number.isFinite(normalized.nogoodHitRate)) normalized.nogoodHitRate = 0;
+            if (!normalized.statsProvenance || typeof normalized.statsProvenance !== 'object') {
+                normalized.statsProvenance = {
+                    sourceModule: 'AuditExport',
+                    sourceFunction: 'toCanonicalAttemptRecord',
+                    producerVersion: '2026-04-18.segment0-gatea.v1',
+                    versionHash: 'sp-audit-export-fallback'
+                };
+            }
+            if (!normalized.counterIntegrityStatus || typeof normalized.counterIntegrityStatus !== 'object') {
+                const expandedNodes = Math.max(0, Number(normalized?.nodesExpanded) || 0);
+                const generatedNodes = Math.max(0, Number(attempt?.candidateMovesConsidered) || 0);
+                const pruneTotal = Math.max(0, Number(normalized?.pruneBreakdown?.total) || 0);
+                const hasAnySignal = expandedNodes > 0
+                    ? (generatedNodes > 0 || pruneTotal > 0 || Number(normalized.memoHitRate) > 0 || Number(normalized.dominanceHitRate) > 0 || Number(normalized.nogoodHitRate) > 0)
+                    : true;
+                normalized.counterIntegrityStatus = {
+                    ok: hasAnySignal,
+                    status: hasAnySignal ? 'ok' : 'invariant-violation',
+                    violations: hasAnySignal ? null : ['expanded-without-progress-or-prune-signal'],
+                    telemetryFlags: null,
+                    expandedNodes,
+                    generatedNodes,
+                    pruneTotal
+                };
+            }
+            return normalized;
+        };
         const toCanonicalAttemptRecord = (attempt = {}, attemptIndex = 0) => {
             const status = normalizeAuditAttemptStatus(attempt);
             const termination = normalizeAuditTermination(attempt, status);
@@ -19517,7 +19586,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const depth = Number.isFinite(sample?.depth) ? sample.depth : 0;
                 return Math.max(maxDepth, depth);
             }, 0);
-            return {
+            const canonical = {
                 label: attempt?.label || toAttemptLabel(attemptIndex),
                 attemptIndex,
                 attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || strategy?.policyProfile || 'main',
@@ -19590,6 +19659,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         : null
                 })
             };
+            return ensureCanonicalAttemptTelemetry(attempt, canonical);
         };
         const buildFullExportAttempts = (rawAttemptHistory = []) => {
             const attempts = Array.isArray(rawAttemptHistory) ? rawAttemptHistory : [];
@@ -19622,7 +19692,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         progressSamples: Array.isArray(attempt?.progressSamples) ? attempt.progressSamples : [],
                         progressSummary: attempt?.progressSummary || null,
                         depth0PruneBreakdown: attempt?.depth0PruneBreakdown || null,
-                        timeoutDiagnostics: attempt?.timeoutDiagnostics || null
+                        timeoutDiagnostics: attempt?.timeoutDiagnostics || null,
+                        pruneBreakdown: attempt?.pruneBreakdown || null,
+                        memoHitRate: Number.isFinite(attempt?.memoHitRate) ? attempt.memoHitRate : null,
+                        dominanceHitRate: Number.isFinite(attempt?.dominanceHitRate) ? attempt.dominanceHitRate : null,
+                        nogoodHitRate: Number.isFinite(attempt?.nogoodHitRate) ? attempt.nogoodHitRate : null,
+                        counterIntegrityStatus: attempt?.counterIntegrityStatus || null,
+                        statsProvenance: attempt?.statsProvenance || null
                     })];
                 nested.forEach((solverAttempt) => {
                     canonical.push(solverAttempt);
