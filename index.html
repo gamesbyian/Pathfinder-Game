@@ -5764,6 +5764,13 @@
                             nextKey = top.neighbors.pop();
                             if (top.depth === 0 && Number.isFinite(nextKey)) rootFamilyRepeatSelectionsAtDepth0++;
                         }
+                        if (top.depth === 0 && Number.isFinite(nextKey)) {
+                            const familyKey = rootDiversificationFamilyByKey.get(nextKey) || `${nextKey}`;
+                            if (rootDiversificationPendingFamilies.has(familyKey)) {
+                                rootDiversificationPendingFamilies.delete(familyKey);
+                            }
+                            rootDiversificationAttemptedFamilies.add(familyKey);
+                        }
                         if (debugStats) debugStats.nodesExpanded++;
                         const topPortal = APP.LevelUtils.resolvePortal(l, top.k);
                         const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
@@ -5798,6 +5805,8 @@
                                 const _rateLast = Math.max(0, _sLast.nodesExpanded - _sPrev.nodesExpanded) / Math.max(1, _sLast.tMs - _sPrev.tMs);
                                 if (_rate0 > 10 && _rateLast / _rate0 < 0.04) {
                                     debugStats.plateauEarlyAbortTriggered = true;
+                                    debugStats.forceFamilySwitchNextAttempt = true;
+                                    debugStats.forceFamilySwitchReason = 'plateau-velocity-collapse';
                                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                                     snapshotTimeoutFrontierDiagnostics(debugStats, stack);
                                     recordPhaseAttempt('timeout');
@@ -10857,6 +10866,7 @@
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
             const hardClusterGating = await this.ensureHardClusterGatingLoaded();
             const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts: { ...opts, hardClusterGating }, controlPlane });
+            const forceFamilySwitchFromLadder = !!sharedHintLadderState?.forceFamilySwitchNextAttempt;
             const rootTieSeedOffset = Number.isFinite(opts?.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null;
             const rootOrderingVariant = typeof opts?.rootOrderingVariant === 'string' ? opts.rootOrderingVariant : null;
             if (Number.isFinite(rootTieSeedOffset) || rootOrderingVariant) {
@@ -11162,6 +11172,18 @@
                     memoStrictness: nextAttempt.memoStrictness
                 };
             };
+            if (forceFamilySwitchFromLadder && attempts.length > 0) {
+                const seededAttempt = attempts[0];
+                const forcedSwitch = forceEscalationNoveltyDiversification(seededAttempt, seededAttempt?.policyProfile || seededAttempt?.orderingPolicy);
+                if (forcedSwitch) {
+                    seededAttempt.forcedFamilySwitch = true;
+                    seededAttempt.escalationReason = sharedHintLadderState?.forcedFamilySwitchReason || 'ladder-trajectory-dedupe-family-switch';
+                }
+                if (sharedHintLadderState && typeof sharedHintLadderState === 'object') {
+                    sharedHintLadderState.forceFamilySwitchNextAttempt = false;
+                    sharedHintLadderState.forcedFamilySwitchReason = null;
+                }
+            }
             const applyRootNoveltyPenalty = (nextAttempt, reasonTag, sourceAttempt = null) => {
                 if (!nextAttempt || !reasonTag) return null;
                 const recentTimeoutAttempts = attemptsUsed
@@ -12061,6 +12083,9 @@
                     const mustCrossScheduleInfeasibleFrontierStatesValue = Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0;
                     const remainingMustCrossValue = Number(attemptResult?.quality?.remainingMustCross) || 0;
                     const mustCrossScheduleThresholdMet = mustCrossScheduleInfeasibleFrontierStatesValue >= 60;
+                    const bestLowerBoundToValidSolution = Number(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
+                    const scheduleAwareLowerBoundMet = Number.isFinite(bestLowerBoundToValidSolution)
+                        && bestLowerBoundToValidSolution <= Math.max(2, remainingMustCrossValue + 1);
                     // L92-style signature: many attempts time out with remainingMustCross>0 but the frontier
                     // counter never reaches 60 because the solver never materializes those states. Instead,
                     // detect stalling via repeated bestLowerBoundToValidSolution across recent timeout attempts.
@@ -12080,7 +12105,7 @@
                     const mustCrossScheduleRescueDetected = (timeoutProne
                             && mustCrossScheduleRescueCount < 2
                             && remainingMustCrossValue > 0
-                            && mustCrossScheduleThresholdMet)
+                            && (mustCrossScheduleThresholdMet || scheduleAwareLowerBoundMet))
                         || mustCrossStallRescueDetected;
                     const mustCrossRescueGateMissed = mustCrossScheduleRescueDetected
                         ? null
@@ -12090,7 +12115,7 @@
                                 ? 'mustCrossScheduleRescueCount'
                                 : (remainingMustCrossValue <= 0
                                     ? 'remainingMustCross'
-                                    : (!mustCrossScheduleThresholdMet && !(lowerBoundStalled && nearMustCrossPresent)
+                                    : (!mustCrossScheduleThresholdMet && !scheduleAwareLowerBoundMet && !(lowerBoundStalled && nearMustCrossPresent)
                                         ? (lowerBoundStalled
                                             ? (nearMustCrossPresent ? null : 'nearMustCrossPresent')
                                             : (recentTimeoutBoundsForStall.length < 3 ? 'lowerBoundStalledSamples' : 'lowerBoundStalled'))
@@ -12101,6 +12126,7 @@
                         attemptResult.debug.mustCrossStallRescueTriggered = !!mustCrossStallRescueDetected;
                         attemptResult.debug.mustCrossLowerBoundStalled = !!lowerBoundStalled;
                         attemptResult.debug.mustCrossNearMustCrossPresent = !!nearMustCrossPresent;
+                        attemptResult.debug.mustCrossScheduleAwareLowerBoundMet = !!scheduleAwareLowerBoundMet;
                     }
                     const configureNearClosureRescueAttempt = (targetAttempt = {}, budgetHint = 1) => {
                         const existingMemo = Number(targetAttempt.memoStrictness);
@@ -12384,6 +12410,17 @@
                         };
                     }
                     if (timeoutProne && nextAttempt) {
+                        if (attemptResult?.debug?.forceFamilySwitchNextAttempt) {
+                            const plateauSwitch = forceEscalationNoveltyDiversification(nextAttempt, nextAttempt?.policyProfile || attempt?.policyProfile);
+                            if (plateauSwitch) {
+                                nextAttempt.forcedFamilySwitch = true;
+                                nextAttempt.escalationReason = attemptResult?.debug?.forceFamilySwitchReason || 'plateau-velocity-collapse';
+                            }
+                            if (currentAttemptEntry) {
+                                currentAttemptEntry.plateauEarlyAbortTriggered = true;
+                                currentAttemptEntry.nextAttemptReason = nextAttempt.escalationReason;
+                            }
+                        }
                         const diversifiedRegistration = diversifyAndRegisterAttempt(nextAttempt, {
                             timeoutLikeAttemptsSoFar,
                             timeoutEscalationTier,
@@ -12988,7 +13025,8 @@
                     purpose: solveContext?.purpose || 'solve',
                     allowRandomizedExploration: false,
                     portalTriage,
-                    rootTieProfile: 'stable-diversified'
+                    rootTieProfile: 'stable-diversified',
+                    hintLadderState: solveContext?.strategy?.hintLadderState || null
                 })
             });
             result.mode = 'portalAgnostic';
@@ -13399,7 +13437,7 @@
             const {
                 level,
                 purpose,
-                strategy: { fallbackDisabledPrunes, complexityStrategy, escalationTier, forcePreExpansionRescue, solveStartTime },
+                strategy: { fallbackDisabledPrunes, complexityStrategy, escalationTier, forcePreExpansionRescue, solveStartTime, hintLadderState },
                 derived: { recoveryBudget, strategyMetadata },
                 controlPlane,
                 flags: { objectivesAreInteriorDominant }
@@ -13460,7 +13498,8 @@
                         relaxRootSuppressionFirstLayer: fallbackActivation.relaxRootSuppressionFirstLayer,
                         rootCandidateGeneratorVariant: (activatePreExpansionRescue || strategyMetadata.rescueMode === 'alternate-rescue')
                             ? 'interaction-fallback'
-                            : 'default'
+                            : 'default',
+                        hintLadderState
                     })
                 });
                 rescueProfileResult.rescueProfileSummary = {
@@ -13507,6 +13546,7 @@
                 controlPlane,
                 budgets: { budgetMs, tierBudgets },
                 policyTier,
+                strategy: { hintLadderState },
                 derived: { strategyMetadata },
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
@@ -13533,7 +13573,8 @@
                         purpose,
                         rootCandidateGeneratorVariant: 'interaction-fallback',
                         preferMacroSkeleton: true,
-                        suppressPerimeterBias: objectivesAreInteriorDominant
+                        suppressPerimeterBias: objectivesAreInteriorDominant,
+                        hintLadderState
                     })
                 });
                 hardFallbackAttempt.routingDecision = compactDefined({
@@ -13633,7 +13674,7 @@
                 level,
                 purpose,
                 controlPlane,
-                strategy: { resolvedPortalBiasMode, resolvedPhasePolicy },
+                strategy: { resolvedPortalBiasMode, resolvedPhasePolicy, hintLadderState },
                 derived: { recoveryBudget },
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
@@ -13661,7 +13702,8 @@
                         allowRandomizedExploration: false,
                         adaptiveOrderingPhase: policy === 'harvestThenFinish' ? 'objective-harvest' : 'knot-build',
                         suppressPerimeterBias: objectivesAreInteriorDominant,
-                        purpose
+                        purpose,
+                        hintLadderState
                     })
                 });
             }
@@ -13693,7 +13735,7 @@
                 level,
                 purpose,
                 controlPlane,
-                strategy: { resolvedPortalBiasMode, resolvedPhasePolicy },
+                strategy: { resolvedPortalBiasMode, resolvedPhasePolicy, hintLadderState },
                 derived: { recoveryBudget, enduranceBudget, knotSensitive },
                 flags: { objectivesAreInteriorDominant }
             } = solveContext;
@@ -13722,7 +13764,8 @@
                         allowRandomizedExploration: false,
                         adaptiveOrderingPhase: 'knot-build',
                         suppressPerimeterBias: objectivesAreInteriorDominant,
-                        purpose
+                        purpose,
+                        hintLadderState
                     })
                 });
             }
@@ -13749,7 +13792,8 @@
                         allowRandomizedExploration: false,
                         adaptiveOrderingPhase: 'objective-harvest',
                         suppressPerimeterBias: objectivesAreInteriorDominant,
-                        purpose
+                        purpose,
+                        hintLadderState
                     })
                 });
             }
@@ -13775,7 +13819,8 @@
                         allowRandomizedExploration: false,
                         adaptiveOrderingPhase: 'objective-harvest',
                         suppressPerimeterBias: objectivesAreInteriorDominant,
-                        purpose
+                        purpose,
+                        hintLadderState
                     })
                 });
             }
@@ -13814,7 +13859,8 @@
                             allowRandomizedExploration: false,
                             adaptiveOrderingPhase: 'objective-harvest',
                             suppressPerimeterBias: objectivesAreInteriorDominant,
-                            purpose
+                            purpose,
+                            hintLadderState
                         })
                     });
                     switchedAttempt.routingDecision = compactDefined({
@@ -14101,7 +14147,8 @@
                                     allowRandomizedExploration: false,
                                     purpose,
                                     preferMacroSkeleton: true,
-                                    rootCandidateGeneratorVariant: 'interaction-fallback'
+                                    rootCandidateGeneratorVariant: 'interaction-fallback',
+                                    hintLadderState
                                 })
                             });
                             if (!last.ok) {
@@ -19631,6 +19678,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const hintLadderState = {
                 recentTimeoutAttempts: [],
                 queuedAttemptSignatureHashes: [],
+                recentOutcomeTrajectoryHashes: [],
+                forceFamilySwitchNextAttempt: false,
+                forcedFamilySwitchReason: null,
                 retryFingerprintDupes: 0
             };
 
@@ -19723,6 +19773,39 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             Number(hintLadderState.retryFingerprintDupes) || 0,
                             Number(hintRes.retryFingerprintDupes) || 0
                         );
+                    }
+                    const attemptTail = Array.isArray(hintRes?.attempts) && hintRes.attempts.length > 0
+                        ? hintRes.attempts[hintRes.attempts.length - 1]
+                        : null;
+                    const tailNearDim = (attemptTail?.timeoutDiagnostics?.nearSolutionByDimension && typeof attemptTail.timeoutDiagnostics.nearSolutionByDimension === 'object')
+                        ? Object.entries(attemptTail.timeoutDiagnostics.nearSolutionByDimension)
+                            .map(([k, v]) => [String(k), Math.max(0, Number(v) || 0)])
+                            .filter(([, v]) => v > 0)
+                            .sort((a, b) => a[0].localeCompare(b[0]))
+                            .map(([k, v]) => `${k}:${v}`)
+                            .join('|')
+                        : 'none';
+                    const trajectoryHash = [
+                        Number(attemptTail?.depthReached) || Number(attemptTail?.debug?.maxDepth) || 0,
+                        Math.max(0, Number(attemptTail?.quality?.nodesExpanded) || Number(attemptTail?.nodesExpanded) || Number(attemptTail?.debug?.nodesExpanded) || 0),
+                        Number(attemptTail?.quality?.constraintDeficit) || 0,
+                        tailNearDim
+                    ].join(':');
+                    const knownOutcomeHashes = new Set(
+                        Array.isArray(hintLadderState.recentOutcomeTrajectoryHashes)
+                            ? hintLadderState.recentOutcomeTrajectoryHashes.filter(Boolean).slice(-24)
+                            : []
+                    );
+                    if (trajectoryHash !== '0:0:0:none') {
+                        if (knownOutcomeHashes.has(trajectoryHash)) {
+                            hintLadderState.forceFamilySwitchNextAttempt = true;
+                            hintLadderState.forcedFamilySwitchReason = 'duplicate-outcome-trajectory';
+                        } else {
+                            knownOutcomeHashes.add(trajectoryHash);
+                            hintLadderState.forceFamilySwitchNextAttempt = false;
+                            hintLadderState.forcedFamilySwitchReason = null;
+                        }
+                        hintLadderState.recentOutcomeTrajectoryHashes = Array.from(knownOutcomeHashes).slice(-24);
                     }
                     const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath
