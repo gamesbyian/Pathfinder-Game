@@ -8378,8 +8378,42 @@
                 nearClosureRescueThreshold: Number.isFinite(debug?.nearClosureRescueThreshold) ? debug.nearClosureRescueThreshold : null,
                 nearClosureRescueLowerBoundThreshold: Number.isFinite(debug?.nearClosureRescueLowerBoundThreshold) ? debug.nearClosureRescueLowerBoundThreshold : null,
                 nearClosureRescueProfile: debug?.nearClosureRescueProfile || null,
+                nearClosureRescueGateMissed: (typeof debug?.nearClosureRescueGateMissed === 'string') ? debug.nearClosureRescueGateMissed : null,
+                nearClosureRescueBlockedReason: debug?.nearClosureRescueBlockedReason || null,
+                nearClosureRescueForced: debug?.nearClosureRescueForced === true ? true : null,
+                nearClosure_timeoutProne: debug?.nearClosure_timeoutProne === true ? true : (debug?.nearClosure_timeoutProne === false ? false : null),
+                nearClosure_countRemaining: debug?.nearClosure_countRemaining === true ? true : (debug?.nearClosure_countRemaining === false ? false : null),
+                nearClosure_repeatedTimeout: debug?.nearClosure_repeatedTimeout === true ? true : (debug?.nearClosure_repeatedTimeout === false ? false : null),
+                nearClosure_nearStatesMet: debug?.nearClosure_nearStatesMet === true ? true : (debug?.nearClosure_nearStatesMet === false ? false : null),
+                nearClosure_lowerBoundMet: debug?.nearClosure_lowerBoundMet === true ? true : (debug?.nearClosure_lowerBoundMet === false ? false : null),
                 mustCrossRescueTriggered: debug?.mustCrossRescueTriggered === true ? true : null,
+                mustCrossRescueGateMissed: (typeof debug?.mustCrossRescueGateMissed === 'string') ? debug.mustCrossRescueGateMissed : null,
+                mustCrossScheduleInfeasibleFrontierStatesAtRescueCheck: Number.isFinite(debug?.mustCrossScheduleInfeasibleFrontierStatesAtRescueCheck)
+                    ? debug.mustCrossScheduleInfeasibleFrontierStatesAtRescueCheck
+                    : null,
+                mustCrossStallRescueTriggered: debug?.mustCrossStallRescueTriggered === true ? true : null,
+                mustCrossLowerBoundStalled: debug?.mustCrossLowerBoundStalled === true ? true : null,
+                mustCrossNearMustCrossPresent: debug?.mustCrossNearMustCrossPresent === true ? true : null,
                 mustCrossUnlockProgressEvents: Number.isFinite(debug?.mustCrossUnlockProgressEvents) ? debug.mustCrossUnlockProgressEvents : null,
+                policyProfile: attempt?.policyProfile
+                    || attempt?.activeProfile?.policyProfile
+                    || attempt?.activeProfile?.name
+                    || debug?.policyProfile
+                    || (Array.isArray(attempt?.attempts) && attempt.attempts.length
+                        ? (attempt.attempts[attempt.attempts.length - 1]?.policyProfile
+                            || attempt.attempts[attempt.attempts.length - 1]?.orderingPolicy
+                            || null)
+                        : null)
+                    || null,
+                orderingPolicy: attempt?.orderingPolicy
+                    || attempt?.activeProfile?.orderingPolicy
+                    || debug?.orderingPolicy
+                    || (Array.isArray(attempt?.attempts) && attempt.attempts.length
+                        ? (attempt.attempts[attempt.attempts.length - 1]?.orderingPolicy
+                            || attempt.attempts[attempt.attempts.length - 1]?.policyProfile
+                            || null)
+                        : null)
+                    || null,
                 attemptInstrumentation: attempt?.attemptInstrumentation || debug?.attemptTelemetry || null,
                 progressSamples: Array.isArray(debug?.progressSamples) ? debug.progressSamples : null,
                 progressSummary: debug?.progressSummary || null,
@@ -11495,6 +11529,7 @@
                     nodes,
                     depth,
                     nearDimSignature,
+                    coreSignature: `${nodes}:${depth}`,
                     signature: `${nodes}:${depth}:${nearDimSignature || 'none'}`
                 };
             };
@@ -11511,6 +11546,8 @@
                         stopReason: executionRegistration.reason || 'duplicate-signature',
                         solved: false,
                         budgetMs: attempt.budgetMs,
+                        orderingPolicy: attempt.orderingPolicy || attempt.policyProfile || 'profile-default',
+                        policyProfile: attempt.policyProfile || attempt.orderingPolicy || 'standard',
                         attemptSignatureHash: attempt?.attemptSignatureHash || executionRegistration.hash || null,
                         attemptSignatureTuple: attempt?.attemptSignatureTuple || executionRegistration.tuple || null,
                         duplicateAttemptSignature: true
@@ -11626,6 +11663,21 @@
                     nearClosureRescueThreshold: Number.isFinite(attemptResult?.debug?.nearClosureRescueThreshold) ? attemptResult.debug.nearClosureRescueThreshold : null,
                     nearClosureRescueLowerBoundThreshold: Number.isFinite(attemptResult?.debug?.nearClosureRescueLowerBoundThreshold) ? attemptResult.debug.nearClosureRescueLowerBoundThreshold : null,
                     nearClosureRescueProfile: attemptResult?.debug?.nearClosureRescueProfile || null,
+                    nearClosureRescueGateMissed: (typeof attemptResult?.debug?.nearClosureRescueGateMissed === 'string') ? attemptResult.debug.nearClosureRescueGateMissed : null,
+                    nearClosureRescueBlockedReason: attemptResult?.debug?.nearClosureRescueBlockedReason || null,
+                    nearClosureRescueForced: !!attemptResult?.debug?.nearClosureRescueForced,
+                    nearClosure_timeoutProne: !!attemptResult?.debug?.nearClosure_timeoutProne,
+                    nearClosure_countRemaining: !!attemptResult?.debug?.nearClosure_countRemaining,
+                    nearClosure_repeatedTimeout: !!attemptResult?.debug?.nearClosure_repeatedTimeout,
+                    nearClosure_nearStatesMet: !!attemptResult?.debug?.nearClosure_nearStatesMet,
+                    nearClosure_lowerBoundMet: !!attemptResult?.debug?.nearClosure_lowerBoundMet,
+                    mustCrossRescueGateMissed: (typeof attemptResult?.debug?.mustCrossRescueGateMissed === 'string') ? attemptResult.debug.mustCrossRescueGateMissed : null,
+                    mustCrossScheduleInfeasibleFrontierStatesAtRescueCheck: Number.isFinite(attemptResult?.debug?.mustCrossScheduleInfeasibleFrontierStatesAtRescueCheck)
+                        ? attemptResult.debug.mustCrossScheduleInfeasibleFrontierStatesAtRescueCheck
+                        : null,
+                    mustCrossStallRescueTriggered: !!attemptResult?.debug?.mustCrossStallRescueTriggered,
+                    mustCrossLowerBoundStalled: !!attemptResult?.debug?.mustCrossLowerBoundStalled,
+                    mustCrossNearMustCrossPresent: !!attemptResult?.debug?.mustCrossNearMustCrossPresent,
                     depth0PruneBreakdown: attemptResult?.debug?.depth0PruneBreakdown || null,
                     rootSuppressionLog: Array.isArray(attemptResult?.debug?.debug?.rootSuppressionLog) ? attemptResult.debug.debug.rootSuppressionLog.slice(0, 20) : null,
                     rootMoveScores: Array.isArray(attemptResult?.debug?.rootMoveScores) ? attemptResult.debug.rootMoveScores.slice(0, 20) : null,
@@ -11721,7 +11773,10 @@
                         .filter(item => !!item.fp)
                         .slice(-2);
                     const duplicateFingerprintMatch = !!(currentFingerprint
-                        && recentComparableAttempts.some(item => item.fp.signature === currentFingerprint.signature));
+                        && recentComparableAttempts.some(item => item.fp.signature === currentFingerprint.signature
+                            || (!item.fp.nearDimSignature
+                                && !currentFingerprint.nearDimSignature
+                                && item.fp.coreSignature === currentFingerprint.coreSignature)));
                     if (duplicateFingerprintMatch && nextAttempt) {
                         retryFingerprintDupes += 1;
                         const matchedPrior = recentComparableAttempts.find(item => item.fp.signature === currentFingerprint.signature);
@@ -11907,25 +11962,93 @@
                     // Near-solution flood rescue: targets "final-mile deadlock" (e.g. Level 108)
                     // Detects thousands of frontier states needing exactly 1 more step but never completing.
                     // Checked before broadStagnation so the more-specific pattern wins when both are present.
-                    const nearSolutionFloodThreshold = Math.max(120, 800 - (i * 120));
+                    // Threshold floor 80 (was 120) removes a false barrier at late attempts where i*120 >= 720.
+                    const nearSolutionFloodThreshold = Math.max(80, 800 - (i * 120));
                     const nearSolutionFloodLowerBoundThreshold = 1;
+                    // Broadened to include no-solution-inconclusive to match timeoutProne; otherwise a single
+                    // inconclusive attempt in the recent window silently disqualifies the rescue even when
+                    // every attempt is a timeout-class failure.
                     const repeatedTimeoutOutcome = recentTimeoutAttempts.length >= 2
-                        && recentTimeoutAttempts.every(entry => `${entry?.status || ''}` === 'timeout');
-                    const nearSolutionFloodDetected = timeoutProne
-                        && nearSolutionFloodRescueCount < 3
-                        && repeatedTimeoutOutcome
-                        && (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= nearSolutionFloodThreshold
-                        && Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
+                        && recentTimeoutAttempts.every(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`));
+                    const nearSolutionStatesMet = (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= nearSolutionFloodThreshold;
+                    const nearClosureLowerBoundFinite = Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
+                    const nearClosureLowerBoundMet = nearClosureLowerBoundFinite
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= nearSolutionFloodLowerBoundThreshold;
+                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < 3;
+                    const nearSolutionFloodDetected = timeoutProne
+                        && nearClosureCountRemaining
+                        && repeatedTimeoutOutcome
+                        && nearSolutionStatesMet
+                        && nearClosureLowerBoundMet;
+                    // First predicate to fail (in evaluation order) — aids diagnosis when rescue does not fire.
+                    const nearClosureRescueGateMissed = nearSolutionFloodDetected
+                        ? null
+                        : (!timeoutProne
+                            ? 'timeoutProne'
+                            : (!nearClosureCountRemaining
+                                ? 'nearClosureCountRemaining'
+                                : (!repeatedTimeoutOutcome
+                                    ? 'repeatedTimeoutOutcome'
+                                    : (!nearSolutionStatesMet
+                                        ? 'nearSolutionStatesMet'
+                                        : (!nearClosureLowerBoundMet
+                                            ? (nearClosureLowerBoundFinite ? 'nearClosureLowerBoundMet' : 'nearClosureLowerBoundFinite')
+                                            : null)))));
                     if (attemptResult?.debug) {
                         attemptResult.debug.nearClosureRescueEligible = nearSolutionFloodDetected;
                         attemptResult.debug.nearClosureRescueThreshold = nearSolutionFloodThreshold;
                         attemptResult.debug.nearClosureRescueLowerBoundThreshold = nearSolutionFloodLowerBoundThreshold;
+                        attemptResult.debug.nearClosureRescueGateMissed = nearClosureRescueGateMissed;
+                        attemptResult.debug.nearClosure_timeoutProne = !!timeoutProne;
+                        attemptResult.debug.nearClosure_countRemaining = !!nearClosureCountRemaining;
+                        attemptResult.debug.nearClosure_repeatedTimeout = !!repeatedTimeoutOutcome;
+                        attemptResult.debug.nearClosure_nearStatesMet = !!nearSolutionStatesMet;
+                        attemptResult.debug.nearClosure_lowerBoundMet = !!nearClosureLowerBoundMet;
                     }
-                    const mustCrossScheduleRescueDetected = timeoutProne
+                    const mustCrossScheduleInfeasibleFrontierStatesValue = Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0;
+                    const remainingMustCrossValue = Number(attemptResult?.quality?.remainingMustCross) || 0;
+                    const mustCrossScheduleThresholdMet = mustCrossScheduleInfeasibleFrontierStatesValue >= 60;
+                    // L92-style signature: many attempts time out with remainingMustCross>0 but the frontier
+                    // counter never reaches 60 because the solver never materializes those states. Instead,
+                    // detect stalling via repeated bestLowerBoundToValidSolution across recent timeout attempts.
+                    const recentTimeoutBoundsForStall = attemptsUsed
+                        .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
+                        .map(entry => Number(entry?.timeoutDiagnostics?.bestLowerBoundToValidSolution))
+                        .filter(v => Number.isFinite(v))
+                        .slice(-3);
+                    const lowerBoundStalled = recentTimeoutBoundsForStall.length >= 3
+                        && (Math.max(...recentTimeoutBoundsForStall) - Math.min(...recentTimeoutBoundsForStall)) <= 1;
+                    const nearMustCrossPresent = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionByDimension?.['must-cross']) > 0;
+                    const mustCrossStallRescueDetected = timeoutProne
                         && mustCrossScheduleRescueCount < 2
-                        && (Number(attemptResult?.quality?.remainingMustCross) || 0) > 0
-                        && (Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0) >= 60;
+                        && remainingMustCrossValue > 0
+                        && lowerBoundStalled
+                        && nearMustCrossPresent;
+                    const mustCrossScheduleRescueDetected = (timeoutProne
+                            && mustCrossScheduleRescueCount < 2
+                            && remainingMustCrossValue > 0
+                            && mustCrossScheduleThresholdMet)
+                        || mustCrossStallRescueDetected;
+                    const mustCrossRescueGateMissed = mustCrossScheduleRescueDetected
+                        ? null
+                        : (!timeoutProne
+                            ? 'timeoutProne'
+                            : (mustCrossScheduleRescueCount >= 2
+                                ? 'mustCrossScheduleRescueCount'
+                                : (remainingMustCrossValue <= 0
+                                    ? 'remainingMustCross'
+                                    : (!mustCrossScheduleThresholdMet && !(lowerBoundStalled && nearMustCrossPresent)
+                                        ? (lowerBoundStalled
+                                            ? (nearMustCrossPresent ? null : 'nearMustCrossPresent')
+                                            : (recentTimeoutBoundsForStall.length < 3 ? 'lowerBoundStalledSamples' : 'lowerBoundStalled'))
+                                        : null))));
+                    if (attemptResult?.debug) {
+                        attemptResult.debug.mustCrossRescueGateMissed = mustCrossRescueGateMissed;
+                        attemptResult.debug.mustCrossScheduleInfeasibleFrontierStatesAtRescueCheck = mustCrossScheduleInfeasibleFrontierStatesValue;
+                        attemptResult.debug.mustCrossStallRescueTriggered = !!mustCrossStallRescueDetected;
+                        attemptResult.debug.mustCrossLowerBoundStalled = !!lowerBoundStalled;
+                        attemptResult.debug.mustCrossNearMustCrossPresent = !!nearMustCrossPresent;
+                    }
                     const configureNearClosureRescueAttempt = (targetAttempt = {}, budgetHint = 1) => {
                         const existingMemo = Number(targetAttempt.memoStrictness);
                         targetAttempt.budgetMs = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
@@ -11975,16 +12098,39 @@
                             ...(attempt || {}),
                             label: `${attempt?.label || 'attempt'}-near-closure-rescue`
                         }, Number(attempt?.budgetMs) || 1);
-                        const rescueRegistration = diversifyAndRegisterAttempt(rescueAttempt, {
+                        let rescueRegistration = diversifyAndRegisterAttempt(rescueAttempt, {
                             timeoutLikeAttemptsSoFar,
                             timeoutEscalationTier,
                             timeoutFamilyDiversificationUsed
                         }, { markDuplicate: true });
+                        // If the rescue is rejected as a duplicate signature, retry once with a -force
+                        // label suffix and markDuplicate: false. This unblocks the case where the
+                        // rescue attempt's signature collides with an earlier attempt despite being
+                        // behaviorally distinct (different disabled prunes, ordering tweaks, etc.).
+                        let rescueForced = false;
+                        if (!rescueRegistration.allowed) {
+                            rescueAttempt.label = `${rescueAttempt.label || 'near-closure-rescue'}-force`;
+                            rescueAttempt.escalationReason = 'near-closure-rescue-force';
+                            rescueAttempt.retryTag = 'near-solution-flood-rescue-force';
+                            const forcedRegistration = diversifyAndRegisterAttempt(rescueAttempt, {
+                                timeoutLikeAttemptsSoFar,
+                                timeoutEscalationTier,
+                                timeoutFamilyDiversificationUsed
+                            }, { markDuplicate: false });
+                            if (forcedRegistration.allowed) {
+                                rescueForced = true;
+                                rescueRegistration = forcedRegistration;
+                            }
+                        }
                         nearSolutionFloodRescueCount++;
                         if (attemptResult?.debug) {
                             attemptResult.debug.rescueTriggeredNearClosure = true;
                             attemptResult.debug.nearClosureRescueActivated = true;
                             attemptResult.debug.nearClosureRescueProfile = 'nearClosureRescue';
+                            attemptResult.debug.nearClosureRescueBlockedReason = rescueRegistration.allowed
+                                ? null
+                                : (rescueRegistration.reason || 'duplicate-signature');
+                            if (rescueForced) attemptResult.debug.nearClosureRescueForced = true;
                         }
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'near-closure-rescue';
@@ -11998,7 +12144,10 @@
                         }
                         if (rescueRegistration.allowed) {
                             attempts.push(rescueAttempt);
-                            if (currentAttemptEntry) currentAttemptEntry.nextAttemptInserted = true;
+                            if (currentAttemptEntry) {
+                                currentAttemptEntry.nextAttemptInserted = true;
+                                if (rescueForced) currentAttemptEntry.nearClosureRescueForced = true;
+                            }
                             continue;
                         }
                         if (currentAttemptEntry) {
