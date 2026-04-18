@@ -12,7 +12,8 @@
     "audit:analyze-failures": "node scripts/analyze-audit-failures.mjs",
     "audit:check-hard-levels": "node scripts/check-persistent-hard-levels.mjs",
     "audit:check-hard-levels:strict": "node scripts/check-persistent-hard-levels.mjs --enforce-solved",
-    "audit:check-regressions": "node scripts/check-regression-levels.mjs --levels=7 --window=3 --max-consecutive-failures=1"
+    "audit:check-regressions": "node scripts/check-regression-levels.mjs --levels=7 --window=3 --max-consecutive-failures=1",
+    "audit:heuristic-recall": "node scripts/audit-heuristic-recall.mjs --levels=92,108,134 --output=audits/heuristic-recall/latest.json"
   },
   "devDependencies": {
     "playwright": "^1.54.2"
