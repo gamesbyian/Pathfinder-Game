@@ -5424,7 +5424,6 @@
                     const maybeEmitAdaptiveTelemetry = (phaseInfo = null) => {
                         const cp = options?.controlPlane;
                         if (!cp) return;
-                        const policyIdentityLocked = options?.lockPolicyIdentity === true;
                         const nodesExpanded = Math.max(0, Number(debugStats?.nodesExpanded) || 0);
                         if (nodesExpanded < 24) return;
                         if ((nodesExpanded - adaptationState.lastNodes) < 64) return;
@@ -5462,7 +5461,7 @@
                         const triggerPortalThrash = portalLockStability < 0.45;
                         const triggerSwitchOrdering = branchFactor < 0.32 && branchFactorTrend < -0.06;
                         const triggerHighVelocityPlateau = expansionVelocity > 0.08 && progressDelta < 0.012 && progress > 0.35;
-                        if (!policyIdentityLocked && (triggerLowExpansion || triggerMemoOverfit || triggerPortalThrash || triggerSwitchOrdering || triggerHighVelocityPlateau)) {
+                        if (triggerLowExpansion || triggerMemoOverfit || triggerPortalThrash || triggerSwitchOrdering || triggerHighVelocityPlateau) {
                             const prevProfile = {
                                 memoStrictness: adaptationState.currentProfile.memoStrictness,
                                 disabledPrunes: adaptationState.currentProfile.disabledPrunes.slice(),
@@ -6614,7 +6613,7 @@
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false, lockPolicyIdentity = false } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -11049,77 +11048,6 @@
                 }
                 return `sig-${(hash >>> 0).toString(16).padStart(8, '0')}`;
             };
-            const stableStringify = (value) => {
-                if (Array.isArray(value)) return `[${value.map((item) => stableStringify(item)).join(',')}]`;
-                if (!value || typeof value !== 'object') return JSON.stringify(value);
-                const keys = Object.keys(value).sort();
-                return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
-            };
-            const hashPortable32 = (raw = '') => {
-                const src = String(raw || '');
-                let hash = 0x811c9dc5;
-                for (let i = 0; i < src.length; i++) {
-                    hash ^= src.charCodeAt(i);
-                    hash = Math.imul(hash, 0x01000193);
-                }
-                return hash >>> 0;
-            };
-            const SEGMENT1_PROFILE_LIBRARY = {
-                'goal-distance-dominant': { id: 'seg1-goal-distance-dominant', policyProfile: 'harvestThenFinish', orderingPolicy: 'harvestThenFinish', scoringMode: 'modern', portalBiasMode: 'agnostic' },
-                'obligation-first': { id: 'seg1-obligation-first', policyProfile: 'mustCrossFirst', orderingPolicy: 'objectiveFirst', scoringMode: 'modern', portalBiasMode: 'adaptiveMustCross' },
-                'portal-conservative': { id: 'seg1-portal-conservative', policyProfile: 'perimeterSweep', orderingPolicy: 'perimeterSweep', scoringMode: 'modern', portalBiasMode: 'off', forbidPortals: true },
-                'portal-aggressive': { id: 'seg1-portal-aggressive', policyProfile: 'portalFirstTransfer', orderingPolicy: 'portalFirstTransfer', scoringMode: 'modern', portalBiasMode: 'adaptiveMustCross' },
-                'randomized-high-entropy': { id: 'seg1-randomized-high-entropy', policyProfile: 'objectiveFirst', orderingPolicy: 'objectiveFirst', scoringMode: 'modern', portalBiasMode: 'agnostic' },
-                'endgame-closure-priority': { id: 'seg1-endgame-closure-priority', policyProfile: 'finishFirst', orderingPolicy: 'finishFirst', scoringMode: 'endurance', portalBiasMode: 'off' }
-            };
-            const classifyPolicyProfileFamily = (attempt = {}) => {
-                const policy = String(attempt?.policyProfile || attempt?.orderingPolicy || '').toLowerCase();
-                const ordering = String(attempt?.orderingPolicy || '').toLowerCase();
-                const scoring = String(attempt?.scoringMode || '').toLowerCase();
-                const portalBias = String(attempt?.portalBiasMode || '').toLowerCase();
-                const forbidPortals = attempt?.forbidPortals === true || portalBias === 'off';
-                if (['mustcrossfirst', 'objectivefirst', 'finishfirst'].includes(policy) || ['objectivefirst', 'finishfirst'].includes(ordering)) return 'obligation-first';
-                if (['endurance', 'knotbuilder'].includes(policy) || scoring === 'endurance') return 'endgame-closure-priority';
-                if (forbidPortals) return 'portal-conservative';
-                if (portalBias === 'adaptivemustcross' || policy === 'portalfirsttransfer' || ordering === 'portalfirsttransfer') return 'portal-aggressive';
-                if (policy === 'perimetersweep' || policy === 'harvestthenfinish' || ordering === 'harvestthenfinish') return 'goal-distance-dominant';
-                return 'randomized-high-entropy';
-            };
-            const ensurePortfolioProfileIdentity = (attempt = {}, context = {}) => {
-                if (!attempt || typeof attempt !== 'object') return null;
-                const family = classifyPolicyProfileFamily(attempt);
-                const libraryProfile = SEGMENT1_PROFILE_LIBRARY[family] || SEGMENT1_PROFILE_LIBRARY['randomized-high-entropy'];
-                if (!attempt.policyProfileId) {
-                    attempt.policyProfileId = libraryProfile.id;
-                }
-                const levelId = Number(context?.levelId) || 0;
-                const attemptId = Number(context?.attemptOrdinal) || Number(attempt?.attemptOrdinal) || 0;
-                const globalSeed = Number(context?.globalSeed) || 0;
-                const profileSeed = hashPortable32(attempt.policyProfileId);
-                const mixedSeed = (((globalSeed ^ (levelId * 2654435761)) >>> 0) ^ (attemptId * 2246822519 >>> 0) ^ profileSeed) >>> 0;
-                if (!Number.isFinite(attempt.attemptSeed)) attempt.attemptSeed = mixedSeed >>> 0;
-                if (!Number.isFinite(attempt.rootTieSeed)) attempt.rootTieSeed = attempt.attemptSeed;
-                if (!attempt.policyConfigHash) {
-                    const configShape = {
-                        policyProfileId: attempt.policyProfileId,
-                        baseLibraryProfile: libraryProfile,
-                        policyProfile: attempt.policyProfile || null,
-                        orderingPolicy: attempt.orderingPolicy || null,
-                        scoringMode: attempt.scoringMode || null,
-                        portalBiasMode: attempt.portalBiasMode || null,
-                        portalUsagePolicy: attempt.portalUsagePolicy || (attempt.forbidPortals ? 'optional-off' : null),
-                        forbidPortals: !!attempt.forbidPortals,
-                        memoStrictness: Number(attempt?.memoStrictness) || 1,
-                        disabledPrunes: canonicalizeDisabledPrunes(attempt?.disabledPrunes || []),
-                        forceRootExpansionFloor: !!attempt.forceRootExpansionFloor,
-                        rootExpansionFloorCount: Number(attempt?.rootExpansionFloorCount) || 0,
-                        beamCompositionRule: attempt?.beamCompositionRule || null
-                    };
-                    attempt.policyConfigHash = `cfg-${hashPortable32(stableStringify(configShape)).toString(16).padStart(8, '0')}`;
-                }
-                attempt.portfolioFamily = family;
-                return { policyProfileId: attempt.policyProfileId, policyConfigHash: attempt.policyConfigHash, attemptSeed: attempt.attemptSeed, portfolioFamily: family };
-            };
             const buildAttemptSignatureTuple = (attempt = {}) => {
                 const rootOrderingProfile = String(
                     attempt?.rootOrderingProfile
@@ -11133,12 +11061,10 @@
                 );
                 const portalBiasMode = String(attempt?.portalBiasMode || 'adaptiveMustCross');
                 const disabledPruneSet = canonicalizeDisabledPrunes(attempt?.disabledPrunes || []);
-                const seed = Number.isFinite(attempt?.attemptSeed)
-                    ? Number(attempt.attemptSeed)
-                    : Number.isFinite(attempt?.rootTieSeed)
+                const seed = Number.isFinite(attempt?.rootTieSeed)
                     ? Number(attempt.rootTieSeed)
                     : ((typeof attempt?.label === 'string' ? attempt.label.length : 0) + ((Number(attempt?.attemptOrdinal) || 0) * 17));
-                return [rootOrderingProfile, beamCompositionRule, portalBiasMode, disabledPruneSet, seed, attempt?.policyProfileId || null, attempt?.policyConfigHash || null];
+                return [rootOrderingProfile, beamCompositionRule, portalBiasMode, disabledPruneSet, seed];
             };
             const applyAttemptSignature = (attempt = {}) => {
                 const signatureTuple = buildAttemptSignatureTuple(attempt);
@@ -11192,11 +11118,6 @@
             );
             const registerAttemptSignature = (attempt, options = {}) => {
                 if (!attempt) return { allowed: false, reason: 'missing-attempt' };
-                ensurePortfolioProfileIdentity(attempt, {
-                    levelId: Number(level?.id) || Number(level?.levelId) || 0,
-                    attemptOrdinal: Number(attempt?.attemptOrdinal) || 0,
-                    globalSeed: Number(opts?.globalSeed) || 0
-                });
                 const signature = applyAttemptSignature(attempt);
                 const hash = signature?.hash || null;
                 if (!hash) return { allowed: false, reason: 'missing-signature' };
@@ -11251,76 +11172,6 @@
                 const nodesDelta = Math.max(0, (Number(entry?.quality?.nodesExpanded) || Number(entry?.nodesExpanded) || 0) - (Number(previousEntry?.quality?.nodesExpanded) || Number(previousEntry?.nodesExpanded) || 0));
                 const objectiveDelta = Math.max(0, (Number(previousEntry?.quality?.constraintDeficit) || 0) - (Number(entry?.quality?.constraintDeficit) || 0));
                 return Number(Math.min(1, (rootKeyChangeRatio * 0.4) + (Math.min(depthDelta, 3) / 3 * 0.25) + (Math.min(nodesDelta, 220) / 220 * 0.2) + (Math.min(objectiveDelta, 2) / 2 * 0.15)).toFixed(4));
-            };
-            const jaccardOverlap = (aList = [], bList = []) => {
-                const a = new Set((Array.isArray(aList) ? aList : []).map(Number).filter((v) => Number.isFinite(v)));
-                const b = new Set((Array.isArray(bList) ? bList : []).map(Number).filter((v) => Number.isFinite(v)));
-                const unionSize = new Set([...a, ...b]).size;
-                if (unionSize <= 0) return 0;
-                let intersect = 0;
-                a.forEach((value) => {
-                    if (b.has(value)) intersect += 1;
-                });
-                return Number((intersect / unionSize).toFixed(4));
-            };
-            const buildAttemptStateSketch = (entry = null) => {
-                if (!entry) return [];
-                const tokens = [];
-                const rootScores = Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 12) : [];
-                rootScores.forEach((item, idx) => {
-                    const key = Number(item?.key);
-                    if (Number.isFinite(key)) tokens.push(`r:${idx}:${key}`);
-                });
-                const progressSamples = Array.isArray(entry?.progressSamples) ? entry.progressSamples : [];
-                progressSamples.slice(0, 24).forEach((sample) => {
-                    const depth = Math.max(0, Number(sample?.depth) || 0);
-                    const nodes = Math.max(0, Number(sample?.nodesExpanded) || 0);
-                    tokens.push(`p:${Math.floor(depth / 2)}:${Math.floor(nodes / 25)}`);
-                });
-                const timeoutDist = entry?.timeoutDiagnostics?.frontierMustPassDistribution
-                    && typeof entry.timeoutDiagnostics.frontierMustPassDistribution === 'object'
-                    ? entry.timeoutDiagnostics.frontierMustPassDistribution
-                    : {};
-                Object.entries(timeoutDist).slice(0, 10).forEach(([k, v]) => {
-                    const bucket = Math.floor(Math.max(0, Number(v) || 0) / 2);
-                    tokens.push(`f:${k}:${bucket}`);
-                });
-                return Array.from(new Set(tokens));
-            };
-            const computeBranchDecisionCorrelation = (entry = null, previousEntry = null) => {
-                const current = Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores : [];
-                const previous = Array.isArray(previousEntry?.rootMoveScores) ? previousEntry.rootMoveScores : [];
-                const rankA = new Map();
-                const rankB = new Map();
-                current.slice(0, 12).forEach((item, idx) => {
-                    const key = Number(item?.key);
-                    if (Number.isFinite(key) && !rankA.has(key)) rankA.set(key, idx + 1);
-                });
-                previous.slice(0, 12).forEach((item, idx) => {
-                    const key = Number(item?.key);
-                    if (Number.isFinite(key) && !rankB.has(key)) rankB.set(key, idx + 1);
-                });
-                const commonKeys = [...rankA.keys()].filter((key) => rankB.has(key));
-                const n = commonKeys.length;
-                if (n < 2) return 0;
-                let diffSquared = 0;
-                commonKeys.forEach((key) => {
-                    const d = (rankA.get(key) || 0) - (rankB.get(key) || 0);
-                    diffSquared += d * d;
-                });
-                const denom = n * ((n * n) - 1);
-                if (denom <= 0) return 0;
-                const rho = 1 - ((6 * diffSquared) / denom);
-                return Number(Math.max(-1, Math.min(1, rho)).toFixed(4));
-            };
-            const computeFrontierDiversityDelta = (entry = null, previousEntry = null) => {
-                const current = entry?.timeoutDiagnostics?.frontierMustPassDistribution && typeof entry.timeoutDiagnostics.frontierMustPassDistribution === 'object'
-                    ? Object.keys(entry.timeoutDiagnostics.frontierMustPassDistribution).length
-                    : 0;
-                const prior = previousEntry?.timeoutDiagnostics?.frontierMustPassDistribution && typeof previousEntry.timeoutDiagnostics.frontierMustPassDistribution === 'object'
-                    ? Object.keys(previousEntry.timeoutDiagnostics.frontierMustPassDistribution).length
-                    : 0;
-                return current - prior;
             };
             const forceEscalationNoveltyDiversification = (nextAttempt, currentPolicyProfile = null) => {
                 if (!nextAttempt) return null;
@@ -11617,12 +11468,9 @@
                     forceRootExpansionFloor,
                     relaxRootSuppressionFirstLayer,
                     portalTriage: opts.portalTriage || null,
-                    rootTieSeed: Number.isFinite(attemptOpts.attemptSeed)
-                        ? attemptOpts.attemptSeed
-                        : (Number.isFinite(attemptOpts.rootTieSeed)
-                            ? attemptOpts.rootTieSeed
+                    rootTieSeed: Number.isFinite(attemptOpts.rootTieSeed)
+                        ? attemptOpts.rootTieSeed
                         : ((typeof attemptOpts.label === 'string' ? attemptOpts.label.length : 0) + ((Number(attemptOpts.attemptOrdinal) || 0) * 17)),
-                        ),
                     rootTieProfile: attemptOpts.rootTieProfile || opts.rootTieProfile || 'stable',
                     rootDiversityTelemetry: {
                         timeoutLikeAttemptsRecent: recentTimeoutTelemetry.length,
@@ -11630,8 +11478,7 @@
                         timeoutEscalationTier: Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : timeoutEscalationTier,
                         maxRecentRootExpanded: recentTimeoutTelemetry.reduce((m, entry) => Math.max(m, Math.max(0, Number(entry?.rootCandidatesExpanded) || 0)), 0),
                         maxRecentRootGenerated: recentTimeoutTelemetry.reduce((m, entry) => Math.max(m, Math.max(0, Number(entry?.rootCandidatesGenerated) || 0)), 0)
-                    },
-                    lockPolicyIdentity: true
+                    }
                 });
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
@@ -11654,9 +11501,6 @@
                 debug.timeoutEscalationTier = Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : 0;
                 debug.forcedFamilySwitch = !!attemptOpts?.forcedFamilySwitch;
                 debug.escalationReason = attemptOpts?.escalationReason || null;
-                debug.policyProfileId = attemptOpts?.policyProfileId || null;
-                debug.policyConfigHash = attemptOpts?.policyConfigHash || null;
-                debug.attemptSeed = Number.isFinite(attemptOpts?.attemptSeed) ? attemptOpts.attemptSeed : null;
                 const status = r?.ok && solution.length > 0
                     ? 'solved'
                     : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error'));
@@ -11678,8 +11522,7 @@
                         controlPlane,
                         contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
                         assertKnownSolvableBounds: hasPortalBounds,
-                        forbidPortals: attemptForbidPortals,
-                        lockPolicyIdentity: true
+                        forbidPortals: attemptForbidPortals
                     });
                     const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
                     const guardedDebug = guarded?.debug || {};
@@ -11707,9 +11550,6 @@
                             label: attemptOpts.label || null,
                             structuralTemplate: attemptOpts.structuralTemplate || null,
                             policyProfile: attemptOpts.policyProfile || 'standard',
-                            policyProfileId: attemptOpts.policyProfileId || null,
-                            policyConfigHash: attemptOpts.policyConfigHash || null,
-                            attemptSeed: Number.isFinite(attemptOpts?.attemptSeed) ? attemptOpts.attemptSeed : null,
                             budgetMs: attemptBudgetMs,
                             heuristicFeatureFlags,
                             featureSignature
@@ -11732,9 +11572,6 @@
                     label: attemptOpts.label || null,
                     structuralTemplate: attemptOpts.structuralTemplate || null,
                     policyProfile: attemptOpts.policyProfile || 'standard',
-                    policyProfileId: attemptOpts.policyProfileId || null,
-                    policyConfigHash: attemptOpts.policyConfigHash || null,
-                    attemptSeed: Number.isFinite(attemptOpts?.attemptSeed) ? attemptOpts.attemptSeed : null,
                     budgetMs: attemptBudgetMs,
                     heuristicFeatureFlags,
                     featureSignature
@@ -11803,11 +11640,6 @@
             for (let i = 0; i < attempts.length; i++) {
                 const attempt = attempts[i];
                 attempt.attemptOrdinal = i + 1;
-                ensurePortfolioProfileIdentity(attempt, {
-                    levelId: Number(level?.id) || Number(level?.levelId) || 0,
-                    attemptOrdinal: attempt.attemptOrdinal,
-                    globalSeed: Number(opts?.globalSeed) || 0
-                });
                 applyAttemptSignature(attempt);
                 const executionRegistration = registerAttemptSignature(attempt, { markDuplicate: true });
                 if (!executionRegistration.allowed) {
@@ -11820,9 +11652,6 @@
                         budgetMs: attempt.budgetMs,
                         orderingPolicy: attempt.orderingPolicy || attempt.policyProfile || 'profile-default',
                         policyProfile: attempt.policyProfile || attempt.orderingPolicy || 'standard',
-                        policyProfileId: attempt.policyProfileId || null,
-                        policyConfigHash: attempt.policyConfigHash || null,
-                        attemptSeed: Number.isFinite(attempt?.attemptSeed) ? attempt.attemptSeed : null,
                         attemptSignatureHash: attempt?.attemptSignatureHash || executionRegistration.hash || null,
                         attemptSignatureTuple: attempt?.attemptSignatureTuple || executionRegistration.tuple || null,
                         duplicateAttemptSignature: true
@@ -11922,9 +11751,6 @@
                     phasePolicy: attemptResult.phasePolicy || attempt.phasePolicy || opts.phasePolicy || null,
                     orderingPolicy: attemptResult.orderingPolicy || attempt.orderingPolicy || attempt.policyProfile || opts.orderingPolicy || 'harvestThenFinish',
                     policyProfile: attemptResult.policyProfile || attempt.policyProfile || 'standard',
-                    policyProfileId: attempt.policyProfileId || attemptResult.policyProfileId || null,
-                    policyConfigHash: attempt.policyConfigHash || attemptResult.policyConfigHash || null,
-                    attemptSeed: Number.isFinite(attempt.attemptSeed) ? attempt.attemptSeed : (Number.isFinite(attemptResult?.attemptSeed) ? attemptResult.attemptSeed : null),
                     commitmentPlan: attempt.commitmentPlan || null,
                     memoStrictness: Number.isFinite(attempt.memoStrictness) ? attempt.memoStrictness : null,
                     disabledPrunes: Array.isArray(attempt.disabledPrunes) ? attempt.disabledPrunes.slice() : [],
@@ -12008,28 +11834,9 @@
                     failureCategory: attemptResult?.failureTaxonomy?.category || null,
                     compatLegacyOutputAlias: !!attempt.compatLegacyOutputAlias,
                     retryTag: attempt.retryTag || null,
-                    pairwiseStateOverlap: null,
-                    branchDecisionCorrelation: null,
-                    frontierDiversityDelta: null,
                     escalationNoveltyScore: null,
                     escalationDecision: null
                 });
-                const currentAttemptEntryForDiversity = attemptsUsed[attemptsUsed.length - 1] || null;
-                const previousAttemptEntryForDiversity = attemptsUsed.length >= 2 ? attemptsUsed[attemptsUsed.length - 2] : null;
-                if (currentAttemptEntryForDiversity && previousAttemptEntryForDiversity) {
-                    currentAttemptEntryForDiversity.pairwiseStateOverlap = jaccardOverlap(
-                        buildAttemptStateSketch(currentAttemptEntryForDiversity),
-                        buildAttemptStateSketch(previousAttemptEntryForDiversity)
-                    );
-                    currentAttemptEntryForDiversity.branchDecisionCorrelation = computeBranchDecisionCorrelation(
-                        currentAttemptEntryForDiversity,
-                        previousAttemptEntryForDiversity
-                    );
-                    currentAttemptEntryForDiversity.frontierDiversityDelta = computeFrontierDiversityDelta(
-                        currentAttemptEntryForDiversity,
-                        previousAttemptEntryForDiversity
-                    );
-                }
                 if (!autoContradictionRecoveryArmed && !attemptResult.ok) {
                     const goalReachableSanity = isGoalReachableFromAnyGate(level);
                     const diag = buildSearchDiagnostics(attemptResult?.debug || {}, attemptResult?.status || 'unknown');
@@ -12666,26 +12473,6 @@
                         };
                     }
                     if (timeoutProne && nextAttempt) {
-                        if (currentAttemptEntry?.pairwiseStateOverlap >= 0.85
-                            && Number(currentAttemptEntry?.branchDecisionCorrelation) >= 0.9) {
-                            const forcedDiversification = forceEscalationNoveltyDiversification(nextAttempt, nextAttempt?.policyProfile || attempt?.policyProfile);
-                            if (forcedDiversification) {
-                                nextAttempt.escalationReason = nextAttempt.escalationReason || 'segment1-min-diversity-threshold-regeneration';
-                                nextAttempt.forcedFamilySwitch = true;
-                                ensurePortfolioProfileIdentity(nextAttempt, {
-                                    levelId: Number(level?.id) || Number(level?.levelId) || 0,
-                                    attemptOrdinal: Number(nextAttempt?.attemptOrdinal) || (i + 2),
-                                    globalSeed: Number(opts?.globalSeed) || 0
-                                });
-                                if (currentAttemptEntry) {
-                                    currentAttemptEntry.minDiversityThresholdTriggered = true;
-                                    currentAttemptEntry.minDiversityThreshold = {
-                                        overlap: currentAttemptEntry.pairwiseStateOverlap,
-                                        correlation: currentAttemptEntry.branchDecisionCorrelation
-                                    };
-                                }
-                            }
-                        }
                         if (attemptResult?.debug?.forceFamilySwitchNextAttempt) {
                             const plateauSwitch = forceEscalationNoveltyDiversification(nextAttempt, nextAttempt?.policyProfile || attempt?.policyProfile);
                             if (plateauSwitch) {
@@ -19804,9 +19591,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 attemptIndex,
                 attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || strategy?.policyProfile || 'main',
                 policyProfile: attempt?.policyProfile || attempt?.attemptFamily || strategy?.policyProfile || 'unknown',
-                policyProfileId: attempt?.policyProfileId || strategy?.policyProfileId || null,
-                policyConfigHash: attempt?.policyConfigHash || strategy?.policyConfigHash || null,
-                attemptSeed: Number.isFinite(attempt?.attemptSeed) ? attempt.attemptSeed : null,
                 retryTag: attempt?.retryTag || null,
                 scoringMode: attempt?.scoringMode || attempt?.mode || strategy?.scoringMode || 'unknown',
                 orderingPolicy: attempt?.orderingPolicy || attempt?.policy || strategy?.orderingPolicy || 'unknown',
@@ -19873,10 +19657,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates)
                         ? timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
                         : null
-                }),
-                pairwiseStateOverlap: Number.isFinite(attempt?.pairwiseStateOverlap) ? attempt.pairwiseStateOverlap : null,
-                branchDecisionCorrelation: Number.isFinite(attempt?.branchDecisionCorrelation) ? attempt.branchDecisionCorrelation : null,
-                frontierDiversityDelta: Number.isFinite(attempt?.frontierDiversityDelta) ? attempt.frontierDiversityDelta : null
+                })
             };
             return ensureCanonicalAttemptTelemetry(attempt, canonical);
         };
@@ -19897,9 +19678,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             ? attempt.budgetMs
                             : (Number.isFinite(attempt?.strategyMetadata?.budgetMs) ? attempt.strategyMetadata.budgetMs : null),
                         policyProfile: attempt?.policyProfile || attempt?.strategyMetadata?.policyProfile || null,
-                        policyProfileId: attempt?.policyProfileId || attempt?.strategyMetadata?.policyProfileId || null,
-                        policyConfigHash: attempt?.policyConfigHash || attempt?.strategyMetadata?.policyConfigHash || null,
-                        attemptSeed: Number.isFinite(attempt?.attemptSeed) ? attempt.attemptSeed : null,
                         retryTag: attempt?.retryTag || null,
                         orderingPolicy: attempt?.orderingPolicy || attempt?.strategyMetadata?.orderingPolicy || null,
                         scoringMode: attempt?.scoringMode || attempt?.strategyMetadata?.scoringMode || null,
@@ -19919,9 +19697,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         memoHitRate: Number.isFinite(attempt?.memoHitRate) ? attempt.memoHitRate : null,
                         dominanceHitRate: Number.isFinite(attempt?.dominanceHitRate) ? attempt.dominanceHitRate : null,
                         nogoodHitRate: Number.isFinite(attempt?.nogoodHitRate) ? attempt.nogoodHitRate : null,
-                        pairwiseStateOverlap: Number.isFinite(attempt?.pairwiseStateOverlap) ? attempt.pairwiseStateOverlap : null,
-                        branchDecisionCorrelation: Number.isFinite(attempt?.branchDecisionCorrelation) ? attempt.branchDecisionCorrelation : null,
-                        frontierDiversityDelta: Number.isFinite(attempt?.frontierDiversityDelta) ? attempt.frontierDiversityDelta : null,
                         counterIntegrityStatus: attempt?.counterIntegrityStatus || null,
                         statsProvenance: attempt?.statsProvenance || null
                     })];
