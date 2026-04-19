@@ -11760,8 +11760,6 @@
                     const baseProfile = String(attempt.policyProfile || attempt.orderingPolicy || 'default');
                     const profileId = SolverCore.buildPolicyProfileId(baseProfile);
                     attempt.originalPolicyProfile = baseProfile;
-                    // Ensure policyProfile is always a meaningful string, not undefined.
-                    if (!attempt.policyProfile) attempt.policyProfile = baseProfile;
                     attempt.policyProfileFamily = SolverCore.getPolicyProfileFamily(baseProfile);
                     attempt.policyProfileId = profileId;
                     attempt.policyConfigHash = SolverCore.computePolicyConfigHash(baseProfile);
