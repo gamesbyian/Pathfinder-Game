@@ -5265,35 +5265,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') return 'aborted';
                 return 'error';
             };
-            const extractFirstHintPath = (hintRes) => {
-                const solutionLike = hintRes?.solution ?? hintRes?.solutions ?? null;
-                if (!solutionLike) return null;
-                const isPathEntry = (value) => !!value && typeof value === 'object' && Array.isArray(value.path);
-                const isCoordTuple = (node) => Array.isArray(node)
-                    && node.length >= 2
-                    && Number.isFinite(Number(node[0]))
-                    && Number.isFinite(Number(node[1]));
-                const isCoordObject = (node) => !!node
-                    && typeof node === 'object'
-                    && Number.isFinite(Number(node.x))
-                    && Number.isFinite(Number(node.y));
-                if (isPathEntry(solutionLike)) return solutionLike.path;
-                if (!Array.isArray(solutionLike) || solutionLike.length === 0) return null;
-                if (isPathEntry(solutionLike[0])) return solutionLike[0].path;
-                const firstNode = solutionLike[0];
-                const looksLikeRawPath = typeof firstNode === 'number'
-                    || isCoordTuple(firstNode)
-                    || isCoordObject(firstNode);
-                if (looksLikeRawPath) return solutionLike;
-                if (Array.isArray(firstNode) && firstNode.length > 0) {
-                    const node0 = firstNode[0];
-                    const nestedLooksLikePath = typeof node0 === 'number'
-                        || isCoordTuple(node0)
-                        || isCoordObject(node0);
-                    if (nestedLooksLikePath) return firstNode;
-                }
-                return null;
-            };
 
             try {
                 await new Promise(requestAnimationFrame);
@@ -5408,7 +5379,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         }
                         hintLadderState.recentOutcomeTrajectoryHashes = Array.from(knownOutcomeHashes).slice(-24);
                     }
-                    const producedPath = extractFirstHintPath(hintRes);
+                    const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
                     const hintValidation = producedPath
                         ? APP.Solver.validateCandidatePath(APP.LevelUtils.canonicalCloneLevel(normalized), copyClone(producedPath))
                         : null;
