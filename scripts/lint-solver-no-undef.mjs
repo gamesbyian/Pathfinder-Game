@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-const solverSource = await readFile(new URL('../solver.js', import.meta.url), 'utf8');
+const solverModule = await import(new URL('../solver.js', import.meta.url));
 
-assert.ok(solverSource.includes('export function createSolver'), 'solver.js should export createSolver factory');
-assert.ok(solverSource.includes('const solveLevel = async (level, opts = {}) => {'), 'solver.js should contain solveLevel implementation');
-assert.ok(solverSource.includes('return (() => {'), 'createSolver should instantiate the solver IIFE');
+assert.equal(typeof solverModule.createSolver, 'function', 'solver.js should export createSolver factory function');
 
-console.log('Solver factory lint check passed.');
+const source = await readFile(new URL('../solver.js', import.meta.url), 'utf8');
+assert.ok(!/\bnew Function\b/.test(source), 'solver.js must not use new Function');
+assert.ok(!/\beval\s*\(/.test(source), 'solver.js must not use eval');
+assert.ok(!/\bwith\s*\(/.test(source), 'solver.js must not use with(...)');
+
+console.log('Solver lint check passed (real module export + no dynamic-eval constructs).');
