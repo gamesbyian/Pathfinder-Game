@@ -6254,25 +6254,12 @@ export function createSolver(deps = {}) {
 
         const normalizeSolutionEntries = (solutionLike) => {
             const isPathEntry = (v) => !!v && typeof v === 'object' && Array.isArray(v.path);
-            const isCoordTuple = (node) => Array.isArray(node)
-                && node.length >= 2
-                && Number.isFinite(Number(node[0]))
-                && Number.isFinite(Number(node[1]));
-            const isCoordObject = (node) => !!node
-                && typeof node === 'object'
-                && Number.isFinite(Number(node.x))
-                && Number.isFinite(Number(node.y));
             if (isPathEntry(solutionLike)) return [{ path: solutionLike.path }];
             if (!Array.isArray(solutionLike)) return [];
 
-            const first = solutionLike[0];
             const treatAsSingleRawPath = solutionLike.length > 0
-                && !isPathEntry(first)
-                && (
-                    typeof first === 'number'
-                    || isCoordTuple(first)
-                    || isCoordObject(first)
-                );
+                && !isPathEntry(solutionLike[0])
+                && !Array.isArray(solutionLike[0]);
             const entries = treatAsSingleRawPath ? [solutionLike] : solutionLike;
 
             const normalized = [];
