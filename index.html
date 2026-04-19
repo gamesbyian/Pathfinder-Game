@@ -14498,8 +14498,6 @@
                 normalized.compatLegacyOutputAlias = !!compatLegacyOutputAlias;
                 normalized.message = normalized.ok ? `Solved (${variant}).` : `${variant} ${normalized.status || 'error'}.`;
                 normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
-                // Preserve identity-stamped inner attempts for Segment 1 portfolio telemetry.
-                if (Array.isArray(result?.attempts) && result.attempts.length > 0) normalized.attempts = result.attempts;
                 return normalized;
             };
 
@@ -14907,9 +14905,7 @@
                     }
                 });
                 const refereeTimeMs = Math.round(performance.now() - refereeStart);
-                const _preCanonAttempts = Array.isArray(solverResult?.attempts) ? solverResult.attempts : null;
                 solverResult = createCanonicalSolveResult(solverResult || {});
-                if (_preCanonAttempts) solverResult.attempts = _preCanonAttempts;
                 applyCanonicalSolutionShape(solverResult);
 
                 let finalStatus = solverResult.rawStatus || solverResult.status || 'error';
