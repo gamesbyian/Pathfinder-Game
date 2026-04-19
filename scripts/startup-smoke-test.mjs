@@ -132,7 +132,7 @@ const onloadSource = extractWindowOnload(html);
   assert.equal(counters.sessionStateUnsubs, 2, 'clearing user should unsubscribe active sessionState listener');
 }
 
-// 2) Fallback path should settle loader mode/state.
+// 2) levels.js load failure should resolve init() to failed mode without pretending fallback success.
 {
   const progress = [];
   const ctx = {
@@ -173,10 +173,10 @@ const onloadSource = extractWindowOnload(html);
 
   const mode = await ctx.APP.Loader.init();
   const status = ctx.APP.Loader.getStatus();
-  assert.equal(mode, 'fallback', 'loader should resolve to fallback when levels.js cannot load');
-  assert.equal(status.mode, 'fallback', 'loader mode should settle to fallback');
-  assert.equal(status.phase, 'fallback', 'loader phase should settle to fallback');
-  assert.ok(progress.some((entry) => entry.phase === 'Using Local Fallback...'), 'fallback progress label should be emitted');
+  assert.equal(mode, 'failed', 'loader should resolve to failed when levels.js cannot load');
+  assert.equal(status.mode, 'failed', 'loader mode should record failed state');
+  assert.equal(status.phase, 'loading', 'loader status remains loading until boot decides finish/fail presentation');
+  assert.ok(progress.some((entry) => entry.phase === 'Loading Levels...'), 'loading-levels progress label should be emitted before failure');
 }
 
 // 3) Auth rejection path should still settle loader via finish.
@@ -248,4 +248,4 @@ const onloadSource = extractWindowOnload(html);
   assert.ok(calls.reportedErrors.includes('startup-input-init'), 'window.onload should report input init error after boot');
 }
 
-console.log('Startup smoke test passed (listener dedupe + loader settle paths).');
+console.log('Startup smoke test passed (listener dedupe + loader failure/settle paths).');
