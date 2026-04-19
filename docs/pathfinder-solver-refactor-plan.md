@@ -157,12 +157,50 @@ Replace pseudo-diversity (near-identical attempts) with explicit, measurable por
    - early branching rank-correlation
 6. Add minimum diversity threshold; regenerate weakly-diverse attempts.
 
+### Diversity metrics wiring (Option A — required approach)
+
+The raw `attemptsUsed` array **must never be attached to `solverResult`** or
+allowed to flow through `createCanonicalSolveResult` and into `runHintLadder`.
+Those objects are large, contain complex nested fields, and cause serialization
+exceptions in `toAuditRefereeAttemptHistory` that silently swallow the hint
+result and produce `status:"error"` / `attemptCount:0` across all affected levels.
+
+The safe pattern is:
+
+1. Inside `solveLevel`, **before** calling `createCanonicalSolveResult`, call
+   `computeLevelDiversityMetrics(attemptsUsed)` while `attemptsUsed` is still
+   in scope.
+2. Assign the returned scalar/plain-object result to a dedicated key on
+   `solverResult` **after** canonicalization:
+
+   ```js
+   const _diversityMetrics = computeLevelDiversityMetrics(attemptsUsed);
+   solverResult = createCanonicalSolveResult(solverResult || {});
+   solverResult.portfolioDiversityMetrics = _diversityMetrics;
+   ```
+
+3. `runHintLadder` reads `hintRes.portfolioDiversityMetrics` — no raw attempt
+   objects ever leave `solveLevel`.
+
+This approach was chosen over alternatives because:
+- No large objects flow through the hint ladder loop (no exception risk).
+- `toAuditAttemptSummary` / `toAuditRefereeAttemptHistory` never see the raw
+  attempts (regression-safe).
+- `computeLevelDiversityMetrics` already exists and has access to everything
+  it needs at the `solveLevel` call site.
+
+**Do not use** the `_preCanonAttempts` pattern (preserving `attemptsUsed` across
+canonicalization and re-attaching to `solverResult`) — this was the root cause
+of the 133-level regression introduced in commit `de16858` and partially reverted
+by `b54cd5d` before being fully reverted in `0401458`.
+
 ### New telemetry required
 - `policyProfileId`
 - `policyConfigHash`
 - `attemptSeed`
 - `pairwiseStateOverlap`
 - `branchDecisionCorrelation`
+- `portfolioDiversityMetrics` (computed in-place inside `solveLevel` via Option A above)
 
 ### Evaluation protocol
 - Run hard set + intermittent set with fixed total node budgets.
