@@ -469,6 +469,53 @@ const summarizeMetrics = (payload, commitSha) => {
     )
   };
 
+  // Segment 1 (portfolio diversification) telemetry rollup. Summarizes per-level
+  // diversity metrics so Gate B can be verified from audits/metrics/latest.json
+  // without re-parsing the raw payload.
+  const diversityLevels = levels.filter((row) => row?.diversityMetrics && typeof row.diversityMetrics === 'object');
+  const overlapMeans = diversityLevels
+    .map((row) => toFiniteNumber(row?.diversityMetrics?.pairwiseStateOverlap?.mean))
+    .filter((n) => n !== null);
+  const overlapMaxes = diversityLevels
+    .map((row) => toFiniteNumber(row?.diversityMetrics?.pairwiseStateOverlap?.max))
+    .filter((n) => n !== null);
+  const correlationMeans = diversityLevels
+    .map((row) => toFiniteNumber(row?.diversityMetrics?.branchDecisionCorrelation?.mean))
+    .filter((n) => n !== null);
+  const distinctProfileCounts = diversityLevels
+    .map((row) => toFiniteNumber(row?.diversityMetrics?.distinctProfileIdCount))
+    .filter((n) => n !== null);
+  const distinctFamilyCounts = diversityLevels
+    .map((row) => toFiniteNumber(row?.diversityMetrics?.distinctFamilyCount))
+    .filter((n) => n !== null);
+  const oscillatedCounts = diversityLevels
+    .map((row) => toFiniteNumber(row?.diversityMetrics?.oscillatedAttemptCount))
+    .filter((n) => n !== null);
+  const avg = (arr) => (arr.length ? Number((arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(4)) : null);
+  const max = (arr) => (arr.length ? Number(Math.max(...arr).toFixed(4)) : null);
+  summary.diversityRollup = {
+    levelsWithDiversityMetrics: diversityLevels.length,
+    pairwiseStateOverlap: {
+      meanOfMeans: avg(overlapMeans),
+      maxOfMaxes: max(overlapMaxes)
+    },
+    branchDecisionCorrelation: {
+      meanOfMeans: avg(correlationMeans)
+    },
+    distinctProfileIdCount: {
+      mean: avg(distinctProfileCounts),
+      max: max(distinctProfileCounts)
+    },
+    distinctFamilyCount: {
+      mean: avg(distinctFamilyCounts),
+      max: max(distinctFamilyCounts)
+    },
+    oscillatedAttempts: {
+      totalAcrossLevels: oscillatedCounts.reduce((s, v) => s + v, 0),
+      mean: avg(oscillatedCounts)
+    }
+  };
+
   if (includeLevels) {
     summary.levels = levels;
   }

@@ -1775,6 +1775,67 @@
                     knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, nearClosureRescue: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.25, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.25 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.1, intersectionSetupWeight: 1.15 } },
                     finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, nearClosureRescue: { goalAttractionWeight: 1.45, finishCommitmentWeight: 1.55, mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1.3, slackPreservationWeight: 1.25 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 }, mustCrossFirst: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.2 } }
                 },
+                // Segment 1 (portfolio diversification): map existing policy profiles onto a compact family taxonomy.
+                // Families group profiles that share a dominant behavioral axis so attempt identity and diversity
+                // metrics can be measured against a small, stable set rather than 11 overlapping profile names.
+                SOLVER_POLICY_FAMILY_OF_PROFILE: {
+                    default: 'baseline',
+                    perimeterSweep: 'portal-conservative',
+                    lengthHarvest: 'portal-conservative',
+                    harvestThenFinish: 'obligation-first',
+                    objectiveFirst: 'obligation-first',
+                    knotBuilder: 'obligation-first',
+                    mustCrossFirst: 'obligation-first',
+                    portalFirstTransfer: 'portal-aggressive',
+                    portalCommitted: 'portal-aggressive',
+                    finishFirst: 'goal-distance',
+                    nearClosureRescue: 'endgame-closure',
+                    endurance: 'endgame-closure'
+                },
+                SOLVER_POLICY_FAMILY_DEFAULT: 'baseline',
+                // Attempt seed namespace: deterministic function of (globalSeed, levelId, attemptOrdinal, profileId)
+                // so attempts can be replayed and diversity can be evaluated across seeded runs.
+                SOLVER_GLOBAL_SEED_DEFAULT: 0x9e3779b9,
+                _fnv1aHash32(str) {
+                    let hash = 0x811c9dc5;
+                    const src = String(str || '');
+                    for (let i = 0; i < src.length; i++) {
+                        hash ^= src.charCodeAt(i);
+                        hash = Math.imul(hash, 0x01000193);
+                    }
+                    return hash >>> 0;
+                },
+                getPolicyProfileFamily(policyName) {
+                    const name = String(policyName || '');
+                    return this.SOLVER_POLICY_FAMILY_OF_PROFILE[name] || this.SOLVER_POLICY_FAMILY_DEFAULT;
+                },
+                computePolicyConfigHash(policyName) {
+                    const canonicalName = this.SOLVER_POLICY_PROFILES[policyName] ? policyName : 'default';
+                    const def = this.SOLVER_POLICY_PROFILES[canonicalName];
+                    const weights = { ...def.direction, ...def.coverage, ...def.urgency, ...def.pathology };
+                    const sortedKeys = Object.keys(weights).sort();
+                    const token = sortedKeys.map(k => `${k}:${weights[k]}`).join('|');
+                    return `pc-${this._fnv1aHash32(`${canonicalName}|${token}`).toString(16).padStart(8, '0')}`;
+                },
+                buildPolicyProfileId(policyName) {
+                    const canonicalName = this.SOLVER_POLICY_PROFILES[policyName] ? policyName : 'default';
+                    const family = this.getPolicyProfileFamily(canonicalName);
+                    return `${family}:${canonicalName}`;
+                },
+                computeAttemptSeed({ globalSeed, levelId, attemptOrdinal, profileId } = {}) {
+                    const gs = Number.isFinite(Number(globalSeed)) ? (Number(globalSeed) >>> 0) : this.SOLVER_GLOBAL_SEED_DEFAULT;
+                    const li = Math.max(0, Number(levelId) | 0);
+                    const ao = Math.max(0, Number(attemptOrdinal) | 0);
+                    const pid = this._fnv1aHash32(String(profileId || ''));
+                    // Mix inputs with distinct odd multipliers; final FNV avalanche for uniformity.
+                    let mix = gs >>> 0;
+                    mix = (mix ^ Math.imul(li + 1, 0x85ebca6b)) >>> 0;
+                    mix = (mix ^ Math.imul(ao + 1, 0xc2b2ae35)) >>> 0;
+                    mix = (mix ^ pid) >>> 0;
+                    mix = Math.imul(mix ^ (mix >>> 16), 0x7feb352d) >>> 0;
+                    mix = Math.imul(mix ^ (mix >>> 15), 0x846ca68b) >>> 0;
+                    return (mix ^ (mix >>> 16)) >>> 0;
+                },
                 getPolicyProfile(policyName = 'default', phase = 'harvest', urgencyScalar = null) {
                     const canonicalName = this.SOLVER_POLICY_PROFILES[policyName] ? policyName : 'default';
                     const def = this.SOLVER_POLICY_PROFILES[canonicalName] || this.SOLVER_POLICY_PROFILES.default;
@@ -8433,6 +8494,22 @@
                             || null)
                         : null)
                     || null,
+                // Segment 1 portfolio diversification telemetry. policyProfileId and policyConfigHash are frozen at
+                // attempt execution start; they identify the attempt's behavioral configuration independent of any
+                // mid-run profile oscillation. policyProfileOscillated flags whether policyProfile was mutated after
+                // the identity stamp.
+                originalPolicyProfile: attempt?.originalPolicyProfile || null,
+                policyProfileId: attempt?.policyProfileId || null,
+                policyProfileFamily: attempt?.policyProfileFamily || null,
+                policyConfigHash: attempt?.policyConfigHash || null,
+                policyProfileOscillated: (attempt?.originalPolicyProfile && attempt?.policyProfile
+                    && attempt.policyProfile !== attempt.originalPolicyProfile) ? true : false,
+                policyProfileOscillationCount: Number.isFinite(attempt?.policyProfileOscillationCount)
+                    ? attempt.policyProfileOscillationCount
+                    : null,
+                attemptOrdinal: Number.isFinite(attempt?.attemptOrdinal) ? attempt.attemptOrdinal : null,
+                attemptSeed: Number.isFinite(attempt?.attemptSeed) ? attempt.attemptSeed : null,
+                globalSeed: Number.isFinite(attempt?.globalSeed) ? attempt.globalSeed : null,
                 orderingPolicy: attempt?.orderingPolicy
                     || attempt?.activeProfile?.orderingPolicy
                     || debug?.orderingPolicy
@@ -11550,6 +11627,19 @@
                             label: attemptOpts.label || null,
                             structuralTemplate: attemptOpts.structuralTemplate || null,
                             policyProfile: attemptOpts.policyProfile || 'standard',
+                            originalPolicyProfile: attemptOpts.originalPolicyProfile || null,
+                            policyProfileId: attemptOpts.policyProfileId || null,
+                            policyProfileFamily: attemptOpts.policyProfileFamily || null,
+                            policyConfigHash: attemptOpts.policyConfigHash || null,
+                            policyProfileOscillated: (attemptOpts.originalPolicyProfile
+                                && attemptOpts.policyProfile
+                                && attemptOpts.policyProfile !== attemptOpts.originalPolicyProfile) ? true : false,
+                            policyProfileOscillationCount: Number.isFinite(attemptOpts?.policyProfileOscillationCount)
+                                ? attemptOpts.policyProfileOscillationCount
+                                : 0,
+                            attemptOrdinal: Number.isFinite(attemptOpts?.attemptOrdinal) ? attemptOpts.attemptOrdinal : null,
+                            attemptSeed: Number.isFinite(attemptOpts?.attemptSeed) ? attemptOpts.attemptSeed : null,
+                            globalSeed: Number.isFinite(attemptOpts?.globalSeed) ? attemptOpts.globalSeed : null,
                             budgetMs: attemptBudgetMs,
                             heuristicFeatureFlags,
                             featureSignature
@@ -11572,6 +11662,19 @@
                     label: attemptOpts.label || null,
                     structuralTemplate: attemptOpts.structuralTemplate || null,
                     policyProfile: attemptOpts.policyProfile || 'standard',
+                    originalPolicyProfile: attemptOpts.originalPolicyProfile || null,
+                    policyProfileId: attemptOpts.policyProfileId || null,
+                    policyProfileFamily: attemptOpts.policyProfileFamily || null,
+                    policyConfigHash: attemptOpts.policyConfigHash || null,
+                    policyProfileOscillated: (attemptOpts.originalPolicyProfile
+                        && attemptOpts.policyProfile
+                        && attemptOpts.policyProfile !== attemptOpts.originalPolicyProfile) ? true : false,
+                    policyProfileOscillationCount: Number.isFinite(attemptOpts?.policyProfileOscillationCount)
+                        ? attemptOpts.policyProfileOscillationCount
+                        : 0,
+                    attemptOrdinal: Number.isFinite(attemptOpts?.attemptOrdinal) ? attemptOpts.attemptOrdinal : null,
+                    attemptSeed: Number.isFinite(attemptOpts?.attemptSeed) ? attemptOpts.attemptSeed : null,
+                    globalSeed: Number.isFinite(attemptOpts?.globalSeed) ? attemptOpts.globalSeed : null,
                     budgetMs: attemptBudgetMs,
                     heuristicFeatureFlags,
                     featureSignature
@@ -11637,9 +11740,40 @@
                     signature: `${nodes}:${depth}:${nearDimSignature || 'none'}`
                 };
             };
+            const globalSeedForRun = Number.isFinite(Number(opts?.globalSeed))
+                ? (Number(opts.globalSeed) >>> 0)
+                : (Number.isFinite(Number(sharedHintLadderState?.globalSeed))
+                    ? (Number(sharedHintLadderState.globalSeed) >>> 0)
+                    : SolverCore.SOLVER_GLOBAL_SEED_DEFAULT);
+            const levelIdForRun = Number.isFinite(Number(level?.id))
+                ? Number(level.id)
+                : (Number.isFinite(Number(level?.levelId))
+                    ? Number(level.levelId)
+                    : (Number.isFinite(Number(level?.level)) ? Number(level.level) : 0));
             for (let i = 0; i < attempts.length; i++) {
                 const attempt = attempts[i];
                 attempt.attemptOrdinal = i + 1;
+                // Segment 1 identity stamp: freeze profile identity once, regardless of later mid-run oscillation.
+                // originalPolicyProfile / policyProfileId / policyConfigHash survive strategy switches so diversity
+                // metrics can be tied to the profile the attempt was provisioned with.
+                if (!attempt.__identityStamped) {
+                    const baseProfile = String(attempt.policyProfile || attempt.orderingPolicy || 'default');
+                    const profileId = SolverCore.buildPolicyProfileId(baseProfile);
+                    attempt.originalPolicyProfile = baseProfile;
+                    attempt.policyProfileFamily = SolverCore.getPolicyProfileFamily(baseProfile);
+                    attempt.policyProfileId = profileId;
+                    attempt.policyConfigHash = SolverCore.computePolicyConfigHash(baseProfile);
+                    attempt.attemptSeed = SolverCore.computeAttemptSeed({
+                        globalSeed: globalSeedForRun,
+                        levelId: levelIdForRun,
+                        attemptOrdinal: attempt.attemptOrdinal,
+                        profileId
+                    });
+                    attempt.globalSeed = globalSeedForRun;
+                    attempt.policyProfileOscillationCount = 0;
+                    attempt.policyProfileOscillationLog = [];
+                    attempt.__identityStamped = true;
+                }
                 applyAttemptSignature(attempt);
                 const executionRegistration = registerAttemptSignature(attempt, { markDuplicate: true });
                 if (!executionRegistration.allowed) {
@@ -11652,6 +11786,19 @@
                         budgetMs: attempt.budgetMs,
                         orderingPolicy: attempt.orderingPolicy || attempt.policyProfile || 'profile-default',
                         policyProfile: attempt.policyProfile || attempt.orderingPolicy || 'standard',
+                        originalPolicyProfile: attempt.originalPolicyProfile || null,
+                        policyProfileId: attempt.policyProfileId || null,
+                        policyProfileFamily: attempt.policyProfileFamily || null,
+                        policyConfigHash: attempt.policyConfigHash || null,
+                        policyProfileOscillated: (attempt.originalPolicyProfile
+                            && attempt.policyProfile
+                            && attempt.policyProfile !== attempt.originalPolicyProfile) ? true : false,
+                        policyProfileOscillationCount: Number.isFinite(attempt?.policyProfileOscillationCount)
+                            ? attempt.policyProfileOscillationCount
+                            : 0,
+                        attemptOrdinal: Number.isFinite(attempt?.attemptOrdinal) ? attempt.attemptOrdinal : null,
+                        attemptSeed: Number.isFinite(attempt?.attemptSeed) ? attempt.attemptSeed : null,
+                        globalSeed: Number.isFinite(attempt?.globalSeed) ? attempt.globalSeed : null,
                         attemptSignatureHash: attempt?.attemptSignatureHash || executionRegistration.hash || null,
                         attemptSignatureTuple: attempt?.attemptSignatureTuple || executionRegistration.tuple || null,
                         duplicateAttemptSignature: true
@@ -11751,6 +11898,19 @@
                     phasePolicy: attemptResult.phasePolicy || attempt.phasePolicy || opts.phasePolicy || null,
                     orderingPolicy: attemptResult.orderingPolicy || attempt.orderingPolicy || attempt.policyProfile || opts.orderingPolicy || 'harvestThenFinish',
                     policyProfile: attemptResult.policyProfile || attempt.policyProfile || 'standard',
+                    originalPolicyProfile: attempt.originalPolicyProfile || attemptResult.originalPolicyProfile || null,
+                    policyProfileId: attempt.policyProfileId || attemptResult.policyProfileId || null,
+                    policyProfileFamily: attempt.policyProfileFamily || attemptResult.policyProfileFamily || null,
+                    policyConfigHash: attempt.policyConfigHash || attemptResult.policyConfigHash || null,
+                    policyProfileOscillated: (attempt.originalPolicyProfile
+                        && (attemptResult.policyProfile || attempt.policyProfile)
+                        && (attemptResult.policyProfile || attempt.policyProfile) !== attempt.originalPolicyProfile) ? true : false,
+                    policyProfileOscillationCount: Number.isFinite(attempt?.policyProfileOscillationCount)
+                        ? attempt.policyProfileOscillationCount
+                        : 0,
+                    attemptOrdinal: Number.isFinite(attempt?.attemptOrdinal) ? attempt.attemptOrdinal : null,
+                    attemptSeed: Number.isFinite(attempt?.attemptSeed) ? attempt.attemptSeed : null,
+                    globalSeed: Number.isFinite(attempt?.globalSeed) ? attempt.globalSeed : null,
                     commitmentPlan: attempt.commitmentPlan || null,
                     memoStrictness: Number.isFinite(attempt.memoStrictness) ? attempt.memoStrictness : null,
                     disabledPrunes: Array.isArray(attempt.disabledPrunes) ? attempt.disabledPrunes.slice() : [],
@@ -14789,6 +14949,8 @@
                 const solution = solverResult.ok ? solverResult.solution : [];
                 const debugInfo = solverResult.debug || solverResult.stats?.debug || null;
                 const canonicalAndAliasPayload = makeSolveCompatibilityPayload(compatAliases);
+                const identityAttempts = Array.isArray(solverResult.attempts) ? solverResult.attempts : [];
+                const identityAttempt = identityAttempts[identityAttempts.length - 1] || null;
                 return guardSolveResult(attachDepthZeroAudit({
                     ok: !!solverResult.ok,
                     status: solverResult.status || 'error',
@@ -14806,7 +14968,23 @@
                     solutions: solution,
                     debug: debugInfo,
                     stagesTried: solverResult.stagesTried || [],
-                    attempts: Array.isArray(solverResult.attempts) ? solverResult.attempts : [],
+                    attempts: identityAttempts,
+                    // Segment 1 diversification identity: surface the last inner-attempt identity so the
+                    // ladder-level attempt record carries its portfolio telemetry.
+                    policyProfile: solverResult.policyProfile || identityAttempt?.policyProfile || null,
+                    originalPolicyProfile: solverResult.originalPolicyProfile || identityAttempt?.originalPolicyProfile || null,
+                    policyProfileId: solverResult.policyProfileId || identityAttempt?.policyProfileId || null,
+                    policyProfileFamily: solverResult.policyProfileFamily || identityAttempt?.policyProfileFamily || null,
+                    policyConfigHash: solverResult.policyConfigHash || identityAttempt?.policyConfigHash || null,
+                    policyProfileOscillated: (identityAttempt?.originalPolicyProfile
+                        && identityAttempt?.policyProfile
+                        && identityAttempt.policyProfile !== identityAttempt.originalPolicyProfile) ? true : false,
+                    policyProfileOscillationCount: Number.isFinite(identityAttempt?.policyProfileOscillationCount)
+                        ? identityAttempt.policyProfileOscillationCount
+                        : 0,
+                    attemptOrdinal: Number.isFinite(identityAttempt?.attemptOrdinal) ? identityAttempt.attemptOrdinal : null,
+                    attemptSeed: Number.isFinite(identityAttempt?.attemptSeed) ? identityAttempt.attemptSeed : null,
+                    globalSeed: Number.isFinite(identityAttempt?.globalSeed) ? identityAttempt.globalSeed : null,
                     stage: solverResult.stage,
                     executionMode,
                     requestedSolverPath,
@@ -19591,6 +19769,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 attemptIndex,
                 attemptFamily: attempt?.attemptFamily || attempt?.policyProfile || strategy?.policyProfile || 'main',
                 policyProfile: attempt?.policyProfile || attempt?.attemptFamily || strategy?.policyProfile || 'unknown',
+                originalPolicyProfile: attempt?.originalPolicyProfile || null,
+                policyProfileId: attempt?.policyProfileId || null,
+                policyProfileFamily: attempt?.policyProfileFamily || null,
+                policyConfigHash: attempt?.policyConfigHash || null,
+                policyProfileOscillated: attempt?.policyProfileOscillated === true ? true : false,
+                policyProfileOscillationCount: Number.isFinite(attempt?.policyProfileOscillationCount)
+                    ? attempt.policyProfileOscillationCount
+                    : null,
+                attemptOrdinal: Number.isFinite(attempt?.attemptOrdinal) ? attempt.attemptOrdinal : (attemptIndex + 1),
+                attemptSeed: Number.isFinite(attempt?.attemptSeed) ? attempt.attemptSeed : null,
+                globalSeed: Number.isFinite(attempt?.globalSeed) ? attempt.globalSeed : null,
                 retryTag: attempt?.retryTag || null,
                 scoringMode: attempt?.scoringMode || attempt?.mode || strategy?.scoringMode || 'unknown',
                 orderingPolicy: attempt?.orderingPolicy || attempt?.policy || strategy?.orderingPolicy || 'unknown',
@@ -19678,6 +19867,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             ? attempt.budgetMs
                             : (Number.isFinite(attempt?.strategyMetadata?.budgetMs) ? attempt.strategyMetadata.budgetMs : null),
                         policyProfile: attempt?.policyProfile || attempt?.strategyMetadata?.policyProfile || null,
+                        originalPolicyProfile: attempt?.originalPolicyProfile || null,
+                        policyProfileId: attempt?.policyProfileId || null,
+                        policyProfileFamily: attempt?.policyProfileFamily || null,
+                        policyConfigHash: attempt?.policyConfigHash || null,
+                        policyProfileOscillated: attempt?.policyProfileOscillated === true ? true : false,
+                        policyProfileOscillationCount: Number.isFinite(attempt?.policyProfileOscillationCount)
+                            ? attempt.policyProfileOscillationCount
+                            : null,
+                        attemptOrdinal: Number.isFinite(attempt?.attemptOrdinal) ? attempt.attemptOrdinal : null,
+                        attemptSeed: Number.isFinite(attempt?.attemptSeed) ? attempt.attemptSeed : null,
+                        globalSeed: Number.isFinite(attempt?.globalSeed) ? attempt.globalSeed : null,
                         retryTag: attempt?.retryTag || null,
                         orderingPolicy: attempt?.orderingPolicy || attempt?.strategyMetadata?.orderingPolicy || null,
                         scoringMode: attempt?.scoringMode || attempt?.strategyMetadata?.scoringMode || null,
@@ -19705,6 +19905,92 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 });
             });
             return canonical.map((attempt, idx) => toCanonicalAttemptRecord(attempt, idx));
+        };
+        // Segment 1 diversity metrics. Computes per-level portfolio diversity from canonical attempts so the audit
+        // can tell whether attempts are actually exploring different trajectories or collapsing to the same one.
+        // pairwiseStateOverlap: mean and max Jaccard overlap between top-10 root-move sets across attempt pairs
+        //   (1.0 = identical root exploration; 0.0 = no shared root moves).
+        // branchDecisionCorrelation: mean Spearman-style rank correlation on shared top-10 root keys; higher means
+        //   attempts prioritize the same candidate order. Only pairs that share >= 3 root keys contribute.
+        // familyCoverage: distinct policyProfileFamily values represented; distinctProfileIds: distinct policyProfileId.
+        const computeLevelDiversityMetrics = (attempts = []) => {
+            const list = Array.isArray(attempts) ? attempts.filter(Boolean) : [];
+            const extractKeys = (entry) => {
+                const fromOrder = Array.isArray(entry?.rootMoveOrder) ? entry.rootMoveOrder.map(Number).filter(Number.isFinite) : [];
+                if (fromOrder.length) return fromOrder.slice(0, 10);
+                const fromScores = Array.isArray(entry?.rootMoveScores)
+                    ? entry.rootMoveScores.map((s) => Number(s?.key)).filter(Number.isFinite)
+                    : [];
+                return fromScores.slice(0, 10);
+            };
+            const keysByAttempt = list.map(extractKeys);
+            const eligiblePairs = [];
+            for (let i = 0; i < keysByAttempt.length; i++) {
+                for (let j = i + 1; j < keysByAttempt.length; j++) {
+                    if (keysByAttempt[i].length > 0 && keysByAttempt[j].length > 0) {
+                        eligiblePairs.push([i, j]);
+                    }
+                }
+            }
+            const jaccard = (a, b) => {
+                if (!a.length || !b.length) return null;
+                const sa = new Set(a);
+                const sb = new Set(b);
+                let inter = 0;
+                sa.forEach((k) => { if (sb.has(k)) inter++; });
+                const unionSize = sa.size + sb.size - inter;
+                return unionSize > 0 ? inter / unionSize : null;
+            };
+            const rankCorr = (a, b) => {
+                const setB = new Set(b);
+                const shared = a.filter((k) => setB.has(k));
+                if (shared.length < 3) return null;
+                const rankIn = (arr, k) => arr.indexOf(k);
+                const ra = shared.map((k) => rankIn(a, k));
+                const rb = shared.map((k) => rankIn(b, k));
+                const mean = (arr) => arr.reduce((s, v) => s + v, 0) / arr.length;
+                const ma = mean(ra), mb = mean(rb);
+                let num = 0, da = 0, db = 0;
+                for (let i = 0; i < shared.length; i++) {
+                    const xa = ra[i] - ma, xb = rb[i] - mb;
+                    num += xa * xb;
+                    da += xa * xa;
+                    db += xb * xb;
+                }
+                if (da === 0 || db === 0) return null;
+                return num / Math.sqrt(da * db);
+            };
+            const overlapValues = [];
+            const correlationValues = [];
+            for (const [i, j] of eligiblePairs) {
+                const j_val = jaccard(keysByAttempt[i], keysByAttempt[j]);
+                if (Number.isFinite(j_val)) overlapValues.push(j_val);
+                const c_val = rankCorr(keysByAttempt[i], keysByAttempt[j]);
+                if (Number.isFinite(c_val)) correlationValues.push(c_val);
+            }
+            const mean = (arr) => arr.length ? Number((arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(4)) : null;
+            const max = (arr) => arr.length ? Number(Math.max(...arr).toFixed(4)) : null;
+            const profileIds = list.map((a) => a?.policyProfileId).filter(Boolean);
+            const families = list.map((a) => a?.policyProfileFamily).filter(Boolean);
+            const oscillatedCount = list.filter((a) => a?.policyProfileOscillated === true).length;
+            return {
+                attemptCount: list.length,
+                eligiblePairCount: eligiblePairs.length,
+                pairwiseStateOverlap: {
+                    mean: mean(overlapValues),
+                    max: max(overlapValues),
+                    samples: overlapValues.length
+                },
+                branchDecisionCorrelation: {
+                    mean: mean(correlationValues),
+                    samples: correlationValues.length
+                },
+                familyCoverage: Array.from(new Set(families)).sort(),
+                distinctProfileIds: Array.from(new Set(profileIds)).sort(),
+                distinctProfileIdCount: new Set(profileIds).size,
+                distinctFamilyCount: new Set(families).size,
+                oscillatedAttemptCount: oscillatedCount
+            };
         };
         const buildLevelAttemptSummary = (attempts = []) => {
             const list = Array.isArray(attempts) ? attempts : [];
@@ -19864,6 +20150,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
                 attempts,
                 summary: buildLevelAttemptSummary(attempts),
+                diversityMetrics: (r?.newHint?.diversityMetrics && typeof r.newHint.diversityMetrics === 'object')
+                    ? r.newHint.diversityMetrics
+                    : computeLevelDiversityMetrics(attempts),
                 error: r?.error?.message || null
             };
         };
@@ -20154,6 +20443,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             }
             const finalAttempt = attemptHistory[attemptHistory.length - 1] || null;
             const finalStatus = finalHintResult?.finalStatus || finalHintResult?.rawStatus || finalAttempt?.rawStatus || status;
+            const diversityMetrics = computeLevelDiversityMetrics(attemptHistory);
             return {
                 ok: solved && Array.isArray(selectedHintPath) && selectedHintPath.length > 0,
                 status,
@@ -20165,6 +20455,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 attemptLabelsTried,
                 ladderTotalWallTimeMs,
                 ladderTotalSolveTimeMs,
+                diversityMetrics,
                 selectedHintPath: (solved && Array.isArray(selectedHintPath) && selectedHintPath.length > 0) ? selectedHintPath : null,
                 finalHintResult,
                 firstAttemptOutcome: attemptHistory[0]?.status || attemptHistory[0]?.rawStatus || 'not-run'
@@ -20196,6 +20487,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 levelEntry.newHint.ladderTotalSolveTimeMs = Number.isFinite(ladderResult?.ladderTotalSolveTimeMs) ? ladderResult.ladderTotalSolveTimeMs : 0;
                 levelEntry.newHint.attemptCount = Number.isFinite(ladderResult?.attemptCount) ? ladderResult.attemptCount : levelEntry.newHint.attemptHistory.length;
                 levelEntry.newHint.attemptLabelsTried = Array.isArray(ladderResult?.attemptLabelsTried) ? ladderResult.attemptLabelsTried : [];
+                levelEntry.newHint.diversityMetrics = (ladderResult && ladderResult.diversityMetrics)
+                    ? ladderResult.diversityMetrics
+                    : computeLevelDiversityMetrics(levelEntry.newHint.attemptHistory);
 
                 if (finalAttempt?.rawStatus === 'no-solution-inconclusive') {
                     const triage = finalAttempt?.diagnosticsSummary?.inconclusiveTriage || null;
