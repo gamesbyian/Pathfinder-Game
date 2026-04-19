@@ -19,14 +19,7 @@ const buildApp = () => ({
   },
   UI: {
     setModalContent() {},
-    setButtonState() {},
-    showMessage() {}
-  },
-  Engine: {
-    setOverlayState() {}
-  },
-  Editor: {
-    setWorkingLevelHintsFromSolutions() {}
+    setButtonState() {}
   },
   LevelUtils: {
     PACK: (x, y) => ((x & 0xffff) << 16) | (y & 0xffff)
@@ -37,7 +30,6 @@ const app = buildApp();
 
 globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
 const solver = createSolver({ APP: app });
-app.Solver = solver;
 
 for (const method of [
   'solveLevel',
@@ -83,12 +75,5 @@ assert.equal(activeController.aborted, true, 'cancel should abort active solver 
 assert.equal(app.State.ENGINE.solverAbortRequested, true, 'cancel should set solverAbortRequested flag');
 assert.equal(solver.isRunning(), true, 'isRunning should reflect active solver controller');
 assert.equal(solver.getStatus().active, true, 'getStatus().active should reflect running state');
-
-app.State.ENGINE.mode = 'play';
-app.State.ENGINE.hinter = { pathList: [], currentPathIdx: 0, source: 'none' };
-app.State.ENGINE.foundHintsSinceLoad = [];
-solver.applySolutionsToEngine([[[1, 1], [1, 2], [1, 3]]], 'hint');
-assert.equal(app.State.ENGINE.hinter.pathList.length, 1, 'applySolutionsToEngine should treat coordinate tuples as one hint path');
-assert.deepEqual(app.State.ENGINE.hinter.pathList[0], [[1, 1], [1, 2], [1, 3]], 'applySolutionsToEngine should preserve tuple-based hint path shape');
 
 console.log('Solver smoke test passed (factory API + behavior contracts).');
