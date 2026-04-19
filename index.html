@@ -4526,13 +4526,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         const waitForSolverIdle = async (maxWaitMs = 3000) => {
             const started = performance.now();
-            const isSolverRunning = () => {
-                if (typeof APP.Solver?.isRunning === 'function') {
-                    try { return !!APP.Solver.isRunning(); } catch (_) {}
-                }
-                return !!APP.State?.ENGINE?.activeSolverController;
-            };
-            while (isSolverRunning()) {
+            while (APP.Solver.isRunning()) {
                 if ((performance.now() - started) >= maxWaitMs) return false;
                 await delay0();
             }
@@ -5346,9 +5340,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     }
                     ladderAttemptPolicySignatures.add(policySignature);
                     const attemptStart = performance.now();
-                    const solveLevelFn = typeof APP.Solver?.solveLevel === 'function' ? APP.Solver.solveLevel.bind(APP.Solver) : null;
-                    if (!solveLevelFn) throw new Error('Solver API unavailable for hint ladder.');
-                    const hintRes = await solveLevelFn(APP.LevelUtils.canonicalCloneLevel(normalized), {
+                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
                         ...policy,
                         auditMode,
                         timeBudgetMs: remainingMs,
