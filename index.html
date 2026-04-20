@@ -14915,7 +14915,9 @@
                     }
                 });
                 const refereeTimeMs = Math.round(performance.now() - refereeStart);
+                const refereeAttempts = Array.isArray(solverResult?.attempts) ? solverResult.attempts : [];
                 solverResult = createCanonicalSolveResult(solverResult || {});
+                solverResult.attempts = refereeAttempts;
                 applyCanonicalSolutionShape(solverResult);
 
                 let finalStatus = solverResult.rawStatus || solverResult.status || 'error';
