@@ -525,17 +525,17 @@ const summarizeMetrics = (payload, commitSha) => {
 
 const run = async () => {
   const server = await startStaticServer();
-  const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROME_EXECUTABLE || '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+  const browser = await chromium.launch({ headless: true });
   let page;
   try {
     page = await browser.newPage();
     await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'domcontentloaded', timeout: 120000 });
 
-    await page.click('#guideBtn', { force: true });
-    await page.locator('#devToggleBtn').click({ force: true });
-    await page.click('#closeGuideX', { force: true });
-    await page.click('#openAuditModalBtn', { force: true });
-    await page.click('#auditNewHintBtn', { force: true });
+    await page.click('#guideBtn');
+    await page.locator('#devToggleBtn').click();
+    await page.click('#closeGuideX');
+    await page.click('#openAuditModalBtn');
+    await page.click('#auditNewHintBtn');
 
     await waitForAuditIdle(page);
     await waitForAuditResult(page);

@@ -8306,15 +8306,6 @@
                         ? entry.budgetMs
                         : (Number.isFinite(strategy?.budgetMs) ? strategy.budgetMs : null),
                     policyProfile: entry?.policyProfile || strategy?.policyProfile || null,
-                    originalPolicyProfile: entry?.originalPolicyProfile || null,
-                    policyProfileId: entry?.policyProfileId || null,
-                    policyProfileFamily: entry?.policyProfileFamily || null,
-                    policyConfigHash: entry?.policyConfigHash || null,
-                    policyProfileOscillated: entry?.policyProfileOscillated === true ? true : false,
-                    policyProfileOscillationCount: Number.isFinite(entry?.policyProfileOscillationCount) ? entry.policyProfileOscillationCount : null,
-                    attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null,
-                    attemptSeed: Number.isFinite(entry?.attemptSeed) ? entry.attemptSeed : null,
-                    globalSeed: Number.isFinite(entry?.globalSeed) ? entry.globalSeed : null,
                     orderingPolicy: entry?.orderingPolicy || strategy?.orderingPolicy || null,
                     scoringMode: entry?.scoringMode || strategy?.scoringMode || null,
                     portalBiasMode: entry?.portalBiasMode || strategy?.portalBiasMode || null,
@@ -8403,8 +8394,7 @@
                         pruningHitRates: instrumentation?.pruningHitRates || null
                     }),
                     progressSamples: Array.isArray(entry?.progressSamples) ? entry.progressSamples : null,
-                    progressSummary: entry?.progressSummary || null,
-                    rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 20) : null
+                    progressSummary: entry?.progressSummary || null
                 });
             });
         };
@@ -14915,9 +14905,7 @@
                     }
                 });
                 const refereeTimeMs = Math.round(performance.now() - refereeStart);
-                const refereeAttempts = Array.isArray(solverResult?.attempts) ? solverResult.attempts : [];
                 solverResult = createCanonicalSolveResult(solverResult || {});
-                solverResult.attempts = refereeAttempts;
                 applyCanonicalSolutionShape(solverResult);
 
                 let finalStatus = solverResult.rawStatus || solverResult.status || 'error';
@@ -19845,7 +19833,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 lengthDeficitAtTimeout: Number.isFinite(attempt?.lengthDeficitAtTimeout)
                     ? attempt.lengthDeficitAtTimeout
                     : null,
-                rootMoveScores: Array.isArray(attempt?.rootMoveScores) ? attempt.rootMoveScores.slice(0, 20) : null,
                 timeoutDiagnostics: compactDefined({
                     frontierMustPassDistribution: timeoutDiagnostics?.frontierMustPassDistribution || null,
                     frontierInteractionDeficitDistribution: timeoutDiagnostics?.frontierInteractionDeficitDistribution || null,
@@ -20163,7 +20150,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 topRootMove: compactTopRootMove(r?.newHint?.rootMoveScores),
                 attempts,
                 summary: buildLevelAttemptSummary(attempts),
-                diversityMetrics: computeLevelDiversityMetrics(attempts),
+                diversityMetrics: (r?.newHint?.diversityMetrics && typeof r.newHint.diversityMetrics === 'object')
+                    ? r.newHint.diversityMetrics
+                    : computeLevelDiversityMetrics(attempts),
                 error: r?.error?.message || null
             };
         };
