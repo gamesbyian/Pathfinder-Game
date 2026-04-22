@@ -1,0 +1,305 @@
+# Technical Memo: Improving the Pathfinder Constrained-Path Solver
+
+**To:** Pathfinder developer
+**Re:** Root-cause analysis of level 92/108/134 failures and a research-grounded plan to fix them
+**Date:** 2026-04-22
+
+---
+
+## Executive Summary
+
+**The single biggest recommendation: replace the current heuristic with a landmark-based heuristic derived from your must-pass / must-cross / portal-automaton constraints, and combine it with an anytime weighted-A\* (LAMA-style) outer loop with Luby restarts.** Your telemetry shows a textbook signature of *heuristic plateau on a satisficing search with landmark-like hard constraints*: a search that "expands cleanly" (no thrash, no contradictions, 0 repeated states) but whose obligation-reduction slope is essentially zero across every one of 7–13 policy profiles is, in the classical-planning literature, the pathological case that the landmark heuristic was explicitly designed to fix ([Richter & Westphal 2010, JAIR](https://arxiv.org/abs/1401.3839)). No amount of root-candidate diversification will help once search is inside such a plateau, which is why your `forcedRootDiversity`, `depth0DiversityFloor`, and 13-profile portfolio all fail identically.
+
+If that one fix is not enough — or if you want a more decisive rewrite — the second recommendation is to re-encode the problem as a **bounded-horizon CP-SAT model** (Google OR-Tools has a native `AddAutomaton` / `AddCircuit` pair that map almost 1:1 onto your portal DFA and path constraints) and use lazy-clause-generation-style nogood learning to get the *depth>0 pruning* that your current solver is missing ([OR-Tools CP-SAT docs](https://developers.google.com/optimization/cp); [d-krupke CP-SAT primer](https://d-krupke.github.io/cpsat-primer/04B_advanced_modelling.html)).
+
+Before investing in either, **spend one afternoon red-teaming solvability** (Section 6): run a backward BFS from the goal under a relaxed ruleset on those three levels. If any of the three is actually unsolvable or requires a path beyond your beam depth, every other recommendation is moot.
+
+---
+
+## 1. Diagnosis: What the telemetry is actually telling us
+
+Your own observations are correct and I want to reinforce them with literature. The failing-pass signature is:
+
+| Signal | Value on failing levels | What this rules in / out |
+|---|---|---|
+| `repeatedStateRatio = 0`, `portalCommitmentChurn = 0` | No cycling | Not a state-aliasing / transposition bug |
+| `contradictionRecoveryActivatedCount = 0` (across all 137 levels) | No backtrack storms | Not a propagation-correctness bug |
+| `obligationReductionSlope ≈ 0.003–0.005` vs. 0.02–2.3 on solved levels (≈ 10–100× worse) | Heuristic is *flat* | Classic **heuristic plateau** |
+| All 7–13 policy profiles fail identically with `cap-reached` | Tuning-invariant | Structural, not parametric |
+| `rootCandidatesExpanded = 2` of 4 on level 134 | Beam starvation at depth >0 | Budget consumed on bad branches |
+| `intersectionScheduleProgress = -0.017` on level 108 | Actively regressing on a constraint metric | Heuristic **misleads** the search |
+
+The canonical name for this pattern in the planning literature is a **local-minimum / plateau in the heuristic landscape**, and it is precisely the failure mode that Hoffmann's "Local Search Topology in Planning Benchmarks" analysis identified as the fundamental limit of greedy / beam heuristic search guided by a delete-relaxation heuristic like `h_FF` ([Hoffmann 2001; Baier tutorial on FF](http://www.cs.toronto.edu/~sheila/2542/f10/slides/CSC2542f10_tutorial1.pdf)). Coles & Smith observe the same bottleneck more pointedly: *"The key bottleneck in using EHC is where the search heuristic cannot provide sufficient guidance to escape a plateau in a single action step … EHC search consists of prolonged periods of exhaustive search, bridged by relatively quick periods of heuristic descent"* [Carnegie Mellon University](https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume28/coles07a-html/node5.html) ([Coles & Smith, JAIR vol. 28](https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume28/coles07a-html/node5.html)). That matches `nodesExpanded=6991` / `candidateMovesConsidered=14617` on level 92 with zero net progress exactly.
+
+Among your candidate diagnoses, I would rank likelihoods:
+
+1. **Heuristic poorly informed for this constraint set** (most likely). `lengthPressure=107` and `mustPassUrgency=-36.52` on level 92 suggest your driver scoring is dominated by a distance-to-goal proxy that simply doesn't reward progress on must-pass / portal-automaton sub-goals. The `mustPassUrgency` sign being *negative* means must-pass pressure is pushing against length pressure rather than integrating with it.
+2. **Missing landmark/subgoal decomposition** (also very likely, and tightly linked to #1). You have all the ingredients of a landmark heuristic — gates, must-pass, must-cross, portal obligations — but they are consumed as soft scoring terms rather than as *facts that must become true on any solution path*, which is exactly the definition of a landmark ([Richter & Westphal 2010](https://www.jair.org/index.php/jair/article/download/10667/25496/19843)).
+3. **Plateau-trapped beam** (the symptom). Your "low branch mode" + diversity floor is a reasonable restart-at-root defense, but it cannot rescue a beam that has no gradient once it leaves the root.
+4. **Constraint propagation too weak at depth>0** (contributing). With no nogood/conflict recording, every pass re-discovers the same bad branches. Nothing in the telemetry indicates learned nogoods or arc-consistency propagation during tree expansion.
+5. **Soft-vs-hard framing** (design smell). Treating hard CSP constraints as soft scoring drivers is a known anti-pattern: CP-SAT and Chuffed get their speed largely by keeping constraints *hard* and learning nogoods from violations ([Chuffed README](https://github.com/chuffed/chuffed); [Stuckey on lazy clause generation](https://www.hakank.org/constraint_programming_blog/2009/08/minizinc_the_lazy_clause_gener.html)).
+
+**Not the cause:** heuristic *inadmissibility* per se. Inadmissible heuristics are typically more informative, not less, and FF and LAMA use inadmissible heuristics successfully ([Patel, "Don't follow the shortest path!"](https://realtimecollisiondetection.net/blog/?p=56)). The problem is informedness / monotonicity along the must-pass axis, not optimality.
+
+---
+
+## 2. Best practices for improving the EXISTING beam/tree-expansion solver
+
+### 2.1 Build a real landmark heuristic
+
+Define a **landmark** as any fact that must hold on any feasible solution path. For Pathfinder:
+
+- Every **must-pass tile** is a trivial fact landmark.
+- Every **must-cross edge** is a fact landmark.
+- Each **portal-automaton accepting-prefix state** that every path must traverse is a landmark (these are exactly what automaton-based CP models expose; see [CP-SAT `AddAutomaton`](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html) which unrolls a DFA into phased flow of required states). [Or-tools](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html)
+- **Disjunctive landmarks**: "at some point the path enters portal A OR portal B" (when parity forces at least one of two portals). LAMA specifically supports disjunctive landmarks, which are what give it an edge over pure delete-relaxation heuristics ([Richter, Helmert, Westphal 2008, AAAI](https://www.semanticscholar.org/paper/The-LAMA-Planner-Using-Landmark-Counting-in-Search-Richter/60d5a4bb1a63aebe56e4c59f1e6498adafc2e9f6)).
+
+The LAMA heuristic is then, informally, `h_L(s) = |landmarks not yet achieved from s, accounting for ordering|`. This produces a *monotone* signal whose slope goes up exactly when a must-pass / must-cross / portal obligation is satisfied — which is *precisely* the signal your `obligationReductionSlope` is currently failing to produce. Richter & Westphal's JAIR paper is the canonical reference and explicitly evaluates landmarks vs. `h_FF` (your `lengthPressure` driver is morally a `h_FF` variant): *"using landmarks improves performance, whereas the incorporation of action costs into the heuristic estimators proves not to be beneficial … in some domains a search that ignores cost solves far more problems"* [ResearchGate](https://www.researchgate.net/publication/374317096_A_Landmark-Cut_Heuristic_for_Lifted_Optimal_Planning) ([JAIR 39, pp. 127–177](https://arxiv.org/abs/1401.3839)). The practical takeaway: **drop `lengthPressure` as the dominant term on failing levels; dominate instead with landmark-count-remaining.**
+
+There is also a 2022 lifted-landmark variant that is useful if you don't want to ground the entire state space ahead of time ([Corrêa et al., IJCAI 2022](https://www.ijcai.org/proceedings/2022/0647.pdf)).
+
+### 2.2 ALT / landmark-based distance bounds
+
+For the *metric* part of your heuristic (estimated steps remaining), replace Manhattan/Euclidean with **ALT (A\*, Landmarks, Triangle inequality)** as described by Goldberg & Harrelson and popularized for game devs by Amit Patel: precompute shortest-path distances from every tile to a small set of "corner" landmarks on each level, then use the triangle inequality as a cheap lower bound that respects walls and portals ([Amit's A\* Heuristics page](http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html)). Patel notes ALT is *"surprisingly simple to implement, sometimes under 15 lines of code, and produces impressive speedups"* [Stanford Theory](http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html) — and for 2D puzzle maps of your size it is genuinely cheap.
+
+### 2.3 Stronger pruning at depth >0: nogoods and arc-consistency
+
+Your telemetry shows `repeatedStateRatio=0` but that only means states don't repeat verbatim; it does not mean *failures don't repeat*. CDCL-style **nogood learning**, ported from SAT, remembers the *reason* a subtree failed and prunes any future node that satisfies that reason. Chuffed implements this for CP via lazy clause generation and reports *"search reduction … can reach orders of magnitude on appropriate problems"* [Debian](https://lists.debian.org/debian-devel/2024/02/msg00078.html) ([Chuffed README](https://github.com/chuffed/chuffed)). For your JS codebase the practical version is much simpler: after any branch that aborts due to a must-pass being unreachable from the current state, record the minimal *assignment prefix* that caused the unreachability and refuse to explore any successor node that contains that prefix. OR-Tools' original-CP solver documents the same idea under `NoGoods` ([OR-Tools manual §7.2](https://acrogenesis.com/or-tools/documentation/user_manual/manual/metaheuristics/restart.html)).
+
+Additionally, run **arc consistency (AC-3)** on must-pass reachability before each expansion: for each remaining must-pass tile, remove from the frontier any node from which that tile is provably unreachable under current portal commitments. This is a cheap O(N·E) sweep that is the standard weak-consistency pre-pruner in every CP solver.
+
+### 2.4 A better outer search: anytime weighted-A\* with Luby restarts
+
+The **LAMA outer loop** is a good template for your setting:
+
+1. Find *any* plan with greedy best-first on `h_landmark` ignoring cost.
+2. Then run weighted-A\* with weights `w = 5, 3, 2, 1` in sequence, restarting the search from the initial state each time a better plan is found ([Richter & Westphal 2010, §3 "Anytime search"](https://arxiv.org/pdf/1401.3839)).
+
+This has two virtues over your current policy-profile portfolio:
+- It keeps the expensive landmark computation but varies *how greedy* the search is, which is much more effective than varying root-candidate diversity.
+- It terminates as soon as it finds *a* plan (your "hint" use case), so for the 134 easy levels it will be as fast or faster than today.
+
+Layered on top, use **Luby restarts**. Luby et al.'s universal restart schedule `(1,1,2,1,1,2,4,1,1,2,1,1,2,4,8,…)` is worst-case optimal for Las Vegas algorithms with unknown runtime distribution and only a logarithmic factor worse than the best fixed cut-off [Adelaide](https://cs.adelaide.edu.au/~markus/pub/2017lion-reactiveRestarts.pdf) ([Luby, Sinclair, Zuckerman 1993; cf. Wu thesis ch. 3](https://cs.uwaterloo.ca/~vanbeek/Publications/wu.pdf)). Modern SAT solvers have actually moved to *ultra-rapid* Luby with unit runs of 6–8 backtracks ([Haim & Heule, "Towards Ultra Rapid Restarts"](https://www.cs.cmu.edu/~mheule/publications/rapid.pdf)); the same phenomenon should apply to your beam — frequent, cheap restarts that retain learned nogoods dominate your current "try a whole profile to exhaustion, then try another whole profile" pattern. OR-Tools exposes this directly as `MakeLubyRestart(scale_factor)` ([OR-Tools docs](https://acrogenesis.com/or-tools/documentation/user_manual/manual/metaheuristics/restart.html)). The key invariant is: **restart must retain nogoods, or you're just paying overhead.**
+
+### 2.5 Enforced Hill Climbing to escape plateaus specifically
+
+Since your core symptom is "plateau", the algorithmic primitive explicitly designed for it is **Enforced Hill Climbing (EHC)** from FF: when no single-step successor improves `h`, perform a bounded breadth-first search forward until you find *any* state with strictly better `h`, then commit to that state [Carnegie Mellon University](https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume28/coles07a-html/node5.html) ([Hoffmann & Nebel 2001, JAIR 14:253–302](https://planning.wiki/_citedpapers/planners/ff.pdf)). Coles & Smith's "Marvin" work extended EHC with plateau memoization so you don't repeatedly re-cross the same plateau [Semantic Scholar](https://www.semanticscholar.org/paper/Heuristic-search-by-guided-enforced-hill-climbing-Akramifar-Ghasem-Sani/da9d05811a96d289dfbec95d19099306763ddd66) ([Coles & Smith, JAIR 28](https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume28/coles07a-html/node5.html)); Akramifar & Ghasem-Sani's "guided EHC" adds an ordering function so the BFS explores the most promising successors first [ScienceDirect](https://www.sciencedirect.com/science/article/abs/pii/S0952197610000813) ([Akramifar et al. 2010](https://www.sciencedirect.com/science/article/abs/pii/S0952197610000813)). For your 3 failing levels, I suspect a small EHC escape (bound of, say, 20 plies) wrapped around `h_landmark` would resolve the issue on its own. EHC is sound but not complete, [University of Toronto](http://www.cs.toronto.edu/~sheila/2542/f10/slides/CSC2542f10_tutorial1.pdf) so keep a fallback to full A\* — which is exactly what FF does.
+
+### 2.6 Waypoint-specific heuristic tricks
+
+Your problem is literally the **Constrained Shortest Path with Waypoints / Shortest Path Tour Problem** when stripped of the portal automaton (Festa et al. 2013; Ferone et al. 2016; [ScienceDirect survey on CSPTP branch-and-price](https://www.sciencedirect.com/science/article/abs/pii/S0305054822001010)). The dominant trick for that family is:
+
+```
+h(n) = h'(n, w1) + distance(w1, w2) + ... + h'(wk, goal)
+```
+
+i.e., estimate cost via the **best ordering of remaining waypoints** using precomputed all-pairs distances among waypoints only, not all tiles ([Amit Patel, Heuristics](http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html); [Stanford CS221 waypoints assignment](https://stanford-cs221.github.io/summer2023/assignments/route/index.html)). For ≤ ~10 must-pass points per level (almost certainly your case), the optimal ordering is a tiny TSP solvable by Held–Karp dynamic programming in O(k² · 2ᵏ) — literally milliseconds. This alone is typically a 5–20× pruning improvement over Manhattan.
+
+### 2.7 Large Neighborhood Search (LNS) as a repair mechanism
+
+If you can find *any* feasible path (even an unnecessarily long one) via a relaxed solve, then repeated **destroy-and-repair** becomes competitive. LNS was introduced by Shaw 1998 for vehicle routing [Springer](https://link.springer.com/chapter/10.1007/3-540-49481-2_30) with constraints and is the default improvement heuristic inside CP-SAT ([Shaw 1998, CP'98](https://link.springer.com/chapter/10.1007/3-540-49481-2_30); [CP-SAT primer, LNS chapter](https://d-krupke.github.io/cpsat-primer/09_lns.html)). In your setting: find a path that hits all must-pass tiles (ignoring portals), then iteratively "unassign" a 20% window of the path and re-optimize with portals/hazards enabled. CP-SAT's log output shows `routing_path_lns` as its most successful strategy [D-krupke](https://d-krupke.github.io/cpsat-primer/09_lns.html) for routing-shaped problems, which is encouraging for Pathfinder.
+
+### 2.8 Diversity, done right
+
+Your existing "forced root diversity" is in the spirit of **Diverse Beam Search** ([Vijayakumar et al. 2016](https://arxiv.org/abs/1610.02424)), which augments the beam objective with an inter-group dissimilarity term. [arXiv](https://arxiv.org/abs/1610.02424) But DBS enforces diversity *at every depth*, not just the root. In your telemetry `frontierDiversityDelta = 0` on both failing *and most solved* levels, which the user correctly flagged as a broken/uninformative metric. If you keep diversified beam, measure diversity as *Hamming distance between the portal-automaton state vectors* of the top-k beam members at every depth, not just opening moves — that's the variation that actually tracks useful exploration.
+
+---
+
+## 3. Alternative solver paradigms to REPLACE the current approach
+
+| Paradigm | Fit for Pathfinder | Browser-deployable? | Expected effort |
+|---|---|---|---|
+| **CP-SAT (OR-Tools) via WASM** | Excellent — native `AddAutomaton` for portal DFA, `AddCircuit` for path, `AddElement` for tile lookups | Yes (experimental WASM build exists, or run serverside) | Medium (rewrite as model) |
+| **MiniZinc + Chuffed (LCG)** | Excellent for the hard-constraint core; LCG is the state of the art for problems with global constraints ([MiniZinc handbook](https://docs.minizinc.dev/en/stable/solvers.html)) | Server-only | Medium |
+| **Z3 / SMT (BMC encoding)** | Good for small levels; encode k-step path as QF_BV or QF_LIA formula | Yes — z3-solver.js WASM build | Low-medium |
+| **ASP / Clingo** | Good fit for combinatorial/logical rules; Clingo has LNS extensions (heulingo) ([Sugimori et al., KR'24](https://proceedings.kr.org/2024/72/kr2024-0072-sugimori-et-al.pdf)) | Clingo compiles to WASM | Medium |
+| **ILP / MIP** | Serviceable but typically inferior to CP-SAT on automaton-structured problems | No free WASM MIP solver matches commercial ones | High |
+| **Classical planning (PDDL + FastDownward/LAMA)** | Nice conceptual fit; FD is the reference implementation of everything in Section 2 | C++ binary; not browser-native | High |
+| **Neural-guided MCTS (AlphaZero-style)** | Possible but overkill; huge training effort; results unverifiable for puzzle hints | Yes (TF.js / ONNX runtime) | Very high |
+| **Learned beam-search value function** | Best-of-both: keep your beam, replace the heuristic with a learned one ([Huber & Raidl 2022, RV-LBS](https://link.springer.com/chapter/10.1007/978-3-031-25312-6_10)) | Yes | High |
+
+### 3.1 CP-SAT (OR-Tools) — the strongest recommendation for a *replacement*
+
+CP-SAT combines CP-style modeling with SAT-style conflict-driven learning and a portfolio of parallel workers running LNS, first-solution heuristics, and LP relaxations ([OR-Tools Constraint Optimization guide](https://developers.google.com/optimization/cp); [d-krupke primer intro](https://github.com/d-krupke/cpsat-primer)). Two CP-SAT globals map almost perfectly onto Pathfinder:
+
+- **`AddAutomaton(transition_variables, starting_state, final_states, transitions)`** unrolls a DFA into phased flow and enforces that the sequence of decisions traces a valid path through the automaton. Your portal automaton is *literally* this ([CP-SAT cp_model.py source, lines 715–730]( [Or-tools](https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html) https://or-tools.github.io/docs/pdoc/ortools/sat/python/cp_model.html)).
+- **`AddCircuit(arcs)`** and `AddMultipleCircuit` enforce path/tour structure; the CP-SAT primer notes this "significantly outperforms" MTZ/DFJ encodings for routing [D-krupke](https://d-krupke.github.io/cpsat-primer/04B_advanced_modelling.html) ([primer advanced modeling](https://d-krupke.github.io/cpsat-primer/04B_advanced_modelling.html)).
+
+Combined, a bounded-horizon CP-SAT model for one Pathfinder level is ~100 lines of Python and typically solves instances with a few thousand cells in milliseconds. The tradeoff is deployment: CP-SAT is not trivially embeddable in a pure-browser app. Options: (a) ship it serverside as a solver-API the browser calls for precomputed hints; (b) use a WASM build (the OR-Tools team has experimental WASM targets but they are not officially supported); (c) use CP-SAT *offline* to generate ground-truth hints for all 137 levels as JSON, and ship those instead of a live solver.
+
+### 3.2 Z3 / SMT as the browser-native option
+
+z3 has a mature WASM build (`z3-solver` on npm) and a long track record of solving puzzles via bounded model checking: encode the path as a sequence of `(x_t, y_t)` integer variables for t=0..k, add transition constraints, add must-pass existence constraints (`∃t. x_t=mx ∧ y_t=my`), add portal-automaton transitions, and `check_sat` ([Z3 book ch. on Rush Hour — a structurally similar puzzle](https://leodemoura.github.io/files/lab.pdf); [Evaluating SAT/SMT on 25×25 Sudoku](https://arxiv.org/html/2501.08569v1)). The Armando / Kroening bounded-model-checking line of work showed SMT encodings can be "considerably more compact" than pure SAT for structured problems ([Armando et al., on SMT vs CBMC](https://www.researchgate.net/publication/227207671_Bounded_model_checking_of_software_using_SMT_solvers_instead_of_SAT_solvers)). Practical caveat: Z3 is single-threaded in the browser and will be slower than CP-SAT serverside, but for 3 levels it's plenty.
+
+### 3.3 Lazy Clause Generation (Chuffed / MiniZinc) — the conceptually cleanest model
+
+If the user is willing to run a serverside solver and wants the cleanest model, Chuffed is arguably the right tool: it "combines some of the advantages of finite domain constraint programming (high-level model and programmable search) with some of the advantages of SAT solvers (reduced search by nogood creation, and effective autonomous search using variable activities)" ([Chuffed ITP announcement](https://lists.debian.org/debian-devel/2024/02/msg00078.html)). Your portal automaton, must-pass/must-cross, parity, and directionality constraints all have direct MiniZinc globals (`regular`, `alldifferent`, `circuit`). Chuffed routinely beats pure CP solvers by orders of magnitude on problems structured like yours ([Stuckey on LCG](https://www.hakank.org/constraint_programming_blog/2009/08/minizinc_the_lazy_clause_gener.html)).
+
+### 3.4 Neural approaches — realistic assessment
+
+AlphaZero-style MCTS has been applied to Sokoban with strong but not dominant results (DRC(3,3) is "state-of-the-art among model-free RL approaches" but still solves fewer boards than hand-engineered Sokoban solvers with pattern databases; [Taufeeque et al. interpretability of DRC](https://arxiv.org/html/2506.10138v1); cf. also [Shoham & Elidan / Crippa / generic MCTS review on Sokoban MCTS alone performing poorly](https://motion.cs.umn.edu/pub/SokobanMCTS/DataDrivenSokobanMCTS.pdf)). For 137 hand-crafted levels with 3 failing, the data-efficiency case for RL is very weak — you don't have thousands of instances for self-play.
+
+A lighter-weight, more defensible option is **Learning Beam Search** (Huber & Raidl 2022): train an MLP offline on the 134 levels you can already solve to predict "how much length-to-go remains from this state" relative to the average beam level, then use that MLP as the heuristic ([Springer LNCS chapter](https://link.springer.com/chapter/10.1007/978-3-031-25312-6_10)). **Simulation-Guided Beam Search** (Choo et al., NeurIPS 2022) is another option — combine a learned policy with rollouts inside a beam ([arXiv 2207.06190](https://arxiv.org/abs/2207.06190)). Both are overkill for 3 failing levels but become attractive if you plan to ship user-generated levels.
+
+### 3.5 Not recommended
+
+- **Pure MCTS without learning:** Pérez, Samothrakis & Lucas 2014 showed pure MCTS performs poorly on Sokoban-like puzzles; it needs a learned policy to be competitive, and you don't have the training data ([UMN Sokoban MCTS paper](https://motion.cs.umn.edu/pub/SokobanMCTS/DataDrivenSokobanMCTS.pdf)).
+- **ILP/MIP:** works, but automaton/circuit constraints need big-M linearization that CP-SAT handles natively, so you'd be giving up the solver's strongest hand.
+
+---
+
+## 4. Specific, actionable recommendations for levels 92 / 108 / 134
+
+Ranked by expected impact-per-engineering-effort, concretely for a JavaScript single-page app:
+
+### Recommendation 1 (ship this first): Replace the heuristic with `h_landmark + h_waypoint_TSP`, keep the existing beam
+
+**Effort:** 1–3 days. **Expected impact:** likely resolves all three failures; also improves `hintTimeMsAvg` materially.
+
+- Compute landmarks per level *once* at load time: each must-pass tile, each must-cross edge, each portal-automaton state that is mandatory.
+- At each node: `h(n) = α · (landmarks_unmet(n)) + β · tsp_tour_lower_bound(n) + γ · manhattan_to_goal`.
+- Held–Karp for the ordering of unmet waypoints — this is O(k²·2ᵏ) and for k ≤ 15 is <1 ms ([CS221 waypoints problem](https://stanford-cs221.github.io/summer2023/assignments/route/index.html)).
+- Drop `lengthPressure` as the dominant driver, or make it subordinate to `landmarks_unmet`. This alone should restore a positive `obligationReductionSlope` because every landmark achieved makes `h` step down.
+
+This is the direct LAMA prescription, and LAMA's evidence is that landmarks alone *"substantially improve coverage"* on cost-sensitive problems ([Richter & Westphal 2010](https://arxiv.org/pdf/1401.3839)).
+
+### Recommendation 2: Add Enforced Hill Climbing with plateau memoization
+
+**Effort:** 1 day on top of Rec. 1. **Expected impact:** converts "stuck on plateau for 28 s" into either "escapes in ≤ 50 nodes" or "fails fast, trigger fallback".
+
+- Replace your current top-of-beam policy on failing levels with EHC: when no successor improves `h_landmark`, BFS forward up to depth D (e.g., D=20) for the first node with strictly lower `h_landmark`; commit and continue ([Hoffmann & Nebel 2001](http://www.cs.toronto.edu/~sheila/2542/f10/slides/CSC2542f10_tutorial1.pdf)).
+- Memoize plateau exits by storing `(plateau_hash → exit_node)` pairs, per Coles & Smith's "Marvin" ([JAIR 28](https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume28/coles07a-html/node5.html)).
+- Keep your full-beam solver as a fallback when EHC exhausts its budget; EHC is known to be incomplete on dead-end-rich domains ([Adapted EHC, IEEE 2013](https://ieeexplore.ieee.org/document/6722139/)).
+
+### Recommendation 3: Add Luby restarts with nogood retention
+
+**Effort:** 2 days. **Expected impact:** moderate-to-large on any residual failures; also improves `maxSolveTimeMs`.
+
+- Replace the "try profile A, then B, ..., G, until cap" portfolio with a single profile driven by Luby-scaled restart limits (in nodes, not wallclock): 1, 1, 2, 1, 1, 2, 4, ...
+- Between restarts, *retain*: (a) the landmark achievement map, (b) a set of learned nogoods of the form "any path prefix that leaves portal X uncommitted by step t is infeasible on this level", (c) the best-so-far obligation-reduction trace.
+- Use the ultra-rapid variant (unit = 6–8) per [Haim & Heule](https://www.cs.cmu.edu/~mheule/publications/rapid.pdf) rather than long restarts.
+
+This is a direct swap for the existing policy-profile portfolio and lets you drop the 7–13 profile mechanism entirely.
+
+### Recommendation 4 (if the above don't close the gap): Precompute hints offline with CP-SAT
+
+**Effort:** 2–4 days, one-time. **Expected impact:** guarantees hint availability for all 137 levels, and all future levels you author.
+
+- Write a ~100-line CP-SAT model using `AddAutomaton` (portal DFA), `AddCircuit` (path), element constraints for tiles. Iterate horizon k upward until feasible ([CP-SAT primer](https://d-krupke.github.io/cpsat-primer/04B_advanced_modelling.html)).
+- Run it offline per level; ship the solutions as a compressed JSON blob alongside the app.
+- Keep the JS solver for real-time hints on user-authored levels, or for partial-path "where should I go from *here*" queries.
+
+This is the pragmatic production answer: you get a correctness guarantee for your 137 shipped levels without shipping a solver rewrite to every browser.
+
+### Not recommended for these three levels
+
+- **SAT/SMT live in the browser**: viable but less expressive per line of code than CP-SAT; do this only if #4 serverside is off the table.
+- **Learned heuristic / NN**: overkill; 3 failures is not enough signal to train on, and your existing 134 solved levels are not adversarial enough to serve as training data.
+- **Full MCTS rewrite**: pure MCTS performs poorly on structurally similar puzzles (Sokoban) without learned guidance ([UMN 2016](https://motion.cs.umn.edu/pub/SokobanMCTS/DataDrivenSokobanMCTS.pdf)).
+
+---
+
+## 5. Instrumentation and evaluation
+
+### 5.1 Replace/augment `obligationReductionSlope`
+
+`obligationReductionSlope` is a scalar average over a pass; it hides the *shape* of progress, which is the diagnostic information you actually need. Replace it with:
+
+- **Per-depth `h` distribution**: record `min/median/max h_landmark` in the beam at every depth. A plateau is visible as a run of depths where `min h_landmark` is unchanged. This is the single most informative diagnostic in classical planning and is what FF, LAMA, and Fast Downward all log.
+- **Landmark achievement timeline**: `[(depth, landmark_id, tile)]` list of when each landmark got achieved. Flat slope = landmarks not being achieved in order.
+- **Plateau length histogram**: for each pass, histogram of "number of consecutive depths with no `h` improvement". Heavy right tail = heuristic bug; short tails = heuristic healthy.
+- **Nogood-hit rate**: of the nodes pruned at depth >0, fraction pruned by a learned nogood vs. by a hard constraint vs. by heuristic dominance. If <5% are nogood-pruned, your learning isn't doing anything.
+- **Effective branching factor**: `b* = N^(1/d)` where N is nodes expanded and d is solution depth, as used in Korf's IDA\* analysis and standard across the planning literature. Track `b*` by level; spikes identify the hard levels structurally.
+- **Landmark ordering violations**: count of times the search commits to landmark L_j before a landmark L_i known to be ordered-before L_j. High counts mean your landmark-ordering inference is wrong.
+
+### 5.2 Standard benchmarking methodology
+
+- **IPC (International Planning Competition)**: reports *coverage* (# of instances solved within a 30-minute-per-task cap), *quality score* (ratio of cost to best-known), and *runtime scatter plots* comparing two planners ([Richter & Westphal on IPC 2008 methodology](https://arxiv.org/pdf/1401.3839)). For Pathfinder, the analogue is: coverage of 137 levels at varying time caps (1s, 5s, 30s), plus a wallclock cumulative solved curve.
+- **MAPF / grid benchmarks**: the Sturtevant benchmarks (Dragon Age, StarCraft, random) are the standard for grid pathfinding; the benchmarking convention is to report per-map and aggregated node-count + wallclock.
+- **Sokoban benchmarks**: Microban (David W. Skinner's dataset) is the canonical hand-crafted test set; reporting is coverage at fixed node-budget ([sokoban-solver GitHub topics for references](https://github.com/topics/sokoban-solver)).
+- **Unsolvability IPC track** (UIPC 2016): has its own benchmarks and reports both "correctly proved unsolvable" and "incorrectly claimed solvable" — relevant given Section 6 below ([Eriksson, Röger, Helmert — Unsolvability Certificates](https://aaai.org/papers/00088-13818-unsolvability-certificates-for-classical-planning/)).
+
+### 5.3 A/B test design
+
+Hold the solver harness constant; vary only the component under test. Concretely:
+
+1. **Single dimension at a time.** Variant `V1` = baseline; `V2` = baseline with landmark heuristic; `V3` = V2 with EHC; `V4` = V3 with Luby restarts; `V5` = V4 with nogood learning. This is the "ablation ladder" from the ML literature adapted to solvers and is exactly how Richter & Westphal's LAMA paper reports per-feature contributions ([JAIR 39 §6](https://arxiv.org/pdf/1401.3839)).
+2. **Deterministic seeding.** Fix RNG seeds per level-variant pair so wallclock variance isn't masking signal. Report median-over-N-seeds (N ≥ 5) plus IQR.
+3. **Two caps.** Short cap (5 s) probes "fast path" regression; long cap (60 s) probes "coverage" improvement. Your 28.5 s cap is too long for #1 and too short for #2.
+4. **Per-level paired test.** Wilcoxon signed-rank on per-level solve-time deltas is the nonparametric test standard; use it because solve-time distributions are heavy-tailed (Gomes, Selman & Crato 1997 established this empirically for CSP/SAT — [cited in Wu thesis](https://cs.uwaterloo.ca/~vanbeek/Publications/wu.pdf)).
+5. **Telemetry parity.** Emit the same telemetry schema across variants, so comparisons are possible post-hoc without a re-run.
+6. **Keep level 92/108/134 in a held-out "hard" subset** from tuning decisions — do not tune hyperparameters on them, only evaluate. Otherwise you'll overfit the solver to those three and regress on the 134 currently-solved ones.
+
+---
+
+## 6. Red-team the diagnosis
+
+Before investing in any solver rewrite, rule out the trivial alternative: **are levels 92/108/134 actually solvable at all under the ruleset your solver is searching?** The telemetry alone cannot distinguish "heuristic plateau on a solvable level" from "search exhausts the reachable state space of an unsolvable level" if the state space is compact enough that 6,991 expansions cover it.
+
+### 6.1 Techniques to verify solvability independently
+
+**Backward reachability / bidirectional search.** Run an *unguided* BFS backward from the goal tile under a *relaxed* ruleset (e.g., ignore hazards, treat must-pass as optional, treat portals as bidirectional). If the start is not in the backward-reachable set even under relaxation, the level is unsolvable under the real ruleset too. Symbolic bidirectional BFS with BDDs is the standard technique here ([Eriksson et al. on unsolvability certificates](https://aaai.org/papers/00088-13818-unsolvability-certificates-for-classical-planning/)).
+
+**Variable projection / `h^m`.** Bäckström, Jonsson & Ståhlberg showed that projecting a planning instance onto a small subset of state variables and checking unsolvability of the projection is an efficient unsolvability test ([SoCS 2013; Ståhlberg thesis](http://www.diva-portal.org/smash/get/diva2:1139680/FULLTEXT02.pdf)). For Pathfinder: project onto `(position, portal_automaton_state)` only and see if any goal state is reachable.
+
+**Pattern databases for dead-end detection.** Ståhlberg's ICAPS 2017 work shows that pattern databases tailored for unsolvability detection can quickly refute unsolvable instances where standard planners spin for hours ([ICAPS 2017 paper](https://ai.dmi.unibas.ch/research/reading_group/stahlberg-icaps2017.pdf)). Build a PDB keyed on `(subset of must-pass tiles, portal-automaton state)`; a state whose PDB value is ∞ is a proven dead-end.
+
+**Trap learning / critical-path `h^C`.** Hoffmann et al.'s ICAPS 2017 "Critical-Path Dead-End Detection vs. NoGoods" gives a way to *learn* dead-end patterns during search and refute subtrees ([ICAPS 2017](https://fai.cs.uni-saarland.de/hoffmann/papers/icaps17c.pdf)). If your three levels all produce the same refuted trap signature, they're unsolvable.
+
+**Unsolvability certificates.** For permanent record-keeping, Eriksson, Röger & Helmert describe certificates efficiently verifiable by a third-party tool, which is the right long-term posture for a shipping puzzle game that must *never* declare a solvable level unsolvable ([Unsolvability Certificates, AAAI](https://aaai.org/papers/00088-13818-unsolvability-certificates-for-classical-planning/)).
+
+### 6.2 Cheap check to run today
+
+A 30-minute experiment: for each of levels 92/108/134, run a full *symmetric bidirectional* BFS on `(position, portal_automaton_state)` ignoring all soft scoring, time-capped at 120 s. If any of the three BFS searches terminates with "no path", the level is either unsolvable or mis-specified — stop building a better solver and fix the level design instead. If all three BFS searches find a path (even a very long one), you have:
+
+1. An existence proof that the level is solvable.
+2. An *actual solution path* you can use as ground truth to evaluate any new heuristic on.
+3. A lower bound on path length, which tells you whether your current beam depth is even adequate (if the BFS path is 300 tiles long and your beam explores to depth 80, you're architecturally incapable of finding it).
+
+Given that `totalSolveTimeMs` is 27–28 s with only 6–7k nodes expanded — a very low expansion rate — I would bet the heuristic is expensive to compute *and* uninformative, not that the state space is large. A bare BFS should cover the reachable space in well under a second. **Do this before anything else in Section 2–4.**
+
+### 6.3 Other confounders worth ruling out
+
+- **Memoization bug**: is your memo key capturing the portal-automaton state? If not, you'd silently conflate non-equivalent states and appear to make progress that isn't real. `portalCommitmentChurn=0` hints this is fine but worth a unit test.
+- **Driver sign errors**: `mustPassUrgency = -36.52` is suspicious. A negative urgency that *rewards* avoiding must-pass tiles would look exactly like a plateau. Grep the code for the sign convention.
+- **Cap-reached vs. convergence**: all three failures are `cap-reached`, not "frontier empty". You have never observed what the solver would do at t=60s or t=300s. Run the three failing levels once with the cap lifted to, say, 10 minutes. If any of them finishes, you have a pure resource-budget problem, not a structural one, and Luby restarts may be sufficient.
+
+---
+
+## Appendix: Reference shortlist (ranked by relevance)
+
+**Must-read, directly applicable:**
+- Richter & Westphal, *The LAMA Planner: Guiding Cost-Based Anytime Planning with Landmarks*, JAIR 39 (2010) — [arXiv:1401.3839](https://arxiv.org/abs/1401.3839)
+- Hoffmann & Nebel, *The FF Planning System*, JAIR 14 (2001) — [AAAI/planning.wiki](https://planning.wiki/_citedpapers/planners/ff.pdf)
+- Coles & Smith, *Marvin: EHC with plateau escaping*, JAIR 28 — [CMU mirror](https://www.cs.cmu.edu/afs/cs/project/jair/pub/volume28/coles07a-html/node5.html)
+- Luby, Sinclair & Zuckerman, *Optimal speedup of Las Vegas algorithms*, IPL 47(4) 1993 — universal restart strategy
+- Amit Patel, *Heuristics* — practical ALT and waypoint tricks — [theory.stanford.edu/~amitp](http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html)
+
+**For the CP-SAT/LCG replacement route:**
+- d-krupke, *The CP-SAT Primer* — [GitHub](https://github.com/d-krupke/cpsat-primer) and especially the [advanced modeling chapter](https://d-krupke.github.io/cpsat-primer/04B_advanced_modelling.html) on `AddAutomaton`/`AddCircuit`
+- Chuffed README and Ohrimenko, Stuckey & Codish, *Propagation via lazy clause generation*, Constraints 14(3) — [Chuffed repo](https://github.com/chuffed/chuffed)
+- MiniZinc Handbook §3.5 solver backends — [docs.minizinc.dev](https://docs.minizinc.dev/en/stable/solvers.html)
+
+**For the unsolvability red-team:**
+- Eriksson, Röger, Helmert, *Unsolvability Certificates for Classical Planning*, AAAI — [aaai.org](https://aaai.org/papers/00088-13818-unsolvability-certificates-for-classical-planning/)
+- Ståhlberg, *Tailoring Pattern Databases for Unsolvable Planning Instances*, ICAPS 2017 — [Unibas](https://ai.dmi.unibas.ch/research/reading_group/stahlberg-icaps2017.pdf)
+- Hoffmann et al., *Critical-Path Dead-End Detection vs. NoGoods*, ICAPS 2017 — [uni-saarland.de](https://fai.cs.uni-saarland.de/hoffmann/papers/icaps17c.pdf)
+
+**For the neural-guided route (if you go there later):**
+- Huber & Raidl, *Relative Value Function Based Learning Beam Search*, 2022 — [Springer LNCS](https://link.springer.com/chapter/10.1007/978-3-031-25312-6_10)
+- Choo et al., *Simulation-Guided Beam Search for Neural Combinatorial Optimization*, NeurIPS 2022 — [arXiv:2207.06190](https://arxiv.org/abs/2207.06190)
+- Taufeeque et al., *Interpreting learned search ... Sokoban*, 2025 — [arXiv:2506.10138](https://arxiv.org/html/2506.10138v1)
+
+**On restart strategies:**
+- Haim & Heule, *Towards Ultra Rapid Restarts* — [CMU](https://www.cs.cmu.edu/~mheule/publications/rapid.pdf)
+- Huang, *The Effect of Restarts on the Efficiency of Clause Learning*, IJCAI
+- Wu thesis, *Randomization and Restart Strategies* — [Waterloo](https://cs.uwaterloo.ca/~vanbeek/Publications/wu.pdf)
+
+**On LNS as a repair step:**
+- Shaw, *Using Constraint Programming and Local Search to Solve Vehicle Routing*, CP'98 — [Springer](https://link.springer.com/chapter/10.1007/3-540-49481-2_30)
+- Addanki et al., *Neural Large Neighborhood Search* — [OpenReview](https://openreview.net/pdf?id=xEQhKANoVW)
+- CP-SAT LNS chapter — [d-krupke primer](https://d-krupke.github.io/cpsat-primer/09_lns.html)
+
+---
+
+**One last heuristic for you, the developer:** when a search has flat `obligationReductionSlope`, zero `repeatedStateRatio`, zero `portalCommitmentChurn`, and 7–13 profiles all fail identically at the cap — and you have a constraint structure rich in must-visit facts — the prior on "the heuristic is not tracking the real objective" is dominant. Fix that first; everything else is secondary.
