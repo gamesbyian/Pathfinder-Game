@@ -16,6 +16,6 @@
     "audit:heuristic-recall": "node scripts/audit-heuristic-recall.mjs --levels=92,108,134 --output=audits/heuristic-recall/latest.json"
   },
   "devDependencies": {
-    "playwright": "^1.59.1"
+    "playwright": "^1.54.2"
   }
 }
