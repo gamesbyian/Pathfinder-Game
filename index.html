@@ -4232,6 +4232,17 @@
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
                             pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
+                            // LANDMARK COUNT HEURISTIC (h_L): dominant flat cost per unmet
+                            // must-pass / must-cross landmark. Each unmet landmark adds a large
+                            // fixed penalty so any path that achieves a landmark steps down by
+                            // LANDMARK_COUNT_WEIGHT regardless of other scoring terms. This
+                            // breaks heuristic plateaus where distance signals give no gradient.
+                            const totalLandmarksUnmet = remainingMustAfterMove + projectedCrossNeed;
+                            if (totalLandmarksUnmet > 0) {
+                                const lcp = totalLandmarksUnmet * 600;
+                                score += lcp;
+                                pushDriver('landmarkCount', totalLandmarksUnmet, lcp);
+                            }
                             const scheduleDeficit = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) - remainingStepsAfterMove;
                             if (scheduleDeficit > 0) {
                                 const c = Math.round(scheduleDeficit * 90);
