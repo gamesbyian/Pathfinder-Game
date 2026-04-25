@@ -4237,8 +4237,10 @@
                             // fixed penalty so any path that achieves a landmark steps down by
                             // LANDMARK_COUNT_WEIGHT regardless of other scoring terms. This
                             // breaks heuristic plateaus where distance signals give no gradient.
+                            // Threshold >= 2: single-landmark levels (1 mustPass, no mustCross)
+                            // are excluded to avoid perturbing their root ordering in lowBranchMode.
                             const totalLandmarksUnmet = remainingMustAfterMove + projectedCrossNeed;
-                            if (totalLandmarksUnmet > 0) {
+                            if (totalLandmarksUnmet >= 2) {
                                 const lcp = totalLandmarksUnmet * 600;
                                 score += lcp;
                                 pushDriver('landmarkCount', totalLandmarksUnmet, lcp);
