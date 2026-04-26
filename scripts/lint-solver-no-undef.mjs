@@ -7,18 +7,18 @@ import { promisify } from 'node:util';
 
 const execFileAsync = promisify(execFile);
 
-const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../Solver.js', import.meta.url), 'utf8');
 const startToken = 'const solveLevel = async (level, opts = {}) => {';
 const start = html.indexOf(startToken);
 if (start < 0) {
-  console.error('Unable to locate solveLevel function start in index.html');
+  console.error('Unable to locate solveLevel function start in Solver.js');
   process.exit(1);
 }
 
 const arrowBody = html.indexOf('=> {', start);
 const openBrace = arrowBody >= 0 ? arrowBody + 3 : -1;
 if (openBrace < 0) {
-  console.error('Unable to locate solveLevel function body in index.html');
+  console.error('Unable to locate solveLevel function body in Solver.js');
   process.exit(1);
 }
 
@@ -34,7 +34,7 @@ for (let i = openBrace; i < html.length; i += 1) {
 }
 
 if (end < 0) {
-  console.error('Unable to locate solveLevel function end in index.html');
+  console.error('Unable to locate solveLevel function end in Solver.js');
   process.exit(1);
 }
 
