@@ -412,6 +412,154 @@ function installSolver(APP) {
                 _buildFlipperDistMap(l, flipperSet) {
                     return this._buildOptimisticDistMap(l, flipperSet);
                 },
+                _buildLandmarkModel(l) {
+                    const obligations = [];
+                    const pushObligation = (type, localIdx, key) => {
+                        obligations.push({ id: obligations.length, type, localIdx, key });
+                    };
+                    for (let i = 0; i < (l.mustPassKeys?.length || 0); i++) pushObligation('mustPass', i, l.mustPassKeys[i]);
+                    for (let i = 0; i < (l.mustCrossKeys?.length || 0); i++) pushObligation('mustCross', i, l.mustCrossKeys[i]);
+                    const goalObligationId = obligations.length;
+                    pushObligation('goal', -1, l.goalKey);
+                    const distMaps = obligations.map((o) => this._buildOptimisticDistMap(l, [o.key]));
+                    const pairDist = Array.from({ length: obligations.length }, () => Array(obligations.length).fill(Infinity));
+                    for (let i = 0; i < obligations.length; i++) {
+                        pairDist[i][i] = 0;
+                        for (let j = i + 1; j < obligations.length; j++) {
+                            const d = distMaps[i].get(obligations[j].key);
+                            const v = Number.isFinite(d) ? d : Infinity;
+                            pairDist[i][j] = v;
+                            pairDist[j][i] = v;
+                        }
+                    }
+                    const unreachableObligations = obligations.filter((o) => o.type !== 'goal' && !Number.isFinite(distMaps[goalObligationId]?.get(o.key))).map((o) => `${o.type}:${o.localIdx}`);
+                    return {
+                        obligations,
+                        goalObligationId,
+                        distMaps,
+                        pairDist,
+                        exactCutoff: 12,
+                        hkMemo: new Map(),
+                        unreachableObligations
+                    };
+                },
+                _remainingLandmarkMask(state, l) {
+                    const mMask = (typeof state.mustMask === 'bigint') ? state.mustMask : 0n;
+                    const cMask = (typeof state.mustCrossMask === 'bigint') ? state.mustCrossMask : 0n;
+                    const shift = BigInt(l.mustPassKeys?.length || 0);
+                    return mMask | (cMask << shift);
+                },
+                _landmarkWaypointLowerBound(fromKey, state, l) {
+                    const model = l?.landmarkModel;
+                    if (!model) return Infinity;
+                    const mCount = l.mustPassKeys?.length || 0;
+                    const cCount = l.mustCrossKeys?.length || 0;
+                    const remaining = [];
+                    for (let i = 0; i < mCount; i++) if ((state.mustMask & (1n << BigInt(i))) !== 0n) remaining.push(i);
+                    for (let i = 0; i < cCount; i++) if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n) remaining.push(mCount + i);
+                    if (remaining.length === 0) return l.distMapForSolver?.get(fromKey) ?? Infinity;
+                    if (remaining.length > model.exactCutoff) {
+                        let nearest = Infinity;
+                        for (const idx of remaining) {
+                            const d = model.distMaps[idx]?.get(fromKey);
+                            if (Number.isFinite(d) && d < nearest) nearest = d;
+                        }
+                        const mst = this._mstBoundFromNodes(remaining, model.pairDist, model.pairDist[model.goalObligationId], nearest);
+                        return mst;
+                    }
+                    const fullMask = remaining.reduce((acc, idx) => acc | (1n << BigInt(idx)), 0n);
+                    const solveFrom = (lastIdx, mask) => {
+                        if (mask === 0n) return model.pairDist[lastIdx][model.goalObligationId];
+                        const key = `${lastIdx}|${mask.toString()}`;
+                        if (model.hkMemo.has(key)) return model.hkMemo.get(key);
+                        let best = Infinity;
+                        for (let bit = 0; bit < remaining.length; bit++) {
+                            const idx = remaining[bit];
+                            const flag = 1n << BigInt(idx);
+                            if ((mask & flag) === 0n) continue;
+                            const hop = model.pairDist[lastIdx][idx];
+                            if (!Number.isFinite(hop)) continue;
+                            const rest = solveFrom(idx, mask ^ flag);
+                            if (!Number.isFinite(rest)) continue;
+                            best = Math.min(best, hop + rest);
+                        }
+                        model.hkMemo.set(key, best);
+                        return best;
+                    };
+                    let bestStart = Infinity;
+                    for (const idx of remaining) {
+                        const toFirst = model.distMaps[idx]?.get(fromKey);
+                        if (!Number.isFinite(toFirst)) continue;
+                        const val = toFirst + solveFrom(idx, fullMask ^ (1n << BigInt(idx)));
+                        if (val < bestStart) bestStart = val;
+                    }
+                    return bestStart;
+                },
+                _buildRedTeamDiagnostics(level) {
+                    const flags = [];
+                    const adjacency = new Map();
+                    const walkable = (k) => Number.isFinite(k) && !level.blockSet?.has(k);
+                    const keys = [];
+                    const { w, h } = level.grid || { w: 0, h: 0 };
+                    for (let y = 0; y < h; y++) {
+                        for (let x = 0; x < w; x++) {
+                            const k = APP.LevelUtils.PACK(x, y);
+                            if (!walkable(k)) continue;
+                            keys.push(k);
+                        }
+                    }
+                    for (const k of keys) {
+                        const p = APP.LevelUtils.UNPACK(k);
+                        const nbs = [];
+                        [[1, 0], [-1, 0], [0, 1], [0, -1]].forEach(([dx, dy]) => {
+                            const nx = p.x + dx, ny = p.y + dy;
+                            if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
+                            const nk = APP.LevelUtils.PACK(nx, ny);
+                            if (walkable(nk)) nbs.push(nk);
+                        });
+                        const portal = APP.LevelUtils.resolvePortal(level, k);
+                        if (portal?.dest !== -1 && walkable(portal.dest)) nbs.push(portal.dest);
+                        adjacency.set(k, nbs);
+                    }
+                    const gateStart = Array.isArray(level.gateKeys) && level.gateKeys.length > 0 ? level.gateKeys[0] : null;
+                    const bfs = (seed, includePortalState = false) => {
+                        if (!Number.isFinite(seed) || !Number.isFinite(level.goalKey)) return { reached: false, states: 0, dist: null };
+                        const q = [];
+                        const seen = new Set();
+                        const encode = (key, portalState = 0) => includePortalState ? `${key}|${portalState}` : `${key}`;
+                        const startCode = encode(seed, 0);
+                        seen.add(startCode);
+                        q.push({ key: seed, d: 0, p: 0 });
+                        while (q.length > 0) {
+                            const cur = q.shift();
+                            if (cur.key === level.goalKey) return { reached: true, states: seen.size, dist: cur.d };
+                            const nbs = adjacency.get(cur.key) || [];
+                            for (const nk of nbs) {
+                                const nextPortalState = includePortalState ? (level.portalMap?.has(cur.key) ? 1 : cur.p) : 0;
+                                const code = encode(nk, nextPortalState);
+                                if (seen.has(code)) continue;
+                                seen.add(code);
+                                q.push({ key: nk, d: cur.d + 1, p: nextPortalState });
+                            }
+                        }
+                        return { reached: false, states: seen.size, dist: null };
+                    };
+                    const relaxed = bfs(gateStart, false);
+                    const projected = bfs(gateStart, true);
+                    if (!relaxed.reached) flags.push('relaxed-unreachable');
+                    if (!projected.reached) flags.push('projected-unreachable');
+                    if (projected.states <= 4 && (keys.length > 20)) flags.push('low-state-space');
+                    if ((level.portalMap?.size || 0) > 0) flags.push('portal-state-not-modeled');
+                    return {
+                        relaxedReachable: relaxed.reached,
+                        relaxedStatesExplored: relaxed.states,
+                        relaxedDistanceToGoal: relaxed.dist,
+                        projectedReachable: projected.reached,
+                        projectedStatesExplored: projected.states,
+                        projectedDistanceToGoal: projected.dist,
+                        flags
+                    };
+                },
                 _manhattanDist(fromKey, toKey) {
                     if (!Number.isFinite(fromKey) || !Number.isFinite(toKey)) return Infinity;
                     const from = APP.LevelUtils.UNPACK(fromKey);
@@ -2639,16 +2787,33 @@ function installSolver(APP) {
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
                             pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
-                            // LANDMARK COUNT HEURISTIC (h_L): dominant flat cost per unmet
-                            // must-pass / must-cross landmark. Each unmet landmark adds a large
-                            // fixed penalty so any path that achieves a landmark steps down by
-                            // LANDMARK_COUNT_WEIGHT regardless of other scoring terms. This
-                            // breaks heuristic plateaus where distance signals give no gradient.
-                            const totalLandmarksUnmet = remainingMustAfterMove + projectedCrossNeed;
-                            if (totalLandmarksUnmet > 0) {
-                                const lcp = totalLandmarksUnmet * 600;
-                                score += lcp;
-                                pushDriver('landmarkCount', totalLandmarksUnmet, lcp);
+                            const totalLandmarksUnmet = remainingMustAfterMove + projectedCrossNeed + (goalReadyAfterMove ? 0 : 1);
+                            const parentLandmarksUnmet = countMaskBits(state.mustMask, l) + Math.max(0, crossNeed) + (state.path[state.path.length - 1] === l.goalKey ? 0 : 1);
+                            const landmarkProgress = parentLandmarksUnmet - totalLandmarksUnmet;
+                            const landmarkCountPenalty = totalLandmarksUnmet * 950;
+                            score += landmarkCountPenalty;
+                            pushDriver('landmarkCount', totalLandmarksUnmet, landmarkCountPenalty);
+                            if (landmarkProgress > 0) {
+                                const bonus = -Math.round(landmarkProgress * 140);
+                                score += bonus;
+                                pushDriver('landmarkProgress', landmarkProgress, bonus);
+                            } else if (landmarkProgress < 0) {
+                                const regress = Math.round(Math.abs(landmarkProgress) * 180);
+                                score += regress;
+                                pushDriver('landmarkRegression', landmarkProgress, regress);
+                            }
+                            const waypointLowerBound = this._landmarkWaypointLowerBound(nk, {
+                                mustMask: projectedMustMask,
+                                mustCrossMask: (typeof state.mustCrossMask === 'bigint')
+                                    ? ((crossIdx !== undefined && state.mustCrossCounts && (state.mustCrossCounts[crossIdx] || 0) < 2)
+                                        ? (state.mustCrossMask & ~(1n << BigInt(crossIdx)))
+                                        : state.mustCrossMask)
+                                    : 0n
+                            }, l);
+                            if (Number.isFinite(waypointLowerBound)) {
+                                const wpCost = Math.round(waypointLowerBound * 22);
+                                score += wpCost;
+                                pushDriver('waypointLowerBound', waypointLowerBound, wpCost);
                             }
                             const scheduleDeficit = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) - remainingStepsAfterMove;
                             if (scheduleDeficit > 0) {
@@ -3885,6 +4050,24 @@ function installSolver(APP) {
                         },
                         pendingGuardrail: null
                     };
+                    if (debugStats) {
+                        debugStats.heuristic = debugStats.heuristic || {
+                            landmarksTotal: (l.mustPassKeys?.length || 0) + (l.mustCrossKeys?.length || 0) + 1,
+                            landmarksRemaining: null,
+                            landmarksAchieved: null,
+                            landmarkProgressThisNode: 0,
+                            waypointLowerBound: null,
+                            remainingLengthBudget: null,
+                            lengthFeasible: null,
+                            perDepthMinLandmarksRemaining: {},
+                            perDepthMedianLandmarksRemaining: {},
+                            plateauLengthHistogram: {},
+                            landmarkAchievementTimeline: []
+                        };
+                        debugStats.restarts = debugStats.restarts || { count: 0, lubyIndex: 1, currentBudget: 0, nodesBeforeRestart: 0, reason: null };
+                        debugStats.nogoods = debugStats.nogoods || { learned: 0, hitCount: 0, byReason: {} };
+                        debugStats.plateau = debugStats.plateau || { detectedCount: 0, escapeAttempts: 0, escapeSuccesses: 0, escapeFailures: 0, averageEscapeDepth: 0 };
+                    }
                     const pushAdaptationEvent = (event = {}) => {
                         if (!debugStats) return;
                         if (!Array.isArray(debugStats.adaptationTimeline)) debugStats.adaptationTimeline = [];
@@ -4376,6 +4559,20 @@ function installSolver(APP) {
                             Number.isFinite(mustCrossBoundEstimate) ? mustCrossBoundEstimate : Infinity,
                             interactionDeficit
                         );
+                        if (debugStats?.heuristic) {
+                            const lmRemaining = remainingMustPass + crossNeeds + (lastK === l.goalKey ? 0 : 1);
+                            const lmTotal = debugStats.heuristic.landmarksTotal || 1;
+                            debugStats.heuristic.landmarksRemaining = lmRemaining;
+                            debugStats.heuristic.landmarksAchieved = Math.max(0, lmTotal - lmRemaining);
+                            debugStats.heuristic.waypointLowerBound = this._landmarkWaypointLowerBound(lastK, state, l);
+                            debugStats.heuristic.remainingLengthBudget = rSteps;
+                            debugStats.heuristic.lengthFeasible = Number.isFinite(lowerBoundToValidSolution) ? (lowerBoundToValidSolution <= rSteps) : false;
+                            const depthKey = String(realLen);
+                            const prevMin = debugStats.heuristic.perDepthMinLandmarksRemaining[depthKey];
+                            debugStats.heuristic.perDepthMinLandmarksRemaining[depthKey] = Number.isFinite(prevMin) ? Math.min(prevMin, lmRemaining) : lmRemaining;
+                            const hist = debugStats.heuristic.plateauLengthHistogram;
+                            hist[depthKey] = (hist[depthKey] || 0) + 1;
+                        }
                         const missingDimensions = [];
                         if (remainingMustPass > 0) missingDimensions.push('must-pass');
                         if (crossNeeds > 0) missingDimensions.push('must-cross');
@@ -5438,6 +5635,11 @@ function installSolver(APP) {
                             level.objectivePairDist[i][j] = val;
                             level.objectivePairDist[j][i] = val;
                         }
+                    }
+                    level.landmarkModel = SolverCore._buildLandmarkModel(level);
+                    level.redTeamDiagnostics = SolverCore._buildRedTeamDiagnostics(level);
+                    if (debugStats) {
+                        debugStats.redTeam = { ...level.redTeamDiagnostics };
                     }
 
                     level._popcountMask = (mask) => {
@@ -6857,6 +7059,11 @@ function installSolver(APP) {
                 enduranceRescueDelta: attempt?.enduranceRescueDelta || attempt?.stage11RescueDelta || null,
                 stage11RescueDelta: attempt?.stage11RescueDelta || attempt?.enduranceRescueDelta || null,
                 diagnosticsSummary: options.diagnosticsSummary || null,
+                redTeam: debug?.redTeam || null,
+                heuristic: debug?.heuristic || null,
+                restarts: debug?.restarts || null,
+                nogoods: debug?.nogoods || null,
+                plateau: debug?.plateau || null,
                 rootCandidatesGenerated: Number.isFinite(debug?.rootCandidatesGenerated) ? debug.rootCandidatesGenerated : null,
                 rootCandidateCountDepth0: Number.isFinite(debug?.rootCandidateCountDepth0) ? debug.rootCandidateCountDepth0 : null,
                 depth0PruneBreakdown: debug?.depth0PruneBreakdown && typeof debug.depth0PruneBreakdown === 'object' ? compactDefined(debug.depth0PruneBreakdown) : null,
