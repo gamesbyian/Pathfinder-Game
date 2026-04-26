@@ -2,17 +2,17 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../Solver.js', import.meta.url), 'utf8');
 const helperToken = 'const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {';
 const helperStart = html.indexOf(helperToken);
 if (helperStart < 0) {
-  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper in index.html');
+  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper in Solver.js');
 }
 
 const helperArrowBody = html.indexOf('=> {', helperStart);
 const helperOpenBrace = helperArrowBody >= 0 ? helperArrowBody + 3 : -1;
 if (helperOpenBrace < 0) {
-  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper body in index.html');
+  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper body in Solver.js');
 }
 
 let helperDepth = 0;
@@ -26,18 +26,18 @@ for (let i = helperOpenBrace; i < html.length; i += 1) {
   }
 }
 if (helperEnd < 0) {
-  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper end in index.html');
+  throw new Error('Unable to locate deriveHeuristicFeatureFlags helper end in Solver.js');
 }
 
 const compactDefinedToken = 'const compactDefined = (obj = {}) => {';
 const compactDefinedStart = html.indexOf(compactDefinedToken);
 if (compactDefinedStart < 0) {
-  throw new Error('Unable to locate compactDefined helper in index.html');
+  throw new Error('Unable to locate compactDefined helper in Solver.js');
 }
 const compactDefinedArrowBody = html.indexOf('=> {', compactDefinedStart);
 const compactDefinedOpenBrace = compactDefinedArrowBody >= 0 ? compactDefinedArrowBody + 3 : -1;
 if (compactDefinedOpenBrace < 0) {
-  throw new Error('Unable to locate compactDefined helper body in index.html');
+  throw new Error('Unable to locate compactDefined helper body in Solver.js');
 }
 let compactDefinedDepth = 0;
 let compactDefinedEnd = -1;
@@ -50,7 +50,7 @@ for (let i = compactDefinedOpenBrace; i < html.length; i += 1) {
   }
 }
 if (compactDefinedEnd < 0) {
-  throw new Error('Unable to locate compactDefined helper end in index.html');
+  throw new Error('Unable to locate compactDefined helper end in Solver.js');
 }
 
 const compactDefinedSource = html.slice(compactDefinedStart, compactDefinedEnd) + ';';
@@ -58,12 +58,12 @@ const helperSource = html.slice(helperStart, helperEnd) + ';';
 const normalizeExecutionToken = 'const normalizeSolverExecutionMode = (modeLike, fallback = \'referee-with-compat-profiles\') => {';
 const normalizeExecutionStart = html.indexOf(normalizeExecutionToken);
 if (normalizeExecutionStart < 0) {
-  throw new Error('Unable to locate normalizeSolverExecutionMode helper in index.html');
+  throw new Error('Unable to locate normalizeSolverExecutionMode helper in Solver.js');
 }
 const normalizeExecutionArrowBody = html.indexOf('=> {', normalizeExecutionStart);
 const normalizeExecutionOpenBrace = normalizeExecutionArrowBody >= 0 ? normalizeExecutionArrowBody + 3 : -1;
 if (normalizeExecutionOpenBrace < 0) {
-  throw new Error('Unable to locate normalizeSolverExecutionMode helper body in index.html');
+  throw new Error('Unable to locate normalizeSolverExecutionMode helper body in Solver.js');
 }
 let normalizeExecutionDepth = 0;
 let normalizeExecutionEnd = -1;
@@ -76,19 +76,19 @@ for (let i = normalizeExecutionOpenBrace; i < html.length; i += 1) {
   }
 }
 if (normalizeExecutionEnd < 0) {
-  throw new Error('Unable to locate normalizeSolverExecutionMode helper end in index.html');
+  throw new Error('Unable to locate normalizeSolverExecutionMode helper end in Solver.js');
 }
 const normalizeExecutionSource = html.slice(normalizeExecutionStart, normalizeExecutionEnd) + ';';
 const startToken = 'const solveLevel = async (level, opts = {}) => {';
 const start = html.indexOf(startToken);
 if (start < 0) {
-  throw new Error('Unable to locate solveLevel function start in index.html');
+  throw new Error('Unable to locate solveLevel function start in Solver.js');
 }
 
 const arrowBody = html.indexOf('=> {', start);
 const openBrace = arrowBody >= 0 ? arrowBody + 3 : -1;
 if (openBrace < 0) {
-  throw new Error('Unable to locate solveLevel function body in index.html');
+  throw new Error('Unable to locate solveLevel function body in Solver.js');
 }
 
 let depth = 0;
@@ -103,7 +103,7 @@ for (let i = openBrace; i < html.length; i += 1) {
 }
 
 if (end < 0) {
-  throw new Error('Unable to locate solveLevel function end in index.html');
+  throw new Error('Unable to locate solveLevel function end in Solver.js');
 }
 
 const solveLevelSource = html.slice(start, end) + ';';

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const html = await readFile(new URL('../Solver.js', import.meta.url), 'utf8');
 const levelsJs = await readFile(new URL('../levels.js', import.meta.url), 'utf8');
 
 const levelsCtx = { window: {} };
@@ -12,7 +12,7 @@ const rawLevels = levelsCtx.window.RAW_LEVELS;
 
 const start = html.indexOf('const detectRapidCollapseSignature = ({ baselineResult = null } = {}) => {');
 const end = html.indexOf('function withZeroExpansionSummary(entry = {}, statusPath = \'unknown\', droppedBy = \'unknown\') {');
-if (start < 0 || end < 0 || end <= start) throw new Error('Unable to locate root fallback helper functions in index.html');
+if (start < 0 || end < 0 || end <= start) throw new Error('Unable to locate root fallback helper functions in Solver.js');
 const helperSource = html.slice(start, end);
 
 const ctx = {
