@@ -2,20 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Pathfinder</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'><rect width='9' height='9' fill='%23f8fafc'/><g stroke='%2394a3b8' stroke-width='0.05'><line x1='0' y1='0' x2='9' y2='0'/><line x1='0' y1='2' x2='9' y2='2'/><line x1='0' y1='4' x2='9' y2='4'/><line x1='0' y1='6' x2='9' y2='6'/><line x1='0' y1='8' x2='9' y2='8'/><line x1='2' y1='0' x2='2' y2='9'/><line x1='4' y1='0' x2='4' y2='9'/><line x1='6' y1='0' x2='6' y2='9'/><line x1='8' y1='0' x2='8' y2='9'/></g><path d='M2.5 5H6.5V2H3.5V7' fill='none' stroke='%233b82f6' stroke-width='0.9' stroke-linecap='round' stroke-linejoin='round'/><circle cx='2.5' cy='5' r='0.525' fill='%233b82f6'/><circle cx='3.5' cy='7' r='0.525' fill='%23ef4444'/></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js" defer></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital@0;1&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <style>
         :root { font-size: var(--app-scale, min(2vh, 3.5vw)); --ui-gap: clamp(0.65rem, 1.8vw, 1rem); --ui-gap-tight: clamp(0.35rem, 1.1vw, 0.6rem); --ui-pad: clamp(0.65rem, 1.6vw, 1rem); --ui-radius: clamp(0.5rem, 1.2vw, 0.9rem); --ui-panel-pad: clamp(0.75rem, 2vw, 1.25rem); --tile-size: clamp(2.2rem, 4.6vw, 3rem); --tap-min: 44px; --theme-gate: #3b82f6; --theme-goal: #ef4444; --theme-block: #cbd5e1; --theme-block-dot: #94a3b8; --theme-pin: #64748b; --theme-portal: #d946ef; --theme-filter: #000000; --theme-cross: #000000; --theme-modal-bg: rgba(248,250,252,0.95); --theme-modal-panel: #ffffff; --theme-modal-border: #cbd5e1; --theme-modal-text: #334155; --theme-modal-muted: #64748b; --theme-modal-accent: #0f172a; --theme-win-bg: #ffffff; --theme-win-border: #3b82f6; --theme-win-text: #64748b; --theme-win-accent: #1e3a8a; --theme-alert-bg: #1e40af; --theme-alert-stroke: #93c5fd; --theme-alert-text: #ffffff; --theme-logo-bg: #ffffff; --theme-logo-grid: #94a3b8; --theme-logo-path: #3b82f6; --theme-logo-gate: #3b82f6; --theme-logo-goal: #ef4444; --theme-burst: #fde047; --theme-check: #1e293b; --theme-leave-bg: #dc2626; --theme-leave-hover: #b91c1c; --theme-leave-text: #ffffff; --theme-leave-border: #b91c1c; --theme-mega-output-bg: #0f172a; --theme-mega-output-text: #f0abfc; --theme-mega-output-border: #334155; --theme-mega-primary-bg: #a21caf; --theme-mega-primary-text: #ffffff; --theme-mega-primary-border: #d946ef; --theme-mega-secondary-bg: #86198f; --theme-mega-secondary-text: #ffffff; --theme-mega-secondary-border: #d946ef; --theme-mega-gemini-bg: #4338ca; --theme-mega-gemini-text: #ffffff; --theme-mega-gemini-border: #6366f1; --theme-mega-copy-bg: #ffffff; --theme-mega-copy-text: #334155; --theme-mega-copy-border: #cbd5e1; --theme-mega-desc-text: #64748b; --theme-body-text: #111827; --theme-disabled-btn-bg: #94a3b8; --theme-canvas-bg: #ffffff; --theme-loading-overlay-bg: rgba(15,23,42,0.6); --theme-loading-panel-bg: #0f172a; --theme-loading-panel-border: #334155; --theme-loading-title: #ffffff; --theme-loading-status: #38bdf8; --theme-loading-percent: #ffffff; --theme-loading-track: #1e293b; --theme-loading-bar: #0ea5e9; --theme-loading-error: #ef4444; --theme-search-overlay-bg: rgba(15,23,42,0.9); --theme-search-mega-status-text: #f0abfc; --theme-search-mega-status-border: rgba(217,70,239,0.3); --theme-search-label: #7dd3fc; --theme-search-dot: #38bdf8; --theme-search-timer: #ffffff; --theme-search-close: rgba(255,255,255,0.4); --theme-search-close-hover: #ffffff; --theme-jumpscare-goose-bg: rgba(0,0,0,0.4); --theme-jumpscare-goose-text: #ffffff; --theme-jumpscare-bomb-bg: rgba(0,0,0,0.6); --theme-jumpscare-bomb-top-text: #facc15; --theme-jumpscare-bomb-bottom-text: #f97316; --theme-shell-btn-bg: rgba(203,213,225,0.6); --theme-shell-btn-bg-hover: rgba(148,163,184,0.6); --theme-shell-btn-text: #475569; --theme-shell-btn-border: rgba(255,255,255,0.2); --theme-shell-audit-bg: rgba(203,213,225,0.6); --theme-shell-audit-bg-hover: rgba(148,163,184,0.6); --theme-shell-audit-text: #475569; --theme-shell-audit-border: rgba(255,255,255,0.2); --theme-shell-mute-bg: rgba(255,255,255,0.5); --theme-shell-mute-bg-hover: rgba(255,255,255,0.8); --theme-shell-mute-text: #64748b; --theme-shell-mute-border: rgba(255,255,255,0.2); --theme-header-nav-bg: rgba(255,255,255,0.2); --theme-header-nav-bg-hover: rgba(255,255,255,0.3); --theme-header-nav-text: #ffffff; --theme-header-divider: rgba(226,232,240,0.2); --theme-main-border: #cbd5e1; --theme-header-left-border: #e2e8f0; --theme-export-border: #f1f5f9; --theme-editor-panel-border: #f1f5f9; --theme-action-btn-text: #ffffff; --theme-hint-hover: rgba(0,0,0,0.1); --theme-hint-divider: rgba(255,255,255,0.2); --theme-editor-input-bg: rgba(0,0,0,0.15); --theme-editor-input-text: #ffffff; --theme-editor-input-border: rgba(255,255,255,0.3); --theme-editor-input-focus: #ffffff; --theme-theme-editor-panel-bg: rgba(0,0,0,0.05); --theme-theme-editor-swatch-border: #cbd5e1; --theme-modal-close-hover: rgba(0,0,0,0.05); --theme-editor-tool-icon: #334155; --theme-editor-palette-shadow: 0 0 0 2px rgba(59,130,246,0.3); --theme-hand-drawn-shadow: #000000; --theme-portal-pending: #999999; --theme-bomb-blast-ring: #ef4444; --theme-bomb-blast-rays: #f97316; }
         body { font-family: 'Inter', sans-serif; overscroll-behavior: none; user-select: none; -webkit-user-select: none; transition: background-color 0.3s ease; color: var(--theme-body-text); }
@@ -239,8 +240,8 @@
                     <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Crosses</p><p id="intersectionInfo" class="text-2xl font-black text-white tabular-nums leading-none">0/0</p></div>
                 </div>
                 <div id="editorMetrics" class="hidden flex gap-6 items-center justify-center w-full">
-                     <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Length</p><input id="editReqLen" type="number" class="editor-input" value="0"></div>
-                    <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Crosses</p><input id="editReqInt" type="number" class="editor-input" value="0"></div>
+                     <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Length</p><input id="editReqLen" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
+                    <div class="flex flex-col items-center"><p class="metric-label text-[0.6rem] uppercase font-bold tracking-widest leading-none mb-1 opacity-70">Crosses</p><input id="editReqInt" type="number" min="0" max="999" step="1" inputmode="numeric" class="editor-input" value="0"></div>
                 </div>
             </div>
         </div>
@@ -248,7 +249,7 @@
         <div id="mustPassOverlay" class="absolute inset-0 pointer-events-none z-50"></div>
 
         <div id="canvasContainer" class="relative overflow-hidden">
-            <canvas id="gameCanvas" width="800" height="800"></canvas>
+            <canvas id="gameCanvas" width="800" height="800" role="application" aria-label="Pathfinder puzzle grid. Tap or drag cells to draw a path from a gate to the goal." tabindex="0"></canvas>
             <div id="gooseJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-[var(--theme-jumpscare-goose-bg)] backdrop-blur-sm overflow-hidden pointer-events-none">
                 <div class="relative w-full h-full flex flex-col items-center justify-center">
                     <div class="absolute top-[15%] z-50 transform rotate-[-25deg] -translate-x-4"><p class="hand-drawn text-[var(--theme-jumpscare-goose-text)] text-4xl mb-2">YOU RAN INTO</p></div>
@@ -467,7 +468,7 @@
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
                 <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
             </div>
-            <div id="alertOverlay" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
+            <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
                 <p id="message" class="font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
             </div>
         </div>
@@ -547,15 +548,55 @@
         const { NONE: OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING } = OverlayStatus;
 
 
-        const SOUND_BUS = {
-            play(freq, dur = "16n") {
-                if (!APP.State?.ENGINE?.muted && window.Tone && Tone.context.state === 'running') {
-                    new Tone.Synth().toDestination().triggerAttackRelease(freq, dur);
+        const SOUND_BUS = (() => {
+            let synth = null;
+            let unlockArmed = false;
+            const armUnlock = () => {
+                if (unlockArmed || typeof window === 'undefined' || !window.Tone) return;
+                unlockArmed = true;
+                const unlock = async () => {
+                    try { await window.Tone.start(); } catch (_) {}
+                    try {
+                        if (window.Tone.context && window.Tone.context.state !== 'running') {
+                            await window.Tone.context.resume();
+                        }
+                    } catch (_) {}
+                };
+                const opts = { once: true, passive: true };
+                window.addEventListener('pointerdown', unlock, opts);
+                window.addEventListener('keydown', unlock, opts);
+                window.addEventListener('touchstart', unlock, opts);
+            };
+            const getSynth = () => {
+                if (!window.Tone) return null;
+                if (!synth) synth = new window.Tone.Synth().toDestination();
+                return synth;
+            };
+            return {
+                armUnlock,
+                play(freq, dur = "16n") {
+                    if (APP.State?.ENGINE?.muted) return;
+                    if (!window.Tone) return;
+                    armUnlock();
+                    if (window.Tone.context?.state !== 'running') return;
+                    const s = getSynth();
+                    if (s) {
+                        try { s.triggerAttackRelease(freq, dur); } catch (_) {}
+                    }
                 }
-            }
+            };
+        })();
+        SOUND_BUS.armUnlock();
+
+        const deepClone = (value) => {
+            try {
+                if (typeof structuredClone === 'function') return structuredClone(value);
+            } catch (_) { /* fallthrough */ }
+            try { return JSON.parse(JSON.stringify(value)); }
+            catch (_) { return value; }
         };
 
-        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS };
+        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS, deepClone };
     })();
 
     APP.Debug = (() => {
@@ -1466,7 +1507,7 @@
                 undoBtn.onclick = () => {
                     if (canUndo) {
                         const prev = undoStacks[themeKey].pop();
-                        APP.Themes.THEMES[themeKey] = JSON.parse(JSON.stringify(prev));
+                        APP.Themes.THEMES[themeKey] = APP.Core.deepClone(prev);
                         renderAll();
                         APP.Themes.populateThemes();
                     }
@@ -1477,7 +1518,7 @@
                 resetBtn.onclick = () => {
                     const originalThemes = APP.Themes.getOriginalThemesStore();
                     if (originalThemes && originalThemes[themeKey]) {
-                        APP.Themes.THEMES[themeKey] = JSON.parse(JSON.stringify(originalThemes[themeKey]));
+                        APP.Themes.THEMES[themeKey] = APP.Core.deepClone(originalThemes[themeKey]);
                         undoStacks[themeKey] = [];
                         renderAll();
                         APP.Themes.populateThemes();
@@ -1624,7 +1665,7 @@
         let _themes = {};
         let _loaded = false;
 
-        const clone = (value) => JSON.parse(JSON.stringify(value));
+        const clone = (value) => APP.Core.deepClone(value);
 
         const normalizeRawLevel = (raw) => {
             if (!raw || typeof raw !== 'object') return raw;
@@ -1703,7 +1744,7 @@
             if (state.hasFinished) return;
             state.hasFinished = true;
             setProgress(100, state.mode === 'ready' ? 'Ready' : 'Load failed');
-            if (document.getElementById('loadingOverlay') || document.getElementById('loadingOverlay')) {
+            if (document.getElementById('loadingOverlay')) {
                 APP.UI.setOverlayOpacity('loadingOverlay', '0');
                 setTimeout(() => APP.UI.hideOverlay('loadingOverlay'), 500);
             }
@@ -1730,29 +1771,43 @@
                     resolve(mode);
                 };
 
-                const loadThemes = new Promise(innerResolve => {
-                    setProgress(20, 'Loading Themes...');
+                const loadScriptWithTimeout = (src, timeoutMs) => new Promise((res, rej) => {
                     const s = document.createElement('script');
-                    s.src = './themes.js';
+                    s.src = src;
+                    let settled = false;
+                    const timer = setTimeout(() => {
+                        if (settled) return;
+                        settled = true;
+                        rej(new Error(`Timed out loading ${src} after ${timeoutMs}ms`));
+                    }, timeoutMs);
                     s.onload = () => {
-                        setProgress(55, 'Themes Ready');
-                        innerResolve();
+                        if (settled) return;
+                        settled = true;
+                        clearTimeout(timer);
+                        res();
                     };
                     s.onerror = () => {
-                        setProgress(55, 'Themes Fallback');
-                        innerResolve();
+                        if (settled) return;
+                        settled = true;
+                        clearTimeout(timer);
+                        rej(new Error(`Failed to load ${src}`));
                     };
                     document.head.appendChild(s);
                 });
 
-                const loadLevels = new Promise((innerResolve, reject) => {
-                    setProgress(70, 'Loading Levels...');
-                    const s = document.createElement('script');
-                    s.src = './levels.js';
-                    s.onload = () => innerResolve();
-                    s.onerror = () => reject(new Error('levels.js failed to load'));
-                    document.head.appendChild(s);
+                const loadThemes = new Promise(innerResolve => {
+                    setProgress(20, 'Loading Themes...');
+                    loadScriptWithTimeout('./themes.js', 4000)
+                        .then(() => { setProgress(55, 'Themes Ready'); innerResolve(); })
+                        .catch(err => {
+                            console.warn('[Loader] themes.js failed; using fallback theme.', err);
+                            setProgress(55, 'Themes Fallback');
+                            innerResolve();
+                        });
                 });
+
+                const loadLevels = loadScriptWithTimeout('./levels.js', 4000)
+                    .then(() => { setProgress(70, 'Loading Levels...'); });
 
                 loadThemes
                     .then(() => loadLevels)
@@ -1770,7 +1825,7 @@
                         state.hasLoaded = true;
                         state.status = 'ready';
                         setProgress(95, 'Levels Ready');
-                        console.log('Levels loaded:', APP.Data.getLevels().length);
+                        if (APP.Core.DEV) console.log('Levels loaded:', APP.Data.getLevels().length);
                         done('ready');
                     })
                     .catch(err => {
@@ -3036,10 +3091,9 @@
             commitWorkingLevel() { refs.ENGINE.level = APP.LevelUtils.deepCloneLevel(refs.ENGINE.editor.workingLevel); refs.ENGINE.editor.isModified = false; },
             applyMetricsFromUI() {
                 if (!refs.ENGINE?.editor?.workingLevel) return;
-                const reqLen = parseInt(refs.UI.getValue('editReqLen'), 10);
-                const reqInt = parseInt(refs.UI.getValue('editReqInt'), 10);
-                refs.ENGINE.editor.workingLevel.reqLen = Number.isFinite(reqLen) ? reqLen : 0;
-                refs.ENGINE.editor.workingLevel.reqInt = Number.isFinite(reqInt) ? reqInt : 0;
+                const clampMetric = (n) => Number.isFinite(n) ? Math.max(0, Math.min(999, Math.floor(n))) : 0;
+                refs.ENGINE.editor.workingLevel.reqLen = clampMetric(parseInt(refs.UI.getValue('editReqLen'), 10));
+                refs.ENGINE.editor.workingLevel.reqInt = clampMetric(parseInt(refs.UI.getValue('editReqInt'), 10));
             },
             setWorkingLevelHintsFromSolutions(paths = []) {
                 this.setWorkingHints(paths);
@@ -3151,6 +3205,7 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
         let activeSyncUid = null;
         let cloudSyncUnsubs = [];
+        let syncGeneration = 0;
 
         if (firebaseConfigRaw) {
             try {
@@ -3158,7 +3213,11 @@
                 firebase.initializeApp(config);
                 auth = firebase.auth();
                 db = firebase.firestore();
-            } catch (e) {}
+            } catch (e) {
+                console.warn('[Persistence] Firebase init failed; running in local-only mode.', e);
+                auth = null;
+                db = null;
+            }
         }
 
         async function initAuth() {
@@ -3169,7 +3228,9 @@
                 } else {
                     await auth.signInAnonymously();
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.warn('[Persistence] Auth sign-in failed; cloud sync disabled.', e);
+            }
         }
 
         function sanitizeSessionPayload(raw, fallback = {}) {
@@ -3194,16 +3255,25 @@
             try {
                 const raw = localStorage.getItem(`pathfinder_session_${appId}`);
                 if (!raw) return sanitizeSessionPayload({}, {});
-                return sanitizeSessionPayload(JSON.parse(raw), {});
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                    console.warn('[Persistence] session payload is not an object, resetting.');
+                    return sanitizeSessionPayload({}, {});
+                }
+                return sanitizeSessionPayload(parsed, {});
             } catch (e) {
+                console.warn('[Persistence] Could not parse session state from localStorage; resetting.', e);
                 return sanitizeSessionPayload({}, {});
             }
         }
 
         function clearCloudSyncListeners() {
+            syncGeneration++;
             if (!cloudSyncUnsubs.length) return;
             for (const unsub of cloudSyncUnsubs) {
-                try { if (typeof unsub === 'function') unsub(); } catch (_) {}
+                try { if (typeof unsub === 'function') unsub(); } catch (e) {
+                    console.warn('[Persistence] error tearing down cloud sync listener', e);
+                }
             }
             cloudSyncUnsubs = [];
             activeSyncUid = null;
@@ -3212,8 +3282,16 @@
         function syncProgress() {
             const localData = localStorage.getItem(`pathfinder_progress_${appId}`);
             if (localData) {
-                APP.State.ENGINE.progressSet = new Set(JSON.parse(localData));
-                APP.Persistence.updateCompletionUI();
+                try {
+                    const parsed = JSON.parse(localData);
+                    if (!Array.isArray(parsed)) throw new Error('progress payload is not an array');
+                    APP.State.ENGINE.progressSet = new Set(parsed.filter(n => Number.isInteger(n) && n >= 0));
+                    APP.Persistence.updateCompletionUI();
+                } catch (e) {
+                    console.warn('[Persistence] Could not parse local progress; starting fresh.', e);
+                    APP.State.ENGINE.progressSet = new Set();
+                    APP.Persistence.updateCompletionUI();
+                }
             }
 
             const user = auth?.currentUser;
@@ -3225,9 +3303,11 @@
             if (activeSyncUid === user.uid && cloudSyncUnsubs.length > 0) return;
             clearCloudSyncListeners();
 
+            const generation = ++syncGeneration;
             const userDataCollection = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('data');
             const progressDoc = userDataCollection.doc('levelProgress');
             const progressUnsub = progressDoc.onSnapshot((doc) => {
+                if (generation !== syncGeneration) return;
                 if (doc.exists) {
                     const data = doc.data();
                     const cloudSet = new Set(data.completedLevels || []);
@@ -3235,17 +3315,18 @@
                     APP.Persistence.updateCompletionUI();
                     localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
                 }
-            }, () => {});
+            }, (err) => { console.warn('[Persistence] progress snapshot error', err); });
 
             const sessionDoc = userDataCollection.doc('sessionState');
             const sessionUnsub = sessionDoc.onSnapshot((doc) => {
+                if (generation !== syncGeneration) return;
                 if (!doc.exists) return;
                 const data = doc.data() || {};
                 const localSession = getLocalSessionState();
                 const cloudSession = sanitizeSessionPayload(data, localSession);
                 const nextSession = cloudSession.updatedAt > localSession.updatedAt ? cloudSession : localSession;
                 localStorage.setItem(`pathfinder_session_${appId}`, JSON.stringify(nextSession));
-            }, () => {});
+            }, (err) => { console.warn('[Persistence] session snapshot error', err); });
 
             cloudSyncUnsubs = [progressUnsub, sessionUnsub].filter(fn => typeof fn === 'function');
             activeSyncUid = user.uid;
@@ -3275,9 +3356,13 @@
                 const user = auth?.currentUser;
                 if (user && db) {
                     const sessionDoc = db.collection('artifacts').doc(appId).collection('users').doc(user.uid).collection('data').doc('sessionState');
-                    sessionDoc.set(payload, { merge: true }).catch(() => {});
+                    sessionDoc.set(payload, { merge: true }).catch(err => {
+                        console.warn('[Persistence] cloud session write failed', err);
+                    });
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.warn('[Persistence] persistSessionState failed', e);
+            }
         }
 
         function applySessionState() {
@@ -3957,7 +4042,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function populateThemes() {
         if (!originalThemes) {
-            originalThemes = JSON.parse(JSON.stringify(THEMES));
+            originalThemes = APP.Core.deepClone(THEMES);
             delete originalThemes['chaos'];
         }
         const themes = getThemeRegistry();
@@ -3971,7 +4056,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
         if (!themeUndoStacks[themeKey]) themeUndoStacks[themeKey] = [];
-        themeUndoStacks[themeKey].push(JSON.parse(JSON.stringify(APP.Themes.THEMES[themeKey])));
+        themeUndoStacks[themeKey].push(APP.Core.deepClone(APP.Themes.THEMES[themeKey]));
 
         const t = APP.Themes.THEMES[themeKey];
         const LINE_KEY_GROUPS = {
@@ -4412,7 +4497,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const getAuditDisableLegacyFallback = () => !!APP.State.ENGINE.flags?.auditDisableLegacyFallback;
 
         const trimAuditError = (err) => `${err?.message || err || ''}`.trim().slice(0, 140);
-        const copyClone = (v) => JSON.parse(JSON.stringify(v));
+        const copyClone = (v) => APP.Core.deepClone(v);
         const delay0 = () => new Promise(r => setTimeout(r, 0));
         const HINT_LADDER_CAP_MS = 180000;
         const HINT_RESCUE_DISABLED_PRUNES = ['mustPassBound', 'mustCrossBound', 'connectivity', 'portalAutomaton'];
@@ -5884,18 +5969,20 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const cardinality = getFieldCardinality(activeLevel[key]);
                 if (cardinality !== null) suspiciousCardinalities[key] = cardinality;
             });
-            console.log('[New Hint start] active level keys/purity probe', {
-                levelId: activeLevel.id,
-                activeLevelKeys,
-                unexpectedKeys,
-                cardinalities,
-                suspiciousCardinalities
-            });
-            if (activeLevel.id === 134) {
-                console.log('[New Hint start] Level 134 purity check', {
-                    isPureCanonical: unexpectedKeys.length === 0,
-                    unexpectedKeys
+            if (APP.Core.DEV) {
+                console.log('[New Hint start] active level keys/purity probe', {
+                    levelId: activeLevel.id,
+                    activeLevelKeys,
+                    unexpectedKeys,
+                    cardinalities,
+                    suspiciousCardinalities
                 });
+                if (activeLevel.id === 134) {
+                    console.log('[New Hint start] Level 134 purity check', {
+                        isPureCanonical: unexpectedKeys.length === 0,
+                        unexpectedKeys
+                    });
+                }
             }
             if (unexpectedKeys.length > 0 && APP.State.ENGINE.flags?.warnNonCanonicalLevelFields) {
                 console.warn('[New Hint start] Non-canonical fields present before canonical clone.', {
