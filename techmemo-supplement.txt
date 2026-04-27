@@ -1,0 +1,493 @@
+# Research Expansion Memo: Beyond Landmarks/Luby/EHC/CP-SAT
+
+**Audience:** Solver developers / small engineering team
+**Status:** Technical memo, complementary to prior memo
+**Scope:** Constrained pathfinding solver with portal automata, parity, must-pass/must-cross, hazards, obligations
+**Out of scope (already covered):** Landmark heuristics, Luby restarts, Enforced Hill Climbing, CP-SAT replacement
+
+---
+
+## 1. Executive Summary
+
+The current solver fails persistently on a handful of hard levels in two distinguishable modes — **final-mile flooding without closure** and **heuristic plateaus where obligations don't reduce**. Broad re-tuning has historically caused regressions on solved levels. The thesis of this memo is that *the next round of progress is unlikely to come from another heuristic re-weighting pass*. Instead, the highest-leverage moves are:
+
+1. **A diagnostic decision tree** that classifies each failing level into one of three families (final-mile, plateau, prune-error) within a day of analysis, using telemetry that is cheap to add (Section 2). This is the precondition for everything else.
+2. **A bounded-cost "closer" stage** triggered when search reaches a configurable proximity threshold to the goal — implemented first as a bounded-completion BFS plus a meet-in-the-middle (Holte–Felner MM-style) frontier from the goal. This directly attacks the final-mile pattern that recurs on these levels and is the cheapest hybrid available (Section 3, 5).
+3. **Trap / nogood / unsolvability witness learning** to attack heuristic plateau failures. When obligation reduction stalls, the solver should be *learning compact dead-end formulas in situ* (à la Steinmetz–Hoffmann nogood learning, Lipovetzky et al. traps), so plateaus translate into pruning rather than continued flailing.
+4. **Per-signature policy selection (lightweight)** — a SATzilla/AutoFolio-style empirical-hardness model trained on the existing 134 solved levels, with regularization explicitly tuned for a small hard set. Run as a *recommender*, not a forcer, with a conservative fallback to the global default. This is the principled answer to "per-level policies without overfitting."
+5. **A protected ship criterion**: any change must clear a paired bootstrap test on a stratified panel (solved + hard) with an explicit regression budget on previously-solved levels. Heavy-tailed runtime distributions (Gomes–Selman–Crato 2000) make naïve mean comparisons misleading; the experimental section specifies how to do this correctly.
+
+The memo also provides a 2-week pilot plan, a 6-week extension, an anti-pattern checklist, and ten labeled novel ideas (Mature / Emerging / Speculative) with fast falsification tests.
+
+---
+
+## 2. Failure Taxonomy and Diagnostic Decision Tree
+
+### 2.1 Three-family taxonomy
+
+The literature on systematic-search pathology converges on three clearly distinct failure modes that require different responses:
+
+**Family A — Final-mile / closure failure.** Search repeatedly arrives within a small Hamming-distance of a feasible solution but never closes. In planning literature this is the "near-solution flood" pattern; in CSP it is the "trapped at the boundary of the solution-cluster" pattern that motivated focal search and bounded-suboptimal closers. Telemetric signature: minimum-h reached is small and stable; obligations reduced are near-complete; final increments require committing to a specific narrow channel that the heuristic does not differentially reward.
+
+**Family B — Heuristic plateau / guidance failure.** Search expands large numbers of states without meaningfully reducing the obligations vector. The runtime distribution is heavy-tailed in the Gomes–Selman–Crato sense: most short prefixes never escape a local basin. In planning, Cohen, Domshlak, and Zilberstein (AAAI 2018) showed that heavy- and fat-tailed behavior persists in satisficing planning, not just systematic SAT search — so this family is the *expected* behavior on hard structured instances, not anomalous.
+
+**Family C — Over-pruning / correctness failure.** A feasibility bound or rescue rule wrongly excludes the basin containing the only feasible completion. Symptoms look identical to A or B from outside, which is exactly why this family is dangerous. The CEGAR-for-planning literature (Seipp & Helmert, JAIR 2018) is built around the diagnostic that distinguishes "abstraction is too coarse" from "concrete plan is genuinely infeasible," and the same logic applies here.
+
+### 2.2 Telemetry signals — most diagnostic vs. most misleading
+
+| Signal | Diagnoses | Misleading because... |
+|---|---|---|
+| **min_h reached** (lowest heuristic value seen) | A vs. B (A: small & stable; B: never small) | Misleading alone if heuristic is non-admissible — can falsely look "close" |
+| **obligation-vector trajectory over expansions** | B (plateau) vs. A (steady reduction then stall) | Aggregate counts mask which obligation is stuck |
+| **state-of-min-h Hamming distance to goal across restarts** | A (concentrated near same boundary) vs. B (spread) | Requires a goal-distance metric that respects portal/automaton state |
+| **success rate of forward-vs-backward reachability check from min-h frontier** | C (forward feasible but heuristic blocks) | Requires a backward operator model; if absent, signal is unavailable |
+| **runtime distribution shape on randomized restarts** (Hill index / log-log tail) | A vs. B (B shows heavier tail per Gomes et al.) | Needs ≥30 restart samples; small samples produce unreliable Hill estimates |
+| **entropy of beam composition over time** | "narrowing too fast" failures | Often spuriously high right after rescue events |
+| **expanded/generated ratio** | over-pruning vs. normal search | Always-misleading on its own; only meaningful relative to a known-good baseline level |
+
+**Commonly misleading signals to deprioritize:** total expansion count (correlates with hardness, not failure family); average h (smeared by beam diversity); count of rescue events (triggered by many causes).
+
+### 2.3 One-day decision tree (lightweight instrumentation only)
+
+This tree requires only three counters that any solver can emit without telemetry refactor:
+
+```
+Has search reached a state with min_h ≤ k_close (small, e.g. 3)?
+├── NO  → Family B (plateau). Go to plateau remediation.
+└── YES → Has obligations-remaining at min_h state ≤ small_obl_threshold?
+          ├── NO → Family B with mid-progress; treat as B.
+          └── YES → On 5 randomized restarts, do ≥3 reach min_h again?
+                    ├── YES (concentrated boundary) → Family A (final-mile)
+                    └── NO (each restart finds different boundary) →
+                         Run a *backward feasibility probe* from goal:
+                         can a relaxed search reach any state in the
+                         min_h frontier?
+                         ├── YES → Family C (over-pruning suspected)
+                         └── NO  → Family A with disconnect; treat as A.
+```
+
+This tree uses only `min_h_seen`, `obligations_at_min_h_state`, and a coarse boundary-fingerprint (hash of (tile_pos, automaton_state, parity)). It deliberately requires no obligation-by-obligation breakdown, satisfying the "robust even with poor telemetry" requirement.
+
+---
+
+## 3. Final-Mile Conversion Methods (UNDEREXPLORED)
+
+This is the section the prior memo's themes do not address well. Final-mile conversion is its own subfield.
+
+### 3.1 Comparison of six approaches
+
+| Approach | Win condition | Failure mode | Compute profile | Integration |
+|---|---|---|---|---|
+| **Bounded completion BFS** from each high-quality leaf | Solution exists within ≤ k moves of a frontier state, branching factor manageable | Branching factor explodes near goal (portal switching, multi-direction edges) | O(b^k); k=8 with b=4 = 64K | Trivial: drop-in after frontier extraction |
+| **Repair / search hybrid** (LPA*, D*-Lite-style local repair, plan repair) | A near-feasible candidate exists and only a localized substructure must change | Repair window must contain a fix; repair operators must be model-complete | Linear in repair window | Medium: needs a *repair operator* definition over your constraint set |
+| **Exact micro-solver** (small SAT/SMT/CP for the last k steps) | k small enough (≤30) that a complete encoding fits in <1s; constraints can be extracted as clauses | Encoding overhead per call dominates if called too eagerly; mismatch in semantics between solver and micro-solver creates spurious unsat | 50ms–2s per call | High: requires a partial-state encoding of portals/parity/obligations |
+| **Bidirectional / meet-in-the-middle** (MM, Holte–Felner–Sharon–Sturtevant 2016/2017) | Backward operators exist or can be approximated; search frontiers can be hashed | If backward branching is much higher than forward, MM's mid-frontier guarantee gives no benefit | Comparable to A* but halves frontier depth in practice | Medium-high: needs invertible transitions over portal/parity automaton |
+| **Conflict-directed completion** (CDCL-style nogood learning during the closer phase, related to Steinmetz–Hoffmann) | Failure structure is repetitive — same conflict reappears across closer attempts | Diminishing returns if every closer failure is unique | Low marginal cost; learns over many attempts | Medium: requires a clause database keyed on (state-projection, failure reason) |
+| **Anytime weighted A* with goal-side restart** (Likhachev's ARA* family) | Quality matters less than completion; an inflated heuristic + repeated tightening can punch through | Weight schedule has to be tuned per family; risk of early commitment | Linear in nodes; reuse across iterations | Medium: needs anytime-friendly bound bookkeeping |
+
+### 3.2 Recommended sequencing
+
+Start with **bounded completion BFS** *triggered by a min-h proximity gate* — it is the cheapest, requires zero new modeling, and gives an immediate empirical answer to "is the closer working?" If BFS-with-budget closes a non-trivial fraction of previously stuck levels, proceed to **MM-style bidirectional closer** (mature, well-understood, Holte et al. AIJ 2017). Reserve the **exact micro-solver** for cases where neither succeeds — those are levels where no purely BFS-shaped closer will work and a constraint-encoded last-k is genuinely needed. The micro-solver is the highest-cost option but also has the highest ceiling; it is the option that converts "almost solved" into "provably unsolvable in last-k OR solved in last-k."
+
+**Operational note (lightweight):** the cheapest pilot is a 100-line "open the top-N min-h frontier states and run depth-limited DFS to depth k=8 with a per-call budget of 50ms." This is *the* one concrete recommendation feasible without telemetry refactor.
+
+### 3.3 What the literature actually says about final-mile
+
+- The MM algorithm (Holte, Felner, Sharon, Sturtevant — AAAI 2016 / AIJ 2017) is the only bidirectional heuristic search whose forward and backward searches are *guaranteed* never to expand a node beyond the solution midpoint. [Semantic Scholar](https://www.semanticscholar.org/paper/Bidirectional-Search-That-Is-Guaranteed-to-Meet-in-Holte-Felner/d4c2696a254c88a2382b399d7c8c146f49338bf1) This makes it the right primitive for final-mile.
+- Recent work (BAE*, MEET; IJCAI 2025) shows BAE*-family and MEET-family bidirectional algorithms now outperform unidirectional A* with state-of-the-art heuristics on hard instances — bidirectional has finally crossed the threshold of practical value, so this is *not* a speculative direction.
+- In bounded-suboptimal search, the EES family (Thayer & Ruml, IJCAI 2011; Cohen et al., IJCAI 2018 anytime focal search) demonstrates that a *secondary* cost on the focal list, distinct from the primary g+h, is what unblocks closure on instances where h is uninformative near the goal. This is directly applicable: a "closer-mode" focal cost like (number of unmet obligations + portal-state-distance) deployed only inside the proximity gate is a cheap, well-grounded change.
+
+---
+
+## 4. Feasibility Pruning: Correctness and Safety
+
+### 4.1 Best practices for stronger pruning without over-pruning
+
+The single most underused tool in solver engineering is **certified pruning**: every prune rule emits an inspectable witness (a small formula or a backward-reachability certificate) explaining *why* the state is being discarded. When integrated correctly:
+
+- Each pruned state can be checked offline against a known solution (for solved levels): if pruning fires on any state on a known-feasible path, it is unsound.
+- Pruning rules accumulate as a *clause database* (in the sense of Steinmetz & Hoffmann's nogood learning, AIJ / IJCAI 2017, and Lipovetzky–Muise–Geffner traps, ICAPS 2016), which gives you the substrate for both stronger pruning and post-hoc auditing.
+
+### 4.2 Counterexample-guided / proof-oriented methods
+
+**CEGAR for planning (Seipp & Helmert, JAIR 2018, *Counterexample-Guided Cartesian Abstraction Refinement for Classical Planning*)** is the gold standard. The idea: start from a *coarse abstraction* of the puzzle (drop portal automaton, drop parity, keep tile graph + obligations only). Solve that abstractly. Check whether the abstract plan refines to the concrete task. If it doesn't, identify which abstract state hides the dead-end, refine that state, repeat. [DIVA-Portal](https://liu.diva-portal.org/smash/record.jsf?pid=diva2:1704612&dswid=-6104) [AAAI Publications](https://ojs.aaai.org/index.php/ICAPS/article/view/19819) Every refinement is *provably sound*; the abstraction itself becomes an admissible heuristic; and the failure trace gives you actionable information about which constraint is causing the impasse.
+
+Adapted to your constraint structure, an initial Cartesian abstraction would group states by (tile_position, satisfied_obligation_subset), dropping portal-automaton state. Refinements would re-introduce automaton dimensions only where they distinguish abstract dead-ends from real ones.
+
+**Trap-based unsolvability witnesses** (Lipovetzky, Muise, Geffner — ICAPS 2016 *Traps, Invariants, and Dead-Ends*; Steinmetz & Hoffmann — IJCAI 2017 *Search and Learn*). A k-trap is a compact DNF formula whose terms together describe a non-goal set the search cannot escape. Trap learning is precisely the kind of pruning that survives audit: each trap is a literal mathematical certificate of "no plan exists from any state satisfying this." Empirically these methods improved coverage on resource-constrained domains specifically, [IJCAI](https://www.ijcai.org/proceedings/2017/614) [ResearchGate](https://www.researchgate.net/publication/363911761_Traps_Invariants_and_Dead-Ends) which is the closest analogue in the planning literature to obligation-bounded path puzzles.
+
+### 4.3 Distinguishing "bad heuristic" from "invalid prune"
+
+Practical methodology:
+
+1. **The replay test.** Take the 134 solved levels. For each, replay the optimal solution path through the current solver with pruning enabled. If pruning fires on any state on the optimal path, that prune rule is provably unsound. (Cost: one pass per change. This is mandatory before merge.)
+2. **The dual-tower test.** Run the solver with pruning *off* on the 3-5 hard levels for an extended budget. If the solver-without-pruning solves a level the solver-with-pruning does not, pruning was the cause; if neither solves it, the heuristic is at fault. This separates Family C from Families A/B with no ambiguity.
+3. **Bisect by rule.** Each prune rule is gated by a flag. On a failing level, run the cross product of rule-on/off and identify the minimal prune set that reproduces the failure. This is dull engineering but it is *exactly* how SAT/CP teams have isolated unsoundness for two decades.
+4. **Witness emission.** Every prune emits `(state_signature, rule_id, derivation_summary)`. On a failing level, sort these by frequency; the dominant rule is the prime suspect.
+
+---
+
+## 5. Per-Instance / Per-Signature Adaptive Control
+
+### 5.1 What the literature actually shows
+
+The algorithm-selection / per-instance configuration line of work is mature:
+
+- **SATzilla** (Xu, Hutter, Hoos, Leyton-Brown — JAIR 2008, multiple SAT competition golds): trains *empirical hardness models* per solver and selects per-instance based on cheap features.
+- **Hydra** (Xu et al. 2010), **ISAC**, **3S**: extensions for parameter configuration and parallel portfolios.
+- **AutoFolio** (Lindauer, Hoos, Hutter, Schaub — JAIR 2015 / IJCAI 2017 ext. abstract): automates the construction of the algorithm selector itself, achieving 1.3×–15.4× speedup over best single algorithm on ASlib scenarios.
+- **Run2Survive / dynamic algorithm scheduling** (more recent, ACM TELO 2025): treats selection as survival analysis, naturally handling censored runs.
+
+### 5.2 Practical, low-risk per-signature mechanism for this solver
+
+**Recommended architecture (regularized recommender, not forcer):**
+
+1. **Signature features** — extract cheap, level-static features only:
+   - Counts: must-pass tiles, must-cross edges, portal automaton states, parity classes, hazards, total obligations.
+   - Topology: tile graph diameter, articulation count, biconnected component count.
+   - Constraint coupling: ratio of obligations to graph nodes; entropy of must-pass distribution.
+   - 30–50 features total. All computable in milliseconds.
+
+2. **Training data** — for each of the 134 solved levels, record (features, best policy from {A...M}, time_to_solve). For the 3 unsolved hard levels, no policy label is available; treat them as unlabeled.
+
+3. **Model** — a small ensemble (random forest, XGBoost, or pairwise cost-sensitive classifier as in SATzilla'11) predicting either (a) best policy ID or (b) per-policy expected runtime. With ~134 training points, prefer pairwise classification; it has the best small-sample behavior in the SATzilla evaluations.
+
+4. **Conservative deployment rule** (the regularization that matters for 3-5 hard instances):
+   - If the recommender's top choice has confidence < threshold τ: **fall back to the global static default**.
+   - If the recommended policy's predicted runtime is not at least 1.5× faster than the default's predicted runtime: **fall back**.
+   - If the level's feature vector lies outside the convex hull of training data (use isolation forest or distance-to-kth-NN): **fall back, log as out-of-distribution**.
+   - This is structurally similar to AutoFolio's confidence-aware recourse and to clp-folio with cost-sensitive recourse (Tornede et al.).
+
+5. **Validation** — leave-one-out across the 134 solved set; for the 3 hard levels, *never* validate-against-self. Do **not** include any hard-level result in the model selection loop, because with N=3 you will overfit immediately.
+
+### 5.3 Avoiding overfitting to a tiny hard set
+
+This is the central risk. Mitigations beyond the above:
+
+- **Held-out promotion gate.** A new policy may not enter the portfolio unless it improves median time on a stratified subset of *solved* levels (proves it's not actively harmful) **and** solves at least one hard level. Improving solved-set time alone is not enough; solving a hard level alone is also not enough (it could be a fluke single seed).
+- **Multi-seed verification.** A "solve" on a hard level only counts if it reproduces on ≥3 of 5 distinct random seeds. Single-seed solves are treated as suggestive-but-not-confirmatory in deployment decisions.
+- **Reverse-direction sanity check.** Confirm that the new policy does not flip any *previously solved* level into unsolved at any seed.
+- **Public adversarial review of the feature set.** Have a teammate try to construct a feature that predicts "hard 3" but is uncorrelated with structural difficulty. If they succeed, your features are leaky.
+
+---
+
+## 6. Alternatives to Monolithic Heuristic Search
+
+### 6.1 Hybrid architectures
+
+The clearest emerging consensus across planning, SAT, and robotics is: **fast heuristic explorer + small exact closer**, where each part does what it's good at. Examples in the literature:
+
+- **Plan-then-repair / plan-then-verify** (Kambhampati's LLM-Modulo framing 2024; ChatHTN, Munoz-Avila et al. 2025): explorer proposes, verifier accepts/rejects with a counterexample, explorer revises.
+- **Bilevel planning with neuro-symbolic skills** (Silver et al., NeurIPS 2022 *Learning Neuro-Symbolic Skills for Bilevel Planning*): symbolic planner picks abstract skill sequence, learned subgoal sampler grounds it.
+- **PEM-BAE\*** (recent bidirectional results): unidirectional explorer + meet-in-the-middle exact phase, beating pure unidirectional A* with strong heuristics on hard instances. [ResearchGate](https://www.researchgate.net/publication/319232036_MM_A_bidirectional_search_algorithm_that_is_guaranteed_to_meet_in_the_middle)
+
+For your solver, the natural decomposition is:
+- **Explorer** = current beam / tree-expansion solver, at full strength.
+- **Closer** = bounded BFS / MM / micro-solver triggered by proximity gate.
+- **Witness collector** = trap learner running across runs; its output flows back into the explorer's pruning.
+
+### 6.2 Deployment tradeoffs
+
+| Setting | Tradeoff |
+|---|---|
+| **Browser/client** | Memory and JS performance constrain micro-solver size; strongly favor BFS + MM closer over SAT/SMT closers; prefer a precomputed nogood database shipped with the puzzle |
+| **Offline precompute** | Each level can have a precomputed trap set, abstraction heuristic table, and per-signature recommended policy; closer becomes very cheap at runtime |
+| **Service-based** | All options open; full CEGAR refinement and SAT micro-solver feasible; lets you ship a tiny client with hard-level rescue routed to server |
+
+**Inference:** for a puzzle game shipping client-side, the precomputed-trap approach (not in the prior memo) is cheaper at runtime than any of (landmarks, Luby restart loops, EHC, CP-SAT swap-in). One offline pass produces a small DNF per hard level; the runtime cost is a constant-time check.
+
+### 6.3 Minimal viable hybrid (≤ 2 weeks)
+
+```
+Existing solver (unchanged)
+        │
+        ├── on min_h ≤ k_close trigger:
+        │      ↓
+        │   Closer-Stage-1: bounded BFS (depth 8, budget 50ms × top-5 frontier states)
+        │      │ if solved → done
+        │      ↓
+        │   Closer-Stage-2: MM bidirectional from goal (if backward operator available; depth 12)
+        │      │ if solved → done
+        │      ↓
+        │   Closer-Stage-3: log full state + obligations to "needs_micro_solver" queue
+        │      ↓
+        │   Return to explorer (explorer learns trap from Closer-Stage-3 failures)
+```
+
+Two engineers, two weeks: instrumentation gate (2 days), BFS closer (2 days), backward operator + MM (4 days), trap-collection sidecar (2 days), measurement (2 days). The explicit non-goals: no new heuristic, no rewriting of beam structure, no architecture rewrite.
+
+---
+
+## 7. Experimental Methodology and Evidence Standards
+
+### 7.1 Heavy-tailed-aware evaluation
+
+Gomes, Selman, Crato, Kautz (J. Automated Reasoning 2000) is foundational: backtrack-search runtime on hard instances is heavy-tailed, often with infinite mean. Cohen, Domshlak, Zilberstein (AAAI 2018) showed the same in *satisficing* planning. Practical implications you must internalize:
+
+1. **Mean and variance are unreliable summary statistics.** Report median, IQR, and quantiles (p25/p50/p75/p90/p95).
+2. **Always plot the runtime distribution (RTD)**, log-scale x-axis, log-scale survival 1–F(x). Heavy tails appear as approximately linear right-tails on a log-log plot.
+3. **Use ≥30 randomized seeds per (algorithm, level)** before claiming a runtime difference. Below this, noise dominates.
+4. **For survival/heavy-tail diagnosis, estimate the Hill index**, but with the caveat that the Hill estimator is biased on small samples — use POT (peaks-over-threshold) for any tail claim, and report confidence intervals.
+5. **For small-sample comparisons** (which yours always will be on hard levels): paired Wilcoxon signed-rank or permutation test on per-level paired runtime / coverage; Bonferroni or Benjamini–Hochberg correction across multiple comparisons; **BCa (bias-corrected and accelerated) bootstrap** for confidence intervals because percentile bootstrap mis-covers under heavy tails.
+6. **Coverage at fixed time** is the most honest single number: % of levels solved within budget T, with Wilson score CI.
+
+### 7.2 Ship criteria — protecting solved-level stability
+
+Define before any change:
+
+- **Regression budget.** No more than R levels (e.g., R=0 strict, R=1 lenient) from the 134-solved set may flip to unsolved at any seed in a multi-seed run.
+- **Coverage threshold.** Median-runtime degradation on the solved set must be ≤ X% (e.g., 10%).
+- **Pareto front check.** Plot (solved-set median time) vs. (hard-set coverage). A change must Pareto-dominate or expand the frontier; pure trade-offs require explicit sign-off.
+- **Stability across seeds.** A hard-level "solve" only counts toward shipping if reproducible at ≥3 of 5 seeds.
+- **Pre-registered analysis.** Decide the test, the threshold, and the panel composition *before* running. Post-hoc threshold tuning is the most common form of self-deception in solver engineering.
+
+This is the answer to "broad heuristic reweighting causes regressions": gate every change on the regression budget, and the regressions stop.
+
+---
+
+## 8. Anti-Patterns and Guardrails
+
+### 8.1 The most common anti-patterns
+
+Drawn from the SAT/planning/CP communities and solver-engineering folklore:
+
+1. **Over-tuning on the failing set.** A change that "fixes" levels 135, 136, 137 by tuning weights to those exact levels is just memorization; it almost always regresses something else.
+2. **Heuristic stacking.** Adding more heuristic terms with hand-tuned weights without ablations. Each added term increases collateral risk superlinearly; ablation discipline is the only counter.
+3. **"Rescue logic" without telemetry.** Rescues that fire frequently and silently mask underlying problems and create heisenbugs.
+4. **Goodhart on expansion count.** Expansions-per-second and total-expansions are *proxies*. Optimizing them can hurt solve rate (e.g., a faster but less informative heuristic).
+5. **Goodhart on min_h.** Optimizing for "deeper minimum h" can lead to heuristics that report low h on infeasible states.
+6. **Single-seed declarations of victory.** Solving a level once at one seed proves only that some seed succeeds, given heavy-tailed RTD; cf. Gomes et al.
+7. **No regression budget.** Shipping a change that "felt good locally" without checking the full solved set is the dominant source of regressions.
+8. **Conflating exploration breadth with policy quality.** A more diverse beam may "cover more states" but solve fewer levels; coverage and quality are different axes.
+9. **Reusing the held-out set.** Once you've looked at hard-level metrics three times in development, the held-out set is contaminated.
+10. **Adding pruning without a soundness proof on solved levels.** Every prune rule must pass the replay test.
+11. **Ignoring the runtime distribution.** Reporting "average runtime improved 12%" when the median moved 0% and the p90 moved 30%. State which.
+12. **Coupling the closer to the explorer's heuristic.** A closer that uses the same h as the explorer cannot fix what the explorer's h gets wrong.
+
+### 8.2 Goodhart warning signs
+
+You're optimizing a divergent proxy when:
+- A change improves your dashboard metric monotonically but solve coverage doesn't move.
+- Improvements concentrate on a metric that humans look at, not one tied to the user-visible goal.
+- The metric gets harder to interpret over time (a sign you're tuning to it).
+- Two metrics that should correlate (e.g., min_h, solve_rate) start moving in opposite directions.
+
+---
+
+## 9. Top Open Questions Requiring Further Research
+
+1. **Do the 3-5 hard levels share a structural fingerprint** that distinguishes them in feature space from the 134 solved? Until this is answered, any per-signature policy is guessing.
+2. **What is the empirical RTD shape on a hard level** under randomized restart of the existing solver? If it's heavy-tailed in the Gomes–Crato sense, restart strategies remain valuable; if not, restart-based fixes will not help and the issue is structural.
+3. **Are backward operators well-defined** for portal automata + parity? If yes, MM-style closer is cheap; if no, the closer must be forward-only, which limits options.
+4. **What fraction of the failures are Family C (over-pruning)** vs. A/B? The dual-tower test (Section 4.3) answers this in a day and dramatically narrows the action space.
+5. **Does a learned heuristic from the 134 solved instances generalize** at all to the hard 3, or are they out-of-distribution? Useful preliminary signal: for each of the 134 solved, train-on-rest; how does median heuristic accuracy degrade?
+6. **Is there a parity or modular invariant** (à la Eriksson & Helmert ICAPS 2020 *Detecting Unsolvability Based on Separating Functions*) that proves some near-success states are unreachable? This would convert near-misses into proven dead-ends.
+
+---
+
+## 10. Novel Ideas Likely Not Yet Tried
+
+For each: relevance to your failure profile, maturity, risk, cost, and a fast falsification test.
+
+### 10.1 Trap / nogood / dead-end-witness learning during search [MATURE]
+
+- **Why it fits.** Directly attacks Family B (plateau): when expansion stalls, learn a trap formula that prunes the plateau next time.
+- **Evidence.** Lipovetzky, Muise, Geffner (ICAPS 2016); Steinmetz, Hoffmann (IJCAI 2017, AIJ 2017). Improves coverage on resource-constrained domains specifically [IJCAI](https://www.ijcai.org/proceedings/2017/614) [ResearchGate](https://www.researchgate.net/publication/363911761_Traps_Invariants_and_Dead-Ends) — close to your obligation structure.
+- **Risk.** Low. Each trap is a soundness-preserving prune.
+- **Cost.** 1–2 weeks for a 1-trap or 2-trap learner over your state projection.
+- **Falsification.** On a stuck Family-B level, run with trap learning for 1 minute, then restart with the learned traps active. If second-run search depth doesn't strictly reduce, the learner isn't capturing the right structure.
+
+### 10.2 Cartesian abstraction CEGAR heuristic [MATURE]
+
+- **Why it fits.** Yields admissible heuristics derived from refinement on the actual failures; addresses both A and B.
+- **Evidence.** Seipp & Helmert JAIR 2018; Seipp et al. ICAPS 2022 (refinement strategies).
+- **Risk.** Medium — abstraction design is non-trivial for portal automata.
+- **Cost.** 3–4 weeks.
+- **Falsification.** Build a coarse abstraction over (tile_position, satisfied_obligations_mask). On the 3 hard levels, can the abstract task be solved? If the abstract task is itself unsolvable, you've proven the levels unsolvable in the current model — a strong signal worth itself.
+
+### 10.3 Bidirectional MM closer [MATURE]
+
+- See Sections 3 and 5; Holte–Felner–Sharon–Sturtevant AAAI 2016 / AIJ 2017. Falsification: implement on one solved hard-ish level; if MM doesn't reduce expansion count vs. unidirectional, your backward heuristic is too weak.
+
+### 10.4 ε-admissible focal search with secondary obligation-distance cost [MATURE]
+
+- **Why it fits.** Final-mile (Family A) is exactly the regime focal search was designed for: when h is uninformative near the goal, a secondary cost on FOCAL (e.g., distance-to-goal-in-obligation-space) breaks ties productively.
+- **Evidence.** Pearl & Kim 1982; Thayer & Ruml 2011 (EES); Cohen et al. IJCAI 2018 (anytime focal search).
+- **Risk.** Low.
+- **Cost.** ~1 week.
+- **Falsification.** Run with secondary cost = (#unmet obligations + portal-automaton-distance) inside the proximity gate. If solve rate on Family-A levels doesn't improve over 5 seeds, the secondary cost isn't differentiating.
+
+### 10.5 Per-instance algorithm selection via empirical hardness model [MATURE]
+
+- See Section 5; SATzilla, AutoFolio. Falsification: train on 134, do leave-one-out cross-validation. If the recommender's policy isn't better than "global default" on > 60% of solved levels, the features aren't informative; iterate features before deploying.
+
+### 10.6 Symmetry breaking / canonicalization of partial paths [MATURE for CP, EMERGING for path puzzles]
+
+- **Why it fits.** Many hard puzzles have hidden symmetries — equivalent prefixes that the solver re-explores. Symmetry breaking constraints (Crawford, Ginsberg, Luks, Roy 1996; Gent & Smith ECAI 2000; Walsh 2006) prune entire equivalent subtrees. [Wikipedia](https://en.wikipedia.org/wiki/Symmetry-breaking_constraints)
+- **Risk.** Medium — incorrectly identifying symmetries breaks soundness; correctness requires automorphism analysis of the puzzle's transition system.
+- **Cost.** 2–3 weeks (find candidate symmetries, verify they preserve solutions, install lex-leader breaking).
+- **Falsification.** Before any installation, run an offline check on the 134 solved levels: does a candidate symmetry map known solution paths to other valid paths? If not, the symmetry is fictional. If so, count expansion savings on a sampled level — if <10%, not worth the integration cost.
+
+### 10.7 Macro-actions / tunneling learned from solved levels [EMERGING]
+
+- **Why it fits.** Reusable subsequences (e.g., "navigate around hazard while preserving parity") learned from the 134 solved levels become single composite operators, reducing effective depth.
+- **Evidence.** Macro-action discovery has a long history (Korf 1985, Botea et al. 2005, recent neuro-symbolic skill learning Silver et al. 2022).
+- **Risk.** Medium — bad macros increase branching with no benefit.
+- **Cost.** 2–3 weeks for offline mining; 1 week for online integration.
+- **Falsification.** Mine top-K macros by frequency-and-shortcut-value across the 134 solutions. On a *solved* level, does adding macros reduce expansions? If not, the mined macros are noise; abandon.
+
+### 10.8 Graph neural network heuristic trained on solved levels [EMERGING]
+
+- **Why it fits.** A learned heuristic can capture obligation–portal–parity interactions that hand-crafted heuristics miss.
+- **Evidence.** Shen, Trevizan, Thiébaux ICAPS 2020; Ståhlberg, Bonet, Geffner ICAPS 2022; Chen, Trevizan, Thiébaux ICAPS 2024 (*Return to Tradition: Learning Reliable Heuristics with Classical Machine Learning* — WL-features + classical ML beats GNNs in many domains, faster). For browser deployment, the WL-feature + linear/RF approach is far more practical than a deep GNN.
+- **Risk.** Medium-high. Generalization from 134 to the hard 3 is uncertain (out-of-distribution risk).
+- **Cost.** 3–4 weeks.
+- **Falsification.** Per-instance learning (Ferber, Helmert, Hoffmann ECAI 2020): for each solved level, can a small NN learn a useful h from random walks within hours? If per-instance fails, generalization across instances will also fail.
+
+### 10.9 Witness-based unsolvability proof attempt [EMERGING]
+
+- **Why it fits.** If any of the 3 hard levels is *actually unsolvable* in the current model, every heuristic improvement is wasted effort. Eriksson & Helmert (ICAPS 2020) *Detecting Unsolvability Based on Separating Functions* introduces potential functions over rings (e.g., parity) that can prove unsolvability in polynomial time for certain structures — and the sliding tiles puzzle parity argument is exactly the kind of witness this finds. [ResearchGate](https://www.researchgate.net/publication/222830183_Disjoint_pattern_database_heuristics)
+- **Risk.** Low (worst case: you waste a week and gain confidence).
+- **Cost.** 1–2 weeks.
+- **Falsification (and value).** Run separating-function synthesis on the 3 hard levels. If any returns a proof, the level is unsolvable (or the model is wrong) — either is high-value information. If none returns a proof, you have evidence (not proof) of solvability and can proceed with closer-based work.
+
+### 10.10 Thompson-sampling portfolio scheduler [EMERGING]
+
+- **Why it fits.** Family B failures are heavy-tailed; running a *schedule* over policies (not picking one) can dominate any single policy on heavy-tailed RTD. Thompson sampling over policies with Beta-Bernoulli priors handles non-stationarity gracefully (Viappiani 2013). [Springer](https://link.springer.com/chapter/10.1007/978-3-642-41575-3_31)
+- **Risk.** Low — falls back to the single best policy if priors are wrong.
+- **Cost.** 1 week.
+- **Falsification.** Run TS over A–M with success/failure-within-budget reward on 5 seeds × 10 levels. If average coverage is not strictly above the best single policy, the policies are too correlated — abandon TS, look at decorrelating policies first.
+
+### 10.11 LLM-as-planner-with-classical-verifier (sound) [EMERGING / SPECULATIVE for production]
+
+- **Why it fits.** An LLM proposes a candidate path; the classical solver verifies move-by-move. Hallucinations are caught; correct guesses unlock final-mile closure.
+- **Evidence.** Kambhampati's LLM-Modulo framing; ChatHTN (2025); Tuisku et al. (2025) *Classical Planning with LLM-Generated Heuristics: Challenging the State of the Art with Python Code* — interestingly, this last paper shows that LLMs are more reliable when generating *heuristic code* than when generating plans.
+- **Risk.** High. Latency, cost, dependency on external service.
+- **Cost.** 2 weeks for LLM-heuristic-as-code experiment; 4+ for full LLM-Modulo loop.
+- **Falsification.** Use the Tuisku-style LLM-heuristic-code-generation pipeline on the 3 hard levels: does any LLM-generated heuristic, when plugged into the solver, solve any hard level? If not in 20 sampled heuristics, abandon.
+
+### 10.12 Hindsight experience replay over the solver's own attempts [SPECULATIVE]
+
+- **Why it fits.** Each near-miss on a hard level is information. HER (Andrychowicz et al. 2017 NeurIPS, and many extensions) re-labels failed trajectories with the goal they actually achieved. [arxiv](https://arxiv.org/pdf/2207.01115) For your solver: each near-miss becomes a labeled "shortest path to *that* state" that can train a per-level heuristic correction term.
+- **Risk.** Medium. The bias issue (USHER 2022) is a known concern.
+- **Cost.** 2–3 weeks.
+- **Falsification.** Train a per-level correction term from 100 near-misses; does correcting h with the term reduce expansions on that same level? If not, the near-miss states aren't informative about goal distance.
+
+---
+
+## 11. Two-Week and Six-Week Experiment Plans
+
+### 11.1 Two-week pilot (single engineer, recommended)
+
+**Days 1–2.** Add three counters: `min_h_seen`, `obligations_at_min_h_state`, `boundary_fingerprint_hash`. Run on 5 hard-ish solved levels + 3 hard levels, 5 seeds each. Classify each into Family A/B/C using Section 2.3.
+
+**Days 3–4.** Implement the dual-tower test (Section 4.3): turn pruning rules on/off, identify any unsound prunes. Replay all 134 solved levels' optimal paths through current pruning; flag unsound rules.
+
+**Days 5–8.** Implement bounded-BFS closer with proximity gate. Measure on full panel: expansion delta on solved set (must be ≤ regression budget), coverage delta on hard set.
+
+**Days 9–10.** Implement focal-list secondary obligation-distance cost inside proximity gate. Measure.
+
+**Days 11–12.** Add randomized restart, run ≥30 seeds on hard levels, fit Hill / POT to RTD. Decide whether restart-based interventions are even appropriate (heavy-tail signature) or whether structural intervention is needed.
+
+**Days 13–14.** Write up findings, classify each hard level, decide which 6-week tracks to run.
+
+**Outputs at end of week 2.**
+- Family classification of each hard level.
+- Quantified regressions (or none) on solved set from BFS closer + focal cost.
+- RTD plot with tail-index estimates per level per policy.
+- Soundness report on every prune rule.
+- Go/no-go on six-week tracks.
+
+### 11.2 Six-week extensions (parallel tracks; pick based on Week 2 results)
+
+**Track-A (if Family A dominates):** Implement MM bidirectional closer with backward operator over portal automaton + parity. Goal: solve at least 1 of the hard 3 with no regression on solved set.
+
+**Track-B (if Family B dominates):** Implement 1-trap/2-trap learner with offline DNF mining on the 134 solved set + online learning during search. Plus per-instance algorithm selection (SATzilla-lite) with leave-one-out validation. Goal: reduce median expansion on stuck levels by 50%+, or solve them.
+
+**Track-C (if Family C dominates):** Cartesian abstraction CEGAR heuristic. Build abstraction; refine; check whether abstract problem is even solvable. If not, conclude unsolvable-in-current-model and escalate to product/design. If yes, deploy the refined abstraction as auxiliary heuristic.
+
+**Cross-track:** Witness-based unsolvability check (Eriksson & Helmert separating functions) — runs in parallel during Week 1 of any 6-week extension. A 1-week effort that may invalidate every other track.
+
+---
+
+## 12. Annotated Bibliography (primary sources, with year and relevance note)
+
+**Algorithm selection / per-instance configuration**
+
+- Xu, Hutter, Hoos, Leyton-Brown. *SATzilla: Portfolio-based Algorithm Selection for SAT*. JAIR 2008. — Foundational empirical-hardness-model algorithm selector. Direct template for Section 5.
+- Lindauer, Hoos, Hutter, Schaub. *AutoFolio: An Automatically Configured Algorithm Selector*. JAIR 2015 / IJCAI-17 ext. abstract. — Auto-configures the selector itself; achieves 1.3×–15.4× speedup over best single algorithm. Useful when feature space is uncertain.
+- Lindauer, Bergdoll, Hutter (2015+). *Parallel Portfolio Selection*. — Adaptation when running multiple policies concurrently is feasible.
+
+**Heavy-tailed search behavior and randomization**
+
+- Gomes, Selman, Crato, Kautz. *Heavy-Tailed Phenomena in Satisfiability and Constraint Satisfaction Problems*. J. Automated Reasoning 24:67–100, 2000. — Foundational; variance and mean misleading on hard instances; restarts cure heavy tails.
+- Gomes, Selman, Crato. *Heavy-tailed distributions in combinatorial search*. CP 1997. — Original observation.
+- Cohen, Domshlak, Zilberstein. *Fat- and Heavy-Tailed Behavior in Satisficing Planning*. AAAI 2018. — Confirms heavy-tail in satisficing planning, not just SAT.
+- Williams, Gomes, Selman. *Backdoors to Typical Case Complexity*. SAT 2003. — Connects backdoors, restarts, and heavy tails.
+
+**CEGAR for planning**
+
+- Seipp, Helmert. *Counterexample-Guided Cartesian Abstraction Refinement for Classical Planning*. JAIR 2018 (and ICAPS 2013 conference version). — Direct method for refinable abstraction heuristics.
+- Seipp, Pommerening, Sievers, Helmert. *New Refinement Strategies for Cartesian Abstractions*. ICAPS 2022. — Practical refinement strategies; useful when adapting to puzzle-specific abstraction.
+
+**Dead-end / unsolvability detection**
+
+- Lipovetzky, Muise, Geffner. *Traps, Invariants, and Dead-Ends*. ICAPS 2016. — k-DNF traps as compact unsolvability witnesses.
+- Steinmetz, Hoffmann. *Search and Learn: On Dead-End Detectors, the Traps they Set, and Trap Learning*. IJCAI 2017. — Online trap learning during search; coverage gains on resource-constrained domains.
+- Steinmetz, Hoffmann. *State space search nogood learning: Online refinement of critical-path dead-end detectors in planning*. AIJ 2017. — Full nogood-style learning extension.
+- Bäckström, Jonsson, Ståhlberg. *Pattern Database for Unsolvability*. AAAI 2013-line. — PDBs specialized for proving infeasibility.
+- Eriksson, Helmert. *Detecting Unsolvability Based on Separating Functions*. ICAPS 2020. — Polynomial-time unsolvability proofs via parity-like potential functions; high signal-value tool.
+
+**Bounded-suboptimal & focal search**
+
+- Pearl, Kim. *Studies in Semi-Admissible Heuristics*. IEEE TPAMI 1982. — Original focal search.
+- Thayer, Ruml. *Bounded Suboptimal Search: A Direct Approach Using Inadmissible Estimates* (EES). IJCAI 2011. — EES family; directly applicable as "secondary cost on focal."
+- Cohen, Greco, Ma, Hernandez, Felner, Kumar, Koenig. *Anytime Focal Search with Applications*. IJCAI 2018. — Anytime variant; useful when proximity gate triggers infrequently.
+- Chen, Sturtevant. *Revisiting Suboptimal Search* (IOS). SoCS 2019. — XDP/XUP priority functions; faster bounded-suboptimal search.
+
+**Bidirectional / meet-in-the-middle**
+
+- Holte, Felner, Sharon, Sturtevant. *Bidirectional Search That Is Guaranteed to Meet in the Middle*. AAAI 2016. — Foundational MM algorithm.
+- Holte, Felner, Sharon, Sturtevant, Chen. *MM: A bidirectional search algorithm that is guaranteed to meet in the middle*. AIJ 2017. — Full journal version.
+- Shaham, Felner, Sturtevant, Rosenschein. *Improved Priority Function for Bidirectional Heuristic Search*. SoCS 2020-line. — Improvements relevant to anomaly cases.
+- *PEM-BAE\* and bidirectional with state-of-the-art heuristics.* (recent SoCS / IJCAI 2024–2025 line). — Demonstrates bidirectional now beating unidirectional A* with strong h on hard problems. [ResearchGate](https://www.researchgate.net/publication/319232036_MM_A_bidirectional_search_algorithm_that_is_guaranteed_to_meet_in_the_middle)
+
+**Symmetry breaking**
+
+- Crawford, Ginsberg, Luks, Roy. *Symmetry-Breaking Predicates for Search Problems*. KR 1996. — Foundational lex-leader.
+- Gent, Smith. *Symmetry Breaking During Search in Constraint Programming* (SBDS). ECAI 2000.
+- Walsh. *General Symmetry Breaking Constraints*. CP 2006. — Generic propagators.
+- Cohen, Jeavons, Jefferson, Petrie, Smith. *Symmetry Definitions for Constraint Satisfaction Problems*. CP 2005.
+
+**Learned heuristics**
+
+- Ferber, Helmert, Hoffmann. *Neural Network Heuristics for Classical Planning: A Study of Hyperparameter Space*. ECAI 2020. — Per-instance learned h.
+- Shen, Trevizan, Thiébaux. *Learning Domain-Independent Planning Heuristics with Hypergraph Networks*. ICAPS 2020. — GNN-based h.
+- Ståhlberg, Bonet, Geffner. *Learning General Optimal Policies with Graph Neural Networks*. ICAPS 2022. — GNN policies/value functions.
+- Chen, Trevizan, Thiébaux. *Return to Tradition: Learning Reliable Heuristics with Classical Machine Learning* (WL-GOOSE). ICAPS 2024. — WL features + classical ML often beats GNNs; far more practical for browser deployment.
+- Tuisku, Seipp et al. *Classical Planning with LLM-Generated Heuristics: Challenging the State of the Art with Python Code*. arXiv:2503.18809, 2025. — LLM as code-generator for heuristics; surprisingly competitive.
+
+**Hindsight experience replay**
+
+- Andrychowicz, Wolski, Ray et al. *Hindsight Experience Replay*. NeurIPS 2017. — Foundational HER.
+- Schroecker, Isbell, "USHER: Unbiased Sampling for HER" (2022). — Bias correction in stochastic settings.
+
+**Algorithm selection / portfolios with bandit dynamics**
+
+- Viappiani. *Thompson Sampling for Bayesian Bandits with Resets*. ADT 2013. — Useful framing for non-stationary policy selection.
+- Agrawal, Goyal. *Analysis of Thompson Sampling for the Multi-armed Bandit Problem*. COLT 2012. — Foundational theory.
+
+**Statistical methodology**
+
+- Hill, B. *A Simple General Approach to Inference About the Tail of a Distribution*. Annals of Statistics 1975. — Hill estimator for heavy-tail index.
+- Efron, Tibshirani. *An Introduction to the Bootstrap*, 1993 + DiCiccio & Efron *Bootstrap Confidence Intervals*, Statistical Science 1996. — BCa bootstrap.
+
+**LLM-modulo / hybrid neuro-symbolic planning**
+
+- Kambhampati, Valmeekam et al. *On the Planning Abilities of Large Language Models*. NeurIPS 2023 / *LLMs Can't Plan, But Can Help Planning in LLM-Modulo Frameworks*, 2024. — Sound LLM-symbolic hybrids.
+- Silver, Chitnis et al. *Learning Neuro-Symbolic Skills for Bilevel Planning*. NeurIPS 2022. — Learned subgoal samplers + symbolic planner.
+- Munoz-Avila et al. *ChatHTN*. 2025. — Sound LLM-augmented HTN with verifier primitives.
+
+---
+
+*End of memo.*
