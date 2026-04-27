@@ -495,16 +495,6 @@ function installSolver(APP) {
                     }
                     return bestStart;
                 },
-                _lubyValue(index) {
-                    // 1-indexed canonical Luby sequence: 1,1,2,1,1,2,4,...
-                    let i = Math.max(1, Number(index) | 0);
-                    const isPow2Minus1 = (n) => ((n & (n + 1)) === 0);
-                    while (!isPow2Minus1(i)) {
-                        const k = Math.floor(Math.log2(i + 1));
-                        i = i - ((1 << k) - 1);
-                    }
-                    return (i + 1) >> 1;
-                },
                 _buildRedTeamDiagnostics(level) {
                     const flags = [];
                     const adjacency = new Map();
@@ -518,7 +508,6 @@ function installSolver(APP) {
                             keys.push(k);
                         }
                     }
-                    const gateStart = Array.isArray(level.gateKeys) && level.gateKeys.length > 0 ? level.gateKeys[0] : null;
                     for (const k of keys) {
                         const p = APP.LevelUtils.UNPACK(k);
                         const nbs = [];
@@ -532,27 +521,25 @@ function installSolver(APP) {
                         if (portal?.dest !== -1 && walkable(portal.dest)) nbs.push(portal.dest);
                         adjacency.set(k, nbs);
                     }
+                    const gateStart = Array.isArray(level.gateKeys) && level.gateKeys.length > 0 ? level.gateKeys[0] : null;
                     const bfs = (seed, includePortalState = false) => {
                         if (!Number.isFinite(seed) || !Number.isFinite(level.goalKey)) return { reached: false, states: 0, dist: null };
                         const q = [];
                         const seen = new Set();
-                        const encode = (key, portalState = 0, leftStart = 0) => includePortalState ? `${key}|${portalState}|${leftStart}` : `${key}|${leftStart}`;
-                        const startCode = encode(seed, 0, 0);
+                        const encode = (key, portalState = 0) => includePortalState ? `${key}|${portalState}` : `${key}`;
+                        const startCode = encode(seed, 0);
                         seen.add(startCode);
-                        q.push({ key: seed, d: 0, p: 0, leftStart: 0 });
+                        q.push({ key: seed, d: 0, p: 0 });
                         while (q.length > 0) {
                             const cur = q.shift();
                             if (cur.key === level.goalKey) return { reached: true, states: seen.size, dist: cur.d };
                             const nbs = adjacency.get(cur.key) || [];
                             for (const nk of nbs) {
-                                // origin gate can be used as source only; once we leave it, do not re-enter.
-                                if (Number.isFinite(gateStart) && cur.leftStart === 1 && nk === gateStart) continue;
-                                const nextLeftStart = cur.leftStart || (cur.key !== gateStart ? 1 : (nk !== gateStart ? 1 : 0));
                                 const nextPortalState = includePortalState ? (level.portalMap?.has(cur.key) ? 1 : cur.p) : 0;
-                                const code = encode(nk, nextPortalState, nextLeftStart);
+                                const code = encode(nk, nextPortalState);
                                 if (seen.has(code)) continue;
                                 seen.add(code);
-                                q.push({ key: nk, d: cur.d + 1, p: nextPortalState, leftStart: nextLeftStart });
+                                q.push({ key: nk, d: cur.d + 1, p: nextPortalState });
                             }
                         }
                         return { reached: false, states: seen.size, dist: null };
@@ -562,7 +549,7 @@ function installSolver(APP) {
                     if (!relaxed.reached) flags.push('relaxed-unreachable');
                     if (!projected.reached) flags.push('projected-unreachable');
                     if (projected.states <= 4 && (keys.length > 20)) flags.push('low-state-space');
-                    if ((level.portalMap?.size || 0) > 0 && !level.portalTransitionAutomaton) flags.push('portal-state-not-modeled');
+                    if ((level.portalMap?.size || 0) > 0) flags.push('portal-state-not-modeled');
                     return {
                         relaxedReachable: relaxed.reached,
                         relaxedStatesExplored: relaxed.states,
@@ -4077,7 +4064,7 @@ function installSolver(APP) {
                             plateauLengthHistogram: {},
                             landmarkAchievementTimeline: []
                         };
-                        debugStats.restarts = debugStats.restarts || { count: Math.max(0, Number(options?.restartCount) || 0), lubyIndex: Math.max(1, Number(options?.restartLubyIndex) || 1), currentBudget: Math.max(0, Number(options?.restartBudgetNodes) || 0), nodesBeforeRestart: Math.max(0, Number(options?.restartNodesBefore) || 0), reason: options?.restartReason || null };
+                        debugStats.restarts = debugStats.restarts || { count: 0, lubyIndex: 1, currentBudget: 0, nodesBeforeRestart: 0, reason: null };
                         debugStats.nogoods = debugStats.nogoods || { learned: 0, hitCount: 0, byReason: {} };
                         debugStats.plateau = debugStats.plateau || { detectedCount: 0, escapeAttempts: 0, escapeSuccesses: 0, escapeFailures: 0, averageEscapeDepth: 0 };
                     }
@@ -10187,11 +10174,6 @@ function installSolver(APP) {
                         ? attemptOpts.rootTieSeed
                         : ((typeof attemptOpts.label === 'string' ? attemptOpts.label.length : 0) + ((Number(attemptOpts.attemptOrdinal) || 0) * 17)),
                     rootTieProfile: attemptOpts.rootTieProfile || opts.rootTieProfile || 'stable',
-                    restartLubyIndex: Number.isFinite(attemptOpts?.restartLubyIndex) ? attemptOpts.restartLubyIndex : 1,
-                    restartBudgetNodes: Number.isFinite(attemptOpts?.restartBudgetNodes) ? attemptOpts.restartBudgetNodes : 0,
-                    restartCount: Number.isFinite(attemptOpts?.restartCount) ? attemptOpts.restartCount : 0,
-                    restartReason: attemptOpts?.restartReason || null,
-                    restartNodesBefore: Number.isFinite(attemptOpts?.restartNodesBefore) ? attemptOpts.restartNodesBefore : 0,
                     rootDiversityTelemetry: {
                         timeoutLikeAttemptsRecent: recentTimeoutTelemetry.length,
                         timeoutStagnationCount: consecutiveTimeoutStagnation,
@@ -10417,16 +10399,6 @@ function installSolver(APP) {
                     attempt.policyProfileOscillationLog = [];
                     attempt.__identityStamped = true;
                 }
-                const lubyIndex = attempt.attemptOrdinal;
-                const lubyValue = SolverCore._lubyValue(lubyIndex);
-                const restartBudgetNodes = Math.max(256, Math.floor((Number(attempt.budgetMs) || 1) * 18));
-                attempt.restartLubyIndex = lubyIndex;
-                attempt.restartBudgetNodes = restartBudgetNodes * lubyValue;
-                attempt.restartCount = Math.max(0, lubyIndex - 1);
-                attempt.restartReason = lubyIndex > 1 ? 'luby-scheduled-restart' : null;
-                attempt.restartNodesBefore = lubyIndex > 1
-                    ? (attemptsUsed.length > 0 ? (Math.max(0, Number(attemptsUsed[attemptsUsed.length - 1]?.nodesExpanded) || 0)) : 0)
-                    : 0;
                 applyAttemptSignature(attempt);
                 const executionRegistration = registerAttemptSignature(attempt, { markDuplicate: true });
                 if (!executionRegistration.allowed) {
@@ -10578,10 +10550,6 @@ function installSolver(APP) {
                     memoHitRate: failMemoChecks > 0 ? Number((failMemoHits / failMemoChecks).toFixed(5)) : 0,
                     dominanceHitRate: dominanceMemoChecks > 0 ? Number((dominanceMemoHits / dominanceMemoChecks).toFixed(5)) : 0,
                     nogoodHitRate: branchesGenerated > 0 ? Number((nogoodRejected / branchesGenerated).toFixed(5)) : 0,
-                    restartLubyIndex: Number.isFinite(attempt?.restartLubyIndex) ? attempt.restartLubyIndex : null,
-                    restartBudgetNodes: Number.isFinite(attempt?.restartBudgetNodes) ? attempt.restartBudgetNodes : null,
-                    restartCount: Number.isFinite(attempt?.restartCount) ? attempt.restartCount : null,
-                    restartReason: attempt?.restartReason || null,
                     counterIntegrityStatus,
                     statsProvenance: attemptResult?.debug?.statsProvenance || null,
                     retryEscalation: attempt.orderingTweaks || null,
