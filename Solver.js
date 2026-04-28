@@ -1628,7 +1628,7 @@ function installSolver(APP) {
                     const maxCoverageGain = Math.max(0.005, Number(tuning.maxCoverageGain) || 0.03);
                     const objectiveCollapseFast = objCollapse >= minObjectiveCollapse && objCollapse > (coverageGain * collapseGainRatio);
                     const stillLengthFeasible = derived.rSteps >= 0 && (Number.isFinite(derived.goalDist) ? derived.goalDist <= (derived.rSteps + Math.max(1, Math.ceil((l.reqLen || 0) * 0.05))) : true);
-                    const intBudgetSlack = Math.max(0, derived.rSteps - derived.remainingIntersections);
+                    const intBudgetSlack = derived.rSteps - derived.remainingIntersections;
                     const intStillFeasible = derived.remainingIntersections <= 1 || intBudgetSlack >= 0;
                     const objectiveWindow = derived.remainingObjectives > 0 && derived.remainingObjectives <= Math.max(4, Math.ceil((l.reqLen || 1) * 0.18));
                     const bridgeState = !!(stillLengthFeasible
@@ -2650,6 +2650,23 @@ function installSolver(APP) {
                                 score += lcp;
                                 pushDriver('landmarkCount', totalLandmarksUnmet, lcp);
                             }
+                            // Intersection-schedule penalty: penalize paths that are behind the
+                            // expected intersection accumulation rate. Without this, high-reqInt
+                            // levels (e.g., L92 reqInt=8) reach near-reqLen with intersection
+                            // deficits of 5-8 because no heuristic guided building them on pace.
+                            if (l.reqInt > 0 && l.reqLen > 0) {
+                                const progressRatio = nLen / l.reqLen;
+                                if (progressRatio > 0.2) {
+                                    const expectedIntsAtProgress = progressRatio * l.reqInt;
+                                    const intsBehindSchedule = Math.max(0, expectedIntsAtProgress - projectedIntsAfterMove);
+                                    if (intsBehindSchedule > 0) {
+                                        const phaseMultiplier = progressRatio > 0.7 ? 2.0 : 1.0;
+                                        const c = Math.round(intsBehindSchedule * 80 * phaseMultiplier);
+                                        score += c;
+                                        pushDriver('intScheduleDeficit', intsBehindSchedule, c);
+                                    }
+                                }
+                            }
                             const scheduleDeficit = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) - remainingStepsAfterMove;
                             if (scheduleDeficit > 0) {
                                 const c = Math.round(scheduleDeficit * 90);
@@ -2669,6 +2686,18 @@ function installSolver(APP) {
                                 const bridgeCommitment = -Math.round(12 * bridgeCommitmentScale * Math.max(0.2, phaseProfile.objectivePull || 1));
                                 score += bridgeCommitment;
                                 pushDriver('bridgeStateCommitment', bridgeState.objectiveCollapse || 0, bridgeCommitment);
+                            }
+                            // In nearClosureRescue mode, strongly prioritize states where all
+                            // obligations (including portal coverage) are satisfied and we are
+                            // adjacent to the goal. This converts near-solution-state density
+                            // into actual closures for levels like L108.
+                            if (scoringProfile === 'nearClosureRescue' && goalReadyAfterMove && !hasRemainingPortalCoverageAfterMove) {
+                                const goalDist = distMap.get(nk) ?? Infinity;
+                                if (Number.isFinite(goalDist) && goalDist <= 2) {
+                                    const nearGoalBonus = -Math.round(3000 + (2 - goalDist) * 1000);
+                                    score += nearGoalBonus;
+                                    pushDriver('nearClosureGoalPull', goalDist, nearGoalBonus);
+                                }
                             }
                             if (state.ints < l.reqInt && l.mustPassIndex?.has(nk) && (state.countsArr[searchCtx.keyToIdx(nk)] || 0) > 0) {
                                 score -= Math.round(gravityMult * 0.6);
@@ -4370,16 +4399,20 @@ function installSolver(APP) {
                             }
                         }
                         const minRemForLowerBound = distMap.get(lastK) || Infinity;
+                        const portalCoverageIncomplete = typeof state.portal?.portalRequiredCoverageMask === 'bigint'
+                            && state.portal.portalRequiredCoverageMask !== 0n;
                         const lowerBoundToValidSolution = Math.max(
                             Number.isFinite(minRemForLowerBound) ? minRemForLowerBound : Infinity,
                             Number.isFinite(mustPassBoundEstimate) ? mustPassBoundEstimate : Infinity,
                             Number.isFinite(mustCrossBoundEstimate) ? mustCrossBoundEstimate : Infinity,
-                            interactionDeficit
+                            interactionDeficit,
+                            portalCoverageIncomplete ? 2 : 0
                         );
                         const missingDimensions = [];
                         if (remainingMustPass > 0) missingDimensions.push('must-pass');
                         if (crossNeeds > 0) missingDimensions.push('must-cross');
                         if (interactionDeficit > 0) missingDimensions.push('interaction');
+                        if (portalCoverageIncomplete) missingDimensions.push('portal-coverage');
                         if (missingDimensions.length === 0 && lowerBoundToValidSolution >= 1) {
                             missingDimensions.push('closure');
                         }
@@ -10773,7 +10806,7 @@ function installSolver(APP) {
                         const existingMemo = Number(targetAttempt.memoStrictness);
                         targetAttempt.budgetMs = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
                         targetAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(targetAttempt.disabledPrunes || [])]);
-                        targetAttempt.memoStrictness = Number.isFinite(existingMemo) ? Math.min(0.5, existingMemo) : 0.5;
+                        targetAttempt.memoStrictness = 0;
                         targetAttempt.rootExpansionFloorCount = Math.max(4, Number(targetAttempt.rootExpansionFloorCount) || 0);
                         targetAttempt.forceRootExpansionFloor = true;
                         targetAttempt.relaxRootSuppressionFirstLayer = true;
