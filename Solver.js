@@ -9408,6 +9408,12 @@ function installSolver(APP) {
                     .slice(-3)
                     .map(entry => ({ ...entry, __carriedFromHintLadder: true }))
                 : [];
+            // Cumulative count of outer hint-ladder attempts that have already run and timed out.
+            // Used to scale the nearClosure rescue threshold so that levels with low-but-nonzero
+            // nearSolutionStates (e.g. L134 ns=47-80) eventually trigger rescue on later outer attempts.
+            const carriedOuterTimeoutCount = Number.isFinite(sharedHintLadderState?.totalOuterTimeouts)
+                ? Math.max(0, sharedHintLadderState.totalOuterTimeouts)
+                : 0;
             const randomExplorationEnabled = !!opts.allowRandomizedExploration;
             const timeoutEscalationRatios = [0.2, 0.35];
             const maxTimeoutEscalationTier = timeoutEscalationRatios.length;
@@ -9456,10 +9462,15 @@ function installSolver(APP) {
                     entry?.mustCrossScheduleRescueDetected
                     || entry?.nextAttemptReason === 'must-cross-schedule-rescue'
                 );
+                const activatedPortalAutomatonRescue = attemptsUsed.some(entry =>
+                    entry?.portalAutomatonOverloadDetected
+                    || entry?.nextAttemptReason === 'portal-automaton-overload-rescue'
+                );
                 return {
                     ...(fallbackDebug || {}),
                     rescueTriggeredNearClosure: activatedNearClosure,
                     mustCrossRescueTriggered: activatedMustCrossRescue,
+                    portalAutomatonOverloadRescueTriggered: activatedPortalAutomatonRescue,
                     rootFamiliesAttemptedBeforeTimeout: attemptedFamilies.length > 0 ? Math.max(...attemptedFamilies) : 0,
                     rootFamiliesStarved: starvedFamilies.length > 0 ? Math.max(...starvedFamilies) : 0
                 };
@@ -9561,6 +9572,7 @@ function installSolver(APP) {
             let broadStagnationRescueCount = 0;
             let nearSolutionFloodRescueCount = 0;
             let mustCrossScheduleRescueCount = 0;
+            let portalAutomatonOverloadRescueCount = 0;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
             const canonicalizeDisabledPrunes = (prunes = []) => {
@@ -10156,6 +10168,9 @@ function installSolver(APP) {
                 sharedHintLadderState.recentTimeoutAttempts = localTimeoutAttempts;
                 sharedHintLadderState.queuedAttemptSignatureHashes = Array.from(queuedAttemptSignatures).slice(-64);
                 sharedHintLadderState.retryFingerprintDupes = retryFingerprintDupes;
+                // Accumulate total outer-attempt timeout count for nearClosure threshold scaling.
+                const localTimeouts = attemptsUsed.filter(e => !e?.__carriedFromHintLadder && ['timeout', 'no-solution-inconclusive'].includes(`${e?.status || ''}`)).length;
+                sharedHintLadderState.totalOuterTimeouts = carriedOuterTimeoutCount + localTimeouts;
             };
             for (let planIdx = 0; planIdx < attempts.length; planIdx++) {
                 const plannedAttempt = attempts[planIdx];
@@ -10711,15 +10726,21 @@ function installSolver(APP) {
                     // Near-solution flood rescue: targets "final-mile deadlock" (e.g. Level 108)
                     // Detects thousands of frontier states needing exactly 1 more step but never completing.
                     // Checked before broadStagnation so the more-specific pattern wins when both are present.
-                    // Threshold floor 80 (was 120) removes a false barrier at late attempts where i*120 >= 720.
-                    const nearSolutionFloodThreshold = Math.max(80, 800 - (i * 120));
-                    const nearSolutionFloodLowerBoundThreshold = 2;
+                    // Threshold decreases both with inner-attempt index i and with carriedOuterTimeoutCount
+                    // (cumulative outer-ladder timeouts from prior hint-ladder calls) so that levels with
+                    // low-but-nonzero nearSolutionStates (e.g. L134 ns=47-80) eventually trigger rescue.
+                    const nearSolutionFloodThreshold = Math.max(40, 800 - (i * 120) - (carriedOuterTimeoutCount * 60));
+                    // When nearSolutionStates is very high (>=5000), the solver is deep in a
+                    // "final-mile flood" — relax lb threshold from 2 to 4 to capture cases like
+                    // L61 where thousands of near-solution states have lb=3-4 steps remaining.
+                    const nearSolutionStatesValue = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0;
+                    const nearSolutionFloodLowerBoundThreshold = nearSolutionStatesValue >= 5000 ? 4 : 2;
                     // Broadened to include no-solution-inconclusive to match timeoutProne; otherwise a single
                     // inconclusive attempt in the recent window silently disqualifies the rescue even when
                     // every attempt is a timeout-class failure.
                     const repeatedTimeoutOutcome = recentTimeoutAttempts.length >= 2
                         && recentTimeoutAttempts.every(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`));
-                    const nearSolutionStatesMet = (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= nearSolutionFloodThreshold;
+                    const nearSolutionStatesMet = nearSolutionStatesValue >= nearSolutionFloodThreshold;
                     const nearClosureLowerBoundFinite = Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
                     const nearClosureLowerBoundMet = nearClosureLowerBoundFinite
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= nearSolutionFloodLowerBoundThreshold;
@@ -10928,6 +10949,47 @@ function installSolver(APP) {
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'must-cross-schedule-rescue';
                             currentAttemptEntry.mustCrossScheduleRescueDetected = true;
+                        }
+                        continue;
+                    }
+                    // Portal automaton overload rescue: targets levels where the portal automaton
+                    // aggressively rejects states (e.g. L92: 10k+ rejections) while the solver
+                    // never reaches near-solution states (ns=0). Disabling the portal automaton
+                    // prune lets the search explore paths it previously filtered, potentially
+                    // finding obligation-satisfying closures that were unreachable under strict
+                    // portal commitment enforcement.
+                    const portalAutomatonRejectedCount = Number(attemptResult?.debug?.prune?.portalAutomatonRejected) || 0;
+                    const nodesExpandedForPortalCheck = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
+                    const nearSolutionStatesForPortalCheck = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0;
+                    const portalAutomatonOverloadDetected = timeoutProne
+                        && portalAutomatonOverloadRescueCount < 2
+                        && nearSolutionStatesForPortalCheck === 0
+                        && portalAutomatonRejectedCount >= 5000
+                        && nodesExpandedForPortalCheck >= 5000;
+                    if (portalAutomatonOverloadDetected && nextAttempt) {
+                        const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
+                        nextAttempt.budgetMs = priorBudget;
+                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes([
+                            'portalAutomaton',
+                            ...(nextAttempt.disabledPrunes || [])
+                        ]);
+                        nextAttempt.policyProfile = 'portalFirstTransfer';
+                        nextAttempt.orderingPolicy = 'portalFirstTransfer';
+                        nextAttempt.portalBiasMode = 'adaptiveMustCross';
+                        nextAttempt.memoStrictness = 0;
+                        nextAttempt.retryTag = 'portal-automaton-overload-rescue';
+                        nextAttempt.escalationReason = 'portal-automaton-overload-rescue';
+                        nextAttempt.orderingTweaks = compactDefined({
+                            ...(nextAttempt.orderingTweaks || {}),
+                            stage: 'timeout-rescue-second-stage',
+                            mode: 'portal-automaton-overload-rescue',
+                            portalAutomatonRejected: portalAutomatonRejectedCount,
+                            nearSolutionStates: nearSolutionStatesForPortalCheck
+                        });
+                        portalAutomatonOverloadRescueCount++;
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = 'portal-automaton-overload-rescue';
+                            currentAttemptEntry.portalAutomatonOverloadDetected = true;
                         }
                         continue;
                     }
@@ -13061,8 +13123,12 @@ function installSolver(APP) {
                 tierBudgets,
                 allowRandomizedExploration,
                 allowRandomizedExplorationOnExpensiveTiers,
+                enableBlueprintPlanning,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
+                hintLadderState,
+                rootTieSeedOffset,
+                rootOrderingVariant,
                 stagesTried,
                 solveStartTime,
                 controlPlane,
@@ -13090,6 +13156,7 @@ function installSolver(APP) {
                     objectivesAreInteriorDominant,
                     allowRandomizedExploration,
                     allowRandomizedExplorationOnExpensiveTiers,
+                    enableBlueprintPlanning,
                     autoEscalate,
                     forcePreExpansionRescue,
                     fallbackDisabledPrunes
@@ -13109,7 +13176,10 @@ function installSolver(APP) {
                     resolvedPhasePolicy,
                     solveStartTime,
                     complexityStrategy,
-                    fallbackDisabledPrunes
+                    fallbackDisabledPrunes,
+                    hintLadderState,
+                    rootTieSeedOffset,
+                    rootOrderingVariant
                 },
                 metadata: {
                     requestedBudget,
