@@ -2651,17 +2651,17 @@ function installSolver(APP) {
                                 pushDriver('landmarkCount', totalLandmarksUnmet, lcp);
                             }
                             // Intersection-schedule penalty: penalize paths that are behind the
-                            // expected intersection accumulation rate. Without this, high-reqInt
-                            // levels (e.g., L92 reqInt=8) reach near-reqLen with intersection
-                            // deficits of 5-8 because no heuristic guided building them on pace.
-                            if (l.reqInt > 0 && l.reqLen > 0) {
+                            // expected intersection accumulation rate. Only applied when
+                            // reqInt/reqLen <= 0.1 (sparse) — dense levels find intersections
+                            // naturally and the heuristic over-penalizes valid paths there.
+                            if (l.reqInt > 0 && l.reqLen > 0 && (l.reqInt / l.reqLen) <= 0.1) {
                                 const progressRatio = nLen / l.reqLen;
-                                if (progressRatio > 0.2) {
+                                if (progressRatio > 0.15) {
                                     const expectedIntsAtProgress = progressRatio * l.reqInt;
                                     const intsBehindSchedule = Math.max(0, expectedIntsAtProgress - projectedIntsAfterMove);
                                     if (intsBehindSchedule > 0) {
-                                        const phaseMultiplier = progressRatio > 0.7 ? 2.0 : 1.0;
-                                        const c = Math.round(intsBehindSchedule * 80 * phaseMultiplier);
+                                        const phaseMultiplier = progressRatio > 0.6 ? 2.0 : 1.0;
+                                        const c = Math.round(intsBehindSchedule * 150 * phaseMultiplier);
                                         score += c;
                                         pushDriver('intScheduleDeficit', intsBehindSchedule, c);
                                     }
@@ -10713,7 +10713,7 @@ function installSolver(APP) {
                     // Checked before broadStagnation so the more-specific pattern wins when both are present.
                     // Threshold floor 80 (was 120) removes a false barrier at late attempts where i*120 >= 720.
                     const nearSolutionFloodThreshold = Math.max(80, 800 - (i * 120));
-                    const nearSolutionFloodLowerBoundThreshold = 1;
+                    const nearSolutionFloodLowerBoundThreshold = 2;
                     // Broadened to include no-solution-inconclusive to match timeoutProne; otherwise a single
                     // inconclusive attempt in the recent window silently disqualifies the rescue even when
                     // every attempt is a timeout-class failure.
