@@ -9408,6 +9408,12 @@ function installSolver(APP) {
                     .slice(-3)
                     .map(entry => ({ ...entry, __carriedFromHintLadder: true }))
                 : [];
+            // Cumulative count of outer hint-ladder attempts that have already run and timed out.
+            // Used to scale the nearClosure rescue threshold so that levels with low-but-nonzero
+            // nearSolutionStates (e.g. L134 ns=47-80) eventually trigger rescue on later outer attempts.
+            const carriedOuterTimeoutCount = Number.isFinite(sharedHintLadderState?.totalOuterTimeouts)
+                ? Math.max(0, sharedHintLadderState.totalOuterTimeouts)
+                : 0;
             const randomExplorationEnabled = !!opts.allowRandomizedExploration;
             const timeoutEscalationRatios = [0.2, 0.35];
             const maxTimeoutEscalationTier = timeoutEscalationRatios.length;
@@ -10156,6 +10162,9 @@ function installSolver(APP) {
                 sharedHintLadderState.recentTimeoutAttempts = localTimeoutAttempts;
                 sharedHintLadderState.queuedAttemptSignatureHashes = Array.from(queuedAttemptSignatures).slice(-64);
                 sharedHintLadderState.retryFingerprintDupes = retryFingerprintDupes;
+                // Accumulate total outer-attempt timeout count for nearClosure threshold scaling.
+                const localTimeouts = attemptsUsed.filter(e => !e?.__carriedFromHintLadder && ['timeout', 'no-solution-inconclusive'].includes(`${e?.status || ''}`)).length;
+                sharedHintLadderState.totalOuterTimeouts = carriedOuterTimeoutCount + localTimeouts;
             };
             for (let planIdx = 0; planIdx < attempts.length; planIdx++) {
                 const plannedAttempt = attempts[planIdx];
@@ -10711,8 +10720,10 @@ function installSolver(APP) {
                     // Near-solution flood rescue: targets "final-mile deadlock" (e.g. Level 108)
                     // Detects thousands of frontier states needing exactly 1 more step but never completing.
                     // Checked before broadStagnation so the more-specific pattern wins when both are present.
-                    // Threshold floor 80 (was 120) removes a false barrier at late attempts where i*120 >= 720.
-                    const nearSolutionFloodThreshold = Math.max(80, 800 - (i * 120));
+                    // Threshold decreases both with inner-attempt index i and with carriedOuterTimeoutCount
+                    // (cumulative outer-ladder timeouts from prior hint-ladder calls) so that levels with
+                    // low-but-nonzero nearSolutionStates (e.g. L134 ns=47-80) eventually trigger rescue.
+                    const nearSolutionFloodThreshold = Math.max(40, 800 - (i * 120) - (carriedOuterTimeoutCount * 60));
                     const nearSolutionFloodLowerBoundThreshold = 2;
                     // Broadened to include no-solution-inconclusive to match timeoutProne; otherwise a single
                     // inconclusive attempt in the recent window silently disqualifies the rescue even when
