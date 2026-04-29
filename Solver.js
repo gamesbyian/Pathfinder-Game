@@ -10730,13 +10730,17 @@ function installSolver(APP) {
                     // (cumulative outer-ladder timeouts from prior hint-ladder calls) so that levels with
                     // low-but-nonzero nearSolutionStates (e.g. L134 ns=47-80) eventually trigger rescue.
                     const nearSolutionFloodThreshold = Math.max(40, 800 - (i * 120) - (carriedOuterTimeoutCount * 60));
-                    const nearSolutionFloodLowerBoundThreshold = 2;
+                    // When nearSolutionStates is very high (>=5000), the solver is deep in a
+                    // "final-mile flood" — relax lb threshold from 2 to 4 to capture cases like
+                    // L61 where thousands of near-solution states have lb=3-4 steps remaining.
+                    const nearSolutionStatesValue = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0;
+                    const nearSolutionFloodLowerBoundThreshold = nearSolutionStatesValue >= 5000 ? 4 : 2;
                     // Broadened to include no-solution-inconclusive to match timeoutProne; otherwise a single
                     // inconclusive attempt in the recent window silently disqualifies the rescue even when
                     // every attempt is a timeout-class failure.
                     const repeatedTimeoutOutcome = recentTimeoutAttempts.length >= 2
                         && recentTimeoutAttempts.every(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`));
-                    const nearSolutionStatesMet = (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= nearSolutionFloodThreshold;
+                    const nearSolutionStatesMet = nearSolutionStatesValue >= nearSolutionFloodThreshold;
                     const nearClosureLowerBoundFinite = Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
                     const nearClosureLowerBoundMet = nearClosureLowerBoundFinite
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= nearSolutionFloodLowerBoundThreshold;
