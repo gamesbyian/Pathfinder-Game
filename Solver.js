@@ -13061,8 +13061,12 @@ function installSolver(APP) {
                 tierBudgets,
                 allowRandomizedExploration,
                 allowRandomizedExplorationOnExpensiveTiers,
+                enableBlueprintPlanning,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
+                hintLadderState,
+                rootTieSeedOffset,
+                rootOrderingVariant,
                 stagesTried,
                 solveStartTime,
                 controlPlane,
@@ -13090,6 +13094,7 @@ function installSolver(APP) {
                     objectivesAreInteriorDominant,
                     allowRandomizedExploration,
                     allowRandomizedExplorationOnExpensiveTiers,
+                    enableBlueprintPlanning,
                     autoEscalate,
                     forcePreExpansionRescue,
                     fallbackDisabledPrunes
@@ -13109,7 +13114,10 @@ function installSolver(APP) {
                     resolvedPhasePolicy,
                     solveStartTime,
                     complexityStrategy,
-                    fallbackDisabledPrunes
+                    fallbackDisabledPrunes,
+                    hintLadderState,
+                    rootTieSeedOffset,
+                    rootOrderingVariant
                 },
                 metadata: {
                     requestedBudget,
