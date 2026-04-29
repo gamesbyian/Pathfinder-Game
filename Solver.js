@@ -9462,10 +9462,15 @@ function installSolver(APP) {
                     entry?.mustCrossScheduleRescueDetected
                     || entry?.nextAttemptReason === 'must-cross-schedule-rescue'
                 );
+                const activatedPortalAutomatonRescue = attemptsUsed.some(entry =>
+                    entry?.portalAutomatonOverloadDetected
+                    || entry?.nextAttemptReason === 'portal-automaton-overload-rescue'
+                );
                 return {
                     ...(fallbackDebug || {}),
                     rescueTriggeredNearClosure: activatedNearClosure,
                     mustCrossRescueTriggered: activatedMustCrossRescue,
+                    portalAutomatonOverloadRescueTriggered: activatedPortalAutomatonRescue,
                     rootFamiliesAttemptedBeforeTimeout: attemptedFamilies.length > 0 ? Math.max(...attemptedFamilies) : 0,
                     rootFamiliesStarved: starvedFamilies.length > 0 ? Math.max(...starvedFamilies) : 0
                 };
@@ -9567,6 +9572,7 @@ function installSolver(APP) {
             let broadStagnationRescueCount = 0;
             let nearSolutionFloodRescueCount = 0;
             let mustCrossScheduleRescueCount = 0;
+            let portalAutomatonOverloadRescueCount = 0;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
             const canonicalizeDisabledPrunes = (prunes = []) => {
@@ -10939,6 +10945,47 @@ function installSolver(APP) {
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'must-cross-schedule-rescue';
                             currentAttemptEntry.mustCrossScheduleRescueDetected = true;
+                        }
+                        continue;
+                    }
+                    // Portal automaton overload rescue: targets levels where the portal automaton
+                    // aggressively rejects states (e.g. L92: 10k+ rejections) while the solver
+                    // never reaches near-solution states (ns=0). Disabling the portal automaton
+                    // prune lets the search explore paths it previously filtered, potentially
+                    // finding obligation-satisfying closures that were unreachable under strict
+                    // portal commitment enforcement.
+                    const portalAutomatonRejectedCount = Number(attemptResult?.debug?.prune?.portalAutomatonRejected) || 0;
+                    const nodesExpandedForPortalCheck = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
+                    const nearSolutionStatesForPortalCheck = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0;
+                    const portalAutomatonOverloadDetected = timeoutProne
+                        && portalAutomatonOverloadRescueCount < 2
+                        && nearSolutionStatesForPortalCheck === 0
+                        && portalAutomatonRejectedCount >= 5000
+                        && nodesExpandedForPortalCheck >= 5000;
+                    if (portalAutomatonOverloadDetected && nextAttempt) {
+                        const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
+                        nextAttempt.budgetMs = priorBudget;
+                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes([
+                            'portalAutomaton',
+                            ...(nextAttempt.disabledPrunes || [])
+                        ]);
+                        nextAttempt.policyProfile = 'portalFirstTransfer';
+                        nextAttempt.orderingPolicy = 'portalFirstTransfer';
+                        nextAttempt.portalBiasMode = 'adaptiveMustCross';
+                        nextAttempt.memoStrictness = 0;
+                        nextAttempt.retryTag = 'portal-automaton-overload-rescue';
+                        nextAttempt.escalationReason = 'portal-automaton-overload-rescue';
+                        nextAttempt.orderingTweaks = compactDefined({
+                            ...(nextAttempt.orderingTweaks || {}),
+                            stage: 'timeout-rescue-second-stage',
+                            mode: 'portal-automaton-overload-rescue',
+                            portalAutomatonRejected: portalAutomatonRejectedCount,
+                            nearSolutionStates: nearSolutionStatesForPortalCheck
+                        });
+                        portalAutomatonOverloadRescueCount++;
+                        if (currentAttemptEntry) {
+                            currentAttemptEntry.nextAttemptReason = 'portal-automaton-overload-rescue';
+                            currentAttemptEntry.portalAutomatonOverloadDetected = true;
                         }
                         continue;
                     }
