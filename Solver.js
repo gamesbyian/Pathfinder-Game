@@ -119,35 +119,88 @@ function installSolver(APP) {
         //  18. portalLock        — derived portal lock state string
         //  19. orderingPolicy    — solver option controlling move ordering
         //  20. nonZeroUsage      — count of cells with non-zero filter usage (-1 if no filters)
+
+        const STATE_SIGNATURE_DIMENSIONS = [
+                { name: 'posKey', pick: ({ state }) => state.path[state.path.length - 1] | 0 },
+                { name: 'stepsUsed', pick: ({ realLen }) => realLen | 0 },
+                { name: 'ints', pick: ({ state }) => Number.isFinite(state.ints) ? (state.ints | 0) : 0 },
+                { name: 'mustMask', pick: ({ state }) => (typeof state.mustMask === 'bigint') ? state.mustMask.toString() : '0' },
+                { name: 'mustCrossMask', pick: ({ state }) => (typeof state.mustCrossMask === 'bigint') ? state.mustCrossMask.toString() : '0' },
+                { name: 'mustCrossCounts', pick: ({ state }) => Array.isArray(state.mustCrossCounts) || (state.mustCrossCounts && typeof state.mustCrossCounts.length === 'number') ? Array.from(state.mustCrossCounts).join(',') : '' },
+                { name: 'portalForced', pick: ({ state, level }) => level && level.portalMap ? (level.portalMap.has(state.path[state.path.length - 1]) && !state.isJump?.has(state.path.length - 1) ? 1 : 0) : 0 },
+                { name: 'flipParity', pick: ({ state }) => Number.isFinite(state.flipParity) ? state.flipParity : 0 },
+                { name: 'flipperCrossMask', pick: ({ state }) => (typeof state.flipperCrossMask === 'bigint') ? state.flipperCrossMask.toString() : '0' },
+                { name: 'flipperParityAtCrossMask', pick: ({ state }) => (typeof state.flipperParityAtCrossMask === 'bigint') ? state.flipperParityAtCrossMask.toString() : '0' },
+                { name: 'falseGoalPolicy', pick: ({ options }) => options.falseGoalPolicy || '' },
+                { name: 'portalFamily', pick: ({ state }) => Number.isFinite(state.portal?.portalSelectedFamily) ? state.portal.portalSelectedFamily : -1 },
+                { name: 'portalEntry', pick: ({ state }) => Number.isFinite(state.portal?.portalSelectedEntry) ? state.portal.portalSelectedEntry : -1 },
+                { name: 'portalRegion', pick: ({ state }) => Number.isFinite(state.portal?.portalCommittedRegion) ? state.portal.portalCommittedRegion : -1 },
+                { name: 'portalCoverage', pick: ({ state }) => (typeof state.portal?.portalRequiredCoverageMask === 'bigint') ? state.portal.portalRequiredCoverageMask.toString() : '0' },
+                { name: 'portalReentry', pick: ({ state }) => Number.isFinite(state.portal?.portalReentryBudget) ? state.portal.portalReentryBudget : 0 },
+                { name: 'portalOscillation', pick: ({ state }) => Number.isFinite(state.portal?.portalOscillationBudget) ? state.portal.portalOscillationBudget : 0 },
+                { name: 'portalLock', pick: ({ options }) => options.portalLockState || '' },
+                { name: 'orderingPolicy', pick: ({ options }) => options.orderingPolicy || '' },
+                { name: 'nonZeroUsage', pick: ({ options }) => Number.isFinite(options.nonZeroUsage) ? options.nonZeroUsage : -1 }
+            ];
+        const buildStateSignatureTuple = (state, level, realLen, options = {}) => {
+                const ctx = { state, level, realLen, options };
+                return STATE_SIGNATURE_DIMENSIONS.map(dim => dim.pick(ctx));
+            };
+        const runStateSignatureInvariantCheck = (core, level) => {
+                if (!level) return;
+                const sampleState = {
+                    path: [11, 22, 33],
+                    isJump: new Set([1]),
+                    ints: 2,
+                    mustMask: 5n,
+                    mustCrossMask: 9n,
+                    mustCrossCounts: Uint8Array.from([0, 2, 1]),
+                    flipParity: 1,
+                    flipperCrossMask: 7n,
+                    flipperParityAtCrossMask: 6n,
+                    nonZeroUsage: 3,
+                    portal: {
+                        portalSelectedFamily: 4,
+                        portalSelectedEntry: 22,
+                        portalCommittedRegion: 1,
+                        portalRequiredCoverageMask: 3n,
+                        portalReentryBudget: 2,
+                        portalOscillationBudget: 1
+                    }
+                };
+                const sampleOptions = {
+                    falseGoalPolicy: 'forbid-early-false-goal',
+                    orderingPolicy: 'portalCommitted',
+                    portalLockState: core._derivePortalLockState(sampleState, {}),
+                    nonZeroUsage: sampleState.nonZeroUsage
+                };
+                const tuple = buildStateSignatureTuple(sampleState, level, 2, sampleOptions);
+                if (tuple.length !== 20) throw new Error(`State signature dimension drift: expected 20, got ${tuple.length}`);
+                const requiredDims = new Set(['portalFamily', 'portalEntry', 'portalRegion', 'portalCoverage', 'portalReentry', 'portalOscillation', 'portalLock', 'flipParity', 'flipperCrossMask', 'flipperParityAtCrossMask', 'falseGoalPolicy']);
+                for (const name of requiredDims) {
+                    if (!STATE_SIGNATURE_DIMENSIONS.some(dim => dim.name === name)) throw new Error(`Missing state signature dimension: ${name}`);
+                }
+                const strictKey = tuple.join('|');
+                const rebuiltKey = StateSignature.makeKey(sampleState, { level, stepsUsed: 2, ...sampleOptions, portalSelectedFamily: sampleState.portal.portalSelectedFamily, portalSelectedEntry: sampleState.portal.portalSelectedEntry, portalCommittedRegion: sampleState.portal.portalCommittedRegion, portalRequiredCoverageMask: sampleState.portal.portalRequiredCoverageMask, portalReentryBudget: sampleState.portal.portalReentryBudget, portalOscillationBudget: sampleState.portal.portalOscillationBudget });
+                if (strictKey !== rebuiltKey) throw new Error('State signature invariant failed: tuple and key builder diverged.');
+            };
         const StateSignature = {
                 makeKey(state, policy = {}) {
                     if (!state?.path?.length) return null;
-                    const posKey = state.path[state.path.length - 1];
-                    // Dims 1–11: core path/constraint state
-                    const portalForced = policy.level && policy.level.portalMap
-                        ? (policy.level.portalMap.has(posKey) && !state.isJump?.has(state.path.length - 1) ? 1 : 0)
-                        : 0;
                     const stepsUsed = Number.isFinite(policy.stepsUsed) ? policy.stepsUsed : ((state.path.length - 1) - (state.isJump?.size || 0));
-                    const ints = Number.isFinite(state.ints) ? state.ints : 0;
-                    const mustMask = (typeof state.mustMask === 'bigint') ? state.mustMask.toString() : '0';
-                    const mustCrossMask = (typeof state.mustCrossMask === 'bigint') ? state.mustCrossMask.toString() : '0';
-                    const mustCrossCounts = Array.isArray(state.mustCrossCounts) || (state.mustCrossCounts && typeof state.mustCrossCounts.length === 'number')
-                        ? Array.from(state.mustCrossCounts).join(',') : '';
-                    const flipParity = Number.isFinite(state.flipParity) ? state.flipParity : 0;
-                    const flipperCrossMask = (typeof state.flipperCrossMask === 'bigint') ? state.flipperCrossMask.toString() : '0';
-                    const flipperParityAtCrossMask = (typeof state.flipperParityAtCrossMask === 'bigint') ? state.flipperParityAtCrossMask.toString() : '0';
-                    const falseGoalPolicy = policy.falseGoalPolicy || '';
-                    // Dims 12–20: portal automaton + solver options (supplied by caller when available)
-                    const portalFamily = Number.isFinite(policy.portalSelectedFamily) ? policy.portalSelectedFamily : -1;
-                    const portalEntry = Number.isFinite(policy.portalSelectedEntry) ? policy.portalSelectedEntry : -1;
-                    const portalRegion = Number.isFinite(policy.portalCommittedRegion) ? policy.portalCommittedRegion : -1;
-                    const portalCoverage = (typeof policy.portalRequiredCoverageMask === 'bigint') ? policy.portalRequiredCoverageMask.toString() : '0';
-                    const portalReentry = Number.isFinite(policy.portalReentryBudget) ? policy.portalReentryBudget : 0;
-                    const portalOscillation = Number.isFinite(policy.portalOscillationBudget) ? policy.portalOscillationBudget : 0;
-                    const portalLock = policy.portalLockState || '';
-                    const orderingPolicy = policy.orderingPolicy || '';
-                    const nonZeroUsage = Number.isFinite(policy.nonZeroUsage) ? policy.nonZeroUsage : -1;
-                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage].join('|');
+                    const tuple = buildStateSignatureTuple(state, policy.level, stepsUsed, {
+                        falseGoalPolicy: policy.falseGoalPolicy || '',
+                        orderingPolicy: policy.orderingPolicy || '',
+                        portalLockState: policy.portalLockState || '',
+                        nonZeroUsage: Number.isFinite(policy.nonZeroUsage) ? policy.nonZeroUsage : -1
+                    });
+                    tuple[11] = Number.isFinite(policy.portalSelectedFamily) ? policy.portalSelectedFamily : tuple[11];
+                    tuple[12] = Number.isFinite(policy.portalSelectedEntry) ? policy.portalSelectedEntry : tuple[12];
+                    tuple[13] = Number.isFinite(policy.portalCommittedRegion) ? policy.portalCommittedRegion : tuple[13];
+                    tuple[14] = (typeof policy.portalRequiredCoverageMask === 'bigint') ? policy.portalRequiredCoverageMask.toString() : tuple[14];
+                    tuple[15] = Number.isFinite(policy.portalReentryBudget) ? policy.portalReentryBudget : tuple[15];
+                    tuple[16] = Number.isFinite(policy.portalOscillationBudget) ? policy.portalOscillationBudget : tuple[16];
+                    return tuple.join('|');
                 }
             };
 
@@ -617,6 +670,7 @@ function installSolver(APP) {
                         debugStats.signatureBuildMs = (debugStats.signatureBuildMs || 0) + dtHash;
                     }
                     const strictMode = !!(options?.debugStrictMemoKey || window.__PF_SOLVER_STRICT_MEMO_KEY__);
+                    if (strictMode && !this._didRunStateSignatureInvariantCheck) { runStateSignatureInvariantCheck(this, l); this._didRunStateSignatureInvariantCheck = true; }
                     if (strictMode) {
                         const tStrict0 = perfNow();
                         const strictKey = this._buildStrictStateSignature(state, l, realLen, options);
