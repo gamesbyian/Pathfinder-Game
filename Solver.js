@@ -13123,7 +13123,6 @@ function installSolver(APP) {
                 tierBudgets,
                 allowRandomizedExploration,
                 allowRandomizedExplorationOnExpensiveTiers,
-                enableBlueprintPlanning,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
                 hintLadderState,
@@ -13156,7 +13155,6 @@ function installSolver(APP) {
                     objectivesAreInteriorDominant,
                     allowRandomizedExploration,
                     allowRandomizedExplorationOnExpensiveTiers,
-                    enableBlueprintPlanning,
                     autoEscalate,
                     forcePreExpansionRescue,
                     fallbackDisabledPrunes
