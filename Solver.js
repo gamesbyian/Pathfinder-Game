@@ -13745,16 +13745,46 @@ function installSolver(APP) {
 
             function validateCandidatePath(level, pathCoordsOrKeys) {
                 if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2) return { ok: false, reason: 'Path must contain at least 2 nodes.' };
+                const normalizeCoord = (node) => {
+                    if (Array.isArray(node) && node.length >= 2) {
+                        const x = Number(node[0]);
+                        const y = Number(node[1]);
+                        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+                        return { x, y };
+                    }
+                    if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y)) {
+                        return { x: Number(node.x), y: Number(node.y) };
+                    }
+                    return null;
+                };
+                const basisFlags = [];
+                for (const node of pathCoordsOrKeys) {
+                    const coord = normalizeCoord(node);
+                    if (!coord) continue;
+                    const canBeZeroBased = Number.isInteger(coord.x) && Number.isInteger(coord.y)
+                        && coord.x >= 0 && coord.x < level.grid.w
+                        && coord.y >= 0 && coord.y < level.grid.h;
+                    const canBeOneBased = Number.isInteger(coord.x) && Number.isInteger(coord.y)
+                        && coord.x >= 1 && coord.x <= level.grid.w
+                        && coord.y >= 1 && coord.y <= level.grid.h;
+                    if (!canBeZeroBased && !canBeOneBased) return { ok: false, reason: 'Path coordinate is out of bounds.' };
+                    basisFlags.push({ canBeZeroBased, canBeOneBased });
+                }
+                const hasZeroOnly = basisFlags.some(f => f.canBeZeroBased && !f.canBeOneBased);
+                const hasOneOnly = basisFlags.some(f => f.canBeOneBased && !f.canBeZeroBased);
+                if (hasZeroOnly && hasOneOnly) return { ok: false, reason: 'Mixed coordinate basis is not allowed.' };
+                // Coord inputs can be either 0-based ([0..w-1],[0..h-1]) or 1-based ([1..w],[1..h]).
+                // We detect basis once for the whole path and convert to internal 0-based keys.
+                const coordBasis = hasOneOnly ? 'one-based' : 'zero-based';
                 const toKey = (node) => {
                     if (typeof node === 'number') return node;
-                    if (Array.isArray(node) && node.length >= 2) return APP.LevelUtils.PACK(Number(node[0]) - 1, Number(node[1]) - 1);
-                    if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y)) {
-                        const x = Number(node.x);
-                        const y = Number(node.y);
-                        if (x >= 1 && y >= 1 && (x > level.grid.w || y > level.grid.h)) return APP.LevelUtils.PACK(x - 1, y - 1);
-                        return APP.LevelUtils.PACK(x, y);
-                    }
-                    return NaN;
+                    const coord = normalizeCoord(node);
+                    if (!coord) return NaN;
+                    const x = coordBasis === 'one-based' ? coord.x - 1 : coord.x;
+                    const y = coordBasis === 'one-based' ? coord.y - 1 : coord.y;
+                    // Bounds are enforced after normalization; we do not attempt fallback arithmetic.
+                    if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || x >= level.grid.w || y < 0 || y >= level.grid.h) return NaN;
+                    return APP.LevelUtils.PACK(x, y);
                 };
                 const path = pathCoordsOrKeys.map(toKey);
                 if (path.some(k => !Number.isFinite(k))) return { ok: false, reason: 'Invalid path coordinate format.' };
