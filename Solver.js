@@ -13340,10 +13340,10 @@ function installSolver(APP) {
                     const existingDroppedBy = dbg?.debug?.depthZeroDroppedBy || null;
                     if (!existingDroppedBy && droppedBy) {
                         const dz = ensureDepthZeroDebug(dbg);
-                        if (dz && dz.depthZeroCaptured && !hasDepthZeroPayload(dbg)) dz.depthZeroDroppedBy = droppedBy;
+                        if (dz && dz.depthZeroCaptured && !hasDepthZeroPayload(dbg)) { dz.depthZeroDroppedBy = droppedBy; dbg.depthZeroDroppedBy = droppedBy; }
                     }
                     const diagnostics = buildSearchDiagnostics(dbg, payload.rawStatus || payload.status || 'unknown');
-                    const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy: dbg?.debug?.depthZeroDroppedBy || droppedBy });
+                    const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy: dbg?.depthZeroDroppedBy || droppedBy });
                     const preExpansionAbort = getPreExpansionAbort(dbg);
                     if (preExpansionAbort) payload.preExpansionAbort = preExpansionAbort;
                     if (summary) payload.zeroExpansionSummary = summary;
@@ -14426,6 +14426,8 @@ function installSolver(APP) {
                 }
                 if (!Object.prototype.hasOwnProperty.call(debugStats.debug, 'preExpansionAbort')) debugStats.debug.preExpansionAbort = null;
                 if (!Array.isArray(debugStats.debug.rootSuppressionLog)) debugStats.debug.rootSuppressionLog = [];
+                if (!Object.prototype.hasOwnProperty.call(debugStats, 'depthZeroCaptured')) debugStats.depthZeroCaptured = !!debugStats.debug.depthZeroCaptured;
+                if (!Object.prototype.hasOwnProperty.call(debugStats, 'depthZeroDroppedBy')) debugStats.depthZeroDroppedBy = debugStats.debug.depthZeroDroppedBy || null;
                 return debugStats.debug;
             }
 
@@ -14466,6 +14468,7 @@ function installSolver(APP) {
                 if (!dbg) return;
                 dbg.depthZeroReason = reason;
                 dbg.depthZeroCaptured = true;
+                debugStats.depthZeroCaptured = true;
                 dbg.depthZeroMeta = {
                     ...(dbg.depthZeroMeta || {}),
                     ...meta
@@ -14486,8 +14489,14 @@ function installSolver(APP) {
                 if (!dbg) return;
                 const sourceHasDepthZero = hasDepthZeroPayload(sourceDebug || targetDebug);
                 const targetHasDepthZero = hasDepthZeroPayload(targetDebug);
-                if (sourceHasDepthZero && !targetHasDepthZero && !dbg.depthZeroDroppedBy) dbg.depthZeroDroppedBy = layer;
-                if (sourceHasDepthZero || targetHasDepthZero) dbg.depthZeroCaptured = true;
+                if (sourceHasDepthZero && !targetHasDepthZero && !dbg.depthZeroDroppedBy) {
+                    dbg.depthZeroDroppedBy = layer;
+                    targetDebug.depthZeroDroppedBy = layer;
+                }
+                if (sourceHasDepthZero || targetHasDepthZero) {
+                    dbg.depthZeroCaptured = true;
+                    targetDebug.depthZeroCaptured = true;
+                }
             }
 
             function getStartStateDebug(debug = {}) {
@@ -14981,8 +14990,11 @@ function installSolver(APP) {
                         details: { status: status || 'unknown', statusPath }
                     });
                 }
-                if (dz && !hasDepthZeroPayload(debug) && dz.depthZeroCaptured && droppedBy && !dz.depthZeroDroppedBy) dz.depthZeroDroppedBy = droppedBy;
-                const summary = makeZeroExpansionSummary({ statusPath, debug, diagnostics, droppedBy: debug?.debug?.depthZeroDroppedBy || droppedBy });
+                if (dz && !hasDepthZeroPayload(debug) && dz.depthZeroCaptured && droppedBy && !dz.depthZeroDroppedBy) {
+                    dz.depthZeroDroppedBy = droppedBy;
+                    debug.depthZeroDroppedBy = droppedBy;
+                }
+                const summary = makeZeroExpansionSummary({ statusPath, debug, diagnostics, droppedBy: debug?.depthZeroDroppedBy || droppedBy });
                 const preExpansionAbort = getPreExpansionAbort(debug);
                 if (preExpansionAbort) entry.preExpansionAbort = preExpansionAbort;
                 if (summary) entry.zeroExpansionSummary = summary;
