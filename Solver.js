@@ -2704,23 +2704,7 @@ function installSolver(APP) {
                                 score += lcp;
                                 pushDriver('landmarkCount', totalLandmarksUnmet, lcp);
                             }
-                            // Intersection-schedule penalty: penalize paths that are behind the
-                            // expected intersection accumulation rate. Only applied when
-                            // reqInt/reqLen <= 0.1 (sparse) — dense levels find intersections
-                            // naturally and the heuristic over-penalizes valid paths there.
-                            if (l.reqInt > 0 && l.reqLen > 0 && (l.reqInt / l.reqLen) <= 0.1) {
-                                const progressRatio = nLen / l.reqLen;
-                                if (progressRatio > 0.15) {
-                                    const expectedIntsAtProgress = progressRatio * l.reqInt;
-                                    const intsBehindSchedule = Math.max(0, expectedIntsAtProgress - projectedIntsAfterMove);
-                                    if (intsBehindSchedule > 0) {
-                                        const phaseMultiplier = progressRatio > 0.6 ? 2.0 : 1.0;
-                                        const c = Math.round(intsBehindSchedule * 150 * phaseMultiplier);
-                                        score += c;
-                                        pushDriver('intScheduleDeficit', intsBehindSchedule, c);
-                                    }
-                                }
-                            }
+
                             const scheduleDeficit = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) - remainingStepsAfterMove;
                             if (scheduleDeficit > 0) {
                                 const c = Math.round(scheduleDeficit * 90);
