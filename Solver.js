@@ -119,88 +119,35 @@ function installSolver(APP) {
         //  18. portalLock        — derived portal lock state string
         //  19. orderingPolicy    — solver option controlling move ordering
         //  20. nonZeroUsage      — count of cells with non-zero filter usage (-1 if no filters)
-
-        const STATE_SIGNATURE_DIMENSIONS = [
-                { name: 'posKey', pick: ({ state }) => state.path[state.path.length - 1] | 0 },
-                { name: 'stepsUsed', pick: ({ realLen }) => realLen | 0 },
-                { name: 'ints', pick: ({ state }) => Number.isFinite(state.ints) ? (state.ints | 0) : 0 },
-                { name: 'mustMask', pick: ({ state }) => (typeof state.mustMask === 'bigint') ? state.mustMask.toString() : '0' },
-                { name: 'mustCrossMask', pick: ({ state }) => (typeof state.mustCrossMask === 'bigint') ? state.mustCrossMask.toString() : '0' },
-                { name: 'mustCrossCounts', pick: ({ state }) => Array.isArray(state.mustCrossCounts) || (state.mustCrossCounts && typeof state.mustCrossCounts.length === 'number') ? Array.from(state.mustCrossCounts).join(',') : '' },
-                { name: 'portalForced', pick: ({ state, level }) => level && level.portalMap ? (level.portalMap.has(state.path[state.path.length - 1]) && !state.isJump?.has(state.path.length - 1) ? 1 : 0) : 0 },
-                { name: 'flipParity', pick: ({ state }) => Number.isFinite(state.flipParity) ? state.flipParity : 0 },
-                { name: 'flipperCrossMask', pick: ({ state }) => (typeof state.flipperCrossMask === 'bigint') ? state.flipperCrossMask.toString() : '0' },
-                { name: 'flipperParityAtCrossMask', pick: ({ state }) => (typeof state.flipperParityAtCrossMask === 'bigint') ? state.flipperParityAtCrossMask.toString() : '0' },
-                { name: 'falseGoalPolicy', pick: ({ options }) => options.falseGoalPolicy || '' },
-                { name: 'portalFamily', pick: ({ state }) => Number.isFinite(state.portal?.portalSelectedFamily) ? state.portal.portalSelectedFamily : -1 },
-                { name: 'portalEntry', pick: ({ state }) => Number.isFinite(state.portal?.portalSelectedEntry) ? state.portal.portalSelectedEntry : -1 },
-                { name: 'portalRegion', pick: ({ state }) => Number.isFinite(state.portal?.portalCommittedRegion) ? state.portal.portalCommittedRegion : -1 },
-                { name: 'portalCoverage', pick: ({ state }) => (typeof state.portal?.portalRequiredCoverageMask === 'bigint') ? state.portal.portalRequiredCoverageMask.toString() : '0' },
-                { name: 'portalReentry', pick: ({ state }) => Number.isFinite(state.portal?.portalReentryBudget) ? state.portal.portalReentryBudget : 0 },
-                { name: 'portalOscillation', pick: ({ state }) => Number.isFinite(state.portal?.portalOscillationBudget) ? state.portal.portalOscillationBudget : 0 },
-                { name: 'portalLock', pick: ({ options }) => options.portalLockState || '' },
-                { name: 'orderingPolicy', pick: ({ options }) => options.orderingPolicy || '' },
-                { name: 'nonZeroUsage', pick: ({ options }) => Number.isFinite(options.nonZeroUsage) ? options.nonZeroUsage : -1 }
-            ];
-        const buildStateSignatureTuple = (state, level, realLen, options = {}) => {
-                const ctx = { state, level, realLen, options };
-                return STATE_SIGNATURE_DIMENSIONS.map(dim => dim.pick(ctx));
-            };
-        const runStateSignatureInvariantCheck = (core, level) => {
-                if (!level) return;
-                const sampleState = {
-                    path: [11, 22, 33],
-                    isJump: new Set([1]),
-                    ints: 2,
-                    mustMask: 5n,
-                    mustCrossMask: 9n,
-                    mustCrossCounts: Uint8Array.from([0, 2, 1]),
-                    flipParity: 1,
-                    flipperCrossMask: 7n,
-                    flipperParityAtCrossMask: 6n,
-                    nonZeroUsage: 3,
-                    portal: {
-                        portalSelectedFamily: 4,
-                        portalSelectedEntry: 22,
-                        portalCommittedRegion: 1,
-                        portalRequiredCoverageMask: 3n,
-                        portalReentryBudget: 2,
-                        portalOscillationBudget: 1
-                    }
-                };
-                const sampleOptions = {
-                    falseGoalPolicy: 'forbid-early-false-goal',
-                    orderingPolicy: 'portalCommitted',
-                    portalLockState: core._derivePortalLockState(sampleState, {}),
-                    nonZeroUsage: sampleState.nonZeroUsage
-                };
-                const tuple = buildStateSignatureTuple(sampleState, level, 2, sampleOptions);
-                if (tuple.length !== 20) throw new Error(`State signature dimension drift: expected 20, got ${tuple.length}`);
-                const requiredDims = new Set(['portalFamily', 'portalEntry', 'portalRegion', 'portalCoverage', 'portalReentry', 'portalOscillation', 'portalLock', 'flipParity', 'flipperCrossMask', 'flipperParityAtCrossMask', 'falseGoalPolicy']);
-                for (const name of requiredDims) {
-                    if (!STATE_SIGNATURE_DIMENSIONS.some(dim => dim.name === name)) throw new Error(`Missing state signature dimension: ${name}`);
-                }
-                const strictKey = tuple.join('|');
-                const rebuiltKey = StateSignature.makeKey(sampleState, { level, stepsUsed: 2, ...sampleOptions, portalSelectedFamily: sampleState.portal.portalSelectedFamily, portalSelectedEntry: sampleState.portal.portalSelectedEntry, portalCommittedRegion: sampleState.portal.portalCommittedRegion, portalRequiredCoverageMask: sampleState.portal.portalRequiredCoverageMask, portalReentryBudget: sampleState.portal.portalReentryBudget, portalOscillationBudget: sampleState.portal.portalOscillationBudget });
-                if (strictKey !== rebuiltKey) throw new Error('State signature invariant failed: tuple and key builder diverged.');
-            };
         const StateSignature = {
                 makeKey(state, policy = {}) {
                     if (!state?.path?.length) return null;
+                    const posKey = state.path[state.path.length - 1];
+                    // Dims 1–11: core path/constraint state
+                    const portalForced = policy.level && policy.level.portalMap
+                        ? (policy.level.portalMap.has(posKey) && !state.isJump?.has(state.path.length - 1) ? 1 : 0)
+                        : 0;
                     const stepsUsed = Number.isFinite(policy.stepsUsed) ? policy.stepsUsed : ((state.path.length - 1) - (state.isJump?.size || 0));
-                    const tuple = buildStateSignatureTuple(state, policy.level, stepsUsed, {
-                        falseGoalPolicy: policy.falseGoalPolicy || '',
-                        orderingPolicy: policy.orderingPolicy || '',
-                        portalLockState: policy.portalLockState || '',
-                        nonZeroUsage: Number.isFinite(policy.nonZeroUsage) ? policy.nonZeroUsage : -1
-                    });
-                    tuple[11] = Number.isFinite(policy.portalSelectedFamily) ? policy.portalSelectedFamily : tuple[11];
-                    tuple[12] = Number.isFinite(policy.portalSelectedEntry) ? policy.portalSelectedEntry : tuple[12];
-                    tuple[13] = Number.isFinite(policy.portalCommittedRegion) ? policy.portalCommittedRegion : tuple[13];
-                    tuple[14] = (typeof policy.portalRequiredCoverageMask === 'bigint') ? policy.portalRequiredCoverageMask.toString() : tuple[14];
-                    tuple[15] = Number.isFinite(policy.portalReentryBudget) ? policy.portalReentryBudget : tuple[15];
-                    tuple[16] = Number.isFinite(policy.portalOscillationBudget) ? policy.portalOscillationBudget : tuple[16];
-                    return tuple.join('|');
+                    const ints = Number.isFinite(state.ints) ? state.ints : 0;
+                    const mustMask = (typeof state.mustMask === 'bigint') ? state.mustMask.toString() : '0';
+                    const mustCrossMask = (typeof state.mustCrossMask === 'bigint') ? state.mustCrossMask.toString() : '0';
+                    const mustCrossCounts = Array.isArray(state.mustCrossCounts) || (state.mustCrossCounts && typeof state.mustCrossCounts.length === 'number')
+                        ? Array.from(state.mustCrossCounts).join(',') : '';
+                    const flipParity = Number.isFinite(state.flipParity) ? state.flipParity : 0;
+                    const flipperCrossMask = (typeof state.flipperCrossMask === 'bigint') ? state.flipperCrossMask.toString() : '0';
+                    const flipperParityAtCrossMask = (typeof state.flipperParityAtCrossMask === 'bigint') ? state.flipperParityAtCrossMask.toString() : '0';
+                    const falseGoalPolicy = policy.falseGoalPolicy || '';
+                    // Dims 12–20: portal automaton + solver options (supplied by caller when available)
+                    const portalFamily = Number.isFinite(policy.portalSelectedFamily) ? policy.portalSelectedFamily : -1;
+                    const portalEntry = Number.isFinite(policy.portalSelectedEntry) ? policy.portalSelectedEntry : -1;
+                    const portalRegion = Number.isFinite(policy.portalCommittedRegion) ? policy.portalCommittedRegion : -1;
+                    const portalCoverage = (typeof policy.portalRequiredCoverageMask === 'bigint') ? policy.portalRequiredCoverageMask.toString() : '0';
+                    const portalReentry = Number.isFinite(policy.portalReentryBudget) ? policy.portalReentryBudget : 0;
+                    const portalOscillation = Number.isFinite(policy.portalOscillationBudget) ? policy.portalOscillationBudget : 0;
+                    const portalLock = policy.portalLockState || '';
+                    const orderingPolicy = policy.orderingPolicy || '';
+                    const nonZeroUsage = Number.isFinite(policy.nonZeroUsage) ? policy.nonZeroUsage : -1;
+                    return [posKey, stepsUsed, ints, mustMask, mustCrossMask, mustCrossCounts, portalForced, flipParity, flipperCrossMask, flipperParityAtCrossMask, falseGoalPolicy, portalFamily, portalEntry, portalRegion, portalCoverage, portalReentry, portalOscillation, portalLock, orderingPolicy, nonZeroUsage].join('|');
                 }
             };
 
@@ -670,7 +617,6 @@ function installSolver(APP) {
                         debugStats.signatureBuildMs = (debugStats.signatureBuildMs || 0) + dtHash;
                     }
                     const strictMode = !!(options?.debugStrictMemoKey || window.__PF_SOLVER_STRICT_MEMO_KEY__);
-                    if (strictMode && !this._didRunStateSignatureInvariantCheck) { runStateSignatureInvariantCheck(this, l); this._didRunStateSignatureInvariantCheck = true; }
                     if (strictMode) {
                         const tStrict0 = perfNow();
                         const strictKey = this._buildStrictStateSignature(state, l, realLen, options);
@@ -2704,7 +2650,23 @@ function installSolver(APP) {
                                 score += lcp;
                                 pushDriver('landmarkCount', totalLandmarksUnmet, lcp);
                             }
-
+                            // Intersection-schedule penalty: penalize paths that are behind the
+                            // expected intersection accumulation rate. Only applied when
+                            // reqInt/reqLen <= 0.1 (sparse) — dense levels find intersections
+                            // naturally and the heuristic over-penalizes valid paths there.
+                            if (l.reqInt > 0 && l.reqLen > 0 && (l.reqInt / l.reqLen) <= 0.1) {
+                                const progressRatio = nLen / l.reqLen;
+                                if (progressRatio > 0.15) {
+                                    const expectedIntsAtProgress = progressRatio * l.reqInt;
+                                    const intsBehindSchedule = Math.max(0, expectedIntsAtProgress - projectedIntsAfterMove);
+                                    if (intsBehindSchedule > 0) {
+                                        const phaseMultiplier = progressRatio > 0.6 ? 2.0 : 1.0;
+                                        const c = Math.round(intsBehindSchedule * 150 * phaseMultiplier);
+                                        score += c;
+                                        pushDriver('intScheduleDeficit', intsBehindSchedule, c);
+                                    }
+                                }
+                            }
                             const scheduleDeficit = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) - remainingStepsAfterMove;
                             if (scheduleDeficit > 0) {
                                 const c = Math.round(scheduleDeficit * 90);
@@ -9446,12 +9408,6 @@ function installSolver(APP) {
                     .slice(-3)
                     .map(entry => ({ ...entry, __carriedFromHintLadder: true }))
                 : [];
-            // Cumulative count of outer hint-ladder attempts that have already run and timed out.
-            // Used to scale the nearClosure rescue threshold so that levels with low-but-nonzero
-            // nearSolutionStates (e.g. L134 ns=47-80) eventually trigger rescue on later outer attempts.
-            const carriedOuterTimeoutCount = Number.isFinite(sharedHintLadderState?.totalOuterTimeouts)
-                ? Math.max(0, sharedHintLadderState.totalOuterTimeouts)
-                : 0;
             const randomExplorationEnabled = !!opts.allowRandomizedExploration;
             const timeoutEscalationRatios = [0.2, 0.35];
             const maxTimeoutEscalationTier = timeoutEscalationRatios.length;
@@ -9500,15 +9456,10 @@ function installSolver(APP) {
                     entry?.mustCrossScheduleRescueDetected
                     || entry?.nextAttemptReason === 'must-cross-schedule-rescue'
                 );
-                const activatedPortalAutomatonRescue = attemptsUsed.some(entry =>
-                    entry?.portalAutomatonOverloadDetected
-                    || entry?.nextAttemptReason === 'portal-automaton-overload-rescue'
-                );
                 return {
                     ...(fallbackDebug || {}),
                     rescueTriggeredNearClosure: activatedNearClosure,
                     mustCrossRescueTriggered: activatedMustCrossRescue,
-                    portalAutomatonOverloadRescueTriggered: activatedPortalAutomatonRescue,
                     rootFamiliesAttemptedBeforeTimeout: attemptedFamilies.length > 0 ? Math.max(...attemptedFamilies) : 0,
                     rootFamiliesStarved: starvedFamilies.length > 0 ? Math.max(...starvedFamilies) : 0
                 };
@@ -9610,7 +9561,6 @@ function installSolver(APP) {
             let broadStagnationRescueCount = 0;
             let nearSolutionFloodRescueCount = 0;
             let mustCrossScheduleRescueCount = 0;
-            let portalAutomatonOverloadRescueCount = 0;
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
             const canonicalizeDisabledPrunes = (prunes = []) => {
@@ -10206,9 +10156,6 @@ function installSolver(APP) {
                 sharedHintLadderState.recentTimeoutAttempts = localTimeoutAttempts;
                 sharedHintLadderState.queuedAttemptSignatureHashes = Array.from(queuedAttemptSignatures).slice(-64);
                 sharedHintLadderState.retryFingerprintDupes = retryFingerprintDupes;
-                // Accumulate total outer-attempt timeout count for nearClosure threshold scaling.
-                const localTimeouts = attemptsUsed.filter(e => !e?.__carriedFromHintLadder && ['timeout', 'no-solution-inconclusive'].includes(`${e?.status || ''}`)).length;
-                sharedHintLadderState.totalOuterTimeouts = carriedOuterTimeoutCount + localTimeouts;
             };
             for (let planIdx = 0; planIdx < attempts.length; planIdx++) {
                 const plannedAttempt = attempts[planIdx];
@@ -10741,14 +10688,6 @@ function installSolver(APP) {
                     const recentTimeoutAttempts = attemptsUsed
                         .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
                         .slice(-3);
-                    // For repeatedTimeoutOutcome we only count non-carried timeouts (current outer call).
-                    // Carried entries from previous outer calls satisfy the length check trivially,
-                    // causing rescue to fire after just the first inner timeout of every outer call.
-                    // Requiring >=2 non-carried timeouts restores the original semantics: rescue only
-                    // fires when 2+ inner attempts in the CURRENT outer call have both timed out.
-                    const recentNonCarriedTimeouts = attemptsUsed
-                        .filter(entry => !entry?.__carriedFromHintLadder && ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
-                        .slice(-3);
                     const highExpansionFloor = Math.max(110, lowExpansionThreshold * 3);
                     const depthSeries = recentTimeoutAttempts
                         .map(entry => Number(entry?.depthReached))
@@ -10772,24 +10711,19 @@ function installSolver(APP) {
                     // Near-solution flood rescue: targets "final-mile deadlock" (e.g. Level 108)
                     // Detects thousands of frontier states needing exactly 1 more step but never completing.
                     // Checked before broadStagnation so the more-specific pattern wins when both are present.
-                    // Threshold decreases both with inner-attempt index i and with carriedOuterTimeoutCount
-                    // (cumulative outer-ladder timeouts from prior hint-ladder calls) so that levels with
-                    // low-but-nonzero nearSolutionStates (e.g. L134 ns=47-80) eventually trigger rescue.
-                    const nearSolutionFloodThreshold = Math.max(40, 800 - (i * 120) - (carriedOuterTimeoutCount * 60));
-                    // When nearSolutionStates is very high (>=5000), the solver is deep in a
-                    // "final-mile flood" — relax lb threshold from 2 to 4 to capture cases like
-                    // L61 where thousands of near-solution states have lb=3-4 steps remaining.
-                    const nearSolutionStatesValue = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0;
-                    const nearSolutionFloodLowerBoundThreshold = nearSolutionStatesValue >= 5000 ? 4 : 2;
+                    // Threshold floor 80 (was 120) removes a false barrier at late attempts where i*120 >= 720.
+                    const nearSolutionFloodThreshold = Math.max(80, 800 - (i * 120));
+                    const nearSolutionFloodLowerBoundThreshold = 2;
                     // Broadened to include no-solution-inconclusive to match timeoutProne; otherwise a single
                     // inconclusive attempt in the recent window silently disqualifies the rescue even when
                     // every attempt is a timeout-class failure.
-                    const repeatedTimeoutOutcome = recentNonCarriedTimeouts.length >= 2;
-                    const nearSolutionStatesMet = nearSolutionStatesValue >= nearSolutionFloodThreshold;
+                    const repeatedTimeoutOutcome = recentTimeoutAttempts.length >= 2
+                        && recentTimeoutAttempts.every(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`));
+                    const nearSolutionStatesMet = (Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0) >= nearSolutionFloodThreshold;
                     const nearClosureLowerBoundFinite = Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
                     const nearClosureLowerBoundMet = nearClosureLowerBoundFinite
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= nearSolutionFloodLowerBoundThreshold;
-                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < 1;
+                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < 3;
                     const nearSolutionFloodDetected = timeoutProne
                         && nearClosureCountRemaining
                         && repeatedTimeoutOutcome
@@ -10869,12 +10803,8 @@ function installSolver(APP) {
                         attemptResult.debug.mustCrossScheduleAwareLowerBoundMet = !!scheduleAwareLowerBoundMet;
                     }
                     const configureNearClosureRescueAttempt = (targetAttempt = {}, budgetHint = 1) => {
-                        // Cap rescue budget: memoStrictness=0 means no memo ceiling on state re-visits,
-                        // so inheriting the full inner-attempt budget (up to 90s) causes each outer call
-                        // to burn 30-90s on rescue. Near-solution states are 1-2 steps from completion;
-                        // 5s is sufficient to explore thousands of them.
-                        const rawBudget = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
-                        targetAttempt.budgetMs = Math.min(5000, rawBudget);
+                        const existingMemo = Number(targetAttempt.memoStrictness);
+                        targetAttempt.budgetMs = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
                         targetAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(targetAttempt.disabledPrunes || [])]);
                         targetAttempt.memoStrictness = 0;
                         targetAttempt.rootExpansionFloorCount = Math.max(4, Number(targetAttempt.rootExpansionFloorCount) || 0);
@@ -10998,48 +10928,6 @@ function installSolver(APP) {
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'must-cross-schedule-rescue';
                             currentAttemptEntry.mustCrossScheduleRescueDetected = true;
-                        }
-                        continue;
-                    }
-                    // Portal automaton overload rescue: targets levels where the portal automaton
-                    // aggressively rejects states (e.g. L92: 10k+ rejections) while the solver
-                    // never reaches near-solution states (ns=0). Disabling the portal automaton
-                    // prune lets the search explore paths it previously filtered, potentially
-                    // finding obligation-satisfying closures that were unreachable under strict
-                    // portal commitment enforcement.
-                    const portalAutomatonRejectedCount = Number(attemptResult?.debug?.prune?.portalAutomatonRejected) || 0;
-                    const nodesExpandedForPortalCheck = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
-                    const nearSolutionStatesForPortalCheck = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0;
-                    const portalAutomatonOverloadDetected = timeoutProne
-                        && portalAutomatonOverloadRescueCount < 2
-                        && nearSolutionStatesForPortalCheck === 0
-                        && portalAutomatonRejectedCount >= 5000
-                        && nodesExpandedForPortalCheck >= 5000;
-                    if (portalAutomatonOverloadDetected && nextAttempt) {
-                        const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
-                        // Cap like nearClosure rescue — memoStrictness=0 with full budget is too slow.
-                        nextAttempt.budgetMs = Math.min(12000, priorBudget);
-                        nextAttempt.disabledPrunes = canonicalizeDisabledPrunes([
-                            'portalAutomaton',
-                            ...(nextAttempt.disabledPrunes || [])
-                        ]);
-                        nextAttempt.policyProfile = 'portalFirstTransfer';
-                        nextAttempt.orderingPolicy = 'portalFirstTransfer';
-                        nextAttempt.portalBiasMode = 'adaptiveMustCross';
-                        nextAttempt.memoStrictness = 0;
-                        nextAttempt.retryTag = 'portal-automaton-overload-rescue';
-                        nextAttempt.escalationReason = 'portal-automaton-overload-rescue';
-                        nextAttempt.orderingTweaks = compactDefined({
-                            ...(nextAttempt.orderingTweaks || {}),
-                            stage: 'timeout-rescue-second-stage',
-                            mode: 'portal-automaton-overload-rescue',
-                            portalAutomatonRejected: portalAutomatonRejectedCount,
-                            nearSolutionStates: nearSolutionStatesForPortalCheck
-                        });
-                        portalAutomatonOverloadRescueCount++;
-                        if (currentAttemptEntry) {
-                            currentAttemptEntry.nextAttemptReason = 'portal-automaton-overload-rescue';
-                            currentAttemptEntry.portalAutomatonOverloadDetected = true;
                         }
                         continue;
                     }
@@ -13175,9 +13063,6 @@ function installSolver(APP) {
                 allowRandomizedExplorationOnExpensiveTiers,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
-                hintLadderState,
-                rootTieSeedOffset,
-                rootOrderingVariant,
                 stagesTried,
                 solveStartTime,
                 controlPlane,
@@ -13224,10 +13109,7 @@ function installSolver(APP) {
                     resolvedPhasePolicy,
                     solveStartTime,
                     complexityStrategy,
-                    fallbackDisabledPrunes,
-                    hintLadderState,
-                    rootTieSeedOffset,
-                    rootOrderingVariant
+                    fallbackDisabledPrunes
                 },
                 metadata: {
                     requestedBudget,
@@ -13388,10 +13270,10 @@ function installSolver(APP) {
                     const existingDroppedBy = dbg?.debug?.depthZeroDroppedBy || null;
                     if (!existingDroppedBy && droppedBy) {
                         const dz = ensureDepthZeroDebug(dbg);
-                        if (dz && dz.depthZeroCaptured && !hasDepthZeroPayload(dbg)) { dz.depthZeroDroppedBy = droppedBy; dbg.depthZeroDroppedBy = droppedBy; }
+                        if (dz && dz.depthZeroCaptured && !hasDepthZeroPayload(dbg)) dz.depthZeroDroppedBy = droppedBy;
                     }
                     const diagnostics = buildSearchDiagnostics(dbg, payload.rawStatus || payload.status || 'unknown');
-                    const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy: dbg?.depthZeroDroppedBy || droppedBy });
+                    const summary = makeZeroExpansionSummary({ statusPath, debug: dbg, diagnostics, droppedBy: dbg?.debug?.depthZeroDroppedBy || droppedBy });
                     const preExpansionAbort = getPreExpansionAbort(dbg);
                     if (preExpansionAbort) payload.preExpansionAbort = preExpansionAbort;
                     if (summary) payload.zeroExpansionSummary = summary;
@@ -13739,46 +13621,16 @@ function installSolver(APP) {
 
             function validateCandidatePath(level, pathCoordsOrKeys) {
                 if (!Array.isArray(pathCoordsOrKeys) || pathCoordsOrKeys.length < 2) return { ok: false, reason: 'Path must contain at least 2 nodes.' };
-                const normalizeCoord = (node) => {
-                    if (Array.isArray(node) && node.length >= 2) {
-                        const x = Number(node[0]);
-                        const y = Number(node[1]);
-                        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
-                        return { x, y };
-                    }
-                    if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y)) {
-                        return { x: Number(node.x), y: Number(node.y) };
-                    }
-                    return null;
-                };
-                const basisFlags = [];
-                for (const node of pathCoordsOrKeys) {
-                    const coord = normalizeCoord(node);
-                    if (!coord) continue;
-                    const canBeZeroBased = Number.isInteger(coord.x) && Number.isInteger(coord.y)
-                        && coord.x >= 0 && coord.x < level.grid.w
-                        && coord.y >= 0 && coord.y < level.grid.h;
-                    const canBeOneBased = Number.isInteger(coord.x) && Number.isInteger(coord.y)
-                        && coord.x >= 1 && coord.x <= level.grid.w
-                        && coord.y >= 1 && coord.y <= level.grid.h;
-                    if (!canBeZeroBased && !canBeOneBased) return { ok: false, reason: 'Path coordinate is out of bounds.' };
-                    basisFlags.push({ canBeZeroBased, canBeOneBased });
-                }
-                const hasZeroOnly = basisFlags.some(f => f.canBeZeroBased && !f.canBeOneBased);
-                const hasOneOnly = basisFlags.some(f => f.canBeOneBased && !f.canBeZeroBased);
-                if (hasZeroOnly && hasOneOnly) return { ok: false, reason: 'Mixed coordinate basis is not allowed.' };
-                // Coord inputs can be either 0-based ([0..w-1],[0..h-1]) or 1-based ([1..w],[1..h]).
-                // We detect basis once for the whole path and convert to internal 0-based keys.
-                const coordBasis = hasOneOnly ? 'one-based' : 'zero-based';
                 const toKey = (node) => {
                     if (typeof node === 'number') return node;
-                    const coord = normalizeCoord(node);
-                    if (!coord) return NaN;
-                    const x = coordBasis === 'one-based' ? coord.x - 1 : coord.x;
-                    const y = coordBasis === 'one-based' ? coord.y - 1 : coord.y;
-                    // Bounds are enforced after normalization; we do not attempt fallback arithmetic.
-                    if (!Number.isInteger(x) || !Number.isInteger(y) || x < 0 || x >= level.grid.w || y < 0 || y >= level.grid.h) return NaN;
-                    return APP.LevelUtils.PACK(x, y);
+                    if (Array.isArray(node) && node.length >= 2) return APP.LevelUtils.PACK(Number(node[0]) - 1, Number(node[1]) - 1);
+                    if (node && typeof node === 'object' && Number.isFinite(node.x) && Number.isFinite(node.y)) {
+                        const x = Number(node.x);
+                        const y = Number(node.y);
+                        if (x >= 1 && y >= 1 && (x > level.grid.w || y > level.grid.h)) return APP.LevelUtils.PACK(x - 1, y - 1);
+                        return APP.LevelUtils.PACK(x, y);
+                    }
+                    return NaN;
                 };
                 const path = pathCoordsOrKeys.map(toKey);
                 if (path.some(k => !Number.isFinite(k))) return { ok: false, reason: 'Invalid path coordinate format.' };
@@ -14504,8 +14356,6 @@ function installSolver(APP) {
                 }
                 if (!Object.prototype.hasOwnProperty.call(debugStats.debug, 'preExpansionAbort')) debugStats.debug.preExpansionAbort = null;
                 if (!Array.isArray(debugStats.debug.rootSuppressionLog)) debugStats.debug.rootSuppressionLog = [];
-                if (!Object.prototype.hasOwnProperty.call(debugStats, 'depthZeroCaptured')) debugStats.depthZeroCaptured = !!debugStats.debug.depthZeroCaptured;
-                if (!Object.prototype.hasOwnProperty.call(debugStats, 'depthZeroDroppedBy')) debugStats.depthZeroDroppedBy = debugStats.debug.depthZeroDroppedBy || null;
                 return debugStats.debug;
             }
 
@@ -14546,7 +14396,6 @@ function installSolver(APP) {
                 if (!dbg) return;
                 dbg.depthZeroReason = reason;
                 dbg.depthZeroCaptured = true;
-                debugStats.depthZeroCaptured = true;
                 dbg.depthZeroMeta = {
                     ...(dbg.depthZeroMeta || {}),
                     ...meta
@@ -14567,14 +14416,8 @@ function installSolver(APP) {
                 if (!dbg) return;
                 const sourceHasDepthZero = hasDepthZeroPayload(sourceDebug || targetDebug);
                 const targetHasDepthZero = hasDepthZeroPayload(targetDebug);
-                if (sourceHasDepthZero && !targetHasDepthZero && !dbg.depthZeroDroppedBy) {
-                    dbg.depthZeroDroppedBy = layer;
-                    targetDebug.depthZeroDroppedBy = layer;
-                }
-                if (sourceHasDepthZero || targetHasDepthZero) {
-                    dbg.depthZeroCaptured = true;
-                    targetDebug.depthZeroCaptured = true;
-                }
+                if (sourceHasDepthZero && !targetHasDepthZero && !dbg.depthZeroDroppedBy) dbg.depthZeroDroppedBy = layer;
+                if (sourceHasDepthZero || targetHasDepthZero) dbg.depthZeroCaptured = true;
             }
 
             function getStartStateDebug(debug = {}) {
@@ -15068,11 +14911,8 @@ function installSolver(APP) {
                         details: { status: status || 'unknown', statusPath }
                     });
                 }
-                if (dz && !hasDepthZeroPayload(debug) && dz.depthZeroCaptured && droppedBy && !dz.depthZeroDroppedBy) {
-                    dz.depthZeroDroppedBy = droppedBy;
-                    debug.depthZeroDroppedBy = droppedBy;
-                }
-                const summary = makeZeroExpansionSummary({ statusPath, debug, diagnostics, droppedBy: debug?.depthZeroDroppedBy || droppedBy });
+                if (dz && !hasDepthZeroPayload(debug) && dz.depthZeroCaptured && droppedBy && !dz.depthZeroDroppedBy) dz.depthZeroDroppedBy = droppedBy;
+                const summary = makeZeroExpansionSummary({ statusPath, debug, diagnostics, droppedBy: debug?.debug?.depthZeroDroppedBy || droppedBy });
                 const preExpansionAbort = getPreExpansionAbort(debug);
                 if (preExpansionAbort) entry.preExpansionAbort = preExpansionAbort;
                 if (summary) entry.zeroExpansionSummary = summary;
