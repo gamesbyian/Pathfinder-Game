@@ -10703,6 +10703,14 @@ function installSolver(APP) {
                     const recentTimeoutAttempts = attemptsUsed
                         .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
                         .slice(-3);
+                    // For repeatedTimeoutOutcome we only count non-carried timeouts (current outer call).
+                    // Carried entries from previous outer calls satisfy the length check trivially,
+                    // causing rescue to fire after just the first inner timeout of every outer call.
+                    // Requiring >=2 non-carried timeouts restores the original semantics: rescue only
+                    // fires when 2+ inner attempts in the CURRENT outer call have both timed out.
+                    const recentNonCarriedTimeouts = attemptsUsed
+                        .filter(entry => !entry?.__carriedFromHintLadder && ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
+                        .slice(-3);
                     const highExpansionFloor = Math.max(110, lowExpansionThreshold * 3);
                     const depthSeries = recentTimeoutAttempts
                         .map(entry => Number(entry?.depthReached))
@@ -10738,13 +10746,12 @@ function installSolver(APP) {
                     // Broadened to include no-solution-inconclusive to match timeoutProne; otherwise a single
                     // inconclusive attempt in the recent window silently disqualifies the rescue even when
                     // every attempt is a timeout-class failure.
-                    const repeatedTimeoutOutcome = recentTimeoutAttempts.length >= 2
-                        && recentTimeoutAttempts.every(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`));
+                    const repeatedTimeoutOutcome = recentNonCarriedTimeouts.length >= 2;
                     const nearSolutionStatesMet = nearSolutionStatesValue >= nearSolutionFloodThreshold;
                     const nearClosureLowerBoundFinite = Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
                     const nearClosureLowerBoundMet = nearClosureLowerBoundFinite
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= nearSolutionFloodLowerBoundThreshold;
-                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < 3;
+                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < 1;
                     const nearSolutionFloodDetected = timeoutProne
                         && nearClosureCountRemaining
                         && repeatedTimeoutOutcome
@@ -10827,9 +10834,9 @@ function installSolver(APP) {
                         // Cap rescue budget: memoStrictness=0 means no memo ceiling on state re-visits,
                         // so inheriting the full inner-attempt budget (up to 90s) causes each outer call
                         // to burn 30-90s on rescue. Near-solution states are 1-2 steps from completion;
-                        // 12s is sufficient to explore thousands of them.
+                        // 5s is sufficient to explore thousands of them.
                         const rawBudget = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
-                        targetAttempt.budgetMs = Math.min(12000, rawBudget);
+                        targetAttempt.budgetMs = Math.min(5000, rawBudget);
                         targetAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(targetAttempt.disabledPrunes || [])]);
                         targetAttempt.memoStrictness = 0;
                         targetAttempt.rootExpansionFloorCount = Math.max(4, Number(targetAttempt.rootExpansionFloorCount) || 0);
