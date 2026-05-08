@@ -10824,8 +10824,12 @@ function installSolver(APP) {
                         attemptResult.debug.mustCrossScheduleAwareLowerBoundMet = !!scheduleAwareLowerBoundMet;
                     }
                     const configureNearClosureRescueAttempt = (targetAttempt = {}, budgetHint = 1) => {
-                        const existingMemo = Number(targetAttempt.memoStrictness);
-                        targetAttempt.budgetMs = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
+                        // Cap rescue budget: memoStrictness=0 means no memo ceiling on state re-visits,
+                        // so inheriting the full inner-attempt budget (up to 90s) causes each outer call
+                        // to burn 30-90s on rescue. Near-solution states are 1-2 steps from completion;
+                        // 12s is sufficient to explore thousands of them.
+                        const rawBudget = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
+                        targetAttempt.budgetMs = Math.min(12000, rawBudget);
                         targetAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(targetAttempt.disabledPrunes || [])]);
                         targetAttempt.memoStrictness = 0;
                         targetAttempt.rootExpansionFloorCount = Math.max(4, Number(targetAttempt.rootExpansionFloorCount) || 0);
@@ -10968,7 +10972,8 @@ function installSolver(APP) {
                         && nodesExpandedForPortalCheck >= 5000;
                     if (portalAutomatonOverloadDetected && nextAttempt) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
-                        nextAttempt.budgetMs = priorBudget;
+                        // Cap like nearClosure rescue — memoStrictness=0 with full budget is too slow.
+                        nextAttempt.budgetMs = Math.min(12000, priorBudget);
                         nextAttempt.disabledPrunes = canonicalizeDisabledPrunes([
                             'portalAutomaton',
                             ...(nextAttempt.disabledPrunes || [])
