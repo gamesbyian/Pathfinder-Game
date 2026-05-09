@@ -6487,6 +6487,11 @@ function installSolver(APP) {
         };
 
         // Canonical solver status/result helpers used by the unified Referee engine.
+        // CANONICAL FIELDS (set once at construction, never mutated): ok, status, rawStatus,
+        // solution, stagesTried. These are the only fields compared by audit regression gates
+        // (statusCounts, failingLevels). All post-solve enrichment (failureProfile, failureTaxonomy,
+        // executionPath, strategyMetadata) is diagnostic and flows into Referee.recordTelemetry()
+        // for side-channel logging; it must not change ok/status.
         const normalizeSolveStatus = (statusLike = 'error', ok = false) => {
             if (ok) return 'solved';
             const status = `${statusLike || ''}`.trim();
@@ -9113,6 +9118,29 @@ function installSolver(APP) {
             return this._hardClusterGatingResolved;
         },
 
+        // ---------------------------------------------------------------------------
+        // Telemetry side-channel (F2): callers can log debug payloads here without
+        // touching the canonical solve result. Canonical fields (ok, status, family,
+        // confidence) are set once at construction and must not be mutated afterwards.
+        // Audit regression gates compare only canonical fields, so adding entries here
+        // never changes statusCounts or failingLevels in audits/metrics/latest.json.
+        // ---------------------------------------------------------------------------
+        _telemetryLog: [],
+        recordTelemetry(levelId, attemptOrdinal, payload) {
+            if (!Array.isArray(this._telemetryLog)) this._telemetryLog = [];
+            this._telemetryLog.push({
+                levelId: Number.isFinite(Number(levelId)) ? Number(levelId) : null,
+                attemptOrdinal: Number.isFinite(Number(attemptOrdinal)) ? Number(attemptOrdinal) : null,
+                ts: Date.now(),
+                payload: payload || null
+            });
+        },
+        getTelemetryLog() {
+            return Array.isArray(this._telemetryLog) ? this._telemetryLog.slice() : [];
+        },
+        clearTelemetryLog() {
+            this._telemetryLog = [];
+        },
 
         _buildAttemptPlan({ level, budgetMs, profile, opts = {}, controlPlane }) {
             const total = Math.max(1, Math.floor(budgetMs || 1));
@@ -12367,6 +12395,20 @@ function installSolver(APP) {
                 budgetSplit: complexityStrategy.budgetSplit || {},
                 directionPolicy: complexityStrategy.directionPolicy || {}
             };
+            // Side-channel: log enrichment metadata (classification, archetype, timing) without
+            // touching canonical fields (ok, status). Audit gates compare only canonical fields.
+            const levelId = Number(level?.id) || Number(level?.levelId) || null;
+            if (Number.isFinite(levelId)) {
+                Referee.recordTelemetry(levelId, stagesTried?.length || 0, {
+                    family: last.failureProfile?.family || null,
+                    confidence: last.failureProfile?.confidence || null,
+                    executionPath: last.executionPath || null,
+                    primaryArchetype: last.primaryArchetype || null,
+                    complexityClass: last.complexityClass || null,
+                    escalationTier: last.escalationTier ?? null,
+                    budgetMs: last.budgetMs ?? null
+                });
+            }
             return last;
         },
 
@@ -15067,7 +15109,10 @@ function installSolver(APP) {
             stopHintAnimation,
             validateCandidatePath,
             toAuditAttemptSummary,
-            clearAttemptHistory: () => { for (const k in attemptHistory) delete attemptHistory[k]; }
+            clearAttemptHistory: () => { for (const k in attemptHistory) delete attemptHistory[k]; },
+            recordTelemetry: (levelId, attemptOrdinal, payload) => Referee.recordTelemetry(levelId, attemptOrdinal, payload),
+            getTelemetryLog: () => Referee.getTelemetryLog(),
+            clearTelemetryLog: () => Referee.clearTelemetryLog()
         };
     })();
 
