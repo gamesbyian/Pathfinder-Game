@@ -1388,7 +1388,12 @@ function installSolver(APP) {
                     // When there are unvisited must-cross cells (need=2, so extraVisitsLB>0),
                     // the demand-flow bound is tighter because it uses actual transit-detour
                     // distances for double-visit requirements rather than a count-based fallback.
-                    if (legacyExtraVisitsLB > 0) {
+                    // Also consult demand-flow whenever transit data is ready, even with
+                    // extraVisitsLB==0: transit distances differ from raw distances when portals
+                    // or filters are present, and that difference can yield a tighter bound even
+                    // when no must-cross revisit is required.
+                    const transitReady = !!(l?.mustCrossTransit?.ready);
+                    if (legacyExtraVisitsLB > 0 || transitReady) {
                         const demandFlowBound = this._estimateMustCrossDemandFlowBoundFrom(key, state, l);
                         if (Number.isFinite(demandFlowBound) && demandFlowBound > dpBound) return demandFlowBound;
                     }
@@ -9636,8 +9641,34 @@ function installSolver(APP) {
             let consecutiveTimeoutStagnation = 0;
             let portalRetryBiasToggle = 0;
             let broadStagnationRescueCount = 0;
+            let broadStagnationRescueLastProgress = null;
             let nearSolutionFloodRescueCount = 0;
+            let nearSolutionFloodRescueLastProgress = null;
             let mustCrossScheduleRescueCount = 0;
+            let mustCrossScheduleRescueLastProgress = null;
+            // Soft caps preserve the previous "fire freely up to N" behavior. Once a soft cap is hit,
+            // the rescue may still fire if telemetry shows the relevant progress signals improved vs.
+            // the snapshot taken at the last fire — this targets the L92/L108/L134 pattern where the
+            // original flat cap silently retired the rescue exactly when it was making progress. Hard
+            // caps act as a safety belt so a marginally-progressing rescue cannot run unbounded.
+            const NEAR_SOLUTION_FLOOD_SOFT_CAP = 3;
+            const NEAR_SOLUTION_FLOOD_HARD_CAP = 6;
+            const MUST_CROSS_SCHEDULE_SOFT_CAP = 2;
+            const MUST_CROSS_SCHEDULE_HARD_CAP = 4;
+            const BROAD_STAGNATION_SOFT_CAP = 3;
+            const BROAD_STAGNATION_HARD_CAP = 6;
+            const rescueProgressedSinceLastFire = (snapshot, current, directions) => {
+                if (!snapshot) return true;
+                for (const key of Object.keys(directions)) {
+                    const cur = Number(current?.[key]);
+                    const prev = Number(snapshot?.[key]);
+                    if (!Number.isFinite(cur) || !Number.isFinite(prev)) continue;
+                    const direction = directions[key];
+                    if (direction === 'lower' && cur < prev) return true;
+                    if (direction === 'higher' && cur > prev) return true;
+                }
+                return false;
+            };
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
             const canonicalizeDisabledPrunes = (prunes = []) => {
@@ -9687,7 +9718,16 @@ function installSolver(APP) {
                 { rootOrderingProfile: 'portalFirstTransfer', orderingPolicy: 'portalFirstTransfer', beamCompositionRule: 'adaptive-relaxed', rootExpansionFloorCount: 1, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'agnostic', disabledPrunes: ['mustCrossBound'] },
                 { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
                 // 5th entry: maximum pruning relaxation for near-solution flood / must-cross deadlock patterns
-                { rootOrderingProfile: 'endurance', orderingPolicy: 'endurance', beamCompositionRule: 'floor-4-endurance', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['mustPassBound', 'mustCrossBound'] }
+                { rootOrderingProfile: 'endurance', orderingPolicy: 'endurance', beamCompositionRule: 'floor-4-endurance', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
+                // Entries 6-8 extend the matrix beyond the prior `% 5` cycle so that late-cascade
+                // retries (timeoutLikeCount >= 5) explore qualitatively different configurations
+                // before any rows recycle. Each adds an axis the original 5 did not vary:
+                //  - row 6: harvestThenFinish + memo-relaxed (low memoStrictness) + length-pruning relaxation
+                //  - row 7: portalCommitted + memo-strict (high memoStrictness) + portal-automaton relaxation
+                //  - row 8: mustCrossFirst + connectivity relaxation, for must-cross-deadlock patterns
+                { rootOrderingProfile: 'harvestThenFinish', orderingPolicy: 'harvestThenFinish', beamCompositionRule: 'floor-3-broad', rootExpansionFloorCount: 3, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['minRemOverflow'], memoStrictness: 0.6 },
+                { rootOrderingProfile: 'portalCommitted', orderingPolicy: 'portalCommitted', beamCompositionRule: 'floor-2-portal', rootExpansionFloorCount: 2, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'off', disabledPrunes: ['portalAutomaton'], memoStrictness: 1.6 },
+                { rootOrderingProfile: 'mustCrossFirst', orderingPolicy: 'mustCrossFirst', beamCompositionRule: 'floor-4-must-cross', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['connectivity'], memoStrictness: 0.8 }
             ];
             const applyDeterministicDiversificationMatrix = (attempt, context = {}) => {
                 if (!attempt) return null;
@@ -9705,6 +9745,7 @@ function installSolver(APP) {
                 attempt.relaxRootSuppressionFirstLayer = row.relaxRootSuppressionFirstLayer;
                 attempt.portalBiasMode = row.portalBiasMode;
                 attempt.disabledPrunes = canonicalizeDisabledPrunes([...(attempt?.disabledPrunes || []), ...(row.disabledPrunes || [])]);
+                if (Number.isFinite(row.memoStrictness)) attempt.memoStrictness = Number(row.memoStrictness);
                 const seededBase = Number.isFinite(attempt.rootTieSeed) ? Number(attempt.rootTieSeed) : 0;
                 attempt.rootTieSeed = (seededBase ^ ((idx + 1) * 2654435761 >>> 0)) >>> 0;
                 applyAttemptSignature(attempt);
@@ -9716,9 +9757,16 @@ function installSolver(APP) {
                     disabledPruneSet: attempt.disabledPrunes.slice()
                 });
             };
+            // Carry over a small window of recent signatures from prior hint-ladder steps so
+            // a tier-escalated retry doesn't immediately re-pick the exact configuration the
+            // last tier just exhausted. The window was previously 64, which dominated the dedup
+            // set with stale configurations from much earlier in the ladder and forced the
+            // diversification matrix to spend offsets resolving collisions before exploring
+            // genuinely novel rows. 16 retains the "don't repeat the last few attempts"
+            // intent while dropping the stale tail.
             const queuedAttemptSignatures = new Set(
                 Array.isArray(sharedHintLadderState?.queuedAttemptSignatureHashes)
-                    ? sharedHintLadderState.queuedAttemptSignatureHashes.filter(Boolean).slice(-64)
+                    ? sharedHintLadderState.queuedAttemptSignatureHashes.filter(Boolean).slice(-16)
                     : []
             );
             const registerAttemptSignature = (attempt, options = {}) => {
@@ -9757,6 +9805,25 @@ function installSolver(APP) {
                 }
                 attempt.duplicateAttemptSignature = true;
                 return { ...(lastRegistration || {}), allowed: false, reason: 'duplicate-signature-after-diversification' };
+            };
+            // Last-resort registration for behaviorally-distinct rescues whose signature hash
+            // collides with an earlier attempt despite different policyProfile / disabledPrunes /
+            // forced-root-floor settings. Perturbs rootTieSeed (which is part of the signature
+            // tuple) with monotonically-varying nonces until a unique hash is found. The cap of
+            // 64 attempts is far above the expected collision rate and acts as a safety belt.
+            const forceRegisterAttemptWithUniqueSeed = (attempt) => {
+                if (!attempt) return { allowed: false, reason: 'missing-attempt' };
+                const baseSeed = Number.isFinite(attempt.rootTieSeed) ? Number(attempt.rootTieSeed) : 0;
+                let lastRegistration = null;
+                for (let nonce = 1; nonce <= 64; nonce++) {
+                    attempt.rootTieSeed = (baseSeed ^ ((nonce * 0x9e3779b1) >>> 0) ^ ((queuedAttemptSignatures.size * 0x85ebca6b) >>> 0)) >>> 0;
+                    lastRegistration = registerAttemptSignature(attempt, { markDuplicate: false });
+                    if (lastRegistration.allowed) {
+                        attempt.duplicateAttemptSignature = false;
+                        return { ...lastRegistration, forcedUniqueSeed: true, nonce };
+                    }
+                }
+                return { ...(lastRegistration || {}), allowed: false, reason: 'force-register-seed-exhausted' };
             };
             const extractAttemptRootKeys = (entry = null) => {
                 if (!entry) return [];
@@ -10778,9 +10845,17 @@ function installSolver(APP) {
                     const sustainedHighExpansion = recentTimeoutAttempts.length >= 2
                         && recentTimeoutAttempts.every(entry => Math.max(0, Number(entry?.quality?.nodesExpanded) || 0) >= highExpansionFloor);
                     const nonPortalBroadSearch = !portalInvolvedRun && (level?.portalMap?.size || 0) === 0;
+                    const broadStagnationProgressSignals = {
+                        depthReached: maxDepthReached,
+                        nodesExpanded
+                    };
+                    const broadStagnationCountRemaining = broadStagnationRescueCount < BROAD_STAGNATION_SOFT_CAP
+                        || (broadStagnationRescueCount < BROAD_STAGNATION_HARD_CAP
+                            && rescueProgressedSinceLastFire(broadStagnationRescueLastProgress, broadStagnationProgressSignals,
+                                { depthReached: 'higher', nodesExpanded: 'higher' }));
                     const broadStagnationDetected = timeoutProne
                         && nonPortalBroadSearch
-                        && broadStagnationRescueCount < 3
+                        && broadStagnationCountRemaining
                         && sustainedHighExpansion
                         && depthSeries.length >= 2
                         && depthPlateauBand <= 2
@@ -10800,7 +10875,16 @@ function installSolver(APP) {
                     const nearClosureLowerBoundFinite = Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
                     const nearClosureLowerBoundMet = nearClosureLowerBoundFinite
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= nearSolutionFloodLowerBoundThreshold;
-                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < 3;
+                    const nearClosureProgressSignals = {
+                        bestLowerBound: nearClosureLowerBoundFinite
+                            ? Number(attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution)
+                            : Infinity,
+                        nearStates: Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0
+                    };
+                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < NEAR_SOLUTION_FLOOD_SOFT_CAP
+                        || (nearSolutionFloodRescueCount < NEAR_SOLUTION_FLOOD_HARD_CAP
+                            && rescueProgressedSinceLastFire(nearSolutionFloodRescueLastProgress, nearClosureProgressSignals,
+                                { bestLowerBound: 'lower', nearStates: 'higher' }));
                     const nearSolutionFloodDetected = timeoutProne
                         && nearClosureCountRemaining
                         && repeatedTimeoutOutcome
@@ -10844,17 +10928,34 @@ function installSolver(APP) {
                         .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
                         .map(entry => Number(entry?.timeoutDiagnostics?.bestLowerBoundToValidSolution))
                         .filter(v => Number.isFinite(v))
-                        .slice(-3);
+                        .slice(-4);
+                    // Stalled if the bound failed to drop by more than 1 across the recent window.
+                    // Previously the predicate was strict max-min <= 1, which missed cases where
+                    // the bound oscillated by 2 between fires of different rescue variants (common
+                    // after a rescue disables/re-enables a prune). The trajectory-based check
+                    // captures both flat windows and oscillating-but-not-progressing windows while
+                    // still letting through windows where the bound made real progress.
                     const lowerBoundStalled = recentTimeoutBoundsForStall.length >= 3
-                        && (Math.max(...recentTimeoutBoundsForStall) - Math.min(...recentTimeoutBoundsForStall)) <= 1;
+                        && (recentTimeoutBoundsForStall[recentTimeoutBoundsForStall.length - 1]
+                            >= (recentTimeoutBoundsForStall[0] - 1));
                     const nearMustCrossPresent = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionByDimension?.['must-cross']) > 0;
+                    const mustCrossProgressSignals = {
+                        bestLowerBound: Number.isFinite(bestLowerBoundToValidSolution)
+                            ? Number(bestLowerBoundToValidSolution)
+                            : Infinity,
+                        remainingMustCross: remainingMustCrossValue
+                    };
+                    const mustCrossCountRemaining = mustCrossScheduleRescueCount < MUST_CROSS_SCHEDULE_SOFT_CAP
+                        || (mustCrossScheduleRescueCount < MUST_CROSS_SCHEDULE_HARD_CAP
+                            && rescueProgressedSinceLastFire(mustCrossScheduleRescueLastProgress, mustCrossProgressSignals,
+                                { bestLowerBound: 'lower', remainingMustCross: 'lower' }));
                     const mustCrossStallRescueDetected = timeoutProne
-                        && mustCrossScheduleRescueCount < 2
+                        && mustCrossCountRemaining
                         && remainingMustCrossValue > 0
                         && lowerBoundStalled
                         && nearMustCrossPresent;
                     const mustCrossScheduleRescueDetected = (timeoutProne
-                            && mustCrossScheduleRescueCount < 2
+                            && mustCrossCountRemaining
                             && remainingMustCrossValue > 0
                             && (mustCrossScheduleThresholdMet || scheduleAwareLowerBoundMet))
                         || mustCrossStallRescueDetected;
@@ -10862,7 +10963,7 @@ function installSolver(APP) {
                         ? null
                         : (!timeoutProne
                             ? 'timeoutProne'
-                            : (mustCrossScheduleRescueCount >= 2
+                            : (!mustCrossCountRemaining
                                 ? 'mustCrossScheduleRescueCount'
                                 : (remainingMustCrossValue <= 0
                                     ? 'remainingMustCross'
@@ -10882,7 +10983,34 @@ function installSolver(APP) {
                     const configureNearClosureRescueAttempt = (targetAttempt = {}, budgetHint = 1) => {
                         const existingMemo = Number(targetAttempt.memoStrictness);
                         targetAttempt.budgetMs = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
-                        targetAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(targetAttempt.disabledPrunes || [])]);
+                        // Previously this rescue unconditionally disabled mustPassBound, mustCrossBound,
+                        // and minRemOverflow. Per the 2026-04-27 audit, blanket-disabling bound-based
+                        // pruning during a near-solution flood widens the already-saturated frontier and
+                        // makes L108's symptom worse. Only disable each prune when telemetry shows it is
+                        // a plausible blocker; otherwise keep it active so it continues to manage the
+                        // frontier.
+                        const diag = attemptResult?.debug?.timeoutDiagnostics || {};
+                        const pruneCounts = attemptResult?.debug?.prune || {};
+                        const qualitySnapshot = quality || attemptResult?.quality || {};
+                        const mustCrossBlocker = (Number(qualitySnapshot.remainingMustCross) || 0) > 0
+                            || (Number(diag.mustCrossScheduleInfeasibleFrontierStates) || 0) > 0
+                            || (Number(diag.nearSolutionByDimension?.['must-cross']) || 0) > 0;
+                        const mustPassBlocker = (Number(qualitySnapshot.remainingMustPass) || 0) > 0
+                            || (Number(diag.nearSolutionByDimension?.['must-pass']) || 0) > 0;
+                        const minRemOverflowBlocker = (Number(pruneCounts.lenOverflow) || 0) > 0
+                            || (Number(pruneCounts.intsOverflow) || 0) > 0;
+                        const conditionallyDisabled = [];
+                        if (mustCrossBlocker) conditionallyDisabled.push('mustCrossBound');
+                        if (mustPassBlocker) conditionallyDisabled.push('mustPassBound');
+                        if (minRemOverflowBlocker) conditionallyDisabled.push('minRemOverflow');
+                        targetAttempt.disabledPrunes = canonicalizeDisabledPrunes([...conditionallyDisabled, ...(targetAttempt.disabledPrunes || [])]);
+                        if (attemptResult?.debug) {
+                            attemptResult.debug.nearClosureRescueDisabledPruneDecisions = {
+                                mustCrossBound: !!mustCrossBlocker,
+                                mustPassBound: !!mustPassBlocker,
+                                minRemOverflow: !!minRemOverflowBlocker
+                            };
+                        }
                         targetAttempt.memoStrictness = 0;
                         targetAttempt.rootExpansionFloorCount = Math.max(4, Number(targetAttempt.rootExpansionFloorCount) || 0);
                         targetAttempt.forceRootExpansionFloor = true;
@@ -10908,6 +11036,7 @@ function installSolver(APP) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         configureNearClosureRescueAttempt(nextAttempt, priorBudget);
                         nearSolutionFloodRescueCount++;
+                        nearSolutionFloodRescueLastProgress = nearClosureProgressSignals;
                         if (attemptResult?.debug) {
                             attemptResult.debug.rescueTriggeredNearClosure = true;
                             attemptResult.debug.nearClosureRescueActivated = true;
@@ -10938,6 +11067,7 @@ function installSolver(APP) {
                         // rescue attempt's signature collides with an earlier attempt despite being
                         // behaviorally distinct (different disabled prunes, ordering tweaks, etc.).
                         let rescueForced = false;
+                        let rescueForcedUniqueSeed = false;
                         if (!rescueRegistration.allowed) {
                             rescueAttempt.label = `${rescueAttempt.label || 'near-closure-rescue'}-force`;
                             rescueAttempt.escalationReason = 'near-closure-rescue-force';
@@ -10950,9 +11080,23 @@ function installSolver(APP) {
                             if (forcedRegistration.allowed) {
                                 rescueForced = true;
                                 rescueRegistration = forcedRegistration;
+                            } else {
+                                // Per §1.7 of the bug-hunt plan: the diversification matrix exhausted
+                                // all offsets without finding a unique signature, so previously the
+                                // rescue was silently dropped here. The rescue is behaviorally distinct
+                                // from prior attempts (different policyProfile, disabledPrunes, forced
+                                // root floor), it's only the signature HASH that collides. Force a
+                                // unique seed so the rescue actually runs instead of vanishing.
+                                const forceUnique = forceRegisterAttemptWithUniqueSeed(rescueAttempt);
+                                if (forceUnique.allowed) {
+                                    rescueForced = true;
+                                    rescueForcedUniqueSeed = true;
+                                    rescueRegistration = forceUnique;
+                                }
                             }
                         }
                         nearSolutionFloodRescueCount++;
+                        nearSolutionFloodRescueLastProgress = nearClosureProgressSignals;
                         if (attemptResult?.debug) {
                             attemptResult.debug.rescueTriggeredNearClosure = true;
                             attemptResult.debug.nearClosureRescueActivated = true;
@@ -10961,6 +11105,7 @@ function installSolver(APP) {
                                 ? null
                                 : (rescueRegistration.reason || 'duplicate-signature');
                             if (rescueForced) attemptResult.debug.nearClosureRescueForced = true;
+                            if (rescueForcedUniqueSeed) attemptResult.debug.nearClosureRescueForcedUniqueSeed = true;
                         }
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'near-closure-rescue';
@@ -10988,6 +11133,12 @@ function installSolver(APP) {
                     if (mustCrossScheduleRescueDetected && nextAttempt) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         nextAttempt.budgetMs = priorBudget;
+                        // mustCross rescue wants mustCrossBound ACTIVE so the bound-based pruning
+                        // helps locate the missing must-cross cells; the prior near-closure rescue
+                        // may have added it to disabledPrunes when its diagnostics indicated it was
+                        // blocking near-closure. Strip it here so this rescue's profile reflects its
+                        // own intent. (Not a behavioral conflict — the two rescues address opposite
+                        // failure modes.)
                         nextAttempt.disabledPrunes = canonicalizeDisabledPrunes((nextAttempt.disabledPrunes || []).filter(prune => prune !== 'mustCrossBound'));
                         nextAttempt.policyProfile = 'mustCrossFirst';
                         nextAttempt.orderingPolicy = 'mustCrossFirst';
@@ -11001,6 +11152,7 @@ function installSolver(APP) {
                             mustCrossScheduleInfeasibleFrontierStates: Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0
                         });
                         mustCrossScheduleRescueCount++;
+                        mustCrossScheduleRescueLastProgress = mustCrossProgressSignals;
                         if (attemptResult?.debug) attemptResult.debug.mustCrossRescueTriggered = true;
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'must-cross-schedule-rescue';
@@ -11027,6 +11179,7 @@ function installSolver(APP) {
                             noveltyAvoidedRootKeys: noveltyKeys || null
                         });
                         broadStagnationRescueCount++;
+                        broadStagnationRescueLastProgress = broadStagnationProgressSignals;
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'broad-stagnation-novelty-rescue';
                             currentAttemptEntry.broadStagnationDetected = true;
@@ -11039,6 +11192,10 @@ function installSolver(APP) {
                         }
                         continue;
                     }
+                    // Note: a similarly-named local in detectRapidCollapseSignature uses a stricter
+                    // threshold (>=120 nodes, no expansion signal) and gates the fallback-rescue
+                    // path. This one (post-attempt) is broader and drives novelty diversification /
+                    // family-switch / budget escalation via the context object below.
                     const healthyExpansionTimeout = timeoutProne
                         && (Number(attemptResult?.debug?.nodesExpanded) || 0) >= 110
                         && (Number(quality?.branchFactor) || 0) >= 0.2
@@ -11834,9 +11991,10 @@ function installSolver(APP) {
                 : this.getComplexityStrategy('standard', 'corridor_commitment');
             const resolvedPortalBiasMode = opts.portalBiasMode || complexityStrategy.portalBiasMode || 'adaptiveMustCross';
             const resolvedPhasePolicy = opts.phasePolicy || level.solverProfile?.phasePolicy || null;
-            // TEMP (2026-03-29): Global solver max-time multiplier for timeout investigation.
-            // Baseline was 1x. We are temporarily running at 2x to evaluate the remaining 8 failures.
-            // Revert by setting SOLVER_MAX_TIME_MULTIPLIER back to 1.
+            // Global solver max-time multiplier. Introduced on 2026-03-29 at 2x; the doubled
+            // budgets produced a meaningful jump in solves and the value is intentionally kept.
+            // This is a load-bearing knob — do NOT revert to 1x without re-baselining the audit
+            // harness (audits/metrics/*.json) on a per-level basis.
             const SOLVER_MAX_TIME_MULTIPLIER = 2;
             const scaleSolverBudget = (ms) => Math.max(1, Math.floor(ms * SOLVER_MAX_TIME_MULTIPLIER));
             const defaultBudget = purpose === 'hint' ? scaleSolverBudget(5000) : scaleSolverBudget(15000);
@@ -14890,6 +15048,10 @@ function installSolver(APP) {
                 else if (generated <= 1 && expanded <= 1) reason.push(`root-generated<=1:${generated}`);
                 if (returnedBeforeExpansionSignal) reason.push('returned-before-expansion');
                 const timeoutLike = status === 'timeout' || status === 'no-solution-inconclusive';
+                // Note: a similarly-named local at the post-attempt diagnostics site uses a different
+                // threshold (>=110 nodes plus branchFactor/maxProgress signals) and drives novelty
+                // diversification / budget escalation. This one is the fallback-gate predicate
+                // (>=120 nodes, no expansion signal) and feeds shouldActivateInteractionRootFallback.
                 const healthyExpansionTimeout = timeoutLike && nodesExpanded >= 120 && !returnedBeforeExpansionSignal;
                 const nearZeroRootFrontierThreshold = healthyExpansionTimeout ? { generatedMax: 1, expandedMax: 0 } : { generatedMax: 3, expandedMax: 1 };
                 const nearZeroRootFrontier = generated <= nearZeroRootFrontierThreshold.generatedMax && expanded <= nearZeroRootFrontierThreshold.expandedMax;
@@ -14961,9 +15123,20 @@ function installSolver(APP) {
                 const interactionComplex = hasRootInteractionComplexity(level);
                 const genericZeroExpansion = nodesExpanded === 0 || expanded === 0 || generated === 0;
                 const healthyExpansionTimeout = !!rapidCollapse?.predicates?.healthyExpansionTimeout;
-                const activate = !healthyExpansionTimeout && (!!force || rapidCollapse.rapidCollapse || genericZeroExpansion || (tooFewRoots && collapsedAtRoot));
+                // Collapse-class triggers (rapid collapse, zero expansion, too-few-roots) imply the
+                // search starved at or near the root; the rescue's root-expansion-floor mechanism
+                // is the right tool. Healthy-expansion-timeout (the L92/L108/L134 signature per the
+                // 2026-04-27 audit) is the opposite: the root expanded healthily but the search
+                // still timed out — historically this case was blocked entirely, leaving the
+                // prune-relaxation and interaction-fallback root-candidate mechanisms unreachable
+                // for the exact levels they were designed to help. Activate those mechanisms for
+                // healthy-expansion-timeout, but don't force the root expansion floor (the root
+                // already expanded healthily, so that mechanism wouldn't help).
+                const rapidCollapseClassTrigger = !!force || rapidCollapse.rapidCollapse || genericZeroExpansion || (tooFewRoots && collapsedAtRoot);
+                const healthyExpansionTimeoutTrigger = healthyExpansionTimeout && !rapidCollapseClassTrigger;
+                const activate = rapidCollapseClassTrigger || healthyExpansionTimeoutTrigger;
                 const rootExpansionFloorCount = (interactionComplex || genericZeroExpansion) ? 6 : 4;
-                const forceRootExpansionFloor = activate && (interactionComplex || genericZeroExpansion);
+                const forceRootExpansionFloor = rapidCollapseClassTrigger && (interactionComplex || genericZeroExpansion);
                 const relaxRootSuppressionFirstLayer = forceRootExpansionFloor;
                 return {
                     activate,
