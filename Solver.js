@@ -9636,8 +9636,34 @@ function installSolver(APP) {
             let consecutiveTimeoutStagnation = 0;
             let portalRetryBiasToggle = 0;
             let broadStagnationRescueCount = 0;
+            let broadStagnationRescueLastProgress = null;
             let nearSolutionFloodRescueCount = 0;
+            let nearSolutionFloodRescueLastProgress = null;
             let mustCrossScheduleRescueCount = 0;
+            let mustCrossScheduleRescueLastProgress = null;
+            // Soft caps preserve the previous "fire freely up to N" behavior. Once a soft cap is hit,
+            // the rescue may still fire if telemetry shows the relevant progress signals improved vs.
+            // the snapshot taken at the last fire — this targets the L92/L108/L134 pattern where the
+            // original flat cap silently retired the rescue exactly when it was making progress. Hard
+            // caps act as a safety belt so a marginally-progressing rescue cannot run unbounded.
+            const NEAR_SOLUTION_FLOOD_SOFT_CAP = 3;
+            const NEAR_SOLUTION_FLOOD_HARD_CAP = 6;
+            const MUST_CROSS_SCHEDULE_SOFT_CAP = 2;
+            const MUST_CROSS_SCHEDULE_HARD_CAP = 4;
+            const BROAD_STAGNATION_SOFT_CAP = 3;
+            const BROAD_STAGNATION_HARD_CAP = 6;
+            const rescueProgressedSinceLastFire = (snapshot, current, directions) => {
+                if (!snapshot) return true;
+                for (const key of Object.keys(directions)) {
+                    const cur = Number(current?.[key]);
+                    const prev = Number(snapshot?.[key]);
+                    if (!Number.isFinite(cur) || !Number.isFinite(prev)) continue;
+                    const direction = directions[key];
+                    if (direction === 'lower' && cur < prev) return true;
+                    if (direction === 'higher' && cur > prev) return true;
+                }
+                return false;
+            };
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
             const canonicalizeDisabledPrunes = (prunes = []) => {
@@ -10778,9 +10804,17 @@ function installSolver(APP) {
                     const sustainedHighExpansion = recentTimeoutAttempts.length >= 2
                         && recentTimeoutAttempts.every(entry => Math.max(0, Number(entry?.quality?.nodesExpanded) || 0) >= highExpansionFloor);
                     const nonPortalBroadSearch = !portalInvolvedRun && (level?.portalMap?.size || 0) === 0;
+                    const broadStagnationProgressSignals = {
+                        depthReached: maxDepthReached,
+                        nodesExpanded
+                    };
+                    const broadStagnationCountRemaining = broadStagnationRescueCount < BROAD_STAGNATION_SOFT_CAP
+                        || (broadStagnationRescueCount < BROAD_STAGNATION_HARD_CAP
+                            && rescueProgressedSinceLastFire(broadStagnationRescueLastProgress, broadStagnationProgressSignals,
+                                { depthReached: 'higher', nodesExpanded: 'higher' }));
                     const broadStagnationDetected = timeoutProne
                         && nonPortalBroadSearch
-                        && broadStagnationRescueCount < 3
+                        && broadStagnationCountRemaining
                         && sustainedHighExpansion
                         && depthSeries.length >= 2
                         && depthPlateauBand <= 2
@@ -10800,7 +10834,16 @@ function installSolver(APP) {
                     const nearClosureLowerBoundFinite = Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution);
                     const nearClosureLowerBoundMet = nearClosureLowerBoundFinite
                         && (attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution) <= nearSolutionFloodLowerBoundThreshold;
-                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < 3;
+                    const nearClosureProgressSignals = {
+                        bestLowerBound: nearClosureLowerBoundFinite
+                            ? Number(attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution)
+                            : Infinity,
+                        nearStates: Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0
+                    };
+                    const nearClosureCountRemaining = nearSolutionFloodRescueCount < NEAR_SOLUTION_FLOOD_SOFT_CAP
+                        || (nearSolutionFloodRescueCount < NEAR_SOLUTION_FLOOD_HARD_CAP
+                            && rescueProgressedSinceLastFire(nearSolutionFloodRescueLastProgress, nearClosureProgressSignals,
+                                { bestLowerBound: 'lower', nearStates: 'higher' }));
                     const nearSolutionFloodDetected = timeoutProne
                         && nearClosureCountRemaining
                         && repeatedTimeoutOutcome
@@ -10848,13 +10891,23 @@ function installSolver(APP) {
                     const lowerBoundStalled = recentTimeoutBoundsForStall.length >= 3
                         && (Math.max(...recentTimeoutBoundsForStall) - Math.min(...recentTimeoutBoundsForStall)) <= 1;
                     const nearMustCrossPresent = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionByDimension?.['must-cross']) > 0;
+                    const mustCrossProgressSignals = {
+                        bestLowerBound: Number.isFinite(bestLowerBoundToValidSolution)
+                            ? Number(bestLowerBoundToValidSolution)
+                            : Infinity,
+                        remainingMustCross: remainingMustCrossValue
+                    };
+                    const mustCrossCountRemaining = mustCrossScheduleRescueCount < MUST_CROSS_SCHEDULE_SOFT_CAP
+                        || (mustCrossScheduleRescueCount < MUST_CROSS_SCHEDULE_HARD_CAP
+                            && rescueProgressedSinceLastFire(mustCrossScheduleRescueLastProgress, mustCrossProgressSignals,
+                                { bestLowerBound: 'lower', remainingMustCross: 'lower' }));
                     const mustCrossStallRescueDetected = timeoutProne
-                        && mustCrossScheduleRescueCount < 2
+                        && mustCrossCountRemaining
                         && remainingMustCrossValue > 0
                         && lowerBoundStalled
                         && nearMustCrossPresent;
                     const mustCrossScheduleRescueDetected = (timeoutProne
-                            && mustCrossScheduleRescueCount < 2
+                            && mustCrossCountRemaining
                             && remainingMustCrossValue > 0
                             && (mustCrossScheduleThresholdMet || scheduleAwareLowerBoundMet))
                         || mustCrossStallRescueDetected;
@@ -10862,7 +10915,7 @@ function installSolver(APP) {
                         ? null
                         : (!timeoutProne
                             ? 'timeoutProne'
-                            : (mustCrossScheduleRescueCount >= 2
+                            : (!mustCrossCountRemaining
                                 ? 'mustCrossScheduleRescueCount'
                                 : (remainingMustCrossValue <= 0
                                     ? 'remainingMustCross'
@@ -10908,6 +10961,7 @@ function installSolver(APP) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         configureNearClosureRescueAttempt(nextAttempt, priorBudget);
                         nearSolutionFloodRescueCount++;
+                        nearSolutionFloodRescueLastProgress = nearClosureProgressSignals;
                         if (attemptResult?.debug) {
                             attemptResult.debug.rescueTriggeredNearClosure = true;
                             attemptResult.debug.nearClosureRescueActivated = true;
@@ -10953,6 +11007,7 @@ function installSolver(APP) {
                             }
                         }
                         nearSolutionFloodRescueCount++;
+                        nearSolutionFloodRescueLastProgress = nearClosureProgressSignals;
                         if (attemptResult?.debug) {
                             attemptResult.debug.rescueTriggeredNearClosure = true;
                             attemptResult.debug.nearClosureRescueActivated = true;
@@ -11001,6 +11056,7 @@ function installSolver(APP) {
                             mustCrossScheduleInfeasibleFrontierStates: Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0
                         });
                         mustCrossScheduleRescueCount++;
+                        mustCrossScheduleRescueLastProgress = mustCrossProgressSignals;
                         if (attemptResult?.debug) attemptResult.debug.mustCrossRescueTriggered = true;
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'must-cross-schedule-rescue';
@@ -11027,6 +11083,7 @@ function installSolver(APP) {
                             noveltyAvoidedRootKeys: noveltyKeys || null
                         });
                         broadStagnationRescueCount++;
+                        broadStagnationRescueLastProgress = broadStagnationProgressSignals;
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'broad-stagnation-novelty-rescue';
                             currentAttemptEntry.broadStagnationDetected = true;
