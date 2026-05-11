@@ -1388,7 +1388,12 @@ function installSolver(APP) {
                     // When there are unvisited must-cross cells (need=2, so extraVisitsLB>0),
                     // the demand-flow bound is tighter because it uses actual transit-detour
                     // distances for double-visit requirements rather than a count-based fallback.
-                    if (legacyExtraVisitsLB > 0) {
+                    // Also consult demand-flow whenever transit data is ready, even with
+                    // extraVisitsLB==0: transit distances differ from raw distances when portals
+                    // or filters are present, and that difference can yield a tighter bound even
+                    // when no must-cross revisit is required.
+                    const transitReady = !!(l?.mustCrossTransit?.ready);
+                    if (legacyExtraVisitsLB > 0 || transitReady) {
                         const demandFlowBound = this._estimateMustCrossDemandFlowBoundFrom(key, state, l);
                         if (Number.isFinite(demandFlowBound) && demandFlowBound > dpBound) return demandFlowBound;
                     }
@@ -9752,9 +9757,16 @@ function installSolver(APP) {
                     disabledPruneSet: attempt.disabledPrunes.slice()
                 });
             };
+            // Carry over a small window of recent signatures from prior hint-ladder steps so
+            // a tier-escalated retry doesn't immediately re-pick the exact configuration the
+            // last tier just exhausted. The window was previously 64, which dominated the dedup
+            // set with stale configurations from much earlier in the ladder and forced the
+            // diversification matrix to spend offsets resolving collisions before exploring
+            // genuinely novel rows. 16 retains the "don't repeat the last few attempts"
+            // intent while dropping the stale tail.
             const queuedAttemptSignatures = new Set(
                 Array.isArray(sharedHintLadderState?.queuedAttemptSignatureHashes)
-                    ? sharedHintLadderState.queuedAttemptSignatureHashes.filter(Boolean).slice(-64)
+                    ? sharedHintLadderState.queuedAttemptSignatureHashes.filter(Boolean).slice(-16)
                     : []
             );
             const registerAttemptSignature = (attempt, options = {}) => {
@@ -10916,9 +10928,16 @@ function installSolver(APP) {
                         .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
                         .map(entry => Number(entry?.timeoutDiagnostics?.bestLowerBoundToValidSolution))
                         .filter(v => Number.isFinite(v))
-                        .slice(-3);
+                        .slice(-4);
+                    // Stalled if the bound failed to drop by more than 1 across the recent window.
+                    // Previously the predicate was strict max-min <= 1, which missed cases where
+                    // the bound oscillated by 2 between fires of different rescue variants (common
+                    // after a rescue disables/re-enables a prune). The trajectory-based check
+                    // captures both flat windows and oscillating-but-not-progressing windows while
+                    // still letting through windows where the bound made real progress.
                     const lowerBoundStalled = recentTimeoutBoundsForStall.length >= 3
-                        && (Math.max(...recentTimeoutBoundsForStall) - Math.min(...recentTimeoutBoundsForStall)) <= 1;
+                        && (recentTimeoutBoundsForStall[recentTimeoutBoundsForStall.length - 1]
+                            >= (recentTimeoutBoundsForStall[0] - 1));
                     const nearMustCrossPresent = Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionByDimension?.['must-cross']) > 0;
                     const mustCrossProgressSignals = {
                         bestLowerBound: Number.isFinite(bestLowerBoundToValidSolution)
@@ -11114,6 +11133,12 @@ function installSolver(APP) {
                     if (mustCrossScheduleRescueDetected && nextAttempt) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         nextAttempt.budgetMs = priorBudget;
+                        // mustCross rescue wants mustCrossBound ACTIVE so the bound-based pruning
+                        // helps locate the missing must-cross cells; the prior near-closure rescue
+                        // may have added it to disabledPrunes when its diagnostics indicated it was
+                        // blocking near-closure. Strip it here so this rescue's profile reflects its
+                        // own intent. (Not a behavioral conflict — the two rescues address opposite
+                        // failure modes.)
                         nextAttempt.disabledPrunes = canonicalizeDisabledPrunes((nextAttempt.disabledPrunes || []).filter(prune => prune !== 'mustCrossBound'));
                         nextAttempt.policyProfile = 'mustCrossFirst';
                         nextAttempt.orderingPolicy = 'mustCrossFirst';
@@ -11966,9 +11991,10 @@ function installSolver(APP) {
                 : this.getComplexityStrategy('standard', 'corridor_commitment');
             const resolvedPortalBiasMode = opts.portalBiasMode || complexityStrategy.portalBiasMode || 'adaptiveMustCross';
             const resolvedPhasePolicy = opts.phasePolicy || level.solverProfile?.phasePolicy || null;
-            // TEMP (2026-03-29): Global solver max-time multiplier for timeout investigation.
-            // Baseline was 1x. We are temporarily running at 2x to evaluate the remaining 8 failures.
-            // Revert by setting SOLVER_MAX_TIME_MULTIPLIER back to 1.
+            // Global solver max-time multiplier. Introduced on 2026-03-29 at 2x; the doubled
+            // budgets produced a meaningful jump in solves and the value is intentionally kept.
+            // This is a load-bearing knob — do NOT revert to 1x without re-baselining the audit
+            // harness (audits/metrics/*.json) on a per-level basis.
             const SOLVER_MAX_TIME_MULTIPLIER = 2;
             const scaleSolverBudget = (ms) => Math.max(1, Math.floor(ms * SOLVER_MAX_TIME_MULTIPLIER));
             const defaultBudget = purpose === 'hint' ? scaleSolverBudget(5000) : scaleSolverBudget(15000);
