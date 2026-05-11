@@ -9794,6 +9794,25 @@ function installSolver(APP) {
                 attempt.duplicateAttemptSignature = true;
                 return { ...(lastRegistration || {}), allowed: false, reason: 'duplicate-signature-after-diversification' };
             };
+            // Last-resort registration for behaviorally-distinct rescues whose signature hash
+            // collides with an earlier attempt despite different policyProfile / disabledPrunes /
+            // forced-root-floor settings. Perturbs rootTieSeed (which is part of the signature
+            // tuple) with monotonically-varying nonces until a unique hash is found. The cap of
+            // 64 attempts is far above the expected collision rate and acts as a safety belt.
+            const forceRegisterAttemptWithUniqueSeed = (attempt) => {
+                if (!attempt) return { allowed: false, reason: 'missing-attempt' };
+                const baseSeed = Number.isFinite(attempt.rootTieSeed) ? Number(attempt.rootTieSeed) : 0;
+                let lastRegistration = null;
+                for (let nonce = 1; nonce <= 64; nonce++) {
+                    attempt.rootTieSeed = (baseSeed ^ ((nonce * 0x9e3779b1) >>> 0) ^ ((queuedAttemptSignatures.size * 0x85ebca6b) >>> 0)) >>> 0;
+                    lastRegistration = registerAttemptSignature(attempt, { markDuplicate: false });
+                    if (lastRegistration.allowed) {
+                        attempt.duplicateAttemptSignature = false;
+                        return { ...lastRegistration, forcedUniqueSeed: true, nonce };
+                    }
+                }
+                return { ...(lastRegistration || {}), allowed: false, reason: 'force-register-seed-exhausted' };
+            };
             const extractAttemptRootKeys = (entry = null) => {
                 if (!entry) return [];
                 const forced = Array.isArray(entry?.forcedRootSelectedKeys) ? entry.forcedRootSelectedKeys : [];
@@ -11029,6 +11048,7 @@ function installSolver(APP) {
                         // rescue attempt's signature collides with an earlier attempt despite being
                         // behaviorally distinct (different disabled prunes, ordering tweaks, etc.).
                         let rescueForced = false;
+                        let rescueForcedUniqueSeed = false;
                         if (!rescueRegistration.allowed) {
                             rescueAttempt.label = `${rescueAttempt.label || 'near-closure-rescue'}-force`;
                             rescueAttempt.escalationReason = 'near-closure-rescue-force';
@@ -11041,6 +11061,19 @@ function installSolver(APP) {
                             if (forcedRegistration.allowed) {
                                 rescueForced = true;
                                 rescueRegistration = forcedRegistration;
+                            } else {
+                                // Per §1.7 of the bug-hunt plan: the diversification matrix exhausted
+                                // all offsets without finding a unique signature, so previously the
+                                // rescue was silently dropped here. The rescue is behaviorally distinct
+                                // from prior attempts (different policyProfile, disabledPrunes, forced
+                                // root floor), it's only the signature HASH that collides. Force a
+                                // unique seed so the rescue actually runs instead of vanishing.
+                                const forceUnique = forceRegisterAttemptWithUniqueSeed(rescueAttempt);
+                                if (forceUnique.allowed) {
+                                    rescueForced = true;
+                                    rescueForcedUniqueSeed = true;
+                                    rescueRegistration = forceUnique;
+                                }
                             }
                         }
                         nearSolutionFloodRescueCount++;
@@ -11053,6 +11086,7 @@ function installSolver(APP) {
                                 ? null
                                 : (rescueRegistration.reason || 'duplicate-signature');
                             if (rescueForced) attemptResult.debug.nearClosureRescueForced = true;
+                            if (rescueForcedUniqueSeed) attemptResult.debug.nearClosureRescueForcedUniqueSeed = true;
                         }
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'near-closure-rescue';
