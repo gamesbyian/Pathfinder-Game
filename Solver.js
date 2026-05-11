@@ -11039,6 +11039,10 @@ function installSolver(APP) {
                         }
                         continue;
                     }
+                    // Note: a similarly-named local in detectRapidCollapseSignature uses a stricter
+                    // threshold (>=120 nodes, no expansion signal) and gates the fallback-rescue
+                    // path. This one (post-attempt) is broader and drives novelty diversification /
+                    // family-switch / budget escalation via the context object below.
                     const healthyExpansionTimeout = timeoutProne
                         && (Number(attemptResult?.debug?.nodesExpanded) || 0) >= 110
                         && (Number(quality?.branchFactor) || 0) >= 0.2
@@ -14890,6 +14894,10 @@ function installSolver(APP) {
                 else if (generated <= 1 && expanded <= 1) reason.push(`root-generated<=1:${generated}`);
                 if (returnedBeforeExpansionSignal) reason.push('returned-before-expansion');
                 const timeoutLike = status === 'timeout' || status === 'no-solution-inconclusive';
+                // Note: a similarly-named local at the post-attempt diagnostics site uses a different
+                // threshold (>=110 nodes plus branchFactor/maxProgress signals) and drives novelty
+                // diversification / budget escalation. This one is the fallback-gate predicate
+                // (>=120 nodes, no expansion signal) and feeds shouldActivateInteractionRootFallback.
                 const healthyExpansionTimeout = timeoutLike && nodesExpanded >= 120 && !returnedBeforeExpansionSignal;
                 const nearZeroRootFrontierThreshold = healthyExpansionTimeout ? { generatedMax: 1, expandedMax: 0 } : { generatedMax: 3, expandedMax: 1 };
                 const nearZeroRootFrontier = generated <= nearZeroRootFrontierThreshold.generatedMax && expanded <= nearZeroRootFrontierThreshold.expandedMax;
@@ -14961,9 +14969,20 @@ function installSolver(APP) {
                 const interactionComplex = hasRootInteractionComplexity(level);
                 const genericZeroExpansion = nodesExpanded === 0 || expanded === 0 || generated === 0;
                 const healthyExpansionTimeout = !!rapidCollapse?.predicates?.healthyExpansionTimeout;
-                const activate = !healthyExpansionTimeout && (!!force || rapidCollapse.rapidCollapse || genericZeroExpansion || (tooFewRoots && collapsedAtRoot));
+                // Collapse-class triggers (rapid collapse, zero expansion, too-few-roots) imply the
+                // search starved at or near the root; the rescue's root-expansion-floor mechanism
+                // is the right tool. Healthy-expansion-timeout (the L92/L108/L134 signature per the
+                // 2026-04-27 audit) is the opposite: the root expanded healthily but the search
+                // still timed out — historically this case was blocked entirely, leaving the
+                // prune-relaxation and interaction-fallback root-candidate mechanisms unreachable
+                // for the exact levels they were designed to help. Activate those mechanisms for
+                // healthy-expansion-timeout, but don't force the root expansion floor (the root
+                // already expanded healthily, so that mechanism wouldn't help).
+                const rapidCollapseClassTrigger = !!force || rapidCollapse.rapidCollapse || genericZeroExpansion || (tooFewRoots && collapsedAtRoot);
+                const healthyExpansionTimeoutTrigger = healthyExpansionTimeout && !rapidCollapseClassTrigger;
+                const activate = rapidCollapseClassTrigger || healthyExpansionTimeoutTrigger;
                 const rootExpansionFloorCount = (interactionComplex || genericZeroExpansion) ? 6 : 4;
-                const forceRootExpansionFloor = activate && (interactionComplex || genericZeroExpansion);
+                const forceRootExpansionFloor = rapidCollapseClassTrigger && (interactionComplex || genericZeroExpansion);
                 const relaxRootSuppressionFirstLayer = forceRootExpansionFloor;
                 return {
                     activate,
