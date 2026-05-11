@@ -10935,7 +10935,34 @@ function installSolver(APP) {
                     const configureNearClosureRescueAttempt = (targetAttempt = {}, budgetHint = 1) => {
                         const existingMemo = Number(targetAttempt.memoStrictness);
                         targetAttempt.budgetMs = Math.max(1, Number(targetAttempt?.budgetMs) || Number(budgetHint) || 1);
-                        targetAttempt.disabledPrunes = canonicalizeDisabledPrunes(['mustPassBound', 'mustCrossBound', 'minRemOverflow', ...(targetAttempt.disabledPrunes || [])]);
+                        // Previously this rescue unconditionally disabled mustPassBound, mustCrossBound,
+                        // and minRemOverflow. Per the 2026-04-27 audit, blanket-disabling bound-based
+                        // pruning during a near-solution flood widens the already-saturated frontier and
+                        // makes L108's symptom worse. Only disable each prune when telemetry shows it is
+                        // a plausible blocker; otherwise keep it active so it continues to manage the
+                        // frontier.
+                        const diag = attemptResult?.debug?.timeoutDiagnostics || {};
+                        const pruneCounts = attemptResult?.debug?.prune || {};
+                        const qualitySnapshot = quality || attemptResult?.quality || {};
+                        const mustCrossBlocker = (Number(qualitySnapshot.remainingMustCross) || 0) > 0
+                            || (Number(diag.mustCrossScheduleInfeasibleFrontierStates) || 0) > 0
+                            || (Number(diag.nearSolutionByDimension?.['must-cross']) || 0) > 0;
+                        const mustPassBlocker = (Number(qualitySnapshot.remainingMustPass) || 0) > 0
+                            || (Number(diag.nearSolutionByDimension?.['must-pass']) || 0) > 0;
+                        const minRemOverflowBlocker = (Number(pruneCounts.lenOverflow) || 0) > 0
+                            || (Number(pruneCounts.intsOverflow) || 0) > 0;
+                        const conditionallyDisabled = [];
+                        if (mustCrossBlocker) conditionallyDisabled.push('mustCrossBound');
+                        if (mustPassBlocker) conditionallyDisabled.push('mustPassBound');
+                        if (minRemOverflowBlocker) conditionallyDisabled.push('minRemOverflow');
+                        targetAttempt.disabledPrunes = canonicalizeDisabledPrunes([...conditionallyDisabled, ...(targetAttempt.disabledPrunes || [])]);
+                        if (attemptResult?.debug) {
+                            attemptResult.debug.nearClosureRescueDisabledPruneDecisions = {
+                                mustCrossBound: !!mustCrossBlocker,
+                                mustPassBound: !!mustPassBlocker,
+                                minRemOverflow: !!minRemOverflowBlocker
+                            };
+                        }
                         targetAttempt.memoStrictness = 0;
                         targetAttempt.rootExpansionFloorCount = Math.max(4, Number(targetAttempt.rootExpansionFloorCount) || 0);
                         targetAttempt.forceRootExpansionFloor = true;
