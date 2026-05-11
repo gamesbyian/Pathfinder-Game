@@ -4422,12 +4422,29 @@ function installSolver(APP) {
                         const minRemForLowerBound = distMap.get(lastK) || Infinity;
                         const portalCoverageIncomplete = typeof state.portal?.portalRequiredCoverageMask === 'bigint'
                             && state.portal.portalRequiredCoverageMask !== 0n;
+                        // Previously this term was a magic constant of 2 whenever portal coverage
+                        // was incomplete, on the assumption that completing portal coverage took
+                        // at least 2 steps. In practice, completing portal coverage from a state
+                        // near the goal often requires a substantial detour back through a portal
+                        // family — the real cost can be 4, 6, or infinite (no feasible detour).
+                        // The constant-2 floor masqueraded as "near-solution" 97% of L108's and
+                        // 100% of L134's near-misses, pinning bestLowerBoundToValidSolution at 2
+                        // across every attempt and feeding the rescue cascade dead-end states.
+                        // _estimatePortalMandatoryFamilyBoundFrom is the existing admissible bound
+                        // (toObjective + MST over outstanding families + family-to-goal) and is
+                        // already used inside _portalAwareLowerBound for search-time pruning.
+                        let portalCoverageBoundComponent = 0;
+                        if (portalCoverageIncomplete) {
+                            const detail = this._estimatePortalMandatoryFamilyBoundFrom(lastK, state.portal.portalRequiredCoverageMask, l);
+                            const b = Number(detail?.bound);
+                            portalCoverageBoundComponent = Number.isFinite(b) ? b : Infinity;
+                        }
                         const lowerBoundToValidSolution = Math.max(
                             Number.isFinite(minRemForLowerBound) ? minRemForLowerBound : Infinity,
                             Number.isFinite(mustPassBoundEstimate) ? mustPassBoundEstimate : Infinity,
                             Number.isFinite(mustCrossBoundEstimate) ? mustCrossBoundEstimate : Infinity,
                             interactionDeficit,
-                            portalCoverageIncomplete ? 2 : 0
+                            portalCoverageBoundComponent
                         );
                         const missingDimensions = [];
                         if (remainingMustPass > 0) missingDimensions.push('must-pass');
