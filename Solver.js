@@ -9713,7 +9713,16 @@ function installSolver(APP) {
                 { rootOrderingProfile: 'portalFirstTransfer', orderingPolicy: 'portalFirstTransfer', beamCompositionRule: 'adaptive-relaxed', rootExpansionFloorCount: 1, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'agnostic', disabledPrunes: ['mustCrossBound'] },
                 { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
                 // 5th entry: maximum pruning relaxation for near-solution flood / must-cross deadlock patterns
-                { rootOrderingProfile: 'endurance', orderingPolicy: 'endurance', beamCompositionRule: 'floor-4-endurance', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['mustPassBound', 'mustCrossBound'] }
+                { rootOrderingProfile: 'endurance', orderingPolicy: 'endurance', beamCompositionRule: 'floor-4-endurance', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
+                // Entries 6-8 extend the matrix beyond the prior `% 5` cycle so that late-cascade
+                // retries (timeoutLikeCount >= 5) explore qualitatively different configurations
+                // before any rows recycle. Each adds an axis the original 5 did not vary:
+                //  - row 6: harvestThenFinish + memo-relaxed (low memoStrictness) + length-pruning relaxation
+                //  - row 7: portalCommitted + memo-strict (high memoStrictness) + portal-automaton relaxation
+                //  - row 8: mustCrossFirst + connectivity relaxation, for must-cross-deadlock patterns
+                { rootOrderingProfile: 'harvestThenFinish', orderingPolicy: 'harvestThenFinish', beamCompositionRule: 'floor-3-broad', rootExpansionFloorCount: 3, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['minRemOverflow'], memoStrictness: 0.6 },
+                { rootOrderingProfile: 'portalCommitted', orderingPolicy: 'portalCommitted', beamCompositionRule: 'floor-2-portal', rootExpansionFloorCount: 2, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'off', disabledPrunes: ['portalAutomaton'], memoStrictness: 1.6 },
+                { rootOrderingProfile: 'mustCrossFirst', orderingPolicy: 'mustCrossFirst', beamCompositionRule: 'floor-4-must-cross', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['connectivity'], memoStrictness: 0.8 }
             ];
             const applyDeterministicDiversificationMatrix = (attempt, context = {}) => {
                 if (!attempt) return null;
@@ -9731,6 +9740,7 @@ function installSolver(APP) {
                 attempt.relaxRootSuppressionFirstLayer = row.relaxRootSuppressionFirstLayer;
                 attempt.portalBiasMode = row.portalBiasMode;
                 attempt.disabledPrunes = canonicalizeDisabledPrunes([...(attempt?.disabledPrunes || []), ...(row.disabledPrunes || [])]);
+                if (Number.isFinite(row.memoStrictness)) attempt.memoStrictness = Number(row.memoStrictness);
                 const seededBase = Number.isFinite(attempt.rootTieSeed) ? Number(attempt.rootTieSeed) : 0;
                 attempt.rootTieSeed = (seededBase ^ ((idx + 1) * 2654435761 >>> 0)) >>> 0;
                 applyAttemptSignature(attempt);
