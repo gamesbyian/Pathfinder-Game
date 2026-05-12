@@ -8243,15 +8243,6 @@ function installSolver(APP) {
                             reason: cutMandatory ? 'parity-cut-dominator' : 'parity-endpoint-dominator'
                         });
                     } else {
-                        // The loose mandatoryLike heuristic at portal-pair enumeration (fromDeg<=2,
-                        // toDeg<=2, objectiveNear, region-bridge) may have flagged this family as
-                        // mandatory. The rigorous parity-aware reachability check above proves a
-                        // feasible (start → goal) path exists without it — the family is genuinely
-                        // OPTIONAL. Demote it: leaving it in mandatoryFamilySet would force the
-                        // solver to bias toward an unnecessary portal traversal and would inflate
-                        // portalRequiredCoverageMask, causing "portal-coverage near-miss" timeouts
-                        // on levels that are solvable without the portal (e.g. L108).
-                        mandatoryFamilySet.delete(fam);
                         optionalFamilySet.add(fam);
                     }
                 }
