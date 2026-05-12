@@ -5424,9 +5424,22 @@ function installSolver(APP) {
                         }
                         level.portalFamilyCount = level.portalVisuals.length;
                     }
-                    if (portalHints && Array.isArray(portalHints.mandatoryFamilies)) {
-                        for (let i = 0; i < portalHints.mandatoryFamilies.length; i++) {
-                            const famIdx = portalHints.mandatoryFamilies[i];
+                    // portalRequiredCoverageMask is the HARD constraint enforced by
+                    // _checkFinalConstraints: a state is only a valid solution if every bit in
+                    // this mask is cleared (all required portal families covered). Use the
+                    // rigorously-proven set if available; fall back to the loose mandatoryFamilies
+                    // list when an older portalHints payload doesn't include the rigorous field.
+                    // The loose set is used elsewhere for scoring boosts and portal-aware pruning
+                    // bias — that's the right place for an over-inclusive heuristic; the hard
+                    // constraint must only fire on families that are actually required, otherwise
+                    // levels solvable without portals (e.g. L108) get their valid non-portal
+                    // solutions rejected.
+                    const hardConstraintFamilies = Array.isArray(portalHints?.provablyMandatoryFamilies)
+                        ? portalHints.provablyMandatoryFamilies
+                        : (Array.isArray(portalHints?.mandatoryFamilies) ? portalHints.mandatoryFamilies : null);
+                    if (hardConstraintFamilies) {
+                        for (let i = 0; i < hardConstraintFamilies.length; i++) {
+                            const famIdx = hardConstraintFamilies[i];
                             if (!Number.isFinite(famIdx) || famIdx < 0) continue;
                             mandatoryFamilyMask |= (1n << BigInt(famIdx));
                         }
@@ -8131,6 +8144,19 @@ function installSolver(APP) {
                 });
             }
             const mandatoryFamilySet = new Set(portalBridgeHints.filter((h) => h.mandatoryLike).map((h) => h.familyId));
+            // mandatoryFamilySet (loose) is the union of the heuristic mandatoryLike flags
+            // (fromDeg<=2, toDeg<=2, objectiveNear, region-bridge) plus any families the
+            // rigorous parity-aware reachability check below proves mandatory. It's used as a
+            // HEURISTIC BIAS — scoring boosts (mandatoryBoost at the heuristic context) and
+            // search-time pruning via _portalAwareLowerBound — where over-inclusion just biases
+            // search toward portals the level likely uses (faster solves on portal levels).
+            //
+            // provablyMandatoryFamilySet (rigorous-only) contains ONLY families that fail
+            // "still reachable without me" — i.e. genuinely required for any solution. It's
+            // used as the HARD CONSTRAINT — portalRequiredCoverageMask gates _checkFinalConstraints
+            // — so that levels like L108 (solvable without portals) don't get their non-portal
+            // solutions rejected by an over-inclusive coverage mask.
+            const provablyMandatoryFamilySet = new Set();
             const optionalFamilySet = new Set();
             const walkableKeys = Array.isArray(topology.walkableKeys) ? topology.walkableKeys : [];
             const walkableSet = (level?.blockSet instanceof Set)
@@ -8237,6 +8263,7 @@ function installSolver(APP) {
                     }
                     if (cutMandatory || endpointDominates) {
                         mandatoryFamilySet.add(fam);
+                        provablyMandatoryFamilySet.add(fam);
                         portalBridgeHints.push({
                             familyId: fam,
                             mandatoryLike: true,
@@ -8256,6 +8283,7 @@ function installSolver(APP) {
                 regionByKey,
                 bridgeHints: portalBridgeHints,
                 mandatoryFamilies: Array.from(mandatoryFamilySet).sort((a, b) => a - b),
+                provablyMandatoryFamilies: Array.from(provablyMandatoryFamilySet).sort((a, b) => a - b),
                 optionalFamilies: Array.from(optionalFamilySet).filter((f) => !mandatoryFamilySet.has(f)).sort((a, b) => a - b)
             };
         },
