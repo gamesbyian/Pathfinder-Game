@@ -536,7 +536,12 @@ function installSolver(APP) {
                         portalLastProgressValue: -1,
                         portalLastFamily: -1,
                         portalLastRegion: -1,
-                        portalRequiredCoverageMask: typeof portalAutomaton?.mandatoryMask === 'bigint' ? portalAutomaton.mandatoryMask : 0n,
+                        // Initialize from the rigorously-proven mandatory mask (drives
+                        // _checkFinalConstraints), not the loose heuristic mask which is used
+                        // elsewhere for macro-plan commitment and scoring bias.
+                        portalRequiredCoverageMask: (typeof portalAutomaton?.provablyMandatoryMask === 'bigint'
+                            ? portalAutomaton.provablyMandatoryMask
+                            : (typeof portalAutomaton?.mandatoryMask === 'bigint' ? portalAutomaton.mandatoryMask : 0n)),
                         portalReentryBudget: portalReentryCap,
                         portalOscillationBudget: portalOscillationCap
                     };
@@ -5424,25 +5429,34 @@ function installSolver(APP) {
                         }
                         level.portalFamilyCount = level.portalVisuals.length;
                     }
-                    // portalRequiredCoverageMask is the HARD constraint enforced by
-                    // _checkFinalConstraints: a state is only a valid solution if every bit in
-                    // this mask is cleared (all required portal families covered). Use the
-                    // rigorously-proven set if available; fall back to the loose mandatoryFamilies
-                    // list when an older portalHints payload doesn't include the rigorous field.
-                    // The loose set is used elsewhere for scoring boosts and portal-aware pruning
-                    // bias — that's the right place for an over-inclusive heuristic; the hard
-                    // constraint must only fire on families that are actually required, otherwise
-                    // levels solvable without portals (e.g. L108) get their valid non-portal
-                    // solutions rejected.
-                    const hardConstraintFamilies = Array.isArray(portalHints?.provablyMandatoryFamilies)
-                        ? portalHints.provablyMandatoryFamilies
-                        : (Array.isArray(portalHints?.mandatoryFamilies) ? portalHints.mandatoryFamilies : null);
-                    if (hardConstraintFamilies) {
-                        for (let i = 0; i < hardConstraintFamilies.length; i++) {
-                            const famIdx = hardConstraintFamilies[i];
+                    let provablyMandatoryFamilyMask = 0n;
+                    if (portalHints && Array.isArray(portalHints.mandatoryFamilies)) {
+                        for (let i = 0; i < portalHints.mandatoryFamilies.length; i++) {
+                            const famIdx = portalHints.mandatoryFamilies[i];
                             if (!Number.isFinite(famIdx) || famIdx < 0) continue;
                             mandatoryFamilyMask |= (1n << BigInt(famIdx));
                         }
+                    }
+                    // mandatoryFamilyMask above (LOOSE) drives macro-plan commitment (which
+                    // portal families are "required" vs "optional" vs "avoid" during plan
+                    // construction) and other heuristic biases via portalAutomaton.mandatoryMask.
+                    // Over-inclusion is the right default there — it keeps plan commitment and
+                    // scoring boost coordinated.
+                    //
+                    // provablyMandatoryFamilyMask (RIGOROUS-only) feeds the HARD constraint at
+                    // _initializePortalState (portalRequiredCoverageMask) only — _checkFinalConstraints
+                    // requires every set bit to be cleared. Using the rigorous set ensures levels
+                    // solvable without portals (e.g. L108) get their non-portal solutions accepted.
+                    if (portalHints && Array.isArray(portalHints.provablyMandatoryFamilies)) {
+                        for (let i = 0; i < portalHints.provablyMandatoryFamilies.length; i++) {
+                            const famIdx = portalHints.provablyMandatoryFamilies[i];
+                            if (!Number.isFinite(famIdx) || famIdx < 0) continue;
+                            provablyMandatoryFamilyMask |= (1n << BigInt(famIdx));
+                        }
+                    } else {
+                        // Older portalHints payload without the rigorous field — fall back to
+                        // loose. Preserves prior behavior for cached profiles.
+                        provablyMandatoryFamilyMask = mandatoryFamilyMask;
                     }
                     const familyDistMaps = [];
                     const familyToGoalDist = [];
@@ -5490,6 +5504,7 @@ function installSolver(APP) {
                         familyByEntry: level.portalFamilyByEntry,
                         regionByKey: level.portalRegionByKey,
                         mandatoryMask: mandatoryFamilyMask,
+                        provablyMandatoryMask: provablyMandatoryFamilyMask,
                         familyDistMaps,
                         familyToGoalDist,
                         familyPairDist
