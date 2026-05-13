@@ -27,7 +27,8 @@
             reqInt,
             highReqIntThreshold,
             attemptOrdinal,
-            landmarkCountSign: true
+            landmarkCountSign: true,
+            mustPassUrgencySign: -1
         });
     };
     const HEURISTIC_FEATURE_FLAGS_SAFE_DEFAULTS = Object.freeze({
@@ -37,7 +38,8 @@
         highReqInt: false,
         reqInt: 0,
         highReqIntThreshold: 3,
-        landmarkCountSign: true
+        landmarkCountSign: true,
+        mustPassUrgencySign: -1
     });
     let heuristicFeatureFlagsResolverAuditLogged = false;
     const logHeuristicFeatureFlagsResolverAuditErrorOnce = (code, detail = {}) => {
@@ -2840,7 +2842,12 @@ function installSolver(APP) {
                                 pushDriver('lengthPressure', depthDeficitAfterMove, lengthPressureContribution);
                             }
 
-                            const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
+                            const rawMustContribution = (mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
+                            const mustPassUrgencySignRaw = Number(heuristicFeatureFlags?.mustPassUrgencySign);
+                            const mustPassUrgencySign = mustPassUrgencySignRaw === 1
+                                ? 1
+                                : (mustPassUrgencySignRaw === 0 ? 0 : -1);
+                            const mustContribution = rawMustContribution * mustPassUrgencySign;
                             const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * mustCrossUrgencyWeight);
                             score += mustContribution;
                             score += crossContribution;
