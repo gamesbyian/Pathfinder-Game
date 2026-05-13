@@ -2709,8 +2709,8 @@ function installSolver(APP) {
                         }
 
                         if (scoringProfile === 'endurance') {
-                            score += (mustBound === Infinity ? 100000 : mustBound * 6);
-                            score += (crossBound === Infinity ? 100000 : crossBound * 6);
+                            score -= (mustBound === Infinity ? 100000 : mustBound * 6);
+                            score -= (crossBound === Infinity ? 100000 : crossBound * 6);
                             if (crossNeed > 0) score += crossNeed * 2;
                             score += (distMap.get(nk) ?? 999);
                         } else {
@@ -2840,29 +2840,25 @@ function installSolver(APP) {
                                 pushDriver('lengthPressure', depthDeficitAfterMove, lengthPressureContribution);
                             }
 
-                            // Obligation bounds are lower-bound remaining work estimates, so larger values are
-                            // always worse. Keep them as positive penalties because the solver
-                            // minimizes score; the previous negative sign inverted this gradient.
-                            const mustContribution = (mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
-                            const crossContribution = (crossBound === Infinity ? 100000 : crossBound * gravityMult * mustCrossUrgencyWeight);
+                            const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
+                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * mustCrossUrgencyWeight);
                             score += mustContribution;
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
                             pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
                             // LANDMARK COUNT HEURISTIC (h_L): dominant flat cost per unmet
-                            // must-pass / must-cross landmark. Each unmet landmark must increase
-                            // total cost because lower scores are preferred by candidate ordering.
-                            // Replay diagnostics on L92 confirmed the old sign inversion here and
-                            // in bound urgency terms was rewarding states that move away from obligations.
+                            // must-pass / must-cross landmark. Each unmet landmark subtracts a
+                            // large fixed amount so satisfying one raises score, making satisfied
+                            // states strictly preferred (heuristicFeatureFlags.landmarkCountSign).
                             const totalLandmarksUnmet = remainingMustAfterMove + projectedCrossNeed;
                             if (totalLandmarksUnmet > 0) {
                                 const lcp = totalLandmarksUnmet * 600;
                                 if (heuristicFeatureFlags?.landmarkCountSign) {
-                                    score += lcp;
-                                } else {
                                     score -= lcp;
+                                } else {
+                                    score += lcp;
                                 }
-                                pushDriver('landmarkCount', totalLandmarksUnmet, heuristicFeatureFlags?.landmarkCountSign ? lcp : -lcp);
+                                pushDriver('landmarkCount', totalLandmarksUnmet, heuristicFeatureFlags?.landmarkCountSign ? -lcp : lcp);
                             }
                             // Intersection-schedule penalty: penalize paths that are behind the
                             // expected intersection accumulation rate. Only applied when
