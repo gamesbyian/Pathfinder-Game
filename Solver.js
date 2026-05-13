@@ -920,6 +920,116 @@ function installSolver(APP) {
                         const goalDistFires = Number.isFinite(goalDist) && goalDist > rSteps;
                         const anyHardPruneFires = mustBoundFires || mustCrossBoundFires || portalBoundFires || goalDistFires;
 
+                        // Rank-audit: at each step, for every legal Manhattan-neighbor (+ portal
+                        // jump) of the CURRENT cell, simulate moving there and compute the
+                        // resulting bounds. Lower-bound-sum is a first-order approximation of
+                        // the score (since each bound enters the score with a negative weight
+                        // and the search picks the candidate with the highest score under max-
+                        // via-pop). If the hint's chosen next cell (hintPath[i+1]) doesn't rank
+                        // first among siblings by this approximation, the heuristic disagrees
+                        // with the witness — that's the rank-mismatch signal the research memos
+                        // recommend (Corrêa-Pereira-Ritt 2018, "rank not estimate").
+                        let rankAudit = null;
+                        if (i + 1 < hintPath.length && level.distMapForSolver) {
+                            const cellP = APP.LevelUtils.UNPACK(cellKey);
+                            const w = Number(level?.grid?.w) || 0;
+                            const h = Number(level?.grid?.h) || 0;
+                            const nextChosen = hintPath[i + 1];
+                            const candidateCells = [];
+                            for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                                const nx = cellP.x + dx;
+                                const ny = cellP.y + dy;
+                                if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                                const cand = APP.LevelUtils.PACK(nx, ny);
+                                if (level.blockSet?.has(cand)) continue;
+                                if (level.gooseSet?.has(cand) && cand !== nextChosen) continue;
+                                candidateCells.push({ cell: cand, kind: 'walk' });
+                            }
+                            const portalEdge = level.portalMap?.get(cellKey);
+                            if (portalEdge && Number.isFinite(portalEdge.dest) && !level.blockSet?.has(portalEdge.dest)) {
+                                candidateCells.push({ cell: portalEdge.dest, kind: 'portal-jump' });
+                            }
+                            const candidates = [];
+                            for (const { cell: candCell, kind } of candidateCells) {
+                                let candMustMask = mustMask;
+                                const mpIdx = level.mustPassIndex?.get(candCell);
+                                if (mpIdx !== undefined) candMustMask &= ~(1n << BigInt(mpIdx));
+                                let candMustCrossMask = mustCrossMask;
+                                const candMustCrossCounts = Array.from(mustCrossCounts);
+                                const mcIdx = level.mustCrossIndex?.get(candCell);
+                                if (mcIdx !== undefined) {
+                                    if (candMustCrossCounts[mcIdx] < 255) candMustCrossCounts[mcIdx]++;
+                                    if (candMustCrossCounts[mcIdx] >= 2) candMustCrossMask &= ~(1n << BigInt(mcIdx));
+                                }
+                                let candPortalMask = portalState.portalRequiredCoverageMask;
+                                const candFam = level.portalFamilyByEntry?.get(candCell);
+                                if (Number.isFinite(candFam) && candFam >= 0) {
+                                    candPortalMask &= ~(1n << BigInt(candFam));
+                                }
+                                if (kind === 'portal-jump') {
+                                    const srcFam = level.portalFamilyByEntry?.get(cellKey);
+                                    if (Number.isFinite(srcFam) && srcFam >= 0) {
+                                        candPortalMask &= ~(1n << BigInt(srcFam));
+                                    }
+                                }
+                                const candState = {
+                                    mustMask: candMustMask,
+                                    mustCrossMask: candMustCrossMask,
+                                    mustCrossCounts: candMustCrossCounts,
+                                    counts: visitedCounts,
+                                    portal: { portalRequiredCoverageMask: candPortalMask }
+                                };
+                                const candGoal = level.distMapForSolver.get(candCell);
+                                const candMustB = candMustMask !== 0n
+                                    ? Number((this._estimateMustPassBoundDetailed(candCell, candState, level) || {}).bound)
+                                    : 0;
+                                const candCrossB = candMustCrossMask !== 0n
+                                    ? Number(this._estimateMustCrossBoundFrom(candCell, candState, level))
+                                    : 0;
+                                const candPortalDetail = this._estimatePortalMandatoryFamilyBoundFrom(candCell, candPortalMask, level);
+                                const candPortalB = Number((candPortalDetail || {}).bound);
+                                const candMustRem = popcount(candMustMask);
+                                const candCrossRem = popcount(candMustCrossMask);
+                                const candLandmarksUnmet = candMustRem + candCrossRem;
+                                // Approximation of score contribution under default-profile
+                                // weights with max-via-pop:
+                                //   score ≈ -(mustB + crossB + portalB) * 40 - landmarksUnmet * 600 - goalDist * 10
+                                // The hint's intersection-setup signal is omitted, so this is a
+                                // partial estimate. Lower (more negative) values are LESS preferred.
+                                const scoreApprox = -(
+                                    (Number.isFinite(candMustB) ? candMustB : 1e6) * 40 +
+                                    (Number.isFinite(candCrossB) ? candCrossB : 1e6) * 40 +
+                                    (Number.isFinite(candPortalB) ? candPortalB : 1e6) * 40
+                                ) - candLandmarksUnmet * 600 - (Number.isFinite(candGoal) ? candGoal : 1e6) * 10;
+                                candidates.push({
+                                    cell: candCell,
+                                    kind,
+                                    isHintChoice: candCell === nextChosen,
+                                    goalDist: Number.isFinite(candGoal) ? candGoal : null,
+                                    mustBound: Number.isFinite(candMustB) ? candMustB : null,
+                                    crossBound: Number.isFinite(candCrossB) ? candCrossB : null,
+                                    portalBound: Number.isFinite(candPortalB) ? candPortalB : null,
+                                    landmarksUnmet: candLandmarksUnmet,
+                                    scoreApprox: Number.isFinite(scoreApprox) ? Number(scoreApprox.toFixed(2)) : null
+                                });
+                            }
+                            // Sort by scoreApprox descending (higher score preferred under max-via-pop).
+                            candidates.sort((a, b) => (b.scoreApprox ?? -Infinity) - (a.scoreApprox ?? -Infinity));
+                            const hintRank = candidates.findIndex((c) => c.isHintChoice);
+                            const hintCandidate = hintRank >= 0 ? candidates[hintRank] : null;
+                            const topCandidate = candidates[0] || null;
+                            rankAudit = {
+                                hintRank,
+                                hintMatchesHeuristic: hintRank === 0,
+                                hintScoreApprox: hintCandidate?.scoreApprox ?? null,
+                                topScoreApprox: topCandidate?.scoreApprox ?? null,
+                                scoreGap: (hintCandidate?.scoreApprox != null && topCandidate?.scoreApprox != null)
+                                    ? Number((topCandidate.scoreApprox - hintCandidate.scoreApprox).toFixed(2))
+                                    : null,
+                                candidates
+                            };
+                        }
+
                         perStep.push({
                             i,
                             cellKey,
@@ -949,7 +1059,8 @@ function installSolver(APP) {
                                 portalAware: portalBoundFires,
                                 goalDistance: goalDistFires
                             },
-                            anyHardPruneFires
+                            anyHardPruneFires,
+                            rankAudit
                         });
                     }
 
