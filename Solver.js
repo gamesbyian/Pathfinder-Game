@@ -2850,18 +2850,19 @@ function installSolver(APP) {
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
                             pushDriver('mustCrossUrgency', crossBound === Infinity ? 999 : crossBound, crossContribution);
                             // LANDMARK COUNT HEURISTIC (h_L): dominant flat cost per unmet
-                            // must-pass / must-cross landmark. Keep feature-flag polarity intact:
-                            // this patch fixes the proven mustBound/mustCrossBound urgency inversion
-                            // without changing landmark experiment behavior.
+                            // must-pass / must-cross landmark. Each unmet landmark must increase
+                            // total cost because lower scores are preferred by candidate ordering.
+                            // Replay diagnostics on L92 confirmed the old sign inversion here and
+                            // in bound urgency terms was rewarding states that move away from obligations.
                             const totalLandmarksUnmet = remainingMustAfterMove + projectedCrossNeed;
                             if (totalLandmarksUnmet > 0) {
                                 const lcp = totalLandmarksUnmet * 600;
                                 if (heuristicFeatureFlags?.landmarkCountSign) {
-                                    score -= lcp;
-                                } else {
                                     score += lcp;
+                                } else {
+                                    score -= lcp;
                                 }
-                                pushDriver('landmarkCount', totalLandmarksUnmet, heuristicFeatureFlags?.landmarkCountSign ? -lcp : lcp);
+                                pushDriver('landmarkCount', totalLandmarksUnmet, heuristicFeatureFlags?.landmarkCountSign ? lcp : -lcp);
                             }
                             // Intersection-schedule penalty: penalize paths that are behind the
                             // expected intersection accumulation rate. Only applied when
