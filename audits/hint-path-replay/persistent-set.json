@@ -1,83 +1,10 @@
 {
-  "timestamp": "2026-05-13T02:34:54.825Z",
+  "timestamp": "2026-05-13T02:45:19.392Z",
   "levelsProcessed": 4,
   "skippedCount": 0,
   "errorCount": 0,
-  "pruneFireCount": 2,
-  "firePerLevel": {
-    "108": {
-      "firstPruneStep": {
-        "i": 28,
-        "cellKey": 458757,
-        "stepDepth": 28,
-        "rSteps": 5,
-        "visitedCount": 1,
-        "intersections": 0,
-        "mustPassRemaining": 0,
-        "mustCrossRemaining": 0,
-        "portalCoverageRemaining": 2,
-        "bounds": {
-          "goalDist": 5,
-          "mustBound": 0,
-          "crossBound": 0,
-          "portalBound": 6,
-          "lowerBoundToValidSolution": 6
-        },
-        "pruneFires": {
-          "mustPassBound": false,
-          "mustCrossBound": false,
-          "portalAware": true,
-          "goalDistance": false
-        },
-        "anyHardPruneFires": true
-      },
-      "summary": {
-        "stepCount": 34,
-        "portalJumpsSoFar": 0,
-        "dupeSkips": 0,
-        "finalIntersections": 1,
-        "finalMustPassRemaining": 0,
-        "finalMustCrossRemaining": 0,
-        "finalPortalCoverageRemaining": 2
-      }
-    },
-    "134": {
-      "firstPruneStep": {
-        "i": 49,
-        "cellKey": 524295,
-        "stepDepth": 47,
-        "rSteps": 6,
-        "visitedCount": 1,
-        "intersections": 3,
-        "mustPassRemaining": 1,
-        "mustCrossRemaining": 0,
-        "portalCoverageRemaining": 1,
-        "bounds": {
-          "goalDist": 2,
-          "mustBound": 6,
-          "crossBound": 0,
-          "portalBound": 7,
-          "lowerBoundToValidSolution": 7
-        },
-        "pruneFires": {
-          "mustPassBound": false,
-          "mustCrossBound": false,
-          "portalAware": true,
-          "goalDistance": false
-        },
-        "anyHardPruneFires": true
-      },
-      "summary": {
-        "stepCount": 56,
-        "portalJumpsSoFar": 2,
-        "dupeSkips": 0,
-        "finalIntersections": 3,
-        "finalMustPassRemaining": 0,
-        "finalMustCrossRemaining": 0,
-        "finalPortalCoverageRemaining": 1
-      }
-    }
-  },
+  "pruneFireCount": 0,
+  "firePerLevel": {},
   "results": [
     {
       "levelNumber": 7,
@@ -112,7 +39,13 @@
               "mustBound": 16,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 16
+              "lowerBoundToValidSolution": 16,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -137,7 +70,13 @@
               "mustBound": 15,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 15
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -162,7 +101,13 @@
               "mustBound": 14,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 14
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -187,7 +132,13 @@
               "mustBound": 15,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 15
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -212,7 +163,13 @@
               "mustBound": 16,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 16
+              "lowerBoundToValidSolution": 16,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -237,7 +194,13 @@
               "mustBound": 15,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 15
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -262,7 +225,13 @@
               "mustBound": 14,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 14
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -287,7 +256,13 @@
               "mustBound": 13,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 13
+              "lowerBoundToValidSolution": 13,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -312,7 +287,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 12
+              "lowerBoundToValidSolution": 12,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -337,7 +318,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 11
+              "lowerBoundToValidSolution": 11,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -362,7 +349,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 10
+              "lowerBoundToValidSolution": 10,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -387,7 +380,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 9
+              "lowerBoundToValidSolution": 9,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -412,7 +411,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 8
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -437,7 +442,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 7
+              "lowerBoundToValidSolution": 7,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -462,7 +473,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 8
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -487,7 +504,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 7
+              "lowerBoundToValidSolution": 7,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -512,7 +535,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 6
+              "lowerBoundToValidSolution": 6,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -537,7 +566,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 5
+              "lowerBoundToValidSolution": 5,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -562,7 +597,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 4
+              "lowerBoundToValidSolution": 4,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -587,7 +628,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 3
+              "lowerBoundToValidSolution": 3,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -612,7 +659,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 2
+              "lowerBoundToValidSolution": 2,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -637,7 +690,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 1
+              "lowerBoundToValidSolution": 1,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -662,7 +721,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 0
+              "lowerBoundToValidSolution": 0,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -703,13 +768,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 11,
               "crossBound": 27,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 27
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 27,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -728,13 +799,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 10,
               "crossBound": 28,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 28
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 28,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -753,13 +830,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 11,
               "crossBound": 29,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 29
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -778,13 +861,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 12,
               "crossBound": 30,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -803,13 +892,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 12,
               "crossBound": 30,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -828,13 +923,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 13,
               "crossBound": 31,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -853,13 +954,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 14,
               "crossBound": 32,
-              "portalBound": 10,
-              "lowerBoundToValidSolution": 32
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 32,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -878,13 +985,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 15,
               "crossBound": 33,
-              "portalBound": 11,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -903,13 +1016,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 16,
               "crossBound": 34,
-              "portalBound": 10,
-              "lowerBoundToValidSolution": 34
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 34,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -928,13 +1047,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 17,
               "crossBound": 35,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 35
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 35,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -953,13 +1078,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 16,
               "crossBound": 36,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 36
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 36,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -978,13 +1109,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 15,
               "crossBound": 35,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 35
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 35,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1003,13 +1140,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 14,
               "crossBound": 34,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 34
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 34,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1028,13 +1171,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 13,
               "crossBound": 33,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1053,13 +1202,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 12,
               "crossBound": 32,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 32
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 32,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1078,13 +1233,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 13,
               "crossBound": 33,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1103,13 +1264,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 14,
               "crossBound": 34,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 34
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 34,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1128,13 +1295,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 13,
               "crossBound": 33,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1153,13 +1326,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 12,
               "crossBound": 32,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 32
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 32,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1178,13 +1357,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 11,
               "crossBound": 31,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1203,13 +1388,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 12,
               "crossBound": 32,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 32
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 32,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1228,13 +1419,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 11,
               "crossBound": 33,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1253,13 +1450,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 10,
               "crossBound": 33,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1278,13 +1481,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 1,
               "mustBound": 11,
               "crossBound": 33,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1303,13 +1512,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 12,
               "crossBound": 32,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 32
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 32,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1328,13 +1543,19 @@
             "intersections": 2,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 11,
               "crossBound": 33,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1353,13 +1574,19 @@
             "intersections": 2,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 10,
               "crossBound": 32,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 32
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 32,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1378,13 +1605,19 @@
             "intersections": 2,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 9,
               "crossBound": 31,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1403,13 +1636,19 @@
             "intersections": 2,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 8,
               "crossBound": 30,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1428,13 +1667,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 7,
               "crossBound": 30,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1453,13 +1698,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 8,
               "crossBound": 31,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1478,13 +1729,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 9,
               "crossBound": 31,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1503,13 +1760,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 10,
               "crossBound": 30,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1528,13 +1791,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 11,
               "crossBound": 31,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1553,13 +1822,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 10,
               "crossBound": 30,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1578,13 +1853,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 11,
               "crossBound": 31,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1603,13 +1884,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 12,
               "crossBound": 32,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 32
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 32,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1628,13 +1915,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 13,
               "crossBound": 31,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1653,13 +1946,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 12,
               "crossBound": 30,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1678,13 +1977,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 13,
               "crossBound": 29,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 29
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1703,13 +2008,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 14,
               "crossBound": 30,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1728,13 +2039,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 15,
               "crossBound": 29,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 29
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1759,7 +2076,13 @@
               "mustBound": 14,
               "crossBound": 28,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 28
+              "lowerBoundToValidSolution": 28,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1784,7 +2107,13 @@
               "mustBound": 14,
               "crossBound": 28,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 28
+              "lowerBoundToValidSolution": 28,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1809,7 +2138,13 @@
               "mustBound": 15,
               "crossBound": 29,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 29
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1834,7 +2169,13 @@
               "mustBound": 16,
               "crossBound": 30,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 30
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1859,7 +2200,13 @@
               "mustBound": 17,
               "crossBound": 31,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 31
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1884,7 +2231,13 @@
               "mustBound": 16,
               "crossBound": 30,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 30
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1909,7 +2262,13 @@
               "mustBound": 15,
               "crossBound": 29,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 29
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1934,7 +2293,13 @@
               "mustBound": 14,
               "crossBound": 30,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 30
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1959,7 +2324,13 @@
               "mustBound": 13,
               "crossBound": 31,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 31
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -1984,7 +2355,13 @@
               "mustBound": 12,
               "crossBound": 31,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 31
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2009,7 +2386,13 @@
               "mustBound": 11,
               "crossBound": 30,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 30
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2034,7 +2417,13 @@
               "mustBound": 10,
               "crossBound": 29,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 29
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2059,7 +2448,13 @@
               "mustBound": 9,
               "crossBound": 28,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 28
+              "lowerBoundToValidSolution": 28,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2084,7 +2479,13 @@
               "mustBound": 8,
               "crossBound": 29,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 29
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2109,7 +2510,13 @@
               "mustBound": 9,
               "crossBound": 30,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 30
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2134,7 +2541,13 @@
               "mustBound": 10,
               "crossBound": 29,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 29
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2159,7 +2572,13 @@
               "mustBound": 11,
               "crossBound": 28,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 28
+              "lowerBoundToValidSolution": 28,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2184,7 +2603,13 @@
               "mustBound": 12,
               "crossBound": 27,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 27
+              "lowerBoundToValidSolution": 27,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2209,7 +2634,13 @@
               "mustBound": 11,
               "crossBound": 26,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 26
+              "lowerBoundToValidSolution": 26,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2234,7 +2665,13 @@
               "mustBound": 10,
               "crossBound": 19,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 19
+              "lowerBoundToValidSolution": 19,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2259,7 +2696,13 @@
               "mustBound": 11,
               "crossBound": 20,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 20
+              "lowerBoundToValidSolution": 20,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2284,7 +2727,13 @@
               "mustBound": 12,
               "crossBound": 21,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 21
+              "lowerBoundToValidSolution": 21,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2309,7 +2758,13 @@
               "mustBound": 11,
               "crossBound": 20,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 20
+              "lowerBoundToValidSolution": 20,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2334,7 +2789,13 @@
               "mustBound": 10,
               "crossBound": 19,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 19
+              "lowerBoundToValidSolution": 19,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2359,7 +2820,13 @@
               "mustBound": 9,
               "crossBound": 20,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 20
+              "lowerBoundToValidSolution": 20,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2384,7 +2851,13 @@
               "mustBound": 10,
               "crossBound": 19,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 19
+              "lowerBoundToValidSolution": 19,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2409,7 +2882,13 @@
               "mustBound": 9,
               "crossBound": 18,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 18
+              "lowerBoundToValidSolution": 18,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2434,7 +2913,13 @@
               "mustBound": 10,
               "crossBound": 17,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 17
+              "lowerBoundToValidSolution": 17,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2459,7 +2944,13 @@
               "mustBound": 11,
               "crossBound": 16,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 16
+              "lowerBoundToValidSolution": 16,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2484,7 +2975,13 @@
               "mustBound": 10,
               "crossBound": 15,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 15
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2509,7 +3006,13 @@
               "mustBound": 9,
               "crossBound": 14,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 14
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2534,7 +3037,13 @@
               "mustBound": 8,
               "crossBound": 15,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 15
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2559,7 +3068,13 @@
               "mustBound": 9,
               "crossBound": 14,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 14
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2584,7 +3099,13 @@
               "mustBound": 10,
               "crossBound": 13,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 13
+              "lowerBoundToValidSolution": 13,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2609,7 +3130,13 @@
               "mustBound": 11,
               "crossBound": 12,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 12
+              "lowerBoundToValidSolution": 12,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2634,7 +3161,13 @@
               "mustBound": 12,
               "crossBound": 11,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 12
+              "lowerBoundToValidSolution": 12,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2659,7 +3192,13 @@
               "mustBound": 13,
               "crossBound": 7,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 13
+              "lowerBoundToValidSolution": 13,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2684,7 +3223,13 @@
               "mustBound": 14,
               "crossBound": 8,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 14
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2709,7 +3254,13 @@
               "mustBound": 15,
               "crossBound": 9,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 15
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2734,7 +3285,13 @@
               "mustBound": 14,
               "crossBound": 8,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 14
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2759,7 +3316,13 @@
               "mustBound": 13,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 13
+              "lowerBoundToValidSolution": 13,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2784,7 +3347,13 @@
               "mustBound": 12,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 12
+              "lowerBoundToValidSolution": 12,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2809,7 +3378,13 @@
               "mustBound": 11,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 11
+              "lowerBoundToValidSolution": 11,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2834,7 +3409,13 @@
               "mustBound": 10,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 10
+              "lowerBoundToValidSolution": 10,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2859,7 +3440,13 @@
               "mustBound": 9,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 9
+              "lowerBoundToValidSolution": 9,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2884,7 +3471,13 @@
               "mustBound": 8,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 8
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2909,7 +3502,13 @@
               "mustBound": 7,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 7
+              "lowerBoundToValidSolution": 7,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2934,7 +3533,13 @@
               "mustBound": 8,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 8
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2959,7 +3564,13 @@
               "mustBound": 7,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 7
+              "lowerBoundToValidSolution": 7,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -2984,7 +3595,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 6
+              "lowerBoundToValidSolution": 6,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3009,7 +3626,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 5
+              "lowerBoundToValidSolution": 5,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3034,7 +3657,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 4
+              "lowerBoundToValidSolution": 4,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3059,7 +3688,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 3
+              "lowerBoundToValidSolution": 3,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3084,7 +3719,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 2
+              "lowerBoundToValidSolution": 2,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3109,7 +3750,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 1
+              "lowerBoundToValidSolution": 1,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3134,7 +3781,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 2
+              "lowerBoundToValidSolution": 2,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3159,7 +3812,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 3
+              "lowerBoundToValidSolution": 3,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3184,7 +3843,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 2
+              "lowerBoundToValidSolution": 2,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3209,7 +3874,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 1
+              "lowerBoundToValidSolution": 1,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3234,7 +3905,13 @@
               "mustBound": 0,
               "crossBound": 0,
               "portalBound": 0,
-              "lowerBoundToValidSolution": 0
+              "lowerBoundToValidSolution": 0,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3251,35 +3928,11 @@
     {
       "levelNumber": 108,
       "status": "replay-only",
-      "ok": false,
+      "ok": true,
       "diagnostics": {
-        "ok": false,
-        "anyHardPruneFiresOnPath": true,
-        "firstPruneStep": {
-          "i": 28,
-          "cellKey": 458757,
-          "stepDepth": 28,
-          "rSteps": 5,
-          "visitedCount": 1,
-          "intersections": 0,
-          "mustPassRemaining": 0,
-          "mustCrossRemaining": 0,
-          "portalCoverageRemaining": 2,
-          "bounds": {
-            "goalDist": 5,
-            "mustBound": 0,
-            "crossBound": 0,
-            "portalBound": 6,
-            "lowerBoundToValidSolution": 6
-          },
-          "pruneFires": {
-            "mustPassBound": false,
-            "mustCrossBound": false,
-            "portalAware": true,
-            "goalDistance": false
-          },
-          "anyHardPruneFires": true
-        },
+        "ok": true,
+        "anyHardPruneFiresOnPath": false,
+        "firstPruneStep": null,
         "summary": {
           "stepCount": 34,
           "portalJumpsSoFar": 0,
@@ -3287,7 +3940,7 @@
           "finalIntersections": 1,
           "finalMustPassRemaining": 0,
           "finalMustCrossRemaining": 0,
-          "finalPortalCoverageRemaining": 2
+          "finalPortalCoverageRemaining": 0
         },
         "perStep": [
           {
@@ -3299,13 +3952,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 19,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 19
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 19,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3324,13 +3983,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 20,
               "crossBound": 0,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 20
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 20,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3349,13 +4014,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 19,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 19
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 19,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3374,13 +4045,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 18,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 18
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 18,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3399,13 +4076,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 17,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 17
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 17,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3424,13 +4107,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 18,
               "crossBound": 0,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 18
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 18,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3449,13 +4138,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 11,
               "mustBound": 19,
               "crossBound": 0,
-              "portalBound": 10,
-              "lowerBoundToValidSolution": 19
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 19,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3474,13 +4169,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 18,
               "crossBound": 0,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 18
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 18,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3499,13 +4200,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 17,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 17
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 17,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3524,13 +4231,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 16,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 16
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 16,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3549,13 +4262,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 15,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 15
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3574,13 +4293,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 14,
               "crossBound": 0,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 14
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3599,13 +4324,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 15,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 15
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3624,13 +4355,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 16,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 16
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 16,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3649,13 +4386,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 17,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 17
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 17,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3674,13 +4417,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 16,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 16
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 16,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3699,13 +4448,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 15,
               "crossBound": 0,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 15
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3724,13 +4479,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 14,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 14
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3749,13 +4510,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 13,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 13
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 13,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3774,13 +4541,19 @@
             "intersections": 0,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 12,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 12
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 12,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3799,13 +4572,19 @@
             "intersections": 0,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 11,
               "crossBound": 0,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 11
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 11,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3824,13 +4603,19 @@
             "intersections": 0,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 10,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 10
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 10,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3849,13 +4634,19 @@
             "intersections": 0,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 9,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 9
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 9,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3874,13 +4665,19 @@
             "intersections": 0,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 8,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 8
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3899,13 +4696,19 @@
             "intersections": 0,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 9,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 9
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 9,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3924,13 +4727,19 @@
             "intersections": 0,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 8,
               "crossBound": 0,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 8
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3949,13 +4758,19 @@
             "intersections": 0,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 7,
               "crossBound": 0,
-              "portalBound": 5,
-              "lowerBoundToValidSolution": 7
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 7,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3974,13 +4789,19 @@
             "intersections": 0,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 6
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 6,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -3999,21 +4820,27 @@
             "intersections": 0,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 6
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 5,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 29,
@@ -4024,21 +4851,27 @@
             "intersections": 1,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 6
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 4,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 30,
@@ -4049,21 +4882,27 @@
             "intersections": 1,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 5,
-              "lowerBoundToValidSolution": 5
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 3,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 31,
@@ -4074,21 +4913,27 @@
             "intersections": 1,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 6,
-              "lowerBoundToValidSolution": 6
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 2,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 32,
@@ -4099,21 +4944,27 @@
             "intersections": 1,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 1,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 7
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 1,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 33,
@@ -4124,21 +4975,27 @@
             "intersections": 1,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 0,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 8
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 0,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           }
         ]
       },
@@ -4147,35 +5004,11 @@
     {
       "levelNumber": 134,
       "status": "replay-only",
-      "ok": false,
+      "ok": true,
       "diagnostics": {
-        "ok": false,
-        "anyHardPruneFiresOnPath": true,
-        "firstPruneStep": {
-          "i": 49,
-          "cellKey": 524295,
-          "stepDepth": 47,
-          "rSteps": 6,
-          "visitedCount": 1,
-          "intersections": 3,
-          "mustPassRemaining": 1,
-          "mustCrossRemaining": 0,
-          "portalCoverageRemaining": 1,
-          "bounds": {
-            "goalDist": 2,
-            "mustBound": 6,
-            "crossBound": 0,
-            "portalBound": 7,
-            "lowerBoundToValidSolution": 7
-          },
-          "pruneFires": {
-            "mustPassBound": false,
-            "mustCrossBound": false,
-            "portalAware": true,
-            "goalDistance": false
-          },
-          "anyHardPruneFires": true
-        },
+        "ok": true,
+        "anyHardPruneFiresOnPath": false,
+        "firstPruneStep": null,
         "summary": {
           "stepCount": 56,
           "portalJumpsSoFar": 2,
@@ -4183,7 +5016,7 @@
           "finalIntersections": 3,
           "finalMustPassRemaining": 0,
           "finalMustCrossRemaining": 0,
-          "finalPortalCoverageRemaining": 1
+          "finalPortalCoverageRemaining": 0
         },
         "perStep": [
           {
@@ -4195,13 +5028,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 3,
+            "portalCoverageRemaining": 2,
             "bounds": {
               "goalDist": 18,
               "mustBound": 28,
               "crossBound": 37,
-              "portalBound": 21,
-              "lowerBoundToValidSolution": 37
+              "portalBound": 16,
+              "lowerBoundToValidSolution": 37,
+              "portalDetail": {
+                "toObjective": 2,
+                "portalCommitment": 14,
+                "toGoal": 5,
+                "familyCount": 2
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4220,13 +5059,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 3,
+            "portalCoverageRemaining": 2,
             "bounds": {
               "goalDist": 17,
               "mustBound": 27,
               "crossBound": 36,
-              "portalBound": 20,
-              "lowerBoundToValidSolution": 36
+              "portalBound": 15,
+              "lowerBoundToValidSolution": 36,
+              "portalDetail": {
+                "toObjective": 1,
+                "portalCommitment": 14,
+                "toGoal": 5,
+                "familyCount": 2
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4245,13 +5090,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 16,
               "mustBound": 26,
               "crossBound": 35,
-              "portalBound": 19,
-              "lowerBoundToValidSolution": 35
+              "portalBound": 14,
+              "lowerBoundToValidSolution": 35,
+              "portalDetail": {
+                "toObjective": 14,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4270,13 +5121,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 16,
               "mustBound": 26,
               "crossBound": 35,
-              "portalBound": 19,
-              "lowerBoundToValidSolution": 35
+              "portalBound": 14,
+              "lowerBoundToValidSolution": 35,
+              "portalDetail": {
+                "toObjective": 14,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4295,13 +5152,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 17,
               "mustBound": 27,
               "crossBound": 36,
-              "portalBound": 20,
-              "lowerBoundToValidSolution": 36
+              "portalBound": 13,
+              "lowerBoundToValidSolution": 36,
+              "portalDetail": {
+                "toObjective": 13,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4320,13 +5183,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 17,
               "mustBound": 28,
               "crossBound": 37,
-              "portalBound": 21,
-              "lowerBoundToValidSolution": 37
+              "portalBound": 12,
+              "lowerBoundToValidSolution": 37,
+              "portalDetail": {
+                "toObjective": 12,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4345,13 +5214,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 16,
               "mustBound": 29,
               "crossBound": 38,
-              "portalBound": 21,
-              "lowerBoundToValidSolution": 38
+              "portalBound": 11,
+              "lowerBoundToValidSolution": 38,
+              "portalDetail": {
+                "toObjective": 11,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4370,13 +5245,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 15,
               "mustBound": 30,
               "crossBound": 38,
-              "portalBound": 20,
-              "lowerBoundToValidSolution": 38
+              "portalBound": 10,
+              "lowerBoundToValidSolution": 38,
+              "portalDetail": {
+                "toObjective": 10,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4395,13 +5276,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 14,
               "mustBound": 31,
               "crossBound": 37,
-              "portalBound": 19,
-              "lowerBoundToValidSolution": 37
+              "portalBound": 9,
+              "lowerBoundToValidSolution": 37,
+              "portalDetail": {
+                "toObjective": 9,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4420,13 +5307,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 13,
               "mustBound": 31,
               "crossBound": 36,
-              "portalBound": 18,
-              "lowerBoundToValidSolution": 36
+              "portalBound": 8,
+              "lowerBoundToValidSolution": 36,
+              "portalDetail": {
+                "toObjective": 8,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4445,13 +5338,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 12,
               "mustBound": 30,
               "crossBound": 35,
-              "portalBound": 17,
-              "lowerBoundToValidSolution": 35
+              "portalBound": 7,
+              "lowerBoundToValidSolution": 35,
+              "portalDetail": {
+                "toObjective": 7,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4470,13 +5369,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 11,
               "mustBound": 29,
               "crossBound": 34,
-              "portalBound": 16,
-              "lowerBoundToValidSolution": 34
+              "portalBound": 6,
+              "lowerBoundToValidSolution": 34,
+              "portalDetail": {
+                "toObjective": 6,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4495,13 +5400,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 10,
               "mustBound": 28,
               "crossBound": 33,
-              "portalBound": 15,
-              "lowerBoundToValidSolution": 33
+              "portalBound": 5,
+              "lowerBoundToValidSolution": 33,
+              "portalDetail": {
+                "toObjective": 5,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4520,13 +5431,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 9,
               "mustBound": 27,
               "crossBound": 32,
-              "portalBound": 14,
-              "lowerBoundToValidSolution": 32
+              "portalBound": 5,
+              "lowerBoundToValidSolution": 32,
+              "portalDetail": {
+                "toObjective": 4,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4545,13 +5462,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 8,
               "mustBound": 26,
               "crossBound": 31,
-              "portalBound": 13,
-              "lowerBoundToValidSolution": 31
+              "portalBound": 5,
+              "lowerBoundToValidSolution": 31,
+              "portalDetail": {
+                "toObjective": 3,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4570,13 +5493,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 7,
               "mustBound": 25,
               "crossBound": 30,
-              "portalBound": 12,
-              "lowerBoundToValidSolution": 30
+              "portalBound": 5,
+              "lowerBoundToValidSolution": 30,
+              "portalDetail": {
+                "toObjective": 2,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4595,13 +5524,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 2,
+            "portalCoverageRemaining": 1,
             "bounds": {
               "goalDist": 6,
               "mustBound": 24,
               "crossBound": 29,
-              "portalBound": 11,
-              "lowerBoundToValidSolution": 29
+              "portalBound": 5,
+              "lowerBoundToValidSolution": 29,
+              "portalDetail": {
+                "toObjective": 1,
+                "portalCommitment": 0,
+                "toGoal": 5,
+                "familyCount": 1
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4620,13 +5555,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 23,
               "crossBound": 28,
-              "portalBound": 10,
-              "lowerBoundToValidSolution": 28
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 28,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4645,13 +5586,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 23,
               "crossBound": 28,
-              "portalBound": 10,
-              "lowerBoundToValidSolution": 28
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 28,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4670,13 +5617,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 22,
               "crossBound": 27,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 27
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 27,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4695,13 +5648,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 23,
               "crossBound": 26,
-              "portalBound": 10,
-              "lowerBoundToValidSolution": 26
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 26,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4720,13 +5679,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 24,
               "crossBound": 25,
-              "portalBound": 11,
-              "lowerBoundToValidSolution": 25
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 25,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4745,13 +5710,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 25,
               "crossBound": 26,
-              "portalBound": 12,
-              "lowerBoundToValidSolution": 26
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 26,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4770,13 +5741,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 24,
               "crossBound": 25,
-              "portalBound": 11,
-              "lowerBoundToValidSolution": 25
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 25,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4795,13 +5772,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 23,
               "crossBound": 24,
-              "portalBound": 10,
-              "lowerBoundToValidSolution": 24
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 24,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4820,13 +5803,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 22,
               "crossBound": 23,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 23
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 23,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4845,13 +5834,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 21,
               "crossBound": 16,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 21
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 21,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4870,13 +5865,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 20,
               "crossBound": 17,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 20
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 20,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4895,13 +5896,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 11,
               "mustBound": 21,
               "crossBound": 18,
-              "portalBound": 10,
-              "lowerBoundToValidSolution": 21
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 21,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4920,13 +5927,19 @@
             "intersections": 0,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 2,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 22,
               "crossBound": 17,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 22
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 22,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4945,13 +5958,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 21,
               "crossBound": 16,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 21
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 21,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4970,13 +5989,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 20,
               "crossBound": 15,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 20
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 20,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -4995,13 +6020,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 11,
               "mustBound": 19,
               "crossBound": 14,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 19
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 19,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5020,13 +6051,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 18,
               "crossBound": 13,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 18
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 18,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5045,13 +6082,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 17,
               "crossBound": 12,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 17
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 17,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5070,13 +6113,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 16,
               "crossBound": 11,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 16
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 16,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5095,13 +6144,19 @@
             "intersections": 1,
             "mustPassRemaining": 2,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 15,
               "crossBound": 12,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 15
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 15,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5120,13 +6175,19 @@
             "intersections": 1,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 10,
               "mustBound": 14,
               "crossBound": 13,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 14
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 14,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5145,13 +6206,19 @@
             "intersections": 1,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 9,
               "mustBound": 13,
               "crossBound": 12,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 13
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 13,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5170,13 +6237,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 8,
               "mustBound": 12,
               "crossBound": 11,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 12
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 12,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5195,13 +6268,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 7,
               "mustBound": 11,
               "crossBound": 10,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 11
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 11,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5220,13 +6299,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 6,
               "mustBound": 10,
               "crossBound": 9,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 10
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 10,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5245,13 +6330,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 5,
               "mustBound": 9,
               "crossBound": 8,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 9
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 9,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5270,13 +6361,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 8,
               "crossBound": 7,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 8
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5295,13 +6392,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 7,
               "crossBound": 3,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 7
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 7,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5320,13 +6423,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 8,
               "crossBound": 4,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 8
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5345,13 +6454,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 9,
               "crossBound": 5,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 9
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 9,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5370,13 +6485,19 @@
             "intersections": 2,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 1,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 4,
               "mustBound": 8,
               "crossBound": 4,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 8
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 8,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5395,13 +6516,19 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 7,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 7
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 7,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
@@ -5420,21 +6547,27 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 6,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 7
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 6,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 50,
@@ -5445,21 +6578,27 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 1,
               "mustBound": 5,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 7
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 5,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 51,
@@ -5470,21 +6609,27 @@
             "intersections": 3,
             "mustPassRemaining": 1,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 4,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 7
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 4,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 52,
@@ -5495,21 +6640,27 @@
             "intersections": 3,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 3,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 8
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 3,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 53,
@@ -5520,21 +6671,27 @@
             "intersections": 3,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 2,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 9,
-              "lowerBoundToValidSolution": 9
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 2,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 54,
@@ -5545,21 +6702,27 @@
             "intersections": 3,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 1,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 8,
-              "lowerBoundToValidSolution": 8
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 1,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           },
           {
             "i": 55,
@@ -5570,21 +6733,27 @@
             "intersections": 3,
             "mustPassRemaining": 0,
             "mustCrossRemaining": 0,
-            "portalCoverageRemaining": 1,
+            "portalCoverageRemaining": 0,
             "bounds": {
               "goalDist": 0,
               "mustBound": 0,
               "crossBound": 0,
-              "portalBound": 7,
-              "lowerBoundToValidSolution": 7
+              "portalBound": 0,
+              "lowerBoundToValidSolution": 0,
+              "portalDetail": {
+                "toObjective": 0,
+                "portalCommitment": 0,
+                "toGoal": 0,
+                "familyCount": 0
+              }
             },
             "pruneFires": {
               "mustPassBound": false,
               "mustCrossBound": false,
-              "portalAware": true,
+              "portalAware": false,
               "goalDistance": false
             },
-            "anyHardPruneFires": true
+            "anyHardPruneFires": false
           }
         ]
       },
