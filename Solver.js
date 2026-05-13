@@ -776,6 +776,194 @@ function installSolver(APP) {
                         }
                     };
                 },
+                // Hint-path replay diagnostic — walks a verified hint path step-by-step and at each
+                // step records the lower-bound estimates the search would compute, plus whether
+                // any hard prune would fire on this state. Used by scripts/hint-path-replay.mjs to
+                // (a) gate refactors via a prune-fire CI assertion (no prune may fire on any
+                // hint-path prefix), and (b) plot heuristic values along the known-good trajectory
+                // to diagnose plateau / sign-inversion bugs in the scoring driver.
+                //
+                // This method assumes the level has been initialized by solve() — distMapForSolver,
+                // mustPassDistMaps, mustCrossDistMaps, mustCrossDp, portalTransitionAutomaton,
+                // _popcountMask, and the mustPass/mustCross/portalFamily index Maps must all be
+                // populated. Triggered via the replayHintPath option in solve() so that init runs
+                // first.
+                _replayHintPathDiagnostics(level, hintPath) {
+                    if (!Array.isArray(hintPath) || hintPath.length < 2) {
+                        return { ok: false, reason: 'hint path needs at least 2 entries', perStep: [] };
+                    }
+                    const mustPassKeys = Array.isArray(level.mustPassKeys) ? level.mustPassKeys : [];
+                    const mustCrossKeys = Array.isArray(level.mustCrossKeys) ? level.mustCrossKeys : [];
+
+                    let mustMask = 0n;
+                    for (let i = 0; i < mustPassKeys.length; i++) mustMask |= (1n << BigInt(i));
+
+                    let mustCrossMask = 0n;
+                    const mustCrossCounts = new Uint8Array(Math.max(0, mustCrossKeys.length));
+                    for (let i = 0; i < mustCrossKeys.length; i++) mustCrossMask |= (1n << BigInt(i));
+
+                    const automaton = level.portalTransitionAutomaton || null;
+                    const initialCoverageMask = typeof automaton?.provablyMandatoryMask === 'bigint'
+                        ? automaton.provablyMandatoryMask
+                        : (typeof automaton?.mandatoryMask === 'bigint' ? automaton.mandatoryMask : 0n);
+                    const portalState = {
+                        portalRequiredCoverageMask: initialCoverageMask,
+                        portalReentryCounts: new Uint8Array(Math.max(0, level.portalFamilyCount || 0)),
+                        portalOscillationCount: 0,
+                        portalLastFamily: -1,
+                        portalLastRegion: -1
+                    };
+
+                    const visitedCounts = new Map();
+                    let intersections = 0;
+                    let portalJumpsSoFar = 0;
+                    let dupeSkips = 0;
+                    const gateSet = level.gateSet instanceof Set
+                        ? level.gateSet
+                        : new Set(Array.isArray(level.gateKeys) ? level.gateKeys : []);
+                    const popcount = typeof level._popcountMask === 'function'
+                        ? (m) => level._popcountMask(m)
+                        : (m) => {
+                            let n = 0, x = m;
+                            while (x > 0n) { if (x & 1n) n++; x >>= 1n; }
+                            return n;
+                        };
+
+                    const applyVisit = (cellKey, isPortalDestArrival) => {
+                        const prev = visitedCounts.get(cellKey) || 0;
+                        if (prev > 0 && cellKey !== level.goalKey && !gateSet.has(cellKey)) {
+                            intersections++;
+                        }
+                        visitedCounts.set(cellKey, prev + 1);
+                        const mpIdx = level.mustPassIndex?.get(cellKey);
+                        if (mpIdx !== undefined) {
+                            mustMask &= ~(1n << BigInt(mpIdx));
+                        }
+                        const mcIdx = level.mustCrossIndex?.get(cellKey);
+                        if (mcIdx !== undefined) {
+                            if (mustCrossCounts[mcIdx] < 255) mustCrossCounts[mcIdx]++;
+                            if (mustCrossCounts[mcIdx] >= 2) {
+                                mustCrossMask &= ~(1n << BigInt(mcIdx));
+                            }
+                        }
+                        // Portal family coverage clears when the cell is entered as a portal source
+                        // OR arrived at as a portal destination — both witness a portal-family use.
+                        const family = level.portalFamilyByEntry?.get(cellKey);
+                        if (Number.isFinite(family) && family >= 0) {
+                            portalState.portalRequiredCoverageMask &= ~(1n << BigInt(family));
+                            portalState.portalLastFamily = family;
+                        }
+                    };
+
+                    const perStep = [];
+                    // Step 0: starting cell
+                    applyVisit(hintPath[0], false);
+
+                    for (let i = 0; i < hintPath.length; i++) {
+                        if (i > 0) {
+                            const prevKey = hintPath[i - 1];
+                            const curKey = hintPath[i];
+                            if (prevKey === curKey) {
+                                dupeSkips++;
+                                continue;
+                            }
+                            const portalEdge = level.portalMap?.get(prevKey);
+                            const isPortalJump = portalEdge && portalEdge.dest === curKey;
+                            if (isPortalJump) portalJumpsSoFar++;
+                            // Clear coverage for the source family on a portal jump too.
+                            if (isPortalJump) {
+                                const srcFamily = level.portalFamilyByEntry?.get(prevKey);
+                                if (Number.isFinite(srcFamily) && srcFamily >= 0) {
+                                    portalState.portalRequiredCoverageMask &= ~(1n << BigInt(srcFamily));
+                                }
+                            }
+                            applyVisit(curKey, !!isPortalJump);
+                        }
+
+                        const cellKey = hintPath[i];
+                        const stepDepth = i - portalJumpsSoFar - dupeSkips;
+                        const rSteps = Math.max(0, (level.reqLen || 0) - stepDepth);
+
+                        const state = {
+                            mustMask,
+                            mustCrossMask,
+                            mustCrossCounts: Array.from(mustCrossCounts),
+                            counts: visitedCounts,
+                            portal: portalState
+                        };
+
+                        const goalDist = level.distMapForSolver?.get(cellKey);
+                        const mustBoundResult = mustMask !== 0n
+                            ? this._estimateMustPassBoundDetailed(cellKey, state, level)
+                            : { bound: 0, method: 'satisfied', k: 0 };
+                        const mustBound = Number.isFinite(mustBoundResult?.bound) ? mustBoundResult.bound : Infinity;
+                        const crossBound = mustCrossMask !== 0n
+                            ? this._estimateMustCrossBoundFrom(cellKey, state, level)
+                            : 0;
+                        const portalBoundDetail = this._estimatePortalMandatoryFamilyBoundFrom(cellKey, portalState.portalRequiredCoverageMask, level);
+                        const portalBound = Number.isFinite(portalBoundDetail?.bound) ? portalBoundDetail.bound : Infinity;
+
+                        const remIntsNeeded = Math.max(0, (level.reqInt || 0) - intersections);
+                        const portalCoverageIncomplete = portalState.portalRequiredCoverageMask !== 0n;
+                        const portalCovComponent = portalCoverageIncomplete && Number.isFinite(portalBound) ? portalBound : 0;
+                        const lowerBoundToValidSolution = Math.max(
+                            Number.isFinite(goalDist) ? goalDist : 0,
+                            Number.isFinite(mustBound) ? mustBound : 0,
+                            Number.isFinite(crossBound) ? crossBound : 0,
+                            remIntsNeeded,
+                            portalCovComponent
+                        );
+
+                        const mustBoundFires = Number.isFinite(mustBound) && mustBound > rSteps;
+                        const mustCrossBoundFires = Number.isFinite(crossBound) && crossBound > rSteps;
+                        const portalBoundFires = Number.isFinite(portalBound) && portalBound > rSteps;
+                        const goalDistFires = Number.isFinite(goalDist) && goalDist > rSteps;
+                        const anyHardPruneFires = mustBoundFires || mustCrossBoundFires || portalBoundFires || goalDistFires;
+
+                        perStep.push({
+                            i,
+                            cellKey,
+                            stepDepth,
+                            rSteps,
+                            visitedCount: visitedCounts.get(cellKey) || 0,
+                            intersections,
+                            mustPassRemaining: popcount(mustMask),
+                            mustCrossRemaining: popcount(mustCrossMask),
+                            portalCoverageRemaining: popcount(portalState.portalRequiredCoverageMask),
+                            bounds: {
+                                goalDist: Number.isFinite(goalDist) ? goalDist : null,
+                                mustBound: Number.isFinite(mustBound) ? mustBound : null,
+                                crossBound: Number.isFinite(crossBound) ? crossBound : null,
+                                portalBound: Number.isFinite(portalBound) ? portalBound : null,
+                                lowerBoundToValidSolution: Number.isFinite(lowerBoundToValidSolution) ? lowerBoundToValidSolution : null
+                            },
+                            pruneFires: {
+                                mustPassBound: mustBoundFires,
+                                mustCrossBound: mustCrossBoundFires,
+                                portalAware: portalBoundFires,
+                                goalDistance: goalDistFires
+                            },
+                            anyHardPruneFires
+                        });
+                    }
+
+                    const firstPruneStepIdx = perStep.findIndex(s => s.anyHardPruneFires);
+                    return {
+                        ok: firstPruneStepIdx < 0,
+                        anyHardPruneFiresOnPath: firstPruneStepIdx >= 0,
+                        firstPruneStep: firstPruneStepIdx >= 0 ? perStep[firstPruneStepIdx] : null,
+                        summary: {
+                            stepCount: perStep.length,
+                            portalJumpsSoFar,
+                            dupeSkips,
+                            finalIntersections: intersections,
+                            finalMustPassRemaining: popcount(mustMask),
+                            finalMustCrossRemaining: popcount(mustCrossMask),
+                            finalPortalCoverageRemaining: popcount(portalState.portalRequiredCoverageMask)
+                        },
+                        perStep
+                    };
+                },
                 _portalProgressTransitionFeasible(fromKey, toKey, state, l, options = {}) {
                     const automaton = l?.portalTransitionAutomaton;
                     const currentMask = typeof state?.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal?.portalRequiredCoverageMask : 0n;
@@ -5700,6 +5888,21 @@ function installSolver(APP) {
                             debugStats.rootCandidatesGenerated = debugStats.rootCandidatesGenerated ?? 0;
                         }
                         return [];
+                    }
+
+                    // Disciplined hint-path replay hook. When `options.replayHintPath` is set,
+                    // bypass the search entirely and return the per-step diagnostic trace. Used by
+                    // scripts/hint-path-replay.mjs as a CI gate (no prune may fire on a hint-path
+                    // prefix) and as a heuristic-quality diagnostic (plotting bounds along π*).
+                    if (Array.isArray(options.replayHintPath) && options.replayHintPath.length >= 2) {
+                        const replayDiagnostics = SolverCore._replayHintPathDiagnostics(level, options.replayHintPath);
+                        return {
+                            ok: !!replayDiagnostics.ok,
+                            solution: null,
+                            status: 'replay-only',
+                            replayHintPathDiagnostics: replayDiagnostics,
+                            debug: debugStats || null
+                        };
                     }
 
                     const snapshotPassDebug = () => {
@@ -15345,7 +15548,11 @@ function installSolver(APP) {
             clearAttemptHistory: () => { for (const k in attemptHistory) delete attemptHistory[k]; },
             recordTelemetry: (levelId, attemptOrdinal, payload) => Referee.recordTelemetry(levelId, attemptOrdinal, payload),
             getTelemetryLog: () => Referee.getTelemetryLog(),
-            clearTelemetryLog: () => Referee.clearTelemetryLog()
+            clearTelemetryLog: () => Referee.clearTelemetryLog(),
+            // Hint-path replay diagnostic — runs the level through PathfinderSolver.solve with the
+            // replayHintPath option, which short-circuits the search and returns per-step bound /
+            // prune-fire trace. Used by scripts/hint-path-replay.mjs.
+            replayHintPath: (level, hintPath, opts = {}) => PathfinderSolver.solve(level, { ...opts, replayHintPath: hintPath, timeLimit: 1 })
         };
     })();
 
