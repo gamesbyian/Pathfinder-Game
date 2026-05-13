@@ -11669,28 +11669,6 @@ function installSolver(APP) {
                         quality
                     });
                     Object.assign(nextAttempt, adaptation?.nextPlan || {});
-                    if (healthyExpansionTimeout) {
-                        const currentFamily = String(attempt?.policyProfile || attempt?.orderingPolicy || '').trim();
-                        const nextFamily = String(nextAttempt?.policyProfile || nextAttempt?.orderingPolicy || '').trim();
-                        const sameOrUnknownFamily = (!currentFamily && !nextFamily) || (currentFamily && currentFamily === nextFamily);
-                        if (sameOrUnknownFamily) {
-                            const fallbackFamilyCycle = ['objectiveFirst', 'knotBuilder', 'portalFirstTransfer', 'finishFirst'];
-                            const fallbackIdx = (Math.max(0, timeoutLikeAttemptsSoFar) + Math.max(0, consecutiveTimeoutStagnation)) % fallbackFamilyCycle.length;
-                            const forcedFamily = fallbackFamilyCycle[fallbackIdx];
-                            nextAttempt.policyProfile = forcedFamily;
-                            nextAttempt.orderingPolicy = forcedFamily;
-                            if (!nextAttempt.retryTag) nextAttempt.retryTag = 'healthy-expansion-force-family-cycle';
-                            if (currentAttemptEntry) {
-                                currentAttemptEntry.retryTag = currentAttemptEntry.retryTag || 'healthy-expansion-force-family-cycle';
-                                currentAttemptEntry.forcedFamilyCycle = {
-                                    from: currentFamily || null,
-                                    to: forcedFamily,
-                                    timeoutLikeAttemptsSoFar,
-                                    consecutiveTimeoutStagnation
-                                };
-                            }
-                        }
-                    }
                     switchedThisAttempt = !!adaptation?.switchedFamily;
                     timeoutEscalationTier = adaptation?.stateUpdates?.timeoutEscalationTier ?? timeoutEscalationTier;
                     timeoutFamilyDiversificationUsed = !!(adaptation?.stateUpdates?.timeoutFamilyDiversificationUsed || timeoutFamilyDiversificationUsed);
