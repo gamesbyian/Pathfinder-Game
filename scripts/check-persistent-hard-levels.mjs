@@ -6,6 +6,11 @@ const args = new Set(process.argv.slice(2));
 const enforceSolved = args.has('--enforce-solved');
 const sourceArg = [...args].find((arg) => arg.startsWith('--file='));
 const sourceFile = sourceArg ? sourceArg.slice('--file='.length) : 'audits/raw/latest.json';
+// External measurement-only watchlist of levels that have historically been hard. This is
+// a TEST SCRIPT used by audit pipelines, not solver behavior. The list is updatable as the
+// historic set changes; the solver itself has no knowledge of these numbers. If the level
+// catalog is reordered, this list should be revised manually (or replaced with logic that
+// derives the watch set from the latest audit's failure list).
 const hardLevels = [61, 92, 108, 134];
 
 const fullPath = path.resolve(sourceFile);

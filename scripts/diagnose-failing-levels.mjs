@@ -330,6 +330,9 @@ function report(levelNum, level, auditRow) {
 }
 
 // ─── main ────────────────────────────────────────────────────────────────────
+// External measurement-only watchlist. This is a DIAGNOSTIC SCRIPT — the solver itself
+// has no knowledge of these numbers. Update manually as the failing set changes (or
+// extend this script to derive it from the latest audit's failure list).
 const FAILING_LEVELS = [92, 108, 134];
 
 const [allLevels, auditMap] = await Promise.all([loadLevels(), loadAudit()]);
