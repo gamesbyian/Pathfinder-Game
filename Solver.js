@@ -909,6 +909,31 @@ function installSolver(APP) {
                         const crossBound = mustCrossMask !== 0n
                             ? this._estimateMustCrossBoundFrom(cellKey, state, level)
                             : 0;
+                        // Capture the must-cross bound's pieces so the harness can show where
+                        // the bound's value comes from (for L1-style over-prune debugging).
+                        let crossBoundDetail = null;
+                        if (mustCrossMask !== 0n && Array.isArray(level.mustCrossKeys)) {
+                            const components = [];
+                            for (let mci = 0; mci < level.mustCrossKeys.length; mci++) {
+                                const bit = 1n << BigInt(mci);
+                                if ((mustCrossMask & bit) === 0n) continue;
+                                const dToCross = level.mustCrossDistMaps?.[mci]?.get(cellKey);
+                                const dGoalFromCross = level.mustCrossToGoalDist?.[mci];
+                                components.push({
+                                    idx: mci,
+                                    distFromCurrentToCross: Number.isFinite(dToCross) ? dToCross : null,
+                                    distFromCrossToGoal: Number.isFinite(dGoalFromCross) ? dGoalFromCross : null
+                                });
+                            }
+                            const extra = this._mustCrossExtraVisitsLowerBound(mustCrossMask, this._crossNeeds(state), level);
+                            crossBoundDetail = {
+                                outstandingNodes: extra?.outstandingNodes ?? null,
+                                extraVisitsLB: extra?.extraVisitsLB ?? null,
+                                crossNeed: this._crossNeeds(state),
+                                mustCrossDpMode: level.mustCrossDpMode || null,
+                                components
+                            };
+                        }
                         const portalBoundDetail = this._estimatePortalMandatoryFamilyBoundFrom(cellKey, portalState.portalRequiredCoverageMask, level);
                         const portalBound = Number.isFinite(portalBoundDetail?.bound) ? portalBoundDetail.bound : Infinity;
 
@@ -1055,6 +1080,7 @@ function installSolver(APP) {
                                 crossBound: Number.isFinite(crossBound) ? crossBound : null,
                                 portalBound: Number.isFinite(portalBound) ? portalBound : null,
                                 lowerBoundToValidSolution: Number.isFinite(lowerBoundToValidSolution) ? lowerBoundToValidSolution : null,
+                                crossBoundDetail,
                                 portalDetail: portalBoundDetail ? {
                                     toObjective: Number.isFinite(portalBoundDetail.toObjective) ? portalBoundDetail.toObjective : null,
                                     portalCommitment: Number.isFinite(portalBoundDetail.portalCommitment) ? portalBoundDetail.portalCommitment : null,
@@ -1569,19 +1595,39 @@ function installSolver(APP) {
                     return Number.isFinite(d) ? d : Infinity;
                 },
                 _mustCrossRepeatVisitDetourLowerBound(crossIdx, l) {
-                    const transit = l?.mustCrossTransit;
-                    if (!transit || !Array.isArray(transit.keys) || !Array.isArray(transit.matrix)) return Infinity;
-                    const key = l.mustCrossKeys?.[crossIdx];
-                    if (key === undefined) return Infinity;
-                    const fromIdx = transit.keyToIdx.get(key);
-                    if (!Number.isFinite(fromIdx)) return Infinity;
-                    let best = Infinity;
-                    for (let i = 0; i < transit.keys.length; i++) {
-                        if (i === fromIdx) continue;
-                        const d = transit.matrix[fromIdx]?.[i];
-                        if (Number.isFinite(d) && d < best) best = d;
+                    // Lower bound on the EXTRA walking cost of an additional visit to mustCross[crossIdx]
+                    // beyond the first. Any revisit means leaving the cell and coming back — a
+                    // minimum of 2 walking steps (one out, one in). Levels where mustCross has no
+                    // walkable adjacent cell would be infeasible anyway, so the floor of 2 is
+                    // admissible whenever the level is solvable.
+                    //
+                    // The previous formula used the minimum transit-matrix distance from this
+                    // mustCross to ANY OTHER transit key (mustCross / goal / portal entries). For
+                    // a level with only one mustCross plus a far goal (e.g. L1, L7, L62, L99 etc.),
+                    // the function returned dist(mustCross, goal) as the "revisit detour cost,"
+                    // wildly overestimating — the must-cross obligation can be satisfied by a
+                    // tiny back-and-forth detour, not by walking to the goal and back. The
+                    // hint-path-replay harness counterexample (e.g. L1 step 0: bound 24 vs
+                    // reqLen 20, with the true minimum being ≈ 18) directly proves the previous
+                    // formula is inadmissible.
+                    const key = l?.mustCrossKeys?.[crossIdx];
+                    if (key === undefined) return 2;
+                    if (!l?.grid || !(l?.blockSet instanceof Set)) return 2;
+                    const w = Number(l.grid.w) || 0;
+                    const h = Number(l.grid.h) || 0;
+                    const p = APP.LevelUtils.UNPACK(key);
+                    // Out-and-back via the nearest walkable neighbor: 2 steps. If no walkable
+                    // neighbor exists the cell is structurally isolated and the level is
+                    // unsolvable — the bound is then irrelevant.
+                    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                        const nx = p.x + dx;
+                        const ny = p.y + dy;
+                        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                        const nk = APP.LevelUtils.PACK(nx, ny);
+                        if (l.blockSet.has(nk)) continue;
+                        return 2;
                     }
-                    return best;
+                    return Infinity;
                 },
                 _estimateMustCrossDemandFlowBoundFrom(key, state, l) {
                     if (!l?.mustCrossTransit?.ready || !Array.isArray(l.mustCrossKeys) || l.mustCrossKeys.length === 0) return null;
