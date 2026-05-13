@@ -935,7 +935,13 @@ function installSolver(APP) {
                                 mustBound: Number.isFinite(mustBound) ? mustBound : null,
                                 crossBound: Number.isFinite(crossBound) ? crossBound : null,
                                 portalBound: Number.isFinite(portalBound) ? portalBound : null,
-                                lowerBoundToValidSolution: Number.isFinite(lowerBoundToValidSolution) ? lowerBoundToValidSolution : null
+                                lowerBoundToValidSolution: Number.isFinite(lowerBoundToValidSolution) ? lowerBoundToValidSolution : null,
+                                portalDetail: portalBoundDetail ? {
+                                    toObjective: Number.isFinite(portalBoundDetail.toObjective) ? portalBoundDetail.toObjective : null,
+                                    portalCommitment: Number.isFinite(portalBoundDetail.portalCommitment) ? portalBoundDetail.portalCommitment : null,
+                                    toGoal: Number.isFinite(portalBoundDetail.toGoal) ? portalBoundDetail.toGoal : null,
+                                    familyCount: portalBoundDetail.familyCount || 0
+                                } : null
                             },
                             pruneFires: {
                                 mustPassBound: mustBoundFires,
@@ -8874,7 +8880,14 @@ function installSolver(APP) {
                     families: Array.isArray(portalHints.families) ? portalHints.families : [],
                     regionByKey: portalHints.regionByKey instanceof Map ? portalHints.regionByKey : new Map(),
                     bridgeHints: Array.isArray(portalHints.bridgeHints) ? portalHints.bridgeHints : [],
-                    mandatoryFamilies: Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies : []
+                    mandatoryFamilies: Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies : [],
+                    // Preserve the rigorous-only set so the hard portalRequiredCoverageMask
+                    // can use it (see _initializePortalState). Previously dropped here,
+                    // which silently forced the hard constraint to fall back to the loose
+                    // mandatoryFamilies set — over-constraining levels solvable without
+                    // portals (e.g. L108).
+                    provablyMandatoryFamilies: Array.isArray(portalHints.provablyMandatoryFamilies) ? portalHints.provablyMandatoryFamilies : [],
+                    optionalFamilies: Array.isArray(portalHints.optionalFamilies) ? portalHints.optionalFamilies : []
                 },
                 topology: {
                     walkableCellCount: Number.isFinite(topology.walkableCellCount) ? topology.walkableCellCount : 0,
