@@ -10,6 +10,9 @@ import { chromium } from 'playwright';
 const HOST = '127.0.0.1';
 const PORT = Number(process.env.HEURISTIC_RECALL_PORT || 4175);
 const BASE_URL = `http://${HOST}:${PORT}`;
+// External measurement-only default: levels historically interesting to audit in depth.
+// This is a TEST SCRIPT — the solver itself has no knowledge of these numbers. Override
+// via --levels=N,M,K; update the constant manually if the historic set changes.
 const DEFAULT_LEVELS = [92, 108, 134];
 
 const args = process.argv.slice(2);

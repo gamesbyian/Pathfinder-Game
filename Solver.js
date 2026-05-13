@@ -9489,26 +9489,6 @@ function installSolver(APP) {
                 })
             });
         },
-        async ensureHardClusterGatingLoaded() {
-            if (!this._hardClusterGatingPromise) {
-                this._hardClusterGatingPromise = (async () => {
-                    try {
-                        const resp = await fetch('audits/metrics/latest.json', { cache: 'no-store' });
-                        if (!resp.ok) return null;
-                        const parsed = await resp.json();
-                        return parsed?.hardClusterGating && typeof parsed.hardClusterGating === 'object'
-                            ? parsed.hardClusterGating
-                            : null;
-                    } catch {
-                        return null;
-                    }
-                })();
-            }
-            if (!this._hardClusterGatingResolved) {
-                this._hardClusterGatingResolved = await this._hardClusterGatingPromise;
-            }
-            return this._hardClusterGatingResolved;
-        },
 
         // ---------------------------------------------------------------------------
         // Telemetry side-channel (F2): callers can log debug payloads here without
@@ -9532,6 +9512,78 @@ function installSolver(APP) {
         },
         clearTelemetryLog() {
             this._telemetryLog = [];
+        },
+
+        // Structural archetype detection — classifies a level purely on its own geometry, never
+        // on its identity. Returns 0 or more archetype tags. Each tag is a name for a structural
+        // pattern (e.g. high-intersection-burden) that historically benefits from a particular
+        // policy mix. Adding a new archetype means choosing a structural predicate; the solver
+        // never references level ids, hashes, or any saved expectations.
+        //
+        // Archetype predicates intentionally rely on simple structural ratios (reqInt, reqLen,
+        // portal pair count, mustCross count, block density, area) so they are stable under
+        // arbitrary level reordering or layout changes — any newly-introduced level whose
+        // geometry matches a predicate gets the corresponding treatment, and a level whose
+        // geometry no longer matches stops getting it.
+        _classifyLevelArchetype(level) {
+            if (!level || typeof level !== 'object') return [];
+            const reqInt = Math.max(0, Number(level?.reqInt) || 0);
+            const reqLen = Math.max(0, Number(level?.reqLen) || 0);
+            const w = Math.max(1, Number(level?.grid?.w) || 0);
+            const h = Math.max(1, Number(level?.grid?.h) || 0);
+            const area = Math.max(1, w * h);
+            const reqLenDensity = reqLen > 0 ? reqLen / area : 0;
+            const mustPassCount = Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0;
+            const mustCrossCount = Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0;
+            const portalPairs = level?.portalMap instanceof Map ? Math.floor(level.portalMap.size / 2) : 0;
+            const blockCount = level?.blockSet instanceof Set ? level.blockSet.size : 0;
+            const blockDensity = blockCount / area;
+            const archetypes = [];
+
+            // High-intersection-burden: levels that REQUIRE many self-intersections. The
+            // standard heuristic prioritizes approaching mustPass/mustCross cells, but
+            // such levels need the path to deliberately wander to set up intersections.
+            // Profiles that boost intersectionSetupWeight relative to obligation urgency
+            // perform better here.
+            if (reqInt >= 5 && reqLenDensity >= 0.55) {
+                archetypes.push('high-intersection-burden');
+            }
+
+            // Portal-mustCross-mix with constrained geometry: portals + mustCross obligations
+            // + significant block density create tight corridors where portal-traversal must
+            // be committed early. portalCommitted + knotBuilder profiles help here.
+            if (mustCrossCount >= 2 && portalPairs >= 2 && blockDensity >= 0.2) {
+                archetypes.push('portal-mustcross-constrained');
+            }
+
+            // Sparse near-closure: low reqInt, no mustCross, but multiple portals and a
+            // short path relative to area. The hard part is closing the final-mile shell
+            // rather than building geometry. nearClosureRescue profile concentrates on
+            // closure-residual ordering and prune relaxation around the goal.
+            if (reqInt <= 1 && mustCrossCount === 0 && portalPairs >= 2 && reqLenDensity < 0.4 && mustPassCount >= 1) {
+                archetypes.push('sparse-near-closure');
+            }
+
+            return archetypes;
+        },
+
+        // Maps archetype tags to a list of stone-soup attempts to prepend ahead of the
+        // standard policy cascade. Each entry specifies a policy profile + a fraction of
+        // the total budget. The dispatcher in _buildAttemptPlan deduplicates by profile
+        // and caps total prepended budget so a level that matches multiple archetypes
+        // never starves the standard cascade.
+        _STONE_SOUP_BY_ARCHETYPE: {
+            'high-intersection-burden': [
+                { policyProfile: 'knotBuilder',     budgetFraction: 0.25 },
+                { policyProfile: 'mustCrossFirst',  budgetFraction: 0.25 }
+            ],
+            'portal-mustcross-constrained': [
+                { policyProfile: 'portalCommitted', budgetFraction: 0.25 },
+                { policyProfile: 'knotBuilder',     budgetFraction: 0.25 }
+            ],
+            'sparse-near-closure': [
+                { policyProfile: 'nearClosureRescue', budgetFraction: 0.45 }
+            ]
         },
 
         _buildAttemptPlan({ level, budgetMs, profile, opts = {}, controlPlane }) {
@@ -9775,59 +9827,44 @@ function installSolver(APP) {
                     portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
-            const levelNumber = Number(level?.id) || Number(level?.levelId) || Number(level?.level) || null;
-            const hardClusterGating = opts?.hardClusterGating && typeof opts.hardClusterGating === 'object'
-                ? opts.hardClusterGating
-                : null;
-            const orderedPasses = levelNumber && hardClusterGating?.passOrderByLevel && Array.isArray(hardClusterGating.passOrderByLevel[levelNumber])
-                ? hardClusterGating.passOrderByLevel[levelNumber]
-                : null;
-            const budgetMultiplier = levelNumber && hardClusterGating?.budgetByLevel && Number.isFinite(hardClusterGating.budgetByLevel[levelNumber])
-                ? Math.max(1, Math.min(1.5, Number(hardClusterGating.budgetByLevel[levelNumber])))
-                : 1;
-            const withAdjustedBudgets = attempts.map((attempt) => ({
-                ...attempt,
-                budgetMs: Math.max(1, Math.floor((Number(attempt?.budgetMs) || 1) * budgetMultiplier))
-            }));
-            const orderedAttempts = (() => {
-                if (!orderedPasses || orderedPasses.length === 0) return withAdjustedBudgets;
-                const ranking = new Map(orderedPasses.map((label, idx) => [label, idx]));
-                return withAdjustedBudgets.slice().sort((a, b) => {
-                    const aRank = ranking.has(a?.label) ? ranking.get(a.label) : Number.MAX_SAFE_INTEGER;
-                    const bRank = ranking.has(b?.label) ? ranking.get(b.label) : Number.MAX_SAFE_INTEGER;
-                    if (aRank !== bRank) return aRank - bRank;
-                    return 0;
-                });
-            })();
-            // Stone Soup: inject targeted passes at the front for the three known hard levels.
-            // These are the ONLY change for these levelIds; all other levels receive the
-            // unmodified orderedAttempts returned above. Using a fraction of `total` so the
-            // targeted passes get a meaningful budget slice without touching standard pass math.
-            const STONE_SOUP_PROFILES = {
-                92:  [
-                    { label: 'stone-soup-92-mustcross',    policyProfile: 'mustCrossFirst',    budgetFraction: 0.25 },
-                    { label: 'stone-soup-92-knotbuilder',  policyProfile: 'knotBuilder',       budgetFraction: 0.25 }
-                ],
-                108: [
-                    { label: 'stone-soup-108-nearclosure', policyProfile: 'nearClosureRescue', budgetFraction: 0.45 }
-                ],
-                134: [
-                    { label: 'stone-soup-134-portal',      policyProfile: 'portalCommitted',   budgetFraction: 0.25 },
-                    { label: 'stone-soup-134-knotbuilder', policyProfile: 'knotBuilder',       budgetFraction: 0.25 }
-                ]
-            };
-            const stoneSoupEntries = levelNumber && STONE_SOUP_PROFILES[levelNumber];
-            if (stoneSoupEntries && stoneSoupEntries.length > 0) {
-                const prepended = stoneSoupEntries.map(({ label, policyProfile, budgetFraction }) => ({
-                    label,
-                    budgetMs: Math.max(1, Math.floor(total * budgetFraction)),
-                    scoringMode: 'modern',
-                    portalBiasMode: 'adaptiveMustCross',
-                    structuralMode: false,
-                    policyProfile,
-                    portalUsagePolicy: resolvePortalUsagePolicy()
-                }));
-                return [...prepended, ...orderedAttempts];
+            // Level-agnostic: every level is treated as a fresh challenge. The solver does not
+            // load any audit-derived per-level pass ordering or budget multipliers — those would
+            // be expectations from prior solves keyed by level identity. Pass order and budget
+            // come from the cascade definition above, the same for every level.
+            const orderedAttempts = attempts.map((attempt) => ({ ...attempt }));
+            // Structural archetype dispatch: classify the level by its OWN geometry (reqInt,
+            // reqLen, area, portal pair count, mustCross/mustPass count, block density). The
+            // classifier returns a set of archetype tags; each tag maps to a list of policy
+            // profiles to prepend with a budget fraction. Replaces the prior level-id-keyed
+            // STONE_SOUP_PROFILES so the solver has no expectations about specific level
+            // numbers — any level whose structure matches an archetype gets the corresponding
+            // treatment, and a level whose number changes (or whose layout changes) gets
+            // re-classified from scratch on its current geometry.
+            const archetypes = this._classifyLevelArchetype(level);
+            if (archetypes.length > 0) {
+                const seenProfiles = new Set();
+                const prepended = [];
+                let budgetFractionUsed = 0;
+                const MAX_PREPENDED_BUDGET_FRACTION = 0.6;
+                for (const archetype of archetypes) {
+                    const entries = this._STONE_SOUP_BY_ARCHETYPE[archetype] || [];
+                    for (const entry of entries) {
+                        if (seenProfiles.has(entry.policyProfile)) continue;
+                        if (budgetFractionUsed + entry.budgetFraction > MAX_PREPENDED_BUDGET_FRACTION) continue;
+                        seenProfiles.add(entry.policyProfile);
+                        budgetFractionUsed += entry.budgetFraction;
+                        prepended.push({
+                            label: `archetype-${archetype}-${entry.policyProfile}`,
+                            budgetMs: Math.max(1, Math.floor(total * entry.budgetFraction)),
+                            scoringMode: 'modern',
+                            portalBiasMode: 'adaptiveMustCross',
+                            structuralMode: false,
+                            policyProfile: entry.policyProfile,
+                            portalUsagePolicy: resolvePortalUsagePolicy()
+                        });
+                    }
+                }
+                if (prepended.length > 0) return [...prepended, ...orderedAttempts];
             }
             return orderedAttempts;
         },
@@ -9886,8 +9923,7 @@ function installSolver(APP) {
             const escalationNoveltyImprovementEpsilon = 0.03;
             const lowNoveltySameFamilyRetryCap = 1;
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
-            const hardClusterGating = await this.ensureHardClusterGatingLoaded();
-            const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts: { ...opts, hardClusterGating }, controlPlane });
+            const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts, controlPlane });
             const forceFamilySwitchFromLadder = !!sharedHintLadderState?.forceFamilySwitchNextAttempt;
             const rootTieSeedOffset = Number.isFinite(opts?.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null;
             const rootOrderingVariant = typeof opts?.rootOrderingVariant === 'string' ? opts.rootOrderingVariant : null;
@@ -14509,25 +14545,6 @@ function installSolver(APP) {
             function runPortalValidatorDiagnostics() {
                 try {
                     runMoveReasonCodeDiagnostics();
-                    const levels = APP.LevelUtils.getRawLevels();
-                    const level21Raw = levels[20];
-                    const level21Hint = Array.isArray(level21Raw?.hints) && level21Raw.hints.length > 0 ? level21Raw.hints[0] : null;
-                    if (Array.isArray(level21Hint)) {
-                        const level21 = APP.LevelUtils.normalizeLevel(20);
-                        const level21Result = validateCandidatePath(level21, level21Hint);
-                        console.log('[Portal/Validator Diagnostic] Level 21 stored hint validation:', level21Result);
-                    } else {
-                        console.warn('[Portal/Validator Diagnostic] Level 21 has no stored hint array to validate.');
-                    }
-
-                    const level117 = APP.LevelUtils.normalizeLevel(116);
-                    if (level117) {
-                        const level117KnownValid = [6,5,4,3,2,1,0,65536,131072,196608,262144,327680,393216,393227,458763,524299,589835,655371,655370,655369,655368,655367,655366,655365,655364,655363,655362,655361,589825,589824,655360,720896,720897,720898,720899,720900,720901,720902];
-                        const level117Result = validateCandidatePath(level117, level117KnownValid);
-                        console.log('[Portal/Validator Diagnostic] Level 117 known valid path validation:', level117Result);
-                    } else {
-                        console.warn('[Portal/Validator Diagnostic] Level 117 is unavailable in loaded level data.');
-                    }
                 } catch (err) {
                     console.error('[Portal/Validator Diagnostic] Failed to run diagnostics:', err);
                 }
