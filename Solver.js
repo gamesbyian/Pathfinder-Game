@@ -4811,6 +4811,19 @@ function installSolver(APP) {
                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     let steps = 0;
                     let endgameIDAStarTriggered = false;
+                    // Track per-attempt fire state. Audit 25 showed IDA* fired at the FIRST
+                    // trigger-eligible state (bound 15, depth 84) but exhausted immediately
+                    // because _getNeighbors at that state returned empty (beam search's prune
+                    // cascade filtered all successors). Beam search subsequently found states
+                    // with bound 13 at the same depth — better than the trigger state — but
+                    // IDA* never fired there because the !endgameIDAStarTriggered guard was set.
+                    // Allow IDA* to re-fire when the current state's bound is strictly lower
+                    // than the bound at the last fire (real progress), with a hard cap on
+                    // total fires per attempt to prevent runaway. Initial fire uses Infinity
+                    // as the "previous bound" so first eligible state always fires.
+                    let endgameIDAStarFireCount = 0;
+                    let endgameIDAStarLastFireBound = Infinity;
+                    const endgameIDAStarMaxFires = 5;
                     // Floor (not ceil) so depth at 0.85*reqLen actually triggers — for L92 with
                     // reqLen=99, floor(84.15)=84, matching the depth at which the bound-plateau
                     // rescue fires. Ceil would round to 85 and miss the trigger.
@@ -5131,25 +5144,32 @@ function installSolver(APP) {
                             }
                         }
                         if (options.endgameIDAStarEnabled
-                            && !endgameIDAStarTriggered
+                            && endgameIDAStarFireCount < endgameIDAStarMaxFires
                             && realLen >= endgameIDAStarTriggerDepth
                             && Number.isFinite(lowerBoundToValidSolution)
                             && lowerBoundToValidSolution > 0
                             && lowerBoundToValidSolution <= Number(options.endgameIDAStarBoundCeiling || 20)
+                            && lowerBoundToValidSolution < endgameIDAStarLastFireBound
                             && (realLen + lowerBoundToValidSolution) <= l.reqLen) {
                             endgameIDAStarTriggered = true;
+                            endgameIDAStarFireCount++;
+                            endgameIDAStarLastFireBound = lowerBoundToValidSolution;
                             const elapsedMs = Date.now() - startTime;
                             const remainingBudget = Math.max(500, Math.floor((options.timeLimit - elapsedMs) * Number(options.endgameIDAStarBudgetFraction || 0.5)));
                             const idaResult = this._runEndgameIDAStar(state, l, options, remainingBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
                             if (debugStats) {
+                                // Most fields reflect the LAST fire (overwrite-style). The
+                                // multi-fire counters and aggregates accumulate across fires.
                                 debugStats.endgameIDAStarTriggered = true;
-                                debugStats.endgameIDAStarSolved = !!idaResult.ok;
-                                debugStats.endgameIDAStarNodesExpanded = Number(idaResult?.nodesExpanded) || 0;
-                                debugStats.endgameIDAStarIterations = Number(idaResult?.iterations) || 0;
-                                debugStats.endgameIDAStarFinalFLimit = Number.isFinite(idaResult?.finalFLimit) ? idaResult.finalFLimit : null;
+                                debugStats.endgameIDAStarSolved = !!idaResult.ok || !!debugStats.endgameIDAStarSolved;
+                                debugStats.endgameIDAStarNodesExpanded = (Number(debugStats.endgameIDAStarNodesExpanded) || 0) + (Number(idaResult?.nodesExpanded) || 0);
+                                debugStats.endgameIDAStarIterations = (Number(debugStats.endgameIDAStarIterations) || 0) + (Number(idaResult?.iterations) || 0);
+                                debugStats.endgameIDAStarFinalFLimit = Number.isFinite(idaResult?.finalFLimit) ? idaResult.finalFLimit : (debugStats.endgameIDAStarFinalFLimit ?? null);
                                 debugStats.endgameIDAStarReason = String(idaResult?.reason || '');
                                 debugStats.endgameIDAStarTriggerDepth = realLen;
                                 debugStats.endgameIDAStarTriggerBound = lowerBoundToValidSolution;
+                                debugStats.endgameIDAStarFireCount = endgameIDAStarFireCount;
+                                debugStats.endgameIDAStarLastFireBound = endgameIDAStarLastFireBound;
                             }
                             if (idaResult.ok && Array.isArray(idaResult.path)) {
                                 captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
@@ -7694,6 +7714,8 @@ function installSolver(APP) {
                 endgameIDAStarReason: (typeof debug?.endgameIDAStarReason === 'string') ? debug.endgameIDAStarReason : null,
                 endgameIDAStarTriggerDepth: Number.isFinite(debug?.endgameIDAStarTriggerDepth) ? debug.endgameIDAStarTriggerDepth : null,
                 endgameIDAStarTriggerBound: Number.isFinite(debug?.endgameIDAStarTriggerBound) ? debug.endgameIDAStarTriggerBound : null,
+                endgameIDAStarFireCount: Number.isFinite(debug?.endgameIDAStarFireCount) ? debug.endgameIDAStarFireCount : null,
+                endgameIDAStarLastFireBound: Number.isFinite(debug?.endgameIDAStarLastFireBound) ? debug.endgameIDAStarLastFireBound : null,
                 endgameIDAStarOption: debug?.endgameIDAStarOption === true ? true : (debug?.endgameIDAStarOption === false ? false : null),
                 endgameIDAStarTriggerDepthThreshold: Number.isFinite(debug?.endgameIDAStarTriggerDepthThreshold) ? debug.endgameIDAStarTriggerDepthThreshold : null,
                 endgameIDAStarBoundCeiling: Number.isFinite(debug?.endgameIDAStarBoundCeiling) ? debug.endgameIDAStarBoundCeiling : null,
@@ -11434,6 +11456,8 @@ function installSolver(APP) {
                     endgameIDAStarReason: (typeof attemptResult?.debug?.endgameIDAStarReason === 'string') ? attemptResult.debug.endgameIDAStarReason : null,
                     endgameIDAStarTriggerDepth: Number.isFinite(attemptResult?.debug?.endgameIDAStarTriggerDepth) ? attemptResult.debug.endgameIDAStarTriggerDepth : null,
                     endgameIDAStarTriggerBound: Number.isFinite(attemptResult?.debug?.endgameIDAStarTriggerBound) ? attemptResult.debug.endgameIDAStarTriggerBound : null,
+                    endgameIDAStarFireCount: Number.isFinite(attemptResult?.debug?.endgameIDAStarFireCount) ? attemptResult.debug.endgameIDAStarFireCount : null,
+                    endgameIDAStarLastFireBound: Number.isFinite(attemptResult?.debug?.endgameIDAStarLastFireBound) ? attemptResult.debug.endgameIDAStarLastFireBound : null,
                     endgameIDAStarOption: attemptResult?.debug?.endgameIDAStarOption === true ? true : (attemptResult?.debug?.endgameIDAStarOption === false ? false : null),
                     endgameIDAStarTriggerDepthThreshold: Number.isFinite(attemptResult?.debug?.endgameIDAStarTriggerDepthThreshold) ? attemptResult.debug.endgameIDAStarTriggerDepthThreshold : null,
                     endgameIDAStarBoundCeiling: Number.isFinite(attemptResult?.debug?.endgameIDAStarBoundCeiling) ? attemptResult.debug.endgameIDAStarBoundCeiling : null,
