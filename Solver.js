@@ -5720,6 +5720,16 @@ function installSolver(APP) {
                                 forcePhaseArchetype,
                                 antiDriftEdgeLock,
                                 suppressPerimeterBias,
+                                // Endgame IDA* options (default-off; archetype dispatch in
+                                // _buildAttemptPlan sets these on planned attempts; PathfinderSolver.solve
+                                // destructures them but the internalOpts wrapper passed to
+                                // _solveInstance was an explicit allowlist — without forwarding here,
+                                // the DFS body always saw options.endgameIDAStarEnabled = undefined
+                                // even when the cascade plan had it set to true).
+                                endgameIDAStarEnabled,
+                                endgameIDAStarTriggerDepthRatio,
+                                endgameIDAStarBoundCeiling,
+                                endgameIDAStarBudgetFraction,
                                 ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
