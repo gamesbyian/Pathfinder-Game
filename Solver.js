@@ -4125,6 +4125,185 @@ function installSolver(APP) {
                     for (const k of l.gooseSet) if (state.counts.has(k)) return false;
                     return true;
                 },
+                // Endgame IDA* (Iterative Deepening A*) — operates on the EXISTING zero-alloc
+                // state via push/pop and explores in f-value order rather than the heuristic
+                // beam order used by the main DFS. Designed for the L92-class endgame: the beam
+                // search reaches a deep state with a small admissible bound (e.g., depth 84 of
+                // 99 with bound 13) but cannot navigate the last ~15 steps because the heuristic
+                // ordering picks one branch and exhausts budget before backtracking. IDA* fully
+                // enumerates branches with f <= fLimit for each iteration, raising fLimit by the
+                // smallest excess until a solution is found or the search exhausts.
+                //
+                // Memory: O(depth) — IDA* only stores the current DFS path stack, never the
+                // closed set. State mutation is reused via _pushStateZeroAlloc / _popStateZeroAlloc.
+                //
+                // Admissibility: h(s) is the existing composite lower bound used by the main
+                // DFS (max of distance-to-goal, mustPassBound, mustCrossBound, intersection
+                // deficit, portal coverage bound). These are already audited as admissible by
+                // the hint-path-replay harness (no path the solver claims as a hint should
+                // hit any of these prunes).
+                //
+                // Returns { ok, path, nodesExpanded, iterations, finalFLimit, reason }.
+                // On failure, the state object is restored to its pre-call cursor/length.
+                _runEndgameIDAStar(state, level, options, budgetMs, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats) {
+                    const startTime = Date.now();
+                    const originalLogCursor = state.logCursor;
+                    const originalPathLength = state.path.length;
+                    const startKey = state.path[state.path.length - 1];
+                    const startDepth = state.path.length - 1;
+                    const reqLen = level.reqLen;
+                    const computeH = (k, s) => {
+                        const distToGoal = distMap?.get(k);
+                        const distComp = Number.isFinite(distToGoal) ? distToGoal : Infinity;
+                        let mustPassBound = 0;
+                        if (typeof s.mustMask === 'bigint' && s.mustMask !== 0n) {
+                            const detail = this._estimateMustPassBoundFrom(k, s, level);
+                            const b = Number(detail?.bound);
+                            mustPassBound = Number.isFinite(b) ? b : Infinity;
+                        }
+                        let mustCrossBound = 0;
+                        if (typeof s.mustCrossMask === 'bigint' && s.mustCrossMask !== 0n) {
+                            const detail = this._estimateMustCrossBoundFrom(k, s, level);
+                            const b = Number(detail?.bound);
+                            mustCrossBound = Number.isFinite(b) ? b : Infinity;
+                        }
+                        const intDeficit = Math.max(0, level.reqInt - s.ints);
+                        let portalCovBound = 0;
+                        if (typeof s.portal?.portalRequiredCoverageMask === 'bigint' && s.portal.portalRequiredCoverageMask !== 0n) {
+                            const detail = this._estimatePortalMandatoryFamilyBoundFrom(k, s.portal.portalRequiredCoverageMask, level);
+                            const b = Number(detail?.bound);
+                            portalCovBound = Number.isFinite(b) ? b : Infinity;
+                        }
+                        return Math.max(distComp, mustPassBound, mustCrossBound, intDeficit, portalCovBound);
+                    };
+                    const restoreToOriginal = () => {
+                        // Walk the undo log backwards entry-by-entry to fully restore state to
+                        // the pre-call snapshot. Mirrors _popStateZeroAlloc's per-entry undo
+                        // logic but stops at originalLogCursor instead of after one path-pop.
+                        const LOG_COUNTS = 1, LOG_USAGE = 2, LOG_INTS = 3, LOG_JUMP = 4,
+                              LOG_CROSSED = 5, LOG_FLIPCOUNT = 6, LOG_FLIPPARITY = 7,
+                              LOG_MUSTCROSS = 8, LOG_MUSTMASK = 9, LOG_MUSTCROSSMASK = 10,
+                              LOG_FLIPPERCROSSMASK = 11, LOG_FLIPPERPARITYMASK = 12,
+                              LOG_PORTAL_SELECTED_FAMILY = 13, LOG_PORTAL_SELECTED_ENTRY = 14,
+                              LOG_PORTAL_COMMITTED_REGION = 15, LOG_PORTAL_REENTRY = 16,
+                              LOG_PORTAL_OSC = 17, LOG_PORTAL_LAST_PROGRESS = 18,
+                              LOG_PORTAL_LAST_FAMILY = 19, LOG_PORTAL_LAST_REGION = 20,
+                              LOG_PORTAL_REQUIRED_MASK = 21, LOG_PORTAL_REENTRY_BUDGET = 22,
+                              LOG_PORTAL_OSC_BUDGET = 23;
+                        while (state.logCursor > originalLogCursor) {
+                            state.logCursor -= 3;
+                            const arrayId = state.undoLog[state.logCursor];
+                            const idx = state.undoLog[state.logCursor + 1];
+                            const prev = state.undoLog[state.logCursor + 2];
+                            if (arrayId === LOG_COUNTS) { if (state.countsArr[idx] > 0 && prev === 0) state.nonZeroCounts--; state.countsArr[idx] = prev; }
+                            else if (arrayId === LOG_USAGE) { if (state.usageBits[idx] > 0 && prev === 0) state.nonZeroUsage--; state.usageBits[idx] = prev; }
+                            else if (arrayId === LOG_INTS) state.ints = prev;
+                            else if (arrayId === LOG_JUMP) { if (idx < 0) state.jumpCount = prev; else state.jumpMarks[idx] = prev; }
+                            else if (arrayId === LOG_CROSSED) state.crossedFlippersAt[idx] = prev;
+                            else if (arrayId === LOG_FLIPCOUNT) state.flipCount = prev;
+                            else if (arrayId === LOG_FLIPPARITY) state.flipParity = prev;
+                            else if (arrayId === LOG_MUSTCROSS) state.mustCrossCounts[idx] = prev;
+                            else if (arrayId === LOG_MUSTMASK) state.mustMask |= (1n << BigInt(idx));
+                            else if (arrayId === LOG_MUSTCROSSMASK) state.mustCrossMask |= (1n << BigInt(idx));
+                            else if (arrayId === LOG_FLIPPERCROSSMASK) state.flipperCrossMask = prev;
+                            else if (arrayId === LOG_FLIPPERPARITYMASK) state.flipperParityAtCrossMask = prev;
+                            else if (arrayId === LOG_PORTAL_SELECTED_FAMILY && state.portal) state.portal.portalSelectedFamily = prev;
+                            else if (arrayId === LOG_PORTAL_SELECTED_ENTRY && state.portal) state.portal.portalSelectedEntry = prev;
+                            else if (arrayId === LOG_PORTAL_COMMITTED_REGION && state.portal) state.portal.portalCommittedRegion = prev;
+                            else if (arrayId === LOG_PORTAL_REENTRY && state.portal) state.portal.portalReentryCounts[idx] = prev;
+                            else if (arrayId === LOG_PORTAL_OSC && state.portal) state.portal.portalOscillationCount = prev;
+                            else if (arrayId === LOG_PORTAL_LAST_PROGRESS && state.portal) state.portal.portalLastProgressValue = prev;
+                            else if (arrayId === LOG_PORTAL_LAST_FAMILY && state.portal) state.portal.portalLastFamily = prev;
+                            else if (arrayId === LOG_PORTAL_LAST_REGION && state.portal) state.portal.portalLastRegion = prev;
+                            else if (arrayId === LOG_PORTAL_REQUIRED_MASK && state.portal) state.portal.portalRequiredCoverageMask = BigInt(prev);
+                            else if (arrayId === LOG_PORTAL_REENTRY_BUDGET && state.portal) state.portal.portalReentryBudget = prev;
+                            else if (arrayId === LOG_PORTAL_OSC_BUDGET && state.portal) state.portal.portalOscBudget = prev;
+                        }
+                        if (state.path.length > originalPathLength) state.path.length = originalPathLength;
+                    };
+                    const initialH = computeH(startKey, state);
+                    if (!Number.isFinite(initialH)) {
+                        // Infeasible from the trigger state — at least one bound dimension is
+                        // Infinity (e.g., a must-pass cell isolated by the path so far). Beam
+                        // search would also fail to close from here; nothing for IDA* to do.
+                        return { ok: false, path: null, nodesExpanded: 0, iterations: 0, finalFLimit: 0, reason: 'initial-state-infeasible' };
+                    }
+                    let fLimit = startDepth + initialH;
+                    if (fLimit > reqLen) fLimit = reqLen;
+                    let totalNodesExpanded = 0;
+                    let iterations = 0;
+                    let solutionPath = null;
+                    while (fLimit <= reqLen) {
+                        if ((Date.now() - startTime) > budgetMs) break;
+                        iterations++;
+                        let nextFLimit = Infinity;
+                        const dfsStack = [];
+                        const startSuccessors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, level, options, scratch, searchCtx, debugStats);
+                        dfsStack.push({ k: startKey, neighbors: startSuccessors.slice(), logMark: null });
+                        while (dfsStack.length > 0) {
+                            if ((Date.now() - startTime) > budgetMs) break;
+                            const top = dfsStack[dfsStack.length - 1];
+                            if (!top.neighbors || top.neighbors.length === 0) {
+                                if (top.logMark !== null) {
+                                    this._popStateZeroAlloc(state, searchCtx, top.logMark, level, options, debugStats);
+                                }
+                                dfsStack.pop();
+                                continue;
+                            }
+                            const nextKey = top.neighbors.pop();
+                            totalNodesExpanded++;
+                            const topPortal = APP.LevelUtils.resolvePortal(level, top.k);
+                            const isJump = !!(topPortal && topPortal.dest === nextKey && !state.isJump.has(state.path.length - 1));
+                            const logMark = this._pushStateZeroAlloc(state, searchCtx, nextKey, isJump, level, options, debugStats);
+                            const newDepth = state.path.length - 1;
+                            // Goal check: at goal cell with all length/intersections/obligations satisfied.
+                            if (nextKey === level.goalKey
+                                && newDepth === reqLen
+                                && state.ints === level.reqInt
+                                && (typeof state.mustMask !== 'bigint' || state.mustMask === 0n)
+                                && (typeof state.mustCrossMask !== 'bigint' || state.mustCrossMask === 0n)) {
+                                if (this._checkFinalConstraints(state, level)) {
+                                    solutionPath = state.path.slice();
+                                    break;
+                                }
+                            }
+                            // f-bound prune (admissible, so safe).
+                            const h = computeH(nextKey, state);
+                            const f = newDepth + (Number.isFinite(h) ? h : reqLen + 1);
+                            if (f > fLimit || f > reqLen) {
+                                if (Number.isFinite(f) && f > fLimit && f <= reqLen && f < nextFLimit) nextFLimit = f;
+                                this._popStateZeroAlloc(state, searchCtx, logMark, level, options, debugStats);
+                                continue;
+                            }
+                            const succNeighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, level, options, scratch, searchCtx, debugStats);
+                            dfsStack.push({ k: nextKey, neighbors: succNeighbors.slice(), logMark });
+                        }
+                        // Cleanup any frames left over from a budget-aborted inner DFS.
+                        while (dfsStack.length > 0) {
+                            const top = dfsStack[dfsStack.length - 1];
+                            if (top.logMark !== null) {
+                                this._popStateZeroAlloc(state, searchCtx, top.logMark, level, options, debugStats);
+                            }
+                            dfsStack.pop();
+                        }
+                        if (solutionPath) break;
+                        if (!Number.isFinite(nextFLimit)) {
+                            // Inner DFS finished without f-pruning anything → search exhausted at this fLimit.
+                            return { ok: false, path: null, nodesExpanded: totalNodesExpanded, iterations, finalFLimit: fLimit, reason: 'exhausted' };
+                        }
+                        fLimit = nextFLimit;
+                    }
+                    if (solutionPath) {
+                        // State is now at the goal — leave it there so the caller's DFS frame can
+                        // unwind via the existing goal-emission path. The returned path is the full
+                        // path from gate to goal.
+                        return { ok: true, path: solutionPath, nodesExpanded: totalNodesExpanded, iterations, finalFLimit: fLimit, reason: 'solved' };
+                    }
+                    // No solution found within budget or fLimit exceeded reqLen. Restore state.
+                    restoreToOriginal();
+                    const reason = ((Date.now() - startTime) > budgetMs) ? 'budget' : 'fLimit-exceeded-reqLen';
+                    return { ok: false, path: null, nodesExpanded: totalNodesExpanded, iterations, finalFLimit: fLimit, reason };
+                },
                 _floodFillReachable(startKey, state, l, searchCtx) {
                     const cols = l.grid.w;
                     const rows = l.grid.h;
@@ -4625,6 +4804,13 @@ function installSolver(APP) {
                     const progressStartTimeMs = Date.now();
                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     let steps = 0;
+                    let endgameIDAStarTriggered = false;
+                    // Floor (not ceil) so depth at 0.85*reqLen actually triggers — for L92 with
+                    // reqLen=99, floor(84.15)=84, matching the depth at which the bound-plateau
+                    // rescue fires. Ceil would round to 85 and miss the trigger.
+                    const endgameIDAStarTriggerDepth = (Number(options?.endgameIDAStarTriggerDepthRatio) > 0)
+                        ? Math.floor(l.reqLen * Number(options.endgameIDAStarTriggerDepthRatio))
+                        : Infinity;
                     while (stack.length > 0) {
                         if (options.signal?.aborted) {
                             captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
@@ -4893,6 +5079,44 @@ function installSolver(APP) {
                             }
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                             continue;
+                        }
+                        // Endgame IDA* trigger: when the beam search reaches a deep state with a
+                        // small admissible bound, swap to f-value-ordered iterative-deepening DFS
+                        // for the remaining horizon. Beam search picks heuristically-best branches
+                        // and exhausts budget before backtracking; IDA* enumerates branches in
+                        // f-order and is guaranteed to find a solution if one exists with f <= reqLen.
+                        // Gated tightly: only fires once per attempt, only when explicitly enabled
+                        // via option (default off), only at depth >= triggerDepth and bound <= ceiling.
+                        // On failure, IDA* restores state to its trigger-time snapshot and beam
+                        // search continues normally — strict additive behavior, no regression risk
+                        // for attempts where the option is off.
+                        if (options.endgameIDAStarEnabled
+                            && !endgameIDAStarTriggered
+                            && realLen >= endgameIDAStarTriggerDepth
+                            && Number.isFinite(lowerBoundToValidSolution)
+                            && lowerBoundToValidSolution > 0
+                            && lowerBoundToValidSolution <= Number(options.endgameIDAStarBoundCeiling || 20)
+                            && (realLen + lowerBoundToValidSolution) <= l.reqLen) {
+                            endgameIDAStarTriggered = true;
+                            const elapsedMs = Date.now() - startTime;
+                            const remainingBudget = Math.max(500, Math.floor((options.timeLimit - elapsedMs) * Number(options.endgameIDAStarBudgetFraction || 0.5)));
+                            const idaResult = this._runEndgameIDAStar(state, l, options, remainingBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
+                            if (debugStats) {
+                                debugStats.endgameIDAStarTriggered = true;
+                                debugStats.endgameIDAStarSolved = !!idaResult.ok;
+                                debugStats.endgameIDAStarNodesExpanded = Number(idaResult?.nodesExpanded) || 0;
+                                debugStats.endgameIDAStarIterations = Number(idaResult?.iterations) || 0;
+                                debugStats.endgameIDAStarFinalFLimit = Number.isFinite(idaResult?.finalFLimit) ? idaResult.finalFLimit : null;
+                                debugStats.endgameIDAStarReason = String(idaResult?.reason || '');
+                                debugStats.endgameIDAStarTriggerDepth = realLen;
+                                debugStats.endgameIDAStarTriggerBound = lowerBoundToValidSolution;
+                            }
+                            if (idaResult.ok && Array.isArray(idaResult.path)) {
+                                captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
+                                recordPhaseAttempt('solved');
+                                return { path: idaResult.path.slice(), len: idaResult.path.length - 1 };
+                            }
+                            // IDA* failed and restored state; continue beam search from the same node.
                         }
                         const minRem = minRemForLowerBound;
                         if (!runtimeDisabledPrunes.has('distance') && !runtimeDisabledPrunes.has('minRemOverflow') && realLen + minRem > l.reqLen) {
@@ -5573,7 +5797,7 @@ function installSolver(APP) {
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false, endgameIDAStarEnabled = false, endgameIDAStarTriggerDepthRatio = 0.85, endgameIDAStarBoundCeiling = 20, endgameIDAStarBudgetFraction = 0.5 } = options;
                     const startTime = Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -7404,6 +7628,14 @@ function installSolver(APP) {
                 depth0FamilyCoverageSelections: Number.isFinite(debug?.depth0FamilyCoverageSelections) ? debug.depth0FamilyCoverageSelections : null,
                 depth0FamilyRepeatSelections: Number.isFinite(debug?.depth0FamilyRepeatSelections) ? debug.depth0FamilyRepeatSelections : null,
                 rescueTriggeredNearClosure: debug?.rescueTriggeredNearClosure === true ? true : null,
+                endgameIDAStarTriggered: debug?.endgameIDAStarTriggered === true ? true : null,
+                endgameIDAStarSolved: debug?.endgameIDAStarSolved === true ? true : null,
+                endgameIDAStarNodesExpanded: Number.isFinite(debug?.endgameIDAStarNodesExpanded) ? debug.endgameIDAStarNodesExpanded : null,
+                endgameIDAStarIterations: Number.isFinite(debug?.endgameIDAStarIterations) ? debug.endgameIDAStarIterations : null,
+                endgameIDAStarFinalFLimit: Number.isFinite(debug?.endgameIDAStarFinalFLimit) ? debug.endgameIDAStarFinalFLimit : null,
+                endgameIDAStarReason: (typeof debug?.endgameIDAStarReason === 'string') ? debug.endgameIDAStarReason : null,
+                endgameIDAStarTriggerDepth: Number.isFinite(debug?.endgameIDAStarTriggerDepth) ? debug.endgameIDAStarTriggerDepth : null,
+                endgameIDAStarTriggerBound: Number.isFinite(debug?.endgameIDAStarTriggerBound) ? debug.endgameIDAStarTriggerBound : null,
                 nearClosureRescueEligible: debug?.nearClosureRescueEligible === true ? true : null,
                 nearClosureRescueActivated: debug?.nearClosureRescueActivated === true ? true : null,
                 nearClosureRescueThreshold: Number.isFinite(debug?.nearClosureRescueThreshold) ? debug.nearClosureRescueThreshold : null,
@@ -9641,12 +9873,17 @@ function installSolver(APP) {
             const blockDensity = blockCount / area;
             const archetypes = [];
 
-            // High-intersection-burden: levels that REQUIRE many self-intersections. The
-            // standard heuristic prioritizes approaching mustPass/mustCross cells, but
-            // such levels need the path to deliberately wander to set up intersections.
-            // Profiles that boost intersectionSetupWeight relative to obligation urgency
-            // perform better here.
-            if (reqInt >= 5 && reqLenDensity >= 0.55) {
+            // High-intersection-burden: levels that REQUIRE many self-intersections AND have
+            // multiple obligation cells. The standard heuristic prioritizes approaching
+            // mustPass/mustCross cells, but such levels need the path to deliberately wander
+            // to set up intersections. Profiles that boost intersectionSetupWeight relative to
+            // obligation urgency perform better here. The (mustPass+mustCross) >= 3 gate
+            // excludes single-obligation puzzles (e.g. levels with one mustPass and dense reqInt
+            // but a clean direct route) — those solve fine on the default cascade and the heavy
+            // closer attempts only consume budget without helping; with this gate they fall
+            // back to the standard cascade. Multi-obligation high-density levels are where the
+            // archetype's profile mix actually pays for itself.
+            if (reqInt >= 5 && reqLenDensity >= 0.55 && (mustPassCount + mustCrossCount) >= 3) {
                 archetypes.push('high-intersection-burden');
             }
 
@@ -10675,6 +10912,16 @@ function installSolver(APP) {
                     rootExpansionFloorCount,
                     forceRootExpansionFloor,
                     relaxRootSuppressionFirstLayer,
+                    endgameIDAStarEnabled: !!attemptOpts.endgameIDAStarEnabled,
+                    endgameIDAStarTriggerDepthRatio: Number.isFinite(Number(attemptOpts.endgameIDAStarTriggerDepthRatio))
+                        ? Number(attemptOpts.endgameIDAStarTriggerDepthRatio)
+                        : 0.85,
+                    endgameIDAStarBoundCeiling: Number.isFinite(Number(attemptOpts.endgameIDAStarBoundCeiling))
+                        ? Number(attemptOpts.endgameIDAStarBoundCeiling)
+                        : 20,
+                    endgameIDAStarBudgetFraction: Number.isFinite(Number(attemptOpts.endgameIDAStarBudgetFraction))
+                        ? Number(attemptOpts.endgameIDAStarBudgetFraction)
+                        : 0.5,
                     portalTriage: opts.portalTriage || null,
                     rootTieSeed: Number.isFinite(attemptOpts.rootTieSeed)
                         ? attemptOpts.rootTieSeed
@@ -11086,6 +11333,14 @@ function installSolver(APP) {
                     depth0FamilyCount: Number.isFinite(attemptResult?.debug?.depth0FamilyCount) ? attemptResult.debug.depth0FamilyCount : null,
                     depth0FamilyCoverageSelections: Number.isFinite(attemptResult?.debug?.depth0FamilyCoverageSelections) ? attemptResult.debug.depth0FamilyCoverageSelections : null,
                     depth0FamilyRepeatSelections: Number.isFinite(attemptResult?.debug?.depth0FamilyRepeatSelections) ? attemptResult.debug.depth0FamilyRepeatSelections : null,
+                    endgameIDAStarTriggered: !!attemptResult?.debug?.endgameIDAStarTriggered,
+                    endgameIDAStarSolved: !!attemptResult?.debug?.endgameIDAStarSolved,
+                    endgameIDAStarNodesExpanded: Number.isFinite(attemptResult?.debug?.endgameIDAStarNodesExpanded) ? attemptResult.debug.endgameIDAStarNodesExpanded : null,
+                    endgameIDAStarIterations: Number.isFinite(attemptResult?.debug?.endgameIDAStarIterations) ? attemptResult.debug.endgameIDAStarIterations : null,
+                    endgameIDAStarFinalFLimit: Number.isFinite(attemptResult?.debug?.endgameIDAStarFinalFLimit) ? attemptResult.debug.endgameIDAStarFinalFLimit : null,
+                    endgameIDAStarReason: (typeof attemptResult?.debug?.endgameIDAStarReason === 'string') ? attemptResult.debug.endgameIDAStarReason : null,
+                    endgameIDAStarTriggerDepth: Number.isFinite(attemptResult?.debug?.endgameIDAStarTriggerDepth) ? attemptResult.debug.endgameIDAStarTriggerDepth : null,
+                    endgameIDAStarTriggerBound: Number.isFinite(attemptResult?.debug?.endgameIDAStarTriggerBound) ? attemptResult.debug.endgameIDAStarTriggerBound : null,
                     nearClosureRescueEligible: !!attemptResult?.debug?.nearClosureRescueEligible,
                     nearClosureRescueActivated: !!attemptResult?.debug?.nearClosureRescueActivated,
                     nearClosureRescueThreshold: Number.isFinite(attemptResult?.debug?.nearClosureRescueThreshold) ? attemptResult.debug.nearClosureRescueThreshold : null,
@@ -11616,12 +11871,28 @@ function installSolver(APP) {
                     if (nearSolutionFloodDetected && nextAttempt) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         configureNearClosureRescueAttempt(nextAttempt, priorBudget);
+                        // Bound-plateau path: the standard rescue body's prune-disable + profile
+                        // mutation has empirically not broken L92's beam-search endgame deadlock
+                        // (audit 14: rescue mutates F and G, both produce identical bound=13 to E).
+                        // Enable endgame IDA* on the rescue attempt so the search swaps from
+                        // heuristic-ordered beam to f-ordered iterative deepening when it reaches
+                        // a deep state with small bound. Original near-solution-flood path keeps
+                        // the standard rescue body only — IDA* is a targeted intervention for
+                        // the bound-plateau signature where beam ordering is the bottleneck.
+                        if (nearClosureRescueTriggerPath === 'bound-plateau') {
+                            nextAttempt.endgameIDAStarEnabled = true;
+                            nextAttempt.endgameIDAStarTriggerDepthRatio = 0.85;
+                            nextAttempt.endgameIDAStarBoundCeiling = 20;
+                            nextAttempt.endgameIDAStarBudgetFraction = 0.6;
+                            nextAttempt.escalationReason = `${nextAttempt.escalationReason || 'near-closure-rescue'}-with-idaStar`;
+                        }
                         nearSolutionFloodRescueCount++;
                         nearSolutionFloodRescueLastProgress = nearClosureProgressSignals;
                         if (attemptResult?.debug) {
                             attemptResult.debug.rescueTriggeredNearClosure = true;
                             attemptResult.debug.nearClosureRescueActivated = true;
                             attemptResult.debug.nearClosureRescueProfile = 'nearClosureRescue';
+                            attemptResult.debug.nearClosureRescueIDAStarEnabled = !!nextAttempt.endgameIDAStarEnabled;
                         }
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'near-solution-flood-rescue';
@@ -11638,6 +11909,14 @@ function installSolver(APP) {
                             ...(attempt || {}),
                             label: `${attempt?.label || 'attempt'}-near-closure-rescue`
                         }, Number(attempt?.budgetMs) || 1);
+                        // Same bound-plateau IDA* opt-in as the in-place rescue branch above.
+                        if (nearClosureRescueTriggerPath === 'bound-plateau') {
+                            rescueAttempt.endgameIDAStarEnabled = true;
+                            rescueAttempt.endgameIDAStarTriggerDepthRatio = 0.85;
+                            rescueAttempt.endgameIDAStarBoundCeiling = 20;
+                            rescueAttempt.endgameIDAStarBudgetFraction = 0.6;
+                            rescueAttempt.escalationReason = `${rescueAttempt.escalationReason || 'near-closure-rescue'}-with-idaStar`;
+                        }
                         let rescueRegistration = diversifyAndRegisterAttempt(rescueAttempt, {
                             timeoutLikeAttemptsSoFar,
                             timeoutEscalationTier,
