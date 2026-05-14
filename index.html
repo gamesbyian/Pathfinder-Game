@@ -4977,7 +4977,33 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     mustCrossScheduleInfeasibleFrontierStates: Number.isFinite(timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates)
                         ? timeoutDiagnostics.mustCrossScheduleInfeasibleFrontierStates
                         : null
-                })
+                }),
+                // Rescue + IDA* telemetry: populated by Solver.js when the bound-plateau rescue
+                // fires (mutating a queued attempt) and when the endgame IDA* triggers during
+                // a rescue-flagged attempt. Without these the audit JSON has no visibility into
+                // whether the rescue/IDA* path executed — both signals are critical for
+                // diagnosing L92-class endgame deadlock.
+                nearClosureRescueEligible: attempt?.nearClosureRescueEligible === true ? true : false,
+                nearClosureRescueActivated: attempt?.nearClosureRescueActivated === true ? true : false,
+                nearClosureRescueTriggerPath: typeof attempt?.nearClosureRescueTriggerPath === 'string' ? attempt.nearClosureRescueTriggerPath : null,
+                nearClosureRescueGateMissed: typeof attempt?.nearClosureRescueGateMissed === 'string' ? attempt.nearClosureRescueGateMissed : null,
+                nearClosureRescueProfile: attempt?.nearClosureRescueProfile || null,
+                nearClosureRescueIDAStarEnabled: attempt?.nearClosureRescueIDAStarEnabled === true ? true : false,
+                nearClosure_boundPlateauEligible: attempt?.nearClosure_boundPlateauEligible === true ? true : false,
+                nearClosure_boundPlateauWindow: Array.isArray(attempt?.nearClosure_boundPlateauWindow)
+                    ? attempt.nearClosure_boundPlateauWindow.slice(0, 5)
+                    : null,
+                nearClosure_boundPlateauCeiling: Number.isFinite(attempt?.nearClosure_boundPlateauCeiling)
+                    ? attempt.nearClosure_boundPlateauCeiling
+                    : null,
+                endgameIDAStarTriggered: attempt?.endgameIDAStarTriggered === true ? true : false,
+                endgameIDAStarSolved: attempt?.endgameIDAStarSolved === true ? true : false,
+                endgameIDAStarNodesExpanded: Number.isFinite(attempt?.endgameIDAStarNodesExpanded) ? attempt.endgameIDAStarNodesExpanded : null,
+                endgameIDAStarIterations: Number.isFinite(attempt?.endgameIDAStarIterations) ? attempt.endgameIDAStarIterations : null,
+                endgameIDAStarFinalFLimit: Number.isFinite(attempt?.endgameIDAStarFinalFLimit) ? attempt.endgameIDAStarFinalFLimit : null,
+                endgameIDAStarReason: typeof attempt?.endgameIDAStarReason === 'string' ? attempt.endgameIDAStarReason : null,
+                endgameIDAStarTriggerDepth: Number.isFinite(attempt?.endgameIDAStarTriggerDepth) ? attempt.endgameIDAStarTriggerDepth : null,
+                endgameIDAStarTriggerBound: Number.isFinite(attempt?.endgameIDAStarTriggerBound) ? attempt.endgameIDAStarTriggerBound : null
             };
             return ensureCanonicalAttemptTelemetry(attempt, canonical);
         };
