@@ -1913,6 +1913,24 @@ function installSolver(APP) {
                         thresholds.transitionProgress = Math.max(0.12, thresholds.transitionProgress - intDensity * 0.8 * densityScale);
                         thresholds.knotProgress = Math.max(0.25, thresholds.knotProgress - intDensity * 1.2 * densityScale);
                     }
+                    // Scale knotIntsRemainingMax to reqInt for high-intersection-burden levels.
+                    // Default is 2, meaning knot phase only fires when ≤2 intersections remain
+                    // (i.e., when the search has already built all but the last two). The
+                    // intersection-setup bonus (Solver.js:3180) fires only in knot phase — so on
+                    // high-reqInt levels (e.g. L92 reqInt=8) the bonus is unavailable while the
+                    // search is BUILDING the bulk of the intersections, leaving the heuristic
+                    // without a strong intersection-setup gradient when it needs one most.
+                    //
+                    // Scale to ceil(reqInt * 0.55): knot phase fires when roughly half the
+                    // intersections are still to be built. For L92 this gives a threshold of 5,
+                    // unlocking the intersection-setup bonus during the geometry-building phase.
+                    // Levels with reqInt < 3 are unaffected (still capped at 2).
+                    if (reqInt >= 3) {
+                        thresholds.knotIntsRemainingMax = Math.max(
+                            Number.isFinite(thresholds.knotIntsRemainingMax) ? thresholds.knotIntsRemainingMax : 2,
+                            Math.ceil(reqInt * 0.55)
+                        );
+                    }
                     const hysteresis = { ...base.hysteresis };
                     hysteresis.minNodeWindow = Math.max(4, Math.min(14,
                         (hysteresis.minNodeWindow || 6)
