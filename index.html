@@ -5008,7 +5008,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 endgameIDAStarTriggerDepthThreshold: Number.isFinite(attempt?.endgameIDAStarTriggerDepthThreshold) ? attempt.endgameIDAStarTriggerDepthThreshold : null,
                 endgameIDAStarBoundCeiling: Number.isFinite(attempt?.endgameIDAStarBoundCeiling) ? attempt.endgameIDAStarBoundCeiling : null,
                 endgameIDAStarBestObservedDepth: Number.isFinite(attempt?.endgameIDAStarBestObservedDepth) ? attempt.endgameIDAStarBestObservedDepth : null,
-                endgameIDAStarBestObservedBound: Number.isFinite(attempt?.endgameIDAStarBestObservedBound) ? attempt.endgameIDAStarBestObservedBound : null
+                endgameIDAStarBestObservedBound: Number.isFinite(attempt?.endgameIDAStarBestObservedBound) ? attempt.endgameIDAStarBestObservedBound : null,
+                endgameIDAStarRawOption: typeof attempt?.endgameIDAStarRawOption === 'string' ? attempt.endgameIDAStarRawOption : null,
+                endgameIDAStarOptionsKeys: typeof attempt?.endgameIDAStarOptionsKeys === 'string' ? attempt.endgameIDAStarOptionsKeys : null,
+                endgameIDAStarAttemptOptsValue: typeof attempt?.endgameIDAStarAttemptOptsValue === 'string' ? attempt.endgameIDAStarAttemptOptsValue : null,
+                endgameIDAStarAttemptLabel: typeof attempt?.endgameIDAStarAttemptLabel === 'string' ? attempt.endgameIDAStarAttemptLabel : null
             };
             return ensureCanonicalAttemptTelemetry(attempt, canonical);
         };
@@ -5078,6 +5082,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         endgameIDAStarBoundCeiling: attempt?.endgameIDAStarBoundCeiling,
                         endgameIDAStarBestObservedDepth: attempt?.endgameIDAStarBestObservedDepth,
                         endgameIDAStarBestObservedBound: attempt?.endgameIDAStarBestObservedBound,
+                        endgameIDAStarRawOption: attempt?.endgameIDAStarRawOption,
+                        endgameIDAStarOptionsKeys: attempt?.endgameIDAStarOptionsKeys,
+                        endgameIDAStarAttemptOptsValue: attempt?.endgameIDAStarAttemptOptsValue,
+                        endgameIDAStarAttemptLabel: attempt?.endgameIDAStarAttemptLabel,
                         nearClosureRescueEligible: attempt?.nearClosureRescueEligible,
                         nearClosureRescueActivated: attempt?.nearClosureRescueActivated,
                         nearClosureRescueTriggerPath: attempt?.nearClosureRescueTriggerPath,

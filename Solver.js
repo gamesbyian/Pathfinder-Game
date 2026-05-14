@@ -4821,6 +4821,12 @@ function installSolver(APP) {
                         debugStats.endgameIDAStarOption = !!options.endgameIDAStarEnabled;
                         debugStats.endgameIDAStarTriggerDepthThreshold = endgameIDAStarTriggerDepth;
                         debugStats.endgameIDAStarBoundCeiling = Number(options.endgameIDAStarBoundCeiling || 20);
+                        // Raw value (undefined / true / false) — distinguishes "key not set" from
+                        // "key set to false". If audit shows option=null, key wasn't in options.
+                        debugStats.endgameIDAStarRawOption = (options.endgameIDAStarEnabled === true) ? 'true'
+                            : (options.endgameIDAStarEnabled === false ? 'false'
+                            : (options.endgameIDAStarEnabled === undefined ? 'undefined' : `other:${typeof options.endgameIDAStarEnabled}`));
+                        debugStats.endgameIDAStarOptionsKeys = Object.keys(options || {}).filter(k => /endgameIDA/i.test(k)).join(',');
                     }
                     let bestObservedDepthForIDA = -1;
                     let bestObservedBoundForIDA = null;
@@ -7669,6 +7675,10 @@ function installSolver(APP) {
                 endgameIDAStarBoundCeiling: Number.isFinite(debug?.endgameIDAStarBoundCeiling) ? debug.endgameIDAStarBoundCeiling : null,
                 endgameIDAStarBestObservedDepth: Number.isFinite(debug?.endgameIDAStarBestObservedDepth) ? debug.endgameIDAStarBestObservedDepth : null,
                 endgameIDAStarBestObservedBound: Number.isFinite(debug?.endgameIDAStarBestObservedBound) ? debug.endgameIDAStarBestObservedBound : null,
+                endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
+                endgameIDAStarOptionsKeys: (typeof debug?.endgameIDAStarOptionsKeys === 'string') ? debug.endgameIDAStarOptionsKeys : null,
+                endgameIDAStarAttemptOptsValue: (typeof debug?.endgameIDAStarAttemptOptsValue === 'string') ? debug.endgameIDAStarAttemptOptsValue : null,
+                endgameIDAStarAttemptLabel: (typeof debug?.endgameIDAStarAttemptLabel === 'string') ? debug.endgameIDAStarAttemptLabel : null,
                 nearClosureRescueEligible: debug?.nearClosureRescueEligible === true ? true : null,
                 nearClosureRescueActivated: debug?.nearClosureRescueActivated === true ? true : null,
                 nearClosureRescueThreshold: Number.isFinite(debug?.nearClosureRescueThreshold) ? debug.nearClosureRescueThreshold : null,
@@ -11007,6 +11017,14 @@ function installSolver(APP) {
                 debug.timeoutEscalationTier = Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : 0;
                 debug.forcedFamilySwitch = !!attemptOpts?.forcedFamilySwitch;
                 debug.escalationReason = attemptOpts?.escalationReason || null;
+                // Capture whether attemptOpts had endgameIDAStarEnabled at the moment runAttempt
+                // built solverOpts. If 'undefined' → archetype opt-in didn't reach this attempt
+                // object. If 'true' → attempt had it but option got stripped between solverOpts
+                // build and DFS entry. If 'false' → attempt explicitly had it off.
+                debug.endgameIDAStarAttemptOptsValue = (attemptOpts.endgameIDAStarEnabled === true) ? 'true'
+                    : (attemptOpts.endgameIDAStarEnabled === false ? 'false'
+                    : (attemptOpts.endgameIDAStarEnabled === undefined ? 'undefined' : `other:${typeof attemptOpts.endgameIDAStarEnabled}`));
+                debug.endgameIDAStarAttemptLabel = attemptOpts.label || null;
                 const status = r?.ok && solution.length > 0
                     ? 'solved'
                     : (debug.status === 'timeout' ? 'timeout' : (debug.status === 'no-solution' ? normalizeNoSolutionStatus(debug) : 'error'));
@@ -11397,6 +11415,10 @@ function installSolver(APP) {
                     endgameIDAStarBoundCeiling: Number.isFinite(attemptResult?.debug?.endgameIDAStarBoundCeiling) ? attemptResult.debug.endgameIDAStarBoundCeiling : null,
                     endgameIDAStarBestObservedDepth: Number.isFinite(attemptResult?.debug?.endgameIDAStarBestObservedDepth) ? attemptResult.debug.endgameIDAStarBestObservedDepth : null,
                     endgameIDAStarBestObservedBound: Number.isFinite(attemptResult?.debug?.endgameIDAStarBestObservedBound) ? attemptResult.debug.endgameIDAStarBestObservedBound : null,
+                    endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
+                    endgameIDAStarOptionsKeys: (typeof attemptResult?.debug?.endgameIDAStarOptionsKeys === 'string') ? attemptResult.debug.endgameIDAStarOptionsKeys : null,
+                    endgameIDAStarAttemptOptsValue: (typeof attemptResult?.debug?.endgameIDAStarAttemptOptsValue === 'string') ? attemptResult.debug.endgameIDAStarAttemptOptsValue : null,
+                    endgameIDAStarAttemptLabel: (typeof attemptResult?.debug?.endgameIDAStarAttemptLabel === 'string') ? attemptResult.debug.endgameIDAStarAttemptLabel : null,
                     nearClosureRescueEligible: !!attemptResult?.debug?.nearClosureRescueEligible,
                     nearClosureRescueActivated: !!attemptResult?.debug?.nearClosureRescueActivated,
                     nearClosureRescueThreshold: Number.isFinite(attemptResult?.debug?.nearClosureRescueThreshold) ? attemptResult.debug.nearClosureRescueThreshold : null,
