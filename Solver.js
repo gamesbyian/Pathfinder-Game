@@ -9641,12 +9641,17 @@ function installSolver(APP) {
             const blockDensity = blockCount / area;
             const archetypes = [];
 
-            // High-intersection-burden: levels that REQUIRE many self-intersections. The
-            // standard heuristic prioritizes approaching mustPass/mustCross cells, but
-            // such levels need the path to deliberately wander to set up intersections.
-            // Profiles that boost intersectionSetupWeight relative to obligation urgency
-            // perform better here.
-            if (reqInt >= 5 && reqLenDensity >= 0.55) {
+            // High-intersection-burden: levels that REQUIRE many self-intersections AND have
+            // multiple obligation cells. The standard heuristic prioritizes approaching
+            // mustPass/mustCross cells, but such levels need the path to deliberately wander
+            // to set up intersections. Profiles that boost intersectionSetupWeight relative to
+            // obligation urgency perform better here. The (mustPass+mustCross) >= 3 gate
+            // excludes single-obligation puzzles (e.g. levels with one mustPass and dense reqInt
+            // but a clean direct route) — those solve fine on the default cascade and the heavy
+            // closer attempts only consume budget without helping; with this gate they fall
+            // back to the standard cascade. Multi-obligation high-density levels are where the
+            // archetype's profile mix actually pays for itself.
+            if (reqInt >= 5 && reqLenDensity >= 0.55 && (mustPassCount + mustCrossCount) >= 3) {
                 archetypes.push('high-intersection-burden');
             }
 
