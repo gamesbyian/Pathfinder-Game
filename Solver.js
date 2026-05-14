@@ -7410,6 +7410,7 @@ function installSolver(APP) {
                 nearClosureRescueLowerBoundThreshold: Number.isFinite(debug?.nearClosureRescueLowerBoundThreshold) ? debug.nearClosureRescueLowerBoundThreshold : null,
                 nearClosureRescueProfile: debug?.nearClosureRescueProfile || null,
                 nearClosureRescueGateMissed: (typeof debug?.nearClosureRescueGateMissed === 'string') ? debug.nearClosureRescueGateMissed : null,
+                nearClosureRescueTriggerPath: (typeof debug?.nearClosureRescueTriggerPath === 'string') ? debug.nearClosureRescueTriggerPath : null,
                 nearClosureRescueBlockedReason: debug?.nearClosureRescueBlockedReason || null,
                 nearClosureRescueForced: debug?.nearClosureRescueForced === true ? true : null,
                 nearClosure_timeoutProne: debug?.nearClosure_timeoutProne === true ? true : (debug?.nearClosure_timeoutProne === false ? false : null),
@@ -11091,6 +11092,7 @@ function installSolver(APP) {
                     nearClosureRescueLowerBoundThreshold: Number.isFinite(attemptResult?.debug?.nearClosureRescueLowerBoundThreshold) ? attemptResult.debug.nearClosureRescueLowerBoundThreshold : null,
                     nearClosureRescueProfile: attemptResult?.debug?.nearClosureRescueProfile || null,
                     nearClosureRescueGateMissed: (typeof attemptResult?.debug?.nearClosureRescueGateMissed === 'string') ? attemptResult.debug.nearClosureRescueGateMissed : null,
+                    nearClosureRescueTriggerPath: (typeof attemptResult?.debug?.nearClosureRescueTriggerPath === 'string') ? attemptResult.debug.nearClosureRescueTriggerPath : null,
                     nearClosureRescueBlockedReason: attemptResult?.debug?.nearClosureRescueBlockedReason || null,
                     nearClosureRescueForced: !!attemptResult?.debug?.nearClosureRescueForced,
                     nearClosure_timeoutProne: !!attemptResult?.debug?.nearClosure_timeoutProne,
@@ -11420,11 +11422,51 @@ function installSolver(APP) {
                         || (nearSolutionFloodRescueCount < NEAR_SOLUTION_FLOOD_HARD_CAP
                             && rescueProgressedSinceLastFire(nearSolutionFloodRescueLastProgress, nearClosureProgressSignals,
                                 { bestLowerBound: 'lower', nearStates: 'higher' }));
+                    // Bound-plateau eligibility (L92 signature): healthy-expansion-timeout cases
+                    // where the frontier-count predicate (nearSolutionStates) reports 0 despite the
+                    // search making real progress on bestLowerBoundToValidSolution. The standard
+                    // predicate set above gates rescue on "thousands of near-solution states" — that
+                    // shape never materializes for L92, which times out with bound ~13 stable across
+                    // attempts D-G while the predicate's nearSolutionStates threshold (≥80) is never
+                    // crossed. Detect "the bound has been small and stable across recent timeouts" as
+                    // an alternative qualifier: real progress was made, the floor is now finite and
+                    // in closer-territory range, but the cascade can't close. Same rescue body fires
+                    // (counter check, prune-disable, profile injection) — only the gate changes.
+                    const reqLenForPlateau = Math.max(1, Number(level?.reqLen) || 1);
+                    const closerTerritoryBoundCeiling = Math.max(20, Math.ceil(reqLenForPlateau / 5));
+                    const recentBoundsForClosurePlateau = attemptsUsed
+                        .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
+                        .map(entry => Number(entry?.timeoutDiagnostics?.bestLowerBoundToValidSolution))
+                        .filter(v => Number.isFinite(v))
+                        .slice(-3);
+                    const currentBoundForPlateau = nearClosureLowerBoundFinite
+                        ? Number(attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution)
+                        : NaN;
+                    const plateauBoundsWindow = Number.isFinite(currentBoundForPlateau)
+                        ? recentBoundsForClosurePlateau.concat([currentBoundForPlateau]).slice(-3)
+                        : recentBoundsForClosurePlateau;
+                    const plateauWindowSize = plateauBoundsWindow.length;
+                    const plateauBoundSpan = plateauWindowSize >= 2
+                        ? (Math.max(...plateauBoundsWindow) - Math.min(...plateauBoundsWindow))
+                        : Infinity;
+                    const plateauLatestBound = plateauWindowSize > 0 ? plateauBoundsWindow[plateauWindowSize - 1] : Infinity;
+                    const plateauObligationSlope = Math.abs(Number(attemptResult?.debug?.causality?.obligationReductionSlope) || 0);
+                    const boundPlateauEligible = plateauWindowSize >= 3
+                        && plateauBoundSpan <= 2
+                        && Number.isFinite(plateauLatestBound)
+                        && plateauLatestBound > 0
+                        && plateauLatestBound <= closerTerritoryBoundCeiling
+                        && plateauObligationSlope <= 0.01;
                     const nearSolutionFloodDetected = timeoutProne
                         && nearClosureCountRemaining
                         && repeatedTimeoutOutcome
-                        && nearSolutionStatesMet
-                        && nearClosureLowerBoundMet;
+                        && (
+                            (nearSolutionStatesMet && nearClosureLowerBoundMet)
+                            || boundPlateauEligible
+                        );
+                    const nearClosureRescueTriggerPath = nearSolutionFloodDetected
+                        ? ((nearSolutionStatesMet && nearClosureLowerBoundMet) ? 'near-solution-flood' : 'bound-plateau')
+                        : null;
                     // First predicate to fail (in evaluation order) — aids diagnosis when rescue does not fire.
                     const nearClosureRescueGateMissed = nearSolutionFloodDetected
                         ? null
@@ -11435,7 +11477,7 @@ function installSolver(APP) {
                                 : (!repeatedTimeoutOutcome
                                     ? 'repeatedTimeoutOutcome'
                                     : (!nearSolutionStatesMet
-                                        ? 'nearSolutionStatesMet'
+                                        ? (boundPlateauEligible ? null : (plateauWindowSize < 3 ? 'boundPlateauSamples' : (plateauBoundSpan > 2 ? 'boundPlateauSpan' : (!Number.isFinite(plateauLatestBound) || plateauLatestBound > closerTerritoryBoundCeiling ? 'boundPlateauCeiling' : (plateauObligationSlope > 0.01 ? 'boundPlateauSlope' : 'nearSolutionStatesMet')))))
                                         : (!nearClosureLowerBoundMet
                                             ? (nearClosureLowerBoundFinite ? 'nearClosureLowerBoundMet' : 'nearClosureLowerBoundFinite')
                                             : null)))));
@@ -11444,11 +11486,15 @@ function installSolver(APP) {
                         attemptResult.debug.nearClosureRescueThreshold = nearSolutionFloodThreshold;
                         attemptResult.debug.nearClosureRescueLowerBoundThreshold = nearSolutionFloodLowerBoundThreshold;
                         attemptResult.debug.nearClosureRescueGateMissed = nearClosureRescueGateMissed;
+                        attemptResult.debug.nearClosureRescueTriggerPath = nearClosureRescueTriggerPath;
                         attemptResult.debug.nearClosure_timeoutProne = !!timeoutProne;
                         attemptResult.debug.nearClosure_countRemaining = !!nearClosureCountRemaining;
                         attemptResult.debug.nearClosure_repeatedTimeout = !!repeatedTimeoutOutcome;
                         attemptResult.debug.nearClosure_nearStatesMet = !!nearSolutionStatesMet;
                         attemptResult.debug.nearClosure_lowerBoundMet = !!nearClosureLowerBoundMet;
+                        attemptResult.debug.nearClosure_boundPlateauEligible = !!boundPlateauEligible;
+                        attemptResult.debug.nearClosure_boundPlateauWindow = plateauBoundsWindow.slice();
+                        attemptResult.debug.nearClosure_boundPlateauCeiling = closerTerritoryBoundCeiling;
                     }
                     const mustCrossScheduleInfeasibleFrontierStatesValue = Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0;
                     const remainingMustCrossValue = Number(attemptResult?.quality?.remainingMustCross) || 0;
