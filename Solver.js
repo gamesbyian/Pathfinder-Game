@@ -182,15 +182,26 @@ function installSolver(APP) {
                     // rank-audit showed the standard heuristics systematically penalize the
                     // away-from-objective moves the hint takes early on such levels; this profile
                     // lets the search consider those moves competitively.
-                    intersectionHarvest: { direction: { goalAttractionWeight: 0.5,  objectiveAttractionWeight: 0.9,  finishCommitmentWeight: 0.45, portalSetupWeight: 1.0,  portalCommitmentWeight: 0.9  }, coverage: { perimeterBiasWeight: 1.15, slackPreservationWeight: 1.3  }, urgency: { mustPassUrgencyWeight: 0.45, mustCrossUrgencyWeight: 0.55, intersectionSetupWeight: 3.0  }, pathology: { antiDeadCorridorWeight: 0.9,  antiDitherWeight: 0.65, revisitPenaltyWeight: 0.6  } }
+                    intersectionHarvest: { direction: { goalAttractionWeight: 0.5,  objectiveAttractionWeight: 0.9,  finishCommitmentWeight: 0.45, portalSetupWeight: 1.0,  portalCommitmentWeight: 0.9  }, coverage: { perimeterBiasWeight: 1.15, slackPreservationWeight: 1.3  }, urgency: { mustPassUrgencyWeight: 0.45, mustCrossUrgencyWeight: 0.55, intersectionSetupWeight: 3.0  }, pathology: { antiDeadCorridorWeight: 0.9,  antiDitherWeight: 0.65, revisitPenaltyWeight: 0.6  } },
+                    // closureCommitment: the EES (Explicit Estimation Search) closer profile.
+                    // After intersectionHarvest / knotBuilder build path geometry, this profile
+                    // commits to closing remaining obligations and reaching the goal. Used together
+                    // with scoringMode='closure-focal-lex' which encodes an obligation-residual
+                    // count as a dominant lexicographic key (so states with fewer remaining
+                    // obligations rank first regardless of fine-grained score-driver differences).
+                    // Designed for the "close last steps with multiple residual obligations" regime
+                    // where attempts D-G of L92's audit reached bound 13 at depth 84 but couldn't
+                    // converge — the additive score has too many comparable candidates near the
+                    // close, and lex ordering forces obligation reduction.
+                    closureCommitment:   { direction: { goalAttractionWeight: 1.5,  objectiveAttractionWeight: 1.3,  finishCommitmentWeight: 2.0,  portalSetupWeight: 1.0,  portalCommitmentWeight: 1.1  }, coverage: { perimeterBiasWeight: 0.8,  slackPreservationWeight: 0.6  }, urgency: { mustPassUrgencyWeight: 2.0,  mustCrossUrgencyWeight: 2.0,  intersectionSetupWeight: 0.8  }, pathology: { antiDeadCorridorWeight: 1.0,  antiDitherWeight: 0.4,  revisitPenaltyWeight: 0.4  } }
                 },
                 // Phase multipliers apply on top of the base profile. Keys must match active weight names.
                 // lengthHarvestWeight and antiTrapWeight entries removed (dead weights).
                 SOLVER_POLICY_PHASE_MULTIPLIERS: {
-                    harvest:    { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, nearClosureRescue: { finishCommitmentWeight: 0.85, mustPassUrgencyWeight: 1.15, mustCrossUrgencyWeight: 1.15, goalAttractionWeight: 0.9 }, lengthHarvest: { perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.15, goalAttractionWeight: 0.75 }, intersectionHarvest: { intersectionSetupWeight: 1.15, mustPassUrgencyWeight: 0.7, mustCrossUrgencyWeight: 0.7, goalAttractionWeight: 0.7 } },
-                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, nearClosureRescue: { finishCommitmentWeight: 1.1, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.15, objectiveAttractionWeight: 1.1 }, intersectionHarvest: { intersectionSetupWeight: 1.3, mustPassUrgencyWeight: 0.8, mustCrossUrgencyWeight: 0.8 } },
-                    knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, nearClosureRescue: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.25, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.25 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.1, intersectionSetupWeight: 1.15 }, intersectionHarvest: { intersectionSetupWeight: 1.5, mustCrossUrgencyWeight: 0.85 } },
-                    finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, nearClosureRescue: { goalAttractionWeight: 1.45, finishCommitmentWeight: 1.55, mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1.3, slackPreservationWeight: 1.25 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 }, mustCrossFirst: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.2 }, intersectionHarvest: { intersectionSetupWeight: 0.9, finishCommitmentWeight: 1.0, goalAttractionWeight: 1.05 } }
+                    harvest:    { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, nearClosureRescue: { finishCommitmentWeight: 0.85, mustPassUrgencyWeight: 1.15, mustCrossUrgencyWeight: 1.15, goalAttractionWeight: 0.9 }, lengthHarvest: { perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.15, goalAttractionWeight: 0.75 }, intersectionHarvest: { intersectionSetupWeight: 1.15, mustPassUrgencyWeight: 0.7, mustCrossUrgencyWeight: 0.7, goalAttractionWeight: 0.7 }, closureCommitment: { mustPassUrgencyWeight: 1.1, mustCrossUrgencyWeight: 1.1, finishCommitmentWeight: 1.1 } },
+                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, nearClosureRescue: { finishCommitmentWeight: 1.1, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.15, objectiveAttractionWeight: 1.1 }, intersectionHarvest: { intersectionSetupWeight: 1.3, mustPassUrgencyWeight: 0.8, mustCrossUrgencyWeight: 0.8 }, closureCommitment: { mustPassUrgencyWeight: 1.15, mustCrossUrgencyWeight: 1.15, finishCommitmentWeight: 1.2 } },
+                    knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, nearClosureRescue: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.25, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.25 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.1, intersectionSetupWeight: 1.15 }, intersectionHarvest: { intersectionSetupWeight: 1.5, mustCrossUrgencyWeight: 0.85 }, closureCommitment: { mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, finishCommitmentWeight: 1.3, goalAttractionWeight: 1.1 } },
+                    finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, nearClosureRescue: { goalAttractionWeight: 1.45, finishCommitmentWeight: 1.55, mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1.3, slackPreservationWeight: 1.25 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 }, mustCrossFirst: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.2 }, intersectionHarvest: { intersectionSetupWeight: 0.9, finishCommitmentWeight: 1.0, goalAttractionWeight: 1.05 }, closureCommitment: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, mustPassUrgencyWeight: 1.3, mustCrossUrgencyWeight: 1.3 } }
                 },
                 // Segment 1 (portfolio diversification): map existing policy profiles onto a compact family taxonomy.
                 // Families group profiles that share a dominant behavioral axis so attempt identity and diversity
@@ -208,6 +219,7 @@ function installSolver(APP) {
                     portalCommitted: 'portal-aggressive',
                     finishFirst: 'goal-distance',
                     nearClosureRescue: 'endgame-closure',
+                    closureCommitment: 'endgame-closure',
                     endurance: 'endgame-closure'
                 },
                 SOLVER_POLICY_FAMILY_DEFAULT: 'baseline',
@@ -3481,6 +3493,21 @@ function installSolver(APP) {
                     const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * pw('revisitPenaltyWeight');
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
+                    if (options?.scoringMode === 'closure-focal-lex') {
+                        // EES (Explicit Estimation Search) closer: lexicographic obligation-residual
+                        // ordering. Magnitudes (1e8/1e7/1e6) dominate the ±~1000 additive score so
+                        // states are sorted primarily by remaining must-pass, then remaining
+                        // must-cross need, then remaining intersection deficit. In max-via-pop, a
+                        // candidate with strictly fewer pending obligations wins regardless of
+                        // smaller heuristic terms — converts the closer into an obligation-residual
+                        // greedy search once geometry has been built.
+                        const obligationLex =
+                            (remainingMustAfterMove * 1e8) +
+                            (projectedCrossNeed * 1e7) +
+                            (remainingIntsAfterMove * 1e6);
+                        score -= obligationLex;
+                        pushDriver('closureFocalLex', remainingMustAfterMove + projectedCrossNeed + remainingIntsAfterMove, -obligationLex);
+                    }
                         return {
                             nk,
                             score,
@@ -9650,8 +9677,16 @@ function installSolver(APP) {
                 // intersectionHarvest runs first: it's the only profile with mustPass/mustCross
                 // urgency below 1.0, which is necessary for the search to consider the
                 // away-from-objective moves that high-reqInt levels require for path geometry.
-                { policyProfile: 'intersectionHarvest', budgetFraction: 0.30 },
-                { policyProfile: 'knotBuilder',         budgetFraction: 0.20 },
+                { policyProfile: 'intersectionHarvest', budgetFraction: 0.25 },
+                { policyProfile: 'knotBuilder',         budgetFraction: 0.15 },
+                // closureCommitment is the EES (Explicit Estimation Search) closer. After
+                // intersectionHarvest / knotBuilder build the bulk of the path geometry, this
+                // profile drives the search to terminate it. The closure-focal-lex scoring
+                // mode applies a lexicographic obligation-residual penalty that dominates
+                // ±~1000 heuristic noise, so states with fewer pending must-pass / must-cross /
+                // intersection obligations are strictly preferred — the closer becomes an
+                // obligation-residual greedy search once geometry is built.
+                { policyProfile: 'closureCommitment',   budgetFraction: 0.15, scoringMode: 'closure-focal-lex' },
                 { policyProfile: 'mustCrossFirst',      budgetFraction: 0.10 }
             ],
             'portal-mustcross-constrained': [
@@ -9933,7 +9968,7 @@ function installSolver(APP) {
                         prepended.push({
                             label: `archetype-${archetype}-${entry.policyProfile}`,
                             budgetMs: Math.max(1, Math.floor(total * entry.budgetFraction)),
-                            scoringMode: 'modern',
+                            scoringMode: entry.scoringMode || 'modern',
                             portalBiasMode: 'adaptiveMustCross',
                             structuralMode: false,
                             policyProfile: entry.policyProfile,
