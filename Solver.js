@@ -4157,19 +4157,25 @@ function installSolver(APP) {
                         const distComp = Number.isFinite(distToGoal) ? distToGoal : Infinity;
                         let mustPassBound = 0;
                         if (typeof s.mustMask === 'bigint' && s.mustMask !== 0n) {
-                            const detail = this._estimateMustPassBoundFrom(k, s, level);
-                            const b = Number(detail?.bound);
+                            // _estimateMustPassBoundFrom returns a NUMBER directly (not a detail
+                            // object); the previous detail?.bound dereference was always undefined →
+                            // NaN → Infinity, making computeH report every state as infeasible
+                            // even when the DFS-side composite bound was finite (audit 24
+                            // 'initial-state-infeasible' on every L92 trigger).
+                            const b = Number(this._estimateMustPassBoundFrom(k, s, level));
                             mustPassBound = Number.isFinite(b) ? b : Infinity;
                         }
                         let mustCrossBound = 0;
                         if (typeof s.mustCrossMask === 'bigint' && s.mustCrossMask !== 0n) {
-                            const detail = this._estimateMustCrossBoundFrom(k, s, level);
-                            const b = Number(detail?.bound);
+                            // Same: _estimateMustCrossBoundFrom returns a number, not a detail.
+                            const b = Number(this._estimateMustCrossBoundFrom(k, s, level));
                             mustCrossBound = Number.isFinite(b) ? b : Infinity;
                         }
                         const intDeficit = Math.max(0, level.reqInt - s.ints);
                         let portalCovBound = 0;
                         if (typeof s.portal?.portalRequiredCoverageMask === 'bigint' && s.portal.portalRequiredCoverageMask !== 0n) {
+                            // _estimatePortalMandatoryFamilyBoundFrom DOES return a detail object
+                            // with .bound — keep this dereference.
                             const detail = this._estimatePortalMandatoryFamilyBoundFrom(k, s.portal.portalRequiredCoverageMask, level);
                             const b = Number(detail?.bound);
                             portalCovBound = Number.isFinite(b) ? b : Infinity;
