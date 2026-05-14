@@ -11751,6 +11751,27 @@ function installSolver(APP) {
                         attemptResult.debug.nearClosure_boundPlateauWindow = plateauBoundsWindow.slice();
                         attemptResult.debug.nearClosure_boundPlateauCeiling = closerTerritoryBoundCeiling;
                     }
+                    // Mirror the rescue diagnostics onto the just-pushed attemptsUsed entry so
+                    // the audit JSON reflects them. The push at L11255 happens BEFORE this
+                    // eligibility check, so fields captured there from attemptResult.debug
+                    // were stale (undefined → false). Updating currentAttemptEntry in place
+                    // gives the per-attempt audit record an accurate view of whether the
+                    // plateau predicate fired and which gate failed if not.
+                    if (currentAttemptEntry) {
+                        currentAttemptEntry.nearClosureRescueEligible = !!nearSolutionFloodDetected;
+                        currentAttemptEntry.nearClosureRescueThreshold = nearSolutionFloodThreshold;
+                        currentAttemptEntry.nearClosureRescueLowerBoundThreshold = nearSolutionFloodLowerBoundThreshold;
+                        currentAttemptEntry.nearClosureRescueGateMissed = nearClosureRescueGateMissed;
+                        currentAttemptEntry.nearClosureRescueTriggerPath = nearClosureRescueTriggerPath;
+                        currentAttemptEntry.nearClosure_timeoutProne = !!timeoutProne;
+                        currentAttemptEntry.nearClosure_countRemaining = !!nearClosureCountRemaining;
+                        currentAttemptEntry.nearClosure_repeatedTimeout = !!repeatedTimeoutOutcome;
+                        currentAttemptEntry.nearClosure_nearStatesMet = !!nearSolutionStatesMet;
+                        currentAttemptEntry.nearClosure_lowerBoundMet = !!nearClosureLowerBoundMet;
+                        currentAttemptEntry.nearClosure_boundPlateauEligible = !!boundPlateauEligible;
+                        currentAttemptEntry.nearClosure_boundPlateauWindow = plateauBoundsWindow.slice();
+                        currentAttemptEntry.nearClosure_boundPlateauCeiling = closerTerritoryBoundCeiling;
+                    }
                     const mustCrossScheduleInfeasibleFrontierStatesValue = Number(attemptResult?.debug?.timeoutDiagnostics?.mustCrossScheduleInfeasibleFrontierStates) || 0;
                     const remainingMustCrossValue = Number(attemptResult?.quality?.remainingMustCross) || 0;
                     const mustCrossScheduleThresholdMet = mustCrossScheduleInfeasibleFrontierStatesValue >= 60;
@@ -11897,6 +11918,9 @@ function installSolver(APP) {
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'near-solution-flood-rescue';
                             currentAttemptEntry.nearSolutionFloodDetected = true;
+                            currentAttemptEntry.nearClosureRescueActivated = true;
+                            currentAttemptEntry.nearClosureRescueProfile = 'nearClosureRescue';
+                            currentAttemptEntry.nearClosureRescueIDAStarEnabled = !!nextAttempt.endgameIDAStarEnabled;
                             currentAttemptEntry.nearSolutionFloodWindow = {
                                 nearSolutionStates: attemptResult.debug.timeoutDiagnostics.nearSolutionStates,
                                 bestLowerBound: attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution
@@ -11970,6 +11994,12 @@ function installSolver(APP) {
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptReason = 'near-closure-rescue';
                             currentAttemptEntry.nearSolutionFloodDetected = true;
+                            currentAttemptEntry.nearClosureRescueActivated = true;
+                            currentAttemptEntry.nearClosureRescueProfile = 'nearClosureRescue';
+                            currentAttemptEntry.nearClosureRescueIDAStarEnabled = !!rescueAttempt.endgameIDAStarEnabled;
+                            currentAttemptEntry.nearClosureRescueBlockedReason = rescueRegistration.allowed
+                                ? null
+                                : (rescueRegistration.reason || 'duplicate-signature');
                             currentAttemptEntry.nearSolutionFloodWindow = {
                                 nearSolutionStates: Number(attemptResult?.debug?.timeoutDiagnostics?.nearSolutionStates) || 0,
                                 bestLowerBound: Number.isFinite(attemptResult?.debug?.timeoutDiagnostics?.bestLowerBoundToValidSolution)
