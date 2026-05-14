@@ -5003,7 +5003,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 endgameIDAStarFinalFLimit: Number.isFinite(attempt?.endgameIDAStarFinalFLimit) ? attempt.endgameIDAStarFinalFLimit : null,
                 endgameIDAStarReason: typeof attempt?.endgameIDAStarReason === 'string' ? attempt.endgameIDAStarReason : null,
                 endgameIDAStarTriggerDepth: Number.isFinite(attempt?.endgameIDAStarTriggerDepth) ? attempt.endgameIDAStarTriggerDepth : null,
-                endgameIDAStarTriggerBound: Number.isFinite(attempt?.endgameIDAStarTriggerBound) ? attempt.endgameIDAStarTriggerBound : null
+                endgameIDAStarTriggerBound: Number.isFinite(attempt?.endgameIDAStarTriggerBound) ? attempt.endgameIDAStarTriggerBound : null,
+                endgameIDAStarOption: attempt?.endgameIDAStarOption === true ? true : (attempt?.endgameIDAStarOption === false ? false : null),
+                endgameIDAStarTriggerDepthThreshold: Number.isFinite(attempt?.endgameIDAStarTriggerDepthThreshold) ? attempt.endgameIDAStarTriggerDepthThreshold : null,
+                endgameIDAStarBoundCeiling: Number.isFinite(attempt?.endgameIDAStarBoundCeiling) ? attempt.endgameIDAStarBoundCeiling : null,
+                endgameIDAStarBestObservedDepth: Number.isFinite(attempt?.endgameIDAStarBestObservedDepth) ? attempt.endgameIDAStarBestObservedDepth : null,
+                endgameIDAStarBestObservedBound: Number.isFinite(attempt?.endgameIDAStarBestObservedBound) ? attempt.endgameIDAStarBestObservedBound : null
             };
             return ensureCanonicalAttemptTelemetry(attempt, canonical);
         };

@@ -4811,6 +4811,19 @@ function installSolver(APP) {
                     const endgameIDAStarTriggerDepth = (Number(options?.endgameIDAStarTriggerDepthRatio) > 0)
                         ? Math.floor(l.reqLen * Number(options.endgameIDAStarTriggerDepthRatio))
                         : Infinity;
+                    // Unconditional telemetry surfaces the runtime option state and the
+                    // best-observed (depth, bound) the DFS reached. If the trigger never fires,
+                    // these tell us whether the option made it through (endgameIDAStarOption=true)
+                    // and whether the DFS actually got close enough (bestObservedDepth/Bound)
+                    // — distinguishing "option not set" from "DFS never reached trigger conditions"
+                    // from "trigger fired but IDA* failed".
+                    if (debugStats) {
+                        debugStats.endgameIDAStarOption = !!options.endgameIDAStarEnabled;
+                        debugStats.endgameIDAStarTriggerDepthThreshold = endgameIDAStarTriggerDepth;
+                        debugStats.endgameIDAStarBoundCeiling = Number(options.endgameIDAStarBoundCeiling || 20);
+                    }
+                    let bestObservedDepthForIDA = -1;
+                    let bestObservedBoundForIDA = null;
                     while (stack.length > 0) {
                         if (options.signal?.aborted) {
                             captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
@@ -5090,6 +5103,21 @@ function installSolver(APP) {
                         // On failure, IDA* restores state to its trigger-time snapshot and beam
                         // search continues normally — strict additive behavior, no regression risk
                         // for attempts where the option is off.
+                        // Track the highest (depth, lowest bound at that depth) the DFS reached
+                        // so audit can show how close to trigger conditions the search got even when
+                        // the IDA* trigger fails to fire.
+                        if (Number.isFinite(lowerBoundToValidSolution) && lowerBoundToValidSolution > 0) {
+                            if (realLen > bestObservedDepthForIDA
+                                || (realLen === bestObservedDepthForIDA
+                                    && (bestObservedBoundForIDA == null || lowerBoundToValidSolution < bestObservedBoundForIDA))) {
+                                bestObservedDepthForIDA = realLen;
+                                bestObservedBoundForIDA = lowerBoundToValidSolution;
+                                if (debugStats) {
+                                    debugStats.endgameIDAStarBestObservedDepth = realLen;
+                                    debugStats.endgameIDAStarBestObservedBound = lowerBoundToValidSolution;
+                                }
+                            }
+                        }
                         if (options.endgameIDAStarEnabled
                             && !endgameIDAStarTriggered
                             && realLen >= endgameIDAStarTriggerDepth
@@ -11359,6 +11387,11 @@ function installSolver(APP) {
                     endgameIDAStarReason: (typeof attemptResult?.debug?.endgameIDAStarReason === 'string') ? attemptResult.debug.endgameIDAStarReason : null,
                     endgameIDAStarTriggerDepth: Number.isFinite(attemptResult?.debug?.endgameIDAStarTriggerDepth) ? attemptResult.debug.endgameIDAStarTriggerDepth : null,
                     endgameIDAStarTriggerBound: Number.isFinite(attemptResult?.debug?.endgameIDAStarTriggerBound) ? attemptResult.debug.endgameIDAStarTriggerBound : null,
+                    endgameIDAStarOption: attemptResult?.debug?.endgameIDAStarOption === true ? true : (attemptResult?.debug?.endgameIDAStarOption === false ? false : null),
+                    endgameIDAStarTriggerDepthThreshold: Number.isFinite(attemptResult?.debug?.endgameIDAStarTriggerDepthThreshold) ? attemptResult.debug.endgameIDAStarTriggerDepthThreshold : null,
+                    endgameIDAStarBoundCeiling: Number.isFinite(attemptResult?.debug?.endgameIDAStarBoundCeiling) ? attemptResult.debug.endgameIDAStarBoundCeiling : null,
+                    endgameIDAStarBestObservedDepth: Number.isFinite(attemptResult?.debug?.endgameIDAStarBestObservedDepth) ? attemptResult.debug.endgameIDAStarBestObservedDepth : null,
+                    endgameIDAStarBestObservedBound: Number.isFinite(attemptResult?.debug?.endgameIDAStarBestObservedBound) ? attemptResult.debug.endgameIDAStarBestObservedBound : null,
                     nearClosureRescueEligible: !!attemptResult?.debug?.nearClosureRescueEligible,
                     nearClosureRescueActivated: !!attemptResult?.debug?.nearClosureRescueActivated,
                     nearClosureRescueThreshold: Number.isFinite(attemptResult?.debug?.nearClosureRescueThreshold) ? attemptResult.debug.nearClosureRescueThreshold : null,
