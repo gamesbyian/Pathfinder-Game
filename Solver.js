@@ -10191,6 +10191,23 @@ function installSolver(APP) {
             // treatment, and a level whose number changes (or whose layout changes) gets
             // re-classified from scratch on its current geometry.
             const archetypes = this._classifyLevelArchetype(level);
+            // For high-intersection-burden levels, enable endgame IDA* across the ENTIRE cascade
+            // (every prepended archetype attempt AND every standard cascade attempt). The audit's
+            // outer loop calls the solver multiple times for hard levels, but the bound-plateau
+            // rescue can't accumulate history WITHIN a single solver call (each call's internal
+            // cascade only runs 1-2 attempts before its budget exhausts). Direct archetype-gated
+            // opt-in lets the DFS trigger IDA* whenever a single attempt reaches the depth/bound
+            // conditions, independent of the multi-attempt rescue chain. Gate is still tight:
+            // requires high-intersection-burden archetype (reqInt>=5, density>=0.55, obligations>=3)
+            // — currently matches only L92.
+            const allowEndgameIDAStarForArchetype = archetypes.includes('high-intersection-burden');
+            if (allowEndgameIDAStarForArchetype) {
+                for (const planned of orderedAttempts) {
+                    if (planned.endgameIDAStarEnabled === undefined) {
+                        planned.endgameIDAStarEnabled = true;
+                    }
+                }
+            }
             if (archetypes.length > 0) {
                 const seenProfiles = new Set();
                 const prepended = [];
@@ -10210,7 +10227,8 @@ function installSolver(APP) {
                             portalBiasMode: 'adaptiveMustCross',
                             structuralMode: false,
                             policyProfile: entry.policyProfile,
-                            portalUsagePolicy: resolvePortalUsagePolicy()
+                            portalUsagePolicy: resolvePortalUsagePolicy(),
+                            endgameIDAStarEnabled: allowEndgameIDAStarForArchetype
                         });
                     }
                 }
