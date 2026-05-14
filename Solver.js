@@ -5647,7 +5647,11 @@ function installSolver(APP) {
                         forcePhaseArchetype = null,
                         antiDriftEdgeLock = false,
                         forcedPolicyProfile = null,
-                        suppressPerimeterBias = false
+                        suppressPerimeterBias = false,
+                        endgameIDAStarEnabled = false,
+                        endgameIDAStarTriggerDepthRatio = 0.85,
+                        endgameIDAStarBoundCeiling = 20,
+                        endgameIDAStarBudgetFraction = 0.5
                     } = options;
 
                     let rankedQueue = gateRankings.slice();
@@ -6477,7 +6481,11 @@ function installSolver(APP) {
                             forcePhaseArchetype,
                             antiDriftEdgeLock,
                             forcedPolicyProfile,
-                            suppressPerimeterBias
+                            suppressPerimeterBias,
+                            endgameIDAStarEnabled,
+                            endgameIDAStarTriggerDepthRatio,
+                            endgameIDAStarBoundCeiling,
+                            endgameIDAStarBudgetFraction
                         });
                         const out = await SearchFramework.runSearch({
                             level,
