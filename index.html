@@ -5060,7 +5060,33 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         dominanceHitRate: Number.isFinite(attempt?.dominanceHitRate) ? attempt.dominanceHitRate : null,
                         nogoodHitRate: Number.isFinite(attempt?.nogoodHitRate) ? attempt.nogoodHitRate : null,
                         counterIntegrityStatus: attempt?.counterIntegrityStatus || null,
-                        statsProvenance: attempt?.statsProvenance || null
+                        statsProvenance: attempt?.statsProvenance || null,
+                        // Rescue + IDA* observation fields — propagate from the solver's audit
+                        // summary so toCanonicalAttemptRecord can surface them. Without this
+                        // explicit forwarding, compactDefined strips fields not in this list
+                        // and the audit JSON shows null for every IDA*/rescue diagnostic.
+                        endgameIDAStarTriggered: attempt?.endgameIDAStarTriggered,
+                        endgameIDAStarSolved: attempt?.endgameIDAStarSolved,
+                        endgameIDAStarNodesExpanded: attempt?.endgameIDAStarNodesExpanded,
+                        endgameIDAStarIterations: attempt?.endgameIDAStarIterations,
+                        endgameIDAStarFinalFLimit: attempt?.endgameIDAStarFinalFLimit,
+                        endgameIDAStarReason: attempt?.endgameIDAStarReason,
+                        endgameIDAStarTriggerDepth: attempt?.endgameIDAStarTriggerDepth,
+                        endgameIDAStarTriggerBound: attempt?.endgameIDAStarTriggerBound,
+                        endgameIDAStarOption: attempt?.endgameIDAStarOption,
+                        endgameIDAStarTriggerDepthThreshold: attempt?.endgameIDAStarTriggerDepthThreshold,
+                        endgameIDAStarBoundCeiling: attempt?.endgameIDAStarBoundCeiling,
+                        endgameIDAStarBestObservedDepth: attempt?.endgameIDAStarBestObservedDepth,
+                        endgameIDAStarBestObservedBound: attempt?.endgameIDAStarBestObservedBound,
+                        nearClosureRescueEligible: attempt?.nearClosureRescueEligible,
+                        nearClosureRescueActivated: attempt?.nearClosureRescueActivated,
+                        nearClosureRescueTriggerPath: attempt?.nearClosureRescueTriggerPath,
+                        nearClosureRescueGateMissed: attempt?.nearClosureRescueGateMissed,
+                        nearClosureRescueProfile: attempt?.nearClosureRescueProfile,
+                        nearClosureRescueIDAStarEnabled: attempt?.nearClosureRescueIDAStarEnabled,
+                        nearClosure_boundPlateauEligible: attempt?.nearClosure_boundPlateauEligible,
+                        nearClosure_boundPlateauWindow: attempt?.nearClosure_boundPlateauWindow,
+                        nearClosure_boundPlateauCeiling: attempt?.nearClosure_boundPlateauCeiling
                     })];
                 nested.forEach((solverAttempt) => {
                     canonical.push(solverAttempt);
