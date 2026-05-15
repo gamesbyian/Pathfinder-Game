@@ -11027,12 +11027,30 @@ function installSolver(APP) {
                         : (attemptOpts.useControlPlaneArchetype !== false
                             ? (controlPlane?.activeHypothesis?.archetype || 'harvestThenFinish')
                             : null);
+                const recentTimeoutLikeAttempts = recentTimeoutTelemetry.filter(entry => ['timeout', 'no-solution-inconclusive'].includes(entry?.status));
+                const repeatedTimeoutLike = recentTimeoutLikeAttempts.length >= 2;
+                const recentRootExpandedMax = recentTimeoutLikeAttempts.reduce((maxVal, entry) => {
+                    return Math.max(maxVal, Math.max(0, Number(entry?.rootCandidatesExpanded) || 0));
+                }, 0);
+                const highIntersectionBurden = !!heuristicFeatureFlags?.highReqInt;
+                // Level-agnostic adaptive root broadening:
+                // when repeated timeout-like outcomes keep root expansion pinned to a narrow beam,
+                // force a broader root floor for the next attempt. This uses only per-level runtime
+                // telemetry + derived feature flags, with no level-id branching or persisted level memory.
+                const adaptiveRootBroadening = repeatedTimeoutLike
+                    && highIntersectionBurden
+                    && recentRootExpandedMax <= 4;
+                const adaptiveRootExpansionFloorCount = adaptiveRootBroadening
+                    ? Math.min(10, Math.max(6, recentRootExpandedMax + 2))
+                    : null;
                 const rootExpansionFloorCount = Number.isFinite(attemptOpts.rootExpansionFloorCount)
                     ? attemptOpts.rootExpansionFloorCount
-                    : (Number.isFinite(opts.rootExpansionFloorCount) ? opts.rootExpansionFloorCount : null);
+                    : (Number.isFinite(opts.rootExpansionFloorCount)
+                        ? opts.rootExpansionFloorCount
+                        : adaptiveRootExpansionFloorCount);
                 const forceRootExpansionFloor = (attemptOpts.forceRootExpansionFloor !== undefined)
                     ? !!attemptOpts.forceRootExpansionFloor
-                    : !!opts.forceRootExpansionFloor;
+                    : !!(opts.forceRootExpansionFloor || adaptiveRootBroadening);
                 const relaxRootSuppressionFirstLayer = (attemptOpts.relaxRootSuppressionFirstLayer !== undefined)
                     ? !!attemptOpts.relaxRootSuppressionFirstLayer
                     : !!opts.relaxRootSuppressionFirstLayer;
@@ -11130,6 +11148,13 @@ function installSolver(APP) {
                 debug.timeoutEscalationTier = Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : 0;
                 debug.forcedFamilySwitch = !!attemptOpts?.forcedFamilySwitch;
                 debug.escalationReason = attemptOpts?.escalationReason || null;
+                debug.adaptiveRootBroadening = adaptiveRootBroadening;
+                debug.adaptiveRootBroadeningReason = adaptiveRootBroadening
+                    ? 'repeated-timeout-like+high-reqInt+low-root-frontier'
+                    : null;
+                debug.adaptiveRootExpansionFloorCount = Number.isFinite(adaptiveRootExpansionFloorCount)
+                    ? adaptiveRootExpansionFloorCount
+                    : null;
                 // Capture whether attemptOpts had endgameIDAStarEnabled at the moment runAttempt
                 // built solverOpts. If 'undefined' → archetype opt-in didn't reach this attempt
                 // object. If 'true' → attempt had it but option got stripped between solverOpts
