@@ -6020,11 +6020,56 @@ function installSolver(APP) {
                                 level.mustPassPairDist[j][i] = val;
                             }
                         }
+                        // Free-pickup credit: when the shortest path between two must-pass cells
+                        // incidentally passes through a third must-pass cell, the game counts that
+                        // third cell as visited "for free." The TSP DP without this credit
+                        // overestimates the remaining must-pass cost (hint-path-replay flagged this
+                        // for L133: bound=13 but the hint completes in 11 steps because the path
+                        // between must-pass cells incidentally covers another).
+                        //
+                        // For each pair (i,j), free pickup includes other must-pass c such that
+                        //   d(MP_i, MP_c) + d(MP_c, MP_j) == d(MP_i, MP_j)
+                        // i.e., c lies on SOME shortest path from MP_i to MP_j.
+                        // For the goal leg (DP base case), freePickupGoal[i] includes c such that
+                        //   d(MP_i, MP_c) + d(MP_c, goal) == d(MP_i, goal)
+                        // i.e., c is on some shortest path from MP_i to goal.
+                        level.mustPassFreePickup = Array.from({ length: n }, () => Array(n).fill(0n));
+                        level.mustPassFreePickupGoal = Array(n).fill(0n);
+                        for (let i = 0; i < n; i++) {
+                            const dGoalI = level.mustPassToGoalDist[i];
+                            for (let c = 0; c < n; c++) {
+                                if (c === i) continue;
+                                const cBit = 1n << BigInt(c);
+                                const dIc = level.mustPassPairDist[i][c];
+                                // Goal-leg pickup: c on shortest path from MP_i to goal.
+                                if (Number.isFinite(dIc) && Number.isFinite(dGoalI)) {
+                                    const dCGoal = level.mustPassToGoalDist[c];
+                                    if (Number.isFinite(dCGoal) && (dIc + dCGoal) === dGoalI) {
+                                        level.mustPassFreePickupGoal[i] |= cBit;
+                                    }
+                                }
+                                // Pairwise pickup: c on shortest path from MP_i to MP_j (j != i, j != c).
+                                for (let j = 0; j < n; j++) {
+                                    if (j === i || j === c) continue;
+                                    const dIj = level.mustPassPairDist[i][j];
+                                    const dCj = level.mustPassPairDist[c][j];
+                                    if (Number.isFinite(dIc) && Number.isFinite(dCj) && Number.isFinite(dIj)
+                                        && (dIc + dCj) === dIj) {
+                                        level.mustPassFreePickup[i][j] |= cBit;
+                                    }
+                                }
+                            }
+                        }
                         if (n <= 7) {
                             level.mustPassDpMode = 'exact';
                             const dpMemo = new Map();
                             level.mustPassDp = (mask, lastIdx) => {
                                 if (mask === 0n) return level.mustPassToGoalDist[lastIdx];
+                                // Goal-leg shortcut: if every remaining must-pass is on some
+                                // shortest path from lastIdx to goal, the direct goal path covers
+                                // them all for free. No need to detour.
+                                const goalFree = level.mustPassFreePickupGoal[lastIdx];
+                                if ((mask & ~goalFree) === 0n) return level.mustPassToGoalDist[lastIdx];
                                 const key = `${mask.toString()}|${lastIdx}`;
                                 const cached = dpMemo.get(key);
                                 if (cached !== undefined) return cached;
@@ -6034,7 +6079,11 @@ function installSolver(APP) {
                                     if ((mask & bit) === 0n) continue;
                                     const d = level.mustPassPairDist[lastIdx][nxt];
                                     if (d === Infinity) continue;
-                                    const rest = level.mustPassDp(mask ^ bit, nxt);
+                                    // Pair free pickup: cells on shortest path lastIdx → nxt are
+                                    // satisfied incidentally.
+                                    const pairFree = level.mustPassFreePickup[lastIdx][nxt];
+                                    const remainingMask = (mask ^ bit) & ~pairFree;
+                                    const rest = level.mustPassDp(remainingMask, nxt);
                                     if (rest === Infinity) continue;
                                     const total = d + rest;
                                     if (total < best) best = total;
