@@ -5085,6 +5085,11 @@ function installSolver(APP) {
                             interactionDeficit,
                             portalCoverageBoundComponent
                         );
+                        if (lowerBoundToValidSolution > rSteps) {
+                            if (debugStats) debugStats.prune.minRemOverflow++;
+                            this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
+                            continue;
+                        }
                         const missingDimensions = [];
                         if (remainingMustPass > 0) missingDimensions.push('must-pass');
                         if (crossNeeds > 0) missingDimensions.push('must-cross');
