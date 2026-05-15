@@ -10307,15 +10307,7 @@ function installSolver(APP) {
             // conditions, independent of the multi-attempt rescue chain. Gate is still tight:
             // requires high-intersection-burden archetype (reqInt>=5, density>=0.55, obligations>=3)
             // — currently matches only L92.
-            // Kill-switch: temporarily disable archetype-gated IDA* opt-in until we can verify
-            // the per-fire and per-attempt time caps fully prevent UI hangs. The user reported
-            // L92 still hangs in the Portal-Aware Stage-Agnostic stage even after the b9dd1c1
-            // budget caps. To isolate cause, default-disable IDA* via archetype; opt-in can
-            // still happen via the explicit endgameIDAStarEnabled attempt option elsewhere
-            // (currently no callers in this branch). If the next audit shows L92 no longer
-            // hangs, IDA* was the culprit; we'll then async-ify IDA* with periodic event-loop
-            // yields and re-enable. If the hang persists, the bug is elsewhere.
-            const allowEndgameIDAStarForArchetype = false && archetypes.includes('high-intersection-burden');
+            const allowEndgameIDAStarForArchetype = archetypes.includes('high-intersection-burden');
             if (allowEndgameIDAStarForArchetype) {
                 for (const planned of orderedAttempts) {
                     if (planned.endgameIDAStarEnabled === undefined) {
