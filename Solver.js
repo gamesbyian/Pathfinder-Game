@@ -4823,7 +4823,12 @@ function installSolver(APP) {
                     // as the "previous bound" so first eligible state always fires.
                     let endgameIDAStarFireCount = 0;
                     let endgameIDAStarLastFireBound = Infinity;
-                    const endgameIDAStarMaxFires = 5;
+                    let endgameIDAStarTotalElapsedMs = 0;
+                    const endgameIDAStarMaxFires = 2;
+                    // Total per-attempt cap to prevent multi-fire from accumulating into a freeze.
+                    // Even with 2 fires of up to 2000ms each, this hard-caps the total at 3s so the
+                    // beam search retains meaningful budget for actual exploration after IDA* fails.
+                    const endgameIDAStarMaxTotalMs = 3000;
                     // Floor (not ceil) so depth at 0.85*reqLen actually triggers — for L92 with
                     // reqLen=99, floor(84.15)=84, matching the depth at which the bound-plateau
                     // rescue fires. Ceil would round to 85 and miss the trigger.
@@ -5145,6 +5150,7 @@ function installSolver(APP) {
                         }
                         if (options.endgameIDAStarEnabled
                             && endgameIDAStarFireCount < endgameIDAStarMaxFires
+                            && endgameIDAStarTotalElapsedMs < endgameIDAStarMaxTotalMs
                             && realLen >= endgameIDAStarTriggerDepth
                             && Number.isFinite(lowerBoundToValidSolution)
                             && lowerBoundToValidSolution > 0
@@ -5155,8 +5161,20 @@ function installSolver(APP) {
                             endgameIDAStarFireCount++;
                             endgameIDAStarLastFireBound = lowerBoundToValidSolution;
                             const elapsedMs = Date.now() - startTime;
-                            const remainingBudget = Math.max(500, Math.floor((options.timeLimit - elapsedMs) * Number(options.endgameIDAStarBudgetFraction || 0.5)));
+                            const remainingAttemptMs = Math.max(0, Number(options.timeLimit || 0) - elapsedMs);
+                            const fraction = Number(options.endgameIDAStarBudgetFraction || 0.5);
+                            // Cap the IDA* budget at min(remaining attempt budget, fraction*remaining)
+                            // and at most 2000ms per single fire to avoid blocking the JS event loop
+                            // long enough to freeze the UI. The Math.max(500, ...) floor used previously
+                            // could exceed the entire attempt budget when called from short stages
+                            // (e.g., the 0.5s portal-agnostic-exploration stage), making IDA* the
+                            // dominant contributor to a perceived "hang" without any solving progress.
+                            const perFireBudget = Math.max(10, Math.min(remainingAttemptMs, 2000, Math.floor(remainingAttemptMs * fraction)));
+                            const remainingTotalCap = Math.max(0, endgameIDAStarMaxTotalMs - endgameIDAStarTotalElapsedMs);
+                            const remainingBudget = Math.max(10, Math.min(perFireBudget, remainingTotalCap));
+                            const idaFireStart = Date.now();
                             const idaResult = this._runEndgameIDAStar(state, l, options, remainingBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
+                            endgameIDAStarTotalElapsedMs += (Date.now() - idaFireStart);
                             if (debugStats) {
                                 // Most fields reflect the LAST fire (overwrite-style). The
                                 // multi-fire counters and aggregates accumulate across fires.
