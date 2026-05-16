@@ -12329,6 +12329,41 @@ function installSolver(APP) {
                         quality
                     });
                     Object.assign(nextAttempt, adaptation?.nextPlan || {});
+                    // Generic hard-timeout diversification (level-agnostic):
+                    // if retries keep timing out with low novelty, widen root hypotheses and
+                    // reserve an endgame IDA* slice earlier. This is keyed to runtime signals
+                    // (healthy-expansion timeout + novelty stall), not specific level ids.
+                    if (nextAttempt && healthyExpansionTimeout && forceNoveltyDiversification) {
+                        const lowNoveltyPressure = (lowNoveltySameFamilyRetries > 0) || noveltyBelowThreshold;
+                        const adaptiveRootFloor = lowNoveltySameFamilyRetries > lowNoveltySameFamilyRetryCap ? 8 : 6;
+                        if (lowNoveltyPressure) {
+                            nextAttempt.rootExpansionFloorCount = Math.max(adaptiveRootFloor, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                            nextAttempt.forceRootExpansionFloor = true;
+                            nextAttempt.relaxRootSuppressionFirstLayer = true;
+                            nextAttempt.orderingTweaks = compactDefined({
+                                ...(nextAttempt.orderingTweaks || {}),
+                                mode: nextAttempt?.orderingTweaks?.mode || 'novelty-diversification',
+                                rootDiversificationFloor: nextAttempt.rootExpansionFloorCount
+                            });
+                        }
+                        // Promote an earlier/stronger endgame handoff when retries show a repeated
+                        // low-novelty timeout pattern.
+                        if (lowNoveltySameFamilyRetries >= 1) {
+                            nextAttempt.endgameIDAStarEnabled = true;
+                            nextAttempt.endgameIDAStarTriggerDepthRatio = Math.min(
+                                Number(nextAttempt.endgameIDAStarTriggerDepthRatio) || 0.85,
+                                0.8
+                            );
+                            nextAttempt.endgameIDAStarBoundCeiling = Math.max(
+                                Number(nextAttempt.endgameIDAStarBoundCeiling) || 20,
+                                24
+                            );
+                            nextAttempt.endgameIDAStarBudgetFraction = Math.max(
+                                Number(nextAttempt.endgameIDAStarBudgetFraction) || 0.5,
+                                0.6
+                            );
+                        }
+                    }
                     switchedThisAttempt = !!adaptation?.switchedFamily;
                     timeoutEscalationTier = adaptation?.stateUpdates?.timeoutEscalationTier ?? timeoutEscalationTier;
                     timeoutFamilyDiversificationUsed = !!(adaptation?.stateUpdates?.timeoutFamilyDiversificationUsed || timeoutFamilyDiversificationUsed);
