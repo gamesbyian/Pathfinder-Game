@@ -12,6 +12,30 @@ const BASE_URL = `http://${HOST}:${PORT}`;
 // Baseline fallback: 15 * 60 * 1000. Revert by restoring baseline multiplier below.
 const AUDIT_TIMEOUT_MS = Number(process.env.AUDIT_TIMEOUT_MS || 30 * 60 * 1000);
 
+const HISTORY_MAX_BYTES = Number(process.env.AUDIT_HISTORY_MAX_BYTES || 95 * 1024 * 1024);
+const HISTORY_MAX_ENTRIES = Number(process.env.AUDIT_HISTORY_MAX_ENTRIES || 4000);
+
+const trimHistoryEntries = (entries) => {
+  const normalized = entries.filter((entry) => typeof entry === 'string' && entry.trim().length > 0);
+  const cappedByCount = normalized.slice(-Math.max(1, HISTORY_MAX_ENTRIES));
+
+  let kept = [];
+  let totalBytes = 0;
+  for (let i = cappedByCount.length - 1; i >= 0; i -= 1) {
+    const line = cappedByCount[i];
+    const lineBytes = Buffer.byteLength(`${line}
+`, 'utf8');
+    if (kept.length > 0 && totalBytes + lineBytes > HISTORY_MAX_BYTES) break;
+    if (kept.length === 0 && lineBytes > HISTORY_MAX_BYTES) {
+      kept = [line];
+      break;
+    }
+    kept.push(line);
+    totalBytes += lineBytes;
+  }
+  return kept.reverse();
+};
+
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
@@ -609,7 +633,11 @@ const run = async () => {
       history = existing.split('\n').filter(Boolean);
     } catch {}
     history.push(JSON.stringify(metrics));
-    await writeFile(historyPath, `${history.join('\n')}\n`, 'utf8');
+    const trimmedHistory = trimHistoryEntries(history);
+    await writeFile(historyPath, `${trimmedHistory.join('\n')}\n`, 'utf8');
+    if (trimmedHistory.length !== history.length) {
+      console.log(`Trimmed metrics history from ${history.length} to ${trimmedHistory.length} entries to stay within repository limits.`);
+    }
 
     console.log(`Audit export written: ${path.relative(process.cwd(), rawFilePath)}`);
     console.log(`Metrics written: ${path.relative(process.cwd(), metricsFilePath)}`);
