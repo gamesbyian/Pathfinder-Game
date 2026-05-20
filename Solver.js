@@ -4236,7 +4236,7 @@ function installSolver(APP) {
                 //
                 // Returns { ok, path, nodesExpanded, iterations, finalFLimit, reason }.
                 // On failure, the state object is restored to its pre-call cursor/length.
-                _runEndgameIDAStar(state, level, options, budgetMs, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats) {
+                async _runEndgameIDAStar(state, level, options, budgetMs, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats) {
                     const startTime = Date.now();
                     const originalLogCursor = state.logCursor;
                     const originalPathLength = state.path.length;
@@ -4341,6 +4341,14 @@ function installSolver(APP) {
                     let totalNodesExpanded = 0;
                     let iterations = 0;
                     let solutionPath = null;
+                    // Yield to the event loop every N nodes inside the IDA* inner DFS so
+                    // the browser can repaint the modal label and the solver-progress
+                    // indicators during long fires. Without this, even a single 1-2s IDA*
+                    // call freezes the modal — and with snapshot multi-start chaining
+                    // additional fires, the perceived hang grows to many seconds.
+                    // setTimeout(0) is a macrotask (paint-eligible); plain await is not.
+                    const IDA_YIELD_INTERVAL = 1000;
+                    let nodesSinceYield = 0;
                     while (fLimit <= reqLen) {
                         if ((Date.now() - startTime) > budgetMs) break;
                         iterations++;
@@ -4350,6 +4358,17 @@ function installSolver(APP) {
                         dfsStack.push({ k: startKey, neighbors: startSuccessors.slice(), logMark: null });
                         while (dfsStack.length > 0) {
                             if ((Date.now() - startTime) > budgetMs) break;
+                            if (nodesSinceYield >= IDA_YIELD_INTERVAL) {
+                                nodesSinceYield = 0;
+                                // Also drive onProgress so the modal's timer keeps ticking
+                                // during long IDA* fires — without this, the user sees a
+                                // static timer for seconds and assumes the solver hung.
+                                if (typeof options.onProgress === 'function' && options.startTime) {
+                                    try { options.onProgress(Date.now() - options.startTime); } catch (_) {}
+                                }
+                                await new Promise(resolve => setTimeout(resolve, 0));
+                                if ((Date.now() - startTime) > budgetMs) break;
+                            }
                             const top = dfsStack[dfsStack.length - 1];
                             if (!top.neighbors || top.neighbors.length === 0) {
                                 if (top.logMark !== null) {
@@ -4360,6 +4379,7 @@ function installSolver(APP) {
                             }
                             const nextKey = top.neighbors.pop();
                             totalNodesExpanded++;
+                            nodesSinceYield++;
                             const topPortal = APP.LevelUtils.resolvePortal(level, top.k);
                             const isJump = !!(topPortal && topPortal.dest === nextKey && !state.isJump.has(state.path.length - 1));
                             const logMark = this._pushStateZeroAlloc(state, searchCtx, nextKey, isJump, level, idaOptions, debugStats);
@@ -5315,7 +5335,7 @@ function installSolver(APP) {
                             // (plain await) don't reliably trigger paint.
                             await new Promise(resolve => setTimeout(resolve, 0));
                             const idaFireStart = Date.now();
-                            const idaResult = this._runEndgameIDAStar(state, l, options, remainingBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
+                            const idaResult = await this._runEndgameIDAStar(state, l, options, remainingBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
                             endgameIDAStarTotalElapsedMs += (Date.now() - idaFireStart);
                             if (debugStats) {
                                 // Most fields reflect the LAST fire (overwrite-style). The
@@ -5394,7 +5414,7 @@ function installSolver(APP) {
                                     // synchronously block the event loop for hundreds of ms.
                                     await new Promise(resolve => setTimeout(resolve, 0));
                                     const snapFireStart = Date.now();
-                                    const snapResult = this._runEndgameIDAStar(snap.clone, l, options, snapBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
+                                    const snapResult = await this._runEndgameIDAStar(snap.clone, l, options, snapBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
                                     endgameIDAStarTotalElapsedMs += (Date.now() - snapFireStart);
                                     if (debugStats) {
                                         debugStats.endgameIDAStarSnapshotFires = (Number(debugStats.endgameIDAStarSnapshotFires) || 0) + 1;
