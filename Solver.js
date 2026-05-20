@@ -8323,6 +8323,9 @@ function installSolver(APP) {
                 forbiddenPrefixesReceivedCount: Number.isFinite(debug?.forbiddenPrefixesReceivedCount) ? debug.forbiddenPrefixesReceivedCount : null,
                 forbiddenPrefixesReceivedSampleLen: Number.isFinite(debug?.forbiddenPrefixesReceivedSampleLen) ? debug.forbiddenPrefixesReceivedSampleLen : null,
                 forbiddenPrefixFallbackEmpty: Number.isFinite(debug?.forbiddenPrefixFallbackEmpty) ? debug.forbiddenPrefixFallbackEmpty : null,
+                unifiedHKBoundComputed: Number.isFinite(debug?.unifiedHKBoundComputed) ? debug.unifiedHKBoundComputed : null,
+                unifiedHKBoundMaxObserved: Number.isFinite(debug?.unifiedHKBoundMaxObserved) ? debug.unifiedHKBoundMaxObserved : null,
+                unifiedHKBoundDominatedComposite: Number.isFinite(debug?.unifiedHKBoundDominatedComposite) ? debug.unifiedHKBoundDominatedComposite : null,
                 endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
                 endgameIDAStarOptionsKeys: (typeof debug?.endgameIDAStarOptionsKeys === 'string') ? debug.endgameIDAStarOptionsKeys : null,
                 endgameIDAStarAttemptOptsValue: (typeof debug?.endgameIDAStarAttemptOptsValue === 'string') ? debug.endgameIDAStarAttemptOptsValue : null,
@@ -11946,6 +11949,18 @@ function installSolver(APP) {
                     if (priorTimeoutPrefixes.length > 0) {
                         attempt.forbiddenPrefixes = priorTimeoutPrefixes;
                     }
+                    // Orchestrator-side telemetry: records what THIS code path saw,
+                    // so we can distinguish 'never ran' / 'ran but no priors' /
+                    // 'ran, priors exist, but no usable prefix' / 'set it' in the
+                    // audit. Without this, all four cases look identical (null).
+                    attempt.__orchestratorForbiddenPrefixDecision = {
+                        attemptIndexInPlan: i,
+                        attemptsUsedSoFar: attemptsUsed.length,
+                        timeoutCountSoFar: attemptsUsed.filter(a => a && ['timeout', 'no-solution-inconclusive'].includes(a.status)).length,
+                        prefixesCollected: priorTimeoutPrefixes.length,
+                        firstPrefixLength: priorTimeoutPrefixes[0]?.prefix?.length || 0,
+                        setForbiddenPrefixes: Array.isArray(attempt.forbiddenPrefixes)
+                    };
                 }
                 // Per-attempt modal update. A single stage can run multiple attempts
                 // sequentially (audit shows L92 runs 7 attempts in one solve), each taking
@@ -12131,10 +12146,14 @@ function installSolver(APP) {
                     endgameIDAStarSnapshotsTried: Number.isFinite(attemptResult?.debug?.endgameIDAStarSnapshotsTried) ? attemptResult.debug.endgameIDAStarSnapshotsTried : null,
                     endgameIDAStarSolvedBySnapshot: attemptResult?.debug?.endgameIDAStarSolvedBySnapshot === true ? true : null,
                     endgameIDAStarLastSnapshotReason: (typeof attemptResult?.debug?.endgameIDAStarLastSnapshotReason === 'string') ? attemptResult.debug.endgameIDAStarLastSnapshotReason : null,
+                    orchestratorForbiddenPrefixDecision: (attempt && typeof attempt === 'object') ? attempt.__orchestratorForbiddenPrefixDecision || null : null,
                     forbiddenPrefixSuppressions: Number.isFinite(attemptResult?.debug?.forbiddenPrefixSuppressions) ? attemptResult.debug.forbiddenPrefixSuppressions : null,
                     forbiddenPrefixesReceivedCount: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesReceivedCount) ? attemptResult.debug.forbiddenPrefixesReceivedCount : null,
                     forbiddenPrefixesReceivedSampleLen: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesReceivedSampleLen) ? attemptResult.debug.forbiddenPrefixesReceivedSampleLen : null,
                     forbiddenPrefixFallbackEmpty: Number.isFinite(attemptResult?.debug?.forbiddenPrefixFallbackEmpty) ? attemptResult.debug.forbiddenPrefixFallbackEmpty : null,
+                    unifiedHKBoundComputed: Number.isFinite(attemptResult?.debug?.unifiedHKBoundComputed) ? attemptResult.debug.unifiedHKBoundComputed : null,
+                    unifiedHKBoundMaxObserved: Number.isFinite(attemptResult?.debug?.unifiedHKBoundMaxObserved) ? attemptResult.debug.unifiedHKBoundMaxObserved : null,
+                    unifiedHKBoundDominatedComposite: Number.isFinite(attemptResult?.debug?.unifiedHKBoundDominatedComposite) ? attemptResult.debug.unifiedHKBoundDominatedComposite : null,
                     endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
                     endgameIDAStarOptionsKeys: (typeof attemptResult?.debug?.endgameIDAStarOptionsKeys === 'string') ? attemptResult.debug.endgameIDAStarOptionsKeys : null,
                     endgameIDAStarAttemptOptsValue: (typeof attemptResult?.debug?.endgameIDAStarAttemptOptsValue === 'string') ? attemptResult.debug.endgameIDAStarAttemptOptsValue : null,
