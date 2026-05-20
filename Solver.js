@@ -4366,6 +4366,14 @@ function installSolver(APP) {
                                 if (typeof options.onProgress === 'function' && options.startTime) {
                                     try { options.onProgress(Date.now() - options.startTime); } catch (_) {}
                                 }
+                                // Live progress update for the modal — IDA* runs for up to
+                                // 2s synchronously per fire, with this the detail line
+                                // visibly counts up rather than freezing.
+                                try {
+                                    if (typeof APP !== 'undefined' && APP?.UI?.setSolverDetailText) {
+                                        APP.UI.setSolverDetailText(`IDA* iter ${iterations} · fLimit ${fLimit} · ${totalNodesExpanded.toLocaleString()} nodes`);
+                                    }
+                                } catch (_) { /* UI not available; ignore */ }
                                 await new Promise(resolve => setTimeout(resolve, 0));
                                 if ((Date.now() - startTime) > budgetMs) break;
                             }
@@ -5022,6 +5030,19 @@ function installSolver(APP) {
                         if (++steps % 500 === 0) {
                             await new Promise(r => setTimeout(r, 0));
                             options.onProgress(Date.now() - options.startTime);
+                            // Live progress update for the solver modal. Without this the
+                            // detail line is static for the whole stage (seconds to minutes)
+                            // and the user perceives the solver as frozen even when it's
+                            // actively expanding nodes. APP.UI may be absent in non-browser
+                            // invocations (Node-based tests), so guard the access.
+                            try {
+                                if (typeof APP !== 'undefined' && APP?.UI?.setSolverDetailText) {
+                                    const stackTop = stack[stack.length - 1];
+                                    const depth = stackTop ? stackTop.depth : 0;
+                                    const nodesCount = (debugStats?.nodesExpanded || 0);
+                                    APP.UI.setSolverDetailText(`depth ${depth} · ${nodesCount.toLocaleString()} nodes expanded`);
+                                }
+                            } catch (_) { /* UI not available; ignore */ }
                         }
                         const top = stack[stack.length - 1];
                         if (top.neighbors.length === 0) {
