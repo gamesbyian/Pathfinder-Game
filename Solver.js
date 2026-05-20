@@ -5991,7 +5991,8 @@ function installSolver(APP) {
                         endgameIDAStarEnabled = false,
                         endgameIDAStarTriggerDepthRatio = 0.85,
                         endgameIDAStarBoundCeiling = 20,
-                        endgameIDAStarBudgetFraction = 0.5
+                        endgameIDAStarBudgetFraction = 0.5,
+                        forbiddenPrefixes = null
                     } = options;
 
                     let rankedQueue = gateRankings.slice();
@@ -6074,6 +6075,7 @@ function installSolver(APP) {
                                 endgameIDAStarTriggerDepthRatio,
                                 endgameIDAStarBoundCeiling,
                                 endgameIDAStarBudgetFraction,
+                                forbiddenPrefixes,
                                 ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
@@ -6874,7 +6876,8 @@ function installSolver(APP) {
                             endgameIDAStarEnabled,
                             endgameIDAStarTriggerDepthRatio,
                             endgameIDAStarBoundCeiling,
-                            endgameIDAStarBudgetFraction
+                            endgameIDAStarBudgetFraction,
+                            forbiddenPrefixes: options?.forbiddenPrefixes || null
                         });
                         const out = await SearchFramework.runSearch({
                             level,
