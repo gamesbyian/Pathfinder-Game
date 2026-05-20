@@ -16289,7 +16289,8 @@ function installSolver(APP) {
                     intsOverflow: Math.max(0, Number(prune?.intsOverflow) || 0),
                     minRemOverflow: Math.max(0, Number(prune?.minRemOverflow) || 0),
                     mustPassBound: Math.max(0, Number(prune?.mustPassBound) || 0),
-                    mustCrossBound: Math.max(0, Number(prune?.mustCrossBound) || 0)
+                    mustCrossBound: Math.max(0, Number(prune?.mustCrossBound) || 0),
+                    jointBound: Math.max(0, Number(prune?.jointBound) || 0)
                 });
                 const memoPrunes = compactDefined({
                     failedStateHit: Math.max(0, Number(prune?.failedStateHit) || 0),
