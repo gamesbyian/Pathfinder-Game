@@ -1376,6 +1376,58 @@ function installSolver(APP) {
                         }
                     };
                 },
+                // Deep-copies the mutable parts of a search state so an alternate search
+                // (e.g. IDA* fired from a captured frontier snapshot) can mutate the
+                // clone without disturbing the live beam DFS. The clone gets its own
+                // fresh undoLog so subsequent push/pop calls record into the clone's
+                // log only; the live state's log is untouched. Re-attaches typed views
+                // via _makeTypedStateViews. Skips: undoLog history (intentionally fresh).
+                _cloneStateForSnapshot(state, ctx, level) {
+                    const undoLogLen = Array.isArray(state.undoLog) ? state.undoLog.length : 0;
+                    const clone = {
+                        path: state.path.slice(),
+                        countsArr: state.countsArr.slice(),
+                        usageBits: state.usageBits.slice(),
+                        ints: state.ints,
+                        jumpMarks: state.jumpMarks.slice(),
+                        jumpCount: state.jumpCount,
+                        flipCount: state.flipCount,
+                        flipParity: state.flipParity,
+                        crossedFlippersAt: state.crossedFlippersAt.slice(),
+                        undoLog: new Array(undoLogLen),
+                        logCursor: 0,
+                        nonZeroCounts: state.nonZeroCounts,
+                        nonZeroUsage: state.nonZeroUsage,
+                        flipperCrossMask: state.flipperCrossMask,
+                        flipperParityAtCrossMask: state.flipperParityAtCrossMask,
+                        mustMask: state.mustMask,
+                        mustCrossMask: state.mustCrossMask,
+                        mustCrossCounts: state.mustCrossCounts ? state.mustCrossCounts.slice() : null,
+                        hashDirty: true
+                    };
+                    if (state.portal) {
+                        clone.portal = {
+                            activeObjectivePortalForced: state.portal.activeObjectivePortalForced,
+                            portalSelectedFamily: state.portal.portalSelectedFamily,
+                            portalSelectedEntry: state.portal.portalSelectedEntry,
+                            portalCommittedRegion: state.portal.portalCommittedRegion,
+                            portalReentryCounts: state.portal.portalReentryCounts
+                                ? state.portal.portalReentryCounts.slice()
+                                : new Uint8Array(0),
+                            portalOscillationCount: state.portal.portalOscillationCount,
+                            portalLastProgressValue: state.portal.portalLastProgressValue,
+                            portalLastFamily: state.portal.portalLastFamily,
+                            portalLastRegion: state.portal.portalLastRegion,
+                            portalRequiredCoverageMask: state.portal.portalRequiredCoverageMask,
+                            portalReentryBudget: state.portal.portalReentryBudget,
+                            portalOscillationBudget: state.portal.portalOscillationBudget
+                        };
+                    }
+                    if (state.floodVisited) clone.floodVisited = state.floodVisited.slice();
+                    if (state.floodQueue) clone.floodQueue = state.floodQueue.slice();
+                    this._makeTypedStateViews(clone, ctx);
+                    return clone;
+                },
                 _undoLogWrite(state, arrayId, idx, prev) {
                     const c = state.logCursor;
                     state.undoLog[c] = arrayId;
@@ -2385,7 +2437,46 @@ function installSolver(APP) {
                     };
                     const { valid, stageTrace, startNeighborBoundSanity, candidatesCount } =
                         this._filterCandidates(candidates, state, l, options, filterCtx, debugStats);
-                    return this._scoreCandidates(valid, state, l, options, {
+                    // Cross-attempt prefix-divergence guard. The L92 audit found pairwise
+                    // attempt overlap ≈ 1.0 — the beam search re-explored the same basin
+                    // across retries with only first-move (root) novelty. forbiddenPrefixes
+                    // carries each prior timed-out attempt's deepest path prefix; at depth ≤
+                    // (prefix.length - 1) we suppress the next-key that would continue any
+                    // matching prefix. Safety: if every candidate would be suppressed, fall
+                    // back to the unsuppressed list — the guard must never make a level
+                    // unsolvable. Suppression is recorded for audit so we can see whether the
+                    // guard is actually firing on retries.
+                    let dgValid = valid;
+                    const dgPrefixes = Array.isArray(options?.forbiddenPrefixes) ? options.forbiddenPrefixes : null;
+                    if (dgPrefixes && dgPrefixes.length > 0 && depth >= 0 && valid && valid.length > 0) {
+                        const forbiddenNextKeys = new Set();
+                        const currentPathLen = state.path.length;
+                        for (let pi = 0; pi < dgPrefixes.length; pi++) {
+                            const entry = dgPrefixes[pi];
+                            const pref = Array.isArray(entry?.prefix) ? entry.prefix : null;
+                            if (!pref || pref.length <= currentPathLen) continue;
+                            // Current path must match the prefix exactly up to its current length.
+                            let matches = true;
+                            for (let mi = 0; mi < currentPathLen; mi++) {
+                                if (state.path[mi] !== pref[mi]) { matches = false; break; }
+                            }
+                            if (matches) forbiddenNextKeys.add(pref[currentPathLen]);
+                        }
+                        if (forbiddenNextKeys.size > 0) {
+                            const filtered = valid.filter(nk => !forbiddenNextKeys.has(nk));
+                            if (filtered.length > 0) {
+                                dgValid = filtered;
+                                if (debugStats) {
+                                    debugStats.forbiddenPrefixSuppressions = (Number(debugStats.forbiddenPrefixSuppressions) || 0) + (valid.length - filtered.length);
+                                }
+                            } else if (debugStats) {
+                                // Guard would empty the candidate list — fall back. Tracks
+                                // "all candidates suppressed" so we know when forced-bypass kicked in.
+                                debugStats.forbiddenPrefixFallbackEmpty = (Number(debugStats.forbiddenPrefixFallbackEmpty) || 0) + 1;
+                            }
+                        }
+                    }
+                    return this._scoreCandidates(dgValid, state, l, options, {
                         k, depth, curLen, hasMust, crossNeed, getMustBound, getCrossBound,
                         portalForced, portalDest, distMap, flipperDistMap, usageFreq,
                         stageTrace, startNeighborBoundSanity, assertKnownSolvableBounds,
@@ -4152,6 +4243,17 @@ function installSolver(APP) {
                     const startKey = state.path[state.path.length - 1];
                     const startDepth = state.path.length - 1;
                     const reqLen = level.reqLen;
+                    // Relax bound-based prunes inside _getNeighbors while IDA* runs.
+                    // IDA* uses its own admissible f-bound for correctness; the per-neighbor
+                    // bound prunes are beam-search aggressiveness, and the L92 audit ('exhausted'
+                    // after 1 node, 'initial-state-infeasible' on retry) showed they filter to
+                    // zero successors at trigger depth — leaving IDA* with nothing to explore.
+                    // Augment disabledPrunes only for the duration of this IDA* call. Distance/
+                    // minRemOverflow are intentionally left ON: a state with realLen+minRem>reqLen
+                    // is provably unsolvable regardless of search strategy.
+                    const baseDisabled = Array.isArray(options?.disabledPrunes) ? options.disabledPrunes : [];
+                    const idaDisabled = Array.from(new Set([...baseDisabled, 'mustPassBound', 'mustCrossBound', 'portalAutomaton']));
+                    const idaOptions = { ...options, disabledPrunes: idaDisabled };
                     const computeH = (k, s) => {
                         const distToGoal = distMap?.get(k);
                         const distComp = Number.isFinite(distToGoal) ? distToGoal : Infinity;
@@ -4244,14 +4346,14 @@ function installSolver(APP) {
                         iterations++;
                         let nextFLimit = Infinity;
                         const dfsStack = [];
-                        const startSuccessors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, level, options, scratch, searchCtx, debugStats);
+                        const startSuccessors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, level, idaOptions, scratch, searchCtx, debugStats);
                         dfsStack.push({ k: startKey, neighbors: startSuccessors.slice(), logMark: null });
                         while (dfsStack.length > 0) {
                             if ((Date.now() - startTime) > budgetMs) break;
                             const top = dfsStack[dfsStack.length - 1];
                             if (!top.neighbors || top.neighbors.length === 0) {
                                 if (top.logMark !== null) {
-                                    this._popStateZeroAlloc(state, searchCtx, top.logMark, level, options, debugStats);
+                                    this._popStateZeroAlloc(state, searchCtx, top.logMark, level, idaOptions, debugStats);
                                 }
                                 dfsStack.pop();
                                 continue;
@@ -4260,7 +4362,7 @@ function installSolver(APP) {
                             totalNodesExpanded++;
                             const topPortal = APP.LevelUtils.resolvePortal(level, top.k);
                             const isJump = !!(topPortal && topPortal.dest === nextKey && !state.isJump.has(state.path.length - 1));
-                            const logMark = this._pushStateZeroAlloc(state, searchCtx, nextKey, isJump, level, options, debugStats);
+                            const logMark = this._pushStateZeroAlloc(state, searchCtx, nextKey, isJump, level, idaOptions, debugStats);
                             const newDepth = state.path.length - 1;
                             // Goal check: at goal cell with all length/intersections/obligations satisfied.
                             if (nextKey === level.goalKey
@@ -4278,17 +4380,17 @@ function installSolver(APP) {
                             const f = newDepth + (Number.isFinite(h) ? h : reqLen + 1);
                             if (f > fLimit || f > reqLen) {
                                 if (Number.isFinite(f) && f > fLimit && f <= reqLen && f < nextFLimit) nextFLimit = f;
-                                this._popStateZeroAlloc(state, searchCtx, logMark, level, options, debugStats);
+                                this._popStateZeroAlloc(state, searchCtx, logMark, level, idaOptions, debugStats);
                                 continue;
                             }
-                            const succNeighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, level, options, scratch, searchCtx, debugStats);
+                            const succNeighbors = this._getNeighbors(nextKey, state, distMap, flipperDistMap, usageFreq, level, idaOptions, scratch, searchCtx, debugStats);
                             dfsStack.push({ k: nextKey, neighbors: succNeighbors.slice(), logMark });
                         }
                         // Cleanup any frames left over from a budget-aborted inner DFS.
                         while (dfsStack.length > 0) {
                             const top = dfsStack[dfsStack.length - 1];
                             if (top.logMark !== null) {
-                                this._popStateZeroAlloc(state, searchCtx, top.logMark, level, options, debugStats);
+                                this._popStateZeroAlloc(state, searchCtx, top.logMark, level, idaOptions, debugStats);
                             }
                             dfsStack.pop();
                         }
@@ -4854,6 +4956,15 @@ function installSolver(APP) {
                     }
                     let bestObservedDepthForIDA = -1;
                     let bestObservedBoundForIDA = null;
+                    // Frontier snapshots for multi-start IDA*. The L92 audit and IDA* postmortem
+                    // showed IDA* fires from a state where _getNeighbors filters to 0 successors —
+                    // beam search committed to a dead-end branch before IDA* triggered, so IDA*
+                    // has no room to recover. Capture clones at moments the search reaches a new
+                    // (best depth, lowest bound) so that if the current-state IDA* fire fails,
+                    // we can try alternates that may have different downstream successor sets.
+                    // Capped at 3 snapshots to bound memory and wall-clock cost; FIFO replacement.
+                    const FRONTIER_SNAPSHOT_CAP = 3;
+                    const frontierSnapshots = [];
                     while (stack.length > 0) {
                         if (options.signal?.aborted) {
                             captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
@@ -5145,6 +5256,30 @@ function installSolver(APP) {
                                 if (debugStats) {
                                     debugStats.endgameIDAStarBestObservedDepth = realLen;
                                     debugStats.endgameIDAStarBestObservedBound = lowerBoundToValidSolution;
+                                    // Telemetry: capture the path prefix of the deepest-reached
+                                    // state for cross-attempt prefix-divergence guard. Capped at
+                                    // 16 keys to keep the audit payload small; the guard only
+                                    // uses the first ~8-10 anyway.
+                                    debugStats.endgameIDAStarBestObservedPathPrefix = state.path.slice(0, Math.min(16, state.path.length));
+                                }
+                                // Capture a frontier snapshot at significant-improvement moments
+                                // for multi-start IDA*. Gated on the same option as IDA* itself —
+                                // avoids unnecessary cloning when the feature isn't enabled.
+                                if (options.endgameIDAStarEnabled
+                                    && realLen >= Math.floor(l.reqLen * 0.5)
+                                    && lowerBoundToValidSolution <= Number(options.endgameIDAStarBoundCeiling || 20) * 2) {
+                                    if (frontierSnapshots.length >= FRONTIER_SNAPSHOT_CAP) {
+                                        frontierSnapshots.shift();
+                                    }
+                                    frontierSnapshots.push({
+                                        clone: this._cloneStateForSnapshot(state, searchCtx, l),
+                                        depth: realLen,
+                                        bound: lowerBoundToValidSolution,
+                                        tried: false
+                                    });
+                                    if (debugStats) {
+                                        debugStats.endgameIDAStarFrontierSnapshotCount = frontierSnapshots.length;
+                                    }
                                 }
                             }
                         }
@@ -5195,6 +5330,66 @@ function installSolver(APP) {
                                 return { path: idaResult.path.slice(), len: idaResult.path.length - 1 };
                             }
                             // IDA* failed and restored state; continue beam search from the same node.
+                            // Multi-start fallback: try IDA* from each captured frontier snapshot
+                            // (in newest-first order). Each snapshot is a fully-cloned state, so
+                            // _runEndgameIDAStar mutates the clone — the live beam state is not
+                            // touched. Bounded by remaining IDA* budget cap and snapshot count.
+                            // This addresses the L92 failure mode where the current state's
+                            // _getNeighbors filters to 0 successors: alternate snapshots may have
+                            // different downstream successor sets that IDA* can search.
+                            if (frontierSnapshots.length > 0
+                                && endgameIDAStarTotalElapsedMs < endgameIDAStarMaxTotalMs) {
+                                let snapshotIDASolved = false;
+                                let snapshotSolutionPath = null;
+                                let snapshotsTried = 0;
+                                // Try newest first — those tend to be the deepest, closest to closure.
+                                for (let si = frontierSnapshots.length - 1; si >= 0 && !snapshotIDASolved; si--) {
+                                    if (endgameIDAStarTotalElapsedMs >= endgameIDAStarMaxTotalMs) break;
+                                    const snap = frontierSnapshots[si];
+                                    if (snap.tried) continue;
+                                    // Skip snapshots whose path is a strict prefix of the current
+                                    // path — they're the same trajectory, no new information.
+                                    let isPrefix = true;
+                                    if (snap.clone.path.length > state.path.length) {
+                                        isPrefix = false;
+                                    } else {
+                                        for (let pi = 0; pi < snap.clone.path.length; pi++) {
+                                            if (snap.clone.path[pi] !== state.path[pi]) { isPrefix = false; break; }
+                                        }
+                                    }
+                                    if (isPrefix && snap.clone.path.length === state.path.length) {
+                                        // Identical to current state — already tried via the main fire.
+                                        snap.tried = true;
+                                        continue;
+                                    }
+                                    snap.tried = true;
+                                    snapshotsTried++;
+                                    const snapBudgetCap = Math.max(0, endgameIDAStarMaxTotalMs - endgameIDAStarTotalElapsedMs);
+                                    const snapBudget = Math.max(10, Math.min(snapBudgetCap, 1000));
+                                    const snapFireStart = Date.now();
+                                    const snapResult = this._runEndgameIDAStar(snap.clone, l, options, snapBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
+                                    endgameIDAStarTotalElapsedMs += (Date.now() - snapFireStart);
+                                    if (debugStats) {
+                                        debugStats.endgameIDAStarSnapshotFires = (Number(debugStats.endgameIDAStarSnapshotFires) || 0) + 1;
+                                        debugStats.endgameIDAStarNodesExpanded = (Number(debugStats.endgameIDAStarNodesExpanded) || 0) + (Number(snapResult?.nodesExpanded) || 0);
+                                        debugStats.endgameIDAStarIterations = (Number(debugStats.endgameIDAStarIterations) || 0) + (Number(snapResult?.iterations) || 0);
+                                        debugStats.endgameIDAStarLastSnapshotReason = String(snapResult?.reason || '');
+                                    }
+                                    if (snapResult.ok && Array.isArray(snapResult.path)) {
+                                        snapshotIDASolved = true;
+                                        snapshotSolutionPath = snapResult.path.slice();
+                                    }
+                                }
+                                if (debugStats) {
+                                    debugStats.endgameIDAStarSnapshotsTried = (Number(debugStats.endgameIDAStarSnapshotsTried) || 0) + snapshotsTried;
+                                }
+                                if (snapshotIDASolved && snapshotSolutionPath) {
+                                    captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
+                                    recordPhaseAttempt('solved');
+                                    if (debugStats) debugStats.endgameIDAStarSolvedBySnapshot = true;
+                                    return { path: snapshotSolutionPath, len: snapshotSolutionPath.length - 1 };
+                                }
+                            }
                         }
                         const minRem = minRemForLowerBound;
                         if (!runtimeDisabledPrunes.has('distance') && !runtimeDisabledPrunes.has('minRemOverflow') && realLen + minRem > l.reqLen) {
@@ -11097,6 +11292,7 @@ function installSolver(APP) {
                         ? Number(attemptOpts.endgameIDAStarBudgetFraction)
                         : 0.5,
                     portalTriage: opts.portalTriage || null,
+                    forbiddenPrefixes: Array.isArray(attemptOpts.forbiddenPrefixes) ? attemptOpts.forbiddenPrefixes : null,
                     rootTieSeed: Number.isFinite(attemptOpts.rootTieSeed)
                         ? attemptOpts.rootTieSeed
                         : ((typeof attemptOpts.label === 'string' ? attemptOpts.label.length : 0) + ((Number(attemptOpts.attemptOrdinal) || 0) * 17)),
@@ -11374,6 +11570,33 @@ function installSolver(APP) {
                     attempt.portalBiasMode = bestTemplate?.weightOverrides?.portalBiasMode || attempt.portalBiasMode;
                     attempt.label = `template-best-focus:${bestTemplate.id}`;
                 }
+                // Cross-attempt prefix-divergence guard. Collect deepest-frontier path
+                // prefixes from prior timed-out attempts so the inner solver's _getNeighbors
+                // can suppress the same continuations and force the retry into a different
+                // basin. The L92 audit found pairwise overlap ≈1.0 across retries — root
+                // novelty alone was insufficient; per-prefix suppression is additive.
+                // Limited to the 3 most recent timeouts to keep the suppression set small
+                // (otherwise we risk over-constraining and emptying every candidate list).
+                if (!Array.isArray(attempt.forbiddenPrefixes)) {
+                    const priorTimeoutPrefixes = [];
+                    for (let pi = attemptsUsed.length - 1; pi >= 0 && priorTimeoutPrefixes.length < 3; pi--) {
+                        const prior = attemptsUsed[pi];
+                        if (!prior) continue;
+                        if (!['timeout', 'no-solution-inconclusive'].includes(prior.status)) continue;
+                        const pref = Array.isArray(prior.endgameIDAStarBestObservedPathPrefix)
+                            ? prior.endgameIDAStarBestObservedPathPrefix
+                            : null;
+                        if (!pref || pref.length < 4) continue;
+                        // Use the first ~10 keys as the divergence-zone. Long enough to define
+                        // a basin but short enough that the suppression frees up most of the
+                        // search space.
+                        const trimmed = pref.slice(0, Math.min(10, pref.length));
+                        priorTimeoutPrefixes.push({ prefix: trimmed, sourceAttemptOrdinal: prior.attemptOrdinal || null });
+                    }
+                    if (priorTimeoutPrefixes.length > 0) {
+                        attempt.forbiddenPrefixes = priorTimeoutPrefixes;
+                    }
+                }
                 const attemptResult = await runAttempt(attempt.budgetMs, attempt);
                 const quality = getSearchQuality(attemptResult);
                 const attemptInstrumentation = buildAttemptInstrumentation(attemptResult, quality);
@@ -11530,6 +11753,16 @@ function installSolver(APP) {
                     endgameIDAStarBoundCeiling: Number.isFinite(attemptResult?.debug?.endgameIDAStarBoundCeiling) ? attemptResult.debug.endgameIDAStarBoundCeiling : null,
                     endgameIDAStarBestObservedDepth: Number.isFinite(attemptResult?.debug?.endgameIDAStarBestObservedDepth) ? attemptResult.debug.endgameIDAStarBestObservedDepth : null,
                     endgameIDAStarBestObservedBound: Number.isFinite(attemptResult?.debug?.endgameIDAStarBestObservedBound) ? attemptResult.debug.endgameIDAStarBestObservedBound : null,
+                    endgameIDAStarBestObservedPathPrefix: Array.isArray(attemptResult?.debug?.endgameIDAStarBestObservedPathPrefix)
+                        ? attemptResult.debug.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
+                        : null,
+                    endgameIDAStarFrontierSnapshotCount: Number.isFinite(attemptResult?.debug?.endgameIDAStarFrontierSnapshotCount) ? attemptResult.debug.endgameIDAStarFrontierSnapshotCount : null,
+                    endgameIDAStarSnapshotFires: Number.isFinite(attemptResult?.debug?.endgameIDAStarSnapshotFires) ? attemptResult.debug.endgameIDAStarSnapshotFires : null,
+                    endgameIDAStarSnapshotsTried: Number.isFinite(attemptResult?.debug?.endgameIDAStarSnapshotsTried) ? attemptResult.debug.endgameIDAStarSnapshotsTried : null,
+                    endgameIDAStarSolvedBySnapshot: attemptResult?.debug?.endgameIDAStarSolvedBySnapshot === true ? true : null,
+                    endgameIDAStarLastSnapshotReason: (typeof attemptResult?.debug?.endgameIDAStarLastSnapshotReason === 'string') ? attemptResult.debug.endgameIDAStarLastSnapshotReason : null,
+                    forbiddenPrefixSuppressions: Number.isFinite(attemptResult?.debug?.forbiddenPrefixSuppressions) ? attemptResult.debug.forbiddenPrefixSuppressions : null,
+                    forbiddenPrefixFallbackEmpty: Number.isFinite(attemptResult?.debug?.forbiddenPrefixFallbackEmpty) ? attemptResult.debug.forbiddenPrefixFallbackEmpty : null,
                     endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
                     endgameIDAStarOptionsKeys: (typeof attemptResult?.debug?.endgameIDAStarOptionsKeys === 'string') ? attemptResult.debug.endgameIDAStarOptionsKeys : null,
                     endgameIDAStarAttemptOptsValue: (typeof attemptResult?.debug?.endgameIDAStarAttemptOptsValue === 'string') ? attemptResult.debug.endgameIDAStarAttemptOptsValue : null,
