@@ -5076,6 +5076,16 @@ function installSolver(APP) {
                             : (options.endgameIDAStarEnabled === false ? 'false'
                             : (options.endgameIDAStarEnabled === undefined ? 'undefined' : `other:${typeof options.endgameIDAStarEnabled}`));
                         debugStats.endgameIDAStarOptionsKeys = Object.keys(options || {}).filter(k => /endgameIDA/i.test(k)).join(',');
+                        // Mirror what THIS solver invocation actually received for the
+                        // HK and forbiddenPrefixes features. Distinguishes "feature was
+                        // off at this layer" from "feature was on but never fired" — both
+                        // previously appeared identically as null in the audit.
+                        debugStats.useUnifiedHKBoundOptionSeen = !!options.useUnifiedHKBound;
+                        debugStats.unifiedHKLevelTableReady = !!l.unifiedHK;
+                        debugStats.forbiddenPrefixesOptionLength = Array.isArray(options.forbiddenPrefixes) ? options.forbiddenPrefixes.length : null;
+                        debugStats.forbiddenPrefixesOptionFirstLen = (Array.isArray(options.forbiddenPrefixes) && Array.isArray(options.forbiddenPrefixes[0]?.prefix))
+                            ? options.forbiddenPrefixes[0].prefix.length
+                            : null;
                     }
                     let bestObservedDepthForIDA = -1;
                     let bestObservedBoundForIDA = null;
@@ -8326,6 +8336,10 @@ function installSolver(APP) {
                 unifiedHKBoundComputed: Number.isFinite(debug?.unifiedHKBoundComputed) ? debug.unifiedHKBoundComputed : null,
                 unifiedHKBoundMaxObserved: Number.isFinite(debug?.unifiedHKBoundMaxObserved) ? debug.unifiedHKBoundMaxObserved : null,
                 unifiedHKBoundDominatedComposite: Number.isFinite(debug?.unifiedHKBoundDominatedComposite) ? debug.unifiedHKBoundDominatedComposite : null,
+                useUnifiedHKBoundOptionSeen: debug?.useUnifiedHKBoundOptionSeen === true ? true : (debug?.useUnifiedHKBoundOptionSeen === false ? false : null),
+                unifiedHKLevelTableReady: debug?.unifiedHKLevelTableReady === true ? true : (debug?.unifiedHKLevelTableReady === false ? false : null),
+                forbiddenPrefixesOptionLength: Number.isFinite(debug?.forbiddenPrefixesOptionLength) ? debug.forbiddenPrefixesOptionLength : null,
+                forbiddenPrefixesOptionFirstLen: Number.isFinite(debug?.forbiddenPrefixesOptionFirstLen) ? debug.forbiddenPrefixesOptionFirstLen : null,
                 endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
                 endgameIDAStarOptionsKeys: (typeof debug?.endgameIDAStarOptionsKeys === 'string') ? debug.endgameIDAStarOptionsKeys : null,
                 endgameIDAStarAttemptOptsValue: (typeof debug?.endgameIDAStarAttemptOptsValue === 'string') ? debug.endgameIDAStarAttemptOptsValue : null,
@@ -10931,7 +10945,13 @@ function installSolver(APP) {
                             structuralMode: false,
                             policyProfile: entry.policyProfile,
                             portalUsagePolicy: resolvePortalUsagePolicy(),
-                            endgameIDAStarEnabled: allowEndgameIDAStarForArchetype
+                            endgameIDAStarEnabled: allowEndgameIDAStarForArchetype,
+                            // L92 audit confirmed the prepended archetype attempts run
+                            // INSTEAD of the orderedAttempts loop that earlier sets
+                            // useUnifiedHKBound. The prepended list has its own explicit
+                            // flag set so HK actually fires for the high-intersection-
+                            // burden archetype.
+                            useUnifiedHKBound: allowEndgameIDAStarForArchetype
                         });
                     }
                 }
@@ -12154,6 +12174,10 @@ function installSolver(APP) {
                     unifiedHKBoundComputed: Number.isFinite(attemptResult?.debug?.unifiedHKBoundComputed) ? attemptResult.debug.unifiedHKBoundComputed : null,
                     unifiedHKBoundMaxObserved: Number.isFinite(attemptResult?.debug?.unifiedHKBoundMaxObserved) ? attemptResult.debug.unifiedHKBoundMaxObserved : null,
                     unifiedHKBoundDominatedComposite: Number.isFinite(attemptResult?.debug?.unifiedHKBoundDominatedComposite) ? attemptResult.debug.unifiedHKBoundDominatedComposite : null,
+                    useUnifiedHKBoundOptionSeen: attemptResult?.debug?.useUnifiedHKBoundOptionSeen === true ? true : (attemptResult?.debug?.useUnifiedHKBoundOptionSeen === false ? false : null),
+                    unifiedHKLevelTableReady: attemptResult?.debug?.unifiedHKLevelTableReady === true ? true : (attemptResult?.debug?.unifiedHKLevelTableReady === false ? false : null),
+                    forbiddenPrefixesOptionLength: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionLength) ? attemptResult.debug.forbiddenPrefixesOptionLength : null,
+                    forbiddenPrefixesOptionFirstLen: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionFirstLen) ? attemptResult.debug.forbiddenPrefixesOptionFirstLen : null,
                     endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
                     endgameIDAStarOptionsKeys: (typeof attemptResult?.debug?.endgameIDAStarOptionsKeys === 'string') ? attemptResult.debug.endgameIDAStarOptionsKeys : null,
                     endgameIDAStarAttemptOptsValue: (typeof attemptResult?.debug?.endgameIDAStarAttemptOptsValue === 'string') ? attemptResult.debug.endgameIDAStarAttemptOptsValue : null,
