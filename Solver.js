@@ -5307,6 +5307,13 @@ function installSolver(APP) {
                             const perFireBudget = Math.max(10, Math.min(remainingAttemptMs, 2000, Math.floor(remainingAttemptMs * fraction)));
                             const remainingTotalCap = Math.max(0, endgameIDAStarMaxTotalMs - endgameIDAStarTotalElapsedMs);
                             const remainingBudget = Math.max(10, Math.min(perFireBudget, remainingTotalCap));
+                            // Yield to the event loop before firing IDA*. IDA* runs
+                            // synchronously for up to ~2s; without this yield the browser
+                            // can't repaint the modal label set by the current stage's
+                            // onStage callback (which fired before the beam-DFS reached its
+                            // first 500-step yield). Macrotask via setTimeout(0) — microtasks
+                            // (plain await) don't reliably trigger paint.
+                            await new Promise(resolve => setTimeout(resolve, 0));
                             const idaFireStart = Date.now();
                             const idaResult = this._runEndgameIDAStar(state, l, options, remainingBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
                             endgameIDAStarTotalElapsedMs += (Date.now() - idaFireStart);
@@ -5382,6 +5389,10 @@ function installSolver(APP) {
                                     const halfAttemptRemaining = Math.floor(innerAttemptRemaining * 0.5);
                                     const snapBudget = Math.min(idaCapRemaining, innerAttemptRemaining, halfAttemptRemaining, 1000);
                                     if (snapBudget < 50) break;
+                                    // Yield between snapshot fires so the browser can repaint
+                                    // the modal even when consecutive snapshot IDA* runs each
+                                    // synchronously block the event loop for hundreds of ms.
+                                    await new Promise(resolve => setTimeout(resolve, 0));
                                     const snapFireStart = Date.now();
                                     const snapResult = this._runEndgameIDAStar(snap.clone, l, options, snapBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
                                     endgameIDAStarTotalElapsedMs += (Date.now() - snapFireStart);
@@ -7999,6 +8010,16 @@ function installSolver(APP) {
                 endgameIDAStarBoundCeiling: Number.isFinite(debug?.endgameIDAStarBoundCeiling) ? debug.endgameIDAStarBoundCeiling : null,
                 endgameIDAStarBestObservedDepth: Number.isFinite(debug?.endgameIDAStarBestObservedDepth) ? debug.endgameIDAStarBestObservedDepth : null,
                 endgameIDAStarBestObservedBound: Number.isFinite(debug?.endgameIDAStarBestObservedBound) ? debug.endgameIDAStarBestObservedBound : null,
+                endgameIDAStarBestObservedPathPrefix: Array.isArray(debug?.endgameIDAStarBestObservedPathPrefix)
+                    ? debug.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
+                    : null,
+                endgameIDAStarFrontierSnapshotCount: Number.isFinite(debug?.endgameIDAStarFrontierSnapshotCount) ? debug.endgameIDAStarFrontierSnapshotCount : null,
+                endgameIDAStarSnapshotFires: Number.isFinite(debug?.endgameIDAStarSnapshotFires) ? debug.endgameIDAStarSnapshotFires : null,
+                endgameIDAStarSnapshotsTried: Number.isFinite(debug?.endgameIDAStarSnapshotsTried) ? debug.endgameIDAStarSnapshotsTried : null,
+                endgameIDAStarSolvedBySnapshot: debug?.endgameIDAStarSolvedBySnapshot === true ? true : null,
+                endgameIDAStarLastSnapshotReason: (typeof debug?.endgameIDAStarLastSnapshotReason === 'string') ? debug.endgameIDAStarLastSnapshotReason : null,
+                forbiddenPrefixSuppressions: Number.isFinite(debug?.forbiddenPrefixSuppressions) ? debug.forbiddenPrefixSuppressions : null,
+                forbiddenPrefixFallbackEmpty: Number.isFinite(debug?.forbiddenPrefixFallbackEmpty) ? debug.forbiddenPrefixFallbackEmpty : null,
                 endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
                 endgameIDAStarOptionsKeys: (typeof debug?.endgameIDAStarOptionsKeys === 'string') ? debug.endgameIDAStarOptionsKeys : null,
                 endgameIDAStarAttemptOptsValue: (typeof debug?.endgameIDAStarAttemptOptsValue === 'string') ? debug.endgameIDAStarAttemptOptsValue : null,
@@ -14549,6 +14570,14 @@ function installSolver(APP) {
                     return { ok: false, status: 'cancelled', stage, message: 'Solver cancelled.', stagesTried };
                 }
                 if (opts.onStage) opts.onStage({ stage, name, variant, budgetMs: stageBudgetMs });
+                // Yield a macrotask after setting the modal label so the browser can
+                // repaint with the new stage name BEFORE run() starts its heavy
+                // synchronous work. Without this, the next stage's IDA* trigger can
+                // block the event loop for hundreds of ms before the first beam-DFS
+                // yield, leaving the modal visually stuck on the previous stage's label.
+                // microtasks (plain await) don't always trigger paint — only macrotasks
+                // (setTimeout) do.
+                await new Promise(resolve => setTimeout(resolve, 0));
                 const startedAt = Date.now();
                 const result = await run();
                 markStage(stage, name, variant, stageBudgetMs, startedAt, result, {
