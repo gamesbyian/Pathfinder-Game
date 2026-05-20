@@ -5342,7 +5342,16 @@ function installSolver(APP) {
                             endgameIDAStarTriggered = true;
                             endgameIDAStarFireCount++;
                             endgameIDAStarLastFireBound = lowerBoundToValidSolution;
-                            const elapsedMs = Date.now() - startTime;
+                            // options.startTime is the per-solve start; bare `startTime` is
+                            // undeclared inside _solveInstance so `Date.now() - startTime`
+                            // yields NaN, which cascades into NaN budgets and disabled
+                            // budget checks downstream. Long-standing latent bug — main
+                            // IDA* fires happen to behave because Math.max(10, NaN) → NaN
+                            // and the inner DFS's `> NaN` budget check is always false,
+                            // so IDA* terminates naturally via exhaustion. The snapshot
+                            // multi-start below is more sensitive: `NaN >= 100` is false,
+                            // so the loop is silently skipped.
+                            const elapsedMs = Date.now() - (options.startTime || Date.now());
                             const remainingAttemptMs = Math.max(0, Number(options.timeLimit || 0) - elapsedMs);
                             const fraction = Number(options.endgameIDAStarBudgetFraction || 0.5);
                             // Cap the IDA* budget at min(remaining attempt budget, fraction*remaining)
@@ -5393,7 +5402,8 @@ function installSolver(APP) {
                             // This addresses the L92 failure mode where the current state's
                             // _getNeighbors filters to 0 successors: alternate snapshots may have
                             // different downstream successor sets that IDA* can search.
-                            const attemptElapsedForSnapshots = Date.now() - startTime;
+                            const solveStartTime = options.startTime || Date.now();
+                            const attemptElapsedForSnapshots = Date.now() - solveStartTime;
                             const attemptRemainingForSnapshots = Math.max(0, Number(options.timeLimit || 0) - attemptElapsedForSnapshots);
                             if (frontierSnapshots.length > 0
                                 && endgameIDAStarTotalElapsedMs < endgameIDAStarMaxTotalMs
@@ -5407,7 +5417,7 @@ function installSolver(APP) {
                                     // Re-check the attempt budget on every iteration: long snapshot
                                     // fires can deplete it mid-loop, and the user-visible modal
                                     // stays frozen on the current stage until we return.
-                                    const innerElapsed = Date.now() - startTime;
+                                    const innerElapsed = Date.now() - solveStartTime;
                                     const innerAttemptRemaining = Math.max(0, Number(options.timeLimit || 0) - innerElapsed);
                                     if (innerAttemptRemaining < 100) break;
                                     const snap = frontierSnapshots[si];
