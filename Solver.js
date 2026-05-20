@@ -2454,6 +2454,14 @@ function installSolver(APP) {
                     // guard is actually firing on retries.
                     let dgValid = valid;
                     const dgPrefixes = Array.isArray(options?.forbiddenPrefixes) ? options.forbiddenPrefixes : null;
+                    // Diagnostic: surface that the inner solver received forbiddenPrefixes
+                    // (set once per call, idempotent). Helps distinguish "guard never fires
+                    // because not configured" from "guard fires but suppresses 0" — the prior
+                    // audit could only tell us suppr=null which conflates both cases.
+                    if (debugStats && dgPrefixes && dgPrefixes.length > 0) {
+                        debugStats.forbiddenPrefixesReceivedCount = dgPrefixes.length;
+                        debugStats.forbiddenPrefixesReceivedSampleLen = dgPrefixes[0]?.prefix?.length || 0;
+                    }
                     if (dgPrefixes && dgPrefixes.length > 0 && depth >= 0 && valid && valid.length > 0) {
                         const forbiddenNextKeys = new Set();
                         const currentPathLen = state.path.length;
@@ -8096,6 +8104,8 @@ function installSolver(APP) {
                 endgameIDAStarSolvedBySnapshot: debug?.endgameIDAStarSolvedBySnapshot === true ? true : null,
                 endgameIDAStarLastSnapshotReason: (typeof debug?.endgameIDAStarLastSnapshotReason === 'string') ? debug.endgameIDAStarLastSnapshotReason : null,
                 forbiddenPrefixSuppressions: Number.isFinite(debug?.forbiddenPrefixSuppressions) ? debug.forbiddenPrefixSuppressions : null,
+                forbiddenPrefixesReceivedCount: Number.isFinite(debug?.forbiddenPrefixesReceivedCount) ? debug.forbiddenPrefixesReceivedCount : null,
+                forbiddenPrefixesReceivedSampleLen: Number.isFinite(debug?.forbiddenPrefixesReceivedSampleLen) ? debug.forbiddenPrefixesReceivedSampleLen : null,
                 forbiddenPrefixFallbackEmpty: Number.isFinite(debug?.forbiddenPrefixFallbackEmpty) ? debug.forbiddenPrefixFallbackEmpty : null,
                 endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
                 endgameIDAStarOptionsKeys: (typeof debug?.endgameIDAStarOptionsKeys === 'string') ? debug.endgameIDAStarOptionsKeys : null,
@@ -11896,6 +11906,8 @@ function installSolver(APP) {
                     endgameIDAStarSolvedBySnapshot: attemptResult?.debug?.endgameIDAStarSolvedBySnapshot === true ? true : null,
                     endgameIDAStarLastSnapshotReason: (typeof attemptResult?.debug?.endgameIDAStarLastSnapshotReason === 'string') ? attemptResult.debug.endgameIDAStarLastSnapshotReason : null,
                     forbiddenPrefixSuppressions: Number.isFinite(attemptResult?.debug?.forbiddenPrefixSuppressions) ? attemptResult.debug.forbiddenPrefixSuppressions : null,
+                    forbiddenPrefixesReceivedCount: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesReceivedCount) ? attemptResult.debug.forbiddenPrefixesReceivedCount : null,
+                    forbiddenPrefixesReceivedSampleLen: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesReceivedSampleLen) ? attemptResult.debug.forbiddenPrefixesReceivedSampleLen : null,
                     forbiddenPrefixFallbackEmpty: Number.isFinite(attemptResult?.debug?.forbiddenPrefixFallbackEmpty) ? attemptResult.debug.forbiddenPrefixFallbackEmpty : null,
                     endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
                     endgameIDAStarOptionsKeys: (typeof attemptResult?.debug?.endgameIDAStarOptionsKeys === 'string') ? attemptResult.debug.endgameIDAStarOptionsKeys : null,
