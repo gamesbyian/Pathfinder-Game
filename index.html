@@ -5561,7 +5561,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
                         rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
                         timeoutDiagnostics: entry?.timeoutDiagnostics || null,
-                        quality: entry?.quality || null
+                        quality: entry?.quality || null,
+                        // Carry the deepest-frontier path prefix across hint-ladder
+                        // iterations so the orchestrator in runBaselineStage (Solver.js)
+                        // can populate attempt.forbiddenPrefixes from priors. Without
+                        // this field, the orchestrator's seeded attemptsUsed entries
+                        // (from carriedTimeoutAttempts) have no usable prefix → guard
+                        // never fires across iterations. The L92 audit confirmed every
+                        // iteration's first attempt sees attemptsUsed seeded with
+                        // priors but with no path prefix on them.
+                        endgameIDAStarBestObservedPathPrefix: Array.isArray(entry?.endgameIDAStarBestObservedPathPrefix)
+                            ? entry.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
+                            : null,
+                        attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null
                     }));
                     if (Array.isArray(hintRes?.attempts)) {
                         const hashes = hintRes.attempts
