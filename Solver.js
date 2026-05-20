@@ -508,6 +508,74 @@ function installSolver(APP) {
                     if (nodes.length === 0) return { bound: l.distMapForSolver.get(key) ?? Infinity, method: 'goalOnly', k: 0 };
                     return { bound: this._mstBoundFromNodes(nodes, l.mustPassPairDist, l.mustPassToGoalDist, nearest), method: 'mst', k: nodes.length };
                 },
+                // Unified Held-Karp bound. Returns the minimum total path length that
+                // visits all currently-unmet waypoints (mustPass cells AND mustCross
+                // cells that haven't yet been crossed even once) plus reaches the goal,
+                // starting from `key`. Strictly admissible: HK path-TSP is an exact
+                // lower bound on the shortest path through a given set of waypoints,
+                // and our actual problem requires AT LEAST visiting these cells.
+                //
+                // The revisitSlack term accounts for mustCross cells needing ≥2 visits:
+                // for each mustCross with current visits < 2, the path must come back
+                // at least once more, costing ≥2 extra steps. This is admissible
+                // because revisiting any cell on a grid requires leaving and returning.
+                //
+                // Returns Infinity if any required waypoint is unreachable (the level
+                // is infeasible from this state); the caller treats this as a hard prune.
+                _estimateUnifiedHKBoundFrom(key, state, l) {
+                    const hk = l.unifiedHK;
+                    if (!hk) return 0;
+                    let unmetMask = 0n;
+                    // mustPass: in tour iff not yet visited.
+                    if (typeof state.mustMask === 'bigint' && state.mustMask !== 0n) {
+                        const mpKeys = l.mustPassKeys || [];
+                        for (let i = 0; i < mpKeys.length; i++) {
+                            if ((state.mustMask & (1n << BigInt(i))) !== 0n) {
+                                unmetMask |= (1n << BigInt(hk.wpFromMustPassIdx[i]));
+                            }
+                        }
+                    }
+                    // mustCross: in tour iff visit count < 2 (same semantics as
+                    // mustCrossMask). The tour HK counts ONE visit per cell; the
+                    // additional visit cost is intentionally NOT added as +2 slack
+                    // because a mustCross that lies ON the natural goal path
+                    // (current→cross→goal) can be revisited 'for free' via the path
+                    // doubling-back through nearby cells — adding +2 broke admissibility
+                    // on 26 hint paths where this happens (L120 step 21 was the test
+                    // case: distFromCurrentToCross=1, distFromCrossToGoal=4, rSteps=5,
+                    // and the +2 slack made HK report 7 > 5). The looser variant
+                    // (tour only, no slack) is admissible but doesn't capture the full
+                    // 'visit ≥ 2 times' cost — that's traded for soundness.
+                    if (typeof state.mustCrossMask === 'bigint' && state.mustCrossMask !== 0n) {
+                        const mcKeys = l.mustCrossKeys || [];
+                        for (let i = 0; i < mcKeys.length; i++) {
+                            if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n) {
+                                for (let w = 0; w < hk.w; w++) {
+                                    if (hk.wpFromMustCrossIdx[w] === i) {
+                                        unmetMask |= (1n << BigInt(w));
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (unmetMask === 0n) {
+                        const g = l.distMapForSolver?.get(key);
+                        return (g === undefined) ? Infinity : g;
+                    }
+                    let best = Infinity;
+                    for (let i = 0; i < hk.w; i++) {
+                        const bit = 1n << BigInt(i);
+                        if ((unmetMask & bit) === 0n) continue;
+                        const dToWp = hk.wpDistMaps[i].get(key);
+                        if (dToWp === undefined) continue;
+                        const rest = hk.hkDp(unmetMask ^ bit, i);
+                        if (rest === Infinity) continue;
+                        const total = dToWp + rest;
+                        if (total < best) best = total;
+                    }
+                    return best;
+                },
                 _encodeMustCrossCountsCompact(state) {
                     if (!state.mustCrossCounts || state.mustCrossCounts.length === 0) return 0n;
                     let code = 0n;
@@ -952,24 +1020,36 @@ function installSolver(APP) {
                         const remIntsNeeded = Math.max(0, (level.reqInt || 0) - intersections);
                         const portalCoverageIncomplete = portalState.portalRequiredCoverageMask !== 0n;
                         const portalCovComponent = portalCoverageIncomplete && Number.isFinite(portalBound) ? portalBound : 0;
+                        // Unified HK bound (same shape as the beam DFS computes when
+                        // useUnifiedHKBound is on). Always computed in the replay harness
+                        // — its sole purpose IS to validate admissibility of the bound
+                        // against every known-good hint path. If it ever exceeds rSteps
+                        // on a hint-path state, the bound is inadmissible and must be
+                        // revisited before merge.
+                        const hkBoundRaw = level.unifiedHK
+                            ? this._estimateUnifiedHKBoundFrom(cellKey, state, level)
+                            : 0;
+                        const hkBound = Number.isFinite(hkBoundRaw) ? hkBoundRaw : 0;
                         const lowerBoundToValidSolution = Math.max(
                             Number.isFinite(goalDist) ? goalDist : 0,
                             Number.isFinite(mustBound) ? mustBound : 0,
                             Number.isFinite(crossBound) ? crossBound : 0,
                             remIntsNeeded,
-                            portalCovComponent
+                            portalCovComponent,
+                            hkBound
                         );
 
                         const mustBoundFires = Number.isFinite(mustBound) && mustBound > rSteps;
                         const mustCrossBoundFires = Number.isFinite(crossBound) && crossBound > rSteps;
                         const portalBoundFires = Number.isFinite(portalBound) && portalBound > rSteps;
                         const goalDistFires = Number.isFinite(goalDist) && goalDist > rSteps;
+                        const hkBoundFires = Number.isFinite(hkBoundRaw) && hkBoundRaw > rSteps;
                         // jointBound mirrors the new composite prune in the beam DFS: if max-of-
                         // admissible-sub-bounds > rSteps, the corresponding prune would fire on
                         // this state. Any hint-path state firing this is a soundness bug — one
                         // of the sub-bounds is inadmissible — and the CI gate must catch it.
                         const jointBoundFires = Number.isFinite(lowerBoundToValidSolution) && lowerBoundToValidSolution > rSteps;
-                        const anyHardPruneFires = mustBoundFires || mustCrossBoundFires || portalBoundFires || goalDistFires || jointBoundFires;
+                        const anyHardPruneFires = mustBoundFires || mustCrossBoundFires || portalBoundFires || goalDistFires || jointBoundFires || hkBoundFires;
 
                         // Rank-audit: at each step, for every legal Manhattan-neighbor (+ portal
                         // jump) of the CURRENT cell, simulate moving there and compute the
@@ -1110,7 +1190,8 @@ function installSolver(APP) {
                                 mustCrossBound: mustCrossBoundFires,
                                 portalAware: portalBoundFires,
                                 goalDistance: goalDistFires,
-                                jointBound: jointBoundFires
+                                jointBound: jointBoundFires,
+                                hkBound: hkBoundFires
                             },
                             anyHardPruneFires,
                             rankAudit
@@ -5244,13 +5325,49 @@ function installSolver(APP) {
                             const b = Number(detail?.bound);
                             portalCoverageBoundComponent = Number.isFinite(b) ? b : Infinity;
                         }
+                        // Unified Held-Karp bound (gated). When enabled, augments the
+                        // composite lower bound with a tour-TSP through all unmet
+                        // waypoints. Strictly admissible (max of admissibles), so
+                        // adding it can only tighten the bound — never produce
+                        // false-positive prunes IF the constituent bounds remain
+                        // admissible. Default off; toggle via options.useUnifiedHKBound.
+                        // Records its contribution separately so audit can tell whether
+                        // it actually moves the composite (vs. being dominated by another
+                        // term every time).
+                        let unifiedHKBoundEstimate = 0;
+                        if (options?.useUnifiedHKBound && l.unifiedHK) {
+                            const b = this._estimateUnifiedHKBoundFrom(lastK, state, l);
+                            unifiedHKBoundEstimate = Number.isFinite(b) ? b : Infinity;
+                            if (debugStats) {
+                                debugStats.unifiedHKBoundComputed = (Number(debugStats.unifiedHKBoundComputed) || 0) + 1;
+                                if (!Number.isFinite(debugStats.unifiedHKBoundMaxObserved)
+                                    || unifiedHKBoundEstimate > debugStats.unifiedHKBoundMaxObserved) {
+                                    debugStats.unifiedHKBoundMaxObserved = Number.isFinite(unifiedHKBoundEstimate) ? unifiedHKBoundEstimate : null;
+                                }
+                            }
+                        }
                         const lowerBoundToValidSolution = Math.max(
                             Number.isFinite(minRemForLowerBound) ? minRemForLowerBound : Infinity,
                             Number.isFinite(mustPassBoundEstimate) ? mustPassBoundEstimate : Infinity,
                             Number.isFinite(mustCrossBoundEstimate) ? mustCrossBoundEstimate : Infinity,
                             interactionDeficit,
-                            portalCoverageBoundComponent
+                            portalCoverageBoundComponent,
+                            Number.isFinite(unifiedHKBoundEstimate) ? unifiedHKBoundEstimate : Infinity
                         );
+                        if (debugStats && options?.useUnifiedHKBound && Number.isFinite(unifiedHKBoundEstimate) && unifiedHKBoundEstimate > 0) {
+                            // Count cases where HK dominates the composite — direct signal
+                            // for whether it's contributing pruning power vs. being subsumed.
+                            const otherMax = Math.max(
+                                Number.isFinite(minRemForLowerBound) ? minRemForLowerBound : 0,
+                                Number.isFinite(mustPassBoundEstimate) ? mustPassBoundEstimate : 0,
+                                Number.isFinite(mustCrossBoundEstimate) ? mustCrossBoundEstimate : 0,
+                                interactionDeficit,
+                                Number.isFinite(portalCoverageBoundComponent) ? portalCoverageBoundComponent : 0
+                            );
+                            if (unifiedHKBoundEstimate > otherMax) {
+                                debugStats.unifiedHKBoundDominatedComposite = (Number(debugStats.unifiedHKBoundDominatedComposite) || 0) + 1;
+                            }
+                        }
                         const missingDimensions = [];
                         if (remainingMustPass > 0) missingDimensions.push('must-pass');
                         if (crossNeeds > 0) missingDimensions.push('must-cross');
@@ -6000,7 +6117,8 @@ function installSolver(APP) {
                         endgameIDAStarTriggerDepthRatio = 0.85,
                         endgameIDAStarBoundCeiling = 20,
                         endgameIDAStarBudgetFraction = 0.5,
-                        forbiddenPrefixes = null
+                        forbiddenPrefixes = null,
+                        useUnifiedHKBound = false
                     } = options;
 
                     let rankedQueue = gateRankings.slice();
@@ -6084,6 +6202,7 @@ function installSolver(APP) {
                                 endgameIDAStarBoundCeiling,
                                 endgameIDAStarBudgetFraction,
                                 forbiddenPrefixes,
+                                useUnifiedHKBound,
                                 ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
@@ -6481,6 +6600,102 @@ function installSolver(APP) {
                             matrix: transitMatrix,
                             distMapsByKey: new Map(transitKeys.map((k, i) => [k, transitDistMaps[i]]))
                         };
+                    }
+
+                    // Unified Held-Karp waypoint bound. The existing mustPassDp and
+                    // mustCrossDp each give an admissible bound on their own waypoint
+                    // set's tour. But the composite at search time takes max() of those
+                    // independent bounds, which under-estimates whenever both sets must
+                    // be covered by the SAME path. A unified HK over the union of
+                    // mustPass + first-visit-of-mustCross waypoints is strictly tighter
+                    // than max-of-individual because the tour now has to visit all of
+                    // them in some order from current → through-all → goal.
+                    //
+                    // Each remaining mustCross visit beyond the first adds an admissible
+                    // +2 (out and back) — modeled as revisitSlack at use-site, not
+                    // baked into the DP.
+                    //
+                    // Capped at 12 waypoints to keep 2^k tractable in-browser
+                    // (k=12 ⇒ 4096 mask × 12 last-idx = 49K cells, still <ms compute).
+                    level.unifiedHK = null;
+                    {
+                        const mpKeys = Array.isArray(level.mustPassKeys) ? level.mustPassKeys : [];
+                        const mcKeys = Array.isArray(level.mustCrossKeys) ? level.mustCrossKeys : [];
+                        const seen = new Map();
+                        const wpKeys = [];
+                        const wpFromMustPassIdx = [];
+                        const wpFromMustCrossIdx = [];
+                        for (let i = 0; i < mpKeys.length; i++) {
+                            const k = mpKeys[i];
+                            if (seen.has(k)) {
+                                wpFromMustPassIdx[i] = seen.get(k);
+                            } else {
+                                const idx = wpKeys.length;
+                                wpKeys.push(k);
+                                wpFromMustPassIdx[i] = idx;
+                                wpFromMustCrossIdx[idx] = -1;
+                                seen.set(k, idx);
+                            }
+                        }
+                        for (let i = 0; i < mcKeys.length; i++) {
+                            const k = mcKeys[i];
+                            if (seen.has(k)) {
+                                wpFromMustCrossIdx[seen.get(k)] = i;
+                            } else {
+                                const idx = wpKeys.length;
+                                wpKeys.push(k);
+                                wpFromMustCrossIdx[idx] = i;
+                                seen.set(k, idx);
+                            }
+                        }
+                        const w = wpKeys.length;
+                        if (w > 0 && w <= 12) {
+                            const wpDistMaps = wpKeys.map(k => SolverCore._buildOptimisticDistMap(level, [k]));
+                            const wpToGoal = wpKeys.map(k => distMap.get(k));
+                            const wpPairDist = Array.from({ length: w }, () => Array(w).fill(Infinity));
+                            for (let i = 0; i < w; i++) {
+                                wpPairDist[i][i] = 0;
+                                for (let j = i + 1; j < w; j++) {
+                                    const d = wpDistMaps[i].get(wpKeys[j]);
+                                    const val = (d === undefined) ? Infinity : d;
+                                    wpPairDist[i][j] = val;
+                                    wpPairDist[j][i] = val;
+                                }
+                            }
+                            const dpMemo = new Map();
+                            const hkDp = (mask, lastIdx) => {
+                                if (mask === 0n) {
+                                    const g = wpToGoal[lastIdx];
+                                    return (g === undefined) ? Infinity : g;
+                                }
+                                const key = `${mask.toString()}|${lastIdx}`;
+                                const cached = dpMemo.get(key);
+                                if (cached !== undefined) return cached;
+                                let best = Infinity;
+                                for (let nxt = 0; nxt < w; nxt++) {
+                                    const bit = 1n << BigInt(nxt);
+                                    if ((mask & bit) === 0n) continue;
+                                    const d = wpPairDist[lastIdx][nxt];
+                                    if (d === Infinity) continue;
+                                    const rest = hkDp(mask ^ bit, nxt);
+                                    if (rest === Infinity) continue;
+                                    const total = d + rest;
+                                    if (total < best) best = total;
+                                }
+                                dpMemo.set(key, best);
+                                return best;
+                            };
+                            level.unifiedHK = {
+                                w,
+                                wpKeys,
+                                wpFromMustPassIdx,   // [mustPassIdx] → wpIdx
+                                wpFromMustCrossIdx,  // [wpIdx] → mustCrossIdx or -1
+                                wpDistMaps,
+                                wpToGoal,
+                                wpPairDist,
+                                hkDp
+                            };
+                        }
                     }
 
                     const portalHints = level?.solverProfile?.portalHints || null;
@@ -6885,7 +7100,8 @@ function installSolver(APP) {
                             endgameIDAStarTriggerDepthRatio,
                             endgameIDAStarBoundCeiling,
                             endgameIDAStarBudgetFraction,
-                            forbiddenPrefixes: options?.forbiddenPrefixes || null
+                            forbiddenPrefixes: options?.forbiddenPrefixes || null,
+                            useUnifiedHKBound: !!options?.useUnifiedHKBound
                         });
                         const out = await SearchFramework.runSearch({
                             level,
@@ -10681,6 +10897,15 @@ function installSolver(APP) {
                     if (planned.endgameIDAStarEnabled === undefined) {
                         planned.endgameIDAStarEnabled = true;
                     }
+                    // Unified Held-Karp bound: same gate as endgame IDA* — for the
+                    // high-intersection-burden archetype, the existing max-of-per-dim
+                    // bounds (mustPass/mustCross independently) systematically
+                    // under-estimates the true cost of visiting BOTH sets along one
+                    // path. HK over the union is strictly tighter and admissible.
+                    // Hint-path-replay verifies admissibility before this can land.
+                    if (planned.useUnifiedHKBound === undefined) {
+                        planned.useUnifiedHKBound = true;
+                    }
                 }
             }
             if (archetypes.length > 0) {
@@ -11417,6 +11642,7 @@ function installSolver(APP) {
                         : 0.5,
                     portalTriage: opts.portalTriage || null,
                     forbiddenPrefixes: Array.isArray(attemptOpts.forbiddenPrefixes) ? attemptOpts.forbiddenPrefixes : null,
+                    useUnifiedHKBound: !!attemptOpts.useUnifiedHKBound,
                     rootTieSeed: Number.isFinite(attemptOpts.rootTieSeed)
                         ? attemptOpts.rootTieSeed
                         : ((typeof attemptOpts.label === 'string' ? attemptOpts.label.length : 0) + ((Number(attemptOpts.attemptOrdinal) || 0) * 17)),
