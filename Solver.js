@@ -11654,6 +11654,26 @@ function installSolver(APP) {
                         attempt.forbiddenPrefixes = priorTimeoutPrefixes;
                     }
                 }
+                // Per-attempt modal update. A single stage can run multiple attempts
+                // sequentially (audit shows L92 runs 7 attempts in one solve), each taking
+                // hundreds of ms to seconds. Without this, the modal stays on the stage's
+                // label for the entire stage duration with no sign of internal progress —
+                // looks frozen even though attempts are advancing. Updates the detail line
+                // (lower text) so the stage label (upper text) stays as the macro context.
+                // Guarded for APP.UI presence so this still works in non-browser invocations.
+                try {
+                    if (typeof APP !== 'undefined' && APP?.UI?.setSolverDetailText) {
+                        const totalAttempts = Array.isArray(attempts) ? attempts.length : null;
+                        const attemptNo = i + 1;
+                        const lbl = typeof attempt.label === 'string' && attempt.label ? attempt.label : `attempt ${attemptNo}`;
+                        const totalStr = Number.isFinite(totalAttempts) ? `/${totalAttempts}` : '';
+                        const budgetStr = Number.isFinite(attempt.budgetMs) ? ` · ${(attempt.budgetMs / 1000).toFixed(1)}s` : '';
+                        APP.UI.setSolverDetailText(`Attempt ${attemptNo}${totalStr}: ${lbl}${budgetStr}`);
+                    }
+                } catch (_) { /* UI not available in non-browser; ignore */ }
+                // Yield a macrotask before launching the attempt so the modal detail line
+                // can repaint before runAttempt's heavy synchronous work begins.
+                if (i > 0) await new Promise(resolve => setTimeout(resolve, 0));
                 const attemptResult = await runAttempt(attempt.budgetMs, attempt);
                 const quality = getSearchQuality(attemptResult);
                 const attemptInstrumentation = buildAttemptInstrumentation(attemptResult, quality);
