@@ -5333,18 +5333,29 @@ function installSolver(APP) {
                             // Multi-start fallback: try IDA* from each captured frontier snapshot
                             // (in newest-first order). Each snapshot is a fully-cloned state, so
                             // _runEndgameIDAStar mutates the clone — the live beam state is not
-                            // touched. Bounded by remaining IDA* budget cap and snapshot count.
+                            // touched. Bounded by the per-attempt time budget AND the cumulative
+                            // 3s IDA* cap — short stages (e.g. the 0.5s portal-agnostic-exploration
+                            // pass) won't burn far past their stage budget on snapshot retries.
                             // This addresses the L92 failure mode where the current state's
                             // _getNeighbors filters to 0 successors: alternate snapshots may have
                             // different downstream successor sets that IDA* can search.
+                            const attemptElapsedForSnapshots = Date.now() - startTime;
+                            const attemptRemainingForSnapshots = Math.max(0, Number(options.timeLimit || 0) - attemptElapsedForSnapshots);
                             if (frontierSnapshots.length > 0
-                                && endgameIDAStarTotalElapsedMs < endgameIDAStarMaxTotalMs) {
+                                && endgameIDAStarTotalElapsedMs < endgameIDAStarMaxTotalMs
+                                && attemptRemainingForSnapshots >= 100) {
                                 let snapshotIDASolved = false;
                                 let snapshotSolutionPath = null;
                                 let snapshotsTried = 0;
                                 // Try newest first — those tend to be the deepest, closest to closure.
                                 for (let si = frontierSnapshots.length - 1; si >= 0 && !snapshotIDASolved; si--) {
                                     if (endgameIDAStarTotalElapsedMs >= endgameIDAStarMaxTotalMs) break;
+                                    // Re-check the attempt budget on every iteration: long snapshot
+                                    // fires can deplete it mid-loop, and the user-visible modal
+                                    // stays frozen on the current stage until we return.
+                                    const innerElapsed = Date.now() - startTime;
+                                    const innerAttemptRemaining = Math.max(0, Number(options.timeLimit || 0) - innerElapsed);
+                                    if (innerAttemptRemaining < 100) break;
                                     const snap = frontierSnapshots[si];
                                     if (snap.tried) continue;
                                     // Skip snapshots whose path is a strict prefix of the current
@@ -5364,8 +5375,13 @@ function installSolver(APP) {
                                     }
                                     snap.tried = true;
                                     snapshotsTried++;
-                                    const snapBudgetCap = Math.max(0, endgameIDAStarMaxTotalMs - endgameIDAStarTotalElapsedMs);
-                                    const snapBudget = Math.max(10, Math.min(snapBudgetCap, 1000));
+                                    // Per-snapshot budget = min(IDA* total cap remaining, attempt
+                                    // remaining, 1s hard ceiling, half of attempt remaining so a
+                                    // single snapshot doesn't starve later ones / following stages).
+                                    const idaCapRemaining = Math.max(0, endgameIDAStarMaxTotalMs - endgameIDAStarTotalElapsedMs);
+                                    const halfAttemptRemaining = Math.floor(innerAttemptRemaining * 0.5);
+                                    const snapBudget = Math.min(idaCapRemaining, innerAttemptRemaining, halfAttemptRemaining, 1000);
+                                    if (snapBudget < 50) break;
                                     const snapFireStart = Date.now();
                                     const snapResult = this._runEndgameIDAStar(snap.clone, l, options, snapBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
                                     endgameIDAStarTotalElapsedMs += (Date.now() - snapFireStart);
