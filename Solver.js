@@ -964,7 +964,12 @@ function installSolver(APP) {
                         const mustCrossBoundFires = Number.isFinite(crossBound) && crossBound > rSteps;
                         const portalBoundFires = Number.isFinite(portalBound) && portalBound > rSteps;
                         const goalDistFires = Number.isFinite(goalDist) && goalDist > rSteps;
-                        const anyHardPruneFires = mustBoundFires || mustCrossBoundFires || portalBoundFires || goalDistFires;
+                        // jointBound mirrors the new composite prune in the beam DFS: if max-of-
+                        // admissible-sub-bounds > rSteps, the corresponding prune would fire on
+                        // this state. Any hint-path state firing this is a soundness bug — one
+                        // of the sub-bounds is inadmissible — and the CI gate must catch it.
+                        const jointBoundFires = Number.isFinite(lowerBoundToValidSolution) && lowerBoundToValidSolution > rSteps;
+                        const anyHardPruneFires = mustBoundFires || mustCrossBoundFires || portalBoundFires || goalDistFires || jointBoundFires;
 
                         // Rank-audit: at each step, for every legal Manhattan-neighbor (+ portal
                         // jump) of the CURRENT cell, simulate moving there and compute the
@@ -1104,7 +1109,8 @@ function installSolver(APP) {
                                 mustPassBound: mustBoundFires,
                                 mustCrossBound: mustCrossBoundFires,
                                 portalAware: portalBoundFires,
-                                goalDistance: goalDistFires
+                                goalDistance: goalDistFires,
+                                jointBound: jointBoundFires
                             },
                             anyHardPruneFires,
                             rankAudit
@@ -5463,6 +5469,23 @@ function installSolver(APP) {
                         if (!runtimeDisabledPrunes.has('distance') && !runtimeDisabledPrunes.has('minRemOverflow') && realLen + minRem > l.reqLen) {
                             if (debugStats) debugStats.prune.minRemOverflow++;
                             if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'minRemOverflow', `minRem=${minRem} realLen=${realLen} reqLen=${l.reqLen}`);
+                            this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
+                            continue;
+                        }
+                        // Joint-feasibility prune: the composite lowerBoundToValidSolution
+                        // (= max of all admissible sub-bounds, computed just above) is itself
+                        // admissible, and `realLen + composite > reqLen` proves no path through
+                        // this state can satisfy reqLen. This strictly dominates the per-dimension
+                        // prunes (which only check individual bounds against rSteps) — it catches
+                        // states where every individual bound fits but their max does not.
+                        // Gated by 'jointBound' so it can be disabled if a sub-bound turns out
+                        // not to be admissible. Soundness invariant: every hint path's states
+                        // must pass this check (verified by hint-path-replay harness).
+                        if (!runtimeDisabledPrunes.has('jointBound')
+                            && Number.isFinite(lowerBoundToValidSolution)
+                            && realLen + lowerBoundToValidSolution > l.reqLen) {
+                            if (debugStats) debugStats.prune.jointBound = (debugStats.prune.jointBound || 0) + 1;
+                            if (state.path.length === 2) this._recordDepth0Prune(debugStats, 'jointBound', `lb=${lowerBoundToValidSolution} realLen=${realLen} reqLen=${l.reqLen}`);
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
                             continue;
                         }
