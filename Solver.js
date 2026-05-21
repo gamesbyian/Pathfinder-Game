@@ -7920,14 +7920,7 @@ function installSolver(APP) {
                 routingDecision: partial.routingDecision || null,
                 orderingPolicySummary: partial.orderingPolicySummary || null,
                 enduranceRescueDelta: partial.enduranceRescueDelta || partial.stage11RescueDelta || null,
-                engine: partial.engine || 'referee',
-                // attempts: the inner-attempt history is needed downstream by
-                // hint-ladder cross-iteration carry-over (index.html line 5555 reads
-                // hintRes.attempts to populate hintLadderState.recentTimeoutAttempts).
-                // Without forwarding this, the canonical filter strips the array, the
-                // next iteration sees no priors to seed attemptsUsed, and the
-                // cross-attempt prefix-divergence guard never fires.
-                attempts: Array.isArray(partial.attempts) ? partial.attempts : []
+                engine: partial.engine || 'referee'
             };
         };
         const normalizeProfileSolveResult = (profileResult, fallbackStatus = 'error', context = {}) => {
