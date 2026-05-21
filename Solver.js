@@ -11269,6 +11269,20 @@ function installSolver(APP) {
                     if (rootOrderingVariant === 'knot-first-bias' && !attempt.orderingPolicy) {
                         attempt.orderingPolicy = 'knotBuilder';
                     }
+                    // Additional bias variants for richer ladder-level diversity.
+                    // The L92 audit showed iterations A..G all reaching the same
+                    // depth-84 dead basin because rootOrderingVariant only fired
+                    // for variation>=8, leaving 7 of 8 early iterations with
+                    // identical orderingPolicy.
+                    if (rootOrderingVariant === 'portal-first-bias' && !attempt.orderingPolicy) {
+                        attempt.orderingPolicy = 'portalFirstTransfer';
+                    }
+                    if (rootOrderingVariant === 'perimeter-first-bias' && !attempt.orderingPolicy) {
+                        attempt.orderingPolicy = 'perimeterSweep';
+                    }
+                    if (rootOrderingVariant === 'harvest-first-bias' && !attempt.orderingPolicy) {
+                        attempt.orderingPolicy = 'harvestThenFinish';
+                    }
                 });
             }
             const buildStageDebugSummary = (fallbackDebug = {}) => {
@@ -12065,7 +12079,17 @@ function installSolver(APP) {
                         depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
                         rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
                         timeoutDiagnostics: entry?.timeoutDiagnostics || null,
-                        quality: entry?.quality || null
+                        quality: entry?.quality || null,
+                        // Preserve the deepest-frontier prefix so the next baseline
+                        // stage call's orchestrator (cross-attempt prefix-divergence
+                        // guard at line ~12189) can extract a usable forbiddenPrefixes
+                        // entry. Index.html ALSO repopulates this field across the
+                        // outer hint-ladder boundary; including it here makes the data
+                        // flow robust to a missing repopulation step.
+                        endgameIDAStarBestObservedPathPrefix: Array.isArray(entry?.endgameIDAStarBestObservedPathPrefix)
+                            ? entry.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
+                            : null,
+                        attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null
                     }));
                 sharedHintLadderState.recentTimeoutAttempts = localTimeoutAttempts;
                 sharedHintLadderState.queuedAttemptSignatureHashes = Array.from(queuedAttemptSignatures).slice(-64);
@@ -12186,6 +12210,21 @@ function installSolver(APP) {
                 // novelty alone was insufficient; per-prefix suppression is additive.
                 // Limited to the 3 most recent timeouts to keep the suppression set small
                 // (otherwise we risk over-constraining and emptying every candidate list).
+                // Diagnostic: track the orchestrator entry conditions on EVERY
+                // attempt iteration (not just when the if-branch fires). The L92
+                // audit (audit 41) showed orchestratorForbiddenPrefixDecision=null
+                // on every L92 attempt, which previously could mean either "branch
+                // skipped because forbiddenPrefixes already set" OR "branch
+                // skipped because attempt was never reached". This pre-branch
+                // telemetry distinguishes those cases.
+                const __orchestratorPreBranchState = {
+                    attemptIndexInPlan: i,
+                    attemptsUsedSoFar: attemptsUsed.length,
+                    forbiddenPrefixesAlreadySet: Array.isArray(attempt.forbiddenPrefixes),
+                    timeoutCountSoFar: attemptsUsed.filter(a => a && ['timeout', 'no-solution-inconclusive'].includes(a.status)).length,
+                    timeoutsWithPrefix: attemptsUsed.filter(a => a && ['timeout', 'no-solution-inconclusive'].includes(a.status) && Array.isArray(a.endgameIDAStarBestObservedPathPrefix) && a.endgameIDAStarBestObservedPathPrefix.length >= 4).length
+                };
+                attempt.__orchestratorPreBranchState = __orchestratorPreBranchState;
                 if (!Array.isArray(attempt.forbiddenPrefixes)) {
                     const priorTimeoutPrefixes = [];
                     for (let pi = attemptsUsed.length - 1; pi >= 0 && priorTimeoutPrefixes.length < 3; pi--) {
@@ -12403,6 +12442,7 @@ function installSolver(APP) {
                     endgameIDAStarSolvedBySnapshot: attemptResult?.debug?.endgameIDAStarSolvedBySnapshot === true ? true : null,
                     endgameIDAStarLastSnapshotReason: (typeof attemptResult?.debug?.endgameIDAStarLastSnapshotReason === 'string') ? attemptResult.debug.endgameIDAStarLastSnapshotReason : null,
                     orchestratorForbiddenPrefixDecision: (attempt && typeof attempt === 'object') ? attempt.__orchestratorForbiddenPrefixDecision || null : null,
+                    orchestratorPreBranchState: (attempt && typeof attempt === 'object') ? attempt.__orchestratorPreBranchState || null : null,
                     forbiddenPrefixSuppressions: Number.isFinite(attemptResult?.debug?.forbiddenPrefixSuppressions) ? attemptResult.debug.forbiddenPrefixSuppressions : null,
                     forbiddenPrefixesReceivedCount: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesReceivedCount) ? attemptResult.debug.forbiddenPrefixesReceivedCount : null,
                     forbiddenPrefixesReceivedSampleLen: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesReceivedSampleLen) ? attemptResult.debug.forbiddenPrefixesReceivedSampleLen : null,
