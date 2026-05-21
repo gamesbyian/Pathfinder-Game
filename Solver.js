@@ -354,7 +354,16 @@ function installSolver(APP) {
                     }
                     return mappedReason;
                 },
-                _buildOptimisticDistMap(l, sourceKeys) {
+                _buildOptimisticDistMap(l, sourceKeys, opts = {}) {
+                    // filterAware: when true, BFS respects non-flipping filters by
+                    // skipping edges whose movement axis doesn't match the filter's
+                    // required axis at either endpoint. Yields strictly tighter
+                    // (longer) distance estimates than the default — still admissible
+                    // because real paths must respect filters anyway. flippingFilters
+                    // are left fully open (their axis is path-history-dependent, so
+                    // any static treatment would be either path-aware-and-expensive
+                    // or pessimistic-and-inadmissible).
+                    const respectFilters = !!opts.filterAware;
                     class Deque {
                         constructor(initialCapacity = 32) {
                             this.buf = new Array(Math.max(4, initialCapacity | 0));
@@ -419,6 +428,16 @@ function installSolver(APP) {
                             if (!APP.LevelUtils.inBounds(nx, ny, w, h)) return;
                             const nk = APP.LevelUtils.PACK(nx, ny);
                             if (l.blockSet.has(nk)) return;
+                            if (respectFilters && (l.filterMap?.size > 0)) {
+                                // Movement axis: dy=0 means horizontal move (axis 1=H),
+                                // dx=0 means vertical (axis 2=V). isValidMove checks
+                                // filter axis === movement axis on both endpoints.
+                                const moveAxis = (dy === 0) ? 1 : 2;
+                                const originFilter = l.filterMap.get(k);
+                                if (originFilter !== undefined && originFilter !== moveAxis) return;
+                                const destFilter = l.filterMap.get(nk);
+                                if (destFilter !== undefined && destFilter !== moveAxis) return;
+                            }
                             const nd = d + 1;
                             const prev = map.get(nk);
                             if (prev === undefined || nd < prev) {
@@ -560,7 +579,13 @@ function installSolver(APP) {
                         }
                     }
                     if (unmetMask === 0n) {
-                        const g = l.distMapForSolver?.get(key);
+                        // When all waypoints are satisfied, the bound reduces to the
+                        // current→goal distance. Use the filter-aware distance map if
+                        // available (built in unifiedHK setup) — same admissibility
+                        // argument as the wpDistMaps, just for the goal leg.
+                        const g = hk.filterAwareGoalDistMap
+                            ? hk.filterAwareGoalDistMap.get(key)
+                            : l.distMapForSolver?.get(key);
                         return (g === undefined) ? Infinity : g;
                     }
                     let best = Infinity;
@@ -576,21 +601,15 @@ function installSolver(APP) {
                     }
                     if (!Number.isFinite(best)) return best;
                     // Strict-admissible 2nd-visit slack for unvisited mustCross cells.
-                    // The HK tour above visits each in-mask cell EXACTLY ONCE. For a
-                    // mustCross with current visits = 0, the path must visit it TWICE
-                    // (mustCross is satisfied at count >= 2). The HK tour pays for the
-                    // 1st visit; the 2nd visit requires leaving the cell and returning
-                    // — at least 2 additional path steps under grid-with-blocks
-                    // topology. This is provably admissible: any path that visits a
-                    // single cell twice must traverse at least one outbound edge plus
-                    // one return edge beyond the visit itself, contributing ≥2 steps.
-                    //
-                    // We DO NOT add slack for mustCross with count = 1 (one visit
-                    // already done): the 2nd visit might happen 'for free' if the cell
-                    // lies on the natural path toward another waypoint or the goal.
-                    // Adding +2 in that case would break admissibility (L120 step 21
-                    // is the test case: count=1, cell on natural goal path, rSteps=5,
-                    // and +2 slack incorrectly made HK report 7 > 5).
+                    // count = 0: +2. mustCrossMask bit is set (cleared at count>=2),
+                    //   so HK tour visits the cell once. Total visits after tour = 1,
+                    //   but obligation requires 2. The second visit requires leaving
+                    //   and returning — ≥2 path steps. Provably admissible.
+                    // count = 1: NO slack. mustCrossMask bit is still set, HK tour
+                    //   visits the cell once → combined with prior 1 visit = 2 visits
+                    //   total → obligation satisfied. Adding more slack would
+                    //   overcount the (already-accounted-for) revisit.
+                    // count >= 2: mask cleared, cell not in tour, no slack.
                     if (state.mustCrossCounts && state.mustCrossCounts.length > 0) {
                         for (let i = 0; i < state.mustCrossCounts.length; i++) {
                             if (state.mustCrossCounts[i] === 0) best += 2;
@@ -6682,8 +6701,22 @@ function installSolver(APP) {
                         }
                         const w = wpKeys.length;
                         if (w > 0 && w <= 12) {
-                            const wpDistMaps = wpKeys.map(k => SolverCore._buildOptimisticDistMap(level, [k]));
-                            const wpToGoal = wpKeys.map(k => distMap.get(k));
+                            // Filter-aware BFS for HK's per-waypoint distance maps and
+                            // for the goal-leg distance. Yields strictly tighter (longer)
+                            // distances on levels with non-flipping filters because the
+                            // movement-axis constraint is enforced. For L92 specifically
+                            // (filters at (4,4) axis H and (8,10) axis V), pair distances
+                            // near those cells become longer, which raises the HK bound
+                            // when waypoint tours pass through filter zones.
+                            const hkDistOpts = { filterAware: (level.filterMap?.size || 0) > 0 };
+                            const hkFilterAwareGoalDistMap = hkDistOpts.filterAware
+                                ? SolverCore._buildOptimisticDistMap(level, [level.goalKey], hkDistOpts)
+                                : null;
+                            const goalDistGetter = hkFilterAwareGoalDistMap
+                                ? (k) => hkFilterAwareGoalDistMap.get(k)
+                                : (k) => distMap.get(k);
+                            const wpDistMaps = wpKeys.map(k => SolverCore._buildOptimisticDistMap(level, [k], hkDistOpts));
+                            const wpToGoal = wpKeys.map(k => goalDistGetter(k));
                             const wpPairDist = Array.from({ length: w }, () => Array(w).fill(Infinity));
                             for (let i = 0; i < w; i++) {
                                 wpPairDist[i][i] = 0;
@@ -6725,7 +6758,9 @@ function installSolver(APP) {
                                 wpDistMaps,
                                 wpToGoal,
                                 wpPairDist,
-                                hkDp
+                                hkDp,
+                                filterAwareGoalDistMap: hkFilterAwareGoalDistMap,
+                                filterAware: hkDistOpts.filterAware
                             };
                         }
                     }
