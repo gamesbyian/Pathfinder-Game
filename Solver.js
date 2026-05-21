@@ -4457,7 +4457,21 @@ function installSolver(APP) {
                             const b = Number(detail?.bound);
                             portalCovBound = Number.isFinite(b) ? b : Infinity;
                         }
-                        return Math.max(distComp, mustPassBound, mustCrossBound, intDeficit, portalCovBound);
+                        // Unified Held-Karp bound, when enabled and built. Same admissibility
+                        // argument as in the beam composite bound at the main search loop —
+                        // HK is the max over admissibles (path-TSP / GTSP through unmet
+                        // waypoints) and dominates the other terms on most L92-class levels
+                        // (audit 40: HK dominates 97.6% of composite evaluations). Omitting
+                        // it from computeH leaves IDA*'s f-limit looser than the beam's:
+                        // beam prunes a state at f=84+34=118>reqLen=99, but IDA* without HK
+                        // computes f=84+13=97≤99 and enters the dead subtree, exhausting
+                        // its budget on states the beam already proved infeasible.
+                        let unifiedHKBound = 0;
+                        if (options?.useUnifiedHKBound && level.unifiedHK) {
+                            const b = Number(this._estimateUnifiedHKBoundFrom(k, s, level));
+                            unifiedHKBound = Number.isFinite(b) ? b : Infinity;
+                        }
+                        return Math.max(distComp, mustPassBound, mustCrossBound, intDeficit, portalCovBound, unifiedHKBound);
                     };
                     const restoreToOriginal = () => {
                         // Walk the undo log backwards entry-by-entry to fully restore state to
@@ -5170,6 +5184,13 @@ function installSolver(APP) {
                         debugStats.unifiedHKTotalGroups = l.unifiedHK ? l.unifiedHK.totalGroups : null;
                         debugStats.unifiedHKMandatoryFamilyGroupCount = l.unifiedHK ? l.unifiedHK.mfCount : null;
                         debugStats.unifiedHKApspStateCount = l.unifiedHK ? l.unifiedHK.stateCount : null;
+                        // Per-attempt diagnostic: what the solver actually SAW as mp/mc/portal
+                        // counts at HK-build time. Surfaces the wp anomaly (wp=10 on some L92
+                        // attempts vs wp=4 on others) so audits can distinguish "level was
+                        // augmented" from "level was untouched but HK built differently".
+                        debugStats.unifiedHKMpCountSeen = Array.isArray(l.mustPassKeys) ? l.mustPassKeys.length : null;
+                        debugStats.unifiedHKMcCountSeen = Array.isArray(l.mustCrossKeys) ? l.mustCrossKeys.length : null;
+                        debugStats.unifiedHKPortalFamilyCountSeen = Number.isFinite(l.portalFamilyCount) ? l.portalFamilyCount : null;
                         // Per-attempt running counts, populated by _estimateUnifiedHKBoundFrom
                         // through bumpHKApspStat. apspCommittedHits counts evaluations that
                         // used a committed-family matrix (stateIdx>0) — only meaningful on
@@ -8550,6 +8571,9 @@ function installSolver(APP) {
                 unifiedHKMandatoryFamilyGroupCount: Number.isFinite(debug?.unifiedHKMandatoryFamilyGroupCount) ? debug.unifiedHKMandatoryFamilyGroupCount : null,
                 unifiedHKApspStateCount: Number.isFinite(debug?.unifiedHKApspStateCount) ? debug.unifiedHKApspStateCount : null,
                 unifiedHKApspCommittedHits: Number.isFinite(debug?.unifiedHKApspCommittedHits) ? debug.unifiedHKApspCommittedHits : null,
+                unifiedHKMpCountSeen: Number.isFinite(debug?.unifiedHKMpCountSeen) ? debug.unifiedHKMpCountSeen : null,
+                unifiedHKMcCountSeen: Number.isFinite(debug?.unifiedHKMcCountSeen) ? debug.unifiedHKMcCountSeen : null,
+                unifiedHKPortalFamilyCountSeen: Number.isFinite(debug?.unifiedHKPortalFamilyCountSeen) ? debug.unifiedHKPortalFamilyCountSeen : null,
                 forbiddenPrefixesOptionLength: Number.isFinite(debug?.forbiddenPrefixesOptionLength) ? debug.forbiddenPrefixesOptionLength : null,
                 forbiddenPrefixesOptionFirstLen: Number.isFinite(debug?.forbiddenPrefixesOptionFirstLen) ? debug.forbiddenPrefixesOptionFirstLen : null,
                 endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
@@ -12393,6 +12417,9 @@ function installSolver(APP) {
                     unifiedHKMandatoryFamilyGroupCount: Number.isFinite(attemptResult?.debug?.unifiedHKMandatoryFamilyGroupCount) ? attemptResult.debug.unifiedHKMandatoryFamilyGroupCount : null,
                     unifiedHKApspStateCount: Number.isFinite(attemptResult?.debug?.unifiedHKApspStateCount) ? attemptResult.debug.unifiedHKApspStateCount : null,
                     unifiedHKApspCommittedHits: Number.isFinite(attemptResult?.debug?.unifiedHKApspCommittedHits) ? attemptResult.debug.unifiedHKApspCommittedHits : null,
+                    unifiedHKMpCountSeen: Number.isFinite(attemptResult?.debug?.unifiedHKMpCountSeen) ? attemptResult.debug.unifiedHKMpCountSeen : null,
+                    unifiedHKMcCountSeen: Number.isFinite(attemptResult?.debug?.unifiedHKMcCountSeen) ? attemptResult.debug.unifiedHKMcCountSeen : null,
+                    unifiedHKPortalFamilyCountSeen: Number.isFinite(attemptResult?.debug?.unifiedHKPortalFamilyCountSeen) ? attemptResult.debug.unifiedHKPortalFamilyCountSeen : null,
                     forbiddenPrefixesOptionLength: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionLength) ? attemptResult.debug.forbiddenPrefixesOptionLength : null,
                     forbiddenPrefixesOptionFirstLen: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionFirstLen) ? attemptResult.debug.forbiddenPrefixesOptionFirstLen : null,
                     endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
