@@ -574,6 +574,28 @@ function installSolver(APP) {
                         const total = dToWp + rest;
                         if (total < best) best = total;
                     }
+                    if (!Number.isFinite(best)) return best;
+                    // Strict-admissible 2nd-visit slack for unvisited mustCross cells.
+                    // The HK tour above visits each in-mask cell EXACTLY ONCE. For a
+                    // mustCross with current visits = 0, the path must visit it TWICE
+                    // (mustCross is satisfied at count >= 2). The HK tour pays for the
+                    // 1st visit; the 2nd visit requires leaving the cell and returning
+                    // — at least 2 additional path steps under grid-with-blocks
+                    // topology. This is provably admissible: any path that visits a
+                    // single cell twice must traverse at least one outbound edge plus
+                    // one return edge beyond the visit itself, contributing ≥2 steps.
+                    //
+                    // We DO NOT add slack for mustCross with count = 1 (one visit
+                    // already done): the 2nd visit might happen 'for free' if the cell
+                    // lies on the natural path toward another waypoint or the goal.
+                    // Adding +2 in that case would break admissibility (L120 step 21
+                    // is the test case: count=1, cell on natural goal path, rSteps=5,
+                    // and +2 slack incorrectly made HK report 7 > 5).
+                    if (state.mustCrossCounts && state.mustCrossCounts.length > 0) {
+                        for (let i = 0; i < state.mustCrossCounts.length; i++) {
+                            if (state.mustCrossCounts[i] === 0) best += 2;
+                        }
+                    }
                     return best;
                 },
                 _encodeMustCrossCountsCompact(state) {
@@ -7898,7 +7920,14 @@ function installSolver(APP) {
                 routingDecision: partial.routingDecision || null,
                 orderingPolicySummary: partial.orderingPolicySummary || null,
                 enduranceRescueDelta: partial.enduranceRescueDelta || partial.stage11RescueDelta || null,
-                engine: partial.engine || 'referee'
+                engine: partial.engine || 'referee',
+                // attempts: the inner-attempt history is needed downstream by
+                // hint-ladder cross-iteration carry-over (index.html line 5555 reads
+                // hintRes.attempts to populate hintLadderState.recentTimeoutAttempts).
+                // Without forwarding this, the canonical filter strips the array, the
+                // next iteration sees no priors to seed attemptsUsed, and the
+                // cross-attempt prefix-divergence guard never fires.
+                attempts: Array.isArray(partial.attempts) ? partial.attempts : []
             };
         };
         const normalizeProfileSolveResult = (profileResult, fallbackStatus = 'error', context = {}) => {
