@@ -4529,6 +4529,32 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (variation === 5 || variation === 7 || variation === 11 || variation === 15) {
                 policy.disableLegacyFallback = false;
             }
+            // Early-iteration root-diversity injection. Previously rootTieSeedOffset
+            // / rootOrderingVariant only fired at variation >= 8, so iterations
+            // A..H all had identical root ordering (audit 41 confirmed L92's
+            // D,E,F,G all reach the same depth-84 dead basin with bound=13 — same
+            // trajectory). Rotate ordering variant + tie seed starting at idx=1
+            // so each iteration explores a distinct first-move and scoring
+            // archetype. Variants map (Solver.js _solveInstance dispatcher):
+            //   'objective-first-bias' → orderingPolicy='objectiveFirst'
+            //   'knot-first-bias'      → orderingPolicy='knotBuilder'
+            //   'portal-first-bias'    → orderingPolicy='portalFirstTransfer'
+            //   'perimeter-first-bias' → orderingPolicy='perimeterSweep'
+            //   'harvest-first-bias'   → orderingPolicy='harvestThenFinish'
+            if (idx >= 1 && variation < 8) {
+                const ladderDiversitySpec = [
+                    { tieSeedOffset: 7919,  variant: 'objective-first-bias' },
+                    { tieSeedOffset: 15838, variant: 'knot-first-bias' },
+                    { tieSeedOffset: 23757, variant: 'portal-first-bias' },
+                    { tieSeedOffset: 31676, variant: 'perimeter-first-bias' },
+                    { tieSeedOffset: 39595, variant: 'objective-first-bias' },
+                    { tieSeedOffset: 47514, variant: 'knot-first-bias' },
+                    { tieSeedOffset: 55433, variant: 'portal-first-bias' }
+                ];
+                const spec = ladderDiversitySpec[(idx - 1) % ladderDiversitySpec.length];
+                policy.rootTieSeedOffset = spec.tieSeedOffset;
+                policy.rootOrderingVariant = spec.variant;
+            }
             if (variation >= 8) {
                 policy.rootTieSeedOffset = variation * 7919;
                 policy.rootOrderingVariant = variation % 2 === 0 ? 'objective-first-bias' : 'knot-first-bias';
@@ -5019,6 +5045,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 endgameIDAStarLastSnapshotReason: typeof attempt?.endgameIDAStarLastSnapshotReason === 'string' ? attempt.endgameIDAStarLastSnapshotReason : null,
                 forbiddenPrefixSuppressions: Number.isFinite(attempt?.forbiddenPrefixSuppressions) ? attempt.forbiddenPrefixSuppressions : null,
                 orchestratorForbiddenPrefixDecision: (attempt && typeof attempt.orchestratorForbiddenPrefixDecision === 'object') ? attempt.orchestratorForbiddenPrefixDecision : null,
+                orchestratorPreBranchState: (attempt && typeof attempt.orchestratorPreBranchState === 'object') ? attempt.orchestratorPreBranchState : null,
                 forbiddenPrefixesReceivedCount: Number.isFinite(attempt?.forbiddenPrefixesReceivedCount) ? attempt.forbiddenPrefixesReceivedCount : null,
                 forbiddenPrefixesReceivedSampleLen: Number.isFinite(attempt?.forbiddenPrefixesReceivedSampleLen) ? attempt.forbiddenPrefixesReceivedSampleLen : null,
                 unifiedHKBoundComputed: Number.isFinite(attempt?.unifiedHKBoundComputed) ? attempt.unifiedHKBoundComputed : null,
@@ -5120,6 +5147,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         endgameIDAStarLastSnapshotReason: attempt?.endgameIDAStarLastSnapshotReason,
                         forbiddenPrefixSuppressions: attempt?.forbiddenPrefixSuppressions,
                         orchestratorForbiddenPrefixDecision: attempt?.orchestratorForbiddenPrefixDecision,
+                        orchestratorPreBranchState: attempt?.orchestratorPreBranchState,
                         forbiddenPrefixesReceivedCount: attempt?.forbiddenPrefixesReceivedCount,
                         forbiddenPrefixesReceivedSampleLen: attempt?.forbiddenPrefixesReceivedSampleLen,
                         unifiedHKBoundComputed: attempt?.unifiedHKBoundComputed,
