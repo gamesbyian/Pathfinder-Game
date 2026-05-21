@@ -363,7 +363,21 @@ function installSolver(APP) {
                     // are left fully open (their axis is path-history-dependent, so
                     // any static treatment would be either path-aware-and-expensive
                     // or pessimistic-and-inadmissible).
+                    //
+                    // activePortalFamily: when set to a finite non-negative integer,
+                    // only that portal family's teleport edges are followed; other
+                    // families' entry cells are treated as ordinary cells (the cells
+                    // remain walkable, but stepping on them does not teleport). Yields
+                    // STRICTLY LONGER distances than the default — admissible because
+                    // any path that has committed to family F can only use F's
+                    // portals, so distances respecting that restriction remain ≤
+                    // actual path lengths. Default (undefined/null/-1) leaves all
+                    // portals optimistically usable.
                     const respectFilters = !!opts.filterAware;
+                    const activePortalFamily = (Number.isFinite(opts.activePortalFamily) && opts.activePortalFamily >= 0)
+                        ? (opts.activePortalFamily | 0)
+                        : -1;
+                    const restrictPortals = activePortalFamily >= 0 && (l.portalFamilyByEntry instanceof Map);
                     class Deque {
                         constructor(initialCapacity = 32) {
                             this.buf = new Array(Math.max(4, initialCapacity | 0));
@@ -416,7 +430,12 @@ function installSolver(APP) {
                         const d = map.get(k);
                         const p = APP.LevelUtils.UNPACK(k);
                         const portal = APP.LevelUtils.resolvePortal(l, k);
-                        if (portal && portal.dest !== -1 && !l.blockSet.has(portal.dest)) {
+                        let portalUsable = !!(portal && portal.dest !== -1 && !l.blockSet.has(portal.dest));
+                        if (portalUsable && restrictPortals) {
+                            const fam = l.portalFamilyByEntry.get(k);
+                            if (fam !== activePortalFamily) portalUsable = false;
+                        }
+                        if (portalUsable) {
                             const pd = map.get(portal.dest);
                             if (pd === undefined || d < pd) {
                                 map.set(portal.dest, d);
@@ -544,57 +563,77 @@ function installSolver(APP) {
                 _estimateUnifiedHKBoundFrom(key, state, l) {
                     const hk = l.unifiedHK;
                     if (!hk) return 0;
-                    let unmetMask = 0n;
-                    // mustPass: in tour iff not yet visited.
+                    // Build the unmet-GROUPS mask. Groups indexed as:
+                    //   0..mpCount-1                              : mustPass (in tour iff not yet visited)
+                    //   mpCount..mpCount+mcCount-1                : mustCross (in tour iff count < 2)
+                    //   mpCount+mcCount..mpCount+mcCount+mfCount-1: provably-mandatory portal family
+                    //                                              (in tour iff state.portal.portalRequiredCoverageMask
+                    //                                              still has the family's bit set)
+                    let unmetGroupsMask = 0n;
                     if (typeof state.mustMask === 'bigint' && state.mustMask !== 0n) {
                         const mpKeys = l.mustPassKeys || [];
                         for (let i = 0; i < mpKeys.length; i++) {
                             if ((state.mustMask & (1n << BigInt(i))) !== 0n) {
-                                unmetMask |= (1n << BigInt(hk.wpFromMustPassIdx[i]));
+                                unmetGroupsMask |= (1n << BigInt(i));
                             }
                         }
                     }
-                    // mustCross: in tour iff visit count < 2 (same semantics as
-                    // mustCrossMask). The tour HK counts ONE visit per cell; the
-                    // additional visit cost is intentionally NOT added as +2 slack
-                    // because a mustCross that lies ON the natural goal path
-                    // (current→cross→goal) can be revisited 'for free' via the path
-                    // doubling-back through nearby cells — adding +2 broke admissibility
-                    // on 26 hint paths where this happens (L120 step 21 was the test
-                    // case: distFromCurrentToCross=1, distFromCrossToGoal=4, rSteps=5,
-                    // and the +2 slack made HK report 7 > 5). The looser variant
-                    // (tour only, no slack) is admissible but doesn't capture the full
-                    // 'visit ≥ 2 times' cost — that's traded for soundness.
                     if (typeof state.mustCrossMask === 'bigint' && state.mustCrossMask !== 0n) {
                         const mcKeys = l.mustCrossKeys || [];
                         for (let i = 0; i < mcKeys.length; i++) {
                             if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n) {
-                                for (let w = 0; w < hk.w; w++) {
-                                    if (hk.wpFromMustCrossIdx[w] === i) {
-                                        unmetMask |= (1n << BigInt(w));
-                                        break;
-                                    }
-                                }
+                                unmetGroupsMask |= (1n << BigInt(hk.mpCount + i));
                             }
                         }
                     }
-                    if (unmetMask === 0n) {
-                        // When all waypoints are satisfied, the bound reduces to the
-                        // current→goal distance. Use the filter-aware distance map if
-                        // available (built in unifiedHK setup) — same admissibility
+                    // Portal-family groups: only the provably-mandatory ones from the
+                    // automaton are in hk.portalGroupFamilyIdx. A family's group bit
+                    // remains set as long as state.portal.portalRequiredCoverageMask still
+                    // requires that family.
+                    if (hk.mfCount > 0 && typeof state.portal?.portalRequiredCoverageMask === 'bigint') {
+                        const coverage = state.portal.portalRequiredCoverageMask;
+                        for (let g = 0; g < hk.mfCount; g++) {
+                            const famIdx = hk.portalGroupFamilyIdx[g];
+                            if ((coverage & (1n << BigInt(famIdx))) !== 0n) {
+                                unmetGroupsMask |= (1n << BigInt(hk.mpCount + hk.mcCount + g));
+                            }
+                        }
+                    }
+                    // Per-portal-state APSP dispatch. When the path has committed to a
+                    // specific portal family, use the matrices/DP built against ONLY
+                    // that family's portal edges — they yield strictly longer (tighter)
+                    // distances than the uncommitted matrix, since the path can no
+                    // longer use other families' teleports. Falls back to state 0
+                    // (uncommitted, all portals usable) when per-state arrays are not
+                    // built (single-family levels) or commitment family is out of range.
+                    let stateIdx = 0;
+                    const committedFamily = Number.isFinite(state.portal?.portalSelectedFamily) ? state.portal.portalSelectedFamily : -1;
+                    if (committedFamily >= 0 && Array.isArray(hk.hkDpByState) && hk.hkDpByState.length > committedFamily + 1) {
+                        stateIdx = committedFamily + 1;
+                    }
+                    const wpDistMaps = (Array.isArray(hk.wpDistMapsByState) && hk.wpDistMapsByState[stateIdx]) || hk.wpDistMaps;
+                    const wpToGoal = (Array.isArray(hk.wpToGoalByState) && hk.wpToGoalByState[stateIdx]) || hk.wpToGoal;
+                    const goalDistMap = (Array.isArray(hk.goalDistMapsByState) && hk.goalDistMapsByState[stateIdx]) || hk.filterAwareGoalDistMap;
+                    const dpFn = (Array.isArray(hk.hkDpByState) && hk.hkDpByState[stateIdx]) || hk.hkDp;
+                    if (unmetGroupsMask === 0n) {
+                        // When all groups are satisfied, the bound reduces to the
+                        // current→goal distance. Use the per-state goal distance map
+                        // when available (built in unifiedHK setup) — same admissibility
                         // argument as the wpDistMaps, just for the goal leg.
-                        const g = hk.filterAwareGoalDistMap
-                            ? hk.filterAwareGoalDistMap.get(key)
+                        const g = goalDistMap
+                            ? goalDistMap.get(key)
                             : l.distMapForSolver?.get(key);
                         return (g === undefined) ? Infinity : g;
                     }
+                    // Top-level expansion: try each waypoint that covers ≥1 unmet group
+                    // as the first stop. Visiting it clears every group bit it carries.
                     let best = Infinity;
                     for (let i = 0; i < hk.w; i++) {
-                        const bit = 1n << BigInt(i);
-                        if ((unmetMask & bit) === 0n) continue;
-                        const dToWp = hk.wpDistMaps[i].get(key);
+                        const covered = hk.wpGroupMasks[i] & unmetGroupsMask;
+                        if (covered === 0n) continue;
+                        const dToWp = wpDistMaps[i].get(key);
                         if (dToWp === undefined) continue;
-                        const rest = hk.hkDp(unmetMask ^ bit, i);
+                        const rest = dpFn(unmetGroupsMask & ~covered, i);
                         if (rest === Infinity) continue;
                         const total = dToWp + rest;
                         if (total < best) best = total;
@@ -5123,6 +5162,19 @@ function installSolver(APP) {
                         // previously appeared identically as null in the audit.
                         debugStats.useUnifiedHKBoundOptionSeen = !!options.useUnifiedHKBound;
                         debugStats.unifiedHKLevelTableReady = !!l.unifiedHK;
+                        // GTSP + per-portal-state APSP shape (level-static): exposes the
+                        // structure of the HK setup at runtime so audits can confirm
+                        // mandatory portal-family groups and per-state matrices were
+                        // actually built. null when no HK table.
+                        debugStats.unifiedHKWaypointCount = l.unifiedHK ? l.unifiedHK.w : null;
+                        debugStats.unifiedHKTotalGroups = l.unifiedHK ? l.unifiedHK.totalGroups : null;
+                        debugStats.unifiedHKMandatoryFamilyGroupCount = l.unifiedHK ? l.unifiedHK.mfCount : null;
+                        debugStats.unifiedHKApspStateCount = l.unifiedHK ? l.unifiedHK.stateCount : null;
+                        // Per-attempt running counts, populated by _estimateUnifiedHKBoundFrom
+                        // through bumpHKApspStat. apspCommittedHits counts evaluations that
+                        // used a committed-family matrix (stateIdx>0) — only meaningful on
+                        // multi-family levels where per-state matrices exist.
+                        debugStats.unifiedHKApspCommittedHits = 0;
                         debugStats.forbiddenPrefixesOptionLength = Array.isArray(options.forbiddenPrefixes) ? options.forbiddenPrefixes.length : null;
                         debugStats.forbiddenPrefixesOptionFirstLen = (Array.isArray(options.forbiddenPrefixes) && Array.isArray(options.forbiddenPrefixes[0]?.prefix))
                             ? options.forbiddenPrefixes[0].prefix.length
@@ -5394,6 +5446,15 @@ function installSolver(APP) {
                                 if (!Number.isFinite(debugStats.unifiedHKBoundMaxObserved)
                                     || unifiedHKBoundEstimate > debugStats.unifiedHKBoundMaxObserved) {
                                     debugStats.unifiedHKBoundMaxObserved = Number.isFinite(unifiedHKBoundEstimate) ? unifiedHKBoundEstimate : null;
+                                }
+                                // Per-portal-state APSP usage telemetry. A committed-state
+                                // matrix was used iff (multi-family level) AND (path has
+                                // selected a portal family).
+                                if (Number.isFinite(l.unifiedHK?.stateCount) && l.unifiedHK.stateCount > 1
+                                    && Number.isFinite(state.portal?.portalSelectedFamily)
+                                    && state.portal.portalSelectedFamily >= 0
+                                    && state.portal.portalSelectedFamily + 1 < l.unifiedHK.stateCount) {
+                                    debugStats.unifiedHKApspCommittedHits = (Number(debugStats.unifiedHKApspCommittedHits) || 0) + 1;
                                 }
                             }
                         }
@@ -6653,118 +6714,6 @@ function installSolver(APP) {
                         };
                     }
 
-                    // Unified Held-Karp waypoint bound. The existing mustPassDp and
-                    // mustCrossDp each give an admissible bound on their own waypoint
-                    // set's tour. But the composite at search time takes max() of those
-                    // independent bounds, which under-estimates whenever both sets must
-                    // be covered by the SAME path. A unified HK over the union of
-                    // mustPass + first-visit-of-mustCross waypoints is strictly tighter
-                    // than max-of-individual because the tour now has to visit all of
-                    // them in some order from current → through-all → goal.
-                    //
-                    // Each remaining mustCross visit beyond the first adds an admissible
-                    // +2 (out and back) — modeled as revisitSlack at use-site, not
-                    // baked into the DP.
-                    //
-                    // Capped at 12 waypoints to keep 2^k tractable in-browser
-                    // (k=12 ⇒ 4096 mask × 12 last-idx = 49K cells, still <ms compute).
-                    level.unifiedHK = null;
-                    {
-                        const mpKeys = Array.isArray(level.mustPassKeys) ? level.mustPassKeys : [];
-                        const mcKeys = Array.isArray(level.mustCrossKeys) ? level.mustCrossKeys : [];
-                        const seen = new Map();
-                        const wpKeys = [];
-                        const wpFromMustPassIdx = [];
-                        const wpFromMustCrossIdx = [];
-                        for (let i = 0; i < mpKeys.length; i++) {
-                            const k = mpKeys[i];
-                            if (seen.has(k)) {
-                                wpFromMustPassIdx[i] = seen.get(k);
-                            } else {
-                                const idx = wpKeys.length;
-                                wpKeys.push(k);
-                                wpFromMustPassIdx[i] = idx;
-                                wpFromMustCrossIdx[idx] = -1;
-                                seen.set(k, idx);
-                            }
-                        }
-                        for (let i = 0; i < mcKeys.length; i++) {
-                            const k = mcKeys[i];
-                            if (seen.has(k)) {
-                                wpFromMustCrossIdx[seen.get(k)] = i;
-                            } else {
-                                const idx = wpKeys.length;
-                                wpKeys.push(k);
-                                wpFromMustCrossIdx[idx] = i;
-                                seen.set(k, idx);
-                            }
-                        }
-                        const w = wpKeys.length;
-                        if (w > 0 && w <= 12) {
-                            // Filter-aware BFS for HK's per-waypoint distance maps and
-                            // for the goal-leg distance. Yields strictly tighter (longer)
-                            // distances on levels with non-flipping filters because the
-                            // movement-axis constraint is enforced. For L92 specifically
-                            // (filters at (4,4) axis H and (8,10) axis V), pair distances
-                            // near those cells become longer, which raises the HK bound
-                            // when waypoint tours pass through filter zones.
-                            const hkDistOpts = { filterAware: (level.filterMap?.size || 0) > 0 };
-                            const hkFilterAwareGoalDistMap = hkDistOpts.filterAware
-                                ? SolverCore._buildOptimisticDistMap(level, [level.goalKey], hkDistOpts)
-                                : null;
-                            const goalDistGetter = hkFilterAwareGoalDistMap
-                                ? (k) => hkFilterAwareGoalDistMap.get(k)
-                                : (k) => distMap.get(k);
-                            const wpDistMaps = wpKeys.map(k => SolverCore._buildOptimisticDistMap(level, [k], hkDistOpts));
-                            const wpToGoal = wpKeys.map(k => goalDistGetter(k));
-                            const wpPairDist = Array.from({ length: w }, () => Array(w).fill(Infinity));
-                            for (let i = 0; i < w; i++) {
-                                wpPairDist[i][i] = 0;
-                                for (let j = i + 1; j < w; j++) {
-                                    const d = wpDistMaps[i].get(wpKeys[j]);
-                                    const val = (d === undefined) ? Infinity : d;
-                                    wpPairDist[i][j] = val;
-                                    wpPairDist[j][i] = val;
-                                }
-                            }
-                            const dpMemo = new Map();
-                            const hkDp = (mask, lastIdx) => {
-                                if (mask === 0n) {
-                                    const g = wpToGoal[lastIdx];
-                                    return (g === undefined) ? Infinity : g;
-                                }
-                                const key = `${mask.toString()}|${lastIdx}`;
-                                const cached = dpMemo.get(key);
-                                if (cached !== undefined) return cached;
-                                let best = Infinity;
-                                for (let nxt = 0; nxt < w; nxt++) {
-                                    const bit = 1n << BigInt(nxt);
-                                    if ((mask & bit) === 0n) continue;
-                                    const d = wpPairDist[lastIdx][nxt];
-                                    if (d === Infinity) continue;
-                                    const rest = hkDp(mask ^ bit, nxt);
-                                    if (rest === Infinity) continue;
-                                    const total = d + rest;
-                                    if (total < best) best = total;
-                                }
-                                dpMemo.set(key, best);
-                                return best;
-                            };
-                            level.unifiedHK = {
-                                w,
-                                wpKeys,
-                                wpFromMustPassIdx,   // [mustPassIdx] → wpIdx
-                                wpFromMustCrossIdx,  // [wpIdx] → mustCrossIdx or -1
-                                wpDistMaps,
-                                wpToGoal,
-                                wpPairDist,
-                                hkDp,
-                                filterAwareGoalDistMap: hkFilterAwareGoalDistMap,
-                                filterAware: hkDistOpts.filterAware
-                            };
-                        }
-                    }
-
                     const portalHints = level?.solverProfile?.portalHints || null;
                     level.portalFamilyByEntry = new Map();
                     level.portalRegionByKey = new Map();
@@ -6867,6 +6816,207 @@ function installSolver(APP) {
                         familyToGoalDist,
                         familyPairDist
                     };
+
+                    // Unified Held-Karp / GTSP waypoint bound. Generalizes the path-TSP
+                    // HK over mustPass + first-visit-of-mustCross with a third group
+                    // kind: PROVABLY-mandatory portal families. Each such family is a
+                    // disjunctive group — the tour must visit one of its entry cells.
+                    //
+                    // DP state: (groupsRemainingMask, lastWaypointIdx). Mask is over
+                    // GROUPS (not waypoints): visiting any waypoint clears every group
+                    // whose membership bit it carries (a single cell can belong to
+                    // multiple groups when, e.g., a portal entry coincides with a
+                    // mustPass cell). Transitions enumerate next waypoints that cover
+                    // at least one unmet group.
+                    //
+                    // Admissibility:
+                    //   - mustPass / mustCross: same single-cell groups as before.
+                    //   - portal families: included ONLY from provablyMandatoryMask
+                    //     (rigorous, not loose). Any feasible solution must visit one
+                    //     entry of every provably-mandatory family, so requiring such a
+                    //     visit in the HK tour preserves the lower-bound property.
+                    //
+                    // Per-mustCross +2 slack (for count=0) is added at use-site, same
+                    // as before. Portal entries do NOT carry +2 slack — a single visit
+                    // through an entry satisfies the obligation.
+                    //
+                    // Caps:
+                    //   - totalGroups <= 12 (mask 2^12 = 4096)
+                    //   - totalWaypoints <= 16 (DP transition loop)
+                    level.unifiedHK = null;
+                    {
+                        const mpKeys = Array.isArray(level.mustPassKeys) ? level.mustPassKeys : [];
+                        const mcKeys = Array.isArray(level.mustCrossKeys) ? level.mustCrossKeys : [];
+                        const mpCount = mpKeys.length;
+                        const mcCount = mcKeys.length;
+                        const portalAutomaton = level.portalTransitionAutomaton;
+                        const mandatoryFamilyIndices = [];
+                        if (portalAutomaton && portalAutomaton.ready && typeof portalAutomaton.provablyMandatoryMask === 'bigint') {
+                            const provable = portalAutomaton.provablyMandatoryMask;
+                            for (let i = 0; i < portalAutomaton.familyCount; i++) {
+                                if ((provable & (1n << BigInt(i))) !== 0n) mandatoryFamilyIndices.push(i);
+                            }
+                        }
+                        const mfCount = mandatoryFamilyIndices.length;
+                        const totalGroups = mpCount + mcCount + mfCount;
+                        if (totalGroups > 0 && totalGroups <= 12) {
+                            const wpKeys = [];
+                            const wpKeyToIdx = new Map();
+                            const wpGroupMasks = []; // [wpIdx] → bigint mask of groups this wp satisfies
+                            const wpFromMustPassIdx = new Array(mpCount).fill(-1);   // [mpIdx] → wpIdx
+                            // wpFromMustCrossIdx is indexed by wpIdx (not mcIdx) for back-compat
+                            // with _estimateUnifiedHKBoundFrom semantics: -1 if wp is not a mustCross.
+                            const wpToMustCrossIdx = []; // [wpIdx] → mustCrossIdx or -1
+                            const mcIdxToWp = new Array(mcCount).fill(-1);
+                            // [groupOffsetWithinPortal] → familyIdx (the original portal family index)
+                            const portalGroupFamilyIdx = mandatoryFamilyIndices.slice();
+
+                            const ensureWp = (k) => {
+                                let idx = wpKeyToIdx.get(k);
+                                if (idx === undefined) {
+                                    idx = wpKeys.length;
+                                    wpKeys.push(k);
+                                    wpKeyToIdx.set(k, idx);
+                                    wpGroupMasks.push(0n);
+                                    wpToMustCrossIdx.push(-1);
+                                }
+                                return idx;
+                            };
+                            // mustPass groups: 0..mpCount-1
+                            for (let i = 0; i < mpCount; i++) {
+                                const widx = ensureWp(mpKeys[i]);
+                                wpGroupMasks[widx] |= (1n << BigInt(i));
+                                wpFromMustPassIdx[i] = widx;
+                            }
+                            // mustCross groups: mpCount..mpCount+mcCount-1
+                            for (let i = 0; i < mcCount; i++) {
+                                const widx = ensureWp(mcKeys[i]);
+                                wpGroupMasks[widx] |= (1n << BigInt(mpCount + i));
+                                wpToMustCrossIdx[widx] = i;
+                                mcIdxToWp[i] = widx;
+                            }
+                            // mandatory-portal-family groups: mpCount+mcCount..totalGroups-1
+                            for (let g = 0; g < mfCount; g++) {
+                                const famIdx = mandatoryFamilyIndices[g];
+                                const groupBit = 1n << BigInt(mpCount + mcCount + g);
+                                const entries = portalHints?.families?.[famIdx]?.entries
+                                    || (level.portalVisuals?.[famIdx] ? [level.portalVisuals[famIdx].k1, level.portalVisuals[famIdx].k2] : []);
+                                for (const k of entries) {
+                                    if (k === undefined || k === null || k === -1) continue;
+                                    if (level.blockSet?.has?.(k)) continue;
+                                    const widx = ensureWp(k);
+                                    wpGroupMasks[widx] |= groupBit;
+                                }
+                            }
+                            const w = wpKeys.length;
+                            // Hard waypoint cap so the DP transition loop stays small.
+                            // 16 keeps the mask×wp work under ~64K per top-level call.
+                            if (w > 0 && w <= 16) {
+                                const filterAware = (level.filterMap?.size || 0) > 0;
+                                const familyCountTotal = level.portalFamilyCount || 0;
+                                // Per-portal-state APSP. We build (1 + familyCountTotal)
+                                // parallel distance/DP structures:
+                                //   stateIdx 0 = uncommitted (any portal usable)
+                                //   stateIdx 1..familyCountTotal = family (stateIdx-1) committed
+                                //     (only that family's portals are usable; other families'
+                                //      portal entries are walkable but don't teleport).
+                                // In committed states, distances are STRICTLY LONGER than the
+                                // uncommitted matrix (or equal), so the HK bound computed against
+                                // the committed matrix is TIGHTER (larger) for committed states.
+                                // Admissibility holds because real paths in committed state
+                                // cannot use other families' portals either.
+                                //
+                                // Only built when there is more than one portal family — single-
+                                // family levels see no benefit (uncommitted ≡ committed when there
+                                // is only one family to choose from).
+                                const stateCount = (familyCountTotal > 1) ? (1 + familyCountTotal) : 1;
+                                const wpDistMapsByState = [];
+                                const wpToGoalByState = [];
+                                const wpPairDistByState = [];
+                                const goalDistMapsByState = [];
+                                const hkDpByState = [];
+                                for (let s = 0; s < stateCount; s++) {
+                                    const distOpts = { filterAware };
+                                    if (s > 0) distOpts.activePortalFamily = s - 1;
+                                    const goalDistMap = (filterAware || s > 0)
+                                        ? SolverCore._buildOptimisticDistMap(level, [level.goalKey], distOpts)
+                                        : null;
+                                    const goalDistGetter = goalDistMap
+                                        ? (k) => goalDistMap.get(k)
+                                        : (k) => distMap.get(k);
+                                    const wpDistMapsS = wpKeys.map(k => SolverCore._buildOptimisticDistMap(level, [k], distOpts));
+                                    const wpToGoalS = wpKeys.map(k => goalDistGetter(k));
+                                    const wpPairDistS = Array.from({ length: w }, () => Array(w).fill(Infinity));
+                                    for (let i = 0; i < w; i++) {
+                                        wpPairDistS[i][i] = 0;
+                                        for (let j = i + 1; j < w; j++) {
+                                            const d = wpDistMapsS[i].get(wpKeys[j]);
+                                            const val = (d === undefined) ? Infinity : d;
+                                            wpPairDistS[i][j] = val;
+                                            wpPairDistS[j][i] = val;
+                                        }
+                                    }
+                                    const memo = new Map();
+                                    const dp = (groupsMask, lastIdx) => {
+                                        if (groupsMask === 0n) {
+                                            const g = wpToGoalS[lastIdx];
+                                            return (g === undefined) ? Infinity : g;
+                                        }
+                                        const key = `${groupsMask.toString()}|${lastIdx}`;
+                                        const cached = memo.get(key);
+                                        if (cached !== undefined) return cached;
+                                        let best = Infinity;
+                                        for (let nxt = 0; nxt < w; nxt++) {
+                                            const covered = wpGroupMasks[nxt] & groupsMask;
+                                            if (covered === 0n) continue;
+                                            const d = wpPairDistS[lastIdx][nxt];
+                                            if (!Number.isFinite(d)) continue;
+                                            const rest = dp(groupsMask & ~covered, nxt);
+                                            if (!Number.isFinite(rest)) continue;
+                                            const total = d + rest;
+                                            if (total < best) best = total;
+                                        }
+                                        memo.set(key, best);
+                                        return best;
+                                    };
+                                    wpDistMapsByState.push(wpDistMapsS);
+                                    wpToGoalByState.push(wpToGoalS);
+                                    wpPairDistByState.push(wpPairDistS);
+                                    goalDistMapsByState.push(goalDistMap);
+                                    hkDpByState.push(dp);
+                                }
+                                level.unifiedHK = {
+                                    w,
+                                    totalGroups,
+                                    mpCount,
+                                    mcCount,
+                                    mfCount,
+                                    stateCount,
+                                    wpKeys,
+                                    wpGroupMasks,
+                                    wpFromMustPassIdx,    // [mustPassIdx] → wpIdx
+                                    wpFromMustCrossIdx: wpToMustCrossIdx, // [wpIdx] → mcIdx or -1 (back-compat name)
+                                    mcIdxToWp,            // [mustCrossIdx] → wpIdx
+                                    portalGroupFamilyIdx, // [portalGroupOffset] → familyIdx
+                                    // State-0 (uncommitted) accessors for back-compat with any
+                                    // external readers; per-state accessors below.
+                                    wpDistMaps: wpDistMapsByState[0],
+                                    wpToGoal: wpToGoalByState[0],
+                                    wpPairDist: wpPairDistByState[0],
+                                    hkDp: hkDpByState[0],
+                                    filterAwareGoalDistMap: goalDistMapsByState[0],
+                                    filterAware,
+                                    // Per-portal-state arrays. State 0 = uncommitted; state
+                                    // 1..familyCountTotal = family (s-1) committed.
+                                    wpDistMapsByState,
+                                    wpToGoalByState,
+                                    wpPairDistByState,
+                                    goalDistMapsByState,
+                                    hkDpByState
+                                };
+                            }
+                        }
+                    }
 
                     level.objectiveNodes = [];
                     for (let i = 0; i < level.mustPassKeys.length; i++) {
@@ -8395,6 +8545,11 @@ function installSolver(APP) {
                 unifiedHKBoundDominatedComposite: Number.isFinite(debug?.unifiedHKBoundDominatedComposite) ? debug.unifiedHKBoundDominatedComposite : null,
                 useUnifiedHKBoundOptionSeen: debug?.useUnifiedHKBoundOptionSeen === true ? true : (debug?.useUnifiedHKBoundOptionSeen === false ? false : null),
                 unifiedHKLevelTableReady: debug?.unifiedHKLevelTableReady === true ? true : (debug?.unifiedHKLevelTableReady === false ? false : null),
+                unifiedHKWaypointCount: Number.isFinite(debug?.unifiedHKWaypointCount) ? debug.unifiedHKWaypointCount : null,
+                unifiedHKTotalGroups: Number.isFinite(debug?.unifiedHKTotalGroups) ? debug.unifiedHKTotalGroups : null,
+                unifiedHKMandatoryFamilyGroupCount: Number.isFinite(debug?.unifiedHKMandatoryFamilyGroupCount) ? debug.unifiedHKMandatoryFamilyGroupCount : null,
+                unifiedHKApspStateCount: Number.isFinite(debug?.unifiedHKApspStateCount) ? debug.unifiedHKApspStateCount : null,
+                unifiedHKApspCommittedHits: Number.isFinite(debug?.unifiedHKApspCommittedHits) ? debug.unifiedHKApspCommittedHits : null,
                 forbiddenPrefixesOptionLength: Number.isFinite(debug?.forbiddenPrefixesOptionLength) ? debug.forbiddenPrefixesOptionLength : null,
                 forbiddenPrefixesOptionFirstLen: Number.isFinite(debug?.forbiddenPrefixesOptionFirstLen) ? debug.forbiddenPrefixesOptionFirstLen : null,
                 endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
@@ -12233,6 +12388,11 @@ function installSolver(APP) {
                     unifiedHKBoundDominatedComposite: Number.isFinite(attemptResult?.debug?.unifiedHKBoundDominatedComposite) ? attemptResult.debug.unifiedHKBoundDominatedComposite : null,
                     useUnifiedHKBoundOptionSeen: attemptResult?.debug?.useUnifiedHKBoundOptionSeen === true ? true : (attemptResult?.debug?.useUnifiedHKBoundOptionSeen === false ? false : null),
                     unifiedHKLevelTableReady: attemptResult?.debug?.unifiedHKLevelTableReady === true ? true : (attemptResult?.debug?.unifiedHKLevelTableReady === false ? false : null),
+                    unifiedHKWaypointCount: Number.isFinite(attemptResult?.debug?.unifiedHKWaypointCount) ? attemptResult.debug.unifiedHKWaypointCount : null,
+                    unifiedHKTotalGroups: Number.isFinite(attemptResult?.debug?.unifiedHKTotalGroups) ? attemptResult.debug.unifiedHKTotalGroups : null,
+                    unifiedHKMandatoryFamilyGroupCount: Number.isFinite(attemptResult?.debug?.unifiedHKMandatoryFamilyGroupCount) ? attemptResult.debug.unifiedHKMandatoryFamilyGroupCount : null,
+                    unifiedHKApspStateCount: Number.isFinite(attemptResult?.debug?.unifiedHKApspStateCount) ? attemptResult.debug.unifiedHKApspStateCount : null,
+                    unifiedHKApspCommittedHits: Number.isFinite(attemptResult?.debug?.unifiedHKApspCommittedHits) ? attemptResult.debug.unifiedHKApspCommittedHits : null,
                     forbiddenPrefixesOptionLength: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionLength) ? attemptResult.debug.forbiddenPrefixesOptionLength : null,
                     forbiddenPrefixesOptionFirstLen: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionFirstLen) ? attemptResult.debug.forbiddenPrefixesOptionFirstLen : null,
                     endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
