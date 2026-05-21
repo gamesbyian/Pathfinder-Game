@@ -5191,6 +5191,17 @@ function installSolver(APP) {
                         debugStats.unifiedHKMpCountSeen = Array.isArray(l.mustPassKeys) ? l.mustPassKeys.length : null;
                         debugStats.unifiedHKMcCountSeen = Array.isArray(l.mustCrossKeys) ? l.mustCrossKeys.length : null;
                         debugStats.unifiedHKPortalFamilyCountSeen = Number.isFinite(l.portalFamilyCount) ? l.portalFamilyCount : null;
+                        // Per-attempt diagnostic: surface the EFFECTIVE orderingPolicy
+                        // and rootTieSeed that this inner solve actually ran with.
+                        // Audit 42 showed orderingPolicy='unknown' for every L92
+                        // attempt, which made it impossible to verify whether the
+                        // ladder-level rootOrderingVariant rotation was being applied.
+                        // These fields propagate via debug → toAuditAttemptSummary →
+                        // audit JSON.
+                        debugStats.effectiveOrderingPolicy = options?.orderingPolicy || 'default';
+                        debugStats.effectiveRootTieSeed = Number.isFinite(options?.rootTieSeed) ? options.rootTieSeed : null;
+                        debugStats.effectiveDirOrderVariant = options?.dirOrderVariant || 'default';
+                        debugStats.effectiveRootOrderingVariant = options?.rootOrderingVariant || null;
                         // Per-attempt running counts, populated by _estimateUnifiedHKBoundFrom
                         // through bumpHKApspStat. apspCommittedHits counts evaluations that
                         // used a committed-family matrix (stateIdx>0) — only meaningful on
@@ -8574,6 +8585,10 @@ function installSolver(APP) {
                 unifiedHKMpCountSeen: Number.isFinite(debug?.unifiedHKMpCountSeen) ? debug.unifiedHKMpCountSeen : null,
                 unifiedHKMcCountSeen: Number.isFinite(debug?.unifiedHKMcCountSeen) ? debug.unifiedHKMcCountSeen : null,
                 unifiedHKPortalFamilyCountSeen: Number.isFinite(debug?.unifiedHKPortalFamilyCountSeen) ? debug.unifiedHKPortalFamilyCountSeen : null,
+                effectiveOrderingPolicy: (typeof debug?.effectiveOrderingPolicy === 'string') ? debug.effectiveOrderingPolicy : null,
+                effectiveRootTieSeed: Number.isFinite(debug?.effectiveRootTieSeed) ? debug.effectiveRootTieSeed : null,
+                effectiveDirOrderVariant: (typeof debug?.effectiveDirOrderVariant === 'string') ? debug.effectiveDirOrderVariant : null,
+                effectiveRootOrderingVariant: (typeof debug?.effectiveRootOrderingVariant === 'string') ? debug.effectiveRootOrderingVariant : null,
                 forbiddenPrefixesOptionLength: Number.isFinite(debug?.forbiddenPrefixesOptionLength) ? debug.forbiddenPrefixesOptionLength : null,
                 forbiddenPrefixesOptionFirstLen: Number.isFinite(debug?.forbiddenPrefixesOptionFirstLen) ? debug.forbiddenPrefixesOptionFirstLen : null,
                 endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
@@ -12460,6 +12475,10 @@ function installSolver(APP) {
                     unifiedHKMpCountSeen: Number.isFinite(attemptResult?.debug?.unifiedHKMpCountSeen) ? attemptResult.debug.unifiedHKMpCountSeen : null,
                     unifiedHKMcCountSeen: Number.isFinite(attemptResult?.debug?.unifiedHKMcCountSeen) ? attemptResult.debug.unifiedHKMcCountSeen : null,
                     unifiedHKPortalFamilyCountSeen: Number.isFinite(attemptResult?.debug?.unifiedHKPortalFamilyCountSeen) ? attemptResult.debug.unifiedHKPortalFamilyCountSeen : null,
+                    effectiveOrderingPolicy: (typeof attemptResult?.debug?.effectiveOrderingPolicy === 'string') ? attemptResult.debug.effectiveOrderingPolicy : null,
+                    effectiveRootTieSeed: Number.isFinite(attemptResult?.debug?.effectiveRootTieSeed) ? attemptResult.debug.effectiveRootTieSeed : null,
+                    effectiveDirOrderVariant: (typeof attemptResult?.debug?.effectiveDirOrderVariant === 'string') ? attemptResult.debug.effectiveDirOrderVariant : null,
+                    effectiveRootOrderingVariant: (typeof attemptResult?.debug?.effectiveRootOrderingVariant === 'string') ? attemptResult.debug.effectiveRootOrderingVariant : null,
                     forbiddenPrefixesOptionLength: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionLength) ? attemptResult.debug.forbiddenPrefixesOptionLength : null,
                     forbiddenPrefixesOptionFirstLen: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionFirstLen) ? attemptResult.debug.forbiddenPrefixesOptionFirstLen : null,
                     endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
