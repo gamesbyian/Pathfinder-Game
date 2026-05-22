@@ -11974,12 +11974,21 @@ function installSolver(APP) {
                     portalTriage: opts.portalTriage || null,
                     forbiddenPrefixes: Array.isArray(attemptOpts.forbiddenPrefixes) ? attemptOpts.forbiddenPrefixes : null,
                     // Forbidden first-move set: per-ladder-iteration hard refusal of cell
-                    // keys at depth 0. Comes from outer opts (set by index.html
-                    // runHintLadder accumulating prior iterations' first moves) and
-                    // applies uniformly to every inner attempt of this stage. Distinct
-                    // from per-attempt attemptOpts.forbiddenPrefixes (which the
-                    // orchestrator sets from within-stage priors).
-                    forbiddenFirstMoves: Array.isArray(opts.forbiddenFirstMoves) ? opts.forbiddenFirstMoves.filter(Number.isFinite) : null,
+                    // keys at depth 0. Two channels:
+                    //  - opts.forbiddenFirstMoves: direct option passed down through
+                    //    the Referee.solve cascade. Reliable when every cascade run-
+                    //    callback explicitly includes it (which they don't — there are
+                    //    9 call sites and propagating to each is brittle).
+                    //  - opts.hintLadderState.forbiddenFirstMoves: piggybacked on
+                    //    hintLadderState, which IS already plumbed through every
+                    //    cascade path (audit 47 evidence: hintLadderState reaches all
+                    //    9 runBaselinePolicySweep call sites). This is the reliable
+                    //    channel; the direct opts is kept as a backup.
+                    forbiddenFirstMoves: Array.isArray(opts.hintLadderState?.forbiddenFirstMoves)
+                        ? opts.hintLadderState.forbiddenFirstMoves.filter(Number.isFinite)
+                        : (Array.isArray(opts.forbiddenFirstMoves)
+                            ? opts.forbiddenFirstMoves.filter(Number.isFinite)
+                            : null),
                     useUnifiedHKBound: !!attemptOpts.useUnifiedHKBound,
                     rootTieSeed: Number.isFinite(attemptOpts.rootTieSeed)
                         ? attemptOpts.rootTieSeed

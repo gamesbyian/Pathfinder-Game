@@ -5611,16 +5611,21 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         continue;
                     }
                     ladderAttemptPolicySignatures.add(policySignature);
+                    // Piggyback the cumulative first-move forbid set on hintLadderState.
+                    // Audit 47 evidence: the direct opts.forbiddenFirstMoves channel
+                    // is dropped at most of the 9 Referee.solve cascade-pass call
+                    // sites (only stage 0 explicitly threads it). hintLadderState IS
+                    // already plumbed through every cascade path, so attaching the
+                    // forbid set here ensures it reaches runAttempt regardless of
+                    // which recovery/rescue stage runs last. The opts entry below
+                    // is kept as a redundant signal for the stage-0 path.
+                    hintLadderState.forbiddenFirstMoves = ladderForbiddenFirstMoves.slice();
                     const attemptStart = performance.now();
                     const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
                         ...policy,
                         auditMode,
                         timeBudgetMs: remainingMs,
                         hintLadderState,
-                        // Pass the cumulative first-move forbid set so the solver's
-                        // depth-0 filter (Solver.js _getNeighbors at the forbiddenFirstMoves
-                        // guard) skips first-move candidates that prior iterations
-                        // already tried.
                         forbiddenFirstMoves: ladderForbiddenFirstMoves.slice()
                     });
                     finalHintResult = hintRes || finalHintResult;
