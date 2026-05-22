@@ -6301,6 +6301,7 @@ function installSolver(APP) {
                         endgameIDAStarBoundCeiling = 20,
                         endgameIDAStarBudgetFraction = 0.5,
                         forbiddenPrefixes = null,
+                        forbiddenFirstMoves = null,
                         useUnifiedHKBound = false
                     } = options;
 
@@ -6385,6 +6386,7 @@ function installSolver(APP) {
                                 endgameIDAStarBoundCeiling,
                                 endgameIDAStarBudgetFraction,
                                 forbiddenPrefixes,
+                                forbiddenFirstMoves,
                                 useUnifiedHKBound,
                                 ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
                             };
@@ -7389,6 +7391,9 @@ function installSolver(APP) {
                             endgameIDAStarBoundCeiling,
                             endgameIDAStarBudgetFraction,
                             forbiddenPrefixes: options?.forbiddenPrefixes || null,
+                            forbiddenFirstMoves: Array.isArray(options?.forbiddenFirstMoves)
+                                ? options.forbiddenFirstMoves.filter(Number.isFinite)
+                                : null,
                             useUnifiedHKBound: !!options?.useUnifiedHKBound
                         });
                         const out = await SearchFramework.runSearch({
@@ -14214,6 +14219,7 @@ function installSolver(APP) {
                 hintLadderState,
                 rootTieSeedOffset,
                 rootOrderingVariant,
+                forbiddenFirstMoves,
                 stagesTried,
                 solveStartTime,
                 controlPlane,
@@ -15459,6 +15465,10 @@ function installSolver(APP) {
                 allowRandomizedExplorationOnExpensiveTiers,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
+                hintLadderState,
+                rootTieSeedOffset,
+                rootOrderingVariant,
+                forbiddenFirstMoves,
                 stagesTried,
                 solveStartTime,
                 controlPlane,
@@ -15505,7 +15515,18 @@ function installSolver(APP) {
                     resolvedPhasePolicy,
                     solveStartTime,
                     complexityStrategy,
-                    fallbackDisabledPrunes
+                    fallbackDisabledPrunes,
+                    // The next four fields were destructured from solveContext.strategy
+                    // (lines ~15035-15045 in the cascade entry) but were never assigned
+                    // here in the construction site — they silently came through as
+                    // undefined for every solve. This was the root cause of audit 41-50
+                    // showing rootOrderingVariant=null, effectiveOrderingPolicy stuck on
+                    // portalCommitted, and forbiddenFirstMovesOptionLength=null. Diagnosed
+                    // via scripts/run-solver-direct.mjs (Node-direct solver test).
+                    hintLadderState,
+                    rootTieSeedOffset,
+                    rootOrderingVariant,
+                    forbiddenFirstMoves
                 },
                 metadata: {
                     requestedBudget,

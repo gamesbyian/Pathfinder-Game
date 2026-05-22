@@ -12,6 +12,7 @@
     "test:startup-smoke": "node scripts/startup-smoke-test.mjs",
     "audit:newhint:full": "node scripts/run-audit-export.mjs",
     "audit:levels": "node scripts/run-level-audit.mjs",
+    "solver:direct": "node scripts/run-solver-direct.mjs",
     "audit:analyze-failures": "node scripts/analyze-audit-failures.mjs",
     "audit:check-hard-levels": "node scripts/check-persistent-hard-levels.mjs",
     "audit:check-hard-levels:strict": "node scripts/check-persistent-hard-levels.mjs --enforce-solved",
