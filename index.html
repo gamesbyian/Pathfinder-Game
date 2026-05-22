@@ -5066,6 +5066,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 effectiveDirOrderVariant: (typeof attempt?.effectiveDirOrderVariant === 'string') ? attempt.effectiveDirOrderVariant : null,
                 effectiveRootOrderingVariant: (typeof attempt?.effectiveRootOrderingVariant === 'string') ? attempt.effectiveRootOrderingVariant : null,
                 forbiddenPrefixesOptionLength: Number.isFinite(attempt?.forbiddenPrefixesOptionLength) ? attempt.forbiddenPrefixesOptionLength : null,
+                forbiddenFirstMovesOptionLength: Number.isFinite(attempt?.forbiddenFirstMovesOptionLength) ? attempt.forbiddenFirstMovesOptionLength : null,
+                forbiddenFirstMovesSuppressions: Number.isFinite(attempt?.forbiddenFirstMovesSuppressions) ? attempt.forbiddenFirstMovesSuppressions : null,
+                forbiddenFirstMovesFallbackEmpty: Number.isFinite(attempt?.forbiddenFirstMovesFallbackEmpty) ? attempt.forbiddenFirstMovesFallbackEmpty : null,
                 forbiddenPrefixesOptionFirstLen: Number.isFinite(attempt?.forbiddenPrefixesOptionFirstLen) ? attempt.forbiddenPrefixesOptionFirstLen : null,
                 forbiddenPrefixFallbackEmpty: Number.isFinite(attempt?.forbiddenPrefixFallbackEmpty) ? attempt.forbiddenPrefixFallbackEmpty : null,
                 endgameIDAStarRawOption: typeof attempt?.endgameIDAStarRawOption === 'string' ? attempt.endgameIDAStarRawOption : null,
@@ -5172,6 +5175,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         effectiveDirOrderVariant: attempt?.effectiveDirOrderVariant,
                         effectiveRootOrderingVariant: attempt?.effectiveRootOrderingVariant,
                         forbiddenPrefixesOptionLength: attempt?.forbiddenPrefixesOptionLength,
+                        forbiddenFirstMovesOptionLength: attempt?.forbiddenFirstMovesOptionLength,
+                        forbiddenFirstMovesSuppressions: attempt?.forbiddenFirstMovesSuppressions,
+                        forbiddenFirstMovesFallbackEmpty: attempt?.forbiddenFirstMovesFallbackEmpty,
                         forbiddenPrefixesOptionFirstLen: attempt?.forbiddenPrefixesOptionFirstLen,
                         forbiddenPrefixFallbackEmpty: attempt?.forbiddenPrefixFallbackEmpty,
                         endgameIDAStarRawOption: attempt?.endgameIDAStarRawOption,
@@ -5541,6 +5547,15 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 forcedFamilySwitchReason: null,
                 retryFingerprintDupes: 0
             };
+            // Accumulator for explicit first-move forbids. Each iteration N's actual
+            // first move (path[1] from its deepest-observed prefix) is added so
+            // iteration N+1 can't pick it again. Capped at 5 entries — beyond that
+            // every legal first move from the gate is typically forbidden, at which
+            // point the in-solver fallback kicks in and we accept whatever lands.
+            // Audit 46 evidence: archetype rotation alone produced uniform depth-84
+            // basin convergence — heuristic-level diversity wasn't enough to escape
+            // L92's attractor, so hard-forbidding first moves is the stronger lever.
+            const ladderForbiddenFirstMoves = [];
 
             const classifyHintStatus = (hintRes, hintValidation) => {
                 if (hintRes?.ok && hintValidation?.ok) return 'success';
@@ -5601,7 +5616,12 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         ...policy,
                         auditMode,
                         timeBudgetMs: remainingMs,
-                        hintLadderState
+                        hintLadderState,
+                        // Pass the cumulative first-move forbid set so the solver's
+                        // depth-0 filter (Solver.js _getNeighbors at the forbiddenFirstMoves
+                        // guard) skips first-move candidates that prior iterations
+                        // already tried.
+                        forbiddenFirstMoves: ladderForbiddenFirstMoves.slice()
                     });
                     finalHintResult = hintRes || finalHintResult;
                     const attemptedTimeoutEntries = Array.isArray(hintRes?.attempts)
@@ -5629,6 +5649,38 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                                 : null,
                             attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null
                         }));
+                    }
+                    // Harvest this iteration's actual first move from any source we can
+                    // find. Sources in priority order:
+                    //   1. hintLadderState.recentTimeoutAttempts (solver-populated via
+                    //      persistHintLadderState; survives the createCanonicalSolveResult
+                    //      attempts[] strip)
+                    //   2. finalHintResult.solution[0].path (when the iteration solved)
+                    // path[1] is the first move's destination cell (path[0] is the start
+                    // gate). Cap the cumulative forbid set at 5 — beyond that the gate's
+                    // legal neighbors are exhausted and the solver's empty-fallback kicks
+                    // in. De-duped against the existing accumulator.
+                    if (ladderForbiddenFirstMoves.length < 5) {
+                        const recent = hintLadderState.recentTimeoutAttempts;
+                        const lastRecent = Array.isArray(recent) && recent.length > 0 ? recent[recent.length - 1] : null;
+                        const recentPrefix = Array.isArray(lastRecent?.endgameIDAStarBestObservedPathPrefix)
+                            ? lastRecent.endgameIDAStarBestObservedPathPrefix
+                            : null;
+                        const solvedPath = Array.isArray(finalHintResult?.solution?.[0]?.path)
+                            ? finalHintResult.solution[0].path
+                            : null;
+                        const firstMoveCandidates = [];
+                        if (recentPrefix && recentPrefix.length >= 2 && Number.isFinite(recentPrefix[1])) {
+                            firstMoveCandidates.push(recentPrefix[1]);
+                        }
+                        if (solvedPath && solvedPath.length >= 2 && Number.isFinite(solvedPath[1])) {
+                            firstMoveCandidates.push(solvedPath[1]);
+                        }
+                        for (const cellKey of firstMoveCandidates) {
+                            if (!ladderForbiddenFirstMoves.includes(cellKey) && ladderForbiddenFirstMoves.length < 5) {
+                                ladderForbiddenFirstMoves.push(cellKey);
+                            }
+                        }
                     }
                     if (Array.isArray(hintRes?.attempts)) {
                         const hashes = hintRes.attempts

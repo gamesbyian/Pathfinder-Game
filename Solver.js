@@ -2614,6 +2614,39 @@ function installSolver(APP) {
                     // unsolvable. Suppression is recorded for audit so we can see whether the
                     // guard is actually firing on retries.
                     let dgValid = valid;
+                    // Explicit forbidden-first-moves guard. Distinct from forbiddenPrefixes:
+                    // operates ONLY at depth 0 (first move from start) and accepts a flat
+                    // array of cell keys to refuse rather than full path prefixes. The
+                    // hint-ladder collects each prior iteration's actual first move and
+                    // passes the union as forbiddenFirstMoves; the next iteration is then
+                    // GUARANTEED to pick a different first move regardless of heuristic
+                    // scoring or archetype rotation (audit 46 evidence: ladder rotation
+                    // applied across archetypes but every iteration's last inner attempt
+                    // landed on the same dead basin — diversifying scoring without
+                    // diversifying first move was insufficient).
+                    //
+                    // Safety: if forbidding empties the candidate list, fall back to
+                    // unfiltered — the guard must never make a level unsolvable. Tracked
+                    // via debugStats.forbiddenFirstMovesFallbackEmpty so audits surface
+                    // when the guard bottoms out.
+                    const forbiddenFirstMoves = Array.isArray(options?.forbiddenFirstMoves) ? options.forbiddenFirstMoves : null;
+                    if (debugStats && forbiddenFirstMoves && forbiddenFirstMoves.length > 0) {
+                        debugStats.forbiddenFirstMovesOptionLength = forbiddenFirstMoves.length;
+                    }
+                    if (forbiddenFirstMoves && forbiddenFirstMoves.length > 0 && depth === 0 && dgValid && dgValid.length > 0) {
+                        const forbiddenSet = new Set(forbiddenFirstMoves.filter(Number.isFinite));
+                        if (forbiddenSet.size > 0) {
+                            const filtered = dgValid.filter(nk => !forbiddenSet.has(nk));
+                            if (filtered.length > 0) {
+                                if (debugStats) {
+                                    debugStats.forbiddenFirstMovesSuppressions = (Number(debugStats.forbiddenFirstMovesSuppressions) || 0) + (dgValid.length - filtered.length);
+                                }
+                                dgValid = filtered;
+                            } else if (debugStats) {
+                                debugStats.forbiddenFirstMovesFallbackEmpty = (Number(debugStats.forbiddenFirstMovesFallbackEmpty) || 0) + 1;
+                            }
+                        }
+                    }
                     const dgPrefixes = Array.isArray(options?.forbiddenPrefixes) ? options.forbiddenPrefixes : null;
                     // Diagnostic: surface that the inner solver received forbiddenPrefixes
                     // (set once per call, idempotent). Helps distinguish "guard never fires
@@ -5199,6 +5232,12 @@ function installSolver(APP) {
                         // These fields propagate via debug → toAuditAttemptSummary →
                         // audit JSON.
                         debugStats.effectiveOrderingPolicy = options?.orderingPolicy || 'default';
+                        // forbiddenFirstMoves diagnostic: surface what the inner solver
+                        // actually received and how many got suppressed. Distinguishes
+                        // "ladder didn't pass" / "passed but no candidates were forbidden
+                        // (cells weren't in candidate list anyway)" / "guard fired and
+                        // filtered N first-move candidates" in audits.
+                        debugStats.forbiddenFirstMovesOptionLength = Array.isArray(options?.forbiddenFirstMoves) ? options.forbiddenFirstMoves.length : null;
                         debugStats.effectiveRootTieSeed = Number.isFinite(options?.rootTieSeed) ? options.rootTieSeed : null;
                         debugStats.effectiveDirOrderVariant = options?.dirOrderVariant || 'default';
                         debugStats.effectiveRootOrderingVariant = options?.rootOrderingVariant || null;
@@ -8590,6 +8629,9 @@ function installSolver(APP) {
                 effectiveDirOrderVariant: (typeof debug?.effectiveDirOrderVariant === 'string') ? debug.effectiveDirOrderVariant : null,
                 effectiveRootOrderingVariant: (typeof debug?.effectiveRootOrderingVariant === 'string') ? debug.effectiveRootOrderingVariant : null,
                 forbiddenPrefixesOptionLength: Number.isFinite(debug?.forbiddenPrefixesOptionLength) ? debug.forbiddenPrefixesOptionLength : null,
+                forbiddenFirstMovesOptionLength: Number.isFinite(debug?.forbiddenFirstMovesOptionLength) ? debug.forbiddenFirstMovesOptionLength : null,
+                forbiddenFirstMovesSuppressions: Number.isFinite(debug?.forbiddenFirstMovesSuppressions) ? debug.forbiddenFirstMovesSuppressions : null,
+                forbiddenFirstMovesFallbackEmpty: Number.isFinite(debug?.forbiddenFirstMovesFallbackEmpty) ? debug.forbiddenFirstMovesFallbackEmpty : null,
                 forbiddenPrefixesOptionFirstLen: Number.isFinite(debug?.forbiddenPrefixesOptionFirstLen) ? debug.forbiddenPrefixesOptionFirstLen : null,
                 endgameIDAStarRawOption: (typeof debug?.endgameIDAStarRawOption === 'string') ? debug.endgameIDAStarRawOption : null,
                 endgameIDAStarOptionsKeys: (typeof debug?.endgameIDAStarOptionsKeys === 'string') ? debug.endgameIDAStarOptionsKeys : null,
@@ -11931,6 +11973,13 @@ function installSolver(APP) {
                         : 0.5,
                     portalTriage: opts.portalTriage || null,
                     forbiddenPrefixes: Array.isArray(attemptOpts.forbiddenPrefixes) ? attemptOpts.forbiddenPrefixes : null,
+                    // Forbidden first-move set: per-ladder-iteration hard refusal of cell
+                    // keys at depth 0. Comes from outer opts (set by index.html
+                    // runHintLadder accumulating prior iterations' first moves) and
+                    // applies uniformly to every inner attempt of this stage. Distinct
+                    // from per-attempt attemptOpts.forbiddenPrefixes (which the
+                    // orchestrator sets from within-stage priors).
+                    forbiddenFirstMoves: Array.isArray(opts.forbiddenFirstMoves) ? opts.forbiddenFirstMoves.filter(Number.isFinite) : null,
                     useUnifiedHKBound: !!attemptOpts.useUnifiedHKBound,
                     rootTieSeed: Number.isFinite(attemptOpts.rootTieSeed)
                         ? attemptOpts.rootTieSeed
@@ -12481,6 +12530,9 @@ function installSolver(APP) {
                     effectiveDirOrderVariant: (typeof attemptResult?.debug?.effectiveDirOrderVariant === 'string') ? attemptResult.debug.effectiveDirOrderVariant : null,
                     effectiveRootOrderingVariant: (typeof attemptResult?.debug?.effectiveRootOrderingVariant === 'string') ? attemptResult.debug.effectiveRootOrderingVariant : null,
                     forbiddenPrefixesOptionLength: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionLength) ? attemptResult.debug.forbiddenPrefixesOptionLength : null,
+                    forbiddenFirstMovesOptionLength: Number.isFinite(attemptResult?.debug?.forbiddenFirstMovesOptionLength) ? attemptResult.debug.forbiddenFirstMovesOptionLength : null,
+                    forbiddenFirstMovesSuppressions: Number.isFinite(attemptResult?.debug?.forbiddenFirstMovesSuppressions) ? attemptResult.debug.forbiddenFirstMovesSuppressions : null,
+                    forbiddenFirstMovesFallbackEmpty: Number.isFinite(attemptResult?.debug?.forbiddenFirstMovesFallbackEmpty) ? attemptResult.debug.forbiddenFirstMovesFallbackEmpty : null,
                     forbiddenPrefixesOptionFirstLen: Number.isFinite(attemptResult?.debug?.forbiddenPrefixesOptionFirstLen) ? attemptResult.debug.forbiddenPrefixesOptionFirstLen : null,
                     endgameIDAStarRawOption: (typeof attemptResult?.debug?.endgameIDAStarRawOption === 'string') ? attemptResult.debug.endgameIDAStarRawOption : null,
                     endgameIDAStarOptionsKeys: (typeof attemptResult?.debug?.endgameIDAStarOptionsKeys === 'string') ? attemptResult.debug.endgameIDAStarOptionsKeys : null,
@@ -14105,6 +14157,12 @@ function installSolver(APP) {
             const hintLadderState = opts.hintLadderState && typeof opts.hintLadderState === 'object' ? opts.hintLadderState : null;
             const rootTieSeedOffset = Number.isFinite(opts.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null;
             const rootOrderingVariant = opts.rootOrderingVariant || null;
+            // forbiddenFirstMoves: cell keys the ladder has explicitly refused as
+            // depth-0 candidates this iteration. Filtered to finite numbers at the
+            // Referee.solve boundary so downstream consumers can assume primitives.
+            const forbiddenFirstMoves = Array.isArray(opts.forbiddenFirstMoves)
+                ? opts.forbiddenFirstMoves.filter(Number.isFinite)
+                : null;
             const solveStartTime = Date.now();
             const controlPlane = this.createControlPlane(level.solverProfile || {});
             const lowComplexityLevel = (level.solverProfile?.objectiveCount || 0) <= 1
@@ -14954,7 +15012,8 @@ function installSolver(APP) {
                     solveStartTime,
                     hintLadderState,
                     rootTieSeedOffset,
-                    rootOrderingVariant
+                    rootOrderingVariant,
+                    forbiddenFirstMoves
                 },
                 flags: { objectivesAreInteriorDominant, allowRandomizedExploration, enableBlueprintPlanning }
             } = solveContext;
@@ -15077,7 +15136,8 @@ function installSolver(APP) {
                         rootTieProfile: 'stable-diversified',
                         hintLadderState,
                         rootTieSeedOffset,
-                        rootOrderingVariant
+                        rootOrderingVariant,
+                        forbiddenFirstMoves
                     })
                 });
                 stage0ZeroExpansion = !last.ok
@@ -15672,6 +15732,9 @@ function installSolver(APP) {
                     hintLadderState: opts.hintLadderState && typeof opts.hintLadderState === 'object' ? opts.hintLadderState : null,
                     rootTieSeedOffset: Number.isFinite(opts.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null,
                     rootOrderingVariant: opts.rootOrderingVariant || null,
+                    forbiddenFirstMoves: Array.isArray(opts.forbiddenFirstMoves)
+                        ? opts.forbiddenFirstMoves.filter(Number.isFinite)
+                        : null,
                     allowRescueProfiles: executionMode === 'referee-with-compat-profiles',
                     onlyRescueProfiles: false,
                     auditMode: !!opts.auditMode,
