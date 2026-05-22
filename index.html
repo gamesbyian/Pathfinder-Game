@@ -6049,6 +6049,22 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             try {
                 for (let i = 0; i < rawLevels.length; i++) {
                     if (auditCancelRequested) break;
+                    // Optional level filter for local audit tooling
+                    // (scripts/run-level-audit.mjs). When set via
+                    // window.__AUDIT_LEVEL_FILTER as a Set or array of
+                    // 1-based level numbers, levels outside the set are
+                    // skipped. Unset / falsy = run all levels (default).
+                    const __auditLevelFilter = (typeof window !== 'undefined') ? window.__AUDIT_LEVEL_FILTER : null;
+                    if (__auditLevelFilter) {
+                        const levelNumber = i + 1;
+                        const included = typeof __auditLevelFilter.has === 'function'
+                            ? __auditLevelFilter.has(levelNumber)
+                            : (Array.isArray(__auditLevelFilter) ? __auditLevelFilter.includes(levelNumber) : false);
+                        if (!included) {
+                            auditProgress.levelsProcessed++;
+                            continue;
+                        }
+                    }
                     const levelEntry = buildAuditLevelEntry(i + 1);
                     try {
                         const normalized = APP.LevelUtils.normalizeLevel(i);
