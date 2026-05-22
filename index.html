@@ -5607,26 +5607,29 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const attemptedTimeoutEntries = Array.isArray(hintRes?.attempts)
                         ? hintRes.attempts.filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`)).slice(-3)
                         : [];
-                    hintLadderState.recentTimeoutAttempts = attemptedTimeoutEntries.map((entry) => ({
-                        status: entry?.status || null,
-                        label: entry?.label || null,
-                        depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
-                        rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
-                        timeoutDiagnostics: entry?.timeoutDiagnostics || null,
-                        quality: entry?.quality || null,
-                        // Carry the deepest-frontier path prefix across hint-ladder
-                        // iterations so the orchestrator in runBaselineStage (Solver.js)
-                        // can populate attempt.forbiddenPrefixes from priors. Without
-                        // this field, the orchestrator's seeded attemptsUsed entries
-                        // (from carriedTimeoutAttempts) have no usable prefix → guard
-                        // never fires across iterations. The L92 audit confirmed every
-                        // iteration's first attempt sees attemptsUsed seeded with
-                        // priors but with no path prefix on them.
-                        endgameIDAStarBestObservedPathPrefix: Array.isArray(entry?.endgameIDAStarBestObservedPathPrefix)
-                            ? entry.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
-                            : null,
-                        attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null
-                    }));
+                    // Skip the overwrite when hintRes.attempts is empty — Solver.js's
+                    // persistHintLadderState already wrote a populated recentTimeoutAttempts
+                    // (with endgameIDAStarBestObservedPathPrefix included) directly to
+                    // sharedHintLadderState, which is this same hintLadderState object.
+                    // Audit 43 diagnosed the cross-iteration divergence guard as dead
+                    // because createCanonicalSolveResult strips attempts[] (regression
+                    // protection from commit 37dfd58), so the overwrite below would wipe
+                    // the solver's data with []. Defensive skip preserves what the solver
+                    // already populated.
+                    if (attemptedTimeoutEntries.length > 0) {
+                        hintLadderState.recentTimeoutAttempts = attemptedTimeoutEntries.map((entry) => ({
+                            status: entry?.status || null,
+                            label: entry?.label || null,
+                            depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
+                            rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
+                            timeoutDiagnostics: entry?.timeoutDiagnostics || null,
+                            quality: entry?.quality || null,
+                            endgameIDAStarBestObservedPathPrefix: Array.isArray(entry?.endgameIDAStarBestObservedPathPrefix)
+                                ? entry.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
+                                : null,
+                            attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null
+                        }));
+                    }
                     if (Array.isArray(hintRes?.attempts)) {
                         const hashes = hintRes.attempts
                             .map(entry => `${entry?.attemptSignatureHash || ''}`.trim())
