@@ -4512,7 +4512,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         const buildHintAttemptPolicy = ({ attemptIndex = 0, disableLegacyFallback = false } = {}) => {
             const idx = Math.max(0, Math.floor(Number(attemptIndex) || 0));
-            const tierCycle = [0, 1, 2, 3, 3, 3];
+            // Tier cycle length must cover the full ladder so trailing iterations
+            // (e.g. attempt H at idx=7 / I at idx=8) don't wrap back to tier 0
+            // and silently lose the intended sustained-tier-3 cluster. The
+            // previous [0,1,2,3,3,3] (length 6) had G wrap to 0 and A/H wrap to 0.
+            const tierCycle = [0, 1, 2, 3, 3, 3, 3, 3];
             const tier = tierCycle[idx % tierCycle.length];
             const variation = idx % 16;
             const policy = {
@@ -4529,27 +4533,28 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             if (variation === 5 || variation === 7 || variation === 11 || variation === 15) {
                 policy.disableLegacyFallback = false;
             }
-            // Early-iteration root-diversity injection. Previously rootTieSeedOffset
-            // / rootOrderingVariant only fired at variation >= 8, so iterations
-            // A..H all had identical root ordering (audit 41 confirmed L92's
-            // D,E,F,G all reach the same depth-84 dead basin with bound=13 — same
-            // trajectory). Rotate ordering variant + tie seed starting at idx=1
-            // so each iteration explores a distinct first-move and scoring
-            // archetype. Variants map (Solver.js _solveInstance dispatcher):
-            //   'objective-first-bias' → orderingPolicy='objectiveFirst'
-            //   'knot-first-bias'      → orderingPolicy='knotBuilder'
-            //   'portal-first-bias'    → orderingPolicy='portalFirstTransfer'
-            //   'perimeter-first-bias' → orderingPolicy='perimeterSweep'
-            //   'harvest-first-bias'   → orderingPolicy='harvestThenFinish'
+            // Root-diversity injection. Rotates rootOrderingVariant across a list
+            // of 11 distinct scoring archetypes (mapped in Solver.js's
+            // variantArchetypeMap). Iteration A (idx=0) is left as the pure
+            // baseline (no variant) so the canonical/default policy still gets
+            // first crack; iterations B onwards each draw a different archetype.
+            // Audit 43 evidence: with the prior 7-entry rotation, D,E,F,G all
+            // reached depth=84 / bound=13 (same dead basin). Broader rotation
+            // covers more of the archetype space so consecutive attempts get
+            // genuinely different scoring biases.
             if (idx >= 1 && variation < 8) {
                 const ladderDiversitySpec = [
-                    { tieSeedOffset: 7919,  variant: 'objective-first-bias' },
-                    { tieSeedOffset: 15838, variant: 'knot-first-bias' },
-                    { tieSeedOffset: 23757, variant: 'portal-first-bias' },
-                    { tieSeedOffset: 31676, variant: 'perimeter-first-bias' },
-                    { tieSeedOffset: 39595, variant: 'objective-first-bias' },
-                    { tieSeedOffset: 47514, variant: 'knot-first-bias' },
-                    { tieSeedOffset: 55433, variant: 'portal-first-bias' }
+                    { tieSeedOffset: 7919  * 1,  variant: 'objective-first-bias' },
+                    { tieSeedOffset: 7919  * 2,  variant: 'knot-first-bias' },
+                    { tieSeedOffset: 7919  * 3,  variant: 'portal-first-bias' },
+                    { tieSeedOffset: 7919  * 4,  variant: 'perimeter-first-bias' },
+                    { tieSeedOffset: 7919  * 5,  variant: 'portal-committed-bias' },
+                    { tieSeedOffset: 7919  * 6,  variant: 'must-cross-first-bias' },
+                    { tieSeedOffset: 7919  * 7,  variant: 'intersection-harvest-bias' },
+                    { tieSeedOffset: 7919  * 8,  variant: 'closure-commitment-bias' },
+                    { tieSeedOffset: 7919  * 9,  variant: 'finish-first-bias' },
+                    { tieSeedOffset: 7919  * 10, variant: 'length-harvest-bias' },
+                    { tieSeedOffset: 7919  * 11, variant: 'harvest-first-bias' }
                 ];
                 const spec = ladderDiversitySpec[(idx - 1) % ladderDiversitySpec.length];
                 policy.rootTieSeedOffset = spec.tieSeedOffset;
@@ -5607,26 +5612,28 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     const attemptedTimeoutEntries = Array.isArray(hintRes?.attempts)
                         ? hintRes.attempts.filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`)).slice(-3)
                         : [];
-                    hintLadderState.recentTimeoutAttempts = attemptedTimeoutEntries.map((entry) => ({
-                        status: entry?.status || null,
-                        label: entry?.label || null,
-                        depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
-                        rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
-                        timeoutDiagnostics: entry?.timeoutDiagnostics || null,
-                        quality: entry?.quality || null,
-                        // Carry the deepest-frontier path prefix across hint-ladder
-                        // iterations so the orchestrator in runBaselineStage (Solver.js)
-                        // can populate attempt.forbiddenPrefixes from priors. Without
-                        // this field, the orchestrator's seeded attemptsUsed entries
-                        // (from carriedTimeoutAttempts) have no usable prefix → guard
-                        // never fires across iterations. The L92 audit confirmed every
-                        // iteration's first attempt sees attemptsUsed seeded with
-                        // priors but with no path prefix on them.
-                        endgameIDAStarBestObservedPathPrefix: Array.isArray(entry?.endgameIDAStarBestObservedPathPrefix)
-                            ? entry.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
-                            : null,
-                        attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null
-                    }));
+                    // Defensive: only overwrite hintLadderState.recentTimeoutAttempts when
+                    // hintRes.attempts actually carries the timeout entries. Audit 43
+                    // diagnosed the cross-iteration divergence guard as dead because
+                    // createCanonicalSolveResult was stripping attempts (commit 37dfd58)
+                    // — the overwrite here would wipe the solver-populated state with [].
+                    // Now createCanonicalSolveResult projects a safe shallow attempts
+                    // array, but keep this guard so a future stripping regression doesn't
+                    // silently re-kill the guard.
+                    if (attemptedTimeoutEntries.length > 0) {
+                        hintLadderState.recentTimeoutAttempts = attemptedTimeoutEntries.map((entry) => ({
+                            status: entry?.status || null,
+                            label: entry?.label || null,
+                            depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
+                            rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
+                            timeoutDiagnostics: entry?.timeoutDiagnostics || null,
+                            quality: entry?.quality || null,
+                            endgameIDAStarBestObservedPathPrefix: Array.isArray(entry?.endgameIDAStarBestObservedPathPrefix)
+                                ? entry.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
+                                : null,
+                            attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null
+                        }));
+                    }
                     if (Array.isArray(hintRes?.attempts)) {
                         const hashes = hintRes.attempts
                             .map(entry => `${entry?.attemptSignatureHash || ''}`.trim())
