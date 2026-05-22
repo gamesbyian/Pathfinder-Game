@@ -11278,24 +11278,25 @@ function installSolver(APP) {
                             : ((typeof attempt.label === 'string' ? attempt.label.length : 0) + ((idx + 1) * 17));
                         attempt.rootTieSeed = (baseSeed ^ ((rootTieSeedOffset + ((idx + 1) * 131)) >>> 0)) >>> 0;
                     }
-                    if (rootOrderingVariant === 'objective-first-bias' && !attempt.orderingPolicy) {
+                    // Variant→orderingPolicy override. Explicitly REPLACES any
+                    // pre-set attempt.orderingPolicy (which _buildAttemptPlan may
+                    // have set to 'portalCommitted' from forcedPolicyProfile, etc.).
+                    // The original `!attempt.orderingPolicy` guard caused audit 45's
+                    // L92 D-G to all run with orderingPolicy='portalCommitted'
+                    // (forced by the plan because the level has mandatory portal
+                    // families) — making the ladder rotation a no-op. When the
+                    // ladder explicitly requests a variant, that signals the user
+                    // wants different ordering — honor it. Falsy rootOrderingVariant
+                    // (iteration A baseline) leaves the plan's choice intact.
+                    if (rootOrderingVariant === 'objective-first-bias') {
                         attempt.orderingPolicy = 'objectiveFirst';
-                    }
-                    if (rootOrderingVariant === 'knot-first-bias' && !attempt.orderingPolicy) {
+                    } else if (rootOrderingVariant === 'knot-first-bias') {
                         attempt.orderingPolicy = 'knotBuilder';
-                    }
-                    // Additional bias variants for richer ladder-level diversity.
-                    // The L92 audit showed iterations A..G all reaching the same
-                    // depth-84 dead basin because rootOrderingVariant only fired
-                    // for variation>=8, leaving 7 of 8 early iterations with
-                    // identical orderingPolicy.
-                    if (rootOrderingVariant === 'portal-first-bias' && !attempt.orderingPolicy) {
+                    } else if (rootOrderingVariant === 'portal-first-bias') {
                         attempt.orderingPolicy = 'portalFirstTransfer';
-                    }
-                    if (rootOrderingVariant === 'perimeter-first-bias' && !attempt.orderingPolicy) {
+                    } else if (rootOrderingVariant === 'perimeter-first-bias') {
                         attempt.orderingPolicy = 'perimeterSweep';
-                    }
-                    if (rootOrderingVariant === 'harvest-first-bias' && !attempt.orderingPolicy) {
+                    } else if (rootOrderingVariant === 'harvest-first-bias') {
                         attempt.orderingPolicy = 'harvestThenFinish';
                     }
                 });
