@@ -8114,6 +8114,78 @@ function installSolver(APP) {
             const canonical = normalizeSolutionEntries(partial.solution ?? partial.solutions ?? []);
             const ok = !!partial.ok && canonical.length > 0;
             const status = normalizeSolveStatus(partial.status || partial.rawStatus || 'error', ok);
+            // Cross-iteration divergence guard channel: project a SAFE shallow copy of
+            // attemptsUsed[] so the outer hint-ladder (index.html) and the next baseline
+            // stage's orchestrator can read prior timeout prefixes, signatures, and
+            // trajectory hashes. Only primitive fields and shallow primitive sub-objects
+            // are copied — no level references, no state objects, no functions — so the
+            // result remains JSON-safe (commit 31537b8 was reverted because passing
+            // attempts through verbatim included circular state references that broke
+            // JSON serialization on 135/137 levels). This explicit allowlist projection
+            // is the "different channel" the revert message promised but never wired up.
+            const projectAttempt = (entry) => {
+                if (!entry || typeof entry !== 'object') return null;
+                const td = entry.timeoutDiagnostics;
+                const quality = entry.quality;
+                return {
+                    label: typeof entry.label === 'string' ? entry.label : null,
+                    status: typeof entry.status === 'string' ? entry.status : null,
+                    rawStatus: typeof entry.rawStatus === 'string' ? entry.rawStatus : null,
+                    stopReason: typeof entry.stopReason === 'string' ? entry.stopReason : null,
+                    solved: !!entry.solved,
+                    elapsedMs: Number.isFinite(entry.elapsedMs) ? entry.elapsedMs : null,
+                    budgetMs: Number.isFinite(entry.budgetMs) ? entry.budgetMs : null,
+                    attemptOrdinal: Number.isFinite(entry.attemptOrdinal) ? entry.attemptOrdinal : null,
+                    attemptSeed: Number.isFinite(entry.attemptSeed) ? entry.attemptSeed : null,
+                    attemptSignatureHash: typeof entry.attemptSignatureHash === 'string' ? entry.attemptSignatureHash : null,
+                    attemptFamily: typeof entry.attemptFamily === 'string' ? entry.attemptFamily : null,
+                    policyProfile: typeof entry.policyProfile === 'string' ? entry.policyProfile : null,
+                    policyProfileFamily: typeof entry.policyProfileFamily === 'string' ? entry.policyProfileFamily : null,
+                    policyProfileId: typeof entry.policyProfileId === 'string' ? entry.policyProfileId : null,
+                    orderingPolicy: typeof entry.orderingPolicy === 'string' ? entry.orderingPolicy : null,
+                    scoringMode: typeof entry.scoringMode === 'string' ? entry.scoringMode : null,
+                    portalBiasMode: typeof entry.portalBiasMode === 'string' ? entry.portalBiasMode : null,
+                    depthReached: Number.isFinite(entry.depthReached) ? entry.depthReached : null,
+                    nodesExpanded: Number.isFinite(entry.nodesExpanded) ? entry.nodesExpanded : null,
+                    nextAttemptReason: typeof entry.nextAttemptReason === 'string' ? entry.nextAttemptReason : null,
+                    endgameIDAStarBestObservedPathPrefix: Array.isArray(entry.endgameIDAStarBestObservedPathPrefix)
+                        ? entry.endgameIDAStarBestObservedPathPrefix.filter(Number.isFinite).slice(0, 16)
+                        : null,
+                    endgameIDAStarBestObservedDepth: Number.isFinite(entry.endgameIDAStarBestObservedDepth) ? entry.endgameIDAStarBestObservedDepth : null,
+                    endgameIDAStarBestObservedBound: Number.isFinite(entry.endgameIDAStarBestObservedBound) ? entry.endgameIDAStarBestObservedBound : null,
+                    rootMoveScores: Array.isArray(entry.rootMoveScores)
+                        ? entry.rootMoveScores
+                            .slice(0, 8)
+                            .map(score => (score && typeof score === 'object') ? {
+                                key: Number.isFinite(score.key) ? score.key : null,
+                                score: Number.isFinite(score.score) ? score.score : null,
+                                rank: Number.isFinite(score.rank) ? score.rank : null
+                            } : null)
+                            .filter(Boolean)
+                        : null,
+                    timeoutDiagnostics: (td && typeof td === 'object') ? {
+                        nearSolution: !!td.nearSolution,
+                        nearSolutionByDimension: (td.nearSolutionByDimension && typeof td.nearSolutionByDimension === 'object')
+                            ? Object.fromEntries(
+                                Object.entries(td.nearSolutionByDimension)
+                                    .filter(([, v]) => Number.isFinite(v))
+                                    .map(([k, v]) => [String(k), Number(v)])
+                            )
+                            : null
+                    } : null,
+                    quality: (quality && typeof quality === 'object') ? {
+                        depthReached: Number.isFinite(quality.depthReached) ? quality.depthReached : null,
+                        nodesExpanded: Number.isFinite(quality.nodesExpanded) ? quality.nodesExpanded : null,
+                        branchFactor: Number.isFinite(quality.branchFactor) ? quality.branchFactor : null,
+                        maxProgress: Number.isFinite(quality.maxProgress) ? quality.maxProgress : null,
+                        constraintDeficit: Number.isFinite(quality.constraintDeficit) ? quality.constraintDeficit : null,
+                        finalObjectives: Number.isFinite(quality.finalObjectives) ? quality.finalObjectives : null
+                    } : null
+                };
+            };
+            const projectedAttempts = Array.isArray(partial.attempts)
+                ? partial.attempts.map(projectAttempt).filter(Boolean)
+                : [];
             return {
                 ok,
                 status,
@@ -8137,7 +8209,8 @@ function installSolver(APP) {
                 routingDecision: partial.routingDecision || null,
                 orderingPolicySummary: partial.orderingPolicySummary || null,
                 enduranceRescueDelta: partial.enduranceRescueDelta || partial.stage11RescueDelta || null,
-                engine: partial.engine || 'referee'
+                engine: partial.engine || 'referee',
+                attempts: projectedAttempts
             };
         };
         const normalizeProfileSolveResult = (profileResult, fallbackStatus = 'error', context = {}) => {
@@ -8626,6 +8699,25 @@ function installSolver(APP) {
                         ? (attempt.attempts[attempt.attempts.length - 1]?.policyProfile
                             || attempt.attempts[attempt.attempts.length - 1]?.orderingPolicy
                             || null)
+                        : null)
+                    || null,
+                // scoringMode, portalBiasMode: same fall-through pattern. Without these,
+                // the canonical record at toCanonicalAttemptRecord (index.html) defaults
+                // to 'unknown' on every audit row even when the inner attempt definitely
+                // ran with a non-default mode (audit 43 confirmed this hollow telemetry
+                // across all 7 L92 attempts).
+                scoringMode: attempt?.scoringMode
+                    || attempt?.mode
+                    || debug?.scoringMode
+                    || (Array.isArray(attempt?.attempts) && attempt.attempts.length
+                        ? (attempt.attempts[attempt.attempts.length - 1]?.scoringMode || null)
+                        : null)
+                    || null,
+                portalBiasMode: attempt?.portalBiasMode
+                    || attempt?.portalMode
+                    || debug?.portalBiasMode
+                    || (Array.isArray(attempt?.attempts) && attempt.attempts.length
+                        ? (attempt.attempts[attempt.attempts.length - 1]?.portalBiasMode || null)
                         : null)
                     || null,
                 // Segment 1 portfolio diversification telemetry. policyProfileId and policyConfigHash are frozen at
@@ -11278,25 +11370,30 @@ function installSolver(APP) {
                             : ((typeof attempt.label === 'string' ? attempt.label.length : 0) + ((idx + 1) * 17));
                         attempt.rootTieSeed = (baseSeed ^ ((rootTieSeedOffset + ((idx + 1) * 131)) >>> 0)) >>> 0;
                     }
-                    if (rootOrderingVariant === 'objective-first-bias' && !attempt.orderingPolicy) {
-                        attempt.orderingPolicy = 'objectiveFirst';
-                    }
-                    if (rootOrderingVariant === 'knot-first-bias' && !attempt.orderingPolicy) {
-                        attempt.orderingPolicy = 'knotBuilder';
-                    }
-                    // Additional bias variants for richer ladder-level diversity.
-                    // The L92 audit showed iterations A..G all reaching the same
-                    // depth-84 dead basin because rootOrderingVariant only fired
-                    // for variation>=8, leaving 7 of 8 early iterations with
-                    // identical orderingPolicy.
-                    if (rootOrderingVariant === 'portal-first-bias' && !attempt.orderingPolicy) {
-                        attempt.orderingPolicy = 'portalFirstTransfer';
-                    }
-                    if (rootOrderingVariant === 'perimeter-first-bias' && !attempt.orderingPolicy) {
-                        attempt.orderingPolicy = 'perimeterSweep';
-                    }
-                    if (rootOrderingVariant === 'harvest-first-bias' && !attempt.orderingPolicy) {
-                        attempt.orderingPolicy = 'harvestThenFinish';
+                    // Variant-to-orderingPolicy dispatch. Each variant maps to one of
+                    // the scoring archetypes registered in the phase profile table
+                    // (search for 'portalCommitted' or 'finishFirst' in this file to see
+                    // the weight overrides per archetype). The L92 audit (43) showed
+                    // ladder diversity needed broader coverage than the original
+                    // 2-variant rotation — 11+ distinct archetypes are available, and
+                    // recycling only 2 across 7 iterations means most attempts share
+                    // a scoring bias.
+                    const variantArchetypeMap = {
+                        'objective-first-bias':    'objectiveFirst',
+                        'knot-first-bias':         'knotBuilder',
+                        'portal-first-bias':       'portalFirstTransfer',
+                        'portal-committed-bias':   'portalCommitted',
+                        'perimeter-first-bias':    'perimeterSweep',
+                        'harvest-first-bias':      'harvestThenFinish',
+                        'finish-first-bias':       'finishFirst',
+                        'length-harvest-bias':     'lengthHarvest',
+                        'must-cross-first-bias':   'mustCrossFirst',
+                        'intersection-harvest-bias': 'intersectionHarvest',
+                        'closure-commitment-bias': 'closureCommitment'
+                    };
+                    const mappedArchetype = variantArchetypeMap[rootOrderingVariant];
+                    if (mappedArchetype && !attempt.orderingPolicy) {
+                        attempt.orderingPolicy = mappedArchetype;
                     }
                 });
             }
