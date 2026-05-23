@@ -2647,6 +2647,51 @@ function installSolver(APP) {
                             }
                         }
                     }
+                    const routeCommitPrefix = Array.isArray(options?.routeCommitPrefix) ? options.routeCommitPrefix : null;
+                    if (debugStats && routeCommitPrefix && routeCommitPrefix.length > 1) {
+                        debugStats.routeCommitPrefixLength = routeCommitPrefix.length;
+                    }
+                    if (routeCommitPrefix && routeCommitPrefix.length > 1 && dgValid && dgValid.length > 0) {
+                        const currentPathLen = state.path.length;
+                        if (currentPathLen < routeCommitPrefix.length - 1) {
+                            let matches = true;
+                            for (let i = 0; i < currentPathLen; i++) {
+                                if (state.path[i] !== routeCommitPrefix[i]) { matches = false; break; }
+                            }
+                            if (matches) {
+                                const forcedNext = routeCommitPrefix[currentPathLen];
+                                const constrained = dgValid.filter(nk => nk === forcedNext);
+                                if (constrained.length > 0) {
+                                    if (debugStats) {
+                                        debugStats.routeCommitPrefixSuppressions = (Number(debugStats.routeCommitPrefixSuppressions) || 0) + (dgValid.length - constrained.length);
+                                    }
+                                    dgValid = constrained;
+                                } else if (debugStats) {
+                                    debugStats.routeCommitPrefixFallbackEmpty = (Number(debugStats.routeCommitPrefixFallbackEmpty) || 0) + 1;
+                                }
+                            }
+                        }
+                    }
+                    const routeCommitSuffix = Array.isArray(options?.routeCommitSuffix) ? options.routeCommitSuffix : null;
+                    if (debugStats && routeCommitSuffix && routeCommitSuffix.length > 1) {
+                        debugStats.routeCommitSuffixLength = routeCommitSuffix.length;
+                    }
+                    if (routeCommitSuffix && routeCommitSuffix.length > 1 && dgValid && dgValid.length > 0) {
+                        const curKey = state.path[state.path.length - 1];
+                        const routeIdx = routeCommitSuffix.indexOf(curKey);
+                        if (routeIdx >= 0 && routeIdx < routeCommitSuffix.length - 1) {
+                            const forcedNext = routeCommitSuffix[routeIdx + 1];
+                            const constrained = dgValid.filter(nk => nk === forcedNext);
+                            if (constrained.length > 0) {
+                                if (debugStats) {
+                                    debugStats.routeCommitSuffixSuppressions = (Number(debugStats.routeCommitSuffixSuppressions) || 0) + (dgValid.length - constrained.length);
+                                }
+                                dgValid = constrained;
+                            } else if (debugStats) {
+                                debugStats.routeCommitSuffixFallbackEmpty = (Number(debugStats.routeCommitSuffixFallbackEmpty) || 0) + 1;
+                            }
+                        }
+                    }
                     const dgPrefixes = Array.isArray(options?.forbiddenPrefixes) ? options.forbiddenPrefixes : null;
                     // Diagnostic: surface that the inner solver received forbiddenPrefixes
                     // (set once per call, idempotent). Helps distinguish "guard never fires
@@ -3789,6 +3834,37 @@ function installSolver(APP) {
                             pushDriver('reqLenFrontierUnresolvedObligations', remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed, unresolvedPenalty);
                         }
 
+                    if (Array.isArray(options?.bridgeRouteHint) && options.bridgeRouteHint.length >= 2) {
+                        const route = options.bridgeRouteHint;
+                        const curIdx = route.indexOf(k);
+                        if (curIdx >= 0 && curIdx + 1 < route.length) {
+                            const obligationsBefore = (
+                                (Number.isFinite(remainingMust) ? remainingMust : Math.max(0, state.remainingMustPass?.size || 0))
+                                + (Number.isFinite(crossNeed) ? crossNeed : 0)
+                                + (Number.isFinite(intNeed) ? intNeed : Math.max(0, (l.reqInt || 0) - (state.ints || 0)))
+                            );
+                            const obligationsAfter = (
+                                (Number.isFinite(remainingMustAfterMove) ? remainingMustAfterMove : obligationsBefore)
+                                + (Number.isFinite(projectedCrossNeed) ? projectedCrossNeed : 0)
+                                + (Number.isFinite(remainingIntsAfterMove) ? remainingIntsAfterMove : 0)
+                            );
+                            const bridgeFeasible = obligationsAfter <= (obligationsBefore + 1);
+                            const expectedNext = route[curIdx + 1];
+                            if (nk === expectedNext && bridgeFeasible) {
+                                const followBonus = -260;
+                                score += followBonus;
+                                pushDriver('mitmBridgeFollow', curIdx + 1, followBonus);
+                            } else if (nk === expectedNext && !bridgeFeasible) {
+                                const infeasiblePenalty = 70;
+                                score += infeasiblePenalty;
+                                pushDriver('mitmBridgeInfeasible', curIdx + 1, infeasiblePenalty);
+                            } else if (curIdx <= 2 && route.length <= 14 && bridgeFeasible) {
+                                const divergePenalty = 45;
+                                score += divergePenalty;
+                                pushDriver('mitmBridgeDiverge', curIdx + 1, divergePenalty);
+                            }
+                        }
+                    }
                     const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * pw('revisitPenaltyWeight');
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
@@ -4880,7 +4956,8 @@ function installSolver(APP) {
                             dirOrderVariant: options?.dirOrderVariant || 'default',
                             portalBiasMode: options?.portalBiasMode || 'adaptiveMustCross'
                         },
-                        pendingGuardrail: null
+                        pendingGuardrail: null,
+                        highVelocityPlateauStreak: 0
                     };
                     const pushAdaptationEvent = (event = {}) => {
                         if (!debugStats) return;
@@ -4938,6 +5015,9 @@ function installSolver(APP) {
                         const triggerSwitchOrdering = branchFactor < 0.32 && branchFactorTrend < -0.06;
                         const triggerHighVelocityPlateau = expansionVelocity > 0.08 && progressDelta < 0.012 && progress > 0.35;
                         if (triggerLowExpansion || triggerMemoOverfit || triggerPortalThrash || triggerSwitchOrdering || triggerHighVelocityPlateau) {
+                            adaptationState.highVelocityPlateauStreak = triggerHighVelocityPlateau
+                                ? (adaptationState.highVelocityPlateauStreak + 1)
+                                : 0;
                             const prevProfile = {
                                 memoStrictness: adaptationState.currentProfile.memoStrictness,
                                 disabledPrunes: adaptationState.currentProfile.disabledPrunes.slice(),
@@ -4955,11 +5035,14 @@ function installSolver(APP) {
                             if (triggerHighVelocityPlateau) {
                                 if (nextProfile.disabledPrunes.includes('mustPassBound')) nextProfile.disabledPrunes = nextProfile.disabledPrunes.filter(p => p !== 'mustPassBound');
                                 if (nextProfile.disabledPrunes.includes('mustCrossBound')) nextProfile.disabledPrunes = nextProfile.disabledPrunes.filter(p => p !== 'mustCrossBound');
+                                if (!nextProfile.disabledPrunes.includes('portalAutomaton') && adaptationState.highVelocityPlateauStreak >= 3) {
+                                    nextProfile.disabledPrunes.push('portalAutomaton');
+                                }
                                 nextProfile.memoStrictness = Math.min(2.1, Math.max(nextProfile.memoStrictness, prevProfile.memoStrictness * 1.12));
                             }
-                            if (triggerSwitchOrdering && nextProfile.dirOrderVariant === 'default') nextProfile.dirOrderVariant = 'alt';
+                            if ((triggerSwitchOrdering || (triggerHighVelocityPlateau && adaptationState.highVelocityPlateauStreak >= 2)) && nextProfile.dirOrderVariant === 'default') nextProfile.dirOrderVariant = 'alt';
                             else if (triggerSwitchOrdering && nextProfile.dirOrderVariant === 'alt') nextProfile.dirOrderVariant = 'random';
-                            if (triggerPortalThrash) nextProfile.portalBiasMode = 'off';
+                            if (triggerPortalThrash || (triggerHighVelocityPlateau && adaptationState.highVelocityPlateauStreak >= 2)) nextProfile.portalBiasMode = 'off';
                             adaptationState.currentProfile = nextProfile;
                             adaptationState.pendingGuardrail = {
                                 from: prevProfile,
@@ -4988,6 +5071,7 @@ function installSolver(APP) {
                                 Referee.maybeSwitchHypothesis(cp, 'mid-run-adaptation');
                             }
                         } else {
+                            adaptationState.highVelocityPlateauStreak = 0;
                             pushAdaptationEvent({
                                 type: 'telemetry-snapshot',
                                 telemetry: {
@@ -7737,7 +7821,7 @@ function installSolver(APP) {
                         // Weight and minimum are kept small to avoid stealing budget from the early
                         // passes that solve the many simpler must-cross levels.
                         ...((level?.mustCrossKeys?.length || 0) > 0 && level.reqInt >= 2
-                            ? [{ passName: 'pass-mustcross-focused', weight: isLargeGrid ? 0.08 : 0.07, minimumBudgetRatio: 0.04, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'mustCrossFirst', statusLabel: `Solving (${validGates.length} viable gates, must-cross priority)...` }]
+                            ? [{ passName: 'pass-mustcross-focused', weight: isLargeGrid ? 0.12 : 0.1, minimumBudgetRatio: 0.08, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'mustCrossFirst', statusLabel: `Solving (${validGates.length} viable gates, must-cross priority)...` }]
                             : []),
                         // Dedicated knot-builder pass: for any level requiring ≥1 crossing, uses the
                         // knotBuilder profile (intersectionSetupWeight: 1.9, goalAttractionWeight: 0.8)
@@ -7748,9 +7832,9 @@ function installSolver(APP) {
                         // are established. Weight kept small to avoid stealing from main passes on
                         // the many simpler intersection levels.
                         ...(level.reqInt >= 1
-                            ? [{ passName: 'pass-knotbuilder', weight: isLargeGrid ? 0.08 : 0.07, minimumBudgetRatio: 0.04, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'knotBuilder', forcePhaseArchetype: 'knotBuilder', statusLabel: `Solving (${validGates.length} viable gates, knot-builder)...` }]
+                            ? [{ passName: 'pass-knotbuilder', weight: isLargeGrid ? 0.12 : 0.1, minimumBudgetRatio: 0.08, variant: 'default', beamTopK: 0, debugVariant: false, forcedPolicyProfile: 'knotBuilder', forcePhaseArchetype: 'knotBuilder', statusLabel: `Solving (${validGates.length} viable gates, knot-builder)...` }]
                             : []),
-                        { passName: 'pass-3-fallback', weight: 0.14, minimumBudgetRatio: 0.2, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
+                        { passName: 'pass-3-fallback', weight: 0.14, minimumBudgetRatio: 0.12, variant: debugGateVariant ? dirOrderVariant : 'default', beamTopK: 0, debugVariant: debugGateVariant, statusLabel: `Solving (${validGates.length} viable gates, fallback)...` }
                     ];
                     const exploratoryPassNames = new Set(['pass-4-filter-relaxed', 'pass-4c-filter-axis-relaxed', 'pass-4-flipper-relaxed', 'pass-mustcross-focused', 'pass-knotbuilder', 'pass-3-fallback']);
                     const dynamicPassBudgets = (() => {
@@ -7819,7 +7903,12 @@ function installSolver(APP) {
                         }));
                     }
                     let macroPlanRun = null;
-                    const macroPlanBudgetCap = Math.max(450, Math.floor(timeLimit * (0.12 + complexityScore * 0.16)));
+                    const repeatedTimeoutLike = Array.isArray(debugStats?.attemptHistory)
+                        && debugStats.attemptHistory.filter(e => `${e?.status || ''}`.includes('timeout')).length >= 2;
+                    const macroPlanBudgetCap = Math.max(
+                        450,
+                        Math.floor(timeLimit * ((0.12 + complexityScore * 0.16) + (repeatedTimeoutLike ? 0.1 : 0)))
+                    );
                     const macroPlanBudgetPerPlan = Math.max(180, Math.floor(macroPlanBudgetCap / Math.max(1, macroPlans.length)));
                     for (let i = 0; i < macroPlans.length; i++) {
                         const rem = remainingBudget();
@@ -7832,7 +7921,7 @@ function installSolver(APP) {
                             disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...(plan.pruneGate || [])])),
                             useFailMemo: !(Array.isArray(plan.pruneGate) && plan.pruneGate.length > 0),
                             statusLabel: `Pre-plan ${i + 1}/${macroPlans.length} (${validGates.length} viable gates)...`,
-                            passVariant: i % 2 === 0 ? 'default' : (debugGateVariant ? dirOrderVariant : 'random'),
+                            passVariant: (i + (repeatedTimeoutLike ? 1 : 0)) % 3 === 0 ? 'default' : ((i + (repeatedTimeoutLike ? 1 : 0)) % 3 === 1 ? 'alt' : (debugGateVariant ? dirOrderVariant : 'random')),
                             passScoringMode: scoringMode,
                             passPortalBiasMode: plan.portalCommitment.required.length > 0 ? 'adaptiveMustCross' : portalBiasMode,
                             passStructuralMode: structuralMode,
@@ -7860,7 +7949,13 @@ function installSolver(APP) {
                         macroPlanRun = run;
                     }
                     if (macroPlanRun?.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
-                    if (macroPlanRun?.kind === "timeout") return { ok: false, solution: null, debug: debugStats };
+                    if (macroPlanRun?.kind === "timeout") {
+                        // Do not hard-stop the whole solve on macro-plan timeout.
+                        // Macro plans are intentionally constrained pre-passes; exhausting
+                        // their local slice should feed into broader staged passes when the
+                        // global budget still has room.
+                        if (debugStats) debugStats.notes.push("MACRO TIMEOUT CONTINUE: pre-plan timed out; continuing into staged passes.");
+                    }
                     if ((macroPlanRun?.solutions || []).length > 0) {
                         foundSolutions.push(...macroPlanRun.solutions);
                         foundSolutions.timedOut = !!macroPlanRun.solutions?.timedOut;
@@ -7916,6 +8011,12 @@ function installSolver(APP) {
                             break;
                         }
                         const passSummary = summarizePassTelemetry(passRun);
+                        if (passSummary && Number.isFinite(passSummary.objectiveReductionRate) && Number.isFinite(passSummary.depthGainRate)) {
+                            const marginalUtility = (Math.max(0, Number(passSummary.objectiveReductionRate) || 0) * 2200) + (Math.max(0, Number(passSummary.depthGainRate) || 0) * 900);
+                            if (marginalUtility > 1.2 && dynamicPassBudgets[pass.passName]) {
+                                dynamicPassBudgets[pass.passName] = Math.floor(dynamicPassBudgets[pass.passName] * 1.15);
+                            }
+                        }
                         if (!shouldContinuePassFamily(previousTelemetry, passSummary, pass.passName)) {
                             if (debugStats) {
                                 debugStats.notes.push(`PASS REALLOCATE: ${pass.passName} stagnated (objective/depth/frontier delta), reallocating to exploratory passes.`);
@@ -7932,7 +8033,14 @@ function installSolver(APP) {
                         primaryRun = passRun;
                     }
                     if (primaryRun.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
-                    if (primaryRun.kind === "timeout") return { ok: false, solution: null, debug: debugStats };
+                    if (primaryRun.kind === "timeout") {
+                        // Progress-first behavior: a timeout in one staged family should not
+                        // terminate the entire level solve while there is remaining budget.
+                        // Preserve timeout flag but continue into escalation tiers below.
+                        if (debugStats) debugStats.notes.push("PRIMARY TIMEOUT CONTINUE: staged passes timed out; proceeding to escalation tiers.");
+                        foundSolutions.timedOut = true;
+                        primaryRun = { kind: 'ok', solutions: Object.assign([], { timedOut: true }) };
+                    }
 
                     foundSolutions.push(...(primaryRun.solutions || []));
                     foundSolutions.timedOut = !!primaryRun.solutions?.timedOut;
@@ -7942,20 +8050,148 @@ function installSolver(APP) {
                     let primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
                     const baseInconclusiveLike = !primarySolved && (primaryStatus === 'timeout' || (primaryStatus === 'no-solution' && goalReachable));
                     const autoContradictionRecovery = baseInconclusiveLike;
+                    const runMitmFrontierProbe = () => {
+                        if (!debugStats) return null;
+                        try {
+                            const goalKey = Number.isFinite(level?.goal?.k) ? level.goal.k : null;
+                            if (!Number.isFinite(goalKey)) return null;
+                            const maxReverseDepth = 8;
+                            const maxReverseStates = 3000;
+                            const seen = new Set();
+                            const q = [{ k: goalKey, depth: 0, parity: 0 }];
+                            seen.add(`${goalKey}:0`);
+                            let idx = 0;
+                            const reverseStates = [];
+                            while (idx < q.length && q.length < maxReverseStates) {
+                                const cur = q[idx++];
+                                reverseStates.push(cur);
+                                if (cur.depth >= maxReverseDepth) continue;
+                                const neigh = this._neighborMap?.[cur.k];
+                                const nextKeys = [];
+                                if (Array.isArray(neigh)) {
+                                    for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
+                                }
+                                const portals = this._portalAdj?.[cur.k];
+                                if (Array.isArray(portals)) {
+                                    for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
+                                }
+                                for (const nk of nextKeys) {
+                                    const ns = `${nk}:${1 - cur.parity}`;
+                                    if (seen.has(ns)) continue;
+                                    seen.add(ns);
+                                    q.push({ k: nk, depth: cur.depth + 1, parity: 1 - cur.parity });
+                                }
+                            }
+                            const rootOrder = Array.isArray(debugStats.rootMoveOrder) ? debugStats.rootMoveOrder.filter(Number.isFinite) : [];
+                            const reverseKeys = new Set(reverseStates.map(s => s.k));
+                            const rootOverlap = rootOrder.filter(k => reverseKeys.has(k)).length;
+                            const attemptHistory = Array.isArray(debugStats.attemptHistory) ? debugStats.attemptHistory : [];
+                            const recentPrefixes = attemptHistory
+                                .filter(a => Array.isArray(a?.endgameIDAStarBestObservedPathPrefix))
+                                .slice(-6)
+                                .map(a => a.endgameIDAStarBestObservedPathPrefix.slice(0, 8));
+                            let meetCandidates = 0;
+                            for (const pref of recentPrefixes) {
+                                if (!Array.isArray(pref) || pref.length === 0) continue;
+                                const tail = pref[pref.length - 1];
+                                if (Number.isFinite(tail) && reverseKeys.has(tail)) meetCandidates++;
+                            }
+                            debugStats.mitmProbe = compactDefined({
+                                triggered: true,
+                                reverseDepth: maxReverseDepth,
+                                reverseStates: reverseStates.length,
+                                uniqueReverseKeys: reverseKeys.size,
+                                rootOverlap,
+                                overlapRatio: rootOrder.length > 0 ? Number((rootOverlap / rootOrder.length).toFixed(4)) : null,
+                                meetCandidates,
+                                recentPrefixCount: recentPrefixes.length,
+                                feasibleMeetSignal: meetCandidates > 0
+                            });
+                            return debugStats.mitmProbe;
+                        } catch (err) {
+                            debugStats.mitmProbe = { triggered: true, error: `${err?.message || err}` };
+                            return debugStats.mitmProbe;
+                        }
+                    };
+                    const runMitmMeetCheck = (attemptEntry = null, options = {}) => {
+                        if (!debugStats) return null;
+                        try {
+                            const goalKey = Number.isFinite(l?.goal?.k) ? l.goal.k : null;
+                            if (!Number.isFinite(goalKey)) return null;
+                            const maxReverseDepth = Math.max(6, Math.min(12, Number(options?.reverseDepth) || 9));
+                            const maxReverseStates = Math.max(1200, Math.min(6000, Number(options?.reverseStates) || 3600));
+                            const seen = new Set();
+                            const q = [{ k: goalKey, depth: 0, parity: 0 }];
+                            seen.add(`${goalKey}:0`);
+                            let idx = 0;
+                            const reverseByKey = new Map();
+                            while (idx < q.length && q.length < maxReverseStates) {
+                                const cur = q[idx++];
+                                if (!reverseByKey.has(cur.k) || cur.depth < reverseByKey.get(cur.k)) reverseByKey.set(cur.k, cur.depth);
+                                if (cur.depth >= maxReverseDepth) continue;
+                                const neigh = this._neighborMap?.[cur.k];
+                                const nextKeys = [];
+                                if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
+                                const portals = this._portalAdj?.[cur.k];
+                                if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
+                                for (const nk of nextKeys) {
+                                    const ns = `${nk}:${1 - cur.parity}`;
+                                    if (seen.has(ns)) continue;
+                                    seen.add(ns);
+                                    q.push({ k: nk, depth: cur.depth + 1, parity: 1 - cur.parity });
+                                }
+                            }
+                            const rootScores = Array.isArray(attemptEntry?.rootMoveScores) ? attemptEntry.rootMoveScores : [];
+                            const rootKeys = rootScores.map(r => Number(r?.key)).filter(Number.isFinite).slice(0, 12);
+                            const meets = [];
+                            for (const key of rootKeys) {
+                                if (!reverseByKey.has(key)) continue;
+                                meets.push({ key, reverseDepth: reverseByKey.get(key) });
+                            }
+                            const bestMeet = meets.sort((a, b) => a.reverseDepth - b.reverseDepth)[0] || null;
+                            const result = compactDefined({
+                                triggered: true,
+                                reverseDepth: maxReverseDepth,
+                                reverseStates: reverseByKey.size,
+                                rootCandidates: rootKeys.length,
+                                meetCount: meets.length,
+                                bestMeetKey: bestMeet?.key ?? null,
+                                bestMeetDepth: Number.isFinite(bestMeet?.reverseDepth) ? bestMeet.reverseDepth : null,
+                                feasibleMeetSignal: meets.length > 0
+                            });
+                            debugStats.mitmMeetCheck = result;
+                            return result;
+                        } catch (err) {
+                            debugStats.mitmMeetCheck = { triggered: true, error: `${err?.message || err}` };
+                            return debugStats.mitmMeetCheck;
+                        }
+                    };
 
-                    if (!primarySolved && remainingBudget() > 1200) {
+                    if (!primarySolved && remainingBudget() > 400) {
                         const escalationTiers = [
                             { tier: 1, passName: 'pass-4a-memo-disabled', disabledPrunes: [], useFailMemo: false, passPortalBiasMode: portalBiasMode, passVariant: 'default', passContradictionRecoveryMode: autoContradictionRecovery },
                             { tier: 2, passName: 'pass-4-bound-relaxed', disabledPrunes: ['mustPassBound', 'mustCrossBound'], useFailMemo: false, passPortalBiasMode: portalBiasMode, passVariant: 'default', passContradictionRecoveryMode: autoContradictionRecovery },
                             { tier: 3, passName: 'pass-4c-portal-relaxed', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: 'default', passContradictionRecoveryMode: true },
-                            { tier: 4, passName: 'pass-4d-diversified-order', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: (dirOrderVariant === 'default' ? 'random' : 'default'), passContradictionRecoveryMode: true }
+                            { tier: 4, passName: 'pass-4d-diversified-order', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: (dirOrderVariant === 'default' ? 'random' : 'default'), passContradictionRecoveryMode: true },
+                            { tier: 5, passName: 'pass-4e-bound13-completion', disabledPrunes: ['mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: 'random', passContradictionRecoveryMode: true, forcedPolicyProfile: 'nearClosureRescue' }
                         ];
                         const tierDiagnostics = [];
                         const seenTierSignatures = new Set();
+                        let escalationConsecutiveNonProductive = 0;
                         let lastTierDiag = buildTierDiagnostics(primaryRun, 'primary');
+                        // Phase-1 MITM prework: gather a compact reverse frontier probe once before
+                        // escalation tiers. This avoids log bloat while surfacing whether goal-side
+                        // state space meaningfully overlaps current root trajectories.
+                        runMitmFrontierProbe();
                         for (const tier of escalationTiers) {
                             if (primarySolved || remainingBudget() <= 400) break;
-                            const tierBudget = Math.max(400, Math.min(remainingBudget(), Math.floor(timeLimit * 0.22)));
+                            const priorProgress = Number(lastTierDiag?.maxProgress) || 0;
+                            // Progress-weighted tier budget:
+                            // - keep a usable floor
+                            // - grant extra budget when we're already close / improving
+                            // - avoid over-consuming when there is no momentum
+                            const progressBonus = priorProgress >= 0.75 ? 0.08 : (priorProgress >= 0.6 ? 0.04 : 0);
+                            const tierBudget = Math.max(400, Math.min(remainingBudget(), Math.floor(timeLimit * (0.22 + progressBonus))));
                             const tierRun = await runSolvePass({
                                 passName: tier.passName,
                                 localTimeLimit: tierBudget,
@@ -7963,17 +8199,21 @@ function installSolver(APP) {
                                 useFailMemo: tier.useFailMemo,
                                 passVariant: tier.passVariant,
                                 passPortalBiasMode: tier.passPortalBiasMode,
-                                passContradictionRecoveryMode: !!tier.passContradictionRecoveryMode
+                                passContradictionRecoveryMode: !!tier.passContradictionRecoveryMode,
+                                forcedPolicyProfile: tier.forcedPolicyProfile || null
                             });
                             const tierDiag = buildTierDiagnostics(tierRun, tier.passName);
                             const signature = makeTierSignature(tierDiag);
                             const productive = isTierProductive(lastTierDiag, tierDiag);
                             tierDiagnostics.push({ ...tierDiag, productive, signature });
                             if (seenTierSignatures.has(signature) || !productive) {
+                                escalationConsecutiveNonProductive++;
                                 if (debugStats) {
-                                    debugStats.notes.push(`ESCALATION TIER SKIP: ${tier.passName} produced duplicate/unproductive diagnostics; stopping ladder early.`);
+                                    debugStats.notes.push(`ESCALATION TIER SOFT-SKIP: ${tier.passName} produced duplicate/unproductive diagnostics (streak=${escalationConsecutiveNonProductive}); continuing unless streak > 2.`);
                                 }
-                                break;
+                                if (escalationConsecutiveNonProductive > 2) break;
+                            } else {
+                                escalationConsecutiveNonProductive = 0;
                             }
                             seenTierSignatures.add(signature);
                             lastTierDiag = tierDiag;
@@ -8509,6 +8749,11 @@ function installSolver(APP) {
                     failedStateHits: Number.isFinite(quality?.failedStateHits) ? quality.failedStateHits : null,
                     nextAttemptInserted: entry?.nextAttemptInserted === true ? true : null,
                     nextAttemptReason: entry?.nextAttemptReason || null,
+                    trajectorySimilarity: Number.isFinite(entry?.trajectorySimilarity) ? entry.trajectorySimilarity : null,
+                    trajectorySimilarityPenalty: Number.isFinite(entry?.trajectorySimilarityPenalty) ? entry.trajectorySimilarityPenalty : null,
+                    trajectoryTabooHits: Number.isFinite(entry?.trajectoryTabooHits) ? entry.trajectoryTabooHits : null,
+                    revisitWithPerturbationTriggered: entry?.revisitWithPerturbationTriggered === true ? true : null,
+                    trajectoryTabooSetSize: Number.isFinite(entry?.trajectoryTabooSetSize) ? entry.trajectoryTabooSetSize : null,
                     strategyFamilySwitchReason: entry?.strategyFamilySwitchReason || null,
                     timeoutFamilyDiversificationUsed: entry?.timeoutFamilyDiversificationUsed === true ? true : null,
                     lowExpansionRecoveryAdded: entry?.lowExpansionRecoveryAdded === true ? true : null,
@@ -8520,6 +8765,11 @@ function installSolver(APP) {
                         branchingFactorSnapshots: instrumentation?.branchingFactorSnapshots || null,
                         pruningHitRates: instrumentation?.pruningHitRates || null
                     }),
+                    mitmProbe: entry?.mitmProbe || null,
+                    mitmMeetCheck: entry?.mitmMeetCheck || null,
+                    mitmConnectorAccepted: entry?.mitmConnectorAccepted === true ? true : (entry?.mitmConnectorAccepted === false ? false : null),
+                    mitmConnectorQuality: Number.isFinite(entry?.mitmConnectorQuality) ? entry.mitmConnectorQuality : null,
+                    mitmConnectorFailureReason: entry?.mitmConnectorFailureReason || null,
                     progressSamples: Array.isArray(entry?.progressSamples) ? entry.progressSamples : null,
                     progressSummary: entry?.progressSummary || null
                 });
@@ -8584,6 +8834,19 @@ function installSolver(APP) {
                 retryFingerprintDupes: Number.isFinite(attempt?.retryFingerprintDupes)
                     ? attempt.retryFingerprintDupes
                     : (Number.isFinite(debug?.retryFingerprintDupes) ? debug.retryFingerprintDupes : null),
+                trajectorySimilarity: Number.isFinite(attempt?.trajectorySimilarity)
+                    ? attempt.trajectorySimilarity
+                    : (Number.isFinite(debug?.trajectorySimilarity) ? debug.trajectorySimilarity : null),
+                trajectorySimilarityPenalty: Number.isFinite(attempt?.trajectorySimilarityPenalty)
+                    ? attempt.trajectorySimilarityPenalty
+                    : (Number.isFinite(debug?.trajectorySimilarityPenalty) ? debug.trajectorySimilarityPenalty : null),
+                trajectoryTabooHits: Number.isFinite(attempt?.trajectoryTabooHits) ? attempt.trajectoryTabooHits : null,
+                revisitWithPerturbationTriggered: attempt?.revisitWithPerturbationTriggered === true ? true : null,
+                mitmProbe: debug?.mitmProbe || attempt?.mitmProbe || null,
+                mitmMeetCheck: debug?.mitmMeetCheck || attempt?.mitmMeetCheck || null,
+                mitmConnectorAccepted: attempt?.mitmConnectorAccepted === true ? true : (attempt?.mitmConnectorAccepted === false ? false : null),
+                mitmConnectorQuality: Number.isFinite(attempt?.mitmConnectorQuality) ? attempt.mitmConnectorQuality : null,
+                mitmConnectorFailureReason: attempt?.mitmConnectorFailureReason || null,
                 depth0FamilyCoverageEnforced: debug?.depth0FamilyCoverageEnforced === true ? true : null,
                 depth0FamilyCount: Number.isFinite(debug?.depth0FamilyCount) ? debug.depth0FamilyCount : null,
                 depth0FamilyCoverageSelections: Number.isFinite(debug?.depth0FamilyCoverageSelections) ? debug.depth0FamilyCoverageSelections : null,
@@ -11672,6 +11935,40 @@ function installSolver(APP) {
                 const objectiveDelta = Math.max(0, (Number(previousEntry?.quality?.constraintDeficit) || 0) - (Number(entry?.quality?.constraintDeficit) || 0));
                 return Number(Math.min(1, (rootKeyChangeRatio * 0.4) + (Math.min(depthDelta, 3) / 3 * 0.25) + (Math.min(nodesDelta, 220) / 220 * 0.2) + (Math.min(objectiveDelta, 2) / 2 * 0.15)).toFixed(4));
             };
+            const computeCandidateDiversificationScore = (candidate = {}, context = {}) => {
+                const timeoutLikeAttemptsSoFar = Math.max(0, Number(context?.timeoutLikeAttemptsSoFar) || 0);
+                const retryDupes = Math.max(0, Number(context?.retryFingerprintDupes) || 0);
+                const trajectoryPenalty = Math.max(0, Number(context?.trajectorySimilarityPenalty) || 0);
+                const baseFloor = Number(candidate?.rootExpansionFloorCount) || 0;
+                const noveltyFloorBonus = Math.min(0.35, baseFloor * 0.03);
+                const portalBonus = candidate?.portalBiasMode === 'off' ? 0.08 : (candidate?.portalBiasMode === 'agnostic' ? 0.05 : 0);
+                const pruneBonus = Array.isArray(candidate?.disabledPrunes) ? Math.min(0.24, candidate.disabledPrunes.length * 0.04) : 0;
+                const randomBonus = candidate?.dirOrderVariant === 'random' ? 0.12 : (candidate?.dirOrderVariant === 'alt' ? 0.06 : 0);
+                const timeoutPressureBonus = Math.min(0.2, timeoutLikeAttemptsSoFar * 0.04) + Math.min(0.12, retryDupes * 0.03);
+                return Number((noveltyFloorBonus + portalBonus + pruneBonus + randomBonus + timeoutPressureBonus - trajectoryPenalty).toFixed(4));
+            };
+            const computeTrajectoryStateNovelty = (currentEntry = null, priorEntries = []) => {
+                if (!currentEntry || !Array.isArray(priorEntries) || priorEntries.length === 0) return null;
+                const currentRoot = Array.isArray(currentEntry?.rootMoveOrder) ? currentEntry.rootMoveOrder.slice(0, 8).filter(Number.isFinite) : [];
+                const currentPrefix = Array.isArray(currentEntry?.endgameIDAStarBestObservedPathPrefix) ? currentEntry.endgameIDAStarBestObservedPathPrefix.slice(0, 12) : [];
+                if (currentRoot.length === 0 && currentPrefix.length === 0) return null;
+                let worstSimilarity = 0;
+                for (const prior of priorEntries.slice(-4)) {
+                    const priorRoot = Array.isArray(prior?.rootMoveOrder) ? prior.rootMoveOrder.slice(0, 8).filter(Number.isFinite) : [];
+                    const priorPrefix = Array.isArray(prior?.endgameIDAStarBestObservedPathPrefix) ? prior.endgameIDAStarBestObservedPathPrefix.slice(0, 12) : [];
+                    const rootUnion = new Set([...currentRoot, ...priorRoot]).size;
+                    const rootOverlap = currentRoot.filter(k => priorRoot.includes(k)).length;
+                    const rootSimilarity = rootUnion > 0 ? (rootOverlap / rootUnion) : 0;
+                    let prefixCommon = 0;
+                    const maxPrefix = Math.min(currentPrefix.length, priorPrefix.length);
+                    while (prefixCommon < maxPrefix && currentPrefix[prefixCommon] === priorPrefix[prefixCommon]) prefixCommon++;
+                    const prefixSimilarity = maxPrefix > 0 ? (prefixCommon / maxPrefix) : 0;
+                    const combined = (rootSimilarity * 0.55) + (prefixSimilarity * 0.45);
+                    if (combined > worstSimilarity) worstSimilarity = combined;
+                }
+                return Number(Math.max(0, Math.min(1, worstSimilarity)).toFixed(4));
+            };
+            
             const forceEscalationNoveltyDiversification = (nextAttempt, currentPolicyProfile = null) => {
                 if (!nextAttempt) return null;
                 const familyCycle = ['objectiveFirst', 'knotBuilder', 'portalFirstTransfer'];
@@ -11738,6 +12035,25 @@ function installSolver(APP) {
                 });
                 return uniqueAvoidedKeys;
             };
+            const buildFrontierTrajectorySignature = (entry = null) => {
+                if (!entry) return null;
+                const rootPrefix = Array.isArray(entry?.rootMoveOrder)
+                    ? entry.rootMoveOrder.slice(0, 6).filter(Number.isFinite)
+                    : [];
+                const endgamePrefix = Array.isArray(entry?.endgameIDAStarBestObservedPathPrefix)
+                    ? entry.endgameIDAStarBestObservedPathPrefix.slice(0, 10)
+                    : [];
+                if (rootPrefix.length === 0 && endgamePrefix.length === 0) return null;
+                return JSON.stringify({ r: rootPrefix, e: endgamePrefix });
+            };
+            const trajectoryTabooSet = new Set(
+                Array.isArray(sharedHintLadderState?.trajectoryTabooSignatures)
+                    ? sharedHintLadderState.trajectoryTabooSignatures.filter(Boolean).slice(-24)
+                    : []
+            );
+            let revisitWithPerturbationCooldown = Number.isFinite(sharedHintLadderState?.revisitWithPerturbationCooldown)
+                ? Math.max(0, Number(sharedHintLadderState.revisitWithPerturbationCooldown))
+                : 0;
             const adaptNextAttempt = (currentAttemptEntry, nextAttempt, context = {}) => {
                 if (!nextAttempt || typeof nextAttempt !== 'object') {
                     return { nextPlan: nextAttempt, adaptationPlan: null, switchedFamily: false, decisionSource: null, decisionReason: null, stateUpdates: {} };
@@ -12173,6 +12489,8 @@ function installSolver(APP) {
                 sharedHintLadderState.recentTimeoutAttempts = localTimeoutAttempts;
                 sharedHintLadderState.queuedAttemptSignatureHashes = Array.from(queuedAttemptSignatures).slice(-64);
                 sharedHintLadderState.retryFingerprintDupes = retryFingerprintDupes;
+                sharedHintLadderState.trajectoryTabooSignatures = Array.from(trajectoryTabooSet).slice(-32);
+                sharedHintLadderState.revisitWithPerturbationCooldown = revisitWithPerturbationCooldown;
             };
             for (let planIdx = 0; planIdx < attempts.length; planIdx++) {
                 const plannedAttempt = attempts[planIdx];
@@ -12306,7 +12624,7 @@ function installSolver(APP) {
                 attempt.__orchestratorPreBranchState = __orchestratorPreBranchState;
                 if (!Array.isArray(attempt.forbiddenPrefixes)) {
                     const priorTimeoutPrefixes = [];
-                    for (let pi = attemptsUsed.length - 1; pi >= 0 && priorTimeoutPrefixes.length < 3; pi--) {
+                    for (let pi = attemptsUsed.length - 1; pi >= 0 && priorTimeoutPrefixes.length < 5; pi--) {
                         const prior = attemptsUsed[pi];
                         if (!prior) continue;
                         if (!['timeout', 'no-solution-inconclusive'].includes(prior.status)) continue;
@@ -12317,7 +12635,9 @@ function installSolver(APP) {
                         // Use the first ~10 keys as the divergence-zone. Long enough to define
                         // a basin but short enough that the suppression frees up most of the
                         // search space.
-                        const trimmed = pref.slice(0, Math.min(10, pref.length));
+                        const timeoutPressure = Math.max(0, Number(__orchestratorPreBranchState?.timeoutCountSoFar) || 0);
+                        const adaptivePrefixCap = timeoutPressure >= 5 ? 18 : (timeoutPressure >= 3 ? 16 : 14);
+                        const trimmed = pref.slice(0, Math.min(adaptivePrefixCap, pref.length));
                         priorTimeoutPrefixes.push({ prefix: trimmed, sourceAttemptOrdinal: prior.attemptOrdinal || null });
                     }
                     if (priorTimeoutPrefixes.length > 0) {
@@ -12470,6 +12790,11 @@ function installSolver(APP) {
                     counterIntegrityStatus,
                     statsProvenance: attemptResult?.debug?.statsProvenance || null,
                     retryEscalation: attempt.orderingTweaks || null,
+                    trajectorySimilarity: Number.isFinite(attempt?.trajectorySimilarity) ? attempt.trajectorySimilarity : null,
+                    trajectorySimilarityPenalty: Number.isFinite(attempt?.trajectorySimilarityPenalty) ? attempt.trajectorySimilarityPenalty : null,
+                    trajectoryTabooHits: Number.isFinite(attempt?.trajectoryTabooHits) ? attempt.trajectoryTabooHits : null,
+                    revisitWithPerturbationTriggered: attempt?.revisitWithPerturbationTriggered === true ? true : null,
+                    trajectoryTabooSetSize: trajectoryTabooSet.size,
                     diversificationMatrix: attempt.diversificationMatrix || null,
                     attemptSignatureHash: attempt.attemptSignatureHash || null,
                     attemptSignatureTuple: attempt.attemptSignatureTuple || null,
@@ -12687,6 +13012,9 @@ function installSolver(APP) {
                         nextAttempt.policyProfile = 'objectiveFirst';
                         nextAttempt.orderingPolicy = 'objectiveFirst';
                         nextAttempt.portalBiasMode = 'off';
+                        nextAttempt.forceRootExpansionFloor = true;
+                        nextAttempt.rootExpansionFloorCount = Math.max(6, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                        nextAttempt.relaxRootSuppressionFirstLayer = true;
                         nextAttempt.retryTag = 'retry-fingerprint-dedupe-guard';
                         nextAttempt.escalationReason = 'retry-fingerprint-dedupe-guard';
                         nextAttempt.orderingTweaks = compactDefined({
@@ -12705,6 +13033,88 @@ function installSolver(APP) {
                     const timeoutLikeAttemptsSoFar = attemptsUsed.reduce((count, usedAttempt) => {
                         return count + (['timeout', 'no-solution-inconclusive'].includes(usedAttempt?.status) ? 1 : 0);
                     }, 0);
+                    if (currentAttemptEntry && ['timeout', 'no-solution-inconclusive'].includes(`${currentAttemptEntry?.status || ''}`)) {
+                        const sig = buildFrontierTrajectorySignature(currentAttemptEntry);
+                        if (sig) trajectoryTabooSet.add(sig);
+                    }
+                    if (nextAttempt && timeoutLikeAttemptsSoFar >= 2) {
+                        // Repeated timeout family: force broader root exploration and forbid
+                        // replaying recent first moves to increase trajectory novelty.
+                        nextAttempt.forceRootExpansionFloor = true;
+                        nextAttempt.rootExpansionFloorCount = Math.max(6, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                        nextAttempt.relaxRootSuppressionFirstLayer = true;
+                        const recentRootStarts = attemptsUsed
+                            .slice(-4)
+                            .flatMap(entry => Array.isArray(entry?.rootMoveOrder) ? entry.rootMoveOrder.slice(0, 2) : [])
+                            .filter(Number.isFinite);
+                        if (recentRootStarts.length > 0) {
+                            const existingForbidden = Array.isArray(nextAttempt.forbiddenFirstMoves) ? nextAttempt.forbiddenFirstMoves : [];
+                            nextAttempt.forbiddenFirstMoves = Array.from(new Set([...existingForbidden, ...recentRootStarts]));
+                        }
+                        const diversificationCandidates = [
+                            { dirOrderVariant: 'default', portalBiasMode: 'adaptiveMustCross', rootExpansionFloorCount: Math.max(6, Number(nextAttempt.rootExpansionFloorCount) || 0), disabledPrunes: [...(nextAttempt.disabledPrunes || [])] },
+                            { dirOrderVariant: 'alt', portalBiasMode: 'agnostic', rootExpansionFloorCount: Math.max(7, Number(nextAttempt.rootExpansionFloorCount) || 0), disabledPrunes: canonicalizeDisabledPrunes([...(nextAttempt.disabledPrunes || []), 'mustPassBound']) },
+                            { dirOrderVariant: 'random', portalBiasMode: 'off', rootExpansionFloorCount: Math.max(8, Number(nextAttempt.rootExpansionFloorCount) || 0), disabledPrunes: canonicalizeDisabledPrunes([...(nextAttempt.disabledPrunes || []), 'mustPassBound', 'mustCrossBound']) }
+                        ];
+                        const trajectorySimilarity = computeTrajectoryStateNovelty(
+                            currentAttemptEntry,
+                            attemptsUsed.filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
+                        );
+                        const trajectorySimilarityPenalty = Number.isFinite(trajectorySimilarity) ? Math.min(0.26, trajectorySimilarity * 0.28) : 0;
+                        if (currentAttemptEntry && Number.isFinite(trajectorySimilarity)) {
+                            currentAttemptEntry.trajectorySimilarity = trajectorySimilarity;
+                            currentAttemptEntry.trajectorySimilarityPenalty = trajectorySimilarityPenalty;
+                        }
+                        const scoredCandidates = diversificationCandidates
+                            .map(candidate => ({ candidate, score: computeCandidateDiversificationScore(candidate, { timeoutLikeAttemptsSoFar, retryFingerprintDupes, trajectorySimilarityPenalty }) }))
+                            .sort((a, b) => b.score - a.score);
+                        const selectedDiversification = scoredCandidates[0] || null;
+                        if (selectedDiversification?.candidate) {
+                            Object.assign(nextAttempt, selectedDiversification.candidate);
+                            nextAttempt.diversificationScore = selectedDiversification.score;
+                            if (Number.isFinite(trajectorySimilarity)) {
+                                nextAttempt.trajectorySimilarity = trajectorySimilarity;
+                                nextAttempt.trajectorySimilarityPenalty = trajectorySimilarityPenalty;
+                            }
+                        }
+                        if (Number.isFinite(trajectorySimilarity) && trajectorySimilarity >= 0.72) {
+                            const existingPrefixes = Array.isArray(nextAttempt.forbiddenPrefixes) ? nextAttempt.forbiddenPrefixes.slice() : [];
+                            const lastPrefix = Array.isArray(currentAttemptEntry?.endgameIDAStarBestObservedPathPrefix)
+                                ? currentAttemptEntry.endgameIDAStarBestObservedPathPrefix.slice(0, Math.min(18, currentAttemptEntry.endgameIDAStarBestObservedPathPrefix.length))
+                                : [];
+                            if (lastPrefix.length >= 5) {
+                                existingPrefixes.push({ prefix: lastPrefix, sourceAttemptOrdinal: currentAttemptEntry?.attemptOrdinal || null, reason: 'trajectory-similarity-block' });
+                                nextAttempt.forbiddenPrefixes = existingPrefixes.slice(-7);
+                            }
+                        }
+                        const recentTimeoutEntries = attemptsUsed
+                            .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`))
+                            .slice(-4);
+                        const matchingTabooHits = recentTimeoutEntries.reduce((hits, entry) => {
+                            const sig = buildFrontierTrajectorySignature(entry);
+                            return hits + (sig && trajectoryTabooSet.has(sig) ? 1 : 0);
+                        }, 0);
+                        if (currentAttemptEntry) currentAttemptEntry.trajectoryTabooHits = matchingTabooHits;
+                        // Controlled revisit lane: occasionally replay best-progress family with perturbation.
+                        const priorProgressSignal = Math.max(
+                            Number(currentAttemptEntry?.quality?.maxProgress) || 0,
+                            Number(currentAttemptEntry?.quality?.frontierQuality) || 0
+                        );
+                        if (revisitWithPerturbationCooldown <= 0 && priorProgressSignal >= 0.72 && matchingTabooHits >= 2) {
+                            nextAttempt.policyProfile = attempt.policyProfile || nextAttempt.policyProfile || 'standard';
+                            nextAttempt.orderingPolicy = attempt.orderingPolicy || nextAttempt.orderingPolicy || nextAttempt.policyProfile;
+                            nextAttempt.rootTieSeed = ((Number(nextAttempt.rootTieSeed) || 0) ^ 0x45d9f3b) >>> 0;
+                            nextAttempt.rootExpansionFloorCount = Math.max(7, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                            nextAttempt.relaxRootSuppressionFirstLayer = true;
+                            nextAttempt.retryTag = 'revisit-with-perturbation';
+                            nextAttempt.escalationReason = 'revisit-with-perturbation';
+                            nextAttempt.revisitWithPerturbationTriggered = true;
+                            revisitWithPerturbationCooldown = 2;
+                            setAdaptationReason('revisit-with-perturbation', { trajectoryTabooHits: matchingTabooHits });
+                        } else if (revisitWithPerturbationCooldown > 0) {
+                            revisitWithPerturbationCooldown -= 1;
+                        }
+                    }
                     const nodesExpanded = Math.max(0, Number(attemptResult?.debug?.nodesExpanded) || 0);
                     const maxDepthReached = Math.max(0, Number(attemptResult?.debug?.maxDepth) || 0);
                     const lowExpansionThreshold = Math.max(14, Math.floor(((timeoutLikeAttemptsSoFar + 1) * 16) / 2));
@@ -12749,7 +13159,589 @@ function installSolver(APP) {
                     } else {
                         consecutiveTimeoutStagnation = 0;
                     }
-                    const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
+                                        const timeoutReplayCandidate = timeoutProne
+                        && timeoutMaterialProgress
+                        && (quality.maxProgress >= 0.78 || maxDepthReached >= 80);
+                    if (timeoutReplayCandidate && nextAttempt) {
+                        nextAttempt.policyProfile = attempt.policyProfile || nextAttempt.policyProfile || 'standard';
+                        nextAttempt.orderingPolicy = attempt.orderingPolicy || nextAttempt.orderingPolicy || nextAttempt.policyProfile;
+                        nextAttempt.forceRootExpansionFloor = true;
+                        nextAttempt.rootExpansionFloorCount = Math.max(8, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                        nextAttempt.relaxRootSuppressionFirstLayer = true;
+                        const replayForbidden = Array.isArray(nextAttempt.forbiddenFirstMoves) ? nextAttempt.forbiddenFirstMoves : [];
+                        const replayRecent = attemptsUsed.slice(-5).flatMap(entry => Array.isArray(entry?.rootMoveOrder) ? entry.rootMoveOrder.slice(0, 3) : []).filter(Number.isFinite);
+                        nextAttempt.forbiddenFirstMoves = Array.from(new Set([...replayForbidden, ...replayRecent]));
+                        setAdaptationReason('timeout-progressive-replay-with-novelty', { timeoutReplayCandidate: true, preservedPolicy: nextAttempt.policyProfile });
+                    }
+                    if (timeoutProne && nextAttempt && currentAttemptEntry) {
+                        const buildMitmBridgeRoute = (meetKey, options = {}) => {
+                            if (!Number.isFinite(meetKey) || !Number.isFinite(l?.goal?.k)) return null;
+                            const goalKey = l.goal.k;
+                            const maxDepth = Math.max(6, Math.min(14, Number(options?.depth) || 10));
+                            const q = [{
+                                k: meetKey,
+                                depth: 0,
+                                path: [meetKey],
+                                remMustPass: Math.max(0, Number(options?.remainingMustPass) || 0),
+                                remMustCross: Math.max(0, Number(options?.remainingMustCross) || 0),
+                                remInts: Math.max(0, Number(options?.remainingInts) || 0)
+                            }];
+                            const seen = new Set([`${meetKey}:0:0:0`]);
+                            let qi = 0;
+                            while (qi < q.length) {
+                                const cur = q[qi++];
+                                if (cur.k === goalKey) return cur.path.slice();
+                                if (cur.depth >= maxDepth) continue;
+                                const neigh = this._neighborMap?.[cur.k];
+                                const nextKeys = [];
+                                if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
+                                const portals = this._portalAdj?.[cur.k];
+                                if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
+                                for (const nk of nextKeys) {
+                                    let remMustPass = cur.remMustPass;
+                                    let remMustCross = cur.remMustCross;
+                                    let remInts = cur.remInts;
+                                    if (Array.isArray(l.mustPassKeys) && l.mustPassKeys.includes(nk) && remMustPass > 0) remMustPass -= 1;
+                                    if (Array.isArray(l.mustCrossKeys) && l.mustCrossKeys.includes(nk) && remMustCross > 0) remMustCross -= 1;
+                                    if (searchCtx?.wouldCreateIntersection?.(nk, cur.path, l) && remInts > 0) remInts -= 1;
+                                    const st = `${nk}:${remMustPass}:${remMustCross}:${remInts}`;
+                                    if (seen.has(st)) continue;
+                                    seen.add(st);
+                                    q.push({ k: nk, depth: cur.depth + 1, path: [...cur.path, nk], remMustPass, remMustCross, remInts });
+                                }
+                            }
+                            return null;
+                        };
+                        const validateMitmBridgeRoute = (route, context = {}) => {
+                            if (!Array.isArray(route) || route.length < 2) {
+                                return { ok: false, reason: 'route-too-short', quality: 0 };
+                            }
+                            const mustPassSet = new Set(Array.isArray(l.mustPassKeys) ? l.mustPassKeys : []);
+                            const mustCrossSet = new Set(Array.isArray(l.mustCrossKeys) ? l.mustCrossKeys : []);
+                            let reachableEdges = 0;
+                            let brokenEdges = 0;
+                            let portalEdges = 0;
+                            let remMustPass = Math.max(0, Number(context?.remainingMustPass) || 0);
+                            let remMustCross = Math.max(0, Number(context?.remainingMustCross) || 0);
+                            for (let i = 0; i < route.length - 1; i++) {
+                                const a = route[i];
+                                const b = route[i + 1];
+                                const neigh = this._neighborMap?.[a];
+                                const walkOk = Array.isArray(neigh) && neigh.includes(b);
+                                const portals = this._portalAdj?.[a];
+                                const portalOk = Array.isArray(portals) && portals.some(p => Number.isFinite(p?.dest) && p.dest === b);
+                                if (portalOk) portalEdges++;
+                                if (walkOk || portalOk) reachableEdges++;
+                                else brokenEdges++;
+                                if (mustPassSet.has(b) && remMustPass > 0) remMustPass--;
+                                if (mustCrossSet.has(b) && remMustCross > 0) remMustCross--;
+                            }
+                            const edgeIntegrity = reachableEdges / Math.max(1, route.length - 1);
+                            const unresolvedPenalty = Math.min(1, (remMustPass + remMustCross) / Math.max(1, (mustPassSet.size + mustCrossSet.size)));
+                            const portalPenalty = portalEdges > Math.max(2, Math.floor(route.length * 0.45)) ? 0.12 : 0;
+                            const quality = Math.max(0, Math.min(1, edgeIntegrity - unresolvedPenalty - portalPenalty - (brokenEdges > 0 ? 0.35 : 0)));
+                            return {
+                                ok: brokenEdges === 0 && quality >= 0.3,
+                                reason: brokenEdges > 0 ? 'route-disconnected' : (quality < 0.3 ? 'obligation-incomplete' : null),
+                                quality: Number(quality.toFixed(4)),
+                                reachableEdges,
+                                brokenEdges,
+                                portalEdges,
+                                remainingMustPassAfterRoute: remMustPass,
+                                remainingMustCrossAfterRoute: remMustCross
+                            };
+                        };
+                        const buildExactMitmJoinRoute = (attemptEntry, mitmCheck, options = {}) => {
+                            const forwardSeed = Array.isArray(attemptEntry?.endgameIDAStarBestObservedPathPrefix)
+                                ? attemptEntry.endgameIDAStarBestObservedPathPrefix.slice()
+                                : [];
+                            const reverseRoute = Array.isArray(mitmCheck?.bestMeetRouteToGoal)
+                                ? mitmCheck.bestMeetRouteToGoal.slice()
+                                : [];
+                            const meetKey = Number.isFinite(mitmCheck?.bestMeetKey) ? mitmCheck.bestMeetKey : null;
+                            if (forwardSeed.length < 2 || reverseRoute.length < 2 || !Number.isFinite(meetKey)) return null;
+                            const bfsBridge = (startKey, endKey, maxDepth = 14) => {
+                                if (!Number.isFinite(startKey) || !Number.isFinite(endKey)) return null;
+                                if (startKey === endKey) return [startKey];
+                                const q = [{ k: startKey, d: 0, path: [startKey] }];
+                                const seen = new Set([startKey]);
+                                let qi = 0;
+                                while (qi < q.length) {
+                                    const cur = q[qi++];
+                                    if (cur.k === endKey) return cur.path;
+                                    if (cur.d >= maxDepth) continue;
+                                    const next = [];
+                                    const neigh = this._neighborMap?.[cur.k];
+                                    if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) next.push(nk);
+                                    const portals = this._portalAdj?.[cur.k];
+                                    if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) next.push(p.dest);
+                                    for (const nk of next) {
+                                        if (seen.has(nk)) continue;
+                                        seen.add(nk);
+                                        q.push({ k: nk, d: cur.d + 1, path: [...cur.path, nk] });
+                                    }
+                                }
+                                return null;
+                            };
+                            let forwardToMeet = forwardSeed.slice();
+                            const forwardEnd = forwardSeed[forwardSeed.length - 1];
+                            if (forwardEnd !== meetKey) {
+                                const bridge = bfsBridge(forwardEnd, meetKey, Math.max(8, Math.min(18, Number(options?.bridgeDepth) || 14)));
+                                if (!Array.isArray(bridge) || bridge.length < 2) return null;
+                                forwardToMeet = forwardSeed.concat(bridge.slice(1));
+                            }
+                            const stitched = forwardToMeet.concat(reverseRoute.slice(1));
+                            return stitched.length >= 4 ? stitched : null;
+                        };
+                        const validateExactMitmJoinState = (route, attemptEntry = null) => {
+                            if (!Array.isArray(route) || route.length < 4) return { ok: false, reason: 'join-route-too-short' };
+                            const goalKey = Number.isFinite(l?.goal?.k) ? l.goal.k : null;
+                            if (!Number.isFinite(goalKey) || route[route.length - 1] !== goalKey) return { ok: false, reason: 'join-not-at-goal' };
+                            const qualityState = attemptEntry?.quality && typeof attemptEntry.quality === 'object' ? attemptEntry.quality : {};
+                            const mustPassSet = new Set(Array.isArray(l.mustPassKeys) ? l.mustPassKeys : []);
+                            const mustCrossSet = new Set(Array.isArray(l.mustCrossKeys) ? l.mustCrossKeys : []);
+                            let remMustPass = Math.max(0, Number(qualityState.remainingMustPass) || 0);
+                            let remMustCross = Math.max(0, Number(qualityState.remainingMustCross) || 0);
+                            let disconnectedEdges = 0;
+                            for (let i = 0; i < route.length - 1; i++) {
+                                const a = route[i];
+                                const b = route[i + 1];
+                                const neigh = this._neighborMap?.[a];
+                                const walkOk = Array.isArray(neigh) && neigh.includes(b);
+                                const portals = this._portalAdj?.[a];
+                                const portalOk = Array.isArray(portals) && portals.some(p => Number.isFinite(p?.dest) && p.dest === b);
+                                if (!(walkOk || portalOk)) disconnectedEdges++;
+                                if (mustPassSet.has(b) && remMustPass > 0) remMustPass--;
+                                if (mustCrossSet.has(b) && remMustCross > 0) remMustCross--;
+                            }
+                            if (disconnectedEdges > 0) return { ok: false, reason: 'join-disconnected', disconnectedEdges };
+                            const unresolved = remMustPass + remMustCross;
+                            return {
+                                ok: unresolved === 0,
+                                reason: unresolved === 0 ? null : 'join-obligations-unresolved',
+                                remainingMustPass: remMustPass,
+                                remainingMustCross: remMustCross
+                            };
+                        };
+                        const reconstructMitmBridgeRoute = (route, options = {}) => {
+                            if (!Array.isArray(route) || route.length < 2) return null;
+                            const maxLocalDepth = Math.max(2, Math.min(6, Number(options?.maxLocalDepth) || 4));
+                            const maxRepairs = Math.max(1, Math.min(8, Number(options?.maxRepairs) || 4));
+                            const repaired = [route[0]];
+                            let repairsUsed = 0;
+                            const buildLocalPatch = (startKey, endKey) => {
+                                if (!Number.isFinite(startKey) || !Number.isFinite(endKey)) return null;
+                                if (startKey === endKey) return [startKey];
+                                const q = [{ k: startKey, depth: 0, path: [startKey] }];
+                                const seen = new Set([startKey]);
+                                let qi = 0;
+                                while (qi < q.length) {
+                                    const cur = q[qi++];
+                                    if (cur.k === endKey) return cur.path;
+                                    if (cur.depth >= maxLocalDepth) continue;
+                                    const nextKeys = [];
+                                    const neigh = this._neighborMap?.[cur.k];
+                                    if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
+                                    const portals = this._portalAdj?.[cur.k];
+                                    if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
+                                    for (const nk of nextKeys) {
+                                        if (seen.has(nk)) continue;
+                                        seen.add(nk);
+                                        q.push({ k: nk, depth: cur.depth + 1, path: [...cur.path, nk] });
+                                    }
+                                }
+                                return null;
+                            };
+                            for (let i = 0; i < route.length - 1; i++) {
+                                const a = route[i];
+                                const b = route[i + 1];
+                                const neigh = this._neighborMap?.[a];
+                                const walkOk = Array.isArray(neigh) && neigh.includes(b);
+                                const portals = this._portalAdj?.[a];
+                                const portalOk = Array.isArray(portals) && portals.some(p => Number.isFinite(p?.dest) && p.dest === b);
+                                if (walkOk || portalOk) {
+                                    repaired.push(b);
+                                    continue;
+                                }
+                                if (repairsUsed >= maxRepairs) return null;
+                                const patch = buildLocalPatch(a, b);
+                                if (!Array.isArray(patch) || patch.length < 2) return null;
+                                for (let j = 1; j < patch.length; j++) repaired.push(patch[j]);
+                                repairsUsed++;
+                            }
+                            return repaired;
+                        };
+                        const runMitmMeetCheckLocal = (attemptEntry = null, options = {}) => {
+                            try {
+                                const goalKey = Number.isFinite(l?.goal?.k) ? l.goal.k : null;
+                                if (!Number.isFinite(goalKey)) return null;
+                                const maxReverseDepth = Math.max(8, Math.min(18, Number(options?.reverseDepth) || 12));
+                                const maxReverseStates = Math.max(2400, Math.min(18000, Number(options?.reverseStates) || 9000));
+                                const seen = new Set();
+                                const q = [{ k: goalKey, depth: 0, parity: 0 }];
+                                seen.add(`${goalKey}:0`);
+                                let idx = 0;
+                                const reverseByKey = new Map();
+                                const reverseParent = new Map();
+                                while (idx < q.length && q.length < maxReverseStates) {
+                                    const cur = q[idx++];
+                                    if (!reverseByKey.has(cur.k) || cur.depth < reverseByKey.get(cur.k)) reverseByKey.set(cur.k, cur.depth);
+                                    if (cur.depth >= maxReverseDepth) continue;
+                                    const neigh = this._neighborMap?.[cur.k];
+                                    const nextKeys = [];
+                                    if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
+                                    const portals = this._portalAdj?.[cur.k];
+                                    if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
+                                    for (const nk of nextKeys) {
+                                        const ns = `${nk}:${1 - cur.parity}`;
+                                        if (seen.has(ns)) continue;
+                                        seen.add(ns);
+                                        if (!reverseParent.has(nk)) reverseParent.set(nk, cur.k);
+                                        q.push({ k: nk, depth: cur.depth + 1, parity: 1 - cur.parity });
+                                    }
+                                }
+                                const rootScores = Array.isArray(attemptEntry?.rootMoveScores) ? attemptEntry.rootMoveScores : [];
+                                const rootKeys = rootScores.map(r => Number(r?.key)).filter(Number.isFinite).slice(0, 24);
+                                const qualityState = attemptEntry?.quality && typeof attemptEntry.quality === 'object'
+                                    ? attemptEntry.quality
+                                    : {};
+                                const remMustPass = Math.max(0, Number(qualityState.remainingMustPass) || 0);
+                                const remMustCross = Math.max(0, Number(qualityState.remainingMustCross) || 0);
+                                const mustPassSet = new Set(Array.isArray(l.mustPassKeys) ? l.mustPassKeys : []);
+                                const mustCrossSet = new Set(Array.isArray(l.mustCrossKeys) ? l.mustCrossKeys : []);
+                                const meets = [];
+                                for (const key of rootKeys) {
+                                    if (!reverseByKey.has(key)) continue;
+                                    const reverseDepth = reverseByKey.get(key);
+                                    let obligationHits = 0;
+                                    if (mustPassSet.has(key) && remMustPass > 0) obligationHits += 1;
+                                    if (mustCrossSet.has(key) && remMustCross > 0) obligationHits += 1;
+                                    const score = (obligationHits * 2.4) - (reverseDepth * 0.22);
+                                    meets.push({ key, reverseDepth, obligationHits, score });
+                                }
+                                const bestMeet = meets.sort((a, b) => {
+                                    if (b.score !== a.score) return b.score - a.score;
+                                    if (a.reverseDepth !== b.reverseDepth) return a.reverseDepth - b.reverseDepth;
+                                    return b.obligationHits - a.obligationHits;
+                                })[0] || null;
+                                const buildReverseRoute = (startKey) => {
+                                    const out = [];
+                                    if (!Number.isFinite(startKey)) return out;
+                                    const localSeen = new Set();
+                                    let cursor = startKey;
+                                    while (Number.isFinite(cursor) && !localSeen.has(cursor) && out.length <= (maxReverseDepth + 2)) {
+                                        out.push(cursor);
+                                        if (cursor === goalKey) break;
+                                        localSeen.add(cursor);
+                                        cursor = reverseParent.get(cursor);
+                                    }
+                                    if (out[out.length - 1] !== goalKey) out.length = 0;
+                                    return out;
+                                };
+                                let reverseRouteFromMeet = [];
+                                let bestMeetRouteObligationHits = null;
+                                if (Number.isFinite(bestMeet?.key)) {
+                                    reverseRouteFromMeet = buildReverseRoute(bestMeet.key);
+                                    if (reverseRouteFromMeet.length >= 2) {
+                                        let routeHits = 0;
+                                        if (remMustPass > 0) routeHits += reverseRouteFromMeet.reduce((n, k) => n + (mustPassSet.has(k) ? 1 : 0), 0);
+                                        if (remMustCross > 0) routeHits += reverseRouteFromMeet.reduce((n, k) => n + (mustCrossSet.has(k) ? 1 : 0), 0);
+                                        bestMeetRouteObligationHits = routeHits;
+                                    }
+                                }
+                                // If current best meet produced no usable route, try a route-first fallback
+                                // among other meet candidates (prefers deeper obligation coverage).
+                                if (reverseRouteFromMeet.length < 2 && meets.length > 1) {
+                                    let bestRouteCandidate = null;
+                                    for (const candidate of meets.slice(0, 8)) {
+                                        const route = buildReverseRoute(candidate.key);
+                                        if (route.length < 2) continue;
+                                        let routeHits = 0;
+                                        if (remMustPass > 0) routeHits += route.reduce((n, k) => n + (mustPassSet.has(k) ? 1 : 0), 0);
+                                        if (remMustCross > 0) routeHits += route.reduce((n, k) => n + (mustCrossSet.has(k) ? 1 : 0), 0);
+                                        const routeScore = (routeHits * 1.8) - (route.length * 0.12) - (candidate.reverseDepth * 0.08);
+                                        if (!bestRouteCandidate || routeScore > bestRouteCandidate.routeScore) {
+                                            bestRouteCandidate = { route, routeHits, routeScore, key: candidate.key, reverseDepth: candidate.reverseDepth };
+                                        }
+                                    }
+                                    if (bestRouteCandidate) {
+                                        reverseRouteFromMeet = bestRouteCandidate.route;
+                                        bestMeetRouteObligationHits = bestRouteCandidate.routeHits;
+                                    }
+                                }
+                                return compactDefined({
+                                    triggered: true,
+                                    reverseDepth: maxReverseDepth,
+                                    reverseStates: reverseByKey.size,
+                                    rootCandidates: rootKeys.length,
+                                    meetCount: meets.length,
+                                    bestMeetKey: bestMeet?.key ?? null,
+                                    bestMeetDepth: Number.isFinite(bestMeet?.reverseDepth) ? bestMeet.reverseDepth : null,
+                                    bestMeetObligationHits: Number.isFinite(bestMeet?.obligationHits) ? bestMeet.obligationHits : null,
+                                    bestMeetScore: Number.isFinite(bestMeet?.score) ? Number(bestMeet.score.toFixed(3)) : null,
+                                    bestMeetRouteObligationHits: Number.isFinite(bestMeetRouteObligationHits) ? bestMeetRouteObligationHits : null,
+                                    bestMeetRouteToGoal: reverseRouteFromMeet.length >= 2 ? reverseRouteFromMeet : null,
+                                    feasibleMeetSignal: meets.length > 0
+                                });
+                            } catch {
+                                return null;
+                            }
+                        };
+                        const mitmCheck = runMitmMeetCheckLocal(currentAttemptEntry, {
+                            reverseDepth: quality.maxProgress >= 0.8 ? 14 : 11,
+                            reverseStates: quality.maxProgress >= 0.8 ? 12000 : 8000
+                        });
+                        if (mitmCheck?.feasibleMeetSignal) {
+                            nextAttempt.endgameIDAStarEnabled = true;
+                            nextAttempt.endgameIDAStarTriggerDepthRatio = Math.min(Number(nextAttempt.endgameIDAStarTriggerDepthRatio) || 0.85, 0.78);
+                            nextAttempt.endgameIDAStarBoundCeiling = Math.max(Number(nextAttempt.endgameIDAStarBoundCeiling) || 20, 24);
+                            nextAttempt.endgameIDAStarBudgetFraction = Math.max(Number(nextAttempt.endgameIDAStarBudgetFraction) || 0.5, 0.65);
+                            nextAttempt.forceRootExpansionFloor = true;
+                            nextAttempt.rootExpansionFloorCount = Math.max(8, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                            nextAttempt.retryTag = `${nextAttempt.retryTag || 'mitm'}-meet-check-boost`;
+                            setAdaptationReason('mitm-meet-check-boost', {
+                                mitmMeetCount: mitmCheck.meetCount,
+                                mitmBestMeetDepth: mitmCheck.bestMeetDepth
+                            });
+                            if (currentAttemptEntry) {
+                                currentAttemptEntry.mitmMeetCheck = mitmCheck;
+                            }
+                            const connectorAttemptLabel = `${nextAttempt.label || 'attempt'}-mitm-connector`;
+                            const connectorExists = attempts.some((pendingAttempt, pendingIndex) => {
+                                if (pendingIndex <= i) return false;
+                                const pendingLabel = (typeof pendingAttempt?.label === 'string') ? pendingAttempt.label : '';
+                                return pendingLabel === connectorAttemptLabel || pendingLabel.endsWith('-mitm-connector');
+                            });
+                            if (!connectorExists) {
+                                const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
+                                const connectorAttempt = {
+                                    ...nextAttempt,
+                                    label: connectorAttemptLabel,
+                                    budgetMs: priorBudget,
+                                    policyProfile: 'closureCommitment',
+                                    orderingPolicy: 'closureCommitment',
+                                    scoringMode: 'closure-focal-lex',
+                                    forceRootExpansionFloor: true,
+                                    rootExpansionFloorCount: Math.max(9, Number(nextAttempt?.rootExpansionFloorCount) || 0),
+                                    relaxRootSuppressionFirstLayer: true,
+                                    endgameIDAStarEnabled: true,
+                                    endgameIDAStarTriggerDepthRatio: 0.74,
+                                    endgameIDAStarBoundCeiling: Math.max(26, Number(nextAttempt?.endgameIDAStarBoundCeiling) || 0),
+                                    endgameIDAStarBudgetFraction: Math.max(0.72, Number(nextAttempt?.endgameIDAStarBudgetFraction) || 0),
+                                    retryTag: 'mitm-connector-closure-attempt',
+                                    escalationReason: 'mitm-connector-closure-attempt'
+                                };
+                                if (Number.isFinite(mitmCheck?.bestMeetKey)) {
+                                    const exactJoinRoute = buildExactMitmJoinRoute(currentAttemptEntry, mitmCheck, { bridgeDepth: 14 });
+                                    const exactJoinValidation = validateExactMitmJoinState(exactJoinRoute, currentAttemptEntry);
+                                    if (exactJoinValidation?.ok && Array.isArray(exactJoinRoute) && exactJoinRoute.length >= 4) {
+                                        const exactCommitAttempt = {
+                                            ...connectorAttempt,
+                                            label: `${connectorAttemptLabel}-exact-join-commit`,
+                                            policyProfile: 'closureCommitment',
+                                            orderingPolicy: 'closureCommitment',
+                                            scoringMode: 'closure-focal-lex',
+                                            portalBiasMode: 'off',
+                                            forceRootExpansionFloor: true,
+                                            rootExpansionFloorCount: Math.max(14, Number(connectorAttempt?.rootExpansionFloorCount) || 0),
+                                            relaxRootSuppressionFirstLayer: true,
+                                            endgameIDAStarEnabled: true,
+                                            endgameIDAStarTriggerDepthRatio: 0.66,
+                                            endgameIDAStarBoundCeiling: Math.max(32, Number(connectorAttempt?.endgameIDAStarBoundCeiling) || 0),
+                                            endgameIDAStarBudgetFraction: Math.max(0.82, Number(connectorAttempt?.endgameIDAStarBudgetFraction) || 0),
+                                            routeCommitPrefix: exactJoinRoute.slice(0, Math.min(14, exactJoinRoute.length)),
+                                            routeCommitSuffix: exactJoinRoute.slice(),
+                                            bridgeRouteHint: exactJoinRoute.slice(0, 18),
+                                            forbiddenFirstMoves: null,
+                                            forbiddenPrefixes: null,
+                                            retryTag: 'mitm-exact-join-commit',
+                                            escalationReason: 'mitm-exact-join-commit',
+                                            orderingTweaks: compactDefined({
+                                                ...(connectorAttempt.orderingTweaks || {}),
+                                                mitmExactJoinCommit: true,
+                                                mitmExactJoinRouteLen: exactJoinRoute.length
+                                            })
+                                        };
+                                        const exactReg = registerAttemptSignature(exactCommitAttempt, { markDuplicate: true });
+                                        if (exactReg?.allowed) {
+                                            attempts.splice(Math.min(attempts.length, i + 1), 0, exactCommitAttempt);
+                                        }
+                                    }
+                                    const route = (Array.isArray(mitmCheck?.bestMeetRouteToGoal) && mitmCheck.bestMeetRouteToGoal.length >= 2)
+                                        ? (Array.isArray(exactJoinRoute) && exactJoinRoute.length >= 4 && exactJoinValidation?.ok ? exactJoinRoute : mitmCheck.bestMeetRouteToGoal.slice())
+                                        : buildMitmBridgeRoute(mitmCheck.bestMeetKey, {
+                                        depth: 11,
+                                        remainingMustPass: Number(currentAttemptEntry?.quality?.remainingMustPass) || 0,
+                                        remainingMustCross: Number(currentAttemptEntry?.quality?.remainingMustCross) || 0,
+                                        remainingInts: Number(currentAttemptEntry?.quality?.remainingInts) || 0
+                                    });
+                                    if (Array.isArray(route) && route.length >= 2) {
+                                        const reconstructedRoute = reconstructMitmBridgeRoute(route, { maxLocalDepth: 4, maxRepairs: 4 }) || route;
+                                        const validation = validateMitmBridgeRoute(reconstructedRoute, {
+                                            remainingMustPass: Number(currentAttemptEntry?.quality?.remainingMustPass) || 0,
+                                            remainingMustCross: Number(currentAttemptEntry?.quality?.remainingMustCross) || 0
+                                        });
+                                        connectorAttempt.bridgeRouteHint = reconstructedRoute.slice(0, 14);
+                                        const mustCrossSet = new Set(Array.isArray(l.mustCrossKeys) ? l.mustCrossKeys : []);
+                                        const mustPassSet = new Set(Array.isArray(l.mustPassKeys) ? l.mustPassKeys : []);
+                                        const routeMustCrossHits = reconstructedRoute.reduce((n, k) => n + (mustCrossSet.has(k) ? 1 : 0), 0);
+                                        const routeMustPassHits = reconstructedRoute.reduce((n, k) => n + (mustPassSet.has(k) ? 1 : 0), 0);
+                                        const routeLen = reconstructedRoute.length;
+                                        const quality = Math.max(0, 1 - (routeLen / 20))
+                                            + (Number(mitmCheck.meetCount || 0) > 1 ? 0.15 : 0)
+                                            + Math.min(0.2, routeMustCrossHits * 0.08)
+                                            + Math.min(0.12, routeMustPassHits * 0.05)
+                                            + Math.min(0.25, Number(validation?.quality) || 0);
+                                        connectorAttempt.mitmConnectorQuality = Number(Math.min(1, quality).toFixed(4));
+                                        connectorAttempt.mitmConnectorValidation = validation;
+                                        connectorAttempt.orderingTweaks = compactDefined({
+                                            ...(connectorAttempt.orderingTweaks || {}),
+                                            mitmBridgeMeetKey: mitmCheck.bestMeetKey,
+                                            mitmBridgeRouteLen: reconstructedRoute.length,
+                                            mitmBridgeRouteReconstructed: reconstructedRoute.length !== route.length,
+                                            mitmExactJoinRouteUsed: Array.isArray(exactJoinRoute) && exactJoinRoute.length >= 4 && exactJoinValidation?.ok,
+                                            mitmExactJoinRouteReason: exactJoinValidation?.reason || null,
+                                            mitmBridgeRouteMustCrossHits: routeMustCrossHits,
+                                            mitmBridgeRouteMustPassHits: routeMustPassHits,
+                                            mitmBridgeValidationReason: validation?.reason || null
+                                        });
+                                    }
+                                }
+                                if (!Number.isFinite(connectorAttempt?.mitmConnectorQuality)
+                                    || connectorAttempt.mitmConnectorQuality < 0.28
+                                    || connectorAttempt?.mitmConnectorValidation?.ok === false) {
+                                    if (currentAttemptEntry) {
+                                        currentAttemptEntry.mitmConnectorAccepted = false;
+                                        currentAttemptEntry.mitmConnectorFailureReason = connectorAttempt?.mitmConnectorValidation?.reason || 'low-connector-quality';
+                                    }
+                                    continue;
+                                }
+                                connectorAttempt.mitmConnectorAccepted = true;
+                                connectorAttempt.mitmConnectorMode = 'bridge_committed';
+                                const topRootKeys = Array.isArray(currentAttemptEntry?.rootMoveScores)
+                                    ? currentAttemptEntry.rootMoveScores.map(item => Number(item?.key)).filter(Number.isFinite).slice(0, 3)
+                                    : [];
+                                if (topRootKeys.length > 0) {
+                                    const existingForbidden = Array.isArray(connectorAttempt.forbiddenFirstMoves) ? connectorAttempt.forbiddenFirstMoves : [];
+                                    connectorAttempt.forbiddenFirstMoves = Array.from(new Set([...existingForbidden, ...topRootKeys]));
+                                }
+                                const connectorRegistration = registerAttemptSignature(connectorAttempt, { markDuplicate: true });
+                                if (connectorRegistration?.allowed) {
+                                    const insertAt = Math.min(attempts.length, i + 2);
+                                    attempts.splice(insertAt, 0, connectorAttempt);
+                                    // Add a sibling connector variant that inverts portal usage bias.
+                                    // On L92-like cases we sometimes reach a meet neighborhood but fail
+                                    // to close due to over-commitment on one portal policy.
+                                    const siblingConnector = {
+                                        ...connectorAttempt,
+                                        label: `${connectorAttemptLabel}-portal-agnostic`,
+                                        portalBiasMode: 'agnostic',
+                                        policyProfile: 'nearClosureRescue',
+                                        orderingPolicy: 'nearClosureRescue',
+                                        retryTag: 'mitm-connector-closure-attempt-portal-agnostic',
+                                        escalationReason: 'mitm-connector-closure-attempt-portal-agnostic'
+                                    };
+                                    const siblingReg = registerAttemptSignature(siblingConnector, { markDuplicate: true });
+                                    if (siblingReg?.allowed) {
+                                        attempts.splice(Math.min(attempts.length, insertAt + 1), 0, siblingConnector);
+                                    }
+                                    if (Array.isArray(connectorAttempt.bridgeRouteHint) && connectorAttempt.bridgeRouteHint.length >= 4) {
+                                        const strictConnector = {
+                                            ...connectorAttempt,
+                                            label: `${connectorAttemptLabel}-strict-route`,
+                                            policyProfile: 'closureCommitment',
+                                            orderingPolicy: 'closureCommitment',
+                                            portalBiasMode: 'off',
+                                            scoringMode: 'closure-focal-lex',
+                                            retryTag: 'mitm-connector-closure-attempt-strict-route',
+                                            escalationReason: 'mitm-connector-closure-attempt-strict-route',
+                                            forceRootExpansionFloor: true,
+                                            rootExpansionFloorCount: Math.max(12, Number(connectorAttempt?.rootExpansionFloorCount) || 0),
+                                            relaxRootSuppressionFirstLayer: true,
+                                            disabledPrunes: mergeDisabledPrunes(connectorAttempt?.disabledPrunes, ['mustPassBound', 'mustCrossBound']),
+                                            commitmentPlan: {
+                                                horizonSteps: Math.min(12, Math.max(6, (connectorAttempt.bridgeRouteHint.length - 1))),
+                                                axisLockTolerance: 0.6,
+                                                driftPenalty: 0.8
+                                            },
+                                            routeCommitPrefix: connectorAttempt.bridgeRouteHint.slice(0, 10),
+                                            routeCommitSuffix: connectorAttempt.bridgeRouteHint.slice(),
+                                            orderingTweaks: compactDefined({
+                                                ...(connectorAttempt.orderingTweaks || {}),
+                                                mitmStrictRouteFollower: true,
+                                                mitmStrictDirectionalSuffix: true
+                                            })
+                                        };
+                                        const strictReg = registerAttemptSignature(strictConnector, { markDuplicate: true });
+                                        if (strictReg?.allowed) {
+                                            attempts.splice(Math.min(attempts.length, insertAt + 2), 0, strictConnector);
+                                        }
+                                        const directionalClosureConnector = {
+                                            ...strictConnector,
+                                            label: `${connectorAttemptLabel}-directional-closure`,
+                                            retryTag: 'mitm-connector-directional-closure',
+                                            escalationReason: 'mitm-connector-directional-closure',
+                                            policyProfile: 'closureCommitment',
+                                            orderingPolicy: 'closureCommitment',
+                                            scoringMode: 'closure-focal-lex',
+                                            portalBiasMode: 'off',
+                                            forceRootExpansionFloor: true,
+                                            rootExpansionFloorCount: Math.max(14, Number(strictConnector?.rootExpansionFloorCount) || 0),
+                                            endgameIDAStarEnabled: true,
+                                            endgameIDAStarTriggerDepthRatio: 0.68,
+                                            endgameIDAStarBoundCeiling: Math.max(30, Number(strictConnector?.endgameIDAStarBoundCeiling) || 0),
+                                            endgameIDAStarBudgetFraction: Math.max(0.8, Number(strictConnector?.endgameIDAStarBudgetFraction) || 0),
+                                            // Force bridge adherence end-to-end for this dedicated closure lane.
+                                            routeCommitPrefix: strictConnector.bridgeRouteHint.slice(0, Math.min(12, strictConnector.bridgeRouteHint.length)),
+                                            routeCommitSuffix: strictConnector.bridgeRouteHint.slice(),
+                                            forbiddenPrefixes: null,
+                                            orderingTweaks: compactDefined({
+                                                ...(strictConnector.orderingTweaks || {}),
+                                                mitmDirectionalClosureForced: true
+                                            })
+                                        };
+                                        const directionalReg = registerAttemptSignature(directionalClosureConnector, { markDuplicate: true });
+                                        if (directionalReg?.allowed) {
+                                            attempts.splice(Math.min(attempts.length, insertAt + 3), 0, directionalClosureConnector);
+                                        }
+                                    }
+                                    if (currentAttemptEntry) {
+                                        currentAttemptEntry.nextAttemptInserted = true;
+                                        currentAttemptEntry.nextAttemptReason = 'mitm-connector-closure-attempt';
+                                        currentAttemptEntry.mitmConnectorAccepted = true;
+                                        currentAttemptEntry.mitmConnectorQuality = connectorAttempt.mitmConnectorQuality;
+                                    }
+                                } else if (currentAttemptEntry) {
+                                    currentAttemptEntry.nextAttemptBlockedReason = connectorRegistration?.reason || 'duplicate-signature';
+                                    currentAttemptEntry.mitmConnectorAccepted = false;
+                                    currentAttemptEntry.mitmConnectorFailureReason = connectorRegistration?.reason || 'duplicate-signature';
+                                }
+                            }
+                        } else if (mitmCheck?.triggered) {
+                            // No immediate meet signal: force root-side novelty away from the
+                            // current top root candidates so the next attempt explores a different
+                            // connector neighborhood before re-running meet checks.
+                            const topRootKeys = Array.isArray(currentAttemptEntry?.rootMoveScores)
+                                ? currentAttemptEntry.rootMoveScores.map(item => Number(item?.key)).filter(Number.isFinite).slice(0, 4)
+                                : [];
+                            if (topRootKeys.length > 0) {
+                                const existingForbidden = Array.isArray(nextAttempt.forbiddenFirstMoves) ? nextAttempt.forbiddenFirstMoves : [];
+                                nextAttempt.forbiddenFirstMoves = Array.from(new Set([...existingForbidden, ...topRootKeys]));
+                                nextAttempt.forceRootExpansionFloor = true;
+                                nextAttempt.rootExpansionFloorCount = Math.max(8, Number(nextAttempt.rootExpansionFloorCount) || 0);
+                                nextAttempt.retryTag = `${nextAttempt.retryTag || 'mitm'}-no-meet-root-diversify`;
+                                setAdaptationReason('mitm-no-meet-root-diversify', {
+                                    mitmMeetCount: 0,
+                                    mitmForbiddenRootKeys: topRootKeys.length
+                                });
+                                if (currentAttemptEntry) {
+                                    currentAttemptEntry.mitmMeetCheck = mitmCheck;
+                                    currentAttemptEntry.mitmNoMeetRootDiversify = true;
+                                }
+                            }
+                        }
+                    }
+const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         && (nodesExpanded === 0 || maxDepthReached === 0);
                     if (zeroExpansionTimeoutGuard) {
                         const forcedCycle = this._switchAttemptStrategyFamily(nextAttempt, {
@@ -12868,7 +13860,7 @@ function installSolver(APP) {
                     // Checked before broadStagnation so the more-specific pattern wins when both are present.
                     // Threshold floor 80 (was 120) removes a false barrier at late attempts where i*120 >= 720.
                     const nearSolutionFloodThreshold = Math.max(80, 800 - (i * 120));
-                    const nearSolutionFloodLowerBoundThreshold = 2;
+                    const nearSolutionFloodLowerBoundThreshold = 4;
                     // Broadened to include no-solution-inconclusive to match timeoutProne; otherwise a single
                     // inconclusive attempt in the recent window silently disqualifies the rescue even when
                     // every attempt is a timeout-class failure.
@@ -12917,12 +13909,12 @@ function installSolver(APP) {
                         : Infinity;
                     const plateauLatestBound = plateauWindowSize > 0 ? plateauBoundsWindow[plateauWindowSize - 1] : Infinity;
                     const plateauObligationSlope = Math.abs(Number(attemptResult?.debug?.causality?.obligationReductionSlope) || 0);
-                    const boundPlateauEligible = plateauWindowSize >= 3
-                        && plateauBoundSpan <= 2
+                    const boundPlateauEligible = plateauWindowSize >= 2
+                        && plateauBoundSpan <= 3
                         && Number.isFinite(plateauLatestBound)
                         && plateauLatestBound > 0
                         && plateauLatestBound <= closerTerritoryBoundCeiling
-                        && plateauObligationSlope <= 0.01;
+                        && plateauObligationSlope <= 0.015;
                     const nearSolutionFloodDetected = timeoutProne
                         && nearClosureCountRemaining
                         && repeatedTimeoutOutcome
@@ -13022,11 +14014,19 @@ function installSolver(APP) {
                         && remainingMustCrossValue > 0
                         && lowerBoundStalled
                         && nearMustCrossPresent;
+                    const mustCrossPlateauRescueDetected = timeoutProne
+                        && timeoutLikeAttemptsSoFar >= 2
+                        && mustCrossCountRemaining
+                        && remainingMustCrossValue >= 6
+                        && lowerBoundStalled
+                        && Number.isFinite(bestLowerBoundToValidSolution)
+                        && bestLowerBoundToValidSolution <= 18;
                     const mustCrossScheduleRescueDetected = (timeoutProne
                             && mustCrossCountRemaining
                             && remainingMustCrossValue > 0
                             && (mustCrossScheduleThresholdMet || scheduleAwareLowerBoundMet))
-                        || mustCrossStallRescueDetected;
+                        || mustCrossStallRescueDetected
+                        || mustCrossPlateauRescueDetected;
                     const mustCrossRescueGateMissed = mustCrossScheduleRescueDetected
                         ? null
                         : (!timeoutProne
@@ -13035,7 +14035,7 @@ function installSolver(APP) {
                                 ? 'mustCrossScheduleRescueCount'
                                 : (remainingMustCrossValue <= 0
                                     ? 'remainingMustCross'
-                                    : (!mustCrossScheduleThresholdMet && !scheduleAwareLowerBoundMet && !(lowerBoundStalled && nearMustCrossPresent)
+                                    : (!mustCrossScheduleThresholdMet && !scheduleAwareLowerBoundMet && !(lowerBoundStalled && (nearMustCrossPresent || mustCrossPlateauRescueDetected))
                                         ? (lowerBoundStalled
                                             ? (nearMustCrossPresent ? null : 'nearMustCrossPresent')
                                             : (recentTimeoutBoundsForStall.length < 3 ? 'lowerBoundStalledSamples' : 'lowerBoundStalled'))
@@ -13047,6 +14047,7 @@ function installSolver(APP) {
                         attemptResult.debug.mustCrossLowerBoundStalled = !!lowerBoundStalled;
                         attemptResult.debug.mustCrossNearMustCrossPresent = !!nearMustCrossPresent;
                         attemptResult.debug.mustCrossScheduleAwareLowerBoundMet = !!scheduleAwareLowerBoundMet;
+                        attemptResult.debug.mustCrossPlateauRescueDetected = !!mustCrossPlateauRescueDetected;
                     }
                     const configureNearClosureRescueAttempt = (targetAttempt = {}, budgetHint = 1) => {
                         const existingMemo = Number(targetAttempt.memoStrictness);
@@ -13244,6 +14245,13 @@ function installSolver(APP) {
                         nextAttempt.policyProfile = 'mustCrossFirst';
                         nextAttempt.orderingPolicy = 'mustCrossFirst';
                         nextAttempt.passPortalBiasMode = 'off';
+                        nextAttempt.forceRootExpansionFloor = true;
+                        nextAttempt.rootExpansionFloorCount = Math.max(
+                            4,
+                            Number(nextAttempt.rootExpansionFloorCount) || 0,
+                            Number(attemptResult?.debug?.depth0FamilyCount) || 0
+                        );
+                        nextAttempt.relaxRootSuppressionFirstLayer = true;
                         nextAttempt.retryTag = 'must-cross-schedule-rescue';
                         nextAttempt.escalationReason = 'must-cross-schedule-rescue';
                         nextAttempt.orderingTweaks = compactDefined({
