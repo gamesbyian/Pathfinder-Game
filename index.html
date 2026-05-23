@@ -5533,7 +5533,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ? Math.max(1, Math.floor(options.maxWallTimeMs))
                 : HINT_LADDER_CAP_MS;
             const startedAt = performance.now();
-            const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
+            const hintRes = await APP.Solver.universalSolveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
                 purpose: 'hint',
                 auditMode,
                 disableLegacyFallback,
