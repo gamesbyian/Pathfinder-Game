@@ -40,6 +40,7 @@ import vm from 'node:vm';
 import path from 'node:path';
 import process from 'node:process';
 import { execSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 // --- CLI args ---
 const args = process.argv.slice(2);
@@ -116,6 +117,33 @@ const parseLevelSpec = (spec) => {
 const parseNumberList = (raw) => {
   if (!raw) return null;
   return raw.split(',').map((v) => Number(v.trim())).filter((n) => Number.isFinite(n));
+};
+
+const formatLevelTag = (levelSet) => {
+  if (!levelSet) return 'all';
+  const levels = [...levelSet].sort((a, b) => a - b);
+  if (levels.length === 0) return 'none';
+
+  const segments = [];
+  let start = levels[0];
+  let prev = levels[0];
+  for (let i = 1; i < levels.length; i++) {
+    const n = levels[i];
+    if (n === prev + 1) {
+      prev = n;
+      continue;
+    }
+    segments.push(start === prev ? `${start}` : `${start}-${prev}`);
+    start = n;
+    prev = n;
+  }
+  segments.push(start === prev ? `${start}` : `${start}-${prev}`);
+
+  const compact = `L${segments.join('_')}`;
+  if (compact.length <= 96) return compact;
+
+  const digest = createHash('sha1').update(levels.join(',')).digest('hex').slice(0, 12);
+  return `L${levels[0]}-${levels[levels.length - 1]}_n${levels.length}_${digest}`;
 };
 
 const levelFilter = parseLevelSpec(argMap.get('--levels'));
@@ -533,7 +561,7 @@ if (writeHistory) {
   await mkdir(historyDir, { recursive: true });
   const stamp = utcStamp();
   const shortSha = `${meta.commitSha || 'local'}`.slice(0, 12);
-  const tag = levelFilter ? `L${[...levelFilter].sort((a, b) => a - b).join('-')}` : 'all';
+  const tag = formatLevelTag(levelFilter);
   const historyPath = path.join(historyDir, `${stamp}-${shortSha}-${tag}.json`);
   await writeFile(historyPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
   console.log(`History ${path.relative(process.cwd(), historyPath)}`);
