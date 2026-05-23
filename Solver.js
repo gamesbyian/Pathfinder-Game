@@ -17337,12 +17337,9 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
 
             async function runCanonicalSolveFlow(level, opts = {}) {
                 const purpose = opts.purpose || 'solve';
-                const requestedTierBase = Number.isFinite(Number(opts.escalationTier)) ? Math.max(0, Math.floor(Number(opts.escalationTier))) : 0;
-                let requestedTier = requestedTierBase;
-                if (purpose === 'hint') {
-                    const hintHist = attemptHistory[getLevelAttemptKey(level, 'hint')] || { timesTried: 0, lastStatus: null };
-                    requestedTier = Math.max(requestedTierBase, Math.min(2, Math.max(0, Number(hintHist.timesTried) || 0)));
-                }
+                const requestedTier = Number.isFinite(Number(opts.escalationTier))
+                    ? Math.max(0, Math.floor(Number(opts.escalationTier)))
+                    : 0;
                 const plan = buildCanonicalSolvePlan(purpose, requestedTier);
                 const totalMaxMs = plan.reduce((sum, item) => sum + item.maxMs, 0);
                 let elapsedMs = 0;
@@ -17376,6 +17373,8 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 const solverResult = await runCanonicalSolveFlow(solveInputLevel, {
                     purpose,
                     escalationTier: requestedTier,
+                    executionMode: 'referee-with-compat-profiles',
+                    resetAttemptHistory: 'level',
                     onAttemptStart: ({ attempt, index, total, elapsedBeforeMs, totalMaxMs }) => {
                         const attemptType = purpose === 'hint' ? 'Hint' : 'Solve';
                         APP.UI.setModalContent('searchLabel', `${attemptType} attempt ${index}/${total}: ${attempt.label}`, 'text');
