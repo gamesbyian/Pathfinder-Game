@@ -17339,8 +17339,20 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     ];
                 };
 
+                const buildSolvePlan = (startTier = 0) => {
+                    const tier0 = Math.max(0, startTier);
+                    const tier1 = Math.max(tier0, 1);
+                    const tier2 = Math.max(tier1, 2);
+                    return [
+                        { tier: tier0, maxMs: 15000, label: 'Baseline solve search' },
+                        { tier: tier1, maxMs: 60000, label: 'Expanded solve search' },
+                        { tier: tier2, maxMs: 180000, label: 'Deep diversified solve search' }
+                    ];
+                };
+
                 const runSingleAttempt = async ({ tier, maxMs, label, index, total, elapsedBeforeMs, totalMaxMs }) => {
-                    APP.UI.setModalContent('searchLabel', `Hint attempt ${index}/${total}: ${label}`, 'text');
+                    const attemptType = purpose === 'hint' ? 'Hint' : 'Solve';
+                    APP.UI.setModalContent('searchLabel', `${attemptType} attempt ${index}/${total}: ${label}`, 'text');
                     APP.UI.setSolverDetailText(`Trying tier ${tier}. If this attempt fails, next: ${index < total ? `attempt ${index + 1}` : 'stop and report result'}.`);
                     if (totalMaxMs > 0) {
                         APP.UI.setSolverProgress((elapsedBeforeMs / totalMaxMs) * 100);
@@ -17389,7 +17401,35 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     }
                     solverResult = finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
                 } else {
-                    solverResult = await APP.Solver.solveLevel(solveInputLevel, { purpose, escalationTier: requestedTier, allowReferee: true });
+                    const plan = buildSolvePlan(requestedTier);
+                    const totalMaxMs = plan.reduce((sum, item) => sum + item.maxMs, 0);
+                    let elapsedMs = 0;
+                    let finalAttempt = null;
+                    for (let i = 0; i < plan.length; i++) {
+                        const attempt = plan[i];
+                        const out = await runSingleAttempt({
+                            ...attempt,
+                            index: i + 1,
+                            total: plan.length,
+                            elapsedBeforeMs: elapsedMs,
+                            totalMaxMs
+                        });
+                        elapsedMs += Math.max(out.elapsedMs, out.plannedMs * 0.25);
+                        finalAttempt = out.result;
+                        const statusNow = out.result?.finalStatus || out.result?.rawStatus || out.result?.status || 'unknown';
+                        const solved = !!out.result?.ok;
+                        const provenNoSolution = statusNow === 'no-solution-proven';
+                        const aborted = statusNow === 'aborted';
+                        if (solved || provenNoSolution || aborted || APP.State.ENGINE.solverAbortRequested || i === plan.length - 1) {
+                            if (solved) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished: solution found.`);
+                            else if (provenNoSolution) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished: puzzle proven unsolved.`);
+                            else if (aborted || APP.State.ENGINE.solverAbortRequested) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} cancelled by user.`);
+                            else APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished with no solution.`);
+                            break;
+                        }
+                        APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished with no solution. Next: attempt ${i + 2}/${plan.length}.`);
+                    }
+                    solverResult = finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
                 }
                 console.info('[Solver] runGameSolver', {
                     purpose,
@@ -17431,7 +17471,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     if (purpose === 'hint') {
                         APP.UI.showMessage('No hint found after full automated search.', 'text-amber-600');
                     } else {
-                        APP.UI.showMessage('No solution found. Press Solve for an extended search.', 'text-amber-600');
+                        APP.UI.showMessage('No solution found after full automated search.', 'text-amber-600');
                     }
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }
