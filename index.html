@@ -6471,11 +6471,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('editMegaSolver').onclick = async () => {
             APP.UI.closeAllModals();
             try {
-                const solveResult = await APP.Solver.runGameSolver('solve', consecutiveSolveFails);
+                const solveResult = await APP.Solver.runGameSolver('solve');
                 if (solveResult?.reason === 'already-running') return;
-                if (!solveResult?.ok) consecutiveSolveFails++;
             } catch (err) {
-                consecutiveSolveFails++;
                 console.error('Solve failed:', err);
                 APP.UI.showMessage(`Solve failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
