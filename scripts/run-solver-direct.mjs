@@ -403,7 +403,14 @@ for (const levelNumber of levelNumbers) {
     // solveLevel uses APP.State.ENGINE.activeSolverController; reset it per call.
     APP.State.ENGINE.activeSolverController = null;
     APP.State.ENGINE.solverAbortRequested = false;
-    result = await Solver.solveLevel(level, { ...solveOpts });
+    if (typeof Solver.universalSolveLevel === 'function') {
+      result = await Solver.universalSolveLevel(level, {
+        ...solveOpts,
+        resetAttemptHistory: 'level'
+      });
+    } else {
+      result = await Solver.solveLevel(level, { ...solveOpts });
+    }
   } catch (solveErr) {
     levelResults.push({
       level: levelNumber,
