@@ -17317,6 +17317,53 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             }, 0);
 
 
+            function buildCanonicalSolvePlan(purpose = 'solve', startTier = 0) {
+                const tier0 = Math.max(0, startTier);
+                const tier1 = Math.max(tier0, 1);
+                const tier2 = Math.max(tier1, 2);
+                if (purpose === 'hint') {
+                    return [
+                        { tier: tier0, maxMs: 5000, label: 'Baseline hint search' },
+                        { tier: tier1, maxMs: 9000, label: 'Expanded hint search' },
+                        { tier: tier2, maxMs: 15000, label: 'Deep diversified hint search' }
+                    ];
+                }
+                return [
+                    { tier: tier0, maxMs: 15000, label: 'Baseline solve search' },
+                    { tier: tier1, maxMs: 60000, label: 'Expanded solve search' },
+                    { tier: tier2, maxMs: 180000, label: 'Deep diversified solve search' }
+                ];
+            }
+
+            async function runCanonicalSolveFlow(level, opts = {}) {
+                const purpose = opts.purpose || 'solve';
+                const requestedTierBase = Number.isFinite(Number(opts.escalationTier)) ? Math.max(0, Math.floor(Number(opts.escalationTier))) : 0;
+                let requestedTier = requestedTierBase;
+                if (purpose === 'hint') {
+                    const hintHist = attemptHistory[getLevelAttemptKey(level, 'hint')] || { timesTried: 0, lastStatus: null };
+                    requestedTier = Math.max(requestedTierBase, Math.min(2, Math.max(0, Number(hintHist.timesTried) || 0)));
+                }
+                const plan = buildCanonicalSolvePlan(purpose, requestedTier);
+                const totalMaxMs = plan.reduce((sum, item) => sum + item.maxMs, 0);
+                let elapsedMs = 0;
+                let finalAttempt = null;
+                for (let i = 0; i < plan.length; i++) {
+                    const attempt = plan[i];
+                    opts.onAttemptStart?.({ attempt, index: i + 1, total: plan.length, elapsedBeforeMs: elapsedMs, totalMaxMs });
+                    const startedAt = performance.now();
+                    const result = await solveLevel(level, { ...opts, purpose, escalationTier: attempt.tier, allowReferee: true, estimatedMaxMs: totalMaxMs, detailLabel: `Attempt ${i + 1}/${plan.length}: ${attempt.label}` });
+                    const elapsed = Math.max(0, performance.now() - startedAt);
+                    elapsedMs += Math.max(elapsed, attempt.maxMs * 0.25);
+                    finalAttempt = result;
+                    const statusNow = result?.finalStatus || result?.rawStatus || result?.status || 'unknown';
+                    const solved = !!result?.ok;
+                    const stop = solved || statusNow === 'no-solution-proven' || statusNow === 'aborted' || APP.State.ENGINE.solverAbortRequested || i === plan.length - 1;
+                    opts.onAttemptResult?.({ result, attempt, index: i + 1, total: plan.length, elapsedMs, stop });
+                    if (stop) break;
+                }
+                return finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
+            }
+
             async function runGameSolver(purpose = 'solve', escalationTier = 0) {
                 if (APP.Solver.isRunning()) {
                     APP.UI.showSolverAlreadyRunning();
@@ -17325,117 +17372,31 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
-                const requestedTierBase = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
-                let requestedTier = requestedTierBase;
-                if (purpose === 'hint') {
-                    const hintHist = attemptHistory[getLevelAttemptKey(solveInputLevel, 'hint')] || { timesTried: 0, lastStatus: null };
-                    const pressDrivenTier = Math.min(2, Math.max(0, Number(hintHist.timesTried) || 0));
-                    requestedTier = Math.max(requestedTierBase, pressDrivenTier);
-                }
-
-                const buildHintPlan = (startTier = 0) => {
-                    const tier0 = Math.max(0, startTier);
-                    const tier1 = Math.max(tier0, 1);
-                    const tier2 = Math.max(tier1, 2);
-                    return [
-                        { tier: tier0, maxMs: 5000, label: 'Baseline hint search' },
-                        { tier: tier1, maxMs: 9000, label: 'Expanded hint search' },
-                        { tier: tier2, maxMs: 15000, label: 'Deep diversified hint search' }
-                    ];
-                };
-
-                const buildSolvePlan = (startTier = 0) => {
-                    const tier0 = Math.max(0, startTier);
-                    const tier1 = Math.max(tier0, 1);
-                    const tier2 = Math.max(tier1, 2);
-                    return [
-                        { tier: tier0, maxMs: 15000, label: 'Baseline solve search' },
-                        { tier: tier1, maxMs: 60000, label: 'Expanded solve search' },
-                        { tier: tier2, maxMs: 180000, label: 'Deep diversified solve search' }
-                    ];
-                };
-
-                const runSingleAttempt = async ({ tier, maxMs, label, index, total, elapsedBeforeMs, totalMaxMs }) => {
-                    const attemptType = purpose === 'hint' ? 'Hint' : 'Solve';
-                    APP.UI.setModalContent('searchLabel', `${attemptType} attempt ${index}/${total}: ${label}`, 'text');
-                    APP.UI.setSolverDetailText(`Trying tier ${tier}. If this attempt fails, next: ${index < total ? `attempt ${index + 1}` : 'stop and report result'}.`);
-                    if (totalMaxMs > 0) {
-                        APP.UI.setSolverProgress((elapsedBeforeMs / totalMaxMs) * 100);
-                    }
-                    const startedAt = performance.now();
-                    const result = await APP.Solver.universalSolveLevel(solveInputLevel, {
-                        purpose,
-                        escalationTier: tier,
-                        allowReferee: true,
-                        estimatedMaxMs: totalMaxMs,
-                        detailLabel: `Attempt ${index}/${total}: ${label}`
-                    });
-                    const elapsed = Math.max(0, performance.now() - startedAt);
-                    return { result, elapsedMs: elapsed, plannedMs: maxMs };
-                };
-
-                let solverResult;
-                if (purpose === 'hint') {
-                    const plan = buildHintPlan(requestedTier);
-                    const totalMaxMs = plan.reduce((sum, item) => sum + item.maxMs, 0);
-                    let elapsedMs = 0;
-                    let finalAttempt = null;
-                    for (let i = 0; i < plan.length; i++) {
-                        const attempt = plan[i];
-                        const out = await runSingleAttempt({
-                            ...attempt,
-                            index: i + 1,
-                            total: plan.length,
-                            elapsedBeforeMs: elapsedMs,
-                            totalMaxMs
-                        });
-                        elapsedMs += Math.max(out.elapsedMs, out.plannedMs * 0.25);
-                        finalAttempt = out.result;
-                        const statusNow = out.result?.finalStatus || out.result?.rawStatus || out.result?.status || 'unknown';
-                        const solved = !!out.result?.ok;
+                const requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
+                const solverResult = await runCanonicalSolveFlow(solveInputLevel, {
+                    purpose,
+                    escalationTier: requestedTier,
+                    onAttemptStart: ({ attempt, index, total, elapsedBeforeMs, totalMaxMs }) => {
+                        const attemptType = purpose === 'hint' ? 'Hint' : 'Solve';
+                        APP.UI.setModalContent('searchLabel', `${attemptType} attempt ${index}/${total}: ${attempt.label}`, 'text');
+                        APP.UI.setSolverDetailText(`Trying tier ${attempt.tier}. If this attempt fails, next: ${index < total ? `attempt ${index + 1}` : 'stop and report result'}.`);
+                        if (totalMaxMs > 0) APP.UI.setSolverProgress((elapsedBeforeMs / totalMaxMs) * 100);
+                    },
+                    onAttemptResult: ({ result, index, total, stop }) => {
+                        const statusNow = result?.finalStatus || result?.rawStatus || result?.status || 'unknown';
+                        const solved = !!result?.ok;
                         const provenNoSolution = statusNow === 'no-solution-proven';
-                        const aborted = statusNow === 'aborted';
-                        if (solved || provenNoSolution || aborted || APP.State.ENGINE.solverAbortRequested || i === plan.length - 1) {
-                            if (solved) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished: hint found.`);
-                            else if (provenNoSolution) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished: puzzle proven unsolved.`);
-                            else if (aborted || APP.State.ENGINE.solverAbortRequested) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} cancelled by user.`);
-                            else APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished with no hint.`);
-                            break;
+                        const aborted = statusNow === 'aborted' || APP.State.ENGINE.solverAbortRequested;
+                        if (stop) {
+                            if (solved) APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished: ${purpose === 'hint' ? 'hint found' : 'solution found'}.`);
+                            else if (provenNoSolution) APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished: puzzle proven unsolved.`);
+                            else if (aborted) APP.UI.setSolverDetailText(`Attempt ${index}/${total} cancelled by user.`);
+                            else APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished with no ${purpose === 'hint' ? 'hint' : 'solution'}.`);
+                        } else {
+                            APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished with no ${purpose === 'hint' ? 'hint' : 'solution'}. Next: attempt ${index + 1}/${total}.`);
                         }
-                        APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished with no hint. Next: attempt ${i + 2}/${plan.length}.`);
                     }
-                    solverResult = finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
-                } else {
-                    const plan = buildSolvePlan(requestedTier);
-                    const totalMaxMs = plan.reduce((sum, item) => sum + item.maxMs, 0);
-                    let elapsedMs = 0;
-                    let finalAttempt = null;
-                    for (let i = 0; i < plan.length; i++) {
-                        const attempt = plan[i];
-                        const out = await runSingleAttempt({
-                            ...attempt,
-                            index: i + 1,
-                            total: plan.length,
-                            elapsedBeforeMs: elapsedMs,
-                            totalMaxMs
-                        });
-                        elapsedMs += Math.max(out.elapsedMs, out.plannedMs * 0.25);
-                        finalAttempt = out.result;
-                        const statusNow = out.result?.finalStatus || out.result?.rawStatus || out.result?.status || 'unknown';
-                        const solved = !!out.result?.ok;
-                        const provenNoSolution = statusNow === 'no-solution-proven';
-                        const aborted = statusNow === 'aborted';
-                        if (solved || provenNoSolution || aborted || APP.State.ENGINE.solverAbortRequested || i === plan.length - 1) {
-                            if (solved) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished: solution found.`);
-                            else if (provenNoSolution) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished: puzzle proven unsolved.`);
-                            else if (aborted || APP.State.ENGINE.solverAbortRequested) APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} cancelled by user.`);
-                            else APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished with no solution.`);
-                            break;
-                        }
-                        APP.UI.setSolverDetailText(`Attempt ${i + 1}/${plan.length} finished with no solution. Next: attempt ${i + 2}/${plan.length}.`);
-                    }
-                    solverResult = finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
-                }
+                });
                 console.info('[Solver] runGameSolver', {
                     purpose,
                     levelId: Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null,
@@ -18483,7 +18444,9 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             getStatus: () => ({ ...status, active: !!APP.State.ENGINE.activeSolverController }),
             Referee,
             runGameSolver: (...args) => runGameSolver(...args),
-            universalSolveLevel: (level, opts = {}) => solveLevel(level, {
+            buildCanonicalSolvePlan,
+            runCanonicalSolveFlow,
+            universalSolveLevel: (level, opts = {}) => runCanonicalSolveFlow(level, {
                 ...opts,
                 purpose: opts.purpose || 'hint',
                 executionMode: opts.executionMode || 'referee-with-compat-profiles',
