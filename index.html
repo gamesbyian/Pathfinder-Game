@@ -6270,7 +6270,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                         debugProbeNewHintLevelPurity(activeLevel);
                         const normalized = APP.LevelUtils.canonicalCloneLevel(activeLevel);
                         const ladderResult = await runHintLadder(normalized, {
-                            auditMode: false,
+                            auditMode: true,
+                            disableLegacyFallback: getAuditDisableLegacyFallback(),
                             maxWallTimeMs: HINT_LADDER_CAP_MS
                         });
                         if (ladderResult.ok && Array.isArray(ladderResult.selectedHintPath)) {
