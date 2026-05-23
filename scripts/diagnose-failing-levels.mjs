@@ -27,20 +27,11 @@ const fmt   = k => `(${keyX(k)+1},${keyY(k)+1})`;   // back to 1-based for displ
 // ─── load level data ──────────────────────────────────────────────────────────
 async function loadLevels() {
   const src1 = await readFile(path.join(root, 'levels.js'),  'utf8');
-  const src2 = await readFile(path.join(root, 'levels2.js'), 'utf8');
-
-  // Both files assign to window.RAW_LEVELS — eval with a fake window
+  // levels.js assigns to window.RAW_LEVELS — eval with a fake window
   const window = {};
   // eslint-disable-next-line no-new-func
   new Function('window', src1)(window);
-  const levels1 = window.RAW_LEVELS || [];
-  window.RAW_LEVELS = null;
-  // eslint-disable-next-line no-new-func
-  new Function('window', src2)(window);
-  const levels2 = window.RAW_LEVELS || [];
-
-  // Combine: levels.js = 1-68, levels2.js = 69-137 (1-indexed)
-  return [...levels1, ...levels2];   // index 0 = level 1
+  return window.RAW_LEVELS || []; // index 0 = level 1
 }
 
 // ─── load latest audit ────────────────────────────────────────────────────────

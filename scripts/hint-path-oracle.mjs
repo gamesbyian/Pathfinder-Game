@@ -37,22 +37,17 @@ const UNPACK = k => ({ x: k & 0xFFFF, y: (k >> 16) & 0xFFFF });
 const adj = v => v - 1;
 const packLevelCoord = (x, y) => PACK(adj(x), adj(y));
 
-// --- Load levels from levels.js + levels2.js ---
+// --- Load levels from levels.js ---
 async function loadAllLevels() {
   const root = new URL('..', import.meta.url).pathname;
   const window = {};
   const ctx = vm.createContext({ window });
 
-  for (const file of ['levels.js', 'levels2.js']) {
-    const filePath = path.join(root, file);
-    if (!existsSync(filePath)) continue;
-    const src = await readFile(filePath, 'utf8');
-    try {
-      vm.runInContext(src, ctx, { filename: file });
-    } catch {
-      // levels2.js may extend the array with push or assignment
-    }
-  }
+  const file = 'levels.js';
+  const filePath = path.join(root, file);
+  if (!existsSync(filePath)) throw new Error('levels.js not found');
+  const src = await readFile(filePath, 'utf8');
+  vm.runInContext(src, ctx, { filename: file });
 
   const levels = ctx.window.RAW_LEVELS;
   if (!Array.isArray(levels) || levels.length === 0) {
