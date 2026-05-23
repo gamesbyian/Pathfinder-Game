@@ -17373,6 +17373,8 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 const solverResult = await runCanonicalSolveFlow(solveInputLevel, {
                     purpose,
                     escalationTier: requestedTier,
+                    executionMode: 'referee-with-compat-profiles',
+                    resetAttemptHistory: 'level',
                     onAttemptStart: ({ attempt, index, total, elapsedBeforeMs, totalMaxMs }) => {
                         const attemptType = purpose === 'hint' ? 'Hint' : 'Solve';
                         APP.UI.setModalContent('searchLabel', `${attemptType} attempt ${index}/${total}: ${attempt.label}`, 'text');
