@@ -5533,294 +5533,50 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 ? Math.max(1, Math.floor(options.maxWallTimeMs))
                 : HINT_LADDER_CAP_MS;
             const startedAt = performance.now();
-            const attemptHistory = [];
-            let status = 'error';
-            let stopReason = 'error';
-            let finalHintResult = null;
-            let selectedHintPath = null;
-            let cancelled = false;
-            let solved = false;
-            let provenNoSolution = false;
-            const ladderAttemptPolicySignatures = new Set();
-            const hintLadderState = {
-                recentTimeoutAttempts: [],
-                queuedAttemptSignatureHashes: [],
-                recentOutcomeTrajectoryHashes: [],
-                forceFamilySwitchNextAttempt: false,
-                forcedFamilySwitchReason: null,
-                retryFingerprintDupes: 0
-            };
-            // Accumulator for explicit first-move forbids. Each iteration N's actual
-            // first move (path[1] from its deepest-observed prefix) is added so
-            // iteration N+1 can't pick it again. Capped at 5 entries — beyond that
-            // every legal first move from the gate is typically forbidden, at which
-            // point the in-solver fallback kicks in and we accept whatever lands.
-            // Audit 46 evidence: archetype rotation alone produced uniform depth-84
-            // basin convergence — heuristic-level diversity wasn't enough to escape
-            // L92's attractor, so hard-forbidding first moves is the stronger lever.
-            const ladderForbiddenFirstMoves = [];
-
-            const classifyHintStatus = (hintRes, hintValidation) => {
-                if (hintRes?.ok && hintValidation?.ok) return 'success';
-                if (hintRes?.rawStatus === 'no-solution-proven') return 'no-solution-proven';
-                if (hintRes?.rawStatus === 'no-solution-inconclusive') return 'no-solution-inconclusive';
-                if (hintRes?.status === 'no-solution') return 'no-solution-inconclusive';
-                if (hintRes?.status === 'timeout' || hintRes?.rawStatus === 'timeout') return 'timeout';
-                if (hintRes?.status === 'aborted' || hintRes?.rawStatus === 'aborted') return 'aborted';
-                return 'error';
-            };
-
-            try {
-                await new Promise(requestAnimationFrame);
-                for (let attemptIndex = 0; ; attemptIndex++) {
-                    const elapsedWallMs = Math.round(performance.now() - startedAt);
-                    const remainingMs = maxWallTimeMs - elapsedWallMs;
-                    if (remainingMs <= 0) {
-                        status = 'timeout';
-                        stopReason = 'cap-reached';
-                        break;
-                    }
-                    if (APP.State.ENGINE.solverAbortRequested) {
-                        cancelled = true;
-                        status = 'aborted';
-                        stopReason = 'cancelled';
-                        break;
-                    }
-                    if (!(await waitForSolverIdle(2000))) {
-                        APP.Solver.cancel();
-                        await waitForSolverIdle(2000);
-                    }
-                    const label = toAttemptLabel(attemptIndex);
-                    const policy = buildHintAttemptPolicy({ attemptIndex, disableLegacyFallback });
-                    const policySignature = JSON.stringify({
-                        variant: policy.variant || null,
-                        escalationTier: Number.isFinite(policy.escalationTier) ? policy.escalationTier : null,
-                        disableLegacyFallback: !!policy.disableLegacyFallback,
-                        forcePreExpansionRescue: !!policy.forcePreExpansionRescue,
-                        fallbackDisabledPrunes: Array.isArray(policy.fallbackDisabledPrunes) ? policy.fallbackDisabledPrunes.slice().sort() : [],
-                        rootTieSeedOffset: Number.isFinite(policy.rootTieSeedOffset) ? policy.rootTieSeedOffset : null,
-                        rootOrderingVariant: policy.rootOrderingVariant || null
-                    });
-                    if (ladderAttemptPolicySignatures.has(policySignature)) {
-                        attemptHistory.push({
-                            attempt: label,
-                            variant: policy.variant || 'default',
-                            status: 'skipped-duplicate-policy',
-                            rawStatus: 'skipped-duplicate-policy',
-                            elapsedMs: 0,
-                            producedHintValid: false,
-                            diagnosticsSummary: null
-                        });
-                        continue;
-                    }
-                    ladderAttemptPolicySignatures.add(policySignature);
-                    // Piggyback the cumulative first-move forbid set on hintLadderState.
-                    // Audit 47 evidence: the direct opts.forbiddenFirstMoves channel
-                    // is dropped at most of the 9 Referee.solve cascade-pass call
-                    // sites (only stage 0 explicitly threads it). hintLadderState IS
-                    // already plumbed through every cascade path, so attaching the
-                    // forbid set here ensures it reaches runAttempt regardless of
-                    // which recovery/rescue stage runs last. The opts entry below
-                    // is kept as a redundant signal for the stage-0 path.
-                    hintLadderState.forbiddenFirstMoves = ladderForbiddenFirstMoves.slice();
-                    const attemptStart = performance.now();
-                    const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
-                        ...policy,
-                        auditMode,
-                        timeBudgetMs: remainingMs,
-                        hintLadderState,
-                        forbiddenFirstMoves: ladderForbiddenFirstMoves.slice()
-                    });
-                    finalHintResult = hintRes || finalHintResult;
-                    const attemptedTimeoutEntries = Array.isArray(hintRes?.attempts)
-                        ? hintRes.attempts.filter(entry => ['timeout', 'no-solution-inconclusive'].includes(`${entry?.status || ''}`)).slice(-3)
-                        : [];
-                    // Skip the overwrite when hintRes.attempts is empty — Solver.js's
-                    // persistHintLadderState already wrote a populated recentTimeoutAttempts
-                    // (with endgameIDAStarBestObservedPathPrefix included) directly to
-                    // sharedHintLadderState, which is this same hintLadderState object.
-                    // Audit 43 diagnosed the cross-iteration divergence guard as dead
-                    // because createCanonicalSolveResult strips attempts[] (regression
-                    // protection from commit 37dfd58), so the overwrite below would wipe
-                    // the solver's data with []. Defensive skip preserves what the solver
-                    // already populated.
-                    if (attemptedTimeoutEntries.length > 0) {
-                        hintLadderState.recentTimeoutAttempts = attemptedTimeoutEntries.map((entry) => ({
-                            status: entry?.status || null,
-                            label: entry?.label || null,
-                            depthReached: Number.isFinite(entry?.depthReached) ? entry.depthReached : null,
-                            rootMoveScores: Array.isArray(entry?.rootMoveScores) ? entry.rootMoveScores.slice(0, 8) : [],
-                            timeoutDiagnostics: entry?.timeoutDiagnostics || null,
-                            quality: entry?.quality || null,
-                            endgameIDAStarBestObservedPathPrefix: Array.isArray(entry?.endgameIDAStarBestObservedPathPrefix)
-                                ? entry.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
-                                : null,
-                            attemptOrdinal: Number.isFinite(entry?.attemptOrdinal) ? entry.attemptOrdinal : null
-                        }));
-                    }
-                    // Harvest this iteration's actual first move from any source we can
-                    // find. Sources in priority order:
-                    //   1. hintLadderState.recentTimeoutAttempts (solver-populated via
-                    //      persistHintLadderState; survives the createCanonicalSolveResult
-                    //      attempts[] strip)
-                    //   2. finalHintResult.solution[0].path (when the iteration solved)
-                    // path[1] is the first move's destination cell (path[0] is the start
-                    // gate). Cap the cumulative forbid set at 5 — beyond that the gate's
-                    // legal neighbors are exhausted and the solver's empty-fallback kicks
-                    // in. De-duped against the existing accumulator.
-                    if (ladderForbiddenFirstMoves.length < 5) {
-                        const recent = hintLadderState.recentTimeoutAttempts;
-                        const lastRecent = Array.isArray(recent) && recent.length > 0 ? recent[recent.length - 1] : null;
-                        const recentPrefix = Array.isArray(lastRecent?.endgameIDAStarBestObservedPathPrefix)
-                            ? lastRecent.endgameIDAStarBestObservedPathPrefix
-                            : null;
-                        const solvedPath = Array.isArray(finalHintResult?.solution?.[0]?.path)
-                            ? finalHintResult.solution[0].path
-                            : null;
-                        const firstMoveCandidates = [];
-                        if (recentPrefix && recentPrefix.length >= 2 && Number.isFinite(recentPrefix[1])) {
-                            firstMoveCandidates.push(recentPrefix[1]);
-                        }
-                        if (solvedPath && solvedPath.length >= 2 && Number.isFinite(solvedPath[1])) {
-                            firstMoveCandidates.push(solvedPath[1]);
-                        }
-                        for (const cellKey of firstMoveCandidates) {
-                            if (!ladderForbiddenFirstMoves.includes(cellKey) && ladderForbiddenFirstMoves.length < 5) {
-                                ladderForbiddenFirstMoves.push(cellKey);
-                            }
-                        }
-                    }
-                    if (Array.isArray(hintRes?.attempts)) {
-                        const hashes = hintRes.attempts
-                            .map(entry => `${entry?.attemptSignatureHash || ''}`.trim())
-                            .filter(Boolean);
-                        if (hashes.length) {
-                            hintLadderState.queuedAttemptSignatureHashes = Array.from(new Set([
-                                ...hintLadderState.queuedAttemptSignatureHashes,
-                                ...hashes
-                            ])).slice(-64);
-                        }
-                    }
-                    if (Number.isFinite(hintRes?.retryFingerprintDupes)) {
-                        hintLadderState.retryFingerprintDupes = Math.max(
-                            Number(hintLadderState.retryFingerprintDupes) || 0,
-                            Number(hintRes.retryFingerprintDupes) || 0
-                        );
-                    }
-                    const attemptTail = Array.isArray(hintRes?.attempts) && hintRes.attempts.length > 0
-                        ? hintRes.attempts[hintRes.attempts.length - 1]
-                        : null;
-                    const tailNearDim = (attemptTail?.timeoutDiagnostics?.nearSolutionByDimension && typeof attemptTail.timeoutDiagnostics.nearSolutionByDimension === 'object')
-                        ? Object.entries(attemptTail.timeoutDiagnostics.nearSolutionByDimension)
-                            .map(([k, v]) => [String(k), Math.max(0, Number(v) || 0)])
-                            .filter(([, v]) => v > 0)
-                            .sort((a, b) => a[0].localeCompare(b[0]))
-                            .map(([k, v]) => `${k}:${v}`)
-                            .join('|')
-                        : 'none';
-                    const trajectoryHash = [
-                        Number(attemptTail?.depthReached) || Number(attemptTail?.debug?.maxDepth) || 0,
-                        Math.max(0, Number(attemptTail?.quality?.nodesExpanded) || Number(attemptTail?.nodesExpanded) || Number(attemptTail?.debug?.nodesExpanded) || 0),
-                        Number(attemptTail?.quality?.constraintDeficit) || 0,
-                        tailNearDim
-                    ].join(':');
-                    const knownOutcomeHashes = new Set(
-                        Array.isArray(hintLadderState.recentOutcomeTrajectoryHashes)
-                            ? hintLadderState.recentOutcomeTrajectoryHashes.filter(Boolean).slice(-24)
-                            : []
-                    );
-                    if (trajectoryHash !== '0:0:0:none') {
-                        if (knownOutcomeHashes.has(trajectoryHash)) {
-                            hintLadderState.forceFamilySwitchNextAttempt = true;
-                            hintLadderState.forcedFamilySwitchReason = 'duplicate-outcome-trajectory';
-                        } else {
-                            knownOutcomeHashes.add(trajectoryHash);
-                            hintLadderState.forceFamilySwitchNextAttempt = false;
-                            hintLadderState.forcedFamilySwitchReason = null;
-                        }
-                        hintLadderState.recentOutcomeTrajectoryHashes = Array.from(knownOutcomeHashes).slice(-24);
-                    }
-                    const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
-                    const hintValidation = producedPath
-                        ? APP.Solver.validateCandidatePath(APP.LevelUtils.canonicalCloneLevel(normalized), copyClone(producedPath))
-                        : null;
-                    const attemptStatus = classifyHintStatus(hintRes, hintValidation);
-                    const attemptRecord = APP.Solver.toAuditAttemptSummary(hintRes, {
-                        attemptLabel: label,
-                        variant: policy.variant || 'default',
-                        escalationTierRequested: policy.escalationTier,
-                        status: attemptStatus,
-                        elapsedMs: Math.round(performance.now() - attemptStart),
-                        producedHintValid: !!hintValidation?.ok,
-                        validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
-                        diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics)
-                    });
-                    attemptHistory.push(attemptRecord);
-
-                    if (attemptStatus === 'success' && hintValidation?.ok) {
-                        solved = true;
-                        status = 'success';
-                        stopReason = 'solved';
-                        selectedHintPath = copyClone(hintValidation.path);
-                        break;
-                    }
-                    if (attemptStatus === 'no-solution-proven') {
-                        provenNoSolution = true;
-                        status = 'no-solution-proven';
-                        stopReason = 'no-solution-proven';
-                        break;
-                    }
-                    if (attemptStatus === 'aborted') {
-                        cancelled = true;
-                        status = 'aborted';
-                        stopReason = 'cancelled';
-                        break;
-                    }
-                    const wallNow = Math.round(performance.now() - startedAt);
-                    if (wallNow >= maxWallTimeMs) {
-                        status = 'timeout';
-                        stopReason = 'cap-reached';
-                        break;
-                    }
-                }
-            } catch (err) {
-                if (`${err?.name || ''}` === 'AbortError') {
-                    cancelled = true;
-                    status = 'aborted';
-                    stopReason = 'cancelled';
-                } else {
-                    status = `${err?.message || ''}`.includes('timeout') ? 'timeout' : 'error';
-                    stopReason = status === 'timeout' ? 'cap-reached' : 'error';
-                }
-            } finally {
-                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-            }
-
+            const hintRes = await APP.Solver.solveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
+                purpose: 'hint',
+                auditMode,
+                disableLegacyFallback,
+                timeBudgetMs: maxWallTimeMs
+            });
+            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+            const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
+            const hintValidation = producedPath
+                ? APP.Solver.validateCandidatePath(APP.LevelUtils.canonicalCloneLevel(normalized), copyClone(producedPath))
+                : null;
+            const status = (hintRes?.ok && hintValidation?.ok)
+                ? 'success'
+                : (hintRes?.rawStatus || hintRes?.status || 'error');
+            const attemptHistory = Array.isArray(hintRes?.attempts) ? hintRes.attempts.map((entry, idx) =>
+                APP.Solver.toAuditAttemptSummary(hintRes, {
+                    attemptLabel: toAttemptLabel(idx),
+                    variant: entry?.label || `core-${idx + 1}`,
+                    escalationTierRequested: entry?.tier ?? null,
+                    status: entry?.status || status,
+                    elapsedMs: Number(entry?.timeMs) || Number(hintRes?.totalSolveTimeMs) || 0,
+                    producedHintValid: !!hintValidation?.ok,
+                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                    diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics)
+                })
+            ) : [];
             const ladderTotalWallTimeMs = Math.round(performance.now() - startedAt);
-            const ladderTotalSolveTimeMs = attemptHistory.reduce((sum, attempt) => sum + (Number(attempt?.elapsedMs) || 0), 0);
+            const ladderTotalSolveTimeMs = Number(hintRes?.totalSolveTimeMs) || attemptHistory.reduce((sum, attempt) => sum + (Number(attempt?.elapsedMs) || 0), 0);
             const attemptLabelsTried = attemptHistory.map((attempt) => `${attempt?.attempt || ''}`.trim()).filter(Boolean);
             const attemptCount = attemptHistory.length;
-            if (!solved && !provenNoSolution && !cancelled && status === 'error' && ladderTotalWallTimeMs >= maxWallTimeMs) {
-                status = 'timeout';
-                stopReason = 'cap-reached';
-            }
-            const finalAttempt = attemptHistory[attemptHistory.length - 1] || null;
-            const finalStatus = finalHintResult?.finalStatus || finalHintResult?.rawStatus || finalAttempt?.rawStatus || status;
-            const diversityMetrics = computeLevelDiversityMetrics(attemptHistory);
             return {
-                ok: solved && Array.isArray(selectedHintPath) && selectedHintPath.length > 0,
+                ok: !!(hintRes?.ok && hintValidation?.ok),
                 status,
-                rawStatus: finalHintResult?.rawStatus || finalAttempt?.rawStatus || status,
-                finalStatus,
-                stopReason,
+                rawStatus: hintRes?.rawStatus || hintRes?.status || status,
+                finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || status,
+                stopReason: status === 'success' ? 'solved' : (status === 'timeout' ? 'cap-reached' : status),
                 attemptHistory,
                 attemptCount,
                 attemptLabelsTried,
                 ladderTotalWallTimeMs,
                 ladderTotalSolveTimeMs,
-                diversityMetrics,
-                selectedHintPath: (solved && Array.isArray(selectedHintPath) && selectedHintPath.length > 0) ? selectedHintPath : null,
-                finalHintResult,
+                diversityMetrics: computeLevelDiversityMetrics(attemptHistory),
+                selectedHintPath: hintValidation?.ok ? copyClone(hintValidation.path) : null,
+                finalHintResult: hintRes,
                 firstAttemptOutcome: attemptHistory[0]?.status || attemptHistory[0]?.rawStatus || 'not-run'
             };
         };
