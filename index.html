@@ -5591,9 +5591,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             levelEntry.newHint.featureFlags = levelFeatureFlags;
             levelEntry.newHint.featureSignature = levelFeatureSignature;
             let finalHintResult = null;
+            let ladderResult = null;
             let finalAttempt = null;
             try {
-                const ladderResult = await runHintLadder(normalized, {
+                ladderResult = await runHintLadder(normalized, {
                     auditMode: true,
                     disableLegacyFallback: getAuditDisableLegacyFallback(),
                     maxWallTimeMs: HINT_LADDER_CAP_MS
@@ -5637,13 +5638,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 if (failedAttempt.status === 'error') setLevelError(newHintErr, { source: 'newHint' });
             }
 
-            levelEntry.newHint.status = finalAttempt?.status || 'error';
-            levelEntry.newHint.rawStatus = finalHintResult?.rawStatus || finalAttempt?.rawStatus || 'error';
+            levelEntry.newHint.status = finalAttempt?.status || ladderResult?.status || finalHintResult?.status || 'error';
+            levelEntry.newHint.rawStatus = finalHintResult?.rawStatus || finalAttempt?.rawStatus || ladderResult?.rawStatus || levelEntry.newHint.status || 'error';
             levelEntry.newHint.producedHintValid = !!finalAttempt?.producedHintValid;
             const attemptHistory = Array.isArray(levelEntry.newHint.attemptHistory) ? levelEntry.newHint.attemptHistory : [];
             const firstPressAttempt = attemptHistory.find((entry) => entry?.attempt === 'A') || attemptHistory[0] || null;
             levelEntry.newHint.firstPressOutcome = firstPressAttempt?.status || firstPressAttempt?.rawStatus || 'not-run';
-            levelEntry.newHint.eventualOutcome = finalAttempt?.status || finalAttempt?.rawStatus || 'not-run';
+            levelEntry.newHint.eventualOutcome = finalAttempt?.status || finalAttempt?.rawStatus || ladderResult?.status || 'not-run';
             levelEntry.newHint.eventualOutcomeWithinPresses = attemptHistory.length;
             levelEntry.newHint.solverPath = finalHintResult?.solverPath || 'unknown';
             levelEntry.newHint.requestedSolverPath = finalHintResult?.requestedSolverPath || 'unknown';
