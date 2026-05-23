@@ -2,7 +2,7 @@
 /**
  * Direct Node-based solver driver. No Playwright, no browser. Loads Solver.js
  * via installSolver(APP) with a minimal Node shim, normalizes levels from
- * levels.js + levels2.js, then calls Solver.solveLevel(level, opts) for each
+ * levels.js, then calls Solver.solveLevel(level, opts) for each
  * target level and writes per-level JSON results.
  *
  * Usage:
@@ -244,21 +244,16 @@ const APP = {
 
 const Solver = installSolver(APP);
 
-// --- Load levels from levels.js + levels2.js (same approach as hint-path-replay) ---
+// --- Load levels from levels.js ---
 async function loadAllLevels() {
   const root = new URL('..', import.meta.url).pathname;
   const windowCtx = {};
   const ctx = vm.createContext({ window: windowCtx });
-  for (const file of ['levels.js', 'levels2.js']) {
-    const filePath = path.join(root, file);
-    if (!existsSync(filePath)) continue;
-    const src = await readFile(filePath, 'utf8');
-    try {
-      vm.runInContext(src, ctx, { filename: file });
-    } catch {
-      /* extension files may fail in isolation */
-    }
-  }
+  const file = 'levels.js';
+  const filePath = path.join(root, file);
+  if (!existsSync(filePath)) throw new Error('levels.js not found');
+  const src = await readFile(filePath, 'utf8');
+  vm.runInContext(src, ctx, { filename: file });
   const levels = ctx.window.RAW_LEVELS;
   if (!Array.isArray(levels) || levels.length === 0) {
     throw new Error('Failed to load RAW_LEVELS from levels.js');
