@@ -17363,7 +17363,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         APP.UI.setSolverProgress((elapsedBeforeMs / totalMaxMs) * 100);
                     }
                     const startedAt = performance.now();
-                    const result = await APP.Solver.solveLevel(solveInputLevel, {
+                    const result = await APP.Solver.universalSolveLevel(solveInputLevel, {
                         purpose,
                         escalationTier: tier,
                         allowReferee: true,
@@ -18484,15 +18484,10 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             Referee,
             runGameSolver: (...args) => runGameSolver(...args),
             universalSolveLevel: (level, opts = {}) => solveLevel(level, {
+                ...opts,
                 purpose: opts.purpose || 'hint',
-                auditMode: opts.auditMode !== undefined ? !!opts.auditMode : true,
-                allowReferee: opts.allowReferee !== undefined ? !!opts.allowReferee : true,
-                disableLegacyFallback: opts.disableLegacyFallback !== undefined ? !!opts.disableLegacyFallback : false,
                 executionMode: opts.executionMode || 'referee-with-compat-profiles',
-                resetAttemptHistory: opts.resetAttemptHistory || 'level',
-                timeBudgetMs: Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : undefined,
-                debug: opts.debug !== undefined ? !!opts.debug : true,
-                debugLevel: opts.debugLevel
+                resetAttemptHistory: opts.resetAttemptHistory || 'level'
             }),
             getHint: (tier = 0) => runGameSolver('hint', tier),
             startHintAnimation,
