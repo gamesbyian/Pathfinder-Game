@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { chromium } from 'playwright';
+import { execFileSync } from 'node:child_process';
 
 const HOST = '127.0.0.1';
 const PORT = 4173;
@@ -547,53 +548,64 @@ const summarizeMetrics = (payload, commitSha) => {
   return summary;
 };
 
+const mapDirectLevelToAuditLevel = (row = {}) => {
+  const solved = row?.ok === true || `${row?.status || ''}` === 'solved' || `${row?.status || ''}` === 'success';
+  const rawStatus = solved ? 'success' : (`${row?.status || ''}` === 'timeout' ? 'timeout' : `${row?.status || ''}` || 'error');
+  return {
+    level: Number(row?.level) || null,
+    status: solved ? 'success' : rawStatus,
+    rawStatus,
+    finalStatus: rawStatus,
+    finalSolvedBy: solved ? 'referee' : 'none',
+    producedHintValid: solved,
+    timeMs: Number.isFinite(row?.elapsedMs) ? row.elapsedMs : null,
+    totalSolveTimeMs: Number.isFinite(row?.elapsedMs) ? row.elapsedMs : null,
+    ladderTotalWallTimeMs: Number.isFinite(row?.elapsedMs) ? row.elapsedMs : null,
+    ladderTotalSolveTimeMs: Number.isFinite(row?.elapsedMs) ? row.elapsedMs : null,
+    stopReason: solved ? 'solved' : rawStatus,
+    attemptCount: Number.isFinite(row?.attemptHistoryCount) ? row.attemptHistoryCount : (Array.isArray(row?.attempts) ? row.attempts.length : 0),
+    attemptLabelsTried: Array.isArray(row?.attempts) ? row.attempts.map((a, i) => a?.label || `A${i + 1}`) : [],
+    failureCategory: row?.failureCategory || (solved ? 'solved-direct' : null),
+    contradictionRecoveryActivated: !!row?.contradictionRecoveryActivated,
+    preExpansionAbort: row?.preExpansionAbort || null,
+    nodesExpanded: Number.isFinite(row?.nodesExpanded) ? row.nodesExpanded : null,
+    candidateMovesConsidered: Number.isFinite(row?.candidateMovesConsidered) ? row.candidateMovesConsidered : null,
+    rootCandidatesGenerated: Number.isFinite(row?.rootCandidatesGenerated) ? row.rootCandidatesGenerated : null,
+    rootCandidateCountDepth0: Number.isFinite(row?.rootCandidateCountDepth0) ? row.rootCandidateCountDepth0 : null,
+    depth0PruneBreakdown: row?.depth0PruneBreakdown || null,
+    softBoundActivations: row?.softBoundActivations || null,
+    lowBranchModeActivated: !!row?.lowBranchModeActivated,
+    retryFingerprintDupes: Number.isFinite(row?.retryFingerprintDupes) ? row.retryFingerprintDupes : 0,
+    rootCandidatesExpanded: Number.isFinite(row?.rootCandidatesExpanded) ? row.rootCandidatesExpanded : null,
+    rootSuppressionLog: Array.isArray(row?.rootSuppressionLog) ? row.rootSuppressionLog : null,
+    attempts: Array.isArray(row?.attempts) ? row.attempts : [],
+    diversityMetrics: row?.diversityMetrics || null,
+    error: row?.error || null
+  };
+};
+
+const convertDirectToRawPayload = (direct = {}) => {
+  const levels = Array.isArray(direct?.levels) ? direct.levels.map(mapDirectLevelToAuditLevel) : [];
+  return {
+    exportMode: 'full',
+    runType: 'newHint',
+    timestamp: direct?.timestamp || new Date().toISOString(),
+    commitSha: direct?.commitSha || process.env.GITHUB_SHA || 'local',
+    levelCount: levels.length,
+    levels
+  };
+};
+
 const run = async () => {
-  const server = await startStaticServer();
-  const browser = await chromium.launch({ headless: true });
-  let page;
-  try {
-    page = await browser.newPage();
-    await page.goto(`${BASE_URL}/index.html`, { waitUntil: 'domcontentloaded', timeout: 120000 });
-
-    await page.click('#guideBtn');
-    await page.locator('#devToggleBtn').click();
-    await page.click('#closeGuideX');
-    await page.click('#openAuditModalBtn');
-    await page.click('#auditNewHintBtn');
-
-    await waitForAuditIdle(page);
-    await waitForAuditResult(page);
-
-    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: BASE_URL });
-    await page.selectOption('#auditExportMode', 'full');
-    await page.click('#copyAuditExportBtn');
-
-    let raw = '';
-    let clipboardReadStatus = 'unknown';
-    let usedClipboardFallback = false;
-    try {
-      raw = await page.evaluate(async () => {
-        if (!navigator.clipboard?.readText) return '';
-        return navigator.clipboard.readText();
-      });
-      clipboardReadStatus = raw?.trim() ? 'ok' : 'empty';
-    } catch {
-      raw = '';
-      clipboardReadStatus = 'exception';
-    }
-    if (!raw?.trim()) {
-      usedClipboardFallback = true;
-      raw = await page.locator('#auditReportRows').innerText();
-    }
-    console.log(`[audit-export] clipboardReadStatus=${clipboardReadStatus} usedClipboardFallback=${usedClipboardFallback} rawChars=${String(raw || '').length}`);
-    let rawPayload;
-    try {
-      rawPayload = JSON.parse(raw);
-    } catch (err) {
-      const preview = `${raw || ''}`.trim().slice(0, 160).replace(/\s+/g, ' ');
-      throw new Error(`Audit export is not valid JSON: ${err?.message || err}. Preview: ${preview || '(empty)'}`);
-    }
-    const payload = normalizeAuditPayload(rawPayload);
+  const directOutPath = path.join(process.cwd(), 'audits', 'local-direct', '.audit-export-tmp.json');
+  console.log('[audit-export] running node solver-direct on all levels');
+  execFileSync('node', ['scripts/run-solver-direct.mjs', '--levels=all', `--output=${directOutPath}`], {
+    stdio: 'inherit',
+    cwd: process.cwd()
+  });
+  const directPayload = JSON.parse(await readFile(directOutPath, 'utf8'));
+  const payload = normalizeAuditPayload(convertDirectToRawPayload(directPayload));
+  const raw = JSON.stringify(payload, null, 2);
 
     const stamp = utcStamp();
     const shortSha = `${process.env.GITHUB_SHA || process.env.AUDIT_GIT_SHA || 'local'}`.slice(0, 12);
@@ -653,10 +665,6 @@ const run = async () => {
     if (migrationPairs) {
       console.log(`Failure-family migration: ${migrationPairs}`);
     }
-  } finally {
-    await browser.close();
-    await new Promise((resolve, reject) => server.close((err) => (err ? reject(err) : resolve())));
-  }
 };
 
 run().catch((err) => {

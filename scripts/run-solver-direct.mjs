@@ -53,6 +53,7 @@ const argMap = new Map(
     })
 );
 const argFlags = new Set(args.filter((a) => a.startsWith('--') && !a.includes('=')));
+const parityMode = argMap.get('--parity-mode') || 'direct';
 
 if (argFlags.has('--help') || argFlags.has('-h')) {
   console.log(`Usage:
@@ -77,6 +78,9 @@ Solver options (all forwarded into Solver.solveLevel):
   --root-tie-seed-offset=N     Integer offset added to root-tiebreak seed.
   --root-ordering-variant=NAME 'objective-first-bias', 'knot-first-bias',
                                  'portal-first-bias', etc.
+  --parity-mode=MODE           'direct' (default) or 'ui'. 'ui' delegates to
+                                 scripts/run-level-audit.mjs for best parity
+                                 with in-app New Hint invocation.
 
 Output options:
   --output=PATH                Output JSON (default: audits/local-direct/latest.json).
@@ -311,6 +315,20 @@ const getCommitSha = () => {
 const utcStamp = () => new Date().toISOString().replace(/[:]/g, '-').replace(/\.\d{3}Z$/, 'Z');
 
 // --- Main ---
+if (parityMode === 'ui') {
+  const levelsSpec = argMap.get('--levels') || 'all';
+  const out = outputFile;
+  const cmd = [
+    'node',
+    'scripts/run-level-audit.mjs',
+    `--levels=${levelsSpec}`,
+    `--output=${out}`,
+    `--timeout-ms=${Math.max(300000, budgetMs * 2)}`
+  ];
+  execSync(cmd.join(' '), { stdio: 'inherit' });
+  process.exit(0);
+}
+
 const rawLevels = await loadAllLevels();
 console.log(`Loaded ${rawLevels.length} levels.`);
 
@@ -403,7 +421,20 @@ for (const levelNumber of levelNumbers) {
     // solveLevel uses APP.State.ENGINE.activeSolverController; reset it per call.
     APP.State.ENGINE.activeSolverController = null;
     APP.State.ENGINE.solverAbortRequested = false;
-    result = await Solver.solveLevel(level, { ...solveOpts });
+    if (typeof Solver.runLevelUnified === 'function') {
+      result = await Solver.runLevelUnified(level, {
+        intent: purpose,
+        ...solveOpts,
+        resetAttemptHistory: 'level'
+      });
+    } else if (typeof Solver.universalSolveLevel === 'function') {
+      result = await Solver.universalSolveLevel(level, {
+        ...solveOpts,
+        resetAttemptHistory: 'level'
+      });
+    } else {
+      result = await Solver.solveLevel(level, { ...solveOpts });
+    }
   } catch (solveErr) {
     levelResults.push({
       level: levelNumber,

@@ -16750,9 +16750,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 }, { levelId, purpose, branch: 'already-running', auditMode: !!opts.auditMode });
             }
 
+            const levelAttemptKey = getLevelAttemptKey(level, purpose);
+            if (opts.resetAttemptHistory === 'level') delete attemptHistory[levelAttemptKey];
+            if (opts.resetAttemptHistory === 'all') {
+                for (const k in attemptHistory) delete attemptHistory[k];
+            }
             const solveStart = performance.now();
             try {
-                const hist = attemptHistory[getLevelAttemptKey(level, purpose)] || { timesTried: 0, lastStatus: null, guardrailStop: false };
+                const hist = attemptHistory[levelAttemptKey] || { timesTried: 0, lastStatus: null, guardrailStop: false };
                 const autoTier = (!hist.guardrailStop && hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus))
                     ? (purpose === 'hint' ? Math.min(2, hist.timesTried) : 1)
                     : 0;
@@ -17358,10 +17363,15 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         APP.UI.setSolverProgress((elapsedBeforeMs / totalMaxMs) * 100);
                     }
                     const startedAt = performance.now();
-                    const result = await APP.Solver.solveLevel(solveInputLevel, {
+                    const runner = typeof APP.Solver.runLevelUnified === 'function'
+                        ? APP.Solver.runLevelUnified
+                        : APP.Solver.solveLevel;
+                    const result = await runner(solveInputLevel, {
+                        intent: purpose,
                         purpose,
                         escalationTier: tier,
                         allowReferee: true,
+                        resetAttemptHistory: 'level',
                         estimatedMaxMs: totalMaxMs,
                         detailLabel: `Attempt ${index}/${total}: ${label}`
                     });
@@ -18478,6 +18488,31 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             getStatus: () => ({ ...status, active: !!APP.State.ENGINE.activeSolverController }),
             Referee,
             runGameSolver: (...args) => runGameSolver(...args),
+            runLevelUnified: (level, opts = {}) => {
+                const intent = opts.intent === 'solve' ? 'solve' : 'hint';
+                return solveLevel(level, {
+                    purpose: intent,
+                    auditMode: opts.auditMode !== undefined ? !!opts.auditMode : true,
+                    allowReferee: opts.allowReferee !== undefined ? !!opts.allowReferee : true,
+                    disableLegacyFallback: opts.disableLegacyFallback !== undefined ? !!opts.disableLegacyFallback : false,
+                    executionMode: opts.executionMode || 'referee-with-compat-profiles',
+                    resetAttemptHistory: opts.resetAttemptHistory || 'level',
+                    timeBudgetMs: Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : undefined,
+                    debug: opts.debug !== undefined ? !!opts.debug : true,
+                    debugLevel: opts.debugLevel
+                });
+            },
+            universalSolveLevel: (level, opts = {}) => solveLevel(level, {
+                purpose: opts.purpose || 'hint',
+                auditMode: opts.auditMode !== undefined ? !!opts.auditMode : true,
+                allowReferee: opts.allowReferee !== undefined ? !!opts.allowReferee : true,
+                disableLegacyFallback: opts.disableLegacyFallback !== undefined ? !!opts.disableLegacyFallback : false,
+                executionMode: opts.executionMode || 'referee-with-compat-profiles',
+                resetAttemptHistory: opts.resetAttemptHistory || 'level',
+                timeBudgetMs: Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : undefined,
+                debug: opts.debug !== undefined ? !!opts.debug : true,
+                debugLevel: opts.debugLevel
+            }),
             getHint: (tier = 0) => runGameSolver('hint', tier),
             startHintAnimation,
             stopHintAnimation,
