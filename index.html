@@ -3450,6 +3450,9 @@
                 }
 
                 if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1) && !isPortalJumpCandidate) return setReason('invalid-portal-legality');
+                if (mode !== APP.Core.EDITOR && level.portalMap?.has(targetKey) && (counts.get(targetKey) || 0) > 0) {
+                    return setReason('invalid-portal-legality', 'portal-terminal-already-used');
+                }
                 if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return setReason('invalid-adjacency');
 
                 const axis = (y === lastP.y) ? APP.Core.H : APP.Core.V;
