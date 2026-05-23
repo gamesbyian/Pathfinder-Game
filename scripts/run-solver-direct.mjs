@@ -402,6 +402,10 @@ for (const levelNumber of levelNumbers) {
 
   // Trim debug to a serializable subset. The full debug contains large maps
   // / typed arrays / function references; the audit fields are what matter.
+  const clipArray = (arr, max = 64) => {
+    if (!Array.isArray(arr)) return arr;
+    return arr.length > max ? arr.slice(0, max) : arr;
+  };
   const serializeDebug = (d) => {
     if (!d || typeof d !== 'object') return null;
     const out = {};
@@ -413,7 +417,8 @@ for (const levelNumber of levelNumbers) {
       if (typeof v === 'object' && v !== null) {
         // Shallow copy primitives only
         if (Array.isArray(v)) {
-          out[k] = v.filter((x) => x === null || typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean' || (typeof x === 'object' && !Array.isArray(x) && !ArrayBuffer.isView(x) && !(x instanceof Map) && !(x instanceof Set)));
+          const filtered = v.filter((x) => x === null || typeof x === 'string' || typeof x === 'number' || typeof x === 'boolean' || (typeof x === 'object' && !Array.isArray(x) && !ArrayBuffer.isView(x) && !(x instanceof Map) && !(x instanceof Set)));
+          out[k] = clipArray(filtered, 80);
         } else {
           try {
             JSON.stringify(v);
@@ -430,6 +435,18 @@ for (const levelNumber of levelNumbers) {
   };
 
   const debugSerialized = serializeDebug(debug);
+  const attemptHistory = Array.isArray(debug?.attemptHistory) ? debug.attemptHistory : [];
+  const attemptHistoryTail = attemptHistory.slice(-8).map((a) => ({
+    label: a?.label || null,
+    status: a?.status || null,
+    elapsedMs: Number.isFinite(a?.elapsedMs) ? a.elapsedMs : null,
+    depthReached: Number.isFinite(a?.depthReached) ? a.depthReached : null,
+    nextAttemptReason: a?.nextAttemptReason || null,
+    trajectorySimilarity: Number.isFinite(a?.trajectorySimilarity) ? a.trajectorySimilarity : null,
+    trajectorySimilarityPenalty: Number.isFinite(a?.trajectorySimilarityPenalty) ? a.trajectorySimilarityPenalty : null,
+    trajectoryTabooHits: Number.isFinite(a?.trajectoryTabooHits) ? a.trajectoryTabooHits : null,
+    revisitWithPerturbationTriggered: a?.revisitWithPerturbationTriggered === true ? true : null
+  }));
   const attemptsSerialized = attemptsRaw.map((a) => {
     if (!a || typeof a !== 'object') return null;
     try {
@@ -470,6 +487,8 @@ for (const levelNumber of levelNumbers) {
     endgameIDAStarBestObservedPathPrefix: Array.isArray(debug?.endgameIDAStarBestObservedPathPrefix)
       ? debug.endgameIDAStarBestObservedPathPrefix.slice(0, 16)
       : null,
+    attemptHistoryCount: attemptHistory.length,
+    attemptHistoryTail,
     debug: debugSerialized,
     attempts: attemptsSerialized,
     solution: ok && Array.isArray(result?.solution) ? result.solution.slice(0, 1) : null
