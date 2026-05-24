@@ -5525,59 +5525,17 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
 
         const runHintLadder = async (normalizedLevel, options = {}) => {
             const normalized = APP.LevelUtils.canonicalCloneLevel(normalizedLevel);
-            const auditMode = !!options.auditMode;
-            const disableLegacyFallback = options.disableLegacyFallback !== undefined
-                ? !!options.disableLegacyFallback
-                : (auditMode ? getAuditDisableLegacyFallback() : false);
             const maxWallTimeMs = Number.isFinite(options.maxWallTimeMs)
                 ? Math.max(1, Math.floor(options.maxWallTimeMs))
                 : HINT_LADDER_CAP_MS;
-            const startedAt = performance.now();
-            const hintRes = await APP.Solver.universalSolveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
-                purpose: 'hint',
-                escalationTier: 0,
-                timeBudgetMs: maxWallTimeMs
+            const ladderResult = await APP.Solver.runHintLadder(normalized, {
+                maxWallTimeMs
             });
             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-            const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
-            const hintValidation = producedPath
-                ? APP.Solver.validateCandidatePath(APP.LevelUtils.canonicalCloneLevel(normalized), copyClone(producedPath))
-                : null;
-            const status = (hintRes?.ok && hintValidation?.ok)
-                ? 'success'
-                : (hintRes?.rawStatus || hintRes?.status || 'error');
-            const attemptHistory = Array.isArray(hintRes?.attempts) ? hintRes.attempts.map((entry, idx) =>
-                APP.Solver.toAuditAttemptSummary(hintRes, {
-                    attemptLabel: toAttemptLabel(idx),
-                    variant: entry?.label || `core-${idx + 1}`,
-                    escalationTierRequested: entry?.tier ?? null,
-                    status: entry?.status || status,
-                    elapsedMs: Number(entry?.timeMs) || Number(hintRes?.totalSolveTimeMs) || 0,
-                    producedHintValid: !!hintValidation?.ok,
-                    validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
-                    diagnosticsSummary: summarizeDiagnostics(hintRes?.diagnostics)
-                })
-            ) : [];
-            const ladderTotalWallTimeMs = Math.round(performance.now() - startedAt);
-            const ladderTotalSolveTimeMs = Number(hintRes?.totalSolveTimeMs) || attemptHistory.reduce((sum, attempt) => sum + (Number(attempt?.elapsedMs) || 0), 0);
-            const attemptLabelsTried = attemptHistory.map((attempt) => `${attempt?.attempt || ''}`.trim()).filter(Boolean);
-            const attemptCount = attemptHistory.length;
-            return {
-                ok: !!(hintRes?.ok && hintValidation?.ok),
-                status,
-                rawStatus: hintRes?.rawStatus || hintRes?.status || status,
-                finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || status,
-                stopReason: status === 'success' ? 'solved' : (status === 'timeout' ? 'cap-reached' : status),
-                attemptHistory,
-                attemptCount,
-                attemptLabelsTried,
-                ladderTotalWallTimeMs,
-                ladderTotalSolveTimeMs,
-                diversityMetrics: computeLevelDiversityMetrics(attemptHistory),
-                selectedHintPath: hintValidation?.ok ? copyClone(hintValidation.path) : null,
-                finalHintResult: hintRes,
-                firstAttemptOutcome: attemptHistory[0]?.status || attemptHistory[0]?.rawStatus || 'not-run'
-            };
+            if (!ladderResult.diversityMetrics) {
+                ladderResult.diversityMetrics = computeLevelDiversityMetrics(ladderResult.attemptHistory || []);
+            }
+            return ladderResult;
         };
 
         const runNewHintCheck = async (normalized, levelEntry, progress) => {

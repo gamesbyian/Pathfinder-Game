@@ -18467,6 +18467,78 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             buildCanonicalSolvePlan,
             runCanonicalSolveFlow,
             runUnifiedSolverFlow,
+            solveHintCanonical: (level, opts = {}) => {
+                const canonicalLevel = APP.LevelUtils.canonicalCloneLevel(level);
+                const timeBudgetMs = Number.isFinite(opts.timeBudgetMs)
+                    ? Math.max(1, Math.floor(opts.timeBudgetMs))
+                    : undefined;
+                return runUnifiedSolverFlow(canonicalLevel, {
+                    ...opts,
+                    purpose: 'hint',
+                    escalationTier: 0,
+                    ...(timeBudgetMs !== undefined ? { timeBudgetMs } : {})
+                });
+            },
+            runHintLadder: async (level, opts = {}) => {
+                const canonicalLevel = APP.LevelUtils.canonicalCloneLevel(level);
+                const startedAt = Date.now();
+                const maxWallTimeMs = Number.isFinite(opts.maxWallTimeMs)
+                    ? Math.max(1, Math.floor(opts.maxWallTimeMs))
+                    : 180000;
+                const toAttemptLabel = (attemptIndex = 0) => {
+                    const n = Math.max(0, Math.floor(Number(attemptIndex) || 0));
+                    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                    let label = '';
+                    let value = n;
+                    do {
+                        label = alphabet[value % 26] + label;
+                        value = Math.floor(value / 26) - 1;
+                    } while (value >= 0);
+                    return label;
+                };
+                const hintRes = await APP.Solver.solveHintCanonical(canonicalLevel, {
+                    timeBudgetMs: maxWallTimeMs,
+                    ...opts
+                });
+                const producedPath = hintRes?.solution?.[0]?.path || hintRes?.solutions?.[0]?.path || null;
+                const hintValidation = producedPath
+                    ? APP.Solver.validateCandidatePath(APP.LevelUtils.canonicalCloneLevel(canonicalLevel), APP.LevelUtils.deepCloneLevel(producedPath))
+                    : null;
+                const status = (hintRes?.ok && hintValidation?.ok)
+                    ? 'success'
+                    : (hintRes?.rawStatus || hintRes?.status || 'error');
+                const attemptHistory = Array.isArray(hintRes?.attempts) ? hintRes.attempts.map((entry, idx) =>
+                    APP.Solver.toAuditAttemptSummary(hintRes, {
+                        attemptLabel: toAttemptLabel(idx),
+                        variant: entry?.label || `core-${idx + 1}`,
+                        escalationTierRequested: entry?.tier ?? null,
+                        status: entry?.status || status,
+                        elapsedMs: Number(entry?.timeMs) || Number(hintRes?.totalSolveTimeMs) || 0,
+                        producedHintValid: !!hintValidation?.ok,
+                        validationReason: hintValidation && !hintValidation.ok ? (hintValidation.reason || 'invalid (reason unknown)') : '',
+                        diagnosticsSummary: hintRes?.diagnostics || null
+                    })
+                ) : [];
+                const ladderTotalWallTimeMs = Math.max(0, Date.now() - startedAt);
+                const ladderTotalSolveTimeMs = Number(hintRes?.totalSolveTimeMs) || attemptHistory.reduce((sum, attempt) => sum + (Number(attempt?.elapsedMs) || 0), 0);
+                const attemptLabelsTried = attemptHistory.map((attempt) => `${attempt?.attempt || ''}`.trim()).filter(Boolean);
+                const attemptCount = attemptHistory.length;
+                return {
+                    ok: !!(hintRes?.ok && hintValidation?.ok),
+                    status,
+                    rawStatus: hintRes?.rawStatus || hintRes?.status || status,
+                    finalStatus: hintRes?.finalStatus || hintRes?.rawStatus || hintRes?.status || status,
+                    stopReason: status === 'success' ? 'solved' : (status === 'timeout' ? 'cap-reached' : status),
+                    attemptHistory,
+                    attemptCount,
+                    attemptLabelsTried,
+                    ladderTotalWallTimeMs,
+                    ladderTotalSolveTimeMs,
+                    selectedHintPath: hintValidation?.ok ? APP.LevelUtils.deepCloneLevel(hintValidation.path) : null,
+                    finalHintResult: hintRes,
+                    firstAttemptOutcome: attemptHistory[0]?.status || attemptHistory[0]?.rawStatus || 'not-run'
+                };
+            },
             universalSolveLevel: (level, opts = {}) => runUnifiedSolverFlow(level, {
                 ...opts,
                 purpose: opts.purpose || 'hint',
