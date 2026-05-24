@@ -386,22 +386,13 @@ for (const levelNumber of levelNumbers) {
     continue;
   }
 
-  // Build solverProfile (needed for portal mandatory family detection, etc.)
-  try {
-    level.solverProfile = Solver.Referee.normalizeSolverProfile(Solver.Referee.buildLevelProfile(level));
-  } catch (profileErr) {
-    levelResults.push({ level: levelNumber, status: 'error', error: `profile: ${profileErr?.message}` });
-    errorCount++;
-    continue;
-  }
-
   const levelStart = Date.now();
   let result;
   try {
     // solveLevel uses APP.State.ENGINE.activeSolverController; reset it per call.
     APP.State.ENGINE.activeSolverController = null;
     APP.State.ENGINE.solverAbortRequested = false;
-    result = await Solver.universalSolveLevel(level, {
+    result = await Solver.solveHintCanonical(level, {
       ...solveOpts,
       resetAttemptHistory: 'level'
     });
