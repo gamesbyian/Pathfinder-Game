@@ -17337,12 +17337,9 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
 
             async function runCanonicalSolveFlow(level, opts = {}) {
                 const purpose = opts.purpose || 'solve';
-                const requestedTierBase = Number.isFinite(Number(opts.escalationTier)) ? Math.max(0, Math.floor(Number(opts.escalationTier))) : 0;
-                let requestedTier = requestedTierBase;
-                if (purpose === 'hint') {
-                    const hintHist = attemptHistory[getLevelAttemptKey(level, 'hint')] || { timesTried: 0, lastStatus: null };
-                    requestedTier = Math.max(requestedTierBase, Math.min(2, Math.max(0, Number(hintHist.timesTried) || 0)));
-                }
+                const requestedTier = Number.isFinite(Number(opts.escalationTier))
+                    ? Math.max(0, Math.floor(Number(opts.escalationTier)))
+                    : 0;
                 const plan = buildCanonicalSolvePlan(purpose, requestedTier);
                 const totalMaxMs = plan.reduce((sum, item) => sum + item.maxMs, 0);
                 let elapsedMs = 0;
@@ -17364,6 +17361,27 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 return finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
             }
 
+            const buildUnifiedSolveInvocationOptions = ({ purpose = 'solve', escalationTier = 0, overrides = {} } = {}) => {
+                const requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
+                return {
+                    purpose,
+                    escalationTier: requestedTier,
+                    executionMode: 'referee-with-compat-profiles',
+                    resetAttemptHistory: 'level',
+                    auditMode: false,
+                    ...overrides
+                };
+            };
+
+            async function runUnifiedSolverFlow(levelInput, opts = {}) {
+                const invocation = buildUnifiedSolveInvocationOptions({
+                    purpose: opts.purpose || 'solve',
+                    escalationTier: opts.escalationTier ?? opts.tier ?? 0,
+                    overrides: opts
+                });
+                return runCanonicalSolveFlow(levelInput, invocation);
+            }
+
             async function runGameSolver(purpose = 'solve', escalationTier = 0) {
                 if (APP.Solver.isRunning()) {
                     APP.UI.showSolverAlreadyRunning();
@@ -17373,7 +17391,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                 const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
                 const requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
-                const solverResult = await runCanonicalSolveFlow(solveInputLevel, {
+                const solverResult = await runUnifiedSolverFlow(solveInputLevel, {
                     purpose,
                     escalationTier: requestedTier,
                     onAttemptStart: ({ attempt, index, total, elapsedBeforeMs, totalMaxMs }) => {
@@ -18446,11 +18464,11 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             runGameSolver: (...args) => runGameSolver(...args),
             buildCanonicalSolvePlan,
             runCanonicalSolveFlow,
-            universalSolveLevel: (level, opts = {}) => runCanonicalSolveFlow(level, {
+            runUnifiedSolverFlow,
+            universalSolveLevel: (level, opts = {}) => runUnifiedSolverFlow(level, {
                 ...opts,
                 purpose: opts.purpose || 'hint',
-                executionMode: opts.executionMode || 'referee-with-compat-profiles',
-                resetAttemptHistory: opts.resetAttemptHistory || 'level'
+                escalationTier: opts.escalationTier ?? opts.tier ?? 0
             }),
             getHint: (tier = 0) => runGameSolver('hint', tier),
             startHintAnimation,
