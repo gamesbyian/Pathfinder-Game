@@ -301,7 +301,19 @@ function installSolver(APP) {
                     });
                     return merged;
                 },
+                _wouldPivotOnFlipper(nextKey, path, l) {
+                    if (!Array.isArray(path) || path.length < 2) return false;
+                    const pivotKey = path[path.length - 1];
+                    if (!l?.flippingFilterMap?.has(pivotKey)) return false;
+                    const entry = APP.LevelUtils.UNPACK(path[path.length - 2]);
+                    const pivot = APP.LevelUtils.UNPACK(pivotKey);
+                    const exit = APP.LevelUtils.UNPACK(nextKey);
+                    const entryAxis = (entry.y === pivot.y) ? APP.Core.H : APP.Core.V;
+                    const exitAxis = (pivot.y === exit.y) ? APP.Core.H : APP.Core.V;
+                    return entryAxis !== exitAxis;
+                },
                 _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet, options = {}) {
+                    if (this._wouldPivotOnFlipper(key, path, l)) return false;
                     const armedFalseGoals = new Set(l?.falseGoalKeys || []);
                     return APP.LevelUtils.isValidMove(key, {
                         mode: APP.Core.PLAY,
@@ -17079,6 +17091,9 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     const prev = path[i - 1];
                     const cur = path[i];
                     const armedFalseGoals = new Set(level.falseGoalKeys || []);
+                    if (SolverCore._wouldPivotOnFlipper(cur, path.slice(0, i), level)) {
+                        return { ok: false, reason: `Invalid move at step ${i + 1}.` };
+                    }
                     if (!APP.LevelUtils.isValidMove(cur, {
                         mode: APP.Core.PLAY,
                         path: path.slice(0, i),
