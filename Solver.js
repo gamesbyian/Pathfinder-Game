@@ -17089,6 +17089,16 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 for (let i = 1; i < path.length; i++) {
                     const prev = path[i - 1];
                     const cur = path[i];
+                    if (i >= 2 && level?.flippingFilterMap?.has(prev)) {
+                        const entry = APP.LevelUtils.UNPACK(path[i - 2]);
+                        const pivot = APP.LevelUtils.UNPACK(prev);
+                        const exit = APP.LevelUtils.UNPACK(cur);
+                        const entryAxis = (entry.y === pivot.y) ? APP.Core.H : APP.Core.V;
+                        const exitAxis = (pivot.y === exit.y) ? APP.Core.H : APP.Core.V;
+                        if (entryAxis !== exitAxis) {
+                            return { ok: false, reason: `Invalid turn on flipping filter at step ${i + 1}.` };
+                        }
+                    }
                     const armedFalseGoals = new Set(level.falseGoalKeys || []);
                     if (!APP.LevelUtils.isValidMove(cur, {
                         mode: APP.Core.PLAY,
