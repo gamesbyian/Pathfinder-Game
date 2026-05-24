@@ -18467,6 +18467,18 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             buildCanonicalSolvePlan,
             runCanonicalSolveFlow,
             runUnifiedSolverFlow,
+            solveHintCanonical: (level, opts = {}) => {
+                const canonicalLevel = APP.LevelUtils.canonicalCloneLevel(level);
+                const timeBudgetMs = Number.isFinite(opts.timeBudgetMs)
+                    ? Math.max(1, Math.floor(opts.timeBudgetMs))
+                    : undefined;
+                return runUnifiedSolverFlow(canonicalLevel, {
+                    ...opts,
+                    purpose: 'hint',
+                    escalationTier: 0,
+                    ...(timeBudgetMs !== undefined ? { timeBudgetMs } : {})
+                });
+            },
             universalSolveLevel: (level, opts = {}) => runUnifiedSolverFlow(level, {
                 ...opts,
                 purpose: opts.purpose || 'hint',
