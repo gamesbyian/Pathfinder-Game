@@ -5535,8 +5535,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const startedAt = performance.now();
             const hintRes = await APP.Solver.universalSolveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
                 purpose: 'hint',
-                auditMode,
-                disableLegacyFallback,
+                escalationTier: 0,
                 timeBudgetMs: maxWallTimeMs
             });
             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
@@ -6025,25 +6024,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     try {
                         const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                         debugProbeNewHintLevelPurity(activeLevel);
-                        const normalized = APP.LevelUtils.canonicalCloneLevel(activeLevel);
-                        const ladderResult = await runHintLadder(normalized, {
-                            auditMode: true,
-                            disableLegacyFallback: getAuditDisableLegacyFallback(),
-                            maxWallTimeMs: HINT_LADDER_CAP_MS
-                        });
-                        if (ladderResult.ok && Array.isArray(ladderResult.selectedHintPath)) {
-                            APP.Solver.applySolutionsToEngine([{ path: ladderResult.selectedHintPath }], 'hint');
-                            APP.UI.showMessage(`Hint found via ladder ${formatHintLadderSummary(ladderResult)}.`, 'text-emerald-600');
-                        } else if (ladderResult.status === 'no-solution-proven') {
-                            APP.UI.showMessage(`No solution exists (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
-                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                        } else if (ladderResult.status === 'aborted') {
-                            APP.UI.showMessage(`Hint cancelled (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
-                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                        } else {
-                            APP.UI.showMessage(`No valid full hint (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
-                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                        }
+                        const hintResult = await APP.Solver.runGameSolver('hint', 0);
+                        if (hintResult?.reason === 'already-running') return;
                     } catch (err) {
                         console.error('Hint solve failed:', err);
                         APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
