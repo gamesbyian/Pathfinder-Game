@@ -302,6 +302,17 @@ function installSolver(APP) {
                     return merged;
                 },
                 _isMoveValid(key, path, counts, usage, ints, jumpSet, l, flipCount, crossedSet, options = {}) {
+                    // Guardrail: a path cannot pivot while occupying a flipping-filter cell.
+                    // If the previous node is a flipper and the entering axis differs from the
+                    // leaving axis, reject before delegating to the shared validator.
+                    if (Array.isArray(path) && path.length >= 2 && l?.flippingFilterMap?.has(path[path.length - 1])) {
+                        const entry = APP.LevelUtils.UNPACK(path[path.length - 2]);
+                        const pivot = APP.LevelUtils.UNPACK(path[path.length - 1]);
+                        const exit = APP.LevelUtils.UNPACK(key);
+                        const entryAxis = (entry.y === pivot.y) ? APP.Core.H : APP.Core.V;
+                        const exitAxis = (pivot.y === exit.y) ? APP.Core.H : APP.Core.V;
+                        if (entryAxis !== exitAxis) return false;
+                    }
                     const armedFalseGoals = new Set(l?.falseGoalKeys || []);
                     return APP.LevelUtils.isValidMove(key, {
                         mode: APP.Core.PLAY,
