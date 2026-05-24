@@ -2697,6 +2697,14 @@
                 APP.State.ENGINE.detonatedFalseGoals = new Set();
 
                 APP.State.ENGINE.foundHintsSinceLoad = [];
+                APP.State.ENGINE.hinter.pathList = [];
+                APP.State.ENGINE.hinter.currentPathIdx = 0;
+                APP.State.ENGINE.hinter.source = 'none';
+                APP.State.ENGINE.hinter.index = 0;
+                APP.State.ENGINE.hinter.alpha = 0;
+                APP.State.ENGINE.hinter.holdStartMs = 0;
+                APP.State.ENGINE.hinter.blinkStartMs = 0;
+                APP.State.ENGINE.hinter.fadeStartMs = 0;
 
                 if (isEditor) {
 
