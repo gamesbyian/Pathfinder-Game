@@ -6022,23 +6022,31 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     try {
                         const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
                         debugProbeNewHintLevelPurity(activeLevel);
+                        if (APP.Solver.isRunning()) {
+                            APP.UI.showSolverAlreadyRunning();
+                            return;
+                        }
+                        APP.Solver.stopHintAnimation();
                         const normalized = APP.LevelUtils.canonicalCloneLevel(activeLevel);
-                        const ladderResult = await runHintLadder(normalized, {
-                            auditMode: true,
-                            disableLegacyFallback: getAuditDisableLegacyFallback(),
-                            maxWallTimeMs: HINT_LADDER_CAP_MS
+                        const hintResult = await APP.Solver.universalSolveLevel(normalized, {
+                            purpose: 'hint',
+                            escalationTier: 0,
+                            executionMode: 'referee-with-compat-profiles',
+                            resetAttemptHistory: 'level'
                         });
-                        if (ladderResult.ok && Array.isArray(ladderResult.selectedHintPath)) {
-                            APP.Solver.applySolutionsToEngine([{ path: ladderResult.selectedHintPath }], 'hint');
-                            APP.UI.showMessage(`Hint found via ladder ${formatHintLadderSummary(ladderResult)}.`, 'text-emerald-600');
-                        } else if (ladderResult.status === 'no-solution-proven') {
-                            APP.UI.showMessage(`No solution exists (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
+                        const canonical = Array.isArray(hintResult?.solution)
+                            ? hintResult.solution
+                            : (Array.isArray(hintResult?.solutions) ? hintResult.solutions : []);
+                        if (hintResult?.ok && canonical.length > 0) {
+                            APP.Solver.applySolutionsToEngine(canonical, 'hint');
+                        } else if ((hintResult?.finalStatus || hintResult?.status) === 'no-solution-proven') {
+                            APP.UI.showMessage('No solution exists for this level.', 'text-amber-600');
                             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                        } else if (ladderResult.status === 'aborted') {
-                            APP.UI.showMessage(`Hint cancelled (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
+                        } else if ((hintResult?.finalStatus || hintResult?.status) === 'aborted') {
+                            APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
                             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                         } else {
-                            APP.UI.showMessage(`No valid full hint (${formatHintLadderSummary(ladderResult)}).`, 'text-amber-600');
+                            APP.UI.showMessage('No hint found after full automated search.', 'text-amber-600');
                             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                         }
                     } catch (err) {

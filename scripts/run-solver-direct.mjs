@@ -392,7 +392,7 @@ for (const levelNumber of levelNumbers) {
     // solveLevel uses APP.State.ENGINE.activeSolverController; reset it per call.
     APP.State.ENGINE.activeSolverController = null;
     APP.State.ENGINE.solverAbortRequested = false;
-    result = await Solver.solveHintCanonical(level, {
+    result = await Solver.universalSolveLevel(level, {
       ...solveOpts,
       resetAttemptHistory: 'level'
     });
