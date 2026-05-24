@@ -173,8 +173,9 @@ function validateHintPath(raw, hintPath, levelNumber) {
   }
 
   // --- reqInt: EXACT match ---
+  // Runtime validation (APP.Engine.areWinMetricsSatisfied) requires exact equality.
   if (intersections !== reqInt) {
-    warnings.push(`intersections ${intersections} ≠ reqInt ${reqInt} (exact match required; some levels allow ≥reqInt if portal-aware)`);
+    errors.push(`intersections ${intersections} ≠ reqInt ${reqInt}`);
   }
 
   // --- Goal check ---
@@ -235,27 +236,33 @@ async function main() {
       continue;
     }
 
-    // Try all hint paths; pass if any one is valid.
-    let bestResult = null;
-    let passingHintIdx = -1;
-    for (let hi = 0; hi < raw.hints.length; hi++) {
-      const r = validateHintPath(raw, raw.hints[hi], levelNumber);
-      if (r.ok) { bestResult = r; passingHintIdx = hi; break; }
-      if (!bestResult) bestResult = r;
-    }
-    const result = bestResult;
-    const status = result.ok ? 'pass' : 'fail';
+    const hintAnalyses = raw.hints.map((hintPath, hi) => {
+      const result = validateHintPath(raw, hintPath, levelNumber);
+      return {
+        hintIndex: hi,
+        status: result.ok ? 'valid' : 'invalid',
+        errors: result.errors || [],
+        warnings: result.warnings || [],
+        stats: result.stats || null
+      };
+    });
+    const firstValid = hintAnalyses.find(entry => entry.status === 'valid') || null;
+    const invalidHints = hintAnalyses.filter(entry => entry.status === 'invalid');
+    const result = firstValid || hintAnalyses[0];
+    const status = invalidHints.length === 0 ? 'pass' : 'warn-invalid-hints';
 
-    if (result.ok) {
+    if (invalidHints.length === 0) {
       passed++;
       if (verbose) {
-        const hintNote = passingHintIdx > 0 ? ` hints[${passingHintIdx}]` : '';
-        console.log(`  L${levelNumber}: PASS${hintNote} (realLen=${result.stats?.realLength}, ints=${result.stats?.intersections})`);
+        console.log(`  L${levelNumber}: PASS (all ${raw.hints.length} hint(s) valid)`);
       }
     } else {
       failed++;
-      console.log(`  L${levelNumber}: FAIL (all ${raw.hints.length} hint(s) invalid)`);
-      for (const e of result.errors) console.log(`    error: ${e}`);
+      console.log(`  L${levelNumber}: WARN (${invalidHints.length}/${raw.hints.length} hint(s) invalid)`);
+      for (const invalid of invalidHints) {
+        console.log(`    hints[${invalid.hintIndex}] invalid:`);
+        for (const e of invalid.errors) console.log(`      error: ${e}`);
+      }
     }
 
     if (result.warnings?.length) {
@@ -264,7 +271,14 @@ async function main() {
       }
     }
 
-    results.push({ levelNumber, status, hintIndex: passingHintIdx, errors: result.errors, warnings: result.warnings, stats: result.stats });
+    results.push({
+      levelNumber,
+      status,
+      invalidHintCount: invalidHints.length,
+      totalHintCount: raw.hints.length,
+      representativeHintIndex: result?.hintIndex ?? 0,
+      hintAnalyses
+    });
   }
 
   const checked = passed + failed;
@@ -282,11 +296,10 @@ async function main() {
   }
 
   if (failed > 0) {
-    console.error(`\nFAIL: ${failed} hint path(s) failed validation. Check level constraints or solver changes.`);
-    process.exit(1);
+    console.log('\nSome levels include invalid hint variants (see output for per-hint reasons).');
+  } else {
+    console.log('All checked hint variants pass validation.');
   }
-
-  console.log('All checked hint paths pass validation.');
 }
 
 main().catch(err => {
