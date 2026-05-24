@@ -5905,14 +5905,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const hintBtn = document.getElementById('hintBtn'); const hintTopHalf = document.getElementById('hintTopHalf');
         const showSavedHint = () => {
             if (APP.State.ENGINE.level?.hints?.length > 0) {
-                const levelForHints = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level);
-                const validSavedHints = APP.State.ENGINE.level.hints.filter(path => APP.Solver.validateCandidatePath(levelForHints, path)?.ok);
-                if (validSavedHints.length > 0) {
-                    APP.State.ENGINE.hinter.pathList = validSavedHints;
-                    APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0);
-                    APP.State.ENGINE.hinter.source = 'saved';
-                    APP.Solver.startHintAnimation();
-                } else APP.UI.showMessage("No valid saved hint.", "text-amber-600");
+                APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints;
+                APP.State.ENGINE.hinter.currentPathIdx = (APP.State.ENGINE.hinter.source === 'saved' ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length : 0);
+                APP.State.ENGINE.hinter.source = 'saved';
+                APP.Solver.startHintAnimation();
             } else APP.UI.showMessage("No saved hint.", "text-white font-black");
         };
         const toggleHint = () => {
