@@ -325,9 +325,7 @@ const buildSolveOpts = () => {
     purpose,
     timeBudgetMs: budgetMs,
     debug: true,
-    auditMode: true,
     allowReferee: true,
-    disableLegacyFallback: false
   };
   if (forbiddenFirstMoves) opts.forbiddenFirstMoves = forbiddenFirstMoves.slice();
   if (orderingPolicy) opts.orderingPolicy = orderingPolicy;

@@ -5535,8 +5535,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const startedAt = performance.now();
             const hintRes = await APP.Solver.universalSolveLevel(APP.LevelUtils.canonicalCloneLevel(normalized), {
                 purpose: 'hint',
-                auditMode,
-                disableLegacyFallback,
+                escalationTier: 0,
                 timeBudgetMs: maxWallTimeMs
             });
             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
