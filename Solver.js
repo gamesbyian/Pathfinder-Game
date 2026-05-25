@@ -16687,7 +16687,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             const solveLevel = async (level, opts = {}) => {
                 level = SavedHintArchitecture.toHintBlindSolverLevel(level);
             const guardSolveResult = (summary = {}, context = {}) => (typeof guardSolveResultSchema === 'function' ? guardSolveResultSchema(summary, context) : summary);
-            const purpose = opts.purpose || 'solve';
+            const requestedPurpose = opts.purpose || 'solve';
+            // Unify orchestration across UI and direct harnesses:
+            // run the same hint-ladder capable referee flow by default, regardless of
+            // whether caller labels intent as "hint" or "solve". Callers can opt out
+            // explicitly when they truly want a bare solve-profile run.
+            const purpose = opts.disableHintLadderOrchestration === true
+                ? requestedPurpose
+                : 'hint';
             const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
             const requestedExecutionMode = typeof opts.executionMode === 'string' ? opts.executionMode : '';
             const compatibilityRequestedRefereeOnly = opts.allowReferee === false || opts.disableLegacyFallback === true;
@@ -16857,7 +16864,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     stageCount: Array.isArray(solverResult.stagesTried) ? solverResult.stagesTried.length : 0,
                     auditMode: !!opts.auditMode
                 });
-                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
+                console.info(`[Solver] level=${levelId ?? 'unknown'} purpose=${purpose} requestedPurpose=${requestedPurpose} requested=${requestedSolverPath} execution=${executionPath} refereeStatus=${finalStatus || 'not-run'} legacyTried=${compatAliases.legacyFallbackTried} legacyStatus=${compatAliases.legacyFallbackStatus || 'not-run'} final=${finalStatus} solvedBy=${compatAliases.finalSolvedBy}`);
                 if (APP.State.ENGINE.flags?.refereeDebug && solverResult?.ok && solverResult.solution.length === 0) {
                     console.warn('Solver marked ok but returned empty canonical solution.', { solverResult, stagesTried: solverResult.stagesTried || [] });
                 }
