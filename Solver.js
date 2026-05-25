@@ -17398,10 +17398,15 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 const adj = (v) => Number(v) - 1;
                 const pack = (x, y) => APP.LevelUtils.PACK(adj(x), adj(y));
                 const asArray = (v) => Array.isArray(v) ? v : [];
+                const normalizeAxis = (axis) => {
+                    const n = Number(axis);
+                    return n === 2 ? 2 : 1;
+                };
                 const levelNum = Number.isFinite(Number(levelNumber)) ? Number(levelNumber) : null;
                 const levelId = Number.isFinite(levelNum) ? Math.max(0, levelNum - 1) : (Number.isFinite(Number(rawLevel?.id)) ? Number(rawLevel.id) : 0);
                 const portalMap = new Map();
                 const portalVisuals = [];
+                let hasParityBreaker = false;
                 asArray(rawLevel?.portals).forEach((p) => {
                     const k1 = pack(p.x1, p.y1);
                     const k2 = pack(p.x2, p.y2);
@@ -17409,11 +17414,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     portalMap.set(k1, { dest: k2, color });
                     portalMap.set(k2, { dest: k1, color });
                     portalVisuals.push({ k1, k2, color });
+                    const p1 = APP.LevelUtils.UNPACK(k1);
+                    const p2 = APP.LevelUtils.UNPACK(k2);
+                    if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) hasParityBreaker = true;
                 });
                 const flippingFilterMap = new Map();
-                asArray(rawLevel?.flippingFilters).forEach((f) => flippingFilterMap.set(pack(f.x, f.y), f.axis === 2 ? 2 : 1));
+                asArray(rawLevel?.flippingFilters).forEach((f) => flippingFilterMap.set(pack(f.x, f.y), normalizeAxis(f.axis)));
                 const filterMap = new Map();
-                asArray(rawLevel?.filters).forEach((f) => filterMap.set(pack(f.x, f.y), f.axis === 2 ? 2 : 1));
+                asArray(rawLevel?.filters).forEach((f) => filterMap.set(pack(f.x, f.y), normalizeAxis(f.axis)));
                 return {
                     id: levelId,
                     level: Number.isFinite(levelNum) ? levelNum : (levelId + 1),
@@ -17424,13 +17432,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     gates: asArray(rawLevel?.gates).map((g) => ({ x: g.x, y: g.y })),
                     gateKeys: asArray(rawLevel?.gates).map((g) => pack(g.x, g.y)),
                     goal: { x: rawLevel.goal.x, y: rawLevel.goal.y },
-                    blockSet: new Set(asArray(rawLevel?.blocks).map((b) => pack(b.x, b.y))),
+                    blockSet: new Set([...asArray(rawLevel?.blocks), ...asArray(rawLevel?.walls)].map((b) => pack(b.x, b.y))),
                     mustPassKeys: asArray(rawLevel?.mustPass).map((m) => pack(m.x, m.y)),
                     mustCrossKeys: asArray(rawLevel?.mustCross).map((m) => pack(m.x, m.y)),
                     falseGoalKeys: new Set(asArray(rawLevel?.falseGoals).map((f) => pack(f.x, f.y))),
                     gooseSet: new Set(asArray(rawLevel?.geese).map((g) => pack(g.x, g.y))),
                     portalMap,
                     portalVisuals,
+                    hasParityBreaker,
                     flippingFilterMap,
                     filterMap,
                     hints: asArray(rawLevel?.hints)
