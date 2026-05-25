@@ -261,48 +261,6 @@ async function loadAllLevels() {
   return levels;
 }
 
-// --- Normalize raw level into Solver.js shape ---
-function normalizeRaw(raw, levelNumber) {
-  const adj = (v) => v - 1;
-  const pack = (x, y) => PACK(adj(x), adj(y));
-  const portalMap = new Map();
-  const portalVisuals = [];
-  for (const p of raw.portals || []) {
-    const k1 = pack(p.x1, p.y1);
-    const k2 = pack(p.x2, p.y2);
-    const color = p.color || '#d946ef';
-    portalMap.set(k1, { dest: k2, color });
-    portalMap.set(k2, { dest: k1, color });
-    portalVisuals.push({ k1, k2, color });
-  }
-  const flippingFilterMap = new Map();
-  for (const f of raw.flippingFilters || []) flippingFilterMap.set(pack(f.x, f.y), f.axis === 2 ? 2 : 1);
-  const filterMap = new Map();
-  for (const f of raw.filters || []) filterMap.set(pack(f.x, f.y), f.axis === 2 ? 2 : 1);
-
-  return {
-    id: levelNumber - 1,
-    level: levelNumber,
-    grid: { w: raw.grid.w, h: raw.grid.h },
-    reqLen: raw.reqLen || 0,
-    reqInt: raw.reqInt || 0,
-    goalKey: pack(raw.goal.x, raw.goal.y),
-    gates: (raw.gates || []).map((g) => ({ x: g.x, y: g.y })),
-    gateKeys: (raw.gates || []).map((g) => pack(g.x, g.y)),
-    goal: { x: raw.goal.x, y: raw.goal.y },
-    blockSet: new Set((raw.blocks || []).map((b) => pack(b.x, b.y))),
-    mustPassKeys: (raw.mustPass || []).map((m) => pack(m.x, m.y)),
-    mustCrossKeys: (raw.mustCross || []).map((m) => pack(m.x, m.y)),
-    falseGoalKeys: new Set((raw.falseGoals || []).map((f) => pack(f.x, f.y))),
-    gooseSet: new Set((raw.geese || []).map((g) => pack(g.x, g.y))),
-    portalMap,
-    portalVisuals,
-    flippingFilterMap,
-    filterMap,
-    hints: raw.hints || []
-  };
-}
-
 const getCommitSha = () => {
   if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
   try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
@@ -379,7 +337,7 @@ for (const levelNumber of levelNumbers) {
 
   let level;
   try {
-    level = normalizeRaw(raw, levelNumber);
+    level = Solver.prepareLevelForSolver(raw, { source: 'raw', levelNumber });
   } catch (normErr) {
     levelResults.push({ level: levelNumber, status: 'error', error: `normalize: ${normErr?.message}` });
     errorCount++;

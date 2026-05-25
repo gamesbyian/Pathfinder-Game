@@ -336,7 +336,7 @@
                 </div>
                 <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-4 pt-2 text-left">
                     <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Building & Testing</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Pick a tool from the palette to start building! You can tap the grid to place objects or even drag them directly into position. Use the <strong>Pencil</strong> to sketch out paths and see how your level plays. Dragging items off the grid will remove them.</p></section>
-                    <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Solving</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Click <strong>Solve Logic</strong> to automatically find valid solutions. It requires target metrics (Length/Crosses) to be properly set beforehand.</p></section>
+                    <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Solving</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Click <strong>Hint</strong> to automatically find valid solutions. It requires target metrics (Length/Crosses) to be properly set beforehand.</p></section>
                     <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Exporting Level Data</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Once you've built something great, click <strong>Generate</strong> to export your level data. If you've drawn a valid solution or used the solver, it will automatically include that as a helpful hint for players! You can also use <strong>Copy Path</strong> to grab the raw coordinate array anytime.</p></section>
                 </div>
             </div>
@@ -437,7 +437,7 @@
             <div id="editorButtonGrid" class="hidden flex gap-1.5">
                 <button id="editResetGrid" class="flex-1 h-10 bg-red-600 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Clear</button>
                 <button id="editNewLevel" class="flex-1 h-10 bg-emerald-600 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">New</button>
-                <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
+                <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Hint</button>
                 <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
                 <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
@@ -4619,28 +4619,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                             return;
                         }
                         APP.Solver.stopHintAnimation();
-                        const normalized = APP.LevelUtils.canonicalCloneLevel(activeLevel);
-                        const hintResult = await APP.Solver.universalSolveLevel(normalized, {
-                            purpose: 'hint',
-                            escalationTier: 0,
-                            executionMode: 'referee-with-compat-profiles',
-                            resetAttemptHistory: 'level'
-                        });
-                        const canonical = Array.isArray(hintResult?.solution)
-                            ? hintResult.solution
-                            : (Array.isArray(hintResult?.solutions) ? hintResult.solutions : []);
-                        if (hintResult?.ok && canonical.length > 0) {
-                            APP.Solver.applySolutionsToEngine(canonical, 'hint');
-                        } else if ((hintResult?.finalStatus || hintResult?.status) === 'no-solution-proven') {
-                            APP.UI.showMessage('No solution exists for this level.', 'text-amber-600');
-                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                        } else if ((hintResult?.finalStatus || hintResult?.status) === 'aborted') {
-                            APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
-                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                        } else {
-                            APP.UI.showMessage('No hint found after full automated search.', 'text-amber-600');
-                            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                        }
+                        const hintResult = await APP.Solver.runGameSolver('hint');
+                        if (hintResult?.reason === 'already-running') return;
                     } catch (err) {
                         console.error('Hint solve failed:', err);
                         APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
@@ -4811,11 +4791,11 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('editMegaSolver').onclick = async () => {
             APP.UI.closeAllModals();
             try {
-                const solveResult = await APP.Solver.runGameSolver('solve');
+                const solveResult = await APP.Solver.runGameSolver('hint');
                 if (solveResult?.reason === 'already-running') return;
             } catch (err) {
-                console.error('Solve failed:', err);
-                APP.UI.showMessage(`Solve failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
+                console.error('Hint failed:', err);
+                APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
             }
         };
