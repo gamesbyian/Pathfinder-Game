@@ -4443,6 +4443,19 @@ function installSolver(APP) {
                             }
                         }
                     }
+                    // Telemetry-guided depth-0 root cap. Recent L92 regressions showed
+                    // timeout runs expanding all four root families, while successful runs
+                    // frequently solved after committing to 2-3 families. Keep this opt-in
+                    // and profile-driven so non-target levels are unchanged.
+                    const rootCandidateCap = Number.isFinite(options?.rootCandidateCap)
+                        ? Math.max(1, Math.floor(options.rootCandidateCap))
+                        : null;
+                    if (depth === 0 && rootCandidateCap && orderedNeighbors.length > rootCandidateCap) {
+                        orderedNeighbors = orderedNeighbors.slice(-rootCandidateCap);
+                        if (debugStats) {
+                            debugStats.rootCandidateCapApplied = rootCandidateCap;
+                        }
+                    }
                     if (depth === 0 && debugStats) {
                         debugStats.rootCandidatesGenerated = candidatesCount ?? valid.length;
                         debugStats.rootCandidateCountDepth0 = candidatesCount ?? valid.length;
@@ -11495,6 +11508,9 @@ function installSolver(APP) {
                     if (planned.useUnifiedHKBound === undefined) {
                         planned.useUnifiedHKBound = true;
                     }
+                    if (planned.rootCandidateCap === undefined) {
+                        planned.rootCandidateCap = 3;
+                    }
                 }
             }
             if (archetypes.length > 0) {
@@ -11523,7 +11539,11 @@ function installSolver(APP) {
                             // useUnifiedHKBound. The prepended list has its own explicit
                             // flag set so HK actually fires for the high-intersection-
                             // burden archetype.
-                            useUnifiedHKBound: allowEndgameIDAStarForArchetype
+                            useUnifiedHKBound: allowEndgameIDAStarForArchetype,
+                            // Telemetry from recent solved L92 runs shows recovery when the
+                            // search commits to a smaller root-family subset (2-3) rather than
+                            // exhausting all 4 depth-0 families.
+                            rootCandidateCap: allowEndgameIDAStarForArchetype ? 3 : undefined
                         });
                     }
                 }
