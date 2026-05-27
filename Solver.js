@@ -89,6 +89,13 @@
         if (__searchClock && __searchClock.realCeilingMs > 0 && (Date.now() - __searchClock.realStart) > __searchClock.realCeilingMs) return true;
         return false;
     };
+    // Virtual ms of work elapsed in the current solve (work*vmsPerNode). Purely a
+    // function of nodes expanded, so any "did this happen quickly?" decision based
+    // on it is deterministic. Returns null when no deterministic clock is installed,
+    // so callers fall back to wall-clock.
+    const searchVirtualElapsedMs = () => (__searchClock && __searchClock.deterministic)
+        ? (__searchClock.work * __searchClock.vmsPerNode)
+        : null;
     const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {
         const reqInt = Math.max(0, Number(level?.reqInt) || 0);
         const highReqIntThreshold = Math.max(3, Number(context?.highReqIntThreshold) || 3);
@@ -16386,7 +16393,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 });
                 stage0ZeroExpansion = !last.ok
                     && (last?.debug?.nodesExpanded ?? last?.nodesExpanded ?? 1) === 0
-                    && (Date.now() - solveStartTime) < 150;
+                    && ((searchVirtualElapsedMs() ?? (Date.now() - solveStartTime)) < 150);
 
                 if (!last.ok && last.status !== 'no-solution-proven') {
                     if (enableBlueprintPlanning) {
