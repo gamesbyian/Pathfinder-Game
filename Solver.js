@@ -16799,8 +16799,32 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             // the UI and the direct script. Real time is kept only as a generous safety
             // ceiling. Callers can opt back into pure wall-clock budgets with
             // deterministicSearch === false.
+            //
+            // Near-Hamiltonian high-intersection levels need a deeper node budget than the
+            // default vms/node calibration grants. On such a level the required path covers
+            // essentially every free cell AND folds back on itself many times; the beam
+            // reaches within ~2 steps of the goal depth but the per-tier work budget expires
+            // before it can close the final knots (it then exhausts a different, fruitless
+            // sub-tree). Granting more nodes per ms lets the tier-2 objectiveFirst pass run
+            // the deterministic search far enough to find the solution. Gated on structural
+            // ratios (high required-intersection count AND near-full free-cell coverage), so
+            // only this narrow class is affected and every other level keeps the audited
+            // 0.05 calibration unchanged. Mirrors _classifyLevelArchetype: the predicate is a
+            // pure function of level geometry, so any future level matching it is treated the
+            // same and a level whose layout changes is re-classified from scratch.
+            const deepIntersectionVmsPerNode = (() => {
+                const reqInt = Math.max(0, Number(level?.reqInt) || 0);
+                const reqLen = Math.max(0, Number(level?.reqLen) || 0);
+                const w = Math.max(1, Number(level?.grid?.w) || 0);
+                const h = Math.max(1, Number(level?.grid?.h) || 0);
+                const blocks = level?.blockSet instanceof Set ? level.blockSet.size : 0;
+                const freeCells = Math.max(1, (w * h) - blocks);
+                const freeCellDensity = reqLen / freeCells;
+                return (reqInt >= 8 && freeCellDensity >= 0.9) ? 0.02 : null;
+            })();
             installSearchClock(createSearchClock({
                 deterministic: opts.deterministicSearch !== false,
+                ...(deepIntersectionVmsPerNode ? { vmsPerNode: deepIntersectionVmsPerNode } : {}),
                 realCeilingMs: Math.max(60000, (Number(budgetMs) || 0) * 8)
             }));
             let cascadeResult;
