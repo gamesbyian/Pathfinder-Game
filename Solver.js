@@ -12353,7 +12353,7 @@ function installSolver(APP) {
                 const resolvedPortalUsagePolicy = attemptOpts.portalUsagePolicy
                     || (attemptForbidPortals ? 'optional-off' : (portalTraversalRequiredForAttempt ? 'required' : 'optional-on'));
                 // When blockPortalEntryCells is requested (for optional-portal no-portal attempts),
-                // add all portal entry cells to blockSet so the solver treats them as walls.
+                // add all portal entry cells to blockSet so the solver treats them as blocks.
                 // PathfinderSolver.solve() does Object.create(level) internally and rebuilds all
                 // distance maps fresh, so this modified level is safe to pass.
                 const solveLevel = (attemptOpts.blockPortalEntryCells && attemptForbidPortals && level?.portalMap instanceof Map && level.portalMap.size > 0)
@@ -17553,7 +17553,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     gates: asArray(rawLevel?.gates).map((g) => ({ x: g.x, y: g.y })),
                     gateKeys: asArray(rawLevel?.gates).map((g) => pack(g.x, g.y)),
                     goal: { x: rawLevel.goal.x, y: rawLevel.goal.y },
-                    blockSet: new Set([...asArray(rawLevel?.blocks), ...asArray(rawLevel?.walls)].map((b) => pack(b.x, b.y))),
+                    blockSet: new Set(asArray(rawLevel?.blocks).map((b) => pack(b.x, b.y))),
                     mustPassKeys: asArray(rawLevel?.mustPass).map((m) => pack(m.x, m.y)),
                     mustCrossKeys: asArray(rawLevel?.mustCross).map((m) => pack(m.x, m.y)),
                     falseGoalKeys: new Set(asArray(rawLevel?.falseGoals).map((f) => pack(f.x, f.y))),
