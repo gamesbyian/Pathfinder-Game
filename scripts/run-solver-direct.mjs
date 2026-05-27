@@ -290,6 +290,16 @@ const buildSolveOpts = () => {
   if (dirOrderVariant) opts.dirOrderVariant = dirOrderVariant;
   if (rootTieSeedOffset !== null) opts.rootTieSeedOffset = rootTieSeedOffset;
   if (rootOrderingVariant) opts.rootOrderingVariant = rootOrderingVariant;
+  // The per-stage cascade hard-codes orderingPolicy/dirOrderVariant and never forwards
+  // the root-seed knobs, so the bare opts above only reach telemetry, not the search.
+  // experimentOverrides is the channel the solver actually honors (Solver.js
+  // installExperimentOverrides): a solve-scoped override that reaches every attempt.
+  const experimentOverrides = {};
+  if (orderingPolicy) experimentOverrides.orderingPolicy = orderingPolicy;
+  if (dirOrderVariant) experimentOverrides.dirOrderVariant = dirOrderVariant;
+  if (rootTieSeedOffset !== null) experimentOverrides.rootTieSeedOffset = rootTieSeedOffset;
+  if (rootOrderingVariant) experimentOverrides.rootOrderingVariant = rootOrderingVariant;
+  if (Object.keys(experimentOverrides).length) opts.experimentOverrides = experimentOverrides;
   // Mirror the browser hint-ladder by also piggybacking forbiddenFirstMoves on
   // hintLadderState. The runAttempt closure (Solver.js:11987) prefers
   // hintLadderState.forbiddenFirstMoves over opts.forbiddenFirstMoves, and
