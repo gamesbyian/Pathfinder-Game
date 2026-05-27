@@ -114,7 +114,7 @@ function normalizeRaw(raw, idx) {
     reqInt: raw.reqInt,
     goalKey: P(raw.goal.x, raw.goal.y),
     gateKeys: (raw.gates || []).map(g => P(g.x, g.y)),
-    blockSet: new Set((raw.blocks || raw.walls || []).map(b => P(b.x, b.y))),
+    blockSet: new Set((raw.blocks || []).map(b => P(b.x, b.y))),
     gooseSet: new Set((raw.geese || []).map(g => P(g.x, g.y))),
     falseGoalKeys: new Set((raw.falseGoals || []).map(g => P(g.x, g.y))),
     portalMap: new Map(),

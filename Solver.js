@@ -14,6 +14,81 @@
         });
         return out;
     };
+    // Deterministic in-place Fisher-Yates shuffle driven by a 32-bit xorshift PRNG.
+    // The diversified search passes (dirOrderVariant === 'random') previously used
+    // unseeded Math.random(), which made solver outcomes non-reproducible run to run.
+    // Seeding off the solver's existing rootTieSeed namespace keeps the diversification
+    // intent (an ordering distinct from the scored/default one) while guaranteeing the
+    // same (level, seed) always explores the same ordering.
+    const seededShuffleInPlace = (arr, seed = 0) => {
+        if (!Array.isArray(arr) || arr.length < 2) return arr;
+        let s = (Number(seed) >>> 0) || 0x9e3779b9;
+        const nextUnit = () => {
+            s ^= s << 13;
+            s ^= s >>> 17;
+            s ^= s << 5;
+            s >>>= 0;
+            return s / 4294967296;
+        };
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(nextUnit() * (i + 1));
+            const tmp = arr[i];
+            arr[i] = arr[j];
+            arr[j] = tmp;
+        }
+        return arr;
+    };
+    // --- Deterministic search clock -------------------------------------------
+    // Wall-clock time made solver outcomes non-reproducible: a time-bounded search
+    // expands however many nodes happen to fit before the deadline, and that count
+    // varies with CPU speed and load — so the same level could solve in one run and
+    // time out in another (this is what diverged the UI from the direct script).
+    // The fix is to bound search by WORK (nodes expanded) instead of elapsed ms.
+    // A monotonic "virtual clock" advances by a fixed number of virtual milliseconds
+    // per expanded node, so every budget/velocity computation already written in ms
+    // keeps working unchanged but becomes a deterministic function of node count.
+    // Real wall-clock is retained only as a safety ceiling so a pathological loop can
+    // never hang. The clock is a module-level singleton because the solver never runs
+    // two searches concurrently (guarded by activeSolverController), and it is only
+    // installed for the duration of Referee.solve — when absent, searchNow() falls
+    // back to Date.now() so non-solve callers (e.g. findTrapSpots) behave as before.
+    //
+    // SEARCH_VIRTUAL_MS_PER_NODE is a load-bearing calibration knob: it sets how many
+    // nodes a given ms budget buys (nodeBudget = budgetMs / vmsPerNode). Changing it
+    // re-shapes how deep every tier searches and MUST be re-baselined against the
+    // audit harness (audits/metrics/*.json) on a per-level basis.
+    const SEARCH_VIRTUAL_MS_PER_NODE = (typeof process !== 'undefined' && process?.env?.PF_VMS_PER_NODE && Number(process.env.PF_VMS_PER_NODE) > 0)
+        ? Number(process.env.PF_VMS_PER_NODE)
+        : 0.05;
+    let __searchClock = null;
+    const createSearchClock = ({ deterministic = true, vmsPerNode = SEARCH_VIRTUAL_MS_PER_NODE, realCeilingMs = 0 } = {}) => {
+        const now = Date.now();
+        return {
+            deterministic: !!deterministic,
+            vmsPerNode: Number(vmsPerNode) > 0 ? Number(vmsPerNode) : SEARCH_VIRTUAL_MS_PER_NODE,
+            work: 0,
+            base: now,
+            realStart: now,
+            realCeilingMs: Number(realCeilingMs) > 0 ? Number(realCeilingMs) : 0
+        };
+    };
+    const installSearchClock = (clock) => { __searchClock = clock || null; };
+    const clearSearchClock = () => { __searchClock = null; };
+    // Tick once per expanded node so the virtual clock advances in lockstep with work.
+    const tickSearchClock = () => { if (__searchClock) __searchClock.work++; };
+    // Virtual "now" for all search budget/velocity decisions; real time when no clock.
+    const searchNow = () => (__searchClock && __searchClock.deterministic)
+        ? (__searchClock.base + __searchClock.work * __searchClock.vmsPerNode)
+        : Date.now();
+    // True when a search started at virtualStart has consumed limitMs of virtual
+    // budget, OR (safety net) the real wall-clock ceiling has been exceeded. The
+    // wall-clock arm guarantees termination even for a loop whose node counter is
+    // not wired to the clock.
+    const searchBudgetExpired = (virtualStart, limitMs) => {
+        if ((searchNow() - virtualStart) > limitMs) return true;
+        if (__searchClock && __searchClock.realCeilingMs > 0 && (Date.now() - __searchClock.realStart) > __searchClock.realCeilingMs) return true;
+        return false;
+    };
     const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {
         const reqInt = Math.max(0, Number(level?.reqInt) || 0);
         const highReqIntThreshold = Math.max(3, Number(context?.highReqIntThreshold) || 3);
@@ -4203,7 +4278,10 @@ function installSolver(APP) {
                         }
                     }
                     if (options?.dirOrderVariant === 'random') {
-                        scored.sort(() => Math.random() - 0.5);
+                        const diversifySeed = ((Number(options?.rootTieSeed) || 0)
+                            ^ Math.imul((state.path.length + 1) >>> 0, 0x9e3779b9)
+                            ^ 0x5bd1e995) >>> 0;
+                        seededShuffleInPlace(scored, diversifySeed);
                     } else {
                         const scoreTieEpsilon = 0.35;
                         const tieFinite = (value, fallback = 9999) => Number.isFinite(value) ? Number(value) : fallback;
@@ -4545,7 +4623,7 @@ function installSolver(APP) {
                 // Returns { ok, path, nodesExpanded, iterations, finalFLimit, reason }.
                 // On failure, the state object is restored to its pre-call cursor/length.
                 async _runEndgameIDAStar(state, level, options, budgetMs, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats) {
-                    const startTime = Date.now();
+                    const startTime = searchNow();
                     const originalLogCursor = state.logCursor;
                     const originalPathLength = state.path.length;
                     const startKey = state.path[state.path.length - 1];
@@ -4672,21 +4750,21 @@ function installSolver(APP) {
                     const IDA_YIELD_INTERVAL = 1000;
                     let nodesSinceYield = 0;
                     while (fLimit <= reqLen) {
-                        if ((Date.now() - startTime) > budgetMs) break;
+                        if (searchBudgetExpired(startTime, budgetMs)) break;
                         iterations++;
                         let nextFLimit = Infinity;
                         const dfsStack = [];
                         const startSuccessors = this._getNeighbors(startKey, state, distMap, flipperDistMap, usageFreq, level, idaOptions, scratch, searchCtx, debugStats);
                         dfsStack.push({ k: startKey, neighbors: startSuccessors.slice(), logMark: null });
                         while (dfsStack.length > 0) {
-                            if ((Date.now() - startTime) > budgetMs) break;
+                            if (searchBudgetExpired(startTime, budgetMs)) break;
                             if (nodesSinceYield >= IDA_YIELD_INTERVAL) {
                                 nodesSinceYield = 0;
                                 // Also drive onProgress so the modal's timer keeps ticking
                                 // during long IDA* fires — without this, the user sees a
                                 // static timer for seconds and assumes the solver hung.
                                 if (typeof options.onProgress === 'function' && options.startTime) {
-                                    try { options.onProgress(Date.now() - options.startTime); } catch (_) {}
+                                    try { options.onProgress(searchNow() - options.startTime); } catch (_) {}
                                 }
                                 // Live progress update for the modal — IDA* runs for up to
                                 // 2s synchronously per fire, with this the detail line
@@ -4697,7 +4775,7 @@ function installSolver(APP) {
                                     }
                                 } catch (_) { /* UI not available; ignore */ }
                                 await new Promise(resolve => setTimeout(resolve, 0));
-                                if ((Date.now() - startTime) > budgetMs) break;
+                                if (searchBudgetExpired(startTime, budgetMs)) break;
                             }
                             const top = dfsStack[dfsStack.length - 1];
                             if (!top.neighbors || top.neighbors.length === 0) {
@@ -4709,6 +4787,7 @@ function installSolver(APP) {
                             }
                             const nextKey = top.neighbors.pop();
                             totalNodesExpanded++;
+                            tickSearchClock();
                             nodesSinceYield++;
                             const topPortal = APP.LevelUtils.resolvePortal(level, top.k);
                             const isJump = !!(topPortal && topPortal.dest === nextKey && !state.isJump.has(state.path.length - 1));
@@ -4759,7 +4838,7 @@ function installSolver(APP) {
                     }
                     // No solution found within budget or fLimit exceeded reqLen. Restore state.
                     restoreToOriginal();
-                    const reason = ((Date.now() - startTime) > budgetMs) ? 'budget' : 'fLimit-exceeded-reqLen';
+                    const reason = searchBudgetExpired(startTime, budgetMs) ? 'budget' : 'fLimit-exceeded-reqLen';
                     return { ok: false, path: null, nodesExpanded: totalNodesExpanded, iterations, finalFLimit: fLimit, reason };
                 },
                 _floodFillReachable(startKey, state, l, searchCtx) {
@@ -5387,7 +5466,7 @@ function installSolver(APP) {
                             }
                             return SOLVER_ABORTED;
                         }
-                        if (Date.now() - options.startTime > options.timeLimit) {
+                        if (searchBudgetExpired(options.startTime, options.timeLimit)) {
                             captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                             snapshotTimeoutFrontierDiagnostics(debugStats, stack);
                             recordPhaseAttempt('timeout');
@@ -5406,7 +5485,7 @@ function installSolver(APP) {
                         }
                         if (++steps % 500 === 0) {
                             await new Promise(r => setTimeout(r, 0));
-                            options.onProgress(Date.now() - options.startTime);
+                            options.onProgress(searchNow() - options.startTime);
                             // Live progress update for the solver modal. Without this the
                             // detail line is static for the whole stage (seconds to minutes)
                             // and the user perceives the solver as frozen even when it's
@@ -5469,6 +5548,7 @@ function installSolver(APP) {
                             rootDiversificationAttemptedFamilies.add(familyKey);
                         }
                         if (debugStats) debugStats.nodesExpanded++;
+                        tickSearchClock();
                         const topPortal = APP.LevelUtils.resolvePortal(l, top.k);
                         const isP = topPortal && !state.isJump.has(state.path.length - 1) ? topPortal.dest === nextKey : false;
                         const transLog = this._pushStateZeroAlloc(state, searchCtx, nextKey, isP, l, options, debugStats);
@@ -5767,7 +5847,7 @@ function installSolver(APP) {
                             // so IDA* terminates naturally via exhaustion. The snapshot
                             // multi-start below is more sensitive: `NaN >= 100` is false,
                             // so the loop is silently skipped.
-                            const elapsedMs = Date.now() - (options.startTime || Date.now());
+                            const elapsedMs = searchNow() - (options.startTime || searchNow());
                             const remainingAttemptMs = Math.max(0, Number(options.timeLimit || 0) - elapsedMs);
                             const fraction = Number(options.endgameIDAStarBudgetFraction || 0.5);
                             // Cap the IDA* budget at min(remaining attempt budget, fraction*remaining)
@@ -5786,9 +5866,9 @@ function installSolver(APP) {
                             // first 500-step yield). Macrotask via setTimeout(0) — microtasks
                             // (plain await) don't reliably trigger paint.
                             await new Promise(resolve => setTimeout(resolve, 0));
-                            const idaFireStart = Date.now();
+                            const idaFireStart = searchNow();
                             const idaResult = await this._runEndgameIDAStar(state, l, options, remainingBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
-                            endgameIDAStarTotalElapsedMs += (Date.now() - idaFireStart);
+                            endgameIDAStarTotalElapsedMs += (searchNow() - idaFireStart);
                             if (debugStats) {
                                 // Most fields reflect the LAST fire (overwrite-style). The
                                 // multi-fire counters and aggregates accumulate across fires.
@@ -6245,13 +6325,13 @@ function installSolver(APP) {
                                 out.stop = true;
                                 break;
                             }
-                            if (timeLimit && out.startTime && (Date.now() - out.startTime > timeLimit)) {
+                            if (timeLimit && out.startTime && searchBudgetExpired(out.startTime, timeLimit)) {
                                 out.timedOut = true;
                                 break;
                             }
                         }
                         if (out.stop || out.timedOut) break;
-                        onProgress?.(Date.now() - (out.startTime || Date.now()));
+                        onProgress?.(searchNow() - (out.startTime || searchNow()));
                     }
                     return out;
                 }
@@ -6421,7 +6501,7 @@ function installSolver(APP) {
 
                     const shouldApplyDebugVariant = !!(debugGateVariant || window.__PF_DEBUG_HINT_GATE_VARIANTS__);
                     if (shouldApplyDebugVariant && dirOrderVariant === 'alt') rankedQueue = rankedQueue.slice().reverse();
-                    else if (shouldApplyDebugVariant && dirOrderVariant === 'random') rankedQueue = rankedQueue.slice().sort(() => Math.random() - 0.5);
+                    else if (shouldApplyDebugVariant && dirOrderVariant === 'random') rankedQueue = seededShuffleInPlace(rankedQueue.slice(), ((Number(options?.rootTieSeed) || 0) ^ 0x632be59b) >>> 0);
 
                     const passCellUsageFreq = SavedHintArchitecture.makePassCellUsageSeed();
                     const seenSolutions = new Set();
@@ -6608,7 +6688,7 @@ function installSolver(APP) {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
                     const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false, endgameIDAStarEnabled = false, endgameIDAStarTriggerDepthRatio = 0.85, endgameIDAStarBoundCeiling = 20, endgameIDAStarBudgetFraction = 0.5 } = options;
-                    const startTime = Date.now();
+                    const startTime = searchNow();
                     const perfStart = performance.now();
                     const foundSolutions = [];
                     const debugStats = debug ? createSolverDebugStats(debugLevel ?? ((typeof level.id === "number") ? level.id + 1 : null)) : null;
@@ -7532,7 +7612,7 @@ function installSolver(APP) {
                         return { kind: "ok", solutions: passSolutions, debug: snapshotPassDebug() };
                     };
 
-                    const remainingBudget = () => Math.max(0, timeLimit - (Date.now() - startTime));
+                    const remainingBudget = () => Math.max(0, timeLimit - (searchNow() - startTime));
                     const buildTierDiagnostics = (passRun, tierName) => {
                         const dbg = passRun?.debug || debugStats || {};
                         const prune = dbg?.prune || {};
@@ -12273,7 +12353,7 @@ function installSolver(APP) {
                 const resolvedPortalUsagePolicy = attemptOpts.portalUsagePolicy
                     || (attemptForbidPortals ? 'optional-off' : (portalTraversalRequiredForAttempt ? 'required' : 'optional-on'));
                 // When blockPortalEntryCells is requested (for optional-portal no-portal attempts),
-                // add all portal entry cells to blockSet so the solver treats them as walls.
+                // add all portal entry cells to blockSet so the solver treats them as blocks.
                 // PathfinderSolver.solve() does Object.create(level) internally and rebuilds all
                 // distance maps fresh, so this modified level is safe to pass.
                 const solveLevel = (attemptOpts.blockPortalEntryCells && attemptForbidPortals && level?.portalMap instanceof Map && level.portalMap.size > 0)
@@ -16582,13 +16662,27 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 extractAttemptQualityMetrics,
                 computeAttemptDeltaMetrics
             } = this._createSolveExecutionHelpers({ stagesTried, opts });
-            const cascadeResult = await this._runSolveCascade({
-                solveContext,
-                computeAttemptDeltaMetrics,
-                runStage,
-                extractStageTelemetry,
-                shouldSwitchFamilyByTelemetryDelta
-            });
+            // Bound this tier's search by deterministic work (node count) rather than
+            // wall-clock time so the outcome is reproducible across machines and between
+            // the UI and the direct script. Real time is kept only as a generous safety
+            // ceiling. Callers can opt back into pure wall-clock budgets with
+            // deterministicSearch === false.
+            installSearchClock(createSearchClock({
+                deterministic: opts.deterministicSearch !== false,
+                realCeilingMs: Math.max(60000, (Number(budgetMs) || 0) * 8)
+            }));
+            let cascadeResult;
+            try {
+                cascadeResult = await this._runSolveCascade({
+                    solveContext,
+                    computeAttemptDeltaMetrics,
+                    runStage,
+                    extractStageTelemetry,
+                    shouldSwitchFamilyByTelemetryDelta
+                });
+            } finally {
+                clearSearchClock();
+            }
             const { last, stagesTried: resolvedStagesTried, previousAttempt, previousAttempts, strategyMetadata } = cascadeResult;
 
             const { attemptDelta } = this._recordSolveAttemptOutcome({
@@ -17459,7 +17553,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     gates: asArray(rawLevel?.gates).map((g) => ({ x: g.x, y: g.y })),
                     gateKeys: asArray(rawLevel?.gates).map((g) => pack(g.x, g.y)),
                     goal: { x: rawLevel.goal.x, y: rawLevel.goal.y },
-                    blockSet: new Set([...asArray(rawLevel?.blocks), ...asArray(rawLevel?.walls)].map((b) => pack(b.x, b.y))),
+                    blockSet: new Set(asArray(rawLevel?.blocks).map((b) => pack(b.x, b.y))),
                     mustPassKeys: asArray(rawLevel?.mustPass).map((m) => pack(m.x, m.y)),
                     mustCrossKeys: asArray(rawLevel?.mustCross).map((m) => pack(m.x, m.y)),
                     falseGoalKeys: new Set(asArray(rawLevel?.falseGoals).map((f) => pack(f.x, f.y))),
