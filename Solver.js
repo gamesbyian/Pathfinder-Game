@@ -11421,12 +11421,11 @@ function installSolver(APP) {
             const w = Math.max(1, Number(level?.grid?.w) || 0);
             const h = Math.max(1, Number(level?.grid?.h) || 0);
             const area = Math.max(1, w * h);
-            const blockCount = level?.blockSet instanceof Set ? level.blockSet.size : 0;
-            const freeCells = Math.max(1, area - blockCount);
-            const reqLenDensity = reqLen > 0 ? reqLen / freeCells : 0;
+            const reqLenDensity = reqLen > 0 ? reqLen / area : 0;
             const mustPassCount = Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0;
             const mustCrossCount = Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0;
             const portalPairs = level?.portalMap instanceof Map ? Math.floor(level.portalMap.size / 2) : 0;
+            const blockCount = level?.blockSet instanceof Set ? level.blockSet.size : 0;
             const blockDensity = blockCount / area;
             const archetypes = [];
 
