@@ -17617,6 +17617,61 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     opts.onAttemptResult?.({ result, attempt, index: i + 1, total: plan.length, elapsedMs, stop });
                     if (stop) break;
                 }
+                // ROOT FAN-OUT: the depth-first search can sink an entire tier's budget into one
+                // first-move subtree and never give the other first move(s) a fair turn, so a
+                // solvable level whose correct first move is lower-scored gets missed (verified:
+                // forcing the correct first move solves L5/L50/L53/L73/L138). When the whole
+                // ladder has failed, retry the full cascade once per legal first move, forcing it
+                // by forbidding the others. forbiddenFirstMoves is carried on hintLadderState so
+                // it reaches every inner pass (incl. macro-plan, where these levels actually
+                // solve), not just stage 0. Additive: runs only after the ladder fails, so it
+                // cannot change an already-solved level; the search still enforces legality.
+                const finalSolved = !!finalAttempt?.ok;
+                const finalStatusNow = finalAttempt?.finalStatus || finalAttempt?.rawStatus || finalAttempt?.status || 'unknown';
+                if (!finalSolved && finalStatusNow !== 'no-solution-proven' && finalStatusNow !== 'aborted'
+                    && !APP.State.ENGINE.solverAbortRequested
+                    && level && level.grid && level.blockSet instanceof Set && Array.isArray(level.gateKeys)) {
+                    const gateSet = new Set(level.gateKeys);
+                    const firstMoveSet = new Set();
+                    for (const gateKey of gateSet) {
+                        const gp = APP.LevelUtils.UNPACK(gateKey);
+                        for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+                            const nx = gp.x + dx, ny = gp.y + dy;
+                            if (nx < 0 || ny < 0 || nx >= level.grid.w || ny >= level.grid.h) continue;
+                            const nk = APP.LevelUtils.PACK(nx, ny);
+                            if (level.blockSet.has(nk) || gateSet.has(nk)) continue;
+                            firstMoveSet.add(nk);
+                        }
+                        const gPortal = level.portalMap instanceof Map ? level.portalMap.get(gateKey) : null;
+                        if (gPortal && Number.isFinite(gPortal.dest) && !gateSet.has(gPortal.dest)) firstMoveSet.add(gPortal.dest);
+                    }
+                    const firstMoves = [...firstMoveSet];
+                    if (firstMoves.length >= 2 && firstMoves.length <= 4) {
+                        const baseForbidden = Array.isArray(opts.forbiddenFirstMoves) ? opts.forbiddenFirstMoves : [];
+                        const fanTier = Math.max(requestedTier, plan.length - 1);
+                        for (const mv of firstMoves) {
+                            if (APP.State.ENGINE.solverAbortRequested) break;
+                            const forbidden = [...baseForbidden, ...firstMoves.filter((k) => k !== mv)];
+                            const fanResult = await solveLevel(level, {
+                                ...opts,
+                                purpose,
+                                escalationTier: fanTier,
+                                allowReferee: true,
+                                estimatedMaxMs: totalMaxMs,
+                                resetAttemptHistory: 'level',
+                                forbiddenFirstMoves: forbidden,
+                                hintLadderState: {
+                                    ...(opts.hintLadderState && typeof opts.hintLadderState === 'object' ? opts.hintLadderState : {}),
+                                    forbiddenFirstMoves: forbidden.slice()
+                                },
+                                detailLabel: `Root fan-out: first move ${mv}`
+                            });
+                            finalAttempt = fanResult || finalAttempt;
+                            if (fanResult?.ok) break;
+                            if ((fanResult?.finalStatus || fanResult?.status) === 'aborted') break;
+                        }
+                    }
+                }
                 return finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
             }
 
