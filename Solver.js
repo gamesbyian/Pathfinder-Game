@@ -3583,8 +3583,8 @@ function installSolver(APP) {
                                 pushDriver('lengthPressure', depthDeficitAfterMove, lengthPressureContribution);
                             }
 
-                            const mustContribution = -(mustBound === Infinity ? 100000 : mustBound * gravityMult * mustPassUrgencyWeight);
-                            const crossContribution = -(crossBound === Infinity ? 100000 : crossBound * gravityMult * mustCrossUrgencyWeight);
+                            const mustContribution = -(mustBound === Infinity ? 100000 : Math.round(mustBound * gravityMult * mustPassUrgencyWeight));
+                            const crossContribution = -(crossBound === Infinity ? 100000 : Math.round(crossBound * gravityMult * mustCrossUrgencyWeight));
                             score += mustContribution;
                             score += crossContribution;
                             pushDriver('mustPassUrgency', mustBound === Infinity ? 999 : mustBound, mustContribution);
@@ -3699,7 +3699,7 @@ function installSolver(APP) {
 
                             if (isTargetingWaypoint) {
                                 // ATTRACTION MODE: Beeline to the mandatory parity-breaker.
-                                { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * pw('goalAttractionWeight'))); score += c; pushDriver('goalAttraction', activeDist, c); }
+                                { const c = -Math.round(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * pw('goalAttractionWeight'))); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 score -= this._staticNeighborDegree(nk, l) * 2;
                             } else {
                                 const slack = rSteps - activeDist;
@@ -3710,11 +3710,11 @@ function installSolver(APP) {
                                     // SLACK MODE: Decaying Orbit + Wall Hugging
                                     const targetSlack = Math.floor((rSteps / 2) * pw('slackPreservationWeight', 0.5));
                                     score -= Math.abs(slack - targetSlack) * 5;
-                                    score -= this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1) * pw('antiDeadCorridorWeight'));
+                                    score -= Math.round(this._staticNeighborDegree(nk, l) * (15 * Math.max(0.25, phaseProfile.antiDither || 1) * pw('antiDeadCorridorWeight')));
                                 } else {
                                     // BEELINE MODE: Slack is mathematically zero, dive straight to the goal.
                                     const ramp = finalApproach ? (1 + (3 - slack) * 0.4) : 1;
-                                    { const c = -(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * pw('goalAttractionWeight') * ramp)); score += c; pushDriver('goalAttraction', activeDist, c); }
+                                    { const c = -Math.round(activeDist * (10 * Math.max(0.25, phaseProfile.goalAttraction || 1) * pw('goalAttractionWeight') * ramp)); score += c; pushDriver('goalAttraction', activeDist, c); }
                                 }
                             }
                         }
@@ -4400,7 +4400,6 @@ function installSolver(APP) {
                             ^ 0x5bd1e995) >>> 0;
                         seededShuffleInPlace(scored, diversifySeed);
                     } else {
-                        const scoreTieEpsilon = 0.35;
                         const tieFinite = (value, fallback = 9999) => Number.isFinite(value) ? Number(value) : fallback;
                         const tieObligationMetric = (item) => {
                             const mustPass = tieFinite(item?.mustPassBound, 9999);
@@ -4432,8 +4431,8 @@ function installSolver(APP) {
                             return { distToGoal, edgeDist, centerDist2, parity };
                         };
                         const compareTieAware = (a, b) => {
-                            const scoreDelta = a.score - b.score;
-                            if (Math.abs(scoreDelta) > scoreTieEpsilon) {
+                            const scoreDelta = Math.round(a.score) - Math.round(b.score);
+                            if (scoreDelta !== 0) {
                                 return { order: scoreDelta, reason: 'score-delta', scoreDelta };
                             }
                             const oa = tieObligationMetric(a);
@@ -4496,17 +4495,17 @@ function installSolver(APP) {
                         }
                         if (depth === 0 && debugStats && scored.length > 0) {
                             const best = scored[0];
-                            const nearEqual = scored.filter(item => Math.abs(item.score - best.score) <= scoreTieEpsilon);
+                            const bestRounded = Math.round(best.score);
+                            const nearEqual = scored.filter(item => Math.round(item.score) === bestRounded);
                             debugStats.rootTieCount = Math.max(0, nearEqual.length - 1);
                             if (nearEqual.length >= 2) {
                                 const tieDecision = compareTieAware(nearEqual[0], nearEqual[1]);
                                 debugStats.rootTieBreak = {
                                     reason: tieDecision.reason || 'score-delta',
-                                    epsilon: scoreTieEpsilon,
                                     chosenKey: nearEqual[0].nk,
                                     runnerUpKey: nearEqual[1].nk,
-                                    chosenScore: Number(nearEqual[0].score.toFixed(3)),
-                                    runnerUpScore: Number(nearEqual[1].score.toFixed(3)),
+                                    chosenScore: Math.round(nearEqual[0].score),
+                                    runnerUpScore: Math.round(nearEqual[1].score),
                                     portalPhase: nearEqual[0]?.portalPhase || null,
                                     portalFamilySwitchCount: Math.max(0, Number(nearEqual[0]?.portalFamilySwitchCount) || 0),
                                     portalOscillationPenaltyApplied: !!nearEqual[0]?.portalOscillationPenaltyApplied
@@ -4514,7 +4513,6 @@ function installSolver(APP) {
                             } else {
                                 debugStats.rootTieBreak = {
                                     reason: 'score-delta',
-                                    epsilon: scoreTieEpsilon,
                                     chosenKey: best.nk,
                                     portalPhase: best?.portalPhase || null,
                                     portalFamilySwitchCount: Math.max(0, Number(best?.portalFamilySwitchCount) || 0),
