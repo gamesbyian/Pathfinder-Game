@@ -6212,11 +6212,10 @@ function installSolver(APP) {
                     let steps = 0;
                     while (stack.length > 0) {
                         if (options.signal?.aborted) throw new DOMException("Aborted", "AbortError");
-                        tickSearchClock();
-                        if (searchBudgetExpired(options.startTime, options.timeLimit)) return;
+                        if (Date.now() - options.startTime > options.timeLimit) return;
                         if (++steps % 500 === 0) {
                             await new Promise(r => setTimeout(r, 0));
-                            options.onProgress(searchNow() - options.startTime);
+                            options.onProgress(Date.now() - options.startTime);
                         }
                         const top = stack[stack.length - 1];
                         if (top.neighbors.length === 0) {
