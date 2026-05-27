@@ -191,7 +191,9 @@ const APP = {
     PACK,
     UNPACK,
     inBounds: (x, y, w, h) => x >= 0 && y >= 0 && x < w && y < h,
-    isValidMove: () => true,
+    // Move legality (isValidMove) and movement-axis constants live in the solver
+    // core now, not the host, so a solve run is identical regardless of caller.
+    // Intentionally NOT stubbed here — the solver no longer reads them.
     resolvePortal: (level, key) => level?.portalMap?.get(key) || null,
     deepCloneLevel: (l) => l,
     canonicalCloneLevel: (l) => l,
@@ -205,9 +207,7 @@ const APP = {
     EDITOR: 'editor',
     HINT_ANIMATING: 'hint-animating',
     SOLVER_RUNNING: 'solver-running',
-    OVERLAY_NONE: 'overlay-none',
-    H: 'h',
-    V: 'v'
+    OVERLAY_NONE: 'overlay-none'
   },
   Data: {
     getLevels: () => [],

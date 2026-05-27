@@ -61,7 +61,7 @@ const APP = {
     PACK,
     UNPACK,
     inBounds: (x, y, w, h) => x >= 0 && y >= 0 && x < w && y < h,
-    isValidMove: () => true, // replay path doesn't call this
+    // Move legality and axis constants live in the solver core, not the host.
     resolvePortal: (level, key) => level?.portalMap?.get(key) || null,
     deepCloneLevel: (l) => l, // not invoked on replay path
     normalizeLevel: () => {
@@ -74,9 +74,7 @@ const APP = {
     EDITOR: 'editor',
     HINT_ANIMATING: 'hint-animating',
     SOLVER_RUNNING: 'solver-running',
-    OVERLAY_NONE: 'overlay-none',
-    H: 'h',
-    V: 'v'
+    OVERLAY_NONE: 'overlay-none'
   },
   State: {
     ENGINE: {
