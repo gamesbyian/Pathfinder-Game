@@ -6132,7 +6132,18 @@ function installSolver(APP) {
                         }
                         const stateSig = this._ensureStateHashState(state, l, realLen, options, debugStats);
                         const shouldBypassRootSuppression = relaxRootSuppressionLayer && realLen <= 1;
-                        if (!shouldBypassRootSuppression && this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx)) {
+                        // The dominance/transposition memo keys on the state signature (cell, step,
+                        // masks, portal automaton state) but NOT the set of visited cells. On
+                        // fixed-length simple-path levels (reqInt=0) two states with an identical
+                        // signature can have different visited sets and therefore different feasible
+                        // completions, so collapsing them is unsound: the first arrival memoises the
+                        // signature and transposition-prunes a later, genuinely-distinct state that
+                        // happens to be the only one with a valid completion (L135's portal-
+                        // partitioned grid is the pathological case). The memo is a heuristic
+                        // accelerator, not an admissible prune, so it is gated by 'dominanceMemo' to
+                        // let a late cascade tier retry without it (mirrors the failMemo escape hatch).
+                        const disableDominanceMemo = runtimeDisabledPrunes.has('dominanceMemo');
+                        if (!shouldBypassRootSuppression && !disableDominanceMemo && this._dominancePruneOrStore(dominanceMemo, stateSig, { intersections: state.ints, stepsUsed: realLen, dominanceStrictness: Number(options?.memoStrictness) || 1, mustCrossCompact: this._encodeMustCrossCountsCompact(state) }, debugStats, l, state, searchCtx)) {
                             if (realLen <= 1 && debugStats) {
                                 debugStats.rootCandidatesSuppressedByDominance = (debugStats.rootCandidatesSuppressedByDominance || 0) + 1;
                                 const dbg = ensureDepthZeroDebug(debugStats);
@@ -8463,12 +8474,18 @@ function installSolver(APP) {
                             minRemOverflow: debugStats.prune.minRemOverflow || 0,
                             deadEnd: debugStats.prune.deadEnd || 0
                         };
-                        debugStats.notes.push("SANITY PASS: retrying with memo disabled and mustPass/mustCross bounds disabled.");
+                        debugStats.notes.push("SANITY PASS: retrying with fail-memo + transposition-memo disabled and mustPass/mustCross bounds disabled.");
                         const diagnosticBudget = Math.min(Math.max(Math.floor(timeLimit * 0.25), 2000), 5000);
                         const sanityRun = await runSolvePass({
                             passName: "sanity-pass",
                             localTimeLimit: diagnosticBudget,
-                            disabledPrunes: ["mustPassBound", "mustCrossBound"],
+                            // Also disable the dominance/transposition memo here. It keys on the state
+                            // signature without the visited-cell set, so on fixed-length simple-path
+                            // levels (reqInt=0) a doomed branch can memoise a signature that then
+                            // transposition-prunes the only viable completion reaching it later
+                            // (L135's portal-partitioned grid). useFailMemo:false alone does not cover
+                            // this because the dominance memo is a separate table.
+                            disabledPrunes: ["mustPassBound", "mustCrossBound", "dominanceMemo"],
                             useFailMemo: false,
                             statusLabel: `Sanity pass (${validGates.length} viable gates)...`,
                             passScoringMode: scoringMode,
