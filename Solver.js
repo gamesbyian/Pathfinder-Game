@@ -165,6 +165,116 @@ function installSolver(APP) {
     // - solution application + output text
     // Public API: isRunning, stop, runGameSolver, findTrapSpots.
     // ======================================================
+    // Canonical movement-axis constants. These match the numeric convention used
+    // by level data (filter `axis` values) and by _getNeighbors
+    // (moveAxis = dy===0 ? 1 : 2). They are defined here, inside the solver, so
+    // move legality does NOT depend on a host-provided APP.Core — whose axis
+    // values differ between the browser app (H:1,V:2) and earlier Node harnesses
+    // (H:'h',V:'v'). Relying on the host previously made the solver behave
+    // differently depending on who invoked it.
+    const SOLVER_AXIS_NONE = 0, SOLVER_AXIS_H = 1, SOLVER_AXIS_V = 2;
+    // Canonical move-legality predicate. Previously the solver called
+    // APP.LevelUtils.isValidMove (the browser UI's implementation); the Node
+    // harness stubbed it as () => true, so script runs explored illegal moves and
+    // "validated" illegal paths — diverging from the UI (e.g. UI solved L45/L92
+    // while the script timed out; the script "solved" L26 with an illegal path the
+    // UI rejected). Owning this logic here makes a solver run identical regardless
+    // of how it was started. UNPACK/inBounds/resolvePortal are pure helpers whose
+    // host implementations agree; mode sentinels (APP.Core.PLAY/EDITOR) are only
+    // ever compared for equality, so their concrete values do not matter.
+    const solverIsValidMove = (targetKey, state, level, options = {}) => {
+        const H = SOLVER_AXIS_H, V = SOLVER_AXIS_V, NONE = SOLVER_AXIS_NONE;
+        const { UNPACK, inBounds, resolvePortal } = APP.LevelUtils;
+        const {
+            isStrict = false,
+            allowJump = true,
+            forbidPortals = false,
+            mode = state?.mode,
+            armedFalseGoals = state?.armedFalseGoals,
+            crossedSet = state?.crossedSet || state?.crossedFlippingFilters || new Map(),
+            checkHazards = isStrict,
+            checkFalseGoals = isStrict,
+            checkWinMetrics = isStrict,
+            disabledPrunes = [],
+            diagnostics = null
+        } = options;
+        const setReason = (reasonCode, detail = null) => {
+            if (!diagnostics || typeof diagnostics !== 'object') return false;
+            diagnostics.reasonCode = reasonCode;
+            if (detail !== null && detail !== undefined) diagnostics.reasonDetail = detail;
+            return false;
+        };
+        if (!level) return false;
+        const path = state?.path || [];
+        const counts = state?.visitedCounts || state?.counts || new Map();
+        const usage = state?.cellUsage || state?.usage || new Map();
+        const jumpSet = state?.isPortalJump || state?.jumpSet || new Set();
+        const { x, y } = UNPACK(targetKey);
+        const { w, h } = level.grid;
+        if (!inBounds(x, y, w, h)) return setReason('invalid-oob');
+        if (level.blockSet.has(targetKey)) return setReason('invalid-blocked');
+        if (forbidPortals && level.portalMap?.has(targetKey)) return setReason('invalid-portal-legality', 'portal-terminal-forbidden');
+        if (mode === APP.Core.EDITOR && checkHazards && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
+        const lastK = path[path.length - 1];
+        if (lastK === undefined) {
+            if (diagnostics && typeof diagnostics === 'object') diagnostics.reasonCode = 'valid';
+            return true;
+        }
+        const lastP = UNPACK(lastK);
+        const isPortalJumpCandidate = allowJump && level.portalMap.has(lastK) && resolvePortal(level, lastK).dest === targetKey;
+        if (mode !== APP.Core.EDITOR) {
+            if (lastK === level.goalKey) return setReason('invalid-after-goal');
+            if (checkFalseGoals && armedFalseGoals?.has(lastK)) return setReason('invalid-false-goal-lock');
+            if (level.gateKeys.includes(targetKey)) return setReason('invalid-gate-reentry');
+        } else if (path.length > 1 && level.gateKeys.includes(lastK)) {
+            return setReason('invalid-editor-gate-reentry');
+        }
+        if (allowJump && level.portalMap.has(lastK) && !jumpSet.has(path.length - 1) && !isPortalJumpCandidate) return setReason('invalid-portal-legality');
+        if (mode !== APP.Core.EDITOR && level.portalMap?.has(targetKey) && (counts.get(targetKey) || 0) > 0) {
+            return setReason('invalid-portal-legality', 'portal-terminal-already-used');
+        }
+        if (!isPortalJumpCandidate && Math.abs(x - lastP.x) + Math.abs(y - lastP.y) !== 1) return setReason('invalid-adjacency');
+        const axis = (y === lastP.y) ? H : V;
+        if (!isPortalJumpCandidate) {
+            const u = usage.get(targetKey);
+            if (u && ((axis === H && u.h) || (axis === V && u.v))) return setReason('invalid-edge-reuse-target');
+            const uLast = usage.get(lastK);
+            if (uLast) {
+                let entryAxis = NONE;
+                if (path.length > 1 && !jumpSet.has(path.length - 1)) {
+                    const prevP = UNPACK(path[path.length - 2]);
+                    const lastPC = UNPACK(lastK);
+                    entryAxis = (prevP.y === lastPC.y) ? H : V;
+                }
+                if (axis !== entryAxis) {
+                    if ((axis === H && uLast.h) || (axis === V && uLast.v)) return setReason('invalid-edge-reuse-origin');
+                }
+            }
+        }
+        if (!isPortalJumpCandidate) {
+            let filterLast = level.filterMap.get(lastK);
+            if (filterLast === undefined && level.flippingFilterMap.has(lastK) && crossedSet.has(lastK)) {
+                const relevantFlipCount = crossedSet.get(lastK);
+                filterLast = (relevantFlipCount % 2 !== 0) ? (level.flippingFilterMap.get(lastK) === H ? V : H) : level.flippingFilterMap.get(lastK);
+            }
+            if (!disabledPrunes.includes('filterAxisStrict') && filterLast && filterLast !== axis) return setReason('invalid-by-filter-axis', 'origin-filter-axis-mismatch');
+            let filterTarget = level.filterMap.get(targetKey);
+            if (filterTarget === undefined && level.flippingFilterMap.has(targetKey) && crossedSet.has(targetKey)) {
+                const relevantFlipCount = crossedSet.get(targetKey);
+                const baseAxis = level.flippingFilterMap.get(targetKey);
+                filterTarget = (relevantFlipCount % 2 !== 0) ? (baseAxis === H ? V : H) : baseAxis;
+            }
+            if (!disabledPrunes.includes('filterAxisStrict') && filterTarget && filterTarget !== axis) return setReason('invalid-by-filter-axis', 'target-filter-axis-mismatch');
+        }
+        if (checkHazards && mode !== APP.Core.EDITOR && level.gooseSet.has(targetKey)) return setReason('invalid-goose-hazard');
+        if (checkWinMetrics && mode !== APP.Core.EDITOR && targetKey === level.goalKey) {
+            const mustPassOk = level.mustPassKeys.every(k => (counts.get(k) || 0) > 0 || k === targetKey);
+            const mustCrossOk = level.mustCrossKeys.every(k => ((counts.get(k) || 0) + (k === targetKey ? 1 : 0)) >= 2);
+            if (!mustPassOk || !mustCrossOk) return setReason('invalid-must-cross-impossibility');
+        }
+        if (diagnostics && typeof diagnostics === 'object') diagnostics.reasonCode = 'valid';
+        return true;
+    };
     APP.Solver = (() => {
         const SOLVER_TIMEOUT = Symbol("solver-timeout");
         const SOLVER_ABORTED = Symbol("solver-aborted");
@@ -384,12 +494,12 @@ function installSolver(APP) {
                         const entry = APP.LevelUtils.UNPACK(path[path.length - 2]);
                         const pivot = APP.LevelUtils.UNPACK(path[path.length - 1]);
                         const exit = APP.LevelUtils.UNPACK(key);
-                        const entryAxis = (entry.y === pivot.y) ? APP.Core.H : APP.Core.V;
-                        const exitAxis = (pivot.y === exit.y) ? APP.Core.H : APP.Core.V;
+                        const entryAxis = (entry.y === pivot.y) ? SOLVER_AXIS_H : SOLVER_AXIS_V;
+                        const exitAxis = (pivot.y === exit.y) ? SOLVER_AXIS_H : SOLVER_AXIS_V;
                         if (entryAxis !== exitAxis) return false;
                     }
                     const armedFalseGoals = new Set(l?.falseGoalKeys || []);
-                    return APP.LevelUtils.isValidMove(key, {
+                    return solverIsValidMove(key, {
                         mode: APP.Core.PLAY,
                         path,
                         visitedCounts: counts,
@@ -5050,7 +5160,7 @@ function installSolver(APP) {
                     const adaptationState = {
                         startedObjectives: Math.max(0, this._objectiveRemainingCount(state, l)),
                         lastNodes: 0,
-                        lastTelemetryAtMs: Date.now(),
+                        lastTelemetryAtMs: searchNow(),
                         lastProgress: 0,
                         lastBranchFactor: null,
                         currentProfile: {
@@ -5090,7 +5200,7 @@ function installSolver(APP) {
                         const memoHitSaturation = Math.max(0, Math.min(1, ((Number(debugStats?.memoHits) || 0) + (Number(debugStats?.dominanceMemoHits) || 0)) / memoChecks));
                         const phaseDerived = phaseInfo || this._deriveSolverPhase(state, state.path[state.path.length - 1], l, distMap);
                         const progress = Math.max(0, Math.min(1, Number(phaseDerived?.progressRatio) || 0));
-                        const nowMs = Date.now();
+                        const nowMs = searchNow();
                         const telemetryDtMs = Math.max(1, nowMs - (adaptationState.lastTelemetryAtMs || nowMs));
                         const expansionVelocity = Math.max(0, (nodesExpanded - (adaptationState.lastNodes || 0)) / telemetryDtMs);
                         const progressDelta = Math.max(0, progress - (adaptationState.lastProgress || 0));
@@ -5346,7 +5456,7 @@ function installSolver(APP) {
                     const rootDiversificationFamilyCount = new Set(rootDiversificationFamilyByKey.values()).size;
                     let rootFamilyCoverageGuaranteedSelections = 0;
                     let rootFamilyRepeatSelectionsAtDepth0 = 0;
-                    const progressStartTimeMs = Date.now();
+                    const progressStartTimeMs = searchNow();
                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                     let steps = 0;
                     let endgameIDAStarTriggered = false;
@@ -5898,8 +6008,8 @@ function installSolver(APP) {
                             // This addresses the L92 failure mode where the current state's
                             // _getNeighbors filters to 0 successors: alternate snapshots may have
                             // different downstream successor sets that IDA* can search.
-                            const solveStartTime = options.startTime || Date.now();
-                            const attemptElapsedForSnapshots = Date.now() - solveStartTime;
+                            const solveStartTime = options.startTime || searchNow();
+                            const attemptElapsedForSnapshots = searchNow() - solveStartTime;
                             const attemptRemainingForSnapshots = Math.max(0, Number(options.timeLimit || 0) - attemptElapsedForSnapshots);
                             if (frontierSnapshots.length > 0
                                 && endgameIDAStarTotalElapsedMs < endgameIDAStarMaxTotalMs
@@ -5913,7 +6023,7 @@ function installSolver(APP) {
                                     // Re-check the attempt budget on every iteration: long snapshot
                                     // fires can deplete it mid-loop, and the user-visible modal
                                     // stays frozen on the current stage until we return.
-                                    const innerElapsed = Date.now() - solveStartTime;
+                                    const innerElapsed = searchNow() - solveStartTime;
                                     const innerAttemptRemaining = Math.max(0, Number(options.timeLimit || 0) - innerElapsed);
                                     if (innerAttemptRemaining < 100) break;
                                     const snap = frontierSnapshots[si];
@@ -5946,9 +6056,9 @@ function installSolver(APP) {
                                     // the modal even when consecutive snapshot IDA* runs each
                                     // synchronously block the event loop for hundreds of ms.
                                     await new Promise(resolve => setTimeout(resolve, 0));
-                                    const snapFireStart = Date.now();
+                                    const snapFireStart = searchNow();
                                     const snapResult = await this._runEndgameIDAStar(snap.clone, l, options, snapBudget, searchCtx, distMap, flipperDistMap, usageFreq, scratch, debugStats);
-                                    endgameIDAStarTotalElapsedMs += (Date.now() - snapFireStart);
+                                    endgameIDAStarTotalElapsedMs += (searchNow() - snapFireStart);
                                     if (debugStats) {
                                         debugStats.endgameIDAStarSnapshotFires = (Number(debugStats.endgameIDAStarSnapshotFires) || 0) + 1;
                                         debugStats.endgameIDAStarNodesExpanded = (Number(debugStats.endgameIDAStarNodesExpanded) || 0) + (Number(snapResult?.nodesExpanded) || 0);
@@ -14747,7 +14857,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 const nk = APP.LevelUtils.PACK(nx, ny);
                 if (level.blockSet?.has(nk)) continue;
                 if (level.portalMap?.has(nk)) continue;
-                const ok = APP.LevelUtils.isValidMove(nk, {
+                const ok = solverIsValidMove(nk, {
                     mode: APP.Core.PLAY,
                     path: [fromKey],
                     visitedCounts: new Map(),
@@ -17214,14 +17324,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         const entry = APP.LevelUtils.UNPACK(path[i - 2]);
                         const pivot = APP.LevelUtils.UNPACK(prev);
                         const exit = APP.LevelUtils.UNPACK(cur);
-                        const entryAxis = (entry.y === pivot.y) ? APP.Core.H : APP.Core.V;
-                        const exitAxis = (pivot.y === exit.y) ? APP.Core.H : APP.Core.V;
+                        const entryAxis = (entry.y === pivot.y) ? SOLVER_AXIS_H : SOLVER_AXIS_V;
+                        const exitAxis = (pivot.y === exit.y) ? SOLVER_AXIS_H : SOLVER_AXIS_V;
                         if (entryAxis !== exitAxis) {
                             return { ok: false, reason: `Invalid turn on flipping filter at step ${i + 1}.` };
                         }
                     }
                     const armedFalseGoals = new Set(level.falseGoalKeys || []);
-                    if (!APP.LevelUtils.isValidMove(cur, {
+                    if (!solverIsValidMove(cur, {
                         mode: APP.Core.PLAY,
                         path: path.slice(0, i),
                         visitedCounts: counts,
@@ -17248,10 +17358,10 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     }
                     const prevP = APP.LevelUtils.UNPACK(prev);
                     const curP = APP.LevelUtils.UNPACK(cur);
-                    const axis = (prevP.y === curP.y) ? APP.Core.H : APP.Core.V;
+                    const axis = (prevP.y === curP.y) ? SOLVER_AXIS_H : SOLVER_AXIS_V;
                     const updateUsage = (from, ax) => {
                         if (!usage.has(from)) usage.set(from, { h: false, v: false });
-                        usage.get(from)[ax === APP.Core.H ? 'h' : 'v'] = true;
+                        usage.get(from)[ax === SOLVER_AXIS_H ? 'h' : 'v'] = true;
                     };
                     updateUsage(prev, axis);
                     updateUsage(cur, axis);
@@ -17365,14 +17475,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     gooseSet: new Set(),
                     falseGoalKeys: new Set(),
                     portalMap: new Map([[APP.LevelUtils.PACK(1, 1), { dest: APP.LevelUtils.PACK(2, 2), color: '#d946ef' }]]),
-                    filterMap: new Map([[APP.LevelUtils.PACK(1, 1), APP.Core.H]]),
+                    filterMap: new Map([[APP.LevelUtils.PACK(1, 1), SOLVER_AXIS_H]]),
                     flippingFilterMap: new Map(),
                     mustPassKeys: [APP.LevelUtils.PACK(2, 0)],
                     mustCrossKeys: []
                 });
                 const evaluate = (label, state, targetKey, expected) => {
                     const diagnostics = {};
-                    APP.LevelUtils.isValidMove(targetKey, state, mkLevel(), {
+                    solverIsValidMove(targetKey, state, mkLevel(), {
                         isStrict: false,
                         checkWinMetrics: true,
                         checkFalseGoals: true,
