@@ -96,6 +96,42 @@
     const searchVirtualElapsedMs = () => (__searchClock && __searchClock.deterministic)
         ? (__searchClock.work * __searchClock.vmsPerNode)
         : null;
+    // Experiment overrides: solve-scoped, caller-supplied search knobs used by the
+    // direct audit harness (scripts/run-solver-direct.mjs) for A/B experimentation.
+    // The cascade builds per-stage opts at ~12 call sites and hard-codes each stage's
+    // orderingPolicy/dirOrderVariant, so a top-level option never reaches the search;
+    // a module-level singleton (installed for the duration of Referee.solve, mirroring
+    // the search clock — the solver never runs two searches at once) lets one CLI flag
+    // reliably reach every attempt without threading through every call site. Read only
+    // when non-null; the values come from opts.experimentOverrides, a namespace nothing
+    // but the harness sets, so production/UI solves leave this null and are unchanged.
+    let __solverExperimentOverrides = null;
+    const EXPERIMENT_ROOT_VARIANT_TO_POLICY = {
+        'objective-first-bias': 'objectiveFirst',
+        'knot-first-bias': 'knotBuilder',
+        'portal-first-bias': 'portalFirstTransfer',
+        'perimeter-first-bias': 'perimeterSweep',
+        'harvest-first-bias': 'harvestThenFinish'
+    };
+    const installExperimentOverrides = (raw) => {
+        const out = {};
+        if (raw && typeof raw === 'object') {
+            if (typeof raw.orderingPolicy === 'string' && raw.orderingPolicy) out.orderingPolicy = raw.orderingPolicy;
+            if (typeof raw.dirOrderVariant === 'string' && raw.dirOrderVariant) out.dirOrderVariant = raw.dirOrderVariant;
+            if (Number.isFinite(raw.rootTieSeedOffset)) out.rootTieSeedOffset = Number(raw.rootTieSeedOffset);
+            if (typeof raw.rootOrderingVariant === 'string' && raw.rootOrderingVariant) {
+                out.rootOrderingVariant = raw.rootOrderingVariant;
+                // A root-ordering bias maps onto a scoring policy (mirrors runBaselineStage's
+                // own variant->orderingPolicy table). An explicit orderingPolicy still wins.
+                if (!out.orderingPolicy && EXPERIMENT_ROOT_VARIANT_TO_POLICY[raw.rootOrderingVariant]) {
+                    out.orderingPolicy = EXPERIMENT_ROOT_VARIANT_TO_POLICY[raw.rootOrderingVariant];
+                }
+            }
+        }
+        __solverExperimentOverrides = Object.keys(out).length ? out : null;
+    };
+    const clearExperimentOverrides = () => { __solverExperimentOverrides = null; };
+    const getExperimentOverrides = () => __solverExperimentOverrides;
     const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {
         const reqInt = Math.max(0, Number(level?.reqInt) || 0);
         const highReqIntThreshold = Math.max(3, Number(context?.highReqIntThreshold) || 3);
@@ -6702,7 +6738,22 @@ function installSolver(APP) {
                                 forbiddenPrefixes,
                                 forbiddenFirstMoves,
                                 useUnifiedHKBound,
-                                ...(forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {})
+                                // The DFS reads its scoring policy / direction order / root-tie
+                                // seed from these option fields, but this internalOpts wrapper is
+                                // an explicit allowlist, so the per-pass forcedPolicyProfile is the
+                                // only policy that normally reaches it. Experiment overrides (audit
+                                // harness only; null in production) force the policy/variant/seed on
+                                // every pass so a single CLI flag actually reaches the search.
+                                ...(() => {
+                                    const ov = getExperimentOverrides();
+                                    if (!ov) return forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {};
+                                    const inj = {};
+                                    const policy = ov.orderingPolicy || forcedPolicyProfile;
+                                    if (policy) inj.orderingPolicy = policy;
+                                    if (ov.dirOrderVariant) inj.dirOrderVariant = ov.dirOrderVariant;
+                                    if (Number.isFinite(ov.rootTieSeedOffset)) inj.rootTieSeed = ov.rootTieSeedOffset >>> 0;
+                                    return inj;
+                                })()
                             };
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
                             if (result === SOLVER_ABORTED) return { kind: 'aborted' };
@@ -11820,8 +11871,13 @@ function installSolver(APP) {
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
             const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts, controlPlane });
             const forceFamilySwitchFromLadder = !!sharedHintLadderState?.forceFamilySwitchNextAttempt;
-            const rootTieSeedOffset = Number.isFinite(opts?.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null;
-            const rootOrderingVariant = typeof opts?.rootOrderingVariant === 'string' ? opts.rootOrderingVariant : null;
+            const __stageOverrides = getExperimentOverrides() || {};
+            const rootTieSeedOffset = Number.isFinite(__stageOverrides.rootTieSeedOffset)
+                ? __stageOverrides.rootTieSeedOffset
+                : (Number.isFinite(opts?.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null);
+            const rootOrderingVariant = (typeof __stageOverrides.rootOrderingVariant === 'string' && __stageOverrides.rootOrderingVariant)
+                ? __stageOverrides.rootOrderingVariant
+                : (typeof opts?.rootOrderingVariant === 'string' ? opts.rootOrderingVariant : null);
             if (Number.isFinite(rootTieSeedOffset) || rootOrderingVariant) {
                 attempts.forEach((attempt, idx) => {
                     if (!attempt || typeof attempt !== 'object') return;
@@ -12455,7 +12511,11 @@ function installSolver(APP) {
                     highReqIntThreshold: attemptOpts?.highReqIntThreshold
                 });
                 const featureSignature = toHeuristicFeatureSignature(heuristicFeatureFlags);
-                const orderingPolicy = attemptOpts.orderingPolicy || attemptOpts.policyProfile || opts.orderingPolicy || 'harvestThenFinish';
+                const __experimentOverrides = getExperimentOverrides() || {};
+                // An explicit experiment override forces this policy on every attempt,
+                // taking precedence over the per-attempt policyProfile (which otherwise
+                // shadows opts.orderingPolicy). Null in production, so no effect there.
+                const orderingPolicy = __experimentOverrides.orderingPolicy || attemptOpts.orderingPolicy || attemptOpts.policyProfile || opts.orderingPolicy || 'harvestThenFinish';
                 const attemptDisabledPrunes = Array.isArray(attemptOpts.disabledPrunes)
                     ? attemptOpts.disabledPrunes.slice()
                     : (Array.isArray(opts.disabledPrunes) ? opts.disabledPrunes.slice() : []);
@@ -12495,9 +12555,11 @@ function installSolver(APP) {
                     timeLimit: attemptBudgetMs,
                     debug: true,
                     debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                    dirOrderVariant: (opts.dirOrderVariant === 'alt' || (opts.dirOrderVariant === 'random' && randomExplorationEnabled))
-                        ? opts.dirOrderVariant
-                        : 'default',
+                    dirOrderVariant: __experimentOverrides.dirOrderVariant
+                        ? __experimentOverrides.dirOrderVariant
+                        : ((opts.dirOrderVariant === 'alt' || (opts.dirOrderVariant === 'random' && randomExplorationEnabled))
+                            ? opts.dirOrderVariant
+                            : 'default'),
                     portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
                     scoringMode: attemptOpts.scoringMode || 'modern',
                     structuralMode: !!attemptOpts.structuralMode,
@@ -16827,6 +16889,10 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 ...(deepIntersectionVmsPerNode ? { vmsPerNode: deepIntersectionVmsPerNode } : {}),
                 realCeilingMs: Math.max(60000, (Number(budgetMs) || 0) * 8)
             }));
+            // Caller-supplied experiment overrides (direct audit harness only). Installed
+            // alongside the search clock and torn down in the same finally so they never
+            // leak across solves.
+            installExperimentOverrides(opts.experimentOverrides);
             let cascadeResult;
             try {
                 cascadeResult = await this._runSolveCascade({
@@ -16838,6 +16904,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 });
             } finally {
                 clearSearchClock();
+                clearExperimentOverrides();
             }
             const { last, stagesTried: resolvedStagesTried, previousAttempt, previousAttempts, strategyMetadata } = cascadeResult;
 
@@ -17063,6 +17130,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     hintLadderState: opts.hintLadderState && typeof opts.hintLadderState === 'object' ? opts.hintLadderState : null,
                     rootTieSeedOffset: Number.isFinite(opts.rootTieSeedOffset) ? Number(opts.rootTieSeedOffset) : null,
                     rootOrderingVariant: opts.rootOrderingVariant || null,
+                    experimentOverrides: opts.experimentOverrides || null,
                     forbiddenFirstMoves: Array.isArray(opts.forbiddenFirstMoves)
                         ? opts.forbiddenFirstMoves.filter(Number.isFinite)
                         : null,
