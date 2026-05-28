@@ -16867,13 +16867,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             // essentially every free cell AND folds back on itself many times; the beam
             // reaches within ~2 steps of the goal depth but the per-tier work budget expires
             // before it can close the final knots (it then exhausts a different, fruitless
-            // sub-tree). Granting more nodes per ms lets the tier-2 objectiveFirst pass run
-            // the deterministic search far enough to find the solution. Gated on structural
-            // ratios (high required-intersection count AND near-full free-cell coverage), so
-            // only this narrow class is affected and every other level keeps the audited
-            // 0.05 calibration unchanged. Mirrors _classifyLevelArchetype: the predicate is a
-            // pure function of level geometry, so any future level matching it is treated the
-            // same and a level whose layout changes is re-classified from scratch.
+            // sub-tree). Granting more nodes per ms lets the deterministic search run far
+            // enough to find the solution. Gated on structural ratios (required-intersection
+            // count AND near-full free-cell coverage), so only this narrow class is affected
+            // and every other level keeps the audited 0.05 calibration unchanged. Mirrors
+            // _classifyLevelArchetype: the predicate is a pure function of level geometry, so
+            // any future level matching it is treated the same and a level whose layout
+            // changes is re-classified from scratch. The two density bands below are the only
+            // levels in the catalog with freeCellDensity >= 0.8 (L139 and L26 respectively).
             const deepIntersectionVmsPerNode = (() => {
                 const reqInt = Math.max(0, Number(level?.reqInt) || 0);
                 const reqLen = Math.max(0, Number(level?.reqLen) || 0);
@@ -16882,7 +16883,15 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 const blocks = level?.blockSet instanceof Set ? level.blockSet.size : 0;
                 const freeCells = Math.max(1, (w * h) - blocks);
                 const freeCellDensity = reqLen / freeCells;
-                return (reqInt >= 8 && freeCellDensity >= 0.9) ? 0.02 : null;
+                // Tightest knot — reqInt>=8 on near-total coverage (L139, density ~1.02 on an
+                // 11x11). Solves deterministically at 0.02.
+                if (reqInt >= 8 && freeCellDensity >= 0.9) return 0.02;
+                // Larger-board high-coverage knot — reqInt>=6 with density>=0.8 (L26, density
+                // ~0.87 across 94 free cells, required path 82). The search space is bigger
+                // than L139's, so the beam stalls at maxDepth ~66 even with 0.02; only a
+                // richer budget (0.005) lets it break past the plateau and close the path.
+                if (reqInt >= 6 && freeCellDensity >= 0.8) return 0.005;
+                return null;
             })();
             installSearchClock(createSearchClock({
                 deterministic: opts.deterministicSearch !== false,
