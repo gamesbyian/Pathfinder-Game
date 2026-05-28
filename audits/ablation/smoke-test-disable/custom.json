@@ -1,0 +1,64 @@
+{
+  "variantId": "custom",
+  "desc": "Custom: disable=[structural-modern]",
+  "config": {
+    "disabledAttemptLabels": [
+      "structural-modern"
+    ]
+  },
+  "commitSha": "2598a45fae2d084851f2ac630b9ce30d5d1c54bc",
+  "timestamp": "2026-05-28T17:59:38.371Z",
+  "budgetMs": 180000,
+  "levelCount": 3,
+  "summary": {
+    "solved": 3,
+    "failed": 0,
+    "errors": 0,
+    "total": 3,
+    "totalMs": 353
+  },
+  "levels": [
+    {
+      "level": 1,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 216,
+      "nodesExpanded": 1418,
+      "maxDepth": 20,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 2,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 118,
+      "nodesExpanded": 1792,
+      "maxDepth": 14,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 3,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 19,
+      "nodesExpanded": 202,
+      "maxDepth": 18,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    }
+  ]
+}
