@@ -144,6 +144,23 @@
                     out.orderingPolicy = EXPERIMENT_ROOT_VARIANT_TO_POLICY[raw.rootOrderingVariant];
                 }
             }
+            // Ablation experiment knobs (harness-only; never set by production UI or hint paths).
+            if (Array.isArray(raw.disabledAttemptLabels) && raw.disabledAttemptLabels.length > 0) {
+                out.disabledAttemptLabels = raw.disabledAttemptLabels.filter(s => typeof s === 'string' && s.length > 0);
+            }
+            if (Array.isArray(raw.allowedAttemptLabels) && raw.allowedAttemptLabels.length > 0) {
+                out.allowedAttemptLabels = raw.allowedAttemptLabels.filter(s => typeof s === 'string' && s.length > 0);
+            }
+            if (raw.attemptBudgetMultipliers && typeof raw.attemptBudgetMultipliers === 'object' && !Array.isArray(raw.attemptBudgetMultipliers)) {
+                const mults = {};
+                for (const [k, v] of Object.entries(raw.attemptBudgetMultipliers)) {
+                    if (typeof k === 'string' && k.length > 0 && Number.isFinite(Number(v)) && Number(v) > 0) mults[k] = Number(v);
+                }
+                if (Object.keys(mults).length > 0) out.attemptBudgetMultipliers = mults;
+            }
+            if (Number.isFinite(Number(raw.globalBudgetMultiplier)) && Number(raw.globalBudgetMultiplier) > 0 && Number(raw.globalBudgetMultiplier) !== 1) {
+                out.globalBudgetMultiplier = Number(raw.globalBudgetMultiplier);
+            }
         }
         __solverExperimentOverrides = Object.keys(out).length ? out : null;
     };
@@ -11875,6 +11892,29 @@ function installSolver(APP) {
             const lowNoveltySameFamilyRetryCap = 1;
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
             const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts, controlPlane });
+            // Ablation experiment: filter/modify attempt plan (harness-only; no-op when null).
+            {
+                const __ab = getExperimentOverrides() || {};
+                let filtered = attempts.slice();
+                if (__ab.allowedAttemptLabels?.length > 0) {
+                    const allowed = __ab.allowedAttemptLabels;
+                    filtered = filtered.filter(a => { const lbl = String(a.label || ''); return allowed.some(p => lbl === p || lbl.startsWith(p + '-') || lbl.startsWith(p)); });
+                }
+                if (__ab.disabledAttemptLabels?.length > 0) {
+                    const disabled = __ab.disabledAttemptLabels;
+                    filtered = filtered.filter(a => { const lbl = String(a.label || ''); return !disabled.some(p => lbl === p || lbl.startsWith(p + '-') || lbl.startsWith(p)); });
+                }
+                if (__ab.attemptBudgetMultipliers && typeof __ab.attemptBudgetMultipliers === 'object') {
+                    const mults = __ab.attemptBudgetMultipliers;
+                    filtered = filtered.map(a => { const lbl = String(a.label || ''); const e = Object.entries(mults).find(([k]) => lbl === k || lbl.startsWith(k + '-') || lbl.startsWith(k)); return e ? { ...a, budgetMs: Math.max(1, Math.floor(a.budgetMs * e[1])) } : a; });
+                }
+                if (Number.isFinite(__ab.globalBudgetMultiplier) && __ab.globalBudgetMultiplier !== 1) {
+                    const m = __ab.globalBudgetMultiplier;
+                    filtered = filtered.map(a => ({ ...a, budgetMs: Math.max(1, Math.floor(a.budgetMs * m)) }));
+                }
+                if (filtered.length === 0 && attempts.length > 0) filtered = [{ ...attempts[0] }];
+                attempts.splice(0, attempts.length, ...filtered);
+            }
             const forceFamilySwitchFromLadder = !!sharedHintLadderState?.forceFamilySwitchNextAttempt;
             const __stageOverrides = getExperimentOverrides() || {};
             const rootTieSeedOffset = Number.isFinite(__stageOverrides.rootTieSeedOffset)
