@@ -161,7 +161,19 @@ function analyzeSolo() {
     const v = variantData[variantId];
     if (!v) continue;
     const techId = variantId.replace('solo-', '');
-    const solved = (v.levels || []).filter(l => l.ok).map(l => l.level);
+    const techPrefix = (manifest.techniques || []).find(t => t.id === techId)?.prefix || techId;
+
+    // Attribution filter: if firstSolvingAttempt doesn't start with this technique's prefix,
+    // it was solved by the "empty plan" fallback (old solver code), not the technique itself.
+    // Count it as a true solo solve only when attribution matches.
+    const allSolved = (v.levels || []).filter(l => l.ok);
+    const trueSolved = allSolved.filter(l => {
+      if (!l.firstSolvingAttempt) return true; // no attribution data — can't filter
+      return l.firstSolvingAttempt.startsWith(techPrefix) || l.firstSolvingAttempt === techPrefix;
+    });
+    const fallbackCount = allSolved.length - trueSolved.length;
+
+    const solved = trueSolved.map(l => l.level);
     coverageSets[techId] = new Set(solved);
 
     rows.push({
@@ -169,6 +181,7 @@ function analyzeSolo() {
       desc: (manifest.techniques || []).find(t => t.id === techId)?.desc || techId,
       solvedCount: solved.length,
       solvedLevels: solved,
+      fallbackCount,
     });
   }
 
@@ -296,6 +309,59 @@ function analyzeTechniqueBudget() {
   return rows.sort((a, b) => a.techId.localeCompare(b.techId));
 }
 
+// ─── Section 5b: Timing impact (slowdown cost of removing each technique) ─────
+function analyzeTimingImpact() {
+  const disableVariants = getVariantIds('disable-');
+  if (!disableVariants.length || !baseline) return null;
+
+  const baselineTimes = {};
+  for (const l of baseline.levels || []) baselineTimes[l.level] = l.elapsedMs || 0;
+
+  const rows = [];
+  for (const variantId of disableVariants.sort()) {
+    const v = variantData[variantId];
+    if (!v) continue;
+    const techId = variantId.replace('disable-', '');
+
+    let totalDeltaMs = 0;
+    const changedLevels = [];
+
+    for (const l of v.levels || []) {
+      const baseMs = baselineTimes[l.level] ?? 0;
+      const varMs = l.elapsedMs || 0;
+      const delta = varMs - baseMs;
+      const multiplier = baseMs > 0 ? varMs / baseMs : 1;
+      if (!l.ok) continue; // skip failures (captured in regression analysis)
+      totalDeltaMs += delta;
+      if (multiplier >= 1.5 || Math.abs(delta) >= 2000) {
+        const baseTech = getLevelResult('baseline', l.level)?.firstSolvingAttempt || '?';
+        changedLevels.push({
+          level: l.level,
+          baseMs,
+          varMs,
+          delta,
+          multiplier,
+          fallbackTech: l.firstSolvingAttempt || '?',
+          baseTech,
+        });
+      }
+    }
+
+    // Sort by absolute time delta (practical impact), not ratio
+    changedLevels.sort((a, b) => b.delta - a.delta);
+    const worstLevel = changedLevels[0] || null;
+
+    rows.push({
+      techId,
+      totalDeltaMs,
+      worstLevel,
+      changedLevels,
+    });
+  }
+
+  return rows.sort((a, b) => b.totalDeltaMs - a.totalDeltaMs);
+}
+
 // ─── Section 6: Overhead analysis (from baseline) ────────────────────────────
 function analyzeOverhead() {
   if (!baseline) return null;
@@ -376,6 +442,7 @@ const disableOneAnalysis = analyzeDisableOne();
 const soloAnalysis = analyzeSolo();
 const budgetSweepAnalysis = analyzeBudgetSweep();
 const techniqueBudgetAnalysis = analyzeTechniqueBudget();
+const timingImpactAnalysis = analyzeTimingImpact();
 const overheadAnalysis = analyzeOverhead();
 const featureAnalysis = analyzeByFeature();
 
@@ -428,18 +495,47 @@ if (disableOneAnalysis) {
   if (redundant.length) row(`REDUNDANT (0 regressions):       ${redundant.join(', ')}`);
 }
 
+// ── Timing impact ─────────────────────────────────────────────────────────────
+if (timingImpactAnalysis && timingImpactAnalysis.some(r => Math.abs(r.totalDeltaMs) >= 500)) {
+  h2('TIMING IMPACT (slowdown cost of disabling each technique)');
+  row(`No failures, but removal may significantly slow solving. Δtime = total extra ms across all levels.`);
+  blank();
+  row(`  ${'Technique'.padEnd(36)} ${'Δ total'.padEnd(12)} ${'Worst level'.padEnd(12)} Worst ×`);
+  row(`  ${'─'.repeat(72)}`);
+  for (const t of timingImpactAnalysis) {
+    if (Math.abs(t.totalDeltaMs) < 100 && !t.worstLevel) continue;
+    const sign = t.totalDeltaMs >= 0 ? '+' : '';
+    const worstStr = t.worstLevel ? `L${t.worstLevel.level}` : '-';
+    const multStr = t.worstLevel ? `${t.worstLevel.multiplier.toFixed(1)}×` : '-';
+    row(`  ${t.techId.padEnd(36)} ${(sign + Math.round(t.totalDeltaMs/1000) + 's').padEnd(12)} ${worstStr.padEnd(12)} ${multStr}`);
+  }
+  blank();
+
+  // Detail for techniques with significant slowdowns
+  const significant = timingImpactAnalysis.filter(t => t.worstLevel && t.worstLevel.multiplier >= 1.5);
+  for (const t of significant) {
+    row(`  disable-${t.techId} level detail:`);
+    for (const l of t.changedLevels) {
+      const sign = l.delta >= 0 ? '+' : '';
+      row(`    L${String(l.level).padEnd(5)} ${l.baseMs}ms → ${l.varMs}ms  (${l.multiplier.toFixed(1)}×)` +
+          (l.baseTech !== l.fallbackTech ? `  ${l.baseTech} → ${l.fallbackTech}` : `  same tech: ${l.baseTech}`));
+    }
+  }
+}
+
 // ── Solo coverage ─────────────────────────────────────────────────────────────
 if (soloAnalysis) {
   h2('SOLO COVERAGE (each technique alone with ≈full budget)');
   row(`How many levels can each technique solve by itself?`);
   blank();
-  row(`  ${'Technique'.padEnd(36)} Alone  Coverage`);
-  row(`  ${'─'.repeat(60)}`);
+  row(`  ${'Technique'.padEnd(36)} Alone  Coverage  Fallback`);
+  row(`  ${'─'.repeat(68)}`);
   const totalSolvable = baseline ? (baseline.levels || []).filter(l => l.ok).length : levelNumbers.length;
   for (const t of soloAnalysis.rows) {
     const pct = totalSolvable > 0 ? ((t.solvedCount / totalSolvable) * 100).toFixed(1) : '?';
     const bar = '█'.repeat(Math.round(t.solvedCount / totalSolvable * 20));
-    row(`  ${t.techId.padEnd(36)} ${String(t.solvedCount).padStart(5)}  ${pct.padStart(5)}%  ${bar}`);
+    const fallbackStr = t.fallbackCount > 0 ? `(+${t.fallbackCount} via fallback)` : '';
+    row(`  ${t.techId.padEnd(36)} ${String(t.solvedCount).padStart(5)}  ${pct.padStart(5)}%  ${bar} ${fallbackStr}`);
   }
   blank();
 
@@ -581,6 +677,7 @@ if (jsonMode) {
   const jsonReport = {
     baseline: baselineAnalysis,
     disableOne: disableOneAnalysis,
+    timingImpact: timingImpactAnalysis,
     solo: soloAnalysis,
     budgetSweep: budgetSweepAnalysis,
     techniqueBudget: techniqueBudgetAnalysis,

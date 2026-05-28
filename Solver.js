@@ -11912,7 +11912,11 @@ function installSolver(APP) {
                     const m = __ab.globalBudgetMultiplier;
                     filtered = filtered.map(a => ({ ...a, budgetMs: Math.max(1, Math.floor(a.budgetMs * m)) }));
                 }
-                if (filtered.length === 0 && attempts.length > 0) filtered = [{ ...attempts[0] }];
+                // In disable-mode (disabledAttemptLabels), keep at least one attempt to avoid an empty plan.
+                // In solo-mode (allowedAttemptLabels), an empty result means no applicable technique — let it fail cleanly.
+                if (filtered.length === 0 && attempts.length > 0 && !(__ab.allowedAttemptLabels?.length > 0)) {
+                    filtered = [{ ...attempts[0] }];
+                }
                 attempts.splice(0, attempts.length, ...filtered);
             }
             const forceFamilySwitchFromLadder = !!sharedHintLadderState?.forceFamilySwitchNextAttempt;
