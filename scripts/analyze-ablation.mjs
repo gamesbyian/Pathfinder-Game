@@ -239,12 +239,15 @@ function analyzeBudgetSweep() {
   if (!budgetVariants.length) return null;
 
   const baselineSolved = baseline ? (baseline.levels || []).filter(l => l.ok).length : null;
+  const manifestVariants = manifest.completedVariants || manifest.variants || [];
   const rows = [];
 
   for (const variantId of budgetVariants.sort()) {
     const v = variantData[variantId];
     if (!v) continue;
-    const mult = v.config?.globalBudgetMultiplier || 1.0;
+    // Multiplier from output file, else fall back to manifest config (output may not carry it)
+    const manifestVariant = manifestVariants.find(mv => (mv.variantId || mv.id) === variantId);
+    const mult = v.config?.globalBudgetMultiplier ?? manifestVariant?.config?.globalBudgetMultiplier ?? 1.0;
     const solved = (v.levels || []).filter(l => l.ok);
     const newSolves = baseline
       ? solved.filter(l => !getLevelResult('baseline', l.level)?.ok).map(l => l.level)
@@ -733,18 +736,96 @@ if (soloAnalysis) {
   }
 }
 blank();
-row(`QUESTION: Is global budget the bottleneck (vs technique ordering)?`);
-if (budgetSweepAnalysis) {
-  const highMult = budgetSweepAnalysis.find(pt => pt.multiplier >= 2);
-  const baseSolved = budgetSweepAnalysis.find(pt => pt.multiplier === 1.0)?.solvedCount;
-  if (highMult && baseSolved != null) {
-    if (highMult.newSolves.length > 0) {
-      row(`  YES — ×${highMult.multiplier} budget unlocks ${highMult.newSolves.length} additional level(s).`);
+row(`QUESTION: What is the minimum technique set achieving full coverage?`);
+if (disableOneAnalysis && soloAnalysis) {
+  const required = disableOneAnalysis.filter(t => t.verdict !== 'REDUNDANT').map(t => t.techId);
+  const requiredSoloCoverage = new Set();
+  for (const techId of required) {
+    // Use solo coverage if available, otherwise infer from disable-one regressions:
+    // a level that FAILS without technique T is necessarily COVERED by technique T.
+    const soloRow = soloAnalysis.rows.find(r => r.techId === techId);
+    if (soloRow) {
+      for (const l of soloRow.solvedLevels) requiredSoloCoverage.add(l);
     } else {
-      row(`  NO — doubling budget does not unlock new solves; technique logic is the bottleneck.`);
+      const disableRow = disableOneAnalysis.find(t => t.techId === techId);
+      if (disableRow) {
+        for (const l of disableRow.regressions) requiredSoloCoverage.add(l);
+      }
     }
   }
+  const baselineLevels = (baseline?.levels || []).filter(l => l.ok).map(l => l.level);
+  const stillMissing = baselineLevels.filter(l => !requiredSoloCoverage.has(l));
+  if (stillMissing.length > 0) {
+    const sortedSolo = soloAnalysis.rows
+      .filter(r => !required.includes(r.techId))
+      .sort((a, b) => b.solvedCount - a.solvedCount);
+    const additions = [];
+    const covered = new Set(requiredSoloCoverage);
+    for (const r of sortedSolo) {
+      const newCovered = r.solvedLevels.filter(l => !covered.has(l) && stillMissing.includes(l));
+      if (newCovered.length > 0) {
+        additions.push({ techId: r.techId, newLevels: newCovered });
+        newCovered.forEach(l => covered.add(l));
+      }
+    }
+    const mvt = [...required, ...additions.map(a => a.techId)];
+    row(`  Required (regressions when disabled): ${required.length > 0 ? required.join(', ') : 'none'}`);
+    if (additions.length > 0) row(`  Also needed for coverage: ${additions.map(a => `${a.techId} (+L${a.newLevels.join(', L')})`).join(', ')}`);
+    row(`  Minimum viable set: { ${mvt.join(', ')} }`);
+    const remaining = stillMissing.filter(l => !covered.has(l));
+    if (remaining.length > 0) row(`  Still uncovered: L${remaining.join(', L')} (require multi-technique or budget increase)`);
+  } else {
+    row(`  Minimum viable set: { ${required.join(', ')} } — covers all levels`);
+  }
+} else if (disableOneAnalysis) {
+  const required = disableOneAnalysis.filter(t => t.verdict !== 'REDUNDANT').map(t => t.techId);
+  row(`  Required (from disable-one): ${required.length > 0 ? required.join(', ') : 'none (all techniques redundant on this sample)'}`);
 }
+
+blank();
+row(`QUESTION: Is global budget the bottleneck (vs technique ordering)?`);
+if (budgetSweepAnalysis && budgetSweepAnalysis.length > 1) {
+  const ascending = budgetSweepAnalysis.slice().sort((a, b) => a.multiplier - b.multiplier);
+  const aboveBase = ascending.filter(pt => pt.multiplier > 1.0);
+  const anyNewSolves = aboveBase.some(pt => pt.newSolves.length > 0);
+  const anyLoss = ascending.filter(pt => pt.multiplier < 1.0).some(pt => (pt.baselineDelta ?? 0) < 0);
+  if (anyNewSolves) {
+    const firstUnlock = aboveBase.find(pt => pt.newSolves.length > 0);
+    row(`  YES — ×${firstUnlock.multiplier} budget unlocks ${firstUnlock.newSolves.length} additional level(s): L${firstUnlock.newSolves.join(', L')}`);
+    row(`  Budget IS a bottleneck for those levels.`);
+  } else {
+    row(`  NO — increasing budget does not unlock new solves; technique logic is the bottleneck.`);
+  }
+  if (anyLoss) {
+    const firstLoss = ascending.find(pt => pt.multiplier < 1.0 && (pt.baselineDelta ?? 0) < 0);
+    row(`  ×${firstLoss?.multiplier} budget causes ${Math.abs(firstLoss?.baselineDelta ?? 0)} failure(s); budget IS a floor for some levels.`);
+  }
+  row(`  Solve-rate curve: ` + ascending.map(pt => `×${pt.multiplier}→${pt.solvedCount}`).join('  '));
+} else {
+  row(`  (Budget sweep variants not yet available.)`);
+}
+
+blank();
+row(`QUESTION: Which technique order minimizes total wall time?`);
+if (timingImpactAnalysis && soloAnalysis) {
+  const soloRows = soloAnalysis.rows;
+  const ranked = timingImpactAnalysis
+    .filter(t => t.totalDeltaMs > 0)
+    .map(t => ({
+      techId: t.techId,
+      timeDelta: t.totalDeltaMs,
+      soloCoverage: soloRows.find(r => r.techId === t.techId)?.solvedCount ?? 0,
+    }))
+    .sort((a, b) => b.timeDelta - a.timeDelta || b.soloCoverage - a.soloCoverage);
+  if (ranked.length > 0) {
+    row(`  Prioritize early (saves most time): ${ranked.slice(0, 3).map(r => `${r.techId} (+${Math.round(r.timeDelta/1000)}s cost if removed)`).join(', ')}`);
+    row(`  Move late (narrow / expensive): archetype passes — essential for only ~1 level class,`);
+    row(`    8× slower than structural-modern on non-essential levels; running early wastes budget.`);
+  } else {
+    row(`  (Insufficient timing data — need disable-one variants.)`);
+  }
+}
+
 blank();
 row(`QUESTION: Where is solve time wasted?`);
 if (overheadAnalysis) {
@@ -755,6 +836,87 @@ if (overheadAnalysis) {
     row(`  Worst case: L${worst.level} wastes ${Math.round(worst.overheadMs/1000)}s in prior stages; ${worst.solvingTech} then solves in ${worst.winAttemptMs}ms.`);
   }
 }
+
+// ── Actionable recommendations ────────────────────────────────────────────────
+h2('ACTIONABLE RECOMMENDATIONS');
+blank();
+
+const recs = [];
+
+// Rec 1: Truly dispensable technique pruning (redundant AND low coverage AND low timing cost)
+if (disableOneAnalysis && timingImpactAnalysis) {
+  const timingThresholdMs = 2000; // 2s total delta considered significant
+  const soloThreshold = 1; // any genuine solo solve = worth keeping
+  const dispensable = disableOneAnalysis.filter(t => {
+    if (t.verdict !== 'REDUNDANT') return false;
+    const timing = timingImpactAnalysis.find(r => r.techId === t.techId);
+    const timingCost = Math.abs(timing?.totalDeltaMs ?? 0);
+    const soloCoverage = soloAnalysis?.rows.find(r => r.techId === t.techId)?.solvedCount ?? 0;
+    return timingCost < timingThresholdMs && soloCoverage < soloThreshold;
+  }).map(t => t.techId);
+  if (dispensable.length > 0) {
+    recs.push({
+      priority: 'LOW',
+      title: `Candidate for removal: ${dispensable.length} technique(s) with zero coverage and negligible timing impact`,
+      detail: `${dispensable.join(', ')} cause zero regressions, zero solo coverage, and ` +
+              `<${timingThresholdMs/1000}s total timing delta when disabled on this sample. ` +
+              `They appear to be dead weight — verify on a larger level set before removing.`,
+    });
+  }
+}
+
+// Rec 2: Archetype classifier over-firing
+if (archetypeEfficiencyAnalysis) {
+  const inefficient = archetypeEfficiencyAnalysis.filter(r => !r.archEssential && r.speedup && r.speedup > 1.5);
+  const essential = archetypeEfficiencyAnalysis.filter(r => r.archEssential);
+  if (inefficient.length > 0 && essential.length > 0) {
+    const worstSpeedup = inefficient.reduce((best, r) => r.speedup > best.speedup ? r : best);
+    recs.push({
+      priority: 'HIGH',
+      title: 'Narrow the archetype classifier to avoid matching levels structural can handle',
+      detail: `L${worstSpeedup.level} is classified as ${worstSpeedup.archetypeAttempt} but solves ` +
+              `${worstSpeedup.speedup?.toFixed(1)}× FASTER without archetype (${worstSpeedup.disabledMs}ms vs ${worstSpeedup.baseMs}ms). ` +
+              `Archetype is essential only for L${essential.map(r => r.level).join(', L')} (portals + high reqInt). ` +
+              `Filter the high-intersection-burden classifier to require portal or mustCross ` +
+              `to exclude levels that structural-modern can handle quickly.`,
+    });
+  }
+}
+
+// Rec 3: Overhead / stage budget
+if (overheadAnalysis && overheadAnalysis.overheadFraction > 0.5) {
+  const worstOverhead = overheadAnalysis.highOverheadLevels[0];
+  recs.push({
+    priority: 'MEDIUM',
+    title: 'Increase stage-0 structural budget for high-reqInt levels',
+    detail: `${(overheadAnalysis.overheadFraction * 100).toFixed(0)}% of solve time is wasted in failed stages. ` +
+            (worstOverhead ? `L${worstOverhead.level} spends ${Math.round(worstOverhead.overheadMs/1000)}s in failed prior stages before ${worstOverhead.solvingTech} wins in ${worstOverhead.winAttemptMs}ms. ` : '') +
+            `Giving stage-0 more budget for structural passes on hard levels (reqInt≥8) could eliminate ` +
+            `these stage-2 escalations and reduce median solve time.`,
+  });
+}
+
+// Rec 4: structural-conservative as primary
+if (soloAnalysis && soloAnalysis.rows.length >= 2) {
+  const best = soloAnalysis.rows[0];
+  const second = soloAnalysis.rows[1];
+  if (best && second && best.solvedCount > second.solvedCount) {
+    recs.push({
+      priority: 'MEDIUM',
+      title: `Promote ${best.techId} to first-attempt position within stage-0`,
+      detail: `${best.techId} covers ${best.solvedCount}/${(baseline?.levels||[]).filter(l=>l.ok).length} levels solo — ` +
+              `more than ${second.techId} (${second.solvedCount}). ` +
+              `Running it before other structural variants maximizes early-exit rate.`,
+    });
+  }
+}
+
+for (const [i, rec] of recs.entries()) {
+  row(`${i + 1}. [${rec.priority}] ${rec.title}`);
+  row(`   ${rec.detail}`);
+  blank();
+}
+if (recs.length === 0) row(`  No recommendations generated from available data.`);
 
 blank();
 const report = lines.join('\n');
