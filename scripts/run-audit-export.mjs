@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { execFileSync } from 'node:child_process';
@@ -515,6 +515,25 @@ const convertDirectToRawPayload = (direct = {}) => {
   };
 };
 
+
+const pruneRawExports = async (rawDir, latestFileName, keepDays = 10) => {
+  const entries = await readdir(rawDir, { withFileTypes: true });
+  const cutoffMs = Date.now() - (keepDays * 24 * 60 * 60 * 1000);
+
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (!entry.name.endsWith('.json')) continue;
+    if (entry.name === latestFileName) continue;
+
+    const stamp = entry.name.split('-').slice(0, 3).join('-');
+    const parsedMs = Date.parse(stamp);
+    if (!Number.isFinite(parsedMs)) continue;
+    if (parsedMs < cutoffMs) {
+      await rm(path.join(rawDir, entry.name));
+    }
+  }
+};
+
 const run = async () => {
   const directOutPath = path.join(process.cwd(), 'audits', 'local-direct', '.audit-export-tmp.json');
   console.log('[audit-export] running node solver-direct on all levels');
@@ -530,60 +549,18 @@ const run = async () => {
     const shortSha = `${process.env.GITHUB_SHA || process.env.AUDIT_GIT_SHA || 'local'}`.slice(0, 12);
 
     const rawDir = path.join(process.cwd(), 'audits', 'raw');
-    const metricsDir = path.join(process.cwd(), 'audits', 'metrics');
     await mkdir(rawDir, { recursive: true });
-    await mkdir(metricsDir, { recursive: true });
 
     const rawFileName = `${stamp}-${shortSha}.json`;
     const rawFilePath = path.join(rawDir, rawFileName);
     const latestRawPath = path.join(rawDir, 'latest.json');
 
-    let previousPayload = null;
-    try {
-      previousPayload = JSON.parse(await readFile(latestRawPath, 'utf8'));
-    } catch {
-      previousPayload = null;
-    }
-
     await writeFile(rawFilePath, raw, 'utf8');
     await writeFile(latestRawPath, raw, 'utf8');
 
-    const metrics = summarizeMetrics(payload, process.env.GITHUB_SHA || 'local');
-    metrics.levelTransitionSummary = computeTransitionSummary(payload, previousPayload);
-    const metricsFileName = `${stamp}-${shortSha}.json`;
-    const metricsFilePath = path.join(metricsDir, metricsFileName);
-    const latestMetricsPath = path.join(metricsDir, 'latest.json');
-
-    await writeFile(metricsFilePath, `${JSON.stringify(metrics, null, 2)}\n`, 'utf8');
-    await writeFile(latestMetricsPath, `${JSON.stringify(metrics, null, 2)}\n`, 'utf8');
-
-    let history = [];
-    const historyPath = path.join(metricsDir, 'history.ndjson');
-    try {
-      const existing = await readFile(historyPath, 'utf8');
-      history = existing.split('\n').filter(Boolean);
-    } catch {}
-    history.push(JSON.stringify(metrics));
-    const trimmedHistory = trimHistoryEntries(history);
-    await writeFile(historyPath, `${trimmedHistory.join('\n')}\n`, 'utf8');
-    if (trimmedHistory.length !== history.length) {
-      console.log(`Trimmed metrics history from ${history.length} to ${trimmedHistory.length} entries to stay within repository limits.`);
-    }
+    await pruneRawExports(rawDir, 'latest.json', 10);
 
     console.log(`Audit export written: ${path.relative(process.cwd(), rawFilePath)}`);
-    console.log(`Metrics written: ${path.relative(process.cwd(), metricsFilePath)}`);
-    const transitionCounters = metrics.levelTransitionSummary?.counters || {};
-    const migrationPairs = Object.entries(metrics.levelTransitionSummary?.failureFamilyMigration || {})
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([k, v]) => `${k}: ${v}`)
-      .join(', ');
-    console.log(
-      `Level transitions (vs previous): improved=${transitionCounters.improved || 0}, regressed=${transitionCounters.regressed || 0}, statusChanged=${transitionCounters.statusChanged || 0}, telemetryChanged=${transitionCounters.telemetryChanged || 0}`
-    );
-    if (migrationPairs) {
-      console.log(`Failure-family migration: ${migrationPairs}`);
-    }
 };
 
 run().catch((err) => {
