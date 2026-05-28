@@ -379,24 +379,38 @@ function analyzeOverhead() {
     overheadByTech[tech].wastedAttempts += l.solvingAttemptIdx || 0;
   }
 
-  // Levels with highest overhead (candidates for earlier-technique budget optimization)
+  // True overhead = total elapsed minus winning attempt's own elapsed.
+  // This captures failed-stage time that overheadBeforeSolveMs misses (it only
+  // covers attempts within the winning stage, not prior stage failures).
   const highOverheadLevels = (baseline.levels || [])
-    .filter(l => l.ok && (l.overheadBeforeSolveMs || 0) > 1000)
-    .map(l => ({
-      level: l.level,
-      solvingTech: l.firstSolvingAttempt,
-      solvingAttemptIdx: l.solvingAttemptIdx,
-      overheadMs: l.overheadBeforeSolveMs,
-      totalMs: l.elapsedMs,
-      overheadFraction: l.elapsedMs > 0 ? (l.overheadBeforeSolveMs / l.elapsedMs) : 0,
-    }))
+    .filter(l => l.ok)
+    .map(l => {
+      const winAttemptMs = (l.attemptSummary || []).find(a => a.solved)?.elapsedMs || 0;
+      const trueOverheadMs = Math.max(0, (l.elapsedMs || 0) - winAttemptMs);
+      return {
+        level: l.level,
+        solvingTech: l.firstSolvingAttempt,
+        solvingAttemptIdx: l.solvingAttemptIdx,
+        overheadMs: trueOverheadMs,
+        winAttemptMs,
+        totalMs: l.elapsedMs,
+        overheadFraction: l.elapsedMs > 0 ? trueOverheadMs / l.elapsedMs : 0,
+      };
+    })
+    .filter(l => l.overheadMs > 200)
     .sort((a, b) => b.overheadMs - a.overheadMs)
     .slice(0, 20);
 
+  // Recompute totals using true overhead
+  const trueTotal = (baseline.levels || []).filter(l => l.ok).reduce((s, l) => {
+    const winAttemptMs = (l.attemptSummary || []).find(a => a.solved)?.elapsedMs || 0;
+    return s + Math.max(0, (l.elapsedMs || 0) - winAttemptMs);
+  }, 0);
+
   return {
-    totalOverheadMs: Math.round(totalOverhead),
+    totalOverheadMs: Math.round(trueTotal),
     totalSolveTimeMs: Math.round(totalSolveTime),
-    overheadFraction: totalSolveTime > 0 ? totalOverhead / totalSolveTime : 0,
+    overheadFraction: totalSolveTime > 0 ? trueTotal / totalSolveTime : 0,
     byTechnique: Object.entries(overheadByTech)
       .map(([tech, d]) => ({ tech, ...d, avgOverheadMs: Math.round(d.totalOverheadMs / d.levels) }))
       .sort((a, b) => b.totalOverheadMs - a.totalOverheadMs),
@@ -589,23 +603,20 @@ if (techniqueBudgetAnalysis) {
 
 // ── Overhead analysis ─────────────────────────────────────────────────────────
 if (overheadAnalysis) {
-  h2('OVERHEAD ANALYSIS (wasted time before winning technique)');
+  h2('OVERHEAD ANALYSIS (time wasted before winning technique)');
   const pct = overheadAnalysis.overheadFraction * 100;
-  row(`Total overhead across all solved levels: ${Math.round(overheadAnalysis.totalOverheadMs/1000)}s of ${Math.round(overheadAnalysis.totalSolveTimeMs/1000)}s total (${pct.toFixed(1)}%)`);
-  blank();
-  row(`Overhead paid per winning technique:`);
-  row(`  ${'Winning technique'.padEnd(36)} Levels  Total overhead  Avg overhead`);
-  row(`  ${'─'.repeat(72)}`);
-  for (const t of overheadAnalysis.byTechnique) {
-    row(`  ${t.tech.padEnd(36)} ${String(t.levels).padStart(6)}  ${String(Math.round(t.totalOverheadMs/1000)+'s').padStart(14)}  ${t.avgOverheadMs}ms`);
-  }
+  row(`True overhead (total elapsed − winning attempt elapsed) across all solved levels:`);
+  row(`  ${Math.round(overheadAnalysis.totalOverheadMs/1000)}s overhead of ${Math.round(overheadAnalysis.totalSolveTimeMs/1000)}s total (${pct.toFixed(1)}%)`);
+  row(`  (Captures failed-stage time that attempt-level overhead misses.)`);
+  row(`  NOTE: at reduced test budgets, stage-0 exhausts its virtual-time fraction before`);
+  row(`  solving hard levels, inflating overhead. At production budget overhead is lower.`);
   if (overheadAnalysis.highOverheadLevels.length > 0) {
     blank();
-    row(`High-overhead levels (candidates for earlier-technique budget boost):`);
-    row(`  ${'Level'.padEnd(8)} ${'Winning tech'.padEnd(30)} ${'Overhead'.padEnd(12)} ${'Attempt#'.padEnd(10)} Fraction`);
-    row(`  ${'─'.repeat(72)}`);
+    row(`High-overhead levels (stages that ran before the winning technique):`);
+    row(`  ${'Level'.padEnd(8)} ${'Winning tech'.padEnd(36)} ${'Win attempt'.padEnd(14)} ${'Overhead'.padEnd(12)} Fraction`);
+    row(`  ${'─'.repeat(80)}`);
     for (const l of overheadAnalysis.highOverheadLevels.slice(0, 15)) {
-      row(`  L${String(l.level).padEnd(6)} ${(l.solvingTech||'?').padEnd(30)} ${(l.overheadMs+'ms').padEnd(12)} ${String('#'+(l.solvingAttemptIdx+1)).padEnd(10)} ${(l.overheadFraction*100).toFixed(0)}%`);
+      row(`  L${String(l.level).padEnd(6)} ${(l.solvingTech||'?').padEnd(36)} ${(l.winAttemptMs+'ms').padEnd(14)} ${(Math.round(l.overheadMs/1000)+'s').padEnd(12)} ${(l.overheadFraction*100).toFixed(0)}%`);
     }
   }
 }
@@ -662,10 +673,10 @@ blank();
 row(`QUESTION: Where is solve time wasted?`);
 if (overheadAnalysis) {
   const pct = (overheadAnalysis.overheadFraction * 100).toFixed(1);
-  row(`  ${pct}% of total solve time is overhead before the winning technique.`);
+  row(`  ${pct}% of total solve time is wasted in failed stages before the winning technique.`);
   if (overheadAnalysis.highOverheadLevels.length > 0) {
     const worst = overheadAnalysis.highOverheadLevels[0];
-    row(`  Worst case: L${worst.level} spends ${worst.overheadMs}ms before ${worst.solvingTech} solves at attempt #${worst.solvingAttemptIdx+1}.`);
+    row(`  Worst case: L${worst.level} wastes ${Math.round(worst.overheadMs/1000)}s in prior stages; ${worst.solvingTech} then solves in ${worst.winAttemptMs}ms.`);
   }
 }
 
