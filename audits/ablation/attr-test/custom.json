@@ -1,0 +1,101 @@
+{
+  "variantId": "custom",
+  "desc": "Custom: allow=[structural-modern], globalMult=2",
+  "config": {
+    "allowedAttemptLabels": [
+      "structural-modern"
+    ],
+    "globalBudgetMultiplier": 2
+  },
+  "commitSha": "3242e4b44f9be75426f606326fe8cc08d57663d3",
+  "timestamp": "2026-05-28T18:16:34.591Z",
+  "budgetMs": 180000,
+  "levelCount": 3,
+  "summary": {
+    "solved": 3,
+    "failed": 0,
+    "errors": 0,
+    "total": 3,
+    "totalMs": 18345
+  },
+  "levels": [
+    {
+      "level": 1,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 180,
+      "nodesExpanded": 1599,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 152,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 152,
+          "budgetMs": 150120,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 92,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 17802,
+      "nodesExpanded": 644555,
+      "maxDepth": 99,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 15462,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 15462,
+          "budgetMs": 183600,
+          "depthReached": 99,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 130,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 361,
+      "nodesExpanded": 7955,
+      "maxDepth": 50,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 347,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 347,
+          "budgetMs": 2216,
+          "depthReached": 50,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    }
+  ]
+}

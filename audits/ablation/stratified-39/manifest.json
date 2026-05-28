@@ -1,0 +1,775 @@
+{
+  "experiment": "disable-one",
+  "timestamp": "2026-05-28T22:37:07.000Z",
+  "commitSha": "0a4070447aa051c4cff5ad7c0202a22383a9d9b4",
+  "budgetMs": 180000,
+  "purpose": "hint",
+  "levelCount": 39,
+  "levels": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    17,
+    19,
+    20,
+    26,
+    30,
+    34,
+    47,
+    50,
+    56,
+    60,
+    61,
+    65,
+    73,
+    74,
+    79,
+    80,
+    83,
+    92,
+    108,
+    130,
+    134,
+    135,
+    136,
+    138,
+    139,
+    140
+  ],
+  "levelClassifications": {
+    "1": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": true,
+      "reqLen": 20,
+      "reqInt": 1,
+      "gridArea": 64
+    },
+    "2": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 14,
+      "reqInt": 1,
+      "gridArea": 64
+    },
+    "3": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 18,
+      "reqInt": 2,
+      "gridArea": 64
+    },
+    "4": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 16,
+      "reqInt": 0,
+      "gridArea": 100
+    },
+    "5": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 20,
+      "reqInt": 2,
+      "gridArea": 36
+    },
+    "6": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 20,
+      "reqInt": 2,
+      "gridArea": 36
+    },
+    "7": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": false,
+      "reqLen": 22,
+      "reqInt": 2,
+      "gridArea": 100
+    },
+    "9": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 22,
+      "reqInt": 0,
+      "gridArea": 100
+    },
+    "10": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 22,
+      "reqInt": 1,
+      "gridArea": 100
+    },
+    "11": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 25,
+      "reqInt": 1,
+      "gridArea": 100
+    },
+    "12": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": true,
+      "reqLen": 34,
+      "reqInt": 2,
+      "gridArea": 81
+    },
+    "13": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 24,
+      "reqInt": 2,
+      "gridArea": 100
+    },
+    "14": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 18,
+      "reqInt": 1,
+      "gridArea": 100
+    },
+    "17": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 19,
+      "reqInt": 2,
+      "gridArea": 100
+    },
+    "19": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 32,
+      "reqInt": 2,
+      "gridArea": 100
+    },
+    "20": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 22,
+      "reqInt": 2,
+      "gridArea": 64
+    },
+    "26": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 82,
+      "reqInt": 6,
+      "gridArea": 100
+    },
+    "30": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 20,
+      "reqInt": 0,
+      "gridArea": 100
+    },
+    "34": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": true,
+      "reqLen": 21,
+      "reqInt": 2,
+      "gridArea": 81
+    },
+    "47": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": false,
+      "reqLen": 58,
+      "reqInt": 5,
+      "gridArea": 100
+    },
+    "50": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 34,
+      "reqInt": 3,
+      "gridArea": 100
+    },
+    "56": {
+      "hasPortals": true,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 32,
+      "reqInt": 4,
+      "gridArea": 100
+    },
+    "60": {
+      "hasPortals": true,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 36,
+      "reqInt": 4,
+      "gridArea": 81
+    },
+    "61": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 50,
+      "reqInt": 8,
+      "gridArea": 100
+    },
+    "65": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 34,
+      "reqInt": 4,
+      "gridArea": 100
+    },
+    "73": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 60,
+      "reqInt": 2,
+      "gridArea": 225
+    },
+    "74": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 56,
+      "reqInt": 4,
+      "gridArea": 144
+    },
+    "79": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 80,
+      "reqInt": 5,
+      "gridArea": 225
+    },
+    "80": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 81,
+      "reqInt": 4,
+      "gridArea": 225
+    },
+    "83": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 30,
+      "reqInt": 1,
+      "gridArea": 121
+    },
+    "92": {
+      "hasPortals": true,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 99,
+      "reqInt": 8,
+      "gridArea": 144
+    },
+    "108": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 33,
+      "reqInt": 1,
+      "gridArea": 121
+    },
+    "130": {
+      "hasPortals": true,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 50,
+      "reqInt": 6,
+      "gridArea": 100
+    },
+    "134": {
+      "hasPortals": true,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 53,
+      "reqInt": 3,
+      "gridArea": 144
+    },
+    "135": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 27,
+      "reqInt": 0,
+      "gridArea": 49
+    },
+    "136": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": false,
+      "reqLen": 29,
+      "reqInt": 6,
+      "gridArea": 100
+    },
+    "138": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 99,
+      "reqInt": 8,
+      "gridArea": 144
+    },
+    "139": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": true,
+      "reqLen": 62,
+      "reqInt": 11,
+      "gridArea": 121
+    },
+    "140": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 75,
+      "reqInt": 5,
+      "gridArea": 196
+    }
+  },
+  "techniques": [
+    {
+      "id": "structural-modern",
+      "prefix": "structural-modern",
+      "desc": "Primary structural search (modern scoring, perimeterSweep profile)"
+    },
+    {
+      "id": "structural-conservative",
+      "prefix": "structural-conservative",
+      "desc": "Conservative structural pass (harvestThenFinish, no portals)"
+    },
+    {
+      "id": "template",
+      "prefix": "template",
+      "desc": "Template-guided warmup passes (template-0/1/2 + template-best-focus)"
+    },
+    {
+      "id": "portal-optional-modern",
+      "prefix": "portal-optional-modern-no-portal",
+      "desc": "Portal-optional modern (portal-eligible levels, no portals)"
+    },
+    {
+      "id": "portal-optional-endurance",
+      "prefix": "portal-optional-endurance-no-portal",
+      "desc": "Portal-optional endurance/knotBuilder (no portals)"
+    },
+    {
+      "id": "portal-optional-perimeter",
+      "prefix": "portal-optional-perimeter-no-portal",
+      "desc": "Portal-optional perimeter sweep (open boards, openness \u2265 0.52)"
+    },
+    {
+      "id": "must-cross-horizon",
+      "prefix": "must-cross-horizon",
+      "desc": "Must-cross early visitation (mustCrossFirst profile, endurance scoring)"
+    },
+    {
+      "id": "endurance-longpath",
+      "prefix": "endurance-longpath",
+      "desc": "Endurance longpath (portal-heavy / \u22653 objectives, purpose=solve only)"
+    },
+    {
+      "id": "archetype",
+      "prefix": "archetype",
+      "desc": "Archetype-dispatched prepended passes (high-intersection-burden etc.)"
+    }
+  ],
+  "variants": [
+    {
+      "id": "baseline",
+      "variantId": "baseline",
+      "desc": "Baseline (standard solver)",
+      "config": {},
+      "outputFile": "baseline.json"
+    },
+    {
+      "id": "disable-structural-modern",
+      "desc": "Disable: Primary structural search (modern scoring, perimeterSweep profile)",
+      "config": {
+        "disabledAttemptLabels": [
+          "structural-modern"
+        ]
+      },
+      "outputFile": "disable-structural-modern.json"
+    },
+    {
+      "id": "disable-structural-conservative",
+      "desc": "Disable: Conservative structural pass (harvestThenFinish, no portals)",
+      "config": {
+        "disabledAttemptLabels": [
+          "structural-conservative"
+        ]
+      },
+      "outputFile": "disable-structural-conservative.json"
+    },
+    {
+      "id": "disable-template",
+      "desc": "Disable: Template-guided warmup passes (template-0/1/2 + template-best-focus)",
+      "config": {
+        "disabledAttemptLabels": [
+          "template"
+        ]
+      },
+      "outputFile": "disable-template.json"
+    },
+    {
+      "id": "disable-portal-optional-modern",
+      "desc": "Disable: Portal-optional modern (portal-eligible levels, no portals)",
+      "config": {
+        "disabledAttemptLabels": [
+          "portal-optional-modern-no-portal"
+        ]
+      },
+      "outputFile": "disable-portal-optional-modern.json"
+    },
+    {
+      "id": "disable-portal-optional-endurance",
+      "desc": "Disable: Portal-optional endurance/knotBuilder (no portals)",
+      "config": {
+        "disabledAttemptLabels": [
+          "portal-optional-endurance-no-portal"
+        ]
+      },
+      "outputFile": "disable-portal-optional-endurance.json"
+    },
+    {
+      "id": "disable-portal-optional-perimeter",
+      "desc": "Disable: Portal-optional perimeter sweep (open boards, openness \u2265 0.52)",
+      "config": {
+        "disabledAttemptLabels": [
+          "portal-optional-perimeter-no-portal"
+        ]
+      },
+      "outputFile": "disable-portal-optional-perimeter.json"
+    },
+    {
+      "id": "disable-must-cross-horizon",
+      "desc": "Disable: Must-cross early visitation (mustCrossFirst profile, endurance scoring)",
+      "config": {
+        "disabledAttemptLabels": [
+          "must-cross-horizon"
+        ]
+      },
+      "outputFile": "disable-must-cross-horizon.json"
+    },
+    {
+      "id": "disable-endurance-longpath",
+      "desc": "Disable: Endurance longpath (portal-heavy / \u22653 objectives, purpose=solve only)",
+      "config": {
+        "disabledAttemptLabels": [
+          "endurance-longpath"
+        ]
+      },
+      "outputFile": "disable-endurance-longpath.json"
+    },
+    {
+      "id": "disable-archetype",
+      "desc": "Disable: Archetype-dispatched prepended passes (high-intersection-burden etc.)",
+      "config": {
+        "disabledAttemptLabels": [
+          "archetype"
+        ]
+      },
+      "outputFile": "disable-archetype.json"
+    }
+  ],
+  "completedAt": "2026-05-28T23:28:08.456Z",
+  "totalElapsedMs": 3061455,
+  "completedVariants": [
+    {
+      "id": "baseline",
+      "variantId": "baseline",
+      "desc": "Baseline (standard solver)",
+      "config": {},
+      "outputFile": "baseline.json"
+    },
+    {
+      "variantId": "disable-structural-modern",
+      "outputFile": "disable-structural-modern.json",
+      "summary": {
+        "solved": 39,
+        "failed": 0,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 370350
+      }
+    },
+    {
+      "variantId": "disable-structural-conservative",
+      "outputFile": "disable-structural-conservative.json",
+      "summary": {
+        "solved": 39,
+        "failed": 0,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 320298
+      }
+    },
+    {
+      "variantId": "disable-template",
+      "outputFile": "disable-template.json",
+      "summary": {
+        "solved": 37,
+        "failed": 2,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 338486
+      }
+    },
+    {
+      "variantId": "disable-portal-optional-modern",
+      "outputFile": "disable-portal-optional-modern.json",
+      "summary": {
+        "solved": 39,
+        "failed": 0,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 324500
+      }
+    },
+    {
+      "variantId": "disable-portal-optional-endurance",
+      "outputFile": "disable-portal-optional-endurance.json",
+      "summary": {
+        "solved": 39,
+        "failed": 0,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 327739
+      }
+    },
+    {
+      "variantId": "disable-portal-optional-perimeter",
+      "outputFile": "disable-portal-optional-perimeter.json",
+      "summary": {
+        "solved": 39,
+        "failed": 0,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 327381
+      }
+    },
+    {
+      "variantId": "disable-must-cross-horizon",
+      "outputFile": "disable-must-cross-horizon.json",
+      "summary": {
+        "solved": 39,
+        "failed": 0,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 341638
+      }
+    },
+    {
+      "variantId": "disable-endurance-longpath",
+      "outputFile": "disable-endurance-longpath.json",
+      "summary": {
+        "solved": 39,
+        "failed": 0,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 342919
+      }
+    },
+    {
+      "variantId": "disable-archetype",
+      "outputFile": "disable-archetype.json",
+      "summary": {
+        "solved": 38,
+        "failed": 1,
+        "errors": 0,
+        "total": 39,
+        "totalMs": 368126
+      }
+    }
+  ]
+}

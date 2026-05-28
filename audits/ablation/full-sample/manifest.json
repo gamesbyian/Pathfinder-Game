@@ -1,0 +1,675 @@
+{
+  "experiment": "full",
+  "timestamp": "2026-05-28T18:16:52.402Z",
+  "commitSha": "07b79cf0fd4250b88d32e6f53b9bfe8b7eb5b6bd",
+  "budgetMs": 30000,
+  "purpose": "hint",
+  "levelCount": 10,
+  "levels": [
+    1,
+    3,
+    50,
+    92,
+    108,
+    120,
+    130,
+    134,
+    139,
+    140
+  ],
+  "levelClassifications": {
+    "1": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": true,
+      "reqLen": 20,
+      "reqInt": 1,
+      "gridArea": 64
+    },
+    "3": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": false,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": true,
+      "reqLen": 18,
+      "reqInt": 2,
+      "gridArea": 64
+    },
+    "50": {
+      "hasPortals": false,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 34,
+      "reqInt": 3,
+      "gridArea": 100
+    },
+    "92": {
+      "hasPortals": true,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 99,
+      "reqInt": 8,
+      "gridArea": 144
+    },
+    "108": {
+      "hasPortals": true,
+      "hasMustCross": false,
+      "hasMustPass": true,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 33,
+      "reqInt": 1,
+      "gridArea": 121
+    },
+    "120": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 26,
+      "reqInt": 1,
+      "gridArea": 100
+    },
+    "130": {
+      "hasPortals": true,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 50,
+      "reqInt": 6,
+      "gridArea": 100
+    },
+    "134": {
+      "hasPortals": true,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 53,
+      "reqInt": 3,
+      "gridArea": 144
+    },
+    "139": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": false,
+      "hasGeese": false,
+      "hasFilters": false,
+      "hasFalseGoals": true,
+      "multiGate": true,
+      "reqLen": 62,
+      "reqInt": 11,
+      "gridArea": 121
+    },
+    "140": {
+      "hasPortals": false,
+      "hasMustCross": true,
+      "hasMustPass": true,
+      "hasGeese": true,
+      "hasFilters": true,
+      "hasFalseGoals": false,
+      "multiGate": false,
+      "reqLen": 75,
+      "reqInt": 5,
+      "gridArea": 196
+    }
+  },
+  "techniques": [
+    {
+      "id": "structural-modern",
+      "prefix": "structural-modern",
+      "desc": "Primary structural search (modern scoring, perimeterSweep profile)"
+    },
+    {
+      "id": "structural-conservative",
+      "prefix": "structural-conservative",
+      "desc": "Conservative structural pass (harvestThenFinish, no portals)"
+    },
+    {
+      "id": "template",
+      "prefix": "template",
+      "desc": "Template-guided warmup passes (template-0/1/2 + template-best-focus)"
+    },
+    {
+      "id": "portal-optional-modern",
+      "prefix": "portal-optional-modern-no-portal",
+      "desc": "Portal-optional modern (portal-eligible levels, no portals)"
+    },
+    {
+      "id": "portal-optional-endurance",
+      "prefix": "portal-optional-endurance-no-portal",
+      "desc": "Portal-optional endurance/knotBuilder (no portals)"
+    },
+    {
+      "id": "portal-optional-perimeter",
+      "prefix": "portal-optional-perimeter-no-portal",
+      "desc": "Portal-optional perimeter sweep (open boards, openness ≥ 0.52)"
+    },
+    {
+      "id": "must-cross-horizon",
+      "prefix": "must-cross-horizon",
+      "desc": "Must-cross early visitation (mustCrossFirst profile, endurance scoring)"
+    },
+    {
+      "id": "endurance-longpath",
+      "prefix": "endurance-longpath",
+      "desc": "Endurance longpath (portal-heavy / ≥3 objectives, purpose=solve only)"
+    },
+    {
+      "id": "archetype",
+      "prefix": "archetype",
+      "desc": "Archetype-dispatched prepended passes (high-intersection-burden etc.)"
+    }
+  ],
+  "variants": [
+    {
+      "id": "baseline",
+      "desc": "Baseline (standard solver)",
+      "config": {},
+      "outputFile": "baseline.json"
+    },
+    {
+      "id": "disable-structural-modern",
+      "desc": "Disable: Primary structural search (modern scoring, perimeterSweep profile)",
+      "config": {
+        "disabledAttemptLabels": [
+          "structural-modern"
+        ]
+      },
+      "outputFile": "disable-structural-modern.json"
+    },
+    {
+      "id": "disable-structural-conservative",
+      "desc": "Disable: Conservative structural pass (harvestThenFinish, no portals)",
+      "config": {
+        "disabledAttemptLabels": [
+          "structural-conservative"
+        ]
+      },
+      "outputFile": "disable-structural-conservative.json"
+    },
+    {
+      "id": "disable-template",
+      "desc": "Disable: Template-guided warmup passes (template-0/1/2 + template-best-focus)",
+      "config": {
+        "disabledAttemptLabels": [
+          "template"
+        ]
+      },
+      "outputFile": "disable-template.json"
+    },
+    {
+      "id": "disable-portal-optional-modern",
+      "desc": "Disable: Portal-optional modern (portal-eligible levels, no portals)",
+      "config": {
+        "disabledAttemptLabels": [
+          "portal-optional-modern-no-portal"
+        ]
+      },
+      "outputFile": "disable-portal-optional-modern.json"
+    },
+    {
+      "id": "disable-portal-optional-endurance",
+      "desc": "Disable: Portal-optional endurance/knotBuilder (no portals)",
+      "config": {
+        "disabledAttemptLabels": [
+          "portal-optional-endurance-no-portal"
+        ]
+      },
+      "outputFile": "disable-portal-optional-endurance.json"
+    },
+    {
+      "id": "disable-portal-optional-perimeter",
+      "desc": "Disable: Portal-optional perimeter sweep (open boards, openness ≥ 0.52)",
+      "config": {
+        "disabledAttemptLabels": [
+          "portal-optional-perimeter-no-portal"
+        ]
+      },
+      "outputFile": "disable-portal-optional-perimeter.json"
+    },
+    {
+      "id": "disable-must-cross-horizon",
+      "desc": "Disable: Must-cross early visitation (mustCrossFirst profile, endurance scoring)",
+      "config": {
+        "disabledAttemptLabels": [
+          "must-cross-horizon"
+        ]
+      },
+      "outputFile": "disable-must-cross-horizon.json"
+    },
+    {
+      "id": "disable-endurance-longpath",
+      "desc": "Disable: Endurance longpath (portal-heavy / ≥3 objectives, purpose=solve only)",
+      "config": {
+        "disabledAttemptLabels": [
+          "endurance-longpath"
+        ]
+      },
+      "outputFile": "disable-endurance-longpath.json"
+    },
+    {
+      "id": "disable-archetype",
+      "desc": "Disable: Archetype-dispatched prepended passes (high-intersection-burden etc.)",
+      "config": {
+        "disabledAttemptLabels": [
+          "archetype"
+        ]
+      },
+      "outputFile": "disable-archetype.json"
+    },
+    {
+      "id": "solo-structural-modern",
+      "desc": "Solo (full budget): Primary structural search (modern scoring, perimeterSweep profile)",
+      "config": {
+        "allowedAttemptLabels": [
+          "structural-modern"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-structural-modern.json"
+    },
+    {
+      "id": "solo-structural-conservative",
+      "desc": "Solo (full budget): Conservative structural pass (harvestThenFinish, no portals)",
+      "config": {
+        "allowedAttemptLabels": [
+          "structural-conservative"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-structural-conservative.json"
+    },
+    {
+      "id": "solo-template",
+      "desc": "Solo (full budget): Template-guided warmup passes (template-0/1/2 + template-best-focus)",
+      "config": {
+        "allowedAttemptLabels": [
+          "template"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-template.json"
+    },
+    {
+      "id": "solo-portal-optional-modern",
+      "desc": "Solo (full budget): Portal-optional modern (portal-eligible levels, no portals)",
+      "config": {
+        "allowedAttemptLabels": [
+          "portal-optional-modern-no-portal"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-portal-optional-modern.json"
+    },
+    {
+      "id": "solo-portal-optional-endurance",
+      "desc": "Solo (full budget): Portal-optional endurance/knotBuilder (no portals)",
+      "config": {
+        "allowedAttemptLabels": [
+          "portal-optional-endurance-no-portal"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-portal-optional-endurance.json"
+    },
+    {
+      "id": "solo-portal-optional-perimeter",
+      "desc": "Solo (full budget): Portal-optional perimeter sweep (open boards, openness ≥ 0.52)",
+      "config": {
+        "allowedAttemptLabels": [
+          "portal-optional-perimeter-no-portal"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-portal-optional-perimeter.json"
+    },
+    {
+      "id": "solo-must-cross-horizon",
+      "desc": "Solo (full budget): Must-cross early visitation (mustCrossFirst profile, endurance scoring)",
+      "config": {
+        "allowedAttemptLabels": [
+          "must-cross-horizon"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-must-cross-horizon.json"
+    },
+    {
+      "id": "solo-endurance-longpath",
+      "desc": "Solo (full budget): Endurance longpath (portal-heavy / ≥3 objectives, purpose=solve only)",
+      "config": {
+        "allowedAttemptLabels": [
+          "endurance-longpath"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-endurance-longpath.json"
+    },
+    {
+      "id": "solo-archetype",
+      "desc": "Solo (full budget): Archetype-dispatched prepended passes (high-intersection-burden etc.)",
+      "config": {
+        "allowedAttemptLabels": [
+          "archetype"
+        ],
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "solo-archetype.json"
+    },
+    {
+      "id": "budget-0p25x",
+      "desc": "Global budget ×0.25 (all techniques)",
+      "config": {
+        "globalBudgetMultiplier": 0.25
+      },
+      "outputFile": "budget-0p25x.json"
+    },
+    {
+      "id": "budget-0p5x",
+      "desc": "Global budget ×0.5 (all techniques)",
+      "config": {
+        "globalBudgetMultiplier": 0.5
+      },
+      "outputFile": "budget-0p5x.json"
+    },
+    {
+      "id": "budget-2x",
+      "desc": "Global budget ×2 (all techniques)",
+      "config": {
+        "globalBudgetMultiplier": 2
+      },
+      "outputFile": "budget-2x.json"
+    },
+    {
+      "id": "budget-4x",
+      "desc": "Global budget ×4 (all techniques)",
+      "config": {
+        "globalBudgetMultiplier": 4
+      },
+      "outputFile": "budget-4x.json"
+    }
+  ],
+  "completedAt": "2026-05-28T20:51:06.340Z",
+  "totalElapsedMs": 9253937,
+  "completedVariants": [
+    {
+      "variantId": "baseline",
+      "outputFile": "baseline.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 81826
+      }
+    },
+    {
+      "variantId": "disable-structural-modern",
+      "outputFile": "disable-structural-modern.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 107777
+      }
+    },
+    {
+      "variantId": "disable-structural-conservative",
+      "outputFile": "disable-structural-conservative.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 82175
+      }
+    },
+    {
+      "variantId": "disable-template",
+      "outputFile": "disable-template.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 82640
+      }
+    },
+    {
+      "variantId": "disable-portal-optional-modern",
+      "outputFile": "disable-portal-optional-modern.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 81355
+      }
+    },
+    {
+      "variantId": "disable-portal-optional-endurance",
+      "outputFile": "disable-portal-optional-endurance.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 82642
+      }
+    },
+    {
+      "variantId": "disable-portal-optional-perimeter",
+      "outputFile": "disable-portal-optional-perimeter.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 82319
+      }
+    },
+    {
+      "variantId": "disable-must-cross-horizon",
+      "outputFile": "disable-must-cross-horizon.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 83588
+      }
+    },
+    {
+      "variantId": "disable-endurance-longpath",
+      "outputFile": "disable-endurance-longpath.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 83291
+      }
+    },
+    {
+      "variantId": "disable-archetype",
+      "outputFile": "disable-archetype.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 1403294
+      }
+    },
+    {
+      "variantId": "solo-structural-modern",
+      "outputFile": "solo-structural-modern.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 90361
+      }
+    },
+    {
+      "variantId": "solo-structural-conservative",
+      "outputFile": "solo-structural-conservative.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 1033060
+      }
+    },
+    {
+      "variantId": "solo-template",
+      "outputFile": "solo-template.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 920804
+      }
+    },
+    {
+      "variantId": "solo-portal-optional-modern",
+      "outputFile": "solo-portal-optional-modern.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 969047
+      }
+    },
+    {
+      "variantId": "solo-portal-optional-endurance",
+      "outputFile": "solo-portal-optional-endurance.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 953501
+      }
+    },
+    {
+      "variantId": "solo-portal-optional-perimeter",
+      "outputFile": "solo-portal-optional-perimeter.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 978833
+      }
+    },
+    {
+      "variantId": "solo-must-cross-horizon",
+      "outputFile": "solo-must-cross-horizon.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 840653
+      }
+    },
+    {
+      "variantId": "solo-endurance-longpath",
+      "outputFile": "solo-endurance-longpath.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 790505
+      }
+    },
+    {
+      "variantId": "solo-archetype",
+      "outputFile": "solo-archetype.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 57932
+      }
+    },
+    {
+      "variantId": "budget-0p25x",
+      "outputFile": "budget-0p25x.json",
+      "summary": {
+        "solved": 9,
+        "failed": 1,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 237808
+      }
+    },
+    {
+      "variantId": "budget-0p5x",
+      "outputFile": "budget-0p5x.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 58403
+      }
+    },
+    {
+      "variantId": "budget-2x",
+      "outputFile": "budget-2x.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 65331
+      }
+    },
+    {
+      "variantId": "budget-4x",
+      "outputFile": "budget-4x.json",
+      "summary": {
+        "solved": 10,
+        "failed": 0,
+        "errors": 0,
+        "total": 10,
+        "totalMs": 86733
+      }
+    }
+  ]
+}

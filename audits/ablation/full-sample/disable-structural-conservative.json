@@ -1,0 +1,282 @@
+{
+  "variantId": "disable-structural-conservative",
+  "desc": "Disable: Conservative structural pass (harvestThenFinish, no portals)",
+  "config": {
+    "disabledAttemptLabels": [
+      "structural-conservative"
+    ]
+  },
+  "commitSha": "07b79cf0fd4250b88d32e6f53b9bfe8b7eb5b6bd",
+  "timestamp": "2026-05-28T18:21:24.185Z",
+  "budgetMs": 30000,
+  "levelCount": 10,
+  "summary": {
+    "solved": 10,
+    "failed": 0,
+    "errors": 0,
+    "total": 10,
+    "totalMs": 82175
+  },
+  "levels": [
+    {
+      "level": 1,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 52,
+      "nodesExpanded": 1599,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 49,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 49,
+          "budgetMs": 12510,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 10,
+      "nodesExpanded": 202,
+      "maxDepth": 18,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 8,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 8,
+          "budgetMs": 12258,
+          "depthReached": 18,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 50,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 24123,
+      "nodesExpanded": 37811,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 611,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 611,
+          "budgetMs": 1038,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 92,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 11872,
+      "nodesExpanded": 46845,
+      "maxDepth": 99,
+      "firstSolvingAttempt": "archetype-high-intersection-burden-intersectionHarvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 1155,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-high-intersection-burden-intersectionHarvest",
+          "solved": true,
+          "elapsedMs": 1155,
+          "budgetMs": 2250,
+          "depthReached": 99,
+          "policyProfile": "intersectionHarvest",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 108,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 30,
+      "nodesExpanded": 378,
+      "maxDepth": 33,
+      "firstSolvingAttempt": "archetype-sparse-near-closure-nearClosureRescue",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 20,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-sparse-near-closure-nearClosureRescue",
+          "solved": true,
+          "elapsedMs": 20,
+          "budgetMs": 563,
+          "depthReached": 33,
+          "policyProfile": "nearClosureRescue",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 120,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 14,
+      "nodesExpanded": 233,
+      "maxDepth": 26,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 10,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 10,
+          "budgetMs": 12330,
+          "depthReached": 26,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 130,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 266,
+      "nodesExpanded": 7955,
+      "maxDepth": 50,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 258,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 258,
+          "budgetMs": 1108,
+          "depthReached": 50,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 134,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 52,
+      "nodesExpanded": 871,
+      "maxDepth": 53,
+      "firstSolvingAttempt": "archetype-portal-mustcross-constrained-portalCommitted",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 48,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-portal-mustcross-constrained-portalCommitted",
+          "solved": true,
+          "elapsedMs": 48,
+          "budgetMs": 5625,
+          "depthReached": 53,
+          "policyProfile": "portalCommitted",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 139,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 41983,
+      "nodesExpanded": 174659,
+      "maxDepth": 62,
+      "firstSolvingAttempt": "archetype-high-intersection-burden-intersectionHarvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 4252,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-high-intersection-burden-intersectionHarvest",
+          "solved": true,
+          "elapsedMs": 4252,
+          "budgetMs": 22500,
+          "depthReached": 62,
+          "policyProfile": "intersectionHarvest",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    },
+    {
+      "level": 140,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 3772,
+      "nodesExpanded": 143501,
+      "maxDepth": 75,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3765,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 3765,
+          "budgetMs": 15300,
+          "depthReached": 75,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null
+        }
+      ]
+    }
+  ]
+}

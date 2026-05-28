@@ -1,0 +1,163 @@
+{
+  "variantId": "solo-endurance-longpath",
+  "desc": "Solo (full budget): Endurance longpath (portal-heavy / ≥3 objectives, purpose=solve only)",
+  "config": {
+    "allowedAttemptLabels": [
+      "endurance-longpath"
+    ],
+    "globalBudgetMultiplier": 2
+  },
+  "commitSha": "2598a45fae2d084851f2ac630b9ce30d5d1c54bc",
+  "timestamp": "2026-05-28T20:18:09.690Z",
+  "budgetMs": 30000,
+  "levelCount": 10,
+  "summary": {
+    "solved": 9,
+    "failed": 1,
+    "errors": 0,
+    "total": 10,
+    "totalMs": 806346
+  },
+  "levels": [
+    {
+      "level": 1,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 53,
+      "nodesExpanded": 1599,
+      "maxDepth": 20,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 2,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 48,
+      "nodesExpanded": 1958,
+      "maxDepth": 14,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 3,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 11,
+      "nodesExpanded": 202,
+      "maxDepth": 18,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 92,
+      "ok": false,
+      "status": "timeout",
+      "elapsedMs": 771605,
+      "nodesExpanded": 110001,
+      "maxDepth": 71,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 108,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 28,
+      "nodesExpanded": 378,
+      "maxDepth": 33,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 120,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 14,
+      "nodesExpanded": 233,
+      "maxDepth": 26,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 130,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 275,
+      "nodesExpanded": 7955,
+      "maxDepth": 50,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 134,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 49,
+      "nodesExpanded": 871,
+      "maxDepth": 53,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 139,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 30264,
+      "nodesExpanded": 174659,
+      "maxDepth": 62,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    },
+    {
+      "level": 140,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 3997,
+      "nodesExpanded": 143501,
+      "maxDepth": 75,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": []
+    }
+  ]
+}

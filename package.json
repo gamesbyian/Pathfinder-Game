@@ -17,7 +17,14 @@
     "audit:check-hard-levels": "node scripts/check-persistent-hard-levels.mjs",
     "audit:check-hard-levels:strict": "node scripts/check-persistent-hard-levels.mjs --enforce-solved",
     "audit:check-regressions": "node scripts/check-regression-levels.mjs --levels=7 --window=3 --max-consecutive-failures=1",
-    "audit:heuristic-recall": "node scripts/audit-heuristic-recall.mjs --levels=92,108,134 --output=audits/heuristic-recall/latest.json"
+    "audit:heuristic-recall": "node scripts/audit-heuristic-recall.mjs --levels=92,108,134 --output=audits/heuristic-recall/latest.json",
+    "ablation:baseline": "node scripts/solver-ablation.mjs --experiment=baseline --levels=all",
+    "ablation:disable-one": "node scripts/solver-ablation.mjs --experiment=disable-one --levels=all",
+    "ablation:solo": "node scripts/solver-ablation.mjs --experiment=solo --levels=all",
+    "ablation:budget-sweep": "node scripts/solver-ablation.mjs --experiment=budget-sweep --levels=all",
+    "ablation:full": "node scripts/solver-ablation.mjs --experiment=full --levels=all",
+    "ablation:technique-budget": "node scripts/solver-ablation.mjs --experiment=technique-budget --levels=all",
+    "ablation:analyze": "node scripts/analyze-ablation.mjs"
   },
   "devDependencies": {
     "playwright": "^1.54.2"
