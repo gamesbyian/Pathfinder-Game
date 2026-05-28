@@ -525,12 +525,30 @@ if (timingImpactAnalysis && timingImpactAnalysis.some(r => Math.abs(r.totalDelta
   }
   blank();
 
+  // Speedup anomalies: techniques whose removal makes things FASTER
+  // This signals the technique is spending budget less efficiently than the fallback.
+  const speedupTechs = timingImpactAnalysis.filter(t => t.totalDeltaMs < -2000);
+  if (speedupTechs.length > 0) {
+    blank();
+    row(`  ANOMALY — faster without the technique (may be budget-inefficient at test scale):`);
+    for (const t of speedupTechs) {
+      if (!t.worstLevel) continue;
+      row(`  disable-${t.techId}: ${Math.abs(Math.round(t.totalDeltaMs/1000))}s faster total | ` +
+          `L${t.worstLevel.level}: ${t.worstLevel.baseMs}ms → ${t.worstLevel.varMs}ms  (${t.worstLevel.multiplier.toFixed(2)}×)`);
+      for (const l of t.changedLevels.filter(l => l.delta < -500)) {
+        row(`    L${String(l.level).padEnd(5)} ${l.baseMs}ms → ${l.varMs}ms  (${l.multiplier.toFixed(2)}×)  ${l.baseTech} → ${l.fallbackTech}`);
+      }
+    }
+    row(`  NOTE: Speedup anomalies are often budget-scale artifacts — reduced test budget`);
+    row(`  causes the technique to fail in stage-0 (wasting its fraction), while the fallback`);
+    row(`  succeeds in fewer virtual nodes. At production budget this anomaly may disappear.`);
+  }
+
   // Detail for techniques with significant slowdowns
-  const significant = timingImpactAnalysis.filter(t => t.worstLevel && t.worstLevel.multiplier >= 1.5);
+  const significant = timingImpactAnalysis.filter(t => t.worstLevel && t.worstLevel.multiplier >= 1.5 && t.totalDeltaMs > 0);
   for (const t of significant) {
     row(`  disable-${t.techId} level detail:`);
-    for (const l of t.changedLevels) {
-      const sign = l.delta >= 0 ? '+' : '';
+    for (const l of t.changedLevels.filter(l => l.delta > 0)) {
       row(`    L${String(l.level).padEnd(5)} ${l.baseMs}ms → ${l.varMs}ms  (${l.multiplier.toFixed(1)}×)` +
           (l.baseTech !== l.fallbackTech ? `  ${l.baseTech} → ${l.fallbackTech}` : `  same tech: ${l.baseTech}`));
     }
