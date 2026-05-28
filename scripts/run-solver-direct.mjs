@@ -147,7 +147,9 @@ const formatLevelTag = (levelSet) => {
 };
 
 const levelFilter = parseLevelSpec(argMap.get('--levels'));
-const budgetMs = Number(argMap.get('--budget-ms') || 180000);
+// Default budget is resolved after Solver.js is imported (see CANONICAL_SOLVE_TIME_BUDGET_MS
+// below) so the audit harness and the UI Solve button share one source of truth.
+const budgetMsArg = argMap.get('--budget-ms');
 const purpose = argMap.get('--purpose') || 'hint';
 const forbiddenFirstMoves = parseNumberList(argMap.get('--forbidden-first-moves'));
 const orderingPolicy = argMap.get('--ordering-policy') || null;
@@ -180,7 +182,10 @@ if (typeof globalThis.performance === 'undefined') {
   globalThis.performance = { now: () => Date.now() };
 }
 
-const { installSolver } = await import('../Solver.js');
+const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('../Solver.js');
+
+// Default per-stage budget shared with the UI Solve path (Solver.js runGameSolver).
+const budgetMs = Number(budgetMsArg || CANONICAL_SOLVE_TIME_BUDGET_MS);
 
 // --- APP shim (extends hint-path-replay's shim with solveLevel needs) ---
 const PACK = (x, y) => (y << 16) | x;
