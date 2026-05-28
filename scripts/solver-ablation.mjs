@@ -69,6 +69,8 @@ if (argFlags.has('--help') || argFlags.has('-h')) {
   --verbose                Per-attempt detail.
   --no-history             Skip manifest history copy.
   --purpose=PURPOSE        hint (default) or solve.
+  --max-level-wall-ms=N    Wall-time cap per level (default: 5× budget). Prevents
+                           virtual/wall divergence on pathological solo runs.
 
   Custom mode flags:
   --disable=t1,t2          Disable these technique prefixes.
@@ -112,6 +114,8 @@ const outputDirArg = argMap.get('--output-dir') || null;
 const customDisable = parseList(argMap.get('--disable') || '');
 const customAllow = parseList(argMap.get('--allow') || '');
 const customGlobalMultiplier = argMap.get('--global-budget-multiplier') ? Number(argMap.get('--global-budget-multiplier')) : null;
+const maxLevelWallMsArg = argMap.get('--max-level-wall-ms') ? Number(argMap.get('--max-level-wall-ms')) : null;
+
 const customAttemptMults = (() => {
   const raw = argMap.get('--attempt-budget-multipliers') || '';
   if (!raw) return {};
@@ -246,6 +250,7 @@ if (typeof globalThis.performance === 'undefined') globalThis.performance = { no
 
 const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('../Solver.js');
 const budgetMs = Number(budgetMsArg || CANONICAL_SOLVE_TIME_BUDGET_MS);
+const maxLevelWallMs = maxLevelWallMsArg ?? (budgetMs * 5);
 
 const PACK = (x, y) => (y << 16) | x;
 const UNPACK = (k) => ({ x: k & 0xFFFF, y: (k >> 16) & 0xFFFF });
@@ -320,7 +325,13 @@ async function solveLevel(levelNumber, raw, variantConfig) {
   const t0 = Date.now();
   let result;
   try {
-    result = await Solver.universalSolveLevel(level, opts);
+    const wallGuard = new Promise(res => setTimeout(() => res({ ok: false, status: 'wall-timeout', _wallTimeout: true }), maxLevelWallMs));
+    result = await Promise.race([Solver.universalSolveLevel(level, opts), wallGuard]);
+    if (result?._wallTimeout) {
+      const elapsed = Date.now() - t0;
+      console.warn(`  L${levelNumber} WALL-TIMEOUT after ${elapsed}ms (cap=${maxLevelWallMs}ms)`);
+      return { level: levelNumber, ok: false, status: 'wall-timeout', elapsedMs: elapsed, nodesExpanded: 0, maxDepth: 0, firstSolvingAttempt: null, solvingAttemptIdx: -1, overheadBeforeSolveMs: 0, solveAttemptMs: 0, attemptCount: 0, attemptSummary: [] };
+    }
   } catch (e) {
     return { level: levelNumber, status: 'error', error: `solve: ${e?.message}`, ok: false, elapsedMs: Date.now() - t0, attempts: [] };
   }
@@ -331,6 +342,8 @@ async function solveLevel(levelNumber, raw, variantConfig) {
   const debug = result?.debug || {};
 
   // Extract per-attempt data from result.attempts (populated by runBaselineStage)
+  // stagesTried gives cross-stage history; attempts is the winning stage's attempts
+  const rawStagesTried = Array.isArray(result?.stagesTried) ? result.stagesTried : [];
   const rawAttempts = Array.isArray(result?.attempts) ? result.attempts : [];
   const attemptSummary = rawAttempts
     .filter(a => a && !a.__carriedFromHintLadder)
@@ -367,6 +380,7 @@ async function solveLevel(levelNumber, raw, variantConfig) {
     solveAttemptMs,
     attemptCount: attemptSummary.length,
     attemptSummary,
+    stagesTriedCount: rawStagesTried.length,
   };
 }
 
