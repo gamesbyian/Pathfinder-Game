@@ -16703,6 +16703,9 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 normalized.compatLegacyOutputAlias = !!compatLegacyOutputAlias;
                 normalized.message = normalized.ok ? `Solved (${variant}).` : `${variant} ${normalized.status || 'error'}.`;
                 normalized.failureSummary = normalized.ok ? null : classifyFailureCategory(normalized);
+                // Preserve attempt-history array from runBaselineStage — dropped by createCanonicalSolveResult
+                // but needed by the outer universalSolveLevel identityAttempt chain and ablation analysis.
+                normalized.attempts = Array.isArray(result?.attempts) ? result.attempts : [];
                 return normalized;
             };
 
@@ -17168,7 +17171,9 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     }
                 });
                 const refereeTimeMs = Math.round(performance.now() - refereeStart);
+                const __preCanonAttempts = Array.isArray(solverResult?.attempts) ? solverResult.attempts : [];
                 solverResult = createCanonicalSolveResult(solverResult || {});
+                if (__preCanonAttempts.length > 0) solverResult.attempts = __preCanonAttempts;
                 applyCanonicalSolutionShape(solverResult);
 
                 let finalStatus = solverResult.rawStatus || solverResult.status || 'error';
