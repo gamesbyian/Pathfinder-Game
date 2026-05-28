@@ -628,6 +628,100 @@ blank();
 row(`  IMPORTANT: "Apparent scar tissue" requires verification on 140-level data.`);
 row(`  A technique covering 0 levels in a 10-level sample may cover many in the full game.`);
 
+// ─── Section: Disable-one fallback chains ────────────────────────────────────
+h2('DISABLE-ONE FALLBACK CHAINS');
+row(`For each disable-one variant: which levels changed winner? When technique T is disabled,`);
+row(`which technique steps in? This reveals the fallback dependency graph.`);
+blank();
+
+// Group technique prefix to short name
+function techShortName(label) {
+  if (!label) return 'none';
+  if (label.startsWith('structural-modern')) return 'SM';
+  if (label.startsWith('structural-conservative')) return 'SC';
+  if (label.startsWith('template')) return 'TPL';
+  if (label.startsWith('portal-optional-modern')) return 'POM';
+  if (label.startsWith('portal-optional-endurance')) return 'POE';
+  if (label.startsWith('portal-optional-perimeter')) return 'POP';
+  if (label.startsWith('must-cross-horizon')) return 'MCH';
+  if (label.startsWith('endurance-longpath')) return 'ELP';
+  if (label.startsWith('archetype')) return 'ARC';
+  return label.slice(0, 6);
+}
+
+const disableVariants = techniques.filter(t => variantData[`disable-${t.id}`]);
+
+for (const tech of disableVariants) {
+  const v = variantData[`disable-${tech.id}`];
+  if (!v) continue;
+
+  const failures = (v.levels || []).filter(l => !l.ok && baselineSolvable.has(l.level));
+  const changed = (v.levels || []).filter(l => {
+    if (!l.ok) return false;
+    const base = baselineWinner[l.level];
+    const now = l.firstSolvingAttempt || '';
+    // Safety valve suspect: disabled technique still "won"
+    return base !== now;
+  });
+  const safetyValveSuspect = (v.levels || []).filter(l => {
+    if (!l.ok) return false;
+    const now = l.firstSolvingAttempt || '';
+    return now.startsWith(tech.prefix);
+  });
+
+  // Fallback distribution: when tech disabled, what won instead?
+  const fallbackDist = new Map();
+  for (const l of changed) {
+    const sn = techShortName(l.firstSolvingAttempt);
+    fallbackDist.set(sn, (fallbackDist.get(sn) || 0) + 1);
+  }
+  const fallbackStr = [...fallbackDist.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k}:${n}`).join(' ');
+
+  row(`  disable-${tech.id.padEnd(30)}`);
+  row(`    Failures: ${failures.length}  ${failures.length > 0 ? failures.map(l => `L${l.level}`).join(' ') : ''}`);
+  row(`    Changed winner: ${changed.length}  Fallbacks: ${fallbackStr || 'none'}`);
+  if (safetyValveSuspect.length > 0) {
+    row(`    Safety-valve suspects: ${safetyValveSuspect.map(l => `L${l.level}`).join(' ')} — technique disabled but still won (plan was single-technique)`);
+  }
+  // Speed delta for changed levels
+  const speedDelta = changed.reduce((s, l) => {
+    const base = baselineTiming[l.level] || 0;
+    return s + (l.elapsedMs || 0) - base;
+  }, 0);
+  if (changed.length > 0) {
+    const avgDelta = speedDelta / changed.length;
+    row(`    Speed on changed levels: ${speedDelta >= 0 ? '+' : ''}${Math.round(speedDelta / 1000)}s total, ${speedDelta >= 0 ? '+' : ''}${Math.round(avgDelta)}ms avg`);
+  }
+  blank();
+}
+
+// ─── Section: Technique interaction matrix ────────────────────────────────────
+h2('TECHNIQUE INTERACTION MATRIX');
+row(`When technique ROW is disabled, how many levels fall to technique COL?`);
+row(`Read across: ROW's fallback distribution. Read down: COL's pickup coverage.`);
+blank();
+
+const techShorts = techniques.map(t => techShortName(t.prefix + '-x'));
+const header = `  ${'Disabled'.padEnd(10)} ` + techShorts.map(s => s.padStart(5)).join(' ') + '  FAIL';
+row(header);
+row(`  ${'─'.repeat(header.length)}`);
+
+for (const disabledTech of techniques) {
+  const v = variantData[`disable-${disabledTech.id}`];
+  if (!v) continue;
+  const counts = new Map(techniques.map(t => [techShortName(t.prefix + '-x'), 0]));
+  let failCount = 0;
+  for (const l of (v.levels || [])) {
+    if (!baselineSolvable.has(l.level)) continue;
+    if (!l.ok) { failCount++; continue; }
+    const sn = techShortName(l.firstSolvingAttempt);
+    if (counts.has(sn)) counts.set(sn, counts.get(sn) + 1);
+  }
+  const cols = techShorts.map(s => String(counts.get(s) || '').padStart(5)).join(' ');
+  row(`  ${techShortName(disabledTech.prefix + '-x').padEnd(10)} ${cols}  ${String(failCount).padStart(4)}`);
+}
+blank();
+
 // ─── Output ───────────────────────────────────────────────────────────────────
 const report = lines.join('\n') + '\n';
 console.log(report);
