@@ -1,17 +1,7 @@
-import { createServer } from 'node:http';
-import { createReadStream } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
-import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
-
-const HOST = '127.0.0.1';
-const PORT = 4173;
-const BASE_URL = `http://${HOST}:${PORT}`;
-// TEMP (2026-03-29): doubled audit timeout fallback from 15m to 30m so audit reflects solver max-time increase.
-// Baseline fallback: 15 * 60 * 1000. Revert by restoring baseline multiplier below.
-const AUDIT_TIMEOUT_MS = Number(process.env.AUDIT_TIMEOUT_MS || 30 * 60 * 1000);
 
 const HISTORY_MAX_BYTES = Number(process.env.AUDIT_HISTORY_MAX_BYTES || 95 * 1024 * 1024);
 const HISTORY_MAX_ENTRIES = Number(process.env.AUDIT_HISTORY_MAX_ENTRIES || 4000);
@@ -35,77 +25,6 @@ const trimHistoryEntries = (entries) => {
     totalBytes += lineBytes;
   }
   return kept.reverse();
-};
-
-const mimeTypes = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.mjs': 'application/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.webp': 'image/webp',
-  '.txt': 'text/plain; charset=utf-8',
-  '.php': 'text/plain; charset=utf-8'
-};
-
-const resolvePath = (urlPath) => {
-  const cleanPath = decodeURIComponent((urlPath || '/').split('?')[0]).replace(/^\/+/, '');
-  const withDefault = cleanPath === '' ? 'index.html' : cleanPath;
-  const fullPath = path.resolve(process.cwd(), withDefault);
-  if (!fullPath.startsWith(process.cwd())) return null;
-  return fullPath;
-};
-
-const startStaticServer = () => {
-  const server = createServer(async (req, res) => {
-    const fullPath = resolvePath(req.url || '/');
-    if (!fullPath) {
-      res.writeHead(403).end('Forbidden');
-      return;
-    }
-
-    try {
-      const stat = await import('node:fs/promises').then((m) => m.stat(fullPath));
-      const filePath = stat.isDirectory() ? path.join(fullPath, 'index.html') : fullPath;
-      const ext = path.extname(filePath).toLowerCase();
-      res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
-      createReadStream(filePath).pipe(res);
-    } catch {
-      res.writeHead(404).end('Not found');
-    }
-  });
-
-  return new Promise((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(PORT, HOST, () => resolve(server));
-  });
-};
-
-const waitForAuditIdle = async (page) => {
-  await page.waitForFunction(
-    () => {
-      const txt = document.getElementById('auditProgressLabel')?.textContent?.trim() || '';
-      return txt === 'Idle' || txt === 'Stopped.';
-    },
-    undefined,
-    { timeout: AUDIT_TIMEOUT_MS }
-  );
-};
-
-const waitForAuditResult = async (page) => {
-  await page.waitForFunction(
-    () => {
-      const txt = document.getElementById('auditReportRows')?.textContent?.trim() || '';
-      return txt.length > 0 && txt !== 'Run a check to generate report.';
-    },
-    undefined,
-    { timeout: AUDIT_TIMEOUT_MS }
-  );
 };
 
 const utcStamp = () => new Date().toISOString().replace(/[:]/g, '-').replace(/\.\d{3}Z$/, 'Z');
