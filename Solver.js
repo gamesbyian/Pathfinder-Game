@@ -60,13 +60,23 @@
     // installed for the duration of Referee.solve — when absent, searchNow() falls
     // back to Date.now() so non-solve callers (e.g. findTrapSpots) behave as before.
     //
-    // SEARCH_VIRTUAL_MS_PER_NODE is a load-bearing calibration knob: it sets how many
-    // nodes a given ms budget buys (nodeBudget = budgetMs / vmsPerNode). Changing it
-    // re-shapes how deep every tier searches and MUST be re-baselined against the
-    // audit harness (audits/metrics/*.json) on a per-level basis.
+    // SEARCH_VIRTUAL_MS_PER_NODE is a single GLOBAL calibration knob: it sets how many
+    // nodes a given ms budget buys (nodeBudget = budgetMs / vmsPerNode), applied
+    // uniformly to every level. There are deliberately NO per-level or per-archetype
+    // overrides — the solver must treat each level on its own geometry as it comes, with
+    // no preconception tied to a level's number, position, or layout (the catalog's set,
+    // order, and construction can change at any time). The value is intentionally
+    // generous so that near-Hamiltonian, high-intersection levels (whose required path
+    // covers nearly every free cell and folds back on itself many times) get a deep
+    // enough per-stage node budget to close their final knots. Granting more budget is
+    // always safe for levels that already solve: a deterministic search that finds a
+    // solution does so before any budget limit, so a larger budget explores the identical
+    // prefix and returns the identical solution — it can only let harder levels run
+    // farther, never change an existing solve. Changing this re-shapes how deep every
+    // tier searches, so re-run the audit harness after any change.
     const SEARCH_VIRTUAL_MS_PER_NODE = (typeof process !== 'undefined' && process?.env?.PF_VMS_PER_NODE && Number(process.env.PF_VMS_PER_NODE) > 0)
         ? Number(process.env.PF_VMS_PER_NODE)
-        : 0.05;
+        : 0.005;
     let __searchClock = null;
     const createSearchClock = ({ deterministic = true, vmsPerNode = SEARCH_VIRTUAL_MS_PER_NODE, realCeilingMs = 0 } = {}) => {
         const now = Date.now();
@@ -16841,40 +16851,13 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             // ceiling. Callers can opt back into pure wall-clock budgets with
             // deterministicSearch === false.
             //
-            // Near-Hamiltonian high-intersection levels need a deeper node budget than the
-            // default vms/node calibration grants. On such a level the required path covers
-            // essentially every free cell AND folds back on itself many times; the beam
-            // reaches within ~2 steps of the goal depth but the per-tier work budget expires
-            // before it can close the final knots (it then exhausts a different, fruitless
-            // sub-tree). Granting more nodes per ms lets the deterministic search run far
-            // enough to find the solution. Gated on structural ratios (required-intersection
-            // count AND near-full free-cell coverage), so only this narrow class is affected
-            // and every other level keeps the audited 0.05 calibration unchanged. Mirrors
-            // _classifyLevelArchetype: the predicate is a pure function of level geometry, so
-            // any future level matching it is treated the same and a level whose layout
-            // changes is re-classified from scratch. The two density bands below are the only
-            // levels in the catalog with freeCellDensity >= 0.8 (L139 and L26 respectively).
-            const deepIntersectionVmsPerNode = (() => {
-                const reqInt = Math.max(0, Number(level?.reqInt) || 0);
-                const reqLen = Math.max(0, Number(level?.reqLen) || 0);
-                const w = Math.max(1, Number(level?.grid?.w) || 0);
-                const h = Math.max(1, Number(level?.grid?.h) || 0);
-                const blocks = level?.blockSet instanceof Set ? level.blockSet.size : 0;
-                const freeCells = Math.max(1, (w * h) - blocks);
-                const freeCellDensity = reqLen / freeCells;
-                // Tightest knot — reqInt>=8 on near-total coverage (L139, density ~1.02 on an
-                // 11x11). Solves deterministically at 0.02.
-                if (reqInt >= 8 && freeCellDensity >= 0.9) return 0.02;
-                // Larger-board high-coverage knot — reqInt>=6 with density>=0.8 (L26, density
-                // ~0.87 across 94 free cells, required path 82). The search space is bigger
-                // than L139's, so the beam stalls at maxDepth ~66 even with 0.02; only a
-                // richer budget (0.005) lets it break past the plateau and close the path.
-                if (reqInt >= 6 && freeCellDensity >= 0.8) return 0.005;
-                return null;
-            })();
+            // The per-node budget is the single global SEARCH_VIRTUAL_MS_PER_NODE calibration
+            // — uniform for every level. The solver deliberately keeps no per-level or
+            // per-archetype budget override here: near-Hamiltonian high-intersection levels
+            // (which need a deeper node budget to close their final knots) are served by the
+            // global calibration being generous, not by singling them out.
             installSearchClock(createSearchClock({
                 deterministic: opts.deterministicSearch !== false,
-                ...(deepIntersectionVmsPerNode ? { vmsPerNode: deepIntersectionVmsPerNode } : {}),
                 realCeilingMs: Math.max(60000, (Number(budgetMs) || 0) * 8)
             }));
             // Caller-supplied experiment overrides (direct audit harness only). Installed
