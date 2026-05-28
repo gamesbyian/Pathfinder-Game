@@ -11421,12 +11421,17 @@ function installSolver(APP) {
             const w = Math.max(1, Number(level?.grid?.w) || 0);
             const h = Math.max(1, Number(level?.grid?.h) || 0);
             const area = Math.max(1, w * h);
-            const reqLenDensity = reqLen > 0 ? reqLen / area : 0;
             const mustPassCount = Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0;
             const mustCrossCount = Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0;
             const portalPairs = level?.portalMap instanceof Map ? Math.floor(level.portalMap.size / 2) : 0;
             const blockCount = level?.blockSet instanceof Set ? level.blockSet.size : 0;
             const blockDensity = blockCount / area;
+            // Density is measured against the navigable board (area minus blocks), not raw
+            // area, so block-heavy layouts aren't systematically under-rated. On a board that
+            // is half blocks, a path that fills the free cells reads as dense even though it
+            // covers only half of the raw grid.
+            const freeArea = Math.max(1, area - blockCount);
+            const reqLenDensity = reqLen > 0 ? reqLen / freeArea : 0;
             const archetypes = [];
 
             // High-intersection-burden: levels that REQUIRE many self-intersections AND have
@@ -11754,8 +11759,8 @@ function installSolver(APP) {
             // cascade only runs 1-2 attempts before its budget exhausts). Direct archetype-gated
             // opt-in lets the DFS trigger IDA* whenever a single attempt reaches the depth/bound
             // conditions, independent of the multi-attempt rescue chain. Gate is still tight:
-            // requires high-intersection-burden archetype (reqInt>=5, density>=0.55, obligations>=3)
-            // — currently matches only L92.
+            // requires high-intersection-burden archetype (reqInt>=5, free-cell density>=0.55,
+            // obligations>=3) — matches block-heavy, intersection-dense boards like L92 and L139.
             const allowEndgameIDAStarForArchetype = archetypes.includes('high-intersection-burden');
             if (allowEndgameIDAStarForArchetype) {
                 for (const planned of orderedAttempts) {
