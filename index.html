@@ -149,8 +149,7 @@
         #gridSizeButtonsRow { padding-inline: 0.25rem; }
         #gridRotateMirrorRow { padding-right: 0.25rem; }
         .landscape-editor-tools #editorLineGridPanel { flex-wrap: nowrap; row-gap: 0; }
-        #hintTopHalf { border-bottom-color: var(--theme-hint-divider); }
-        #hintTopHalf:hover, #hintBottomHalf:hover, .export-action-btn:hover { background: var(--theme-hint-hover); }
+        #hintBtn:hover, .export-action-btn:hover { background: var(--theme-hint-hover); }
         .action-btn-group button, #hintBtn, #editCopyMetrics { color: var(--theme-action-btn-text); }
         .editor-tool-icon { color: var(--theme-editor-tool-icon); }
         .editor-input:focus { border-color: var(--theme-editor-input-focus); }
@@ -424,10 +423,7 @@
     <div id="playControls" class="bg-white p-3 rounded-2xl shadow-xl border border-slate-200 relative">
         <div class="relative">
             <div id="gameButtonGrid" class="flex gap-1.5 action-btn-group">
-                <div id="hintBtn" class="flex-1 h-10 font-bold rounded-lg shadow-md transition-all duration-200 text-[0.65rem] uppercase tracking-wider flex flex-col z-20 overflow-hidden cursor-pointer relative">
-                    <div id="hintTopHalf" class="flex-1 w-full items-center justify-center border-b hidden transition-colors text-[0.65rem] text-center">New Hint</div>
-                    <div id="hintBottomHalf" class="flex-1 w-full items-center justify-center flex transition-colors text-center"><span id="hintMainLabel" class="w-full text-center">Hint</span></div>
-                </div>
+                <div id="hintBtn" class="flex-1 h-10 font-bold rounded-lg shadow-md transition-all duration-200 text-[0.65rem] uppercase tracking-wider flex items-center justify-center z-20 cursor-pointer relative">Hint</div>
                 <button id="resetBtn" class="flex-1 h-10 bg-red-500 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Reset</button>
                 <button id="undoBtn" class="flex-1 h-10 bg-slate-600 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Undo</button>
                 <button id="whoaBtn" class="flex-1 h-10 bg-blue-500 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Whoa</button>
@@ -437,7 +433,7 @@
             <div id="editorButtonGrid" class="hidden flex gap-1.5">
                 <button id="editResetGrid" class="flex-1 h-10 bg-red-600 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Clear</button>
                 <button id="editNewLevel" class="flex-1 h-10 bg-emerald-600 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">New</button>
-                <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Hint</button>
+                <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
                 <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
                 <button id="editModeToggleBtn" class="flex-1 h-10 bg-slate-900 font-black rounded-lg shadow-md text-[0.65rem] uppercase tracking-wider">Play</button>
@@ -1883,7 +1879,7 @@
         foundHintsSinceLoad: [],
         editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true }
         ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
-        ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, isHintExpanded: false, tapStartCoord: null, tapMoved: false }
+        ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, tapStartCoord: null, tapMoved: false }
         ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
         ,flags: { useRefereeSolver: true, refereeDebug: false, warnNonCanonicalLevelFields: false }
     };
@@ -4498,7 +4494,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
         document.getElementById('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
 
-        const hintBtn = document.getElementById('hintBtn'); const hintTopHalf = document.getElementById('hintTopHalf');
+        const hintBtn = document.getElementById('hintBtn');
         const showSavedHint = () => {
             if (APP.State.ENGINE.level?.hints?.length > 0) {
                 APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints;
@@ -4507,80 +4503,13 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 APP.Solver.startHintAnimation();
             } else APP.UI.showMessage("No saved hint.", "text-white font-black");
         };
-        const toggleHint = () => {
-            if (APP.State.ENGINE.runtime.isHintExpanded) {
-                APP.UI.setClassState(hintTopHalf, 'hidden', true);
-                APP.UI.setClassState(hintTopHalf, 'flex', false);
-                APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem');
-                APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
-            } else {
-                APP.UI.setClassState(hintTopHalf, 'hidden', false);
-                APP.UI.setClassState(hintTopHalf, 'flex', true);
-                APP.UI.setInlineStyle(hintBtn, 'height', '5.275rem');
-                const growsDown = APP.State.ENGINE.ui.isLandscapeLayout;
-                APP.UI.setInlineStyle(hintBtn, 'marginTop', growsDown ? '0' : '-2.775rem');
-            }
-            APP.State.ENGINE.runtime.isHintExpanded = !APP.State.ENGINE.runtime.isHintExpanded;
-        };
-        const updateHintLabel = () => {
-            const hasSaved = APP.State.ENGINE.level && APP.State.ENGINE.level.hints && APP.State.ENGINE.level.hints.length > 0;
-            const mainLabel = document.getElementById('hintMainLabel');
-            if (!APP.State.ENGINE.isDevMode) {
-                APP.UI.setTextContent(mainLabel, 'Hint');
-                APP.UI.setInlineStyle(mainLabel, 'color', 'white');
-                return;
-            }
-            if (APP.State.ENGINE.runtime.isHintExpanded) {
-                APP.UI.setTextContent(mainLabel, 'Saved Hint');
-                APP.UI.setInlineStyle(mainLabel, 'color', hasSaved ? 'white' : '#cbd5e1');
-            } else {
-                APP.UI.setTextContent(mainLabel, 'Hint');
-                APP.UI.setInlineStyle(mainLabel, 'color', 'white');
-            }
-        };
-        hintBtn.onclick = async (e) => {
+        // Play Mode hint plays saved hints from levels.js only; it never runs the
+        // solver. The Edit Mode Solve button is the sole solver entry point.
+        hintBtn.onclick = () => {
             APP.UI.closeAllModals();
             if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
-            if (!APP.State.ENGINE.isDevMode) {
-                if (APP.State.ENGINE.runtime.isHintExpanded) {
-                    APP.State.ENGINE.runtime.isHintExpanded = false;
-                    APP.UI.setClassState(hintTopHalf, 'hidden', true);
-                    APP.UI.setClassState(hintTopHalf, 'flex', false);
-                    APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem');
-                    APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
-                }
-                updateHintLabel();
-                showSavedHint();
-                return;
-            }
-            if (!APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); } else {
-                const rect = hintBtn.getBoundingClientRect(); const clickY = e.clientY - rect.top; const isTopHalf = clickY < rect.height / 2;
-                if (isTopHalf) {
-                    APP.State.ENGINE.runtime.isHintExpanded = false;
-                    APP.UI.setClassState(hintTopHalf, 'hidden', true);
-                    APP.UI.setClassState(hintTopHalf, 'flex', false);
-                    APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem');
-                    APP.UI.setInlineStyle(hintBtn, 'marginTop', '0');
-                    updateHintLabel();
-                    await new Promise(requestAnimationFrame);
-                    try {
-                        if (APP.Solver.isRunning()) {
-                            APP.UI.showSolverAlreadyRunning();
-                            return;
-                        }
-                        APP.Solver.stopHintAnimation();
-                        const hintResult = await APP.Solver.runGameSolver('hint');
-                        if (hintResult?.reason === 'already-running') return;
-                    } catch (err) {
-                        console.error('Hint solve failed:', err);
-                        APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
-                        APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                    }
-                } else showSavedHint();
-                if (APP.State.ENGINE.runtime.isHintExpanded) { toggleHint(); updateHintLabel(); }
-            }
+            showSavedHint();
         };
-        document.addEventListener('click', (e) => { if (APP.State.ENGINE.runtime.isHintExpanded && !hintBtn.contains(e.target)) { toggleHint(); updateHintLabel(); } });
 
         document.getElementById('solverCloseBtn').onclick = () => {
             if (!APP.Solver.isRunning()) {
@@ -4640,7 +4569,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         };
         document.getElementById('backToThemeSelectBtn').onclick = closeEditor;
         document.getElementById('doneThemeEditBtn').onclick = closeEditor;
-        document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); if (!APP.State.ENGINE.isDevMode) { if (APP.State.ENGINE.runtime.isHintExpanded) { APP.State.ENGINE.runtime.isHintExpanded = false; APP.UI.setClassState(hintTopHalf, 'hidden', true); APP.UI.setClassState(hintTopHalf, 'flex', false); APP.UI.setInlineStyle(hintBtn, 'height', '2.5rem'); APP.UI.setInlineStyle(hintBtn, 'marginTop', '0'); } } updateHintLabel(); APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
+        document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
         APP.UI.bindAll('.editor-input', 'input', () => {
             APP.Editor.markEditorInputsDirty();
             APP.Editor.applyMetricsFromUI();
@@ -4744,8 +4673,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const solveResult = await APP.Solver.runGameSolver('hint');
                 if (solveResult?.reason === 'already-running') return;
             } catch (err) {
-                console.error('Hint failed:', err);
-                APP.UI.showMessage(`Hint failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
+                console.error('Solve failed:', err);
+                APP.UI.showMessage(`Solve failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
             }
         };

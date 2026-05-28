@@ -6,6 +6,13 @@
 //   - installSolver(APP), which installs APP.Solver on the host's APP namespace.
 // The IIFE wrapped by installSolver is identical to the original inline IIFE.
 
+    // Canonical per-stage solve time budget. The audit/direct harness
+    // (scripts/run-solver-direct.mjs, run by .github/workflows/audit-export.yml)
+    // passes this as timeBudgetMs, and the UI Solve entry point must pass the same
+    // value so a UI-invoked solve reproduces the audited result exactly. Single-source
+    // this here so the two paths can never drift again.
+    const CANONICAL_SOLVE_TIME_BUDGET_MS = 180000;
+
     const compactDefined = (obj = {}) => {
         const out = {};
         Object.entries(obj).forEach(([key, value]) => {
@@ -17888,7 +17895,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 const solverResult = await runUnifiedSolverFlow(solveInputLevel, {
                     purpose,
                     escalationTier: requestedTier,
-                    executionMode: 'referee-with-compat-profiles',
+                    // Match the audit/direct harness option set exactly (see
+                    // scripts/run-solver-direct.mjs): the same canonical time budget,
+                    // debug, and allowReferee. executionMode is intentionally NOT set
+                    // here — buildUnifiedSolveInvocationOptions derives it identically
+                    // for both paths, so the UI never pins a stale mode string.
+                    timeBudgetMs: CANONICAL_SOLVE_TIME_BUDGET_MS,
+                    debug: true,
+                    allowReferee: true,
                     resetAttemptHistory: 'level',
                     onAttemptStart: ({ attempt, index, total, elapsedBeforeMs, totalMaxMs }) => {
                         const attemptType = purpose === 'hint' ? 'Hint' : 'Solve';
@@ -19000,6 +19014,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
 }
 
 export {
+    CANONICAL_SOLVE_TIME_BUDGET_MS,
     compactDefined,
     deriveHeuristicFeatureFlags,
     HEURISTIC_FEATURE_FLAGS_SAFE_DEFAULTS,
