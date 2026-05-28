@@ -13446,19 +13446,23 @@ function installSolver(APP) {
                     const portalInvolvedRun = (Number(profile?.portalCommitment) || 0) > 0 || depth0PruneBreakdown.portalAutomatonActive === true;
                     const timeoutImprovement = previousTimeoutTelemetry
                         ? {
-                            nodesPerSecondDelta: quality.nodesPerSecond - previousTimeoutTelemetry.nodesPerSecond,
                             frontierQualityDelta: quality.frontierQuality - previousTimeoutTelemetry.frontierQuality,
                             maxProgressDelta: quality.maxProgress - previousTimeoutTelemetry.maxProgress,
-                            nodesPerSecondImproved: quality.nodesPerSecond > (previousTimeoutTelemetry.nodesPerSecond * 1.03),
                             frontierImproved: quality.frontierQuality > (previousTimeoutTelemetry.frontierQuality + 0.015),
                             maxProgressImproved: quality.maxProgress > (previousTimeoutTelemetry.maxProgress + 0.02)
                         }
                         : null;
+                    // "Did this retry improve on the last?" is judged ONLY by work-domain signals
+                    // (frontier quality, max progress). The former nodes-per-second axis divided
+                    // node count by REAL elapsed time, so the same attempt could read as
+                    // "improved" or not depending on CPU speed — making escalation/family-switch
+                    // decisions (and therefore the whole solve) non-deterministic. Wall-clock
+                    // throughput has no meaning under the work-based search budget, so it is gone.
                     const timeoutMaterialProgress = !timeoutProne
                         ? true
                         : !timeoutImprovement
                             ? true
-                            : !!(timeoutImprovement.nodesPerSecondImproved || timeoutImprovement.frontierImproved || timeoutImprovement.maxProgressImproved);
+                            : !!(timeoutImprovement.frontierImproved || timeoutImprovement.maxProgressImproved);
                     if (timeoutProne) {
                         consecutiveTimeoutStagnation = timeoutMaterialProgress ? 0 : (consecutiveTimeoutStagnation + 1);
                     } else {
@@ -14634,8 +14638,9 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         && !forceNoveltyDiversification
                         && noveltyImproved
                         && !noveltyBelowThreshold);
+                    // Stagnation is judged on work-domain signals only; nodes-per-REAL-second was
+                    // dropped because it made this decision CPU-speed-dependent (non-deterministic).
                     const telemetryStagnation = !!(previousTelemetry
-                        && !(quality.nodesPerSecond > (previousTelemetry.nodesPerSecond * 1.03))
                         && !(quality.frontierQuality > (previousTelemetry.frontierQuality + 0.015))
                         && !(quality.maxProgress > ((previousTelemetry.maxProgress || 0) + 0.02)));
                     const adaptation = adaptNextAttempt(currentAttemptEntry, nextAttempt, {
@@ -16674,9 +16679,11 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
 
             const shouldSwitchFamilyByTelemetryDelta = (current = {}, prior = {}) => {
                 if (!current || !prior) return false;
-                const nodesPerSecondImproved = Number(current.nodesPerSecond) > (Number(prior.nodesPerSecond) * 1.03);
+                // Work-domain only: the former nodes-per-REAL-second axis made this family-switch
+                // decision depend on wall-clock speed, i.e. non-deterministic. Frontier quality
+                // (a deterministic function of the search) is the reproducible improvement signal.
                 const frontierImproved = Number(current.frontierQuality) > (Number(prior.frontierQuality) + 0.015);
-                return !(nodesPerSecondImproved || frontierImproved);
+                return !(frontierImproved);
             };
 
             const extractAttemptQualityMetrics = (attemptLike = {}) => {
