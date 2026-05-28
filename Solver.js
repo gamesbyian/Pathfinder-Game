@@ -5208,7 +5208,6 @@ function installSolver(APP) {
                     const adaptationState = {
                         startedObjectives: Math.max(0, this._objectiveRemainingCount(state, l)),
                         lastNodes: 0,
-                        lastTelemetryAtMs: searchNow(),
                         lastProgress: 0,
                         lastBranchFactor: null,
                         currentProfile: {
@@ -5248,9 +5247,13 @@ function installSolver(APP) {
                         const memoHitSaturation = Math.max(0, Math.min(1, ((Number(debugStats?.memoHits) || 0) + (Number(debugStats?.dominanceMemoHits) || 0)) / memoChecks));
                         const phaseDerived = phaseInfo || this._deriveSolverPhase(state, state.path[state.path.length - 1], l, distMap);
                         const progress = Math.max(0, Math.min(1, Number(phaseDerived?.progressRatio) || 0));
-                        const nowMs = searchNow();
-                        const telemetryDtMs = Math.max(1, nowMs - (adaptationState.lastTelemetryAtMs || nowMs));
-                        const expansionVelocity = Math.max(0, (nodesExpanded - (adaptationState.lastNodes || 0)) / telemetryDtMs);
+                        // Node expenditure since the last telemetry window. Wall-time
+                        // "velocity" (nodes/ms) is meaningless under the deterministic search
+                        // clock: virtual ms advances in lockstep with node count, so velocity
+                        // is the constant 1/vmsPerNode and carried no signal. The work-domain
+                        // quantity that actually distinguishes a churning search from an idle
+                        // one is how many nodes it expanded this window.
+                        const expansionWorkDelta = Math.max(0, nodesExpanded - (adaptationState.lastNodes || 0));
                         const progressDelta = Math.max(0, progress - (adaptationState.lastProgress || 0));
                         const remainingObjectives = Math.max(0, Number(phaseDerived?.remainingObjectives) || 0);
                         const objectiveReductionRate = (adaptationState.startedObjectives - remainingObjectives) / Math.max(1, nodesExpanded);
@@ -5274,7 +5277,7 @@ function installSolver(APP) {
                         const triggerMemoOverfit = memoHitSaturation > 0.72 && objectiveReductionRate < 0.0008;
                         const triggerPortalThrash = portalLockStability < 0.45;
                         const triggerSwitchOrdering = branchFactor < 0.32 && branchFactorTrend < -0.06;
-                        const triggerHighVelocityPlateau = expansionVelocity > 0.08 && progressDelta < 0.012 && progress > 0.35;
+                        const triggerHighVelocityPlateau = expansionWorkDelta >= 64 && progressDelta < 0.012 && progress > 0.35;
                         if (triggerLowExpansion || triggerMemoOverfit || triggerPortalThrash || triggerSwitchOrdering || triggerHighVelocityPlateau) {
                             adaptationState.highVelocityPlateauStreak = triggerHighVelocityPlateau
                                 ? (adaptationState.highVelocityPlateauStreak + 1)
@@ -5323,7 +5326,7 @@ function installSolver(APP) {
                                     memoHitSaturation: Number(memoHitSaturation.toFixed(3)),
                                     objectiveReductionRate: Number(objectiveReductionRate.toFixed(5)),
                                     portalLockStability: Number(portalLockStability.toFixed(3)),
-                                    expansionVelocity: Number(expansionVelocity.toFixed(4)),
+                                    expansionWorkDelta,
                                     progressDelta: Number(progressDelta.toFixed(4))
                                 },
                                 profile: nextProfile
@@ -5341,7 +5344,7 @@ function installSolver(APP) {
                                     memoHitSaturation: Number(memoHitSaturation.toFixed(3)),
                                     objectiveReductionRate: Number(objectiveReductionRate.toFixed(5)),
                                     portalLockStability: Number(portalLockStability.toFixed(3)),
-                                    expansionVelocity: Number(expansionVelocity.toFixed(4)),
+                                    expansionWorkDelta,
                                     progressDelta: Number(progressDelta.toFixed(4))
                                 }
                             });
@@ -5367,7 +5370,6 @@ function installSolver(APP) {
                         adaptationState.pendingGuardrail = null;
                         }
                         adaptationState.lastNodes = nodesExpanded;
-                        adaptationState.lastTelemetryAtMs = nowMs;
                         adaptationState.lastProgress = progress;
                         adaptationState.lastBranchFactor = branchFactor;
                     };
@@ -5728,33 +5730,14 @@ function installSolver(APP) {
                         maybeEmitAdaptiveTelemetry(phaseDerived);
                         if (debugStats && realLen > debugStats.maxDepth) debugStats.maxDepth = realLen;
                         captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l });
-                        // Plateau velocity-collapse early abort: detects exponential stall pattern (e.g. Level 134)
-                        // Fires when node expansion rate collapses to <4% of initial rate after >=6 samples and >3s elapsed
-                        if (debugStats && Array.isArray(debugStats.progressSamples) && debugStats.progressSamples.length >= 6) {
-                            const _ps = debugStats.progressSamples;
-                            const _tLast = _ps[_ps.length - 1].tMs;
-                            if (_tLast > 3000) {
-                                const _s0 = _ps[0], _s1 = _ps[1];
-                                const _sPrev = _ps[_ps.length - 2], _sLast = _ps[_ps.length - 1];
-                                const _rate0 = Math.max(0, _s1.nodesExpanded - _s0.nodesExpanded) / Math.max(1, _s1.tMs - _s0.tMs);
-                                const _rateLast = Math.max(0, _sLast.nodesExpanded - _sPrev.nodesExpanded) / Math.max(1, _sLast.tMs - _sPrev.tMs);
-                                if (_rate0 > 10 && _rateLast / _rate0 < 0.04) {
-                                    debugStats.plateauEarlyAbortTriggered = true;
-                                    debugStats.forceFamilySwitchNextAttempt = true;
-                                    debugStats.forceFamilySwitchReason = 'plateau-velocity-collapse';
-                                    captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
-                                    snapshotTimeoutFrontierDiagnostics(debugStats, stack);
-                                    recordPhaseAttempt('timeout');
-                                    debugStats.rootFamiliesAttemptedBeforeTimeout = rootDiversificationAttemptedFamilies.size;
-                                    debugStats.rootFamiliesStarved = Math.max(0, rootDiversificationPendingFamilies.size);
-                                    debugStats.depth0FamilyCoverageEnforced = true;
-                                    debugStats.depth0FamilyCount = rootDiversificationFamilyCount;
-                                    debugStats.depth0FamilyCoverageSelections = rootFamilyCoverageGuaranteedSelections;
-                                    debugStats.depth0FamilyRepeatSelections = rootFamilyRepeatSelectionsAtDepth0;
-                                    return SOLVER_TIMEOUT;
-                                }
-                            }
-                        }
+                        // (Removed) Plateau velocity-collapse early abort. It fired when node
+                        // expansion *rate* (nodes per wall-ms) collapsed to <4% of its initial
+                        // value — a measure of per-node wall-clock cost exploding. Under the
+                        // work-based search clock that rate is constant by construction (virtual
+                        // ms advance with node count), so the signal has no deterministic analog,
+                        // and the wall-clock variant reintroduced the exact run-to-run divergence
+                        // the clock removed. The deterministic node budget already bounds wasted
+                        // work, so the abort was dropped rather than translated.
                         if (realLen > l.reqLen) {
                             if (debugStats) debugStats.prune.lenOverflow++;
                             this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
@@ -11984,7 +11967,7 @@ function installSolver(APP) {
                     .map(ev => ({
                         atNodes: Number(ev?.atNodes) || 0,
                         branchFactor: Number(ev.telemetry.branchFactor),
-                        expansionVelocity: Number(ev.telemetry.expansionVelocity) || null,
+                        expansionWorkDelta: Number(ev.telemetry.expansionWorkDelta) || null,
                         progressDelta: Number(ev.telemetry.progressDelta) || null
                     }));
                 const pickSnapshot = (idx) => telemetryPoints.length > 0 ? telemetryPoints[Math.max(0, Math.min(telemetryPoints.length - 1, idx))] : null;
@@ -14774,17 +14757,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         };
                     }
                     if (timeoutProne && nextAttempt) {
-                        if (attemptResult?.debug?.forceFamilySwitchNextAttempt) {
-                            const plateauSwitch = forceEscalationNoveltyDiversification(nextAttempt, nextAttempt?.policyProfile || attempt?.policyProfile);
-                            if (plateauSwitch) {
-                                nextAttempt.forcedFamilySwitch = true;
-                                nextAttempt.escalationReason = attemptResult?.debug?.forceFamilySwitchReason || 'plateau-velocity-collapse';
-                            }
-                            if (currentAttemptEntry) {
-                                currentAttemptEntry.plateauEarlyAbortTriggered = true;
-                                currentAttemptEntry.nextAttemptReason = nextAttempt.escalationReason;
-                            }
-                        }
                         const diversifiedRegistration = diversifyAndRegisterAttempt(nextAttempt, {
                             timeoutLikeAttemptsSoFar,
                             timeoutEscalationTier,
@@ -18256,7 +18228,11 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             };
             const captureProgressSample = ({ debugStats = null, state = null, stack = null, startTimeMs = null, level = null, force = false } = {}) => {
                 if (!debugStats || !state || !Array.isArray(stack)) return;
-                const now = Date.now();
+                // Sample on the deterministic search clock, not wall time. startTimeMs is a
+                // searchNow() value, so reading Date.now() here produced a mixed-unit tMs
+                // (real now minus virtual start) and a CPU-dependent sample cadence — both
+                // sources of the run-to-run divergence the work-based clock exists to remove.
+                const now = searchNow();
                 const samples = Array.isArray(debugStats.progressSamples) ? debugStats.progressSamples : [];
                 const lastSample = samples[samples.length - 1] || null;
                 if (!force && lastSample && (now - Number(debugStats._nextProgressSampleAt || 0)) < 0) return;
