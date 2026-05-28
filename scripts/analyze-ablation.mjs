@@ -418,6 +418,40 @@ function analyzeOverhead() {
   };
 }
 
+// ─── Section 6b: Archetype pass efficiency ────────────────────────────────────
+function analyzeArchetypeEfficiency() {
+  if (!baseline || !variantData['disable-archetype']) return null;
+
+  const disableArchetype = variantData['disable-archetype'];
+  const rows = [];
+
+  for (const baseLevel of (baseline.levels || []).filter(l => l.ok)) {
+    const firstSolving = baseLevel.firstSolvingAttempt || '';
+    if (!firstSolving.startsWith('archetype')) continue;
+
+    const disabledLevel = (disableArchetype.levels || []).find(l => l.level === baseLevel.level);
+    if (!disabledLevel) continue;
+
+    const baseMs = baseLevel.elapsedMs || 0;
+    const disabledMs = disabledLevel.elapsedMs || 0;
+    const speedup = baseMs > 0 && disabledMs > 0 ? baseMs / disabledMs : null;
+    const archEssential = !disabledLevel.ok;
+
+    rows.push({
+      level: baseLevel.level,
+      archetypeAttempt: firstSolving,
+      baseMs,
+      disabledMs,
+      disabledSolvingTech: disabledLevel.firstSolvingAttempt || null,
+      disabledStatus: disabledLevel.status,
+      archEssential,
+      speedup, // >1 means archetype is SLOWER than no-archetype
+    });
+  }
+
+  return rows.sort((a, b) => (b.speedup || 0) - (a.speedup || 0));
+}
+
 // ─── Section 7: Per-feature breakdown ────────────────────────────────────────
 function analyzeByFeature() {
   if (!baseline) return null;
@@ -452,6 +486,7 @@ function analyzeByFeature() {
 
 // ─── Run all analyses ─────────────────────────────────────────────────────────
 const baselineAnalysis = analyzeBaseline();
+const archetypeEfficiencyAnalysis = analyzeArchetypeEfficiency();
 const disableOneAnalysis = analyzeDisableOne();
 const soloAnalysis = analyzeSolo();
 const budgetSweepAnalysis = analyzeBudgetSweep();
@@ -487,6 +522,29 @@ if (baselineAnalysis) {
   for (const t of baselineAnalysis.techDistribution) {
     row(`  ${t.tech.padEnd(42)} ${String(t.count).padStart(6)}  ${t.avgOverheadMs}ms`);
   }
+}
+
+// ── Archetype pass efficiency ─────────────────────────────────────────────────
+if (archetypeEfficiencyAnalysis && archetypeEfficiencyAnalysis.length > 0) {
+  h2('ARCHETYPE PASS EFFICIENCY');
+  row(`For each level solved by an archetype pass in baseline:`);
+  row(`Does removing the archetype make it faster, slower, or impossible?`);
+  blank();
+  row(`  ${'Level'.padEnd(8)} ${'Archetype'.padEnd(48)} ${'Base'.padEnd(8)} ${'NoArch'.padEnd(10)} ${'Ratio'.padEnd(8)} Essential`);
+  row(`  ${'─'.repeat(92)}`);
+  for (const r of archetypeEfficiencyAnalysis) {
+    const noArchStr = r.archEssential ? 'FAIL' : (r.disabledMs ? r.disabledMs + 'ms' : '?');
+    const ratioStr = r.archEssential ? '∞' : (r.speedup != null ? r.speedup.toFixed(2) + '×' : '?');
+    const note = r.archEssential ? 'YES — fails without'
+               : (r.speedup && r.speedup > 1.5) ? `NO  — ${(r.speedup).toFixed(1)}× slower`
+               : 'NO  — similar speed';
+    row(`  L${String(r.level).padEnd(6)} ${(r.archetypeAttempt || '?').padEnd(48)} ${(r.baseMs+'ms').padEnd(8)} ${noArchStr.padEnd(10)} ${ratioStr.padEnd(8)} ${note}`);
+  }
+  const essential = archetypeEfficiencyAnalysis.filter(r => r.archEssential);
+  const inefficient = archetypeEfficiencyAnalysis.filter(r => !r.archEssential && r.speedup && r.speedup > 1.5);
+  blank();
+  if (essential.length > 0) row(`  Essential (would fail without archetype): L${essential.map(r => r.level).join(', L')}`);
+  if (inefficient.length > 0) row(`  Inefficient (archetype slower than fallback at this budget): L${inefficient.map(r => r.level).join(', L')}`);
 }
 
 // ── Disable-one analysis ──────────────────────────────────────────────────────
