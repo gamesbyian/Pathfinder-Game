@@ -1877,5 +1877,42 @@
       },
       "outputFile": "disable-archetype.json"
     }
+  ],
+  "completedAt": "2026-05-29T06:50:15.699Z",
+  "totalElapsedMs": 3013558,
+  "completedVariants": [
+    {
+      "variantId": "disable-structural-modern",
+      "outputFile": "disable-structural-modern.json",
+      "summary": {
+        "solved": 140,
+        "failed": 0,
+        "errors": 0,
+        "total": 140,
+        "totalMs": 690776
+      }
+    },
+    {
+      "variantId": "disable-template",
+      "outputFile": "disable-template.json",
+      "summary": {
+        "solved": 139,
+        "failed": 1,
+        "errors": 0,
+        "total": 140,
+        "totalMs": 679201
+      }
+    },
+    {
+      "variantId": "disable-archetype",
+      "outputFile": "disable-archetype.json",
+      "summary": {
+        "solved": 139,
+        "failed": 1,
+        "errors": 0,
+        "total": 140,
+        "totalMs": 1643572
+      }
+    }
   ]
 }
