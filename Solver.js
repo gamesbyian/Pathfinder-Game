@@ -18051,10 +18051,19 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 }
                 APP.Solver.stopHintAnimation();
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
-                const solveInputLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
+                // Denormalize → re-normalize via normalizeRawLevelForSolver so the UI
+                // Solve button uses identical level preparation to the direct script:
+                // fresh Maps built in Solver.js's own realm, portal data rebuilt from
+                // raw coords. This avoids the deepCloneLevel → canonicalCloneLevel path
+                // which can produce collections from the host page's realm that the
+                // solver's portal-family analysis may not handle correctly.
+                const rawLevelSnapshot = APP.LevelUtils.denormalizeLevel(activeLevel);
+                const levelNumber = Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null;
                 const requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
-                const solverResult = await runUnifiedSolverFlow(solveInputLevel, {
+                const solverResult = await runUnifiedSolverFlow(rawLevelSnapshot, {
                     purpose,
+                    source: 'raw',
+                    levelNumber,
                     escalationTier: requestedTier,
                     // Match the audit/direct harness option set exactly (see
                     // scripts/run-solver-direct.mjs): the same canonical time budget,
@@ -18099,7 +18108,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 solverResult.solution = canonical;
                 solverResult.solutions = canonical;
                 const normalizedEntries = solverResult.ok ? canonical : [];
-                const validationLevel = APP.LevelUtils.deepCloneLevel(activeLevel);
+                const validationLevel = normalizeRawLevelForSolver(rawLevelSnapshot, levelNumber);
                 const validEntries = [];
                 normalizedEntries.forEach((entry) => {
                     const validation = APP.Solver.validateCandidatePath(validationLevel, entry.path);
