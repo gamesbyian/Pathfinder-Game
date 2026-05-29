@@ -293,7 +293,7 @@ function installSolver(APP) {
     // Pass `extra` to override computed fields (timeLimit, startTime, startGateArchetype) and inject
     // per-pass experiment overrides. All other keys are read directly from the options object so a new
     // option only needs to be added here — not also in every internalOpts construction site.
-    function assembleSolverCoreOpts(opts, extra = {}) {
+    function toCoreSolveOptions(opts, extra = {}) {
         return {
             timeLimit:                          opts.localTimeLimit ?? opts.timeLimit,
             startTime:                          opts.startTime,
@@ -337,6 +337,73 @@ function installSolver(APP) {
             memoStrictness:                     opts.memoStrictness ?? null,
             ...extra,
         };
+    }
+
+    // Merges all option sources into the canonical options object passed to PathfinderSolver.solve.
+    // Priority: experimentOverrides > attemptOptions > baseOptions > hardcoded defaults.
+    // The `defaults` bag carries pre-computed values from runAttempt's closure context
+    // (hasPortalBounds, orderingPolicy, etc.) that don't fit the merge hierarchy.
+    function normalizeSolveAttemptOptions({ baseOptions, attemptOptions, experimentOverrides, defaults, overrides }) {
+        const exp = experimentOverrides || {};
+        const base = baseOptions || {};
+        const attempt = attemptOptions || {};
+        const def = defaults || {};
+        const result = {
+            timeLimit:                          def.attemptBudgetMs,
+            debug:                              true,
+            debugLevel:                         def.debugLevel ?? null,
+            dirOrderVariant:                    exp.dirOrderVariant
+                                                    || ((base.dirOrderVariant === 'alt' || (base.dirOrderVariant === 'random' && def.randomExplorationEnabled))
+                                                        ? base.dirOrderVariant
+                                                        : 'default'),
+            portalBiasMode:                     attempt.portalBiasMode || base.portalBiasMode || 'adaptiveMustCross',
+            scoringMode:                        attempt.scoringMode || 'modern',
+            structuralMode:                     !!attempt.structuralMode,
+            phasePolicy:                        attempt.phasePolicy || base.phasePolicy || null,
+            structuralTemplate:                 attempt.structuralTemplate || null,
+            objectiveTrack:                     attempt.objectiveTrack || null,
+            templateCommitment:                 attempt.templateCommitment || null,
+            portalLockPolicy:                   attempt.portalLockPolicy || null,
+            knotBudgetPolicy:                   attempt.knotBudgetPolicy || null,
+            macroSkeleton:                      attempt.macroSkeleton || null,
+            regionCrossingModel:                attempt.regionCrossingModel || null,
+            orderingPolicy:                     def.orderingPolicy,
+            startGateArchetype:                 def.startGateArchetype,
+            commitmentPlan:                     attempt.commitmentPlan || null,
+            memoStrictness:                     Number(attempt.memoStrictness) || 1,
+            disabledPrunes:                     def.attemptDisabledPrunes || [],
+            heuristicFeatureFlags:              def.heuristicFeatureFlags,
+            featureSignature:                   def.featureSignature,
+            controlPlane:                       def.controlPlane,
+            enableLowExpansionProbe:            !!(attempt.enableLowExpansionProbe || base.enableLowExpansionProbe),
+            contradictionRecoveryMode:          def.contradictionRecoveryMode,
+            assertKnownSolvableBounds:          def.hasPortalBounds,
+            forbidPortals:                      def.attemptForbidPortals,
+            suppressPerimeterBias:              !!base.suppressPerimeterBias,
+            rootExpansionFloorCount:            def.rootExpansionFloorCount,
+            forceRootExpansionFloor:            def.forceRootExpansionFloor,
+            relaxRootSuppressionFirstLayer:     def.relaxRootSuppressionFirstLayer,
+            endgameIDAStarEnabled:              !!attempt.endgameIDAStarEnabled,
+            endgameIDAStarTriggerDepthRatio:    Number.isFinite(Number(attempt.endgameIDAStarTriggerDepthRatio)) ? Number(attempt.endgameIDAStarTriggerDepthRatio) : 0.85,
+            endgameIDAStarBoundCeiling:         Number.isFinite(Number(attempt.endgameIDAStarBoundCeiling)) ? Number(attempt.endgameIDAStarBoundCeiling) : 20,
+            endgameIDAStarBudgetFraction:       Number.isFinite(Number(attempt.endgameIDAStarBudgetFraction)) ? Number(attempt.endgameIDAStarBudgetFraction) : 0.5,
+            portalTriage:                       base.portalTriage || null,
+            forbiddenPrefixes:                  Array.isArray(attempt.forbiddenPrefixes) ? attempt.forbiddenPrefixes : null,
+            // forbiddenFirstMoves dual-channel: hintLadderState is the reliable path (audit 47); opts.forbiddenFirstMoves is backup.
+            forbiddenFirstMoves:                Array.isArray(base.hintLadderState?.forbiddenFirstMoves)
+                                                    ? base.hintLadderState.forbiddenFirstMoves.filter(Number.isFinite)
+                                                    : (Array.isArray(base.forbiddenFirstMoves)
+                                                        ? base.forbiddenFirstMoves.filter(Number.isFinite)
+                                                        : null),
+            useUnifiedHKBound:                  !!attempt.useUnifiedHKBound,
+            rootTieSeed:                        Number.isFinite(attempt.rootTieSeed)
+                                                    ? attempt.rootTieSeed
+                                                    : ((typeof attempt.label === 'string' ? attempt.label.length : 0) + ((Number(attempt.attemptOrdinal) || 0) * 17)),
+            rootTieProfile:                     attempt.rootTieProfile || base.rootTieProfile || 'stable',
+            rootDiversityTelemetry:             def.rootDiversityTelemetry || null,
+        };
+        if (overrides) Object.assign(result, overrides);
+        return result;
     }
 
     // ─── AttemptDiversifier helpers (pure, module-level) ────────────────────────
@@ -7024,7 +7091,7 @@ function installSolver(APP) {
                                 if (_expOv?.dirOrderVariant) _expInj.dirOrderVariant = _expOv.dirOrderVariant;
                                 if (Number.isFinite(_expOv?.rootTieSeedOffset)) _expInj.rootTieSeed = _expOv.rootTieSeedOffset >>> 0;
                             }
-                            const internalOpts = assembleSolverCoreOpts(options, {
+                            const internalOpts = toCoreSolveOptions(options, {
                                 timeLimit: localTimeLimit,
                                 startTime,
                                 startGateArchetype: state?.startGateArchetype || null,
@@ -12001,6 +12068,7 @@ function installSolver(APP) {
 
         async runBaselineStage(level, budgetMs, opts = {}) {
             const started = Date.now();
+            const self = this;
             const profile = opts.profile || level?.solverProfile || null;
             const controlPlane = opts.controlPlane || this.createControlPlane(profile || {});
             const sharedHintLadderState = opts?.hintLadderState && typeof opts.hintLadderState === 'object'
@@ -12578,83 +12646,35 @@ function installSolver(APP) {
                 const solveLevel = (attemptOpts.blockPortalEntryCells && attemptForbidPortals && level?.portalMap instanceof Map && level.portalMap.size > 0)
                     ? Object.assign(Object.create(level), { blockSet: new Set([...level.blockSet, ...level.portalMap.keys()]) })
                     : level;
-                const r = await PathfinderSolver.solve(solveLevel, {
-                    timeLimit: attemptBudgetMs,
-                    debug: true,
-                    debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                    dirOrderVariant: __experimentOverrides.dirOrderVariant
-                        ? __experimentOverrides.dirOrderVariant
-                        : ((opts.dirOrderVariant === 'alt' || (opts.dirOrderVariant === 'random' && randomExplorationEnabled))
-                            ? opts.dirOrderVariant
-                            : 'default'),
-                    portalBiasMode: attemptOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
-                    scoringMode: attemptOpts.scoringMode || 'modern',
-                    structuralMode: !!attemptOpts.structuralMode,
-                    phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
-                    structuralTemplate: attemptOpts.structuralTemplate || null,
-                    objectiveTrack: attemptOpts.objectiveTrack || null,
-                    templateCommitment: attemptOpts.templateCommitment || null,
-                    portalLockPolicy: attemptOpts.portalLockPolicy || null,
-                    knotBudgetPolicy: attemptOpts.knotBudgetPolicy || null,
-                    macroSkeleton: attemptOpts.macroSkeleton || null,
-                    regionCrossingModel: attemptOpts.regionCrossingModel || null,
-                    orderingPolicy,
-                    startGateArchetype,
-                    commitmentPlan: attemptOpts.commitmentPlan || null,
-                    memoStrictness: Number(attemptOpts.memoStrictness) || 1,
-                    disabledPrunes: attemptDisabledPrunes,
-                    heuristicFeatureFlags,
-                    featureSignature,
-                    controlPlane,
-                    enableLowExpansionProbe: !!(attemptOpts.enableLowExpansionProbe || opts.enableLowExpansionProbe),
-                    contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
-                    assertKnownSolvableBounds: hasPortalBounds,
-                    forbidPortals: attemptForbidPortals,
-                    suppressPerimeterBias: !!opts.suppressPerimeterBias,
-                    rootExpansionFloorCount,
-                    forceRootExpansionFloor,
-                    relaxRootSuppressionFirstLayer,
-                    endgameIDAStarEnabled: !!attemptOpts.endgameIDAStarEnabled,
-                    endgameIDAStarTriggerDepthRatio: Number.isFinite(Number(attemptOpts.endgameIDAStarTriggerDepthRatio))
-                        ? Number(attemptOpts.endgameIDAStarTriggerDepthRatio)
-                        : 0.85,
-                    endgameIDAStarBoundCeiling: Number.isFinite(Number(attemptOpts.endgameIDAStarBoundCeiling))
-                        ? Number(attemptOpts.endgameIDAStarBoundCeiling)
-                        : 20,
-                    endgameIDAStarBudgetFraction: Number.isFinite(Number(attemptOpts.endgameIDAStarBudgetFraction))
-                        ? Number(attemptOpts.endgameIDAStarBudgetFraction)
-                        : 0.5,
-                    portalTriage: opts.portalTriage || null,
-                    forbiddenPrefixes: Array.isArray(attemptOpts.forbiddenPrefixes) ? attemptOpts.forbiddenPrefixes : null,
-                    // Forbidden first-move set: per-ladder-iteration hard refusal of cell
-                    // keys at depth 0. Two channels:
-                    //  - opts.forbiddenFirstMoves: direct option passed down through
-                    //    the Referee.solve cascade. Reliable when every cascade run-
-                    //    callback explicitly includes it (which they don't — there are
-                    //    9 call sites and propagating to each is brittle).
-                    //  - opts.hintLadderState.forbiddenFirstMoves: piggybacked on
-                    //    hintLadderState, which IS already plumbed through every
-                    //    cascade path (audit 47 evidence: hintLadderState reaches all
-                    //    9 runBaselinePolicySweep call sites). This is the reliable
-                    //    channel; the direct opts is kept as a backup.
-                    forbiddenFirstMoves: Array.isArray(opts.hintLadderState?.forbiddenFirstMoves)
-                        ? opts.hintLadderState.forbiddenFirstMoves.filter(Number.isFinite)
-                        : (Array.isArray(opts.forbiddenFirstMoves)
-                            ? opts.forbiddenFirstMoves.filter(Number.isFinite)
-                            : null),
-                    useUnifiedHKBound: !!attemptOpts.useUnifiedHKBound,
-                    rootTieSeed: Number.isFinite(attemptOpts.rootTieSeed)
-                        ? attemptOpts.rootTieSeed
-                        : ((typeof attemptOpts.label === 'string' ? attemptOpts.label.length : 0) + ((Number(attemptOpts.attemptOrdinal) || 0) * 17)),
-                    rootTieProfile: attemptOpts.rootTieProfile || opts.rootTieProfile || 'stable',
-                    rootDiversityTelemetry: {
-                        timeoutLikeAttemptsRecent: recentTimeoutTelemetry.length,
-                        timeoutStagnationCount: consecutiveTimeoutStagnation,
-                        timeoutEscalationTier: Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : timeoutEscalationTier,
-                        maxRecentRootExpanded: recentTimeoutTelemetry.reduce((m, entry) => Math.max(m, Math.max(0, Number(entry?.rootCandidatesExpanded) || 0)), 0),
-                        maxRecentRootGenerated: recentTimeoutTelemetry.reduce((m, entry) => Math.max(m, Math.max(0, Number(entry?.rootCandidatesGenerated) || 0)), 0)
-                    }
-                });
+                const r = await PathfinderSolver.solve(solveLevel, normalizeSolveAttemptOptions({
+                    baseOptions: opts,
+                    attemptOptions: attemptOpts,
+                    experimentOverrides: __experimentOverrides,
+                    defaults: {
+                        attemptBudgetMs,
+                        debugLevel: typeof level.id === 'number' ? level.id + 1 : null,
+                        randomExplorationEnabled,
+                        orderingPolicy,
+                        startGateArchetype,
+                        attemptDisabledPrunes,
+                        heuristicFeatureFlags,
+                        featureSignature,
+                        controlPlane,
+                        hasPortalBounds,
+                        attemptForbidPortals,
+                        contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
+                        rootExpansionFloorCount,
+                        forceRootExpansionFloor,
+                        relaxRootSuppressionFirstLayer,
+                        rootDiversityTelemetry: {
+                            timeoutLikeAttemptsRecent: recentTimeoutTelemetry.length,
+                            timeoutStagnationCount: consecutiveTimeoutStagnation,
+                            timeoutEscalationTier: Number.isFinite(attemptOpts?.timeoutEscalationTier) ? attemptOpts.timeoutEscalationTier : timeoutEscalationTier,
+                            maxRecentRootExpanded: recentTimeoutTelemetry.reduce((m, e) => Math.max(m, Math.max(0, Number(e?.rootCandidatesExpanded) || 0)), 0),
+                            maxRecentRootGenerated: recentTimeoutTelemetry.reduce((m, e) => Math.max(m, Math.max(0, Number(e?.rootCandidatesGenerated) || 0)), 0),
+                        },
+                    },
+                }));
                 const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
                 const debug = r?.debug || {};
                 debug.primaryArchetype = profile?.hypothesisModel?.primaryArchetype || controlPlane?.activeHypothesis?.archetype || profile?.archetype || null;
@@ -12691,22 +12711,28 @@ function installSolver(APP) {
                 const contradictionGuard = this.buildContradictionGuard(level, debug, searchDiagnostics, attemptOpts);
                 if (contradictionGuard.triggered) {
                     debug.contradictionGuard = contradictionGuard;
-                    const guarded = await PathfinderSolver.solve(level, {
-                        timeLimit: contradictionGuard.guardBudgetMs,
-                        debug: true,
-                        debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                        disabledPrunes: contradictionGuard.protectedPrunesDisabled,
-                        portalBiasMode: 'off',
-                        scoringMode: attemptOpts.scoringMode || 'modern',
-                        structuralMode: !!attemptOpts.structuralMode,
-                        phasePolicy: attemptOpts.phasePolicy || opts.phasePolicy || null,
-                        structuralTemplate: attemptOpts.structuralTemplate || null,
-                        objectiveTrack: attemptOpts.objectiveTrack || null,
-                        controlPlane,
-                        contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
-                        assertKnownSolvableBounds: hasPortalBounds,
-                        forbidPortals: attemptForbidPortals
-                    });
+                    const guarded = await PathfinderSolver.solve(level, normalizeSolveAttemptOptions({
+                        baseOptions: opts,
+                        attemptOptions: { ...attemptOpts, portalBiasMode: 'off' },
+                        experimentOverrides: __experimentOverrides,
+                        defaults: {
+                            attemptBudgetMs: contradictionGuard.guardBudgetMs,
+                            debugLevel: typeof level.id === 'number' ? level.id + 1 : null,
+                            randomExplorationEnabled,
+                            orderingPolicy,
+                            startGateArchetype,
+                            attemptDisabledPrunes: contradictionGuard.protectedPrunesDisabled,
+                            heuristicFeatureFlags,
+                            featureSignature,
+                            controlPlane,
+                            hasPortalBounds,
+                            attemptForbidPortals,
+                            contradictionRecoveryMode: !!(attemptOpts.contradictionRecovery || opts.contradictionRecovery || autoContradictionRecoveryArmed),
+                            rootExpansionFloorCount,
+                            forceRootExpansionFloor,
+                            relaxRootSuppressionFirstLayer,
+                        },
+                    }));
                     const guardedSolution = normalizeSolutionEntries(guarded?.solution ?? guarded?.solutions ?? []);
                     const guardedDebug = guarded?.debug || {};
                     guardedDebug.contradictionGuard = contradictionGuard;
@@ -12869,9 +12895,34 @@ function installSolver(APP) {
                 : (Number.isFinite(Number(level?.levelId))
                     ? Number(level.levelId)
                     : (Number.isFinite(Number(level?.level)) ? Number(level.level) : 0));
-            for (let i = 0; i < attempts.length; i++) {
-                const attempt = attempts[i];
-                attempt.attemptOrdinal = i + 1;
+            // ── Subsystem factory definitions ─────────────────────────────────────────
+            // Each factory closes over runBaselineStage's local state. The implicit-closure
+            // channel makes them read as self-contained modules without a `shared`-bag parameter.
+            // `self` aliases `this` for stable access across async closures.
+
+            const createAttemptPlan = () => {
+                let idx = -1;
+                return {
+                    get currentIndex() { return idx; },
+                    get nextAttempt() { return attempts[idx + 1] ?? null; },
+                    insert(a) { attempts.splice(idx + 1, 0, a); },
+                    push(a) { attempts.push(a); },
+                    [Symbol.iterator]() {
+                        idx = -1;
+                        return {
+                            next() {
+                                idx++;
+                                if (idx >= attempts.length) return { done: true, value: undefined };
+                                return { value: attempts[idx], done: false };
+                            },
+                        };
+                    },
+                };
+            };
+
+            const createAttemptRegistry = () => ({
+                register(attempt) {
+                attempt.attemptOrdinal = attemptPlan.currentIndex + 1;
                 // Segment 1 identity stamp: freeze profile identity once, regardless of later mid-run oscillation.
                 // originalPolicyProfile / policyProfileId / policyConfigHash survive strategy switches so diversity
                 // metrics can be tied to the profile the attempt was provisioned with.
@@ -12922,7 +12973,7 @@ function installSolver(APP) {
                         attemptSignatureTuple: attempt?.attemptSignatureTuple || executionRegistration.tuple || null,
                         duplicateAttemptSignature: true
                     });
-                    continue;
+                    return { allowed: false, reason: executionRegistration.reason || 'duplicate-signature' };
                 }
                 // When every completed warmup attempt scored below the abort threshold, skip
                 // remaining warmup passes — they explore the same hypothesis with the same budget
@@ -12931,12 +12982,12 @@ function installSolver(APP) {
                 // the existing bestTemplateScore < 0.2 guard immediately below.
                 if (attempt.templatePhase === 'warmup' && skipRemainingTemplateWarmups) {
                     templateDiagnostics.reallocatedBudgetMs += attempt.budgetMs;
-                    continue;
+                    return { allowed: false, reason: 'warmup-skipped' };
                 }
                 if (attempt.label === 'template-best-focus') {
                     if (!bestTemplate || bestTemplateScore < 0.2) {
                         templateDiagnostics.reallocatedBudgetMs += attempt.budgetMs;
-                        continue;
+                        return { allowed: false, reason: 'template-focus-no-best' };
                     }
                     attempt.structuralTemplate = bestTemplate;
                     attempt.portalBiasMode = bestTemplate?.weightOverrides?.portalBiasMode || attempt.portalBiasMode;
@@ -13007,8 +13058,8 @@ function installSolver(APP) {
                 // Guarded for APP.UI presence so this still works in non-browser invocations.
                 try {
                     if (typeof APP !== 'undefined' && APP?.UI?.setSolverDetailText) {
-                        const totalAttempts = Array.isArray(attempts) ? attempts.length : null;
-                        const attemptNo = i + 1;
+                        const totalAttempts = attempts.length;
+                        const attemptNo = attemptPlan.currentIndex + 1;
                         const lbl = typeof attempt.label === 'string' && attempt.label ? attempt.label : `attempt ${attemptNo}`;
                         const totalStr = Number.isFinite(totalAttempts) ? `/${totalAttempts}` : '';
                         const budgetStr = Number.isFinite(attempt.budgetMs) ? ` · ${(attempt.budgetMs / 1000).toFixed(1)}s` : '';
@@ -13017,12 +13068,27 @@ function installSolver(APP) {
                 } catch (_) { /* UI not available in non-browser; ignore */ }
                 // Yield a macrotask before launching the attempt so the modal detail line
                 // can repaint before runAttempt's heavy synchronous work begins.
-                if (i > 0) await new Promise(resolve => setTimeout(resolve, 0));
-                const attemptResult = await runAttempt(attempt.budgetMs, attempt);
+                return { allowed: true };
+                },
+            });
+
+            const createAttemptRunner = () => ({
+                async run(attempt) {
+                    return runAttempt(attempt.budgetMs, attempt);
+                },
+            });
+
+            const createAttemptTelemetry = () => {
+                let _lastQuality = null;
+                return {
+                    record(attempt, result) {
+                        const i = attemptPlan.currentIndex;
+                        const attemptResult = result;
                 const quality = getSearchQuality(attemptResult);
+                _lastQuality = quality;
                 const attemptInstrumentation = buildAttemptInstrumentation(attemptResult, quality);
                 const templateScore = templatePerfScore(quality, attemptResult);
-                this.updateHypothesisConfidence(controlPlane, {
+                self.updateHypothesisConfidence(controlPlane, {
                     phaseProgress: quality.maxProgress,
                     objectiveReduction: Number.isFinite(quality.finalObjectives) ? Math.max(0, 1 - (quality.finalObjectives / Math.max(1, profile?.objectiveCount || 1))) : 0,
                     portalLockStability: attemptResult?.debug?.portalOscillationCount ? Math.max(0, 1 - Math.min(1, attemptResult.debug.portalOscillationCount / 4)) : 0.5,
@@ -13293,8 +13359,7 @@ function installSolver(APP) {
                 }
                 if (attemptResult.ok) {
                     const elapsedMs = Date.now() - started;
-                    persistHintLadderState();
-                    return {
+                    return {  // solved: main loop calls persistHintLadderState() before returning
                         ok: true,
                         status: 'solved',
                         solution: attemptResult.solution,
@@ -13311,7 +13376,19 @@ function installSolver(APP) {
                     };
                 }
                 lastAttempt = attemptResult;
-                if (i + 1 < attempts.length) {
+                return null;
+                    },
+                    get lastQuality() { return _lastQuality; },
+                };
+            };
+
+            const createRetryPlanner = () => ({
+                planNext(attempt, result) {
+                    const i = attemptPlan.currentIndex;
+                    const attemptResult = result;
+                    const quality = telemetry.lastQuality;
+                if (i + 1 >= attempts.length) return;  // no next attempt
+                {
                     const nextAttempt = attempts[i + 1];
                     const currentAttemptEntry = attemptsUsed[attemptsUsed.length - 1] || null;
                     let switchedThisAttempt = false;
@@ -13377,7 +13454,7 @@ function installSolver(APP) {
                             retryFingerprintDupes,
                             retryFingerprintMatchedPrior: matchedPrior?.entry?.label || null
                         });
-                        continue;
+                        return;
                     }
                     const timeoutLikeAttemptsSoFar = attemptsUsed.reduce((count, usedAttempt) => {
                         return count + (['timeout', 'no-solution-inconclusive'].includes(usedAttempt?.status) ? 1 : 0);
@@ -13545,10 +13622,10 @@ function installSolver(APP) {
                                 const cur = q[qi++];
                                 if (cur.k === goalKey) return cur.path.slice();
                                 if (cur.depth >= maxDepth) continue;
-                                const neigh = this._neighborMap?.[cur.k];
+                                const neigh = self._neighborMap?.[cur.k];
                                 const nextKeys = [];
                                 if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
-                                const portals = this._portalAdj?.[cur.k];
+                                const portals = self._portalAdj?.[cur.k];
                                 if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
                                 for (const nk of nextKeys) {
                                     let remMustPass = cur.remMustPass;
@@ -13579,9 +13656,9 @@ function installSolver(APP) {
                             for (let i = 0; i < route.length - 1; i++) {
                                 const a = route[i];
                                 const b = route[i + 1];
-                                const neigh = this._neighborMap?.[a];
+                                const neigh = self._neighborMap?.[a];
                                 const walkOk = Array.isArray(neigh) && neigh.includes(b);
-                                const portals = this._portalAdj?.[a];
+                                const portals = self._portalAdj?.[a];
                                 const portalOk = Array.isArray(portals) && portals.some(p => Number.isFinite(p?.dest) && p.dest === b);
                                 if (portalOk) portalEdges++;
                                 if (walkOk || portalOk) reachableEdges++;
@@ -13624,9 +13701,9 @@ function installSolver(APP) {
                                     if (cur.k === endKey) return cur.path;
                                     if (cur.d >= maxDepth) continue;
                                     const next = [];
-                                    const neigh = this._neighborMap?.[cur.k];
+                                    const neigh = self._neighborMap?.[cur.k];
                                     if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) next.push(nk);
-                                    const portals = this._portalAdj?.[cur.k];
+                                    const portals = self._portalAdj?.[cur.k];
                                     if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) next.push(p.dest);
                                     for (const nk of next) {
                                         if (seen.has(nk)) continue;
@@ -13659,9 +13736,9 @@ function installSolver(APP) {
                             for (let i = 0; i < route.length - 1; i++) {
                                 const a = route[i];
                                 const b = route[i + 1];
-                                const neigh = this._neighborMap?.[a];
+                                const neigh = self._neighborMap?.[a];
                                 const walkOk = Array.isArray(neigh) && neigh.includes(b);
-                                const portals = this._portalAdj?.[a];
+                                const portals = self._portalAdj?.[a];
                                 const portalOk = Array.isArray(portals) && portals.some(p => Number.isFinite(p?.dest) && p.dest === b);
                                 if (!(walkOk || portalOk)) disconnectedEdges++;
                                 if (mustPassSet.has(b) && remMustPass > 0) remMustPass--;
@@ -13693,9 +13770,9 @@ function installSolver(APP) {
                                     if (cur.k === endKey) return cur.path;
                                     if (cur.depth >= maxLocalDepth) continue;
                                     const nextKeys = [];
-                                    const neigh = this._neighborMap?.[cur.k];
+                                    const neigh = self._neighborMap?.[cur.k];
                                     if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
-                                    const portals = this._portalAdj?.[cur.k];
+                                    const portals = self._portalAdj?.[cur.k];
                                     if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
                                     for (const nk of nextKeys) {
                                         if (seen.has(nk)) continue;
@@ -13708,13 +13785,13 @@ function installSolver(APP) {
                             for (let i = 0; i < route.length - 1; i++) {
                                 const a = route[i];
                                 const b = route[i + 1];
-                                const neigh = this._neighborMap?.[a];
+                                const neigh = self._neighborMap?.[a];
                                 const walkOk = Array.isArray(neigh) && neigh.includes(b);
-                                const portals = this._portalAdj?.[a];
+                                const portals = self._portalAdj?.[a];
                                 const portalOk = Array.isArray(portals) && portals.some(p => Number.isFinite(p?.dest) && p.dest === b);
                                 if (walkOk || portalOk) {
                                     repaired.push(b);
-                                    continue;
+                                    return;
                                 }
                                 if (repairsUsed >= maxRepairs) return null;
                                 const patch = buildLocalPatch(a, b);
@@ -13740,10 +13817,10 @@ function installSolver(APP) {
                                     const cur = q[idx++];
                                     if (!reverseByKey.has(cur.k) || cur.depth < reverseByKey.get(cur.k)) reverseByKey.set(cur.k, cur.depth);
                                     if (cur.depth >= maxReverseDepth) continue;
-                                    const neigh = this._neighborMap?.[cur.k];
+                                    const neigh = self._neighborMap?.[cur.k];
                                     const nextKeys = [];
                                     if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
-                                    const portals = this._portalAdj?.[cur.k];
+                                    const portals = self._portalAdj?.[cur.k];
                                     if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
                                     for (const nk of nextKeys) {
                                         const ns = `${nk}:${1 - cur.parity}`;
@@ -13967,7 +14044,7 @@ function installSolver(APP) {
                                         currentAttemptEntry.mitmConnectorAccepted = false;
                                         currentAttemptEntry.mitmConnectorFailureReason = connectorAttempt?.mitmConnectorValidation?.reason || 'low-connector-quality';
                                     }
-                                    continue;
+                                    return;
                                 }
                                 connectorAttempt.mitmConnectorAccepted = true;
                                 connectorAttempt.mitmConnectorMode = 'bridge_committed';
@@ -14097,7 +14174,7 @@ function installSolver(APP) {
 const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         && (nodesExpanded === 0 || maxDepthReached === 0);
                     if (zeroExpansionTimeoutGuard) {
-                        const forcedCycle = this._switchAttemptStrategyFamily(nextAttempt, {
+                        const forcedCycle = self._switchAttemptStrategyFamily(nextAttempt, {
                             constraintDeficit: quality.constraintDeficit,
                             remainingMustPass: quality.remainingMustPass,
                             remainingMustCross: quality.remainingMustCross,
@@ -14114,7 +14191,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                             currentAttemptEntry.switchedFrom = forcedCycle?.from || currentAttemptEntry.switchedFrom || null;
                             currentAttemptEntry.switchedTo = forcedCycle?.to || currentAttemptEntry.switchedTo || nextAttempt.policyProfile || null;
                         }
-                        continue;
+                        return;
                     }
                     if (lowExpansionDetected) {
                         const recoveryLabel = `${nextAttempt.label || 'attempt'}-low-expansion-recovery`;
@@ -14175,7 +14252,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                             currentAttemptEntry.lowExpansionRecoveryDuplicateSkipped = recoveryExists;
                             currentAttemptEntry.consecutiveLowExpansionDetections = consecutiveLowExpansionDetections;
                         }
-                        continue;
+                        return;
                     }
                     const recentTimeoutAttempts = attemptsUsed
                         .filter(entry => ['timeout', 'no-solution-inconclusive'].includes(entry?.status))
@@ -14491,7 +14568,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                                 bestLowerBound: attemptResult.debug.timeoutDiagnostics.bestLowerBoundToValidSolution
                             };
                         }
-                        continue;
+                        return;
                     }
                     if (nearSolutionFloodDetected && !nextAttempt) {
                         const rescueAttempt = configureNearClosureRescueAttempt({
@@ -14578,7 +14655,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                                 currentAttemptEntry.nextAttemptInserted = true;
                                 if (rescueForced) currentAttemptEntry.nearClosureRescueForced = true;
                             }
-                            continue;
+                            return;
                         }
                         if (currentAttemptEntry) {
                             currentAttemptEntry.nextAttemptInserted = false;
@@ -14620,7 +14697,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                             currentAttemptEntry.nextAttemptReason = 'must-cross-schedule-rescue';
                             currentAttemptEntry.mustCrossScheduleRescueDetected = true;
                         }
-                        continue;
+                        return;
                     }
                     if (broadStagnationDetected && nextAttempt) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
@@ -14652,7 +14729,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                             };
                             currentAttemptEntry.nextAttemptInserted = currentAttemptEntry.nextAttemptInserted === true ? true : null;
                         }
-                        continue;
+                        return;
                     }
                     // Note: a similarly-named local in detectRapidCollapseSignature uses a stricter
                     // threshold (>=120 nodes, no expansion signal) and gates the fallback-rescue
@@ -14831,7 +14908,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                                 currentAttemptEntry.nextAttemptBlockedReason = diversifiedRegistration?.reason || 'duplicate-signature-after-diversification';
                                 currentAttemptEntry.nextAttemptDuplicateSignature = true;
                             }
-                            continue;
+                            return;
                         }
                     }
                     if (currentAttemptEntry && nextAttempt) {
@@ -14839,10 +14916,37 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         currentAttemptEntry.nextAttemptReason = currentAttemptEntry.nextAttemptReason || (switchedThisAttempt ? 'strategy-family-switch' : 'advance-ladder');
                     }
                 }
+                },
+            });
+
+            const createStopPolicy = () => ({
+                shouldStop(result, quality) {
+                    const i = attemptPlan.currentIndex;
+                    const attemptResult = result;
                 if (!attemptResult.ok && quality.maxProgress < 0.22) {
-                    this.maybeSwitchHypothesis(controlPlane, 'low-progress');
+                    self.maybeSwitchHypothesis(controlPlane, 'low-progress');
                 }
-                if (shouldStopAfterAttempt(attemptResult, quality, i, attempts.length)) break;
+                return shouldStopAfterAttempt(attemptResult, quality, i, attempts.length);
+                },
+            });
+
+            const attemptPlan     = createAttemptPlan();
+            const attemptRegistry = createAttemptRegistry();
+            const attemptRunner   = createAttemptRunner();
+            const telemetry       = createAttemptTelemetry();
+            const retryPlanner    = createRetryPlanner();
+            const stopPolicy      = createStopPolicy();
+
+            // ── Main execution loop ────────────────────────────────────────────────────
+            for (const attempt of attemptPlan) {
+                const registration = attemptRegistry.register(attempt);
+                if (!registration.allowed) continue;
+                await new Promise(r => setTimeout(r, 0));
+                const result = await attemptRunner.run(attempt);
+                const solvedResult = telemetry.record(attempt, result);
+                if (solvedResult) { persistHintLadderState(); return solvedResult; }
+                retryPlanner.planNext(attempt, result);
+                if (stopPolicy.shouldStop(result, telemetry.lastQuality)) break;
             }
 
             const elapsedMs = Date.now() - started;
