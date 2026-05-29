@@ -88,6 +88,11 @@ for (const v of (manifest.completedVariants || manifest.variants || [])) {
   const data = await loadJson(path.join(inputDir, file));
   if (data) variantData[v.variantId || v.id] = data;
 }
+// Also load baseline.json directly if present but not listed in manifest (e.g. separate baseline run)
+if (!variantData['baseline']) {
+  const base = await loadJson(path.join(inputDir, 'baseline.json'));
+  if (base) variantData['baseline'] = base;
+}
 
 const allVariantIds = Object.keys(variantData);
 console.log(`Loaded ${allVariantIds.length} variant(s) from ${inputDir}`);
