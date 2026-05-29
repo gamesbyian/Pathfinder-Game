@@ -1,7 +1,7 @@
 {
   "experiment": "disable-one",
-  "timestamp": "2026-05-29T05:50:11.012Z",
-  "commitSha": "305bfadaccbca41f5c4ba449a971c6762cd03161",
+  "timestamp": "2026-05-29T06:00:02.140Z",
+  "commitSha": "1014a4546a48d67d21f8f3006f75594b27f1eaba",
   "budgetMs": 180000,
   "purpose": "hint",
   "levelCount": 140,
@@ -1836,39 +1836,9 @@
       "desc": "Primary structural search (modern scoring, perimeterSweep profile)"
     },
     {
-      "id": "structural-conservative",
-      "prefix": "structural-conservative",
-      "desc": "Conservative structural pass (harvestThenFinish, no portals)"
-    },
-    {
       "id": "template",
       "prefix": "template",
       "desc": "Template-guided warmup passes (template-0/1/2 + template-best-focus)"
-    },
-    {
-      "id": "portal-optional-modern",
-      "prefix": "portal-optional-modern-no-portal",
-      "desc": "Portal-optional modern (portal-eligible levels, no portals)"
-    },
-    {
-      "id": "portal-optional-endurance",
-      "prefix": "portal-optional-endurance-no-portal",
-      "desc": "Portal-optional endurance/knotBuilder (no portals)"
-    },
-    {
-      "id": "portal-optional-perimeter",
-      "prefix": "portal-optional-perimeter-no-portal",
-      "desc": "Portal-optional perimeter sweep (open boards, openness ≥ 0.52)"
-    },
-    {
-      "id": "must-cross-horizon",
-      "prefix": "must-cross-horizon",
-      "desc": "Must-cross early visitation (mustCrossFirst profile, endurance scoring)"
-    },
-    {
-      "id": "endurance-longpath",
-      "prefix": "endurance-longpath",
-      "desc": "Endurance longpath (portal-heavy / ≥3 objectives)"
     },
     {
       "id": "archetype",
@@ -1888,16 +1858,6 @@
       "outputFile": "disable-structural-modern.json"
     },
     {
-      "id": "disable-structural-conservative",
-      "desc": "Disable: Conservative structural pass (harvestThenFinish, no portals)",
-      "config": {
-        "disabledAttemptLabels": [
-          "structural-conservative"
-        ]
-      },
-      "outputFile": "disable-structural-conservative.json"
-    },
-    {
       "id": "disable-template",
       "desc": "Disable: Template-guided warmup passes (template-0/1/2 + template-best-focus)",
       "config": {
@@ -1906,56 +1866,6 @@
         ]
       },
       "outputFile": "disable-template.json"
-    },
-    {
-      "id": "disable-portal-optional-modern",
-      "desc": "Disable: Portal-optional modern (portal-eligible levels, no portals)",
-      "config": {
-        "disabledAttemptLabels": [
-          "portal-optional-modern-no-portal"
-        ]
-      },
-      "outputFile": "disable-portal-optional-modern.json"
-    },
-    {
-      "id": "disable-portal-optional-endurance",
-      "desc": "Disable: Portal-optional endurance/knotBuilder (no portals)",
-      "config": {
-        "disabledAttemptLabels": [
-          "portal-optional-endurance-no-portal"
-        ]
-      },
-      "outputFile": "disable-portal-optional-endurance.json"
-    },
-    {
-      "id": "disable-portal-optional-perimeter",
-      "desc": "Disable: Portal-optional perimeter sweep (open boards, openness ≥ 0.52)",
-      "config": {
-        "disabledAttemptLabels": [
-          "portal-optional-perimeter-no-portal"
-        ]
-      },
-      "outputFile": "disable-portal-optional-perimeter.json"
-    },
-    {
-      "id": "disable-must-cross-horizon",
-      "desc": "Disable: Must-cross early visitation (mustCrossFirst profile, endurance scoring)",
-      "config": {
-        "disabledAttemptLabels": [
-          "must-cross-horizon"
-        ]
-      },
-      "outputFile": "disable-must-cross-horizon.json"
-    },
-    {
-      "id": "disable-endurance-longpath",
-      "desc": "Disable: Endurance longpath (portal-heavy / ≥3 objectives)",
-      "config": {
-        "disabledAttemptLabels": [
-          "endurance-longpath"
-        ]
-      },
-      "outputFile": "disable-endurance-longpath.json"
     },
     {
       "id": "disable-archetype",
