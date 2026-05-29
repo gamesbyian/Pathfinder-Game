@@ -209,7 +209,7 @@ async function runVariant(variantId, desc, branchControls, levelNumbers, rawLeve
   const results = [];
   let solved = 0, failed = 0;
   for (const n of levelNumbers) {
-    const raw = rawLevels.find(r => r.id === n || r.level === n || r.number === n);
+    const raw = rawLevels[n - 1];
     if (!raw) { console.warn(`  L${n} not found, skipping`); continue; }
     const r = await solveLevel(n, raw, branchControls);
     results.push(r);
