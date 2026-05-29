@@ -3515,6 +3515,8 @@
                 if (src?.portalMap?.forEach) src.portalMap.forEach((v, k) => clone.portalMap.set(k, v && typeof v === 'object' ? { dest: v.dest } : v));
                 if (src?.filterMap?.forEach) src.filterMap.forEach((axis, k) => clone.filterMap.set(k, axis));
                 if (src?.flippingFilterMap?.forEach) src.flippingFilterMap.forEach((axis, k) => clone.flippingFilterMap.set(k, axis));
+                clone.portalVisuals = Array.isArray(src?.portalVisuals) ? src.portalVisuals.map(pv => ({ k1: pv.k1, k2: pv.k2, ...(pv.color != null ? { color: pv.color } : {}) })) : [];
+                clone.hasParityBreaker = !!src?.hasParityBreaker;
                 if (includeHints) clone.hints = Array.isArray(src?.hints) ? src.hints.map(h => Array.isArray(h) ? h.slice() : h) : [];
                 return clone;
             }
