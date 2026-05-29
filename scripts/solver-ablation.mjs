@@ -316,6 +316,10 @@ async function solveLevel(levelNumber, raw, variantConfig) {
     debug: true,
     allowReferee: true,
     resetAttemptHistory: 'level',
+    // Thread the wall cap into the solver so the DFS self-terminates via realCeilingMs
+    // when a single attempt runs long, rather than relying solely on Promise.race which
+    // can only fire at await boundaries between attempts.
+    wallCeilingMs: maxLevelWallMs,
     ...(experimentOverrides ? { experimentOverrides } : {}),
   };
 
@@ -357,6 +361,8 @@ async function solveLevel(levelNumber, raw, variantConfig) {
       scoringMode: a.scoringMode || null,
       status: a.status || null,
       nodesExpanded: Number.isFinite(a.quality?.nodesExpanded) ? a.quality.nodesExpanded : null,
+      timeoutEscalationTier: Number.isFinite(a.timeoutEscalationTier) ? a.timeoutEscalationTier : 0,
+      safetyValveApplied: a.__safetyValveApplied === true ? true : undefined,
     }));
 
   // Derive solve-attribution fields
