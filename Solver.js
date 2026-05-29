@@ -2014,6 +2014,10 @@ function installSolver(APP) {
                 _gridIndexFromKey(key, cols) {
                     return ((key >> 16) * cols) + (key & 0xFFFF);
                 },
+                // Increment a debug telemetry counter. No-op when debugStats is null/undefined.
+                _incStat(debugStats, key, delta = 1) {
+                    if (debugStats) debugStats[key] = (debugStats[key] || 0) + delta;
+                },
                 _createSearchContext(l) {
                     const cols = l.grid.w;
                     const keyCount = l.grid.w * l.grid.h;
@@ -3671,6 +3675,9 @@ function installSolver(APP) {
                             scoreDrivers.push({ feature, value: Number((value || 0).toFixed(3)), contribution: Number(contribution.toFixed(3)) });
                         };
                         const pw = (key, floor = 0.25) => Math.max(floor, policyProfile[key] || 1);
+                        // ── Scoring component 1: Obligation projection ────────────────────────────
+                        // Compute projected must-pass/must-cross/intersection counts after moving to nk.
+                        // Results feed every subsequent component; no score mutations here.
                         const mustIdx = l.mustPassIndex ? l.mustPassIndex.get(nk) : undefined;
                         if (mustIdx !== undefined) {
                             const bit = 1n << BigInt(mustIdx);
@@ -3698,7 +3705,7 @@ function installSolver(APP) {
                             if (currentCrossCount < 2) projectedCrossNeed = Math.max(0, crossNeed - 1);
                         }
                         if (depth === 0 && debugStats && projectedCrossNeed < crossNeed) {
-                            debugStats.mustCrossUnlockProgressEvents = (debugStats.mustCrossUnlockProgressEvents || 0) + 1;
+                            this._incStat(debugStats, 'mustCrossUnlockProgressEvents');
                         }
                         const obligationsSatisfiableInRemainingSteps = (remainingMustAfterMove + remainingIntsAfterMove + projectedCrossNeed) <= remainingStepsAfterMove;
                         const goalReadyAfterMove = obligationsSatisfiableInRemainingSteps
@@ -3749,7 +3756,7 @@ function installSolver(APP) {
                             const rCount = state.portal?.portalReentryCounts?.[committedFamily] || 0;
                             const canEscape = rCount >= 3 && Number.isFinite(state.portal?.portalLastProgressValue) && state.portal?.portalLastProgressValue > this._portalProgressValue(state);
                             if (!canEscape) {
-                                if (debugStats) debugStats.portalLockRejects = (debugStats.portalLockRejects || 0) + 1;
+                                this._incStat(debugStats, 'portalLockRejects');
                                 return { nk, score: 1000000 };
                             }
                         }
@@ -3761,13 +3768,13 @@ function installSolver(APP) {
                             const edgeNowCommit = Math.min(px, py, (l.grid.w - 1) - px, (l.grid.h - 1) - py);
                             const edgeNextCommit = Math.min(nxCommit, nyCommit, (l.grid.w - 1) - nxCommit, (l.grid.h - 1) - nyCommit);
                             if (c.prefersPerimeter && edgeNextCommit > edgeNowCommit + 1) {
-                                if (debugStats) debugStats.templateCommitRejects = (debugStats.templateCommitRejects || 0) + 1;
+                                this._incStat(debugStats, 'templateCommitRejects');
                                 return { nk, score: 1000000 };
                             }
                             if (c.prefersPortalBridge) {
                                 const mandatoryFamilies = Array.isArray(profile?.portalHints?.mandatoryFamilies) ? profile.portalHints.mandatoryFamilies : [];
                                 if (mandatoryFamilies.length > 0 && nextFamily >= 0 && !mandatoryFamilies.includes(nextFamily)) {
-                                    if (debugStats) debugStats.templateCommitRejects = (debugStats.templateCommitRejects || 0) + 1;
+                                    this._incStat(debugStats, 'templateCommitRejects');
                                     return { nk, score: 1000000 };
                                 }
                             }
@@ -3782,7 +3789,7 @@ function installSolver(APP) {
                         const earlyPortalWindow = (l.reqLen > 0 ? (nLen / l.reqLen) : 1) <= 0.55;
                         if (nextFamily >= 0 && mandatoryPortalFamiliesGlobal.length > 0 && earlyPortalWindow) {
                             if (!mandatoryPortalFamiliesGlobal.includes(nextFamily) && optionalPortalFamiliesGlobal.includes(nextFamily)) {
-                                if (debugStats) debugStats.portalLockRejects = (debugStats.portalLockRejects || 0) + 1;
+                                this._incStat(debugStats, 'portalLockRejects');
                                 return { nk, score: 1000000 };
                             }
                         }
@@ -3803,6 +3810,9 @@ function installSolver(APP) {
                             score += symmetryCommitted ? 74 : 36;
                         }
 
+                        // ── Scoring component 2: Geometry / distance / portal bias ───────────────
+                        // Primary score signal: distance to goal, portal opportunity, structural
+                        // template alignment, commitment window, near-closure rescue.
                         if (scoringProfile === 'endurance') {
                             score -= (mustBound === Infinity ? 100000 : mustBound * 6);
                             score -= (crossBound === Infinity ? 100000 : crossBound * 6);
@@ -4020,7 +4030,7 @@ function installSolver(APP) {
                                 const nextObjectiveDist = activeObjectiveDistMap.get(nk) ?? Infinity;
                                 const pullScale = Math.max(0.2, phaseProfile.objectivePull || 1);
                                 if (Array.isArray(state.objectiveTrackKeys) && state.objectiveTrackKeys.length > 0 && Number.isFinite(activeObjectiveCurDist) && Number.isFinite(nextObjectiveDist) && nextObjectiveDist > activeObjectiveCurDist && objectiveTrackStrictness > 0.6) {
-                                    if (debugStats) debugStats.objectiveTrackRejects = (debugStats.objectiveTrackRejects || 0) + 1;
+                                    this._incStat(debugStats, 'objectiveTrackRejects');
                                     return { nk, score: 1000000 };
                                 }
                                 if (Number.isFinite(activeObjectiveCurDist) && Number.isFinite(nextObjectiveDist)) {
@@ -4260,7 +4270,7 @@ function installSolver(APP) {
                             && !l.mustCrossKeys.length;
 
                         if (shouldEnforceNonKnotCap && projectedNonKnotIntersections > state.nonKnotCrossCap) {
-                            if (debugStats) debugStats.knotBudgetRejects = (debugStats.knotBudgetRejects || 0) + 1;
+                            this._incStat(debugStats, 'knotBudgetRejects');
                             return { nk, score: 1000000 };
                         }
 
@@ -4273,11 +4283,11 @@ function installSolver(APP) {
                             const nextZone = Math.max(0, searchCtx.keyToIdx(nk) % zoneCount);
                             if (nextZone !== curZone && crossNeed >= zoneMin + 1) {
                                 score += zonePenaltyWeight;
-                                if (debugStats && state.path.length < 14) debugStats.regionCrossPenaltyHits = (debugStats.regionCrossPenaltyHits || 0) + 1;
+                                if (state.path.length < 14) this._incStat(debugStats, 'regionCrossPenaltyHits');
                             }
                             if (crossNeed >= Math.max(2, zoneMin) && !nextInKnot) {
                                 score += knotRetentionWeight;
-                                if (debugStats && state.path.length < 14) debugStats.regionKnotRetentionPenaltyHits = (debugStats.regionKnotRetentionPenaltyHits || 0) + 1;
+                                if (state.path.length < 14) this._incStat(debugStats, 'regionKnotRetentionPenaltyHits');
                             }
                         }
 
@@ -4327,6 +4337,10 @@ function installSolver(APP) {
                             if (projectedRevisit && !nextInKnot) score += 14;
                         }
 
+                        // ── Scoring component 3: Anti-dither penalties ───────────────────────────
+                        // Penalize local oscillation, inward drift, and early goal approach.
+                        // Each penalty is gated and records a debugStats hit for telemetry.
+
                         // Targeted cohort heuristic: postpone reversible filter churn unless it unlocks hard constraints.
                         if (heuristicFeatureFlags.hasFlippingFilters && l.flippingFilterMap?.has(nk) && !state.crossedFlippers?.has(nk)) {
                             const flipperDistToGoal = distMap.get(nk) ?? Infinity;
@@ -4360,7 +4374,7 @@ function installSolver(APP) {
                                 if (productiveAmbiguity) inwardPenalty = Math.floor(inwardPenalty * 0.4);
                                 else if (goalAggressive && !objectiveImproved) inwardPenalty += 8;
                                 score += inwardPenalty;
-                                if (debugStats) debugStats.ditherPenaltyHits = (debugStats.ditherPenaltyHits || 0) + 1;
+                                this._incStat(debugStats, 'ditherPenaltyHits');
                             }
                         }
 
@@ -4372,7 +4386,7 @@ function installSolver(APP) {
                             if (productiveAmbiguity) oscPenalty = Math.floor(oscPenalty * 0.45);
                             if (activePhase === 'finish') oscPenalty = Math.floor(oscPenalty * 0.35);
                             score += oscPenalty;
-                            if (debugStats) debugStats.ditherPenaltyHits = (debugStats.ditherPenaltyHits || 0) + 1;
+                            this._incStat(debugStats, 'ditherPenaltyHits');
                         }
 
                         // Anti-dither 3: avoid approaching near-goal basin too early when obligations remain.
@@ -4381,7 +4395,7 @@ function installSolver(APP) {
                             if (activePhase === 'finish') earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.2 * Math.max(0.25, 2 - (pw('finishCommitmentWeight', 0))));
                             else if (productiveAmbiguity && objectiveImproved) earlyGoalPenalty = Math.floor(earlyGoalPenalty * 0.5);
                             score += earlyGoalPenalty;
-                            if (debugStats) debugStats.earlyGoalApproachBlocked = (debugStats.earlyGoalApproachBlocked || 0) + 1;
+                            this._incStat(debugStats, 'earlyGoalApproachBlocked');
                         }
                         if (nLen >= l.reqLen && !goalReadyAfterMove) {
                             const unresolvedPenalty = 240 + (remainingMustAfterMove * 110) + (remainingIntsAfterMove * 90) + (projectedCrossNeed * 80);
@@ -4423,6 +4437,9 @@ function installSolver(APP) {
                     const revisitContribution = (suppressAntiDither || intersectionsStillNeeded) ? 0 : (usageFreq.get(nk) || 0) * pw('revisitPenaltyWeight');
                     score += revisitContribution;
                     pushDriver('revisitPenalty', usageFreq.get(nk) || 0, revisitContribution);
+                    // ── Scoring component 4: EES closer (closure-focal-lex mode only) ────────
+                    // Lexicographic obligation-residual tiebreaker. Magnitude (1e8/1e7/1e6)
+                    // dominates all additive score so obligations sort before geometry.
                     if (options?.scoringMode === 'closure-focal-lex') {
                         // EES (Explicit Estimation Search) closer: lexicographic obligation-residual
                         // ordering. Magnitudes (1e8/1e7/1e6) dominate the ±~1000 additive score so
