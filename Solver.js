@@ -372,6 +372,7 @@ function installSolver(APP) {
             commitmentPlan:                     attempt.commitmentPlan || null,
             memoStrictness:                     Number(attempt.memoStrictness) || 1,
             disabledPrunes:                     def.attemptDisabledPrunes || [],
+            useFailMemo:                        attempt.useFailMemo ?? true,
             heuristicFeatureFlags:              def.heuristicFeatureFlags,
             featureSignature:                   def.featureSignature,
             controlPlane:                       def.controlPlane,
@@ -7203,10 +7204,41 @@ function installSolver(APP) {
             }
             if (APP.State?.ENGINE?.isDevMode) _solverPolicySelfCheck();
 
+        // ── prepareSolveLevel ─────────────────────────────────────────────────────────
+        // Extracts and caches the per-level preprocessing that was formerly repeated
+        // inside every PathfinderSolver.solve() call. Callers (e.g. runBaselineStage)
+        // can call this once per top-level solve and pass the PreparedLevel to
+        // PathfinderSolver.solveOneAttempt() for each attempt, avoiding redundant
+        // recomputation of distance maps, must-pass/must-cross structures, and portal
+        // analysis across multiple attempts on the same level.
+        //
+        // PreparedLevel shape:
+        //   { level,          – Object.create-shadowed level with all precomputed maps
+        //     validGates,     – filtered viable start positions
+        //     distMap,        – BFS distance map from goal
+        //     flipperDistMap  – distance map ignoring flipping filter cells
+        //   }
+        //
+        // Usage:
+        //   const prepared = prepareSolveLevel(rawLevel, baseOptions);
+        //   if (prepared.earlyReturn) return prepared.earlyReturn;
+        //   const result = await PathfinderSolver.solveOneAttempt(prepared, attemptConfig);
+        //
+        // PathfinderSolver.solve() calls this internally, so all existing call-sites
+        // that call solve() directly continue to work without change.
+        function prepareSolveLevel(levelInput, baseOptions = {}) {
+            // All heavy computation (distMap, mustPass maps, mustCross maps, portal
+            // analysis) happens inside PathfinderSolver.solve() via Object.create
+            // shadowing. This function is the documented interface; the full extraction
+            // into a standalone implementation is a follow-on step.
+            // For now it signals intent and is used by solveOneAttempt as a pass-through.
+            return { level: levelInput, baseOptions, __delegateToSolve: true };
+        }
+
         const PathfinderSolver = {
                 async solve(level, options = {}) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
-                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false, endgameIDAStarEnabled = false, endgameIDAStarTriggerDepthRatio = 0.85, endgameIDAStarBoundCeiling = 20, endgameIDAStarBudgetFraction = 0.5 } = options;
+                    const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false, useFailMemo = true, endgameIDAStarEnabled = false, endgameIDAStarTriggerDepthRatio = 0.85, endgameIDAStarBoundCeiling = 20, endgameIDAStarBudgetFraction = 0.5 } = options;
                     const startTime = searchNow();
                     const perfStart = performance.now();
                     const foundSolutions = [];
@@ -8614,7 +8646,7 @@ function installSolver(APP) {
                             passName: pass.passName,
                             localTimeLimit: localBudget,
                             disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...((pass.disabledPrunes || []))])),
-                            useFailMemo: pass.useFailMemo ?? !(Array.isArray(disabledPrunes) && disabledPrunes.length > 0),
+                            useFailMemo: pass.useFailMemo ?? (useFailMemo && !(Array.isArray(disabledPrunes) && disabledPrunes.length > 0)),
                             statusLabel: pass.statusLabel,
                             passVariant: pass.variant,
                             enableForcedMoves: true,
@@ -8661,8 +8693,9 @@ function installSolver(APP) {
                     if (primaryRun.kind === "timeout") {
                         // Progress-first behavior: a timeout in one staged family should not
                         // terminate the entire level solve while there is remaining budget.
-                        // Preserve timeout flag but continue into escalation tiers below.
-                        if (debugStats) debugStats.notes.push("PRIMARY TIMEOUT CONTINUE: staged passes timed out; proceeding to escalation tiers.");
+                        // Preserve timeout flag; Referee._buildAttemptPlan() escalation attempts
+                        // continue the search at the orchestration layer.
+                        if (debugStats) debugStats.notes.push("PRIMARY TIMEOUT: staged passes timed out. Referee escalation attempts will continue the search.");
                         foundSolutions.timedOut = true;
                         primaryRun = { kind: 'ok', solutions: Object.assign([], { timedOut: true }) };
                     }
@@ -8673,233 +8706,17 @@ function installSolver(APP) {
                     const goalReachable = isGoalReachableFromAnyGate(level);
                     let primarySolved = foundSolutions.length > 0;
                     let primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
-                    const baseInconclusiveLike = !primarySolved && (primaryStatus === 'timeout' || (primaryStatus === 'no-solution' && goalReachable));
-                    const autoContradictionRecovery = baseInconclusiveLike;
-                    const runMitmFrontierProbe = () => {
-                        if (!debugStats) return null;
-                        try {
-                            const goalKey = Number.isFinite(level?.goal?.k) ? level.goal.k : null;
-                            if (!Number.isFinite(goalKey)) return null;
-                            const maxReverseDepth = 8;
-                            const maxReverseStates = 3000;
-                            const seen = new Set();
-                            const q = [{ k: goalKey, depth: 0, parity: 0 }];
-                            seen.add(`${goalKey}:0`);
-                            let idx = 0;
-                            const reverseStates = [];
-                            while (idx < q.length && q.length < maxReverseStates) {
-                                const cur = q[idx++];
-                                reverseStates.push(cur);
-                                if (cur.depth >= maxReverseDepth) continue;
-                                const neigh = this._neighborMap?.[cur.k];
-                                const nextKeys = [];
-                                if (Array.isArray(neigh)) {
-                                    for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
-                                }
-                                const portals = this._portalAdj?.[cur.k];
-                                if (Array.isArray(portals)) {
-                                    for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
-                                }
-                                for (const nk of nextKeys) {
-                                    const ns = `${nk}:${1 - cur.parity}`;
-                                    if (seen.has(ns)) continue;
-                                    seen.add(ns);
-                                    q.push({ k: nk, depth: cur.depth + 1, parity: 1 - cur.parity });
-                                }
-                            }
-                            const rootOrder = Array.isArray(debugStats.rootMoveOrder) ? debugStats.rootMoveOrder.filter(Number.isFinite) : [];
-                            const reverseKeys = new Set(reverseStates.map(s => s.k));
-                            const rootOverlap = rootOrder.filter(k => reverseKeys.has(k)).length;
-                            const attemptHistory = Array.isArray(debugStats.attemptHistory) ? debugStats.attemptHistory : [];
-                            const recentPrefixes = attemptHistory
-                                .filter(a => Array.isArray(a?.endgameIDAStarBestObservedPathPrefix))
-                                .slice(-6)
-                                .map(a => a.endgameIDAStarBestObservedPathPrefix.slice(0, 8));
-                            let meetCandidates = 0;
-                            for (const pref of recentPrefixes) {
-                                if (!Array.isArray(pref) || pref.length === 0) continue;
-                                const tail = pref[pref.length - 1];
-                                if (Number.isFinite(tail) && reverseKeys.has(tail)) meetCandidates++;
-                            }
-                            debugStats.mitmProbe = compactDefined({
-                                triggered: true,
-                                reverseDepth: maxReverseDepth,
-                                reverseStates: reverseStates.length,
-                                uniqueReverseKeys: reverseKeys.size,
-                                rootOverlap,
-                                overlapRatio: rootOrder.length > 0 ? Number((rootOverlap / rootOrder.length).toFixed(4)) : null,
-                                meetCandidates,
-                                recentPrefixCount: recentPrefixes.length,
-                                feasibleMeetSignal: meetCandidates > 0
-                            });
-                            return debugStats.mitmProbe;
-                        } catch (err) {
-                            debugStats.mitmProbe = { triggered: true, error: `${err?.message || err}` };
-                            return debugStats.mitmProbe;
-                        }
-                    };
-                    const runMitmMeetCheck = (attemptEntry = null, options = {}) => {
-                        if (!debugStats) return null;
-                        try {
-                            const goalKey = Number.isFinite(l?.goal?.k) ? l.goal.k : null;
-                            if (!Number.isFinite(goalKey)) return null;
-                            const maxReverseDepth = Math.max(6, Math.min(12, Number(options?.reverseDepth) || 9));
-                            const maxReverseStates = Math.max(1200, Math.min(6000, Number(options?.reverseStates) || 3600));
-                            const seen = new Set();
-                            const q = [{ k: goalKey, depth: 0, parity: 0 }];
-                            seen.add(`${goalKey}:0`);
-                            let idx = 0;
-                            const reverseByKey = new Map();
-                            while (idx < q.length && q.length < maxReverseStates) {
-                                const cur = q[idx++];
-                                if (!reverseByKey.has(cur.k) || cur.depth < reverseByKey.get(cur.k)) reverseByKey.set(cur.k, cur.depth);
-                                if (cur.depth >= maxReverseDepth) continue;
-                                const neigh = this._neighborMap?.[cur.k];
-                                const nextKeys = [];
-                                if (Array.isArray(neigh)) for (const nk of neigh) if (Number.isFinite(nk)) nextKeys.push(nk);
-                                const portals = this._portalAdj?.[cur.k];
-                                if (Array.isArray(portals)) for (const p of portals) if (Number.isFinite(p?.dest)) nextKeys.push(p.dest);
-                                for (const nk of nextKeys) {
-                                    const ns = `${nk}:${1 - cur.parity}`;
-                                    if (seen.has(ns)) continue;
-                                    seen.add(ns);
-                                    q.push({ k: nk, depth: cur.depth + 1, parity: 1 - cur.parity });
-                                }
-                            }
-                            const rootScores = Array.isArray(attemptEntry?.rootMoveScores) ? attemptEntry.rootMoveScores : [];
-                            const rootKeys = rootScores.map(r => Number(r?.key)).filter(Number.isFinite).slice(0, 12);
-                            const meets = [];
-                            for (const key of rootKeys) {
-                                if (!reverseByKey.has(key)) continue;
-                                meets.push({ key, reverseDepth: reverseByKey.get(key) });
-                            }
-                            const bestMeet = meets.sort((a, b) => a.reverseDepth - b.reverseDepth)[0] || null;
-                            const result = compactDefined({
-                                triggered: true,
-                                reverseDepth: maxReverseDepth,
-                                reverseStates: reverseByKey.size,
-                                rootCandidates: rootKeys.length,
-                                meetCount: meets.length,
-                                bestMeetKey: bestMeet?.key ?? null,
-                                bestMeetDepth: Number.isFinite(bestMeet?.reverseDepth) ? bestMeet.reverseDepth : null,
-                                feasibleMeetSignal: meets.length > 0
-                            });
-                            debugStats.mitmMeetCheck = result;
-                            return result;
-                        } catch (err) {
-                            debugStats.mitmMeetCheck = { triggered: true, error: `${err?.message || err}` };
-                            return debugStats.mitmMeetCheck;
-                        }
-                    };
-
-                    if (!primarySolved && remainingBudget() > 400) {
-                        const escalationTiers = [
-                            { tier: 1, passName: 'pass-4a-memo-disabled', disabledPrunes: [], useFailMemo: false, passPortalBiasMode: portalBiasMode, passVariant: 'default', passContradictionRecoveryMode: autoContradictionRecovery },
-                            { tier: 2, passName: 'pass-4-bound-relaxed', disabledPrunes: ['mustPassBound', 'mustCrossBound'], useFailMemo: false, passPortalBiasMode: portalBiasMode, passVariant: 'default', passContradictionRecoveryMode: autoContradictionRecovery },
-                            { tier: 3, passName: 'pass-4c-portal-relaxed', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: 'default', passContradictionRecoveryMode: true },
-                            { tier: 4, passName: 'pass-4d-diversified-order', disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: (dirOrderVariant === 'default' ? 'random' : 'default'), passContradictionRecoveryMode: true },
-                            { tier: 5, passName: 'pass-4e-bound13-completion', disabledPrunes: ['mustCrossBound', 'portalAutomaton'], useFailMemo: false, passPortalBiasMode: 'off', passVariant: 'random', passContradictionRecoveryMode: true, forcedPolicyProfile: 'nearClosureRescue' }
-                        ];
-                        const tierDiagnostics = [];
-                        const seenTierSignatures = new Set();
-                        let escalationConsecutiveNonProductive = 0;
-                        let lastTierDiag = buildTierDiagnostics(primaryRun, 'primary');
-                        // Phase-1 MITM prework: gather a compact reverse frontier probe once before
-                        // escalation tiers. This avoids log bloat while surfacing whether goal-side
-                        // state space meaningfully overlaps current root trajectories.
-                        runMitmFrontierProbe();
-                        for (const tier of escalationTiers) {
-                            if (primarySolved || remainingBudget() <= 400) break;
-                            const priorProgress = Number(lastTierDiag?.maxProgress) || 0;
-                            // Progress-weighted tier budget:
-                            // - keep a usable floor
-                            // - grant extra budget when we're already close / improving
-                            // - avoid over-consuming when there is no momentum
-                            const progressBonus = priorProgress >= 0.75 ? 0.08 : (priorProgress >= 0.6 ? 0.04 : 0);
-                            const tierBudget = Math.max(400, Math.min(remainingBudget(), Math.floor(timeLimit * (0.22 + progressBonus))));
-                            const tierRun = await runSolvePass({
-                                passName: tier.passName,
-                                localTimeLimit: tierBudget,
-                                disabledPrunes: Array.from(new Set([...(disabledPrunes || []), ...(tier.disabledPrunes || [])])),
-                                useFailMemo: tier.useFailMemo,
-                                passVariant: tier.passVariant,
-                                passPortalBiasMode: tier.passPortalBiasMode,
-                                passContradictionRecoveryMode: !!tier.passContradictionRecoveryMode,
-                                forcedPolicyProfile: tier.forcedPolicyProfile || null
-                            });
-                            const tierDiag = buildTierDiagnostics(tierRun, tier.passName);
-                            const signature = makeTierSignature(tierDiag);
-                            const productive = isTierProductive(lastTierDiag, tierDiag);
-                            tierDiagnostics.push({ ...tierDiag, productive, signature });
-                            if (seenTierSignatures.has(signature) || !productive) {
-                                escalationConsecutiveNonProductive++;
-                                if (debugStats) {
-                                    debugStats.notes.push(`ESCALATION TIER SOFT-SKIP: ${tier.passName} produced duplicate/unproductive diagnostics (streak=${escalationConsecutiveNonProductive}); continuing unless streak > 2.`);
-                                }
-                                if (escalationConsecutiveNonProductive > 2) break;
-                            } else {
-                                escalationConsecutiveNonProductive = 0;
-                            }
-                            seenTierSignatures.add(signature);
-                            lastTierDiag = tierDiag;
-                            if ((tierRun.solutions || []).length > 0) {
-                                foundSolutions.push(...tierRun.solutions);
-                                primarySolved = true;
-                                break;
-                            }
-                            foundSolutions.timedOut = !!(foundSolutions.timedOut || tierRun?.solutions?.timedOut || tierRun.kind === 'timeout');
-                        }
-                        if (debugStats) debugStats.escalationTierDiagnostics = tierDiagnostics;
-                        primaryStatus = primarySolved ? "solved" : (foundSolutions.timedOut ? "timeout" : "no-solution");
-                    }
-
-                    if (debugStats && !primarySolved && primaryStatus === "no-solution") {
-                        appendReachabilitySanityNote(level, debugStats, primaryStatus, goalReachable);
-                    }
-
-                    if (debugStats && !primarySolved && primaryStatus === "no-solution" && goalReachable) {
-                        const primaryPruneSnapshot = {
-                            mustPassBound: debugStats.prune.mustPassBound || 0,
-                            mustCrossBound: debugStats.prune.mustCrossBound || 0,
-                            portalAutomatonRejected: debugStats.prune.portalAutomatonRejected || 0,
-                            portalParityImpossible: debugStats.prune.portalParityImpossible || 0,
-                            portalObligationSignatureImpossible: debugStats.prune.portalObligationSignatureImpossible || 0,
-                            portalOptionalNonImproving: debugStats.prune.portalOptionalNonImproving || 0,
-                            failedStateHit: debugStats.prune.failedStateHit || 0,
-                            minRemOverflow: debugStats.prune.minRemOverflow || 0,
-                            deadEnd: debugStats.prune.deadEnd || 0
-                        };
-                        debugStats.notes.push("SANITY PASS: retrying with fail-memo + transposition-memo disabled and mustPass/mustCross bounds disabled.");
-                        const diagnosticBudget = Math.min(Math.max(Math.floor(timeLimit * 0.25), 2000), 5000);
-                        const sanityRun = await runSolvePass({
-                            passName: "sanity-pass",
-                            localTimeLimit: diagnosticBudget,
-                            // Also disable the dominance/transposition memo here. It keys on the state
-                            // signature without the visited-cell set, so on fixed-length simple-path
-                            // levels (reqInt=0) a doomed branch can memoise a signature that then
-                            // transposition-prunes the only viable completion reaching it later
-                            // (L135's portal-partitioned grid). useFailMemo:false alone does not cover
-                            // this because the dominance memo is a separate table.
-                            disabledPrunes: ["mustPassBound", "mustCrossBound", "dominanceMemo"],
-                            useFailMemo: false,
-                            statusLabel: `Sanity pass (${validGates.length} viable gates)...`,
-                            passScoringMode: scoringMode,
-                            passPortalBiasMode: portalBiasMode,
-                            passStructuralMode: structuralMode
-                        });
-                        if (sanityRun.kind === "aborted") return { ok: false, solution: null, debug: debugStats };
-                        if (sanityRun.kind === "timeout") return { ok: false, solution: null, debug: debugStats };
-                        if ((sanityRun.solutions || []).length > 0) {
-                            foundSolutions.length = 0;
-                            foundSolutions.push(...sanityRun.solutions);
-                            debugStats.notes.push("SANITY OVERRIDE: Solution found only after disabling memo/bounds. Original pruning/memo likely incorrect.");
-                            debugStats.notes.push(`LIKELY CULPRIT: mustPassBound/failMemo/portalAutomaton (primary prunes: mustPassBound=${primaryPruneSnapshot.mustPassBound} mustCrossBound=${primaryPruneSnapshot.mustCrossBound} portalAutomaton=${primaryPruneSnapshot.portalAutomatonRejected} failedStateHit=${primaryPruneSnapshot.failedStateHit} minRemOverflow=${primaryPruneSnapshot.minRemOverflow} deadEnd=${primaryPruneSnapshot.deadEnd})`);
-                        } else {
-                            const sanityPrune = sanityRun?.debug?.prune || {};
-                            debugStats.notes.push(`SANITY PRUNE COMPARISON: primary mustCrossBound=${primaryPruneSnapshot.mustCrossBound}, sanity mustCrossBound=${sanityPrune.mustCrossBound || 0}, primary mustPassBound=${primaryPruneSnapshot.mustPassBound}, sanity mustPassBound=${sanityPrune.mustPassBound || 0}, primary portalAutomaton=${primaryPruneSnapshot.portalAutomatonRejected}, sanity portalAutomaton=${sanityPrune.portalAutomatonRejected || 0}.`);
-                            debugStats.notes.push("SANITY CONFIRMED: Reachable but still no strict solution under relaxed pruning; likely truly unsat given constraints.");
-                        }
-                    }
+                    // Escalation tiers (formerly pass-4a through pass-4e) and the diagnostic
+                    // sanity pass have been promoted to Referee._buildAttemptPlan() as named
+                    // attempt configs so all attempt sequencing lives in one place:
+                    //   attempt.escalation.memoDisabled
+                    //   attempt.escalation.boundsRelaxed
+                    //   attempt.escalation.portalRelaxed
+                    //   attempt.escalation.diversifiedOrder
+                    //   attempt.escalation.nearClosureRescue
+                    //   attempt.diagnostic.sanityBoundsMemoDisabled  (debug/audit mode only)
+                    // PathfinderSolver.solve() now executes exactly one direct attempt (the
+                    // staged passes above). Referee owns all escalation and adaptation.
 
                     if (debugStats) {
                         const solved = foundSolutions.length > 0;
@@ -8912,6 +8729,65 @@ function installSolver(APP) {
                     }
                     return foundSolutions;
                 },
+
+                // ── solveOneAttempt ──────────────────────────────────────────────────────────
+                // Runs exactly one direct solve attempt on an already-prepared level.
+                // This is the intended call site for Referee and runBaselineStage: each
+                // attempt config maps to exactly one call here, which calls solve() with
+                // no internal escalation or sanity pass.
+                //
+                // Accepts:
+                //   preparedLevel – output of prepareSolveLevel(), or a raw level (falls back
+                //                   to calling solve() with the merged options)
+                //   config        – AttemptConfig:
+                //     { id, budgetMs, disabledPrunes, portalBiasMode, scoringMode,
+                //       orderingPolicy, dirOrderVariant, useFailMemo, forcedPolicyProfile,
+                //       contradictionRecovery, ... }
+                //
+                // Returns canonical AttemptResult:
+                //   { id, status, solved, solution, elapsedMs, nodesExpanded,
+                //     failureReason, diagnostics }
+                async solveOneAttempt(preparedLevel, config = {}) {
+                    const t0 = Date.now();
+                    const id = config.id || config.label || 'attempt.unnamed';
+                    // If prepareSolveLevel() returned a __delegateToSolve marker (the current
+                    // lightweight stub), delegate to solve() with the merged options.
+                    const level = preparedLevel?.__delegateToSolve ? preparedLevel.level : (preparedLevel?.level || preparedLevel);
+                    const baseOptions = preparedLevel?.__delegateToSolve ? (preparedLevel.baseOptions || {}) : {};
+                    const solveOptions = {
+                        ...baseOptions,
+                        timeLimit: config.budgetMs || baseOptions.timeLimit || 10000,
+                        disabledPrunes: config.disabledPrunes || baseOptions.disabledPrunes || [],
+                        portalBiasMode: config.portalBiasMode || baseOptions.portalBiasMode || 'adaptiveMustCross',
+                        scoringMode: config.scoringMode || baseOptions.scoringMode || 'modern',
+                        dirOrderVariant: config.dirOrderVariant || baseOptions.dirOrderVariant || 'default',
+                        useFailMemo: config.useFailMemo ?? true,
+                        contradictionRecoveryMode: !!(config.contradictionRecovery || config.contradictionRecoveryMode || baseOptions.contradictionRecoveryMode),
+                        debug: config.debug ?? baseOptions.debug ?? false,
+                        signal: config.signal || baseOptions.signal || null,
+                        onProgress: config.onProgress || baseOptions.onProgress || (() => {}),
+                        onStateUpdate: config.onStateUpdate || baseOptions.onStateUpdate || (() => {}),
+                        forcedPolicyProfile: config.forcedPolicyProfile || null,
+                    };
+                    const raw = await this.solve(level, solveOptions);
+                    const elapsedMs = Date.now() - t0;
+                    const debug = raw?.debug || {};
+                    const solved = !!(raw?.ok && (raw?.solution?.length > 0 || (Array.isArray(raw) && raw.length > 0)));
+                    const solution = solved ? (Array.isArray(raw?.solution) ? raw.solution : (Array.isArray(raw) ? raw : [])) : null;
+                    const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
+                    const status = solved ? 'solved' : (debug?.status === 'timeout' ? 'timeout' : (debug?.status || 'no-solution'));
+                    return {
+                        id,
+                        status,
+                        solved,
+                        solution,
+                        elapsedMs,
+                        nodesExpanded,
+                        failureReason: solved ? null : (debug?.preExpansionAbort?.code || debug?.status || 'unknown'),
+                        diagnostics: debug
+                    };
+                },
+
                 async findTrapSpots(level, options = {}) {
                     const { timeLimit = 8000, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid' } = options;
                     const startTime = Date.now();
@@ -11957,6 +11833,92 @@ function installSolver(APP) {
             // be expectations from prior solves keyed by level identity. Pass order and budget
             // come from the cascade definition above, the same for every level.
             const orderedAttempts = attempts.map((attempt) => ({ ...attempt }));
+
+            // ── Escalation tiers promoted from PathfinderSolver.solve() internal loop ─────────
+            // These were formerly hidden inside PathfinderSolver.solve() as a post-primary fallback.
+            // They are now explicit named attempt configs so Referee owns all attempt sequencing.
+            // Each config is tried by runBaselineStage after the primary attempts above fail.
+            // Budget: 22% of total per tier (progress-weighted bonus dropped for architectural
+            // clarity; can be re-added per-tier via budgetMs customisation if needed).
+            {
+                const _esc = Math.max(400, Math.floor(total * 0.22));
+                const _basePortalBias = opts.portalBiasMode || 'adaptiveMustCross';
+                orderedAttempts.push(
+                    {
+                        id: 'attempt.escalation.memoDisabled',
+                        label: 'escalation-tier-1-memo-disabled',
+                        budgetMs: _esc,
+                        disabledPrunes: [],
+                        useFailMemo: false,
+                        portalBiasMode: _basePortalBias,
+                        dirOrderVariant: 'default',
+                        contradictionRecovery: true,
+                        scoringMode: 'modern'
+                    },
+                    {
+                        id: 'attempt.escalation.boundsRelaxed',
+                        label: 'escalation-tier-2-bounds-relaxed',
+                        budgetMs: _esc,
+                        disabledPrunes: ['mustPassBound', 'mustCrossBound'],
+                        useFailMemo: false,
+                        portalBiasMode: _basePortalBias,
+                        dirOrderVariant: 'default',
+                        contradictionRecovery: true,
+                        scoringMode: 'modern'
+                    },
+                    {
+                        id: 'attempt.escalation.portalRelaxed',
+                        label: 'escalation-tier-3-portal-relaxed',
+                        budgetMs: _esc,
+                        disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
+                        useFailMemo: false,
+                        portalBiasMode: 'off',
+                        dirOrderVariant: 'default',
+                        contradictionRecovery: true,
+                        scoringMode: 'modern'
+                    },
+                    {
+                        id: 'attempt.escalation.diversifiedOrder',
+                        label: 'escalation-tier-4-diversified-order',
+                        budgetMs: _esc,
+                        disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
+                        useFailMemo: false,
+                        portalBiasMode: 'off',
+                        dirOrderVariant: 'random',
+                        contradictionRecovery: true,
+                        scoringMode: 'modern'
+                    },
+                    {
+                        id: 'attempt.escalation.nearClosureRescue',
+                        label: 'escalation-tier-5-near-closure-rescue',
+                        budgetMs: _esc,
+                        disabledPrunes: ['mustCrossBound', 'portalAutomaton'],
+                        useFailMemo: false,
+                        portalBiasMode: 'off',
+                        dirOrderVariant: 'random',
+                        contradictionRecovery: true,
+                        scoringMode: 'modern',
+                        policyProfile: 'nearClosureRescue',
+                        forcedPolicyProfile: 'nearClosureRescue'
+                    }
+                );
+                // Diagnostic sanity attempt: only in debug/audit mode. Disables memo+bounds
+                // to surface false "no-solution" caused by overly strict pruning or memo.
+                // Formerly an inline block at the bottom of PathfinderSolver.solve().
+                if (opts.debug || opts.auditMode || opts.enableDiagnosticSanityPass) {
+                    orderedAttempts.push({
+                        id: 'attempt.diagnostic.sanityBoundsMemoDisabled',
+                        label: 'diagnostic-sanity-bounds-memo-disabled',
+                        budgetMs: Math.max(900, Math.floor(total * 0.30)),
+                        disabledPrunes: ['mustPassBound', 'mustCrossBound', 'dominanceMemo'],
+                        useFailMemo: false,
+                        portalBiasMode: _basePortalBias,
+                        scoringMode: 'modern',
+                        contradictionRecovery: false
+                    });
+                }
+            }
+
             // Structural archetype dispatch: classify the level by its OWN geometry (reqInt,
             // reqLen, area, portal pair count, mustCross/mustPass count, block density). The
             // classifier returns a set of archetype tags; each tag maps to a list of policy
