@@ -339,6 +339,182 @@ function installSolver(APP) {
         };
     }
 
+    // ─── AttemptDiversifier helpers (pure, module-level) ────────────────────────
+    // These are stateless functions used by runBaselineStage's AttemptDiversifier
+    // subsystem. Elevating them avoids re-creating them on every call and makes
+    // their pure nature explicit.
+
+    const canonicalizeDisabledPrunes = (prunes = []) => {
+        if (!Array.isArray(prunes) || prunes.length === 0) return [];
+        return Array.from(new Set(prunes.map(p => String(p || '').trim()).filter(Boolean))).sort();
+    };
+
+    const _hashAttemptSignature = (raw) => {
+        const src = String(raw || '');
+        let hash = 0x811c9dc5;
+        for (let i = 0; i < src.length; i++) {
+            hash ^= src.charCodeAt(i);
+            hash = Math.imul(hash, 0x01000193);
+        }
+        return `sig-${(hash >>> 0).toString(16).padStart(8, '0')}`;
+    };
+
+    const _buildAttemptSignatureTuple = (attempt = {}) => {
+        const rootOrderingProfile = String(
+            attempt?.rootOrderingProfile
+            || attempt?.orderingPolicy
+            || attempt?.policyProfile
+            || 'default'
+        );
+        const beamCompositionRule = String(
+            attempt?.beamCompositionRule
+            || (attempt?.forceRootExpansionFloor ? `floor:${Number(attempt?.rootExpansionFloorCount) || 0}` : 'adaptive')
+        );
+        const portalBiasMode = String(attempt?.portalBiasMode || 'adaptiveMustCross');
+        const disabledPruneSet = canonicalizeDisabledPrunes(attempt?.disabledPrunes || []);
+        const seed = Number.isFinite(attempt?.rootTieSeed)
+            ? Number(attempt.rootTieSeed)
+            : ((typeof attempt?.label === 'string' ? attempt.label.length : 0) + ((Number(attempt?.attemptOrdinal) || 0) * 17));
+        return [rootOrderingProfile, beamCompositionRule, portalBiasMode, disabledPruneSet, seed];
+    };
+
+    const applyAttemptSignature = (attempt = {}) => {
+        const signatureTuple = _buildAttemptSignatureTuple(attempt);
+        const signatureSource = JSON.stringify(signatureTuple);
+        attempt.attemptSignatureTuple = signatureTuple;
+        attempt.attemptSignatureHash = _hashAttemptSignature(signatureSource);
+        return { tuple: signatureTuple, hash: attempt.attemptSignatureHash };
+    };
+
+    // Rows are indexed by (timeoutLikeCount + tier + familyOffset + matrixOffset) % length.
+    // Rows 1-5 are the original cycle; rows 6-8 extend it so late retries explore axes the
+    // first five rows don't vary (memoStrictness, portal-automaton, connectivity relaxation).
+    const ATTEMPT_DIVERSIFICATION_MATRIX = [
+        { rootOrderingProfile: 'objectiveFirst',    orderingPolicy: 'objectiveFirst',    beamCompositionRule: 'floor-2-wide',       rootExpansionFloorCount: 2, forceRootExpansionFloor: true,  relaxRootSuppressionFirstLayer: true,  portalBiasMode: 'adaptiveMustCross', disabledPrunes: [] },
+        { rootOrderingProfile: 'knotBuilder',        orderingPolicy: 'knotBuilder',        beamCompositionRule: 'floor-3-objective',  rootExpansionFloorCount: 3, forceRootExpansionFloor: true,  relaxRootSuppressionFirstLayer: true,  portalBiasMode: 'off',               disabledPrunes: ['mustPassBound'] },
+        { rootOrderingProfile: 'portalFirstTransfer',orderingPolicy: 'portalFirstTransfer',beamCompositionRule: 'adaptive-relaxed',   rootExpansionFloorCount: 1, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'agnostic',          disabledPrunes: ['mustCrossBound'] },
+        { rootOrderingProfile: 'finishFirst',        orderingPolicy: 'finishFirst',        beamCompositionRule: 'floor-4-finish',     rootExpansionFloorCount: 4, forceRootExpansionFloor: true,  relaxRootSuppressionFirstLayer: true,  portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
+        { rootOrderingProfile: 'endurance',          orderingPolicy: 'endurance',          beamCompositionRule: 'floor-4-endurance',  rootExpansionFloorCount: 4, forceRootExpansionFloor: true,  relaxRootSuppressionFirstLayer: true,  portalBiasMode: 'agnostic',          disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
+        { rootOrderingProfile: 'harvestThenFinish',  orderingPolicy: 'harvestThenFinish',  beamCompositionRule: 'floor-3-broad',      rootExpansionFloorCount: 3, forceRootExpansionFloor: true,  relaxRootSuppressionFirstLayer: true,  portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['minRemOverflow'],                  memoStrictness: 0.6 },
+        { rootOrderingProfile: 'portalCommitted',    orderingPolicy: 'portalCommitted',    beamCompositionRule: 'floor-2-portal',     rootExpansionFloorCount: 2, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'off',               disabledPrunes: ['portalAutomaton'],                 memoStrictness: 1.6 },
+        { rootOrderingProfile: 'mustCrossFirst',     orderingPolicy: 'mustCrossFirst',     beamCompositionRule: 'floor-4-must-cross', rootExpansionFloorCount: 4, forceRootExpansionFloor: true,  relaxRootSuppressionFirstLayer: true,  portalBiasMode: 'agnostic',          disabledPrunes: ['connectivity'],                    memoStrictness: 0.8 },
+    ];
+
+    const applyDeterministicDiversificationMatrix = (attempt, context = {}) => {
+        if (!attempt) return null;
+        const timeoutLikeCount = Math.max(0, Number(context?.timeoutLikeAttemptsSoFar) || 0);
+        const tier           = Math.max(0, Number(context?.timeoutEscalationTier) || 0);
+        const familyOffset   = context?.timeoutFamilyDiversificationUsed ? 1 : 0;
+        const matrixOffset   = Math.max(0, Number(context?.matrixOffset) || 0);
+        const idx = (timeoutLikeCount + tier + familyOffset + matrixOffset) % ATTEMPT_DIVERSIFICATION_MATRIX.length;
+        const row = ATTEMPT_DIVERSIFICATION_MATRIX[idx];
+        attempt.rootOrderingProfile        = row.rootOrderingProfile;
+        attempt.orderingPolicy             = row.orderingPolicy;
+        attempt.beamCompositionRule        = row.beamCompositionRule;
+        attempt.rootExpansionFloorCount    = Math.max(Number(attempt?.rootExpansionFloorCount) || 0, Number(row.rootExpansionFloorCount) || 0);
+        attempt.forceRootExpansionFloor    = row.forceRootExpansionFloor;
+        attempt.relaxRootSuppressionFirstLayer = row.relaxRootSuppressionFirstLayer;
+        attempt.portalBiasMode             = row.portalBiasMode;
+        attempt.disabledPrunes             = canonicalizeDisabledPrunes([...(attempt?.disabledPrunes || []), ...(row.disabledPrunes || [])]);
+        if (Number.isFinite(row.memoStrictness)) attempt.memoStrictness = Number(row.memoStrictness);
+        const seededBase = Number.isFinite(attempt.rootTieSeed) ? Number(attempt.rootTieSeed) : 0;
+        attempt.rootTieSeed = (seededBase ^ ((idx + 1) * 2654435761 >>> 0)) >>> 0;
+        applyAttemptSignature(attempt);
+        return compactDefined({
+            matrixIndex: idx,
+            rootOrderingProfile: row.rootOrderingProfile,
+            beamCompositionRule: row.beamCompositionRule,
+            portalBiasMode:      row.portalBiasMode,
+            disabledPruneSet:    attempt.disabledPrunes.slice()
+        });
+    };
+
+    // ─── AttemptTelemetry helpers (pure, module-level) ───────────────────────────
+
+    const getSearchQuality = (attemptResult) => {
+        const debug = attemptResult?.debug || {};
+        const nodesExpanded  = Math.max(0, Number(debug.nodesExpanded) || 0);
+        const branchesTried  = Math.max(0, Number(debug.branchesTried) || 0);
+        const depthReached   = Math.max(0, Number(debug.maxDepth) || 0);
+        const branchFactor   = nodesExpanded > 0 ? (branchesTried / nodesExpanded) : 0;
+        const elapsedMs      = Math.max(1, Number(attemptResult?.elapsedMs ?? debug?.elapsedMs) || 1);
+        const nodesPerSecond = (nodesExpanded * 1000) / elapsedMs;
+        const timeline       = Array.isArray(debug.phaseTimeline) ? debug.phaseTimeline : [];
+        const maxProgress    = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
+        const minObjectives  = timeline.reduce((m, ev) => Math.min(m, Number.isFinite(ev?.remainingObjectives) ? ev.remainingObjectives : m), Infinity);
+        const finalObjectives = Number.isFinite(minObjectives) ? minObjectives : null;
+        const finalTimeline   = timeline.length > 0 ? timeline[timeline.length - 1] : null;
+        const remainingMustPass  = Math.max(0, Number(finalTimeline?.remainingMustPass) || 0);
+        const remainingMustCross = Math.max(0, Number(finalTimeline?.remainingMustCross) || 0);
+        const constraintDeficit  = remainingMustPass + remainingMustCross;
+        const reachedTransition  = timeline.some(ev => ev?.phase === 'transition' || ev?.phase === 'knot' || ev?.phase === 'finish');
+        const branchingCollapse  = nodesExpanded >= 80 && branchFactor <= 0.18;
+        const frontierQuality    = Math.max(0, Math.min(1,
+            (maxProgress * 0.58)
+            + (reachedTransition ? 0.14 : 0)
+            + (Math.max(0, 1 - (constraintDeficit / 4)) * 0.2)
+            + (Math.max(0, 1 - Math.min(1, Math.abs(branchFactor - 0.55))) * 0.08)
+        ));
+        return {
+            depthReached, branchFactor, branchingCollapse, maxProgress, nodesPerSecond,
+            frontierQuality,
+            targetProgressGood: maxProgress >= 0.62 || reachedTransition || (finalObjectives !== null && finalObjectives <= 1),
+            finalObjectives, remainingMustPass, remainingMustCross, constraintDeficit
+        };
+    };
+
+    const buildAttemptInstrumentation = (attemptResult = {}, quality = {}) => {
+        const debug              = attemptResult?.debug || {};
+        const adaptationTimeline = Array.isArray(debug?.adaptationTimeline) ? debug.adaptationTimeline : [];
+        const telemetryPoints    = adaptationTimeline
+            .filter(ev => ev?.telemetry && Number.isFinite(ev?.telemetry?.branchFactor))
+            .map(ev => ({
+                atNodes:            Number(ev?.atNodes) || 0,
+                branchFactor:       Number(ev.telemetry.branchFactor),
+                expansionWorkDelta: Number(ev.telemetry.expansionWorkDelta) || null,
+                progressDelta:      Number(ev.telemetry.progressDelta) || null
+            }));
+        const pickSnapshot  = (idx) => telemetryPoints.length > 0 ? telemetryPoints[Math.max(0, Math.min(telemetryPoints.length - 1, idx))] : null;
+        const early = pickSnapshot(0);
+        const mid   = pickSnapshot(Math.floor((telemetryPoints.length - 1) / 2));
+        const late  = pickSnapshot(telemetryPoints.length - 1);
+        const prune         = debug?.prune || {};
+        const branchesTried = Math.max(0, Number(debug?.branchesTried) || 0);
+        const totalPruneHits   = Object.values(prune).reduce((sum, v) => sum + Math.max(0, Number(v) || 0), 0);
+        const pruneDenominator = Math.max(1, branchesTried + totalPruneHits);
+        const memoSize         = Math.max(0, Number(debug?.memoSize) || 0);
+        const nodesExpanded    = Math.max(0, Number(debug?.nodesExpanded) || 0);
+        return compactDefined({
+            branchingFactorSnapshots: compactDefined({
+                early: early ? Number(early.branchFactor.toFixed(3)) : null,
+                mid:   mid   ? Number(mid.branchFactor.toFixed(3))   : null,
+                late:  late  ? Number(late.branchFactor.toFixed(3))  : null
+            }),
+            pruningHitRates: compactDefined({
+                total:                   Number((totalPruneHits / pruneDenominator).toFixed(4)),
+                mustPassBound:           Number((Math.max(0, Number(prune?.mustPassBound) || 0)           / pruneDenominator).toFixed(4)),
+                mustCrossBound:          Number((Math.max(0, Number(prune?.mustCrossBound) || 0)          / pruneDenominator).toFixed(4)),
+                portalAutomatonRejected: Number((Math.max(0, Number(prune?.portalAutomatonRejected) || 0) / pruneDenominator).toFixed(4)),
+                failedStateHit:          Number((Math.max(0, Number(prune?.failedStateHit) || 0)          / pruneDenominator).toFixed(4))
+            }),
+            uniqueStateGrowthRate: Number((memoSize / Math.max(1, nodesExpanded)).toFixed(5)),
+            nodesPerSecond:   Number((quality?.nodesPerSecond  || 0).toFixed(3)),
+            frontierQuality:  Number((quality?.frontierQuality || 0).toFixed(4)),
+            unresolvedDeficit: compactDefined({
+                mustPass:  Number.isFinite(quality?.remainingMustPass)  ? quality.remainingMustPass  : null,
+                mustCross: Number.isFinite(quality?.remainingMustCross) ? quality.remainingMustCross : null
+            })
+        });
+    };
+
+    const shouldStopAfterAttempt = (attemptResult, quality, attemptIndex, totalAttempts) => {
+        if (!attemptResult || attemptResult.ok) return true;
+        if (attemptResult.status === 'timeout' || attemptResult.status === 'no-solution-proven') return true;
+        if (attemptIndex >= totalAttempts - 1) return true;
+        if (quality.branchingCollapse && !quality.targetProgressGood) return true;
+        return false;
+    };
+
     // ======================================================
     // I) APP.Solver
     // Purpose: async hint/solve orchestration and run lifecycle state.
@@ -11828,6 +12004,10 @@ function installSolver(APP) {
             const escalationNoveltyImprovementEpsilon = 0.03;
             const lowNoveltySameFamilyRetryCap = 1;
             const templateDiagnostics = { candidates: profile?.templateCandidates || [], attempts: [], reallocatedBudgetMs: 0, controlPlaneHistory: controlPlane.history };
+
+            // ── AttemptRegistry ───────────────────────────────────────────────────────────
+            // Build the ordered attempt plan from the level profile, then apply harness-only
+            // ablation filters (no-op in production). _buildAttemptPlan is a separate method.
             const attempts = this._buildAttemptPlan({ level, budgetMs, profile, opts, controlPlane });
             // Ablation experiment: filter/modify attempt plan (harness-only; no-op when null).
             {
@@ -11926,90 +12106,8 @@ function installSolver(APP) {
                 };
             };
 
-            const getSearchQuality = (attemptResult) => {
-                const debug = attemptResult?.debug || {};
-                const nodesExpanded = Math.max(0, Number(debug.nodesExpanded) || 0);
-                const branchesTried = Math.max(0, Number(debug.branchesTried) || 0);
-                const depthReached = Math.max(0, Number(debug.maxDepth) || 0);
-                const branchFactor = nodesExpanded > 0 ? (branchesTried / nodesExpanded) : 0;
-                const elapsedMs = Math.max(1, Number(attemptResult?.elapsedMs ?? debug?.elapsedMs) || 1);
-                const nodesPerSecond = (nodesExpanded * 1000) / elapsedMs;
-                const timeline = Array.isArray(debug.phaseTimeline) ? debug.phaseTimeline : [];
-                const maxProgress = timeline.reduce((m, ev) => Math.max(m, Number(ev?.progress) || 0), 0);
-                const minObjectives = timeline.reduce((m, ev) => Math.min(m, Number.isFinite(ev?.remainingObjectives) ? ev.remainingObjectives : m), Infinity);
-                const finalObjectives = Number.isFinite(minObjectives) ? minObjectives : null;
-                const finalTimeline = timeline.length > 0 ? timeline[timeline.length - 1] : null;
-                const remainingMustPass = Math.max(0, Number(finalTimeline?.remainingMustPass) || 0);
-                const remainingMustCross = Math.max(0, Number(finalTimeline?.remainingMustCross) || 0);
-                const constraintDeficit = remainingMustPass + remainingMustCross;
-                const reachedTransition = timeline.some(ev => ev?.phase === 'transition' || ev?.phase === 'knot' || ev?.phase === 'finish');
-                const branchingCollapse = nodesExpanded >= 80 && branchFactor <= 0.18;
-                const frontierQuality = Math.max(0, Math.min(1, (maxProgress * 0.58) + (reachedTransition ? 0.14 : 0) + (Math.max(0, 1 - (constraintDeficit / 4)) * 0.2) + (Math.max(0, 1 - Math.min(1, Math.abs(branchFactor - 0.55))) * 0.08)));
-                return {
-                    depthReached,
-                    branchFactor,
-                    branchingCollapse,
-                    maxProgress,
-                    nodesPerSecond,
-                    frontierQuality,
-                    targetProgressGood: maxProgress >= 0.62 || reachedTransition || (finalObjectives !== null && finalObjectives <= 1),
-                    finalObjectives,
-                    remainingMustPass,
-                    remainingMustCross,
-                    constraintDeficit
-                };
-            };
-            const buildAttemptInstrumentation = (attemptResult = {}, quality = {}) => {
-                const debug = attemptResult?.debug || {};
-                const adaptationTimeline = Array.isArray(debug?.adaptationTimeline) ? debug.adaptationTimeline : [];
-                const telemetryPoints = adaptationTimeline
-                    .filter(ev => ev?.telemetry && Number.isFinite(ev?.telemetry?.branchFactor))
-                    .map(ev => ({
-                        atNodes: Number(ev?.atNodes) || 0,
-                        branchFactor: Number(ev.telemetry.branchFactor),
-                        expansionWorkDelta: Number(ev.telemetry.expansionWorkDelta) || null,
-                        progressDelta: Number(ev.telemetry.progressDelta) || null
-                    }));
-                const pickSnapshot = (idx) => telemetryPoints.length > 0 ? telemetryPoints[Math.max(0, Math.min(telemetryPoints.length - 1, idx))] : null;
-                const early = pickSnapshot(0);
-                const mid = pickSnapshot(Math.floor((telemetryPoints.length - 1) / 2));
-                const late = pickSnapshot(telemetryPoints.length - 1);
-                const prune = debug?.prune || {};
-                const branchesTried = Math.max(0, Number(debug?.branchesTried) || 0);
-                const totalPruneHits = Object.values(prune).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
-                const pruneDenominator = Math.max(1, branchesTried + totalPruneHits);
-                const memoSize = Math.max(0, Number(debug?.memoSize) || 0);
-                const nodesExpanded = Math.max(0, Number(debug?.nodesExpanded) || 0);
-                return compactDefined({
-                    branchingFactorSnapshots: compactDefined({
-                        early: early ? Number(early.branchFactor.toFixed(3)) : null,
-                        mid: mid ? Number(mid.branchFactor.toFixed(3)) : null,
-                        late: late ? Number(late.branchFactor.toFixed(3)) : null
-                    }),
-                    pruningHitRates: compactDefined({
-                        total: Number((totalPruneHits / pruneDenominator).toFixed(4)),
-                        mustPassBound: Number((Math.max(0, Number(prune?.mustPassBound) || 0) / pruneDenominator).toFixed(4)),
-                        mustCrossBound: Number((Math.max(0, Number(prune?.mustCrossBound) || 0) / pruneDenominator).toFixed(4)),
-                        portalAutomatonRejected: Number((Math.max(0, Number(prune?.portalAutomatonRejected) || 0) / pruneDenominator).toFixed(4)),
-                        failedStateHit: Number((Math.max(0, Number(prune?.failedStateHit) || 0) / pruneDenominator).toFixed(4))
-                    }),
-                    uniqueStateGrowthRate: Number((memoSize / Math.max(1, nodesExpanded)).toFixed(5)),
-                    nodesPerSecond: Number((quality?.nodesPerSecond || 0).toFixed(3)),
-                    frontierQuality: Number((quality?.frontierQuality || 0).toFixed(4)),
-                    unresolvedDeficit: compactDefined({
-                        mustPass: Number.isFinite(quality?.remainingMustPass) ? quality.remainingMustPass : null,
-                        mustCross: Number.isFinite(quality?.remainingMustCross) ? quality.remainingMustCross : null
-                    })
-                });
-            };
-            const shouldStopAfterAttempt = (attemptResult, quality, attemptIndex, totalAttempts) => {
-                if (!attemptResult || attemptResult.ok) return true;
-                if (attemptResult.status === 'timeout' || attemptResult.status === 'no-solution-proven') return true;
-                const isLast = attemptIndex >= totalAttempts - 1;
-                if (isLast) return true;
-                if (quality.branchingCollapse && !quality.targetProgressGood) return true;
-                return false;
-            };
+            // ── AttemptTelemetry: getSearchQuality, buildAttemptInstrumentation,
+            //    shouldStopAfterAttempt are module-level pure functions (see top of installSolver).
 
             let autoContradictionRecoveryArmed = !!opts.contradictionRecovery;
             let timeoutFamilyDiversificationUsed = false;
@@ -12049,94 +12147,12 @@ function installSolver(APP) {
                 }
                 return false;
             };
+            // ── AttemptDiversifier: canonicalizeDisabledPrunes, applyAttemptSignature,
+            //    applyDeterministicDiversificationMatrix (ATTEMPT_DIVERSIFICATION_MATRIX)
+            //    are module-level pure functions/constants (see top of installSolver).
+
             let lastEscalationNoveltyScore = null;
             let lowNoveltySameFamilyRetries = 0;
-            const canonicalizeDisabledPrunes = (prunes = []) => {
-                if (!Array.isArray(prunes) || prunes.length === 0) return [];
-                return Array.from(new Set(prunes.map(p => String(p || '').trim()).filter(Boolean))).sort();
-            };
-            const hashAttemptSignature = (raw) => {
-                const src = String(raw || '');
-                let hash = 0x811c9dc5;
-                for (let i = 0; i < src.length; i++) {
-                    hash ^= src.charCodeAt(i);
-                    hash = Math.imul(hash, 0x01000193);
-                }
-                return `sig-${(hash >>> 0).toString(16).padStart(8, '0')}`;
-            };
-            const buildAttemptSignatureTuple = (attempt = {}) => {
-                const rootOrderingProfile = String(
-                    attempt?.rootOrderingProfile
-                    || attempt?.orderingPolicy
-                    || attempt?.policyProfile
-                    || 'default'
-                );
-                const beamCompositionRule = String(
-                    attempt?.beamCompositionRule
-                    || (attempt?.forceRootExpansionFloor ? `floor:${Number(attempt?.rootExpansionFloorCount) || 0}` : 'adaptive')
-                );
-                const portalBiasMode = String(attempt?.portalBiasMode || 'adaptiveMustCross');
-                const disabledPruneSet = canonicalizeDisabledPrunes(attempt?.disabledPrunes || []);
-                const seed = Number.isFinite(attempt?.rootTieSeed)
-                    ? Number(attempt.rootTieSeed)
-                    : ((typeof attempt?.label === 'string' ? attempt.label.length : 0) + ((Number(attempt?.attemptOrdinal) || 0) * 17));
-                return [rootOrderingProfile, beamCompositionRule, portalBiasMode, disabledPruneSet, seed];
-            };
-            const applyAttemptSignature = (attempt = {}) => {
-                const signatureTuple = buildAttemptSignatureTuple(attempt);
-                const signatureSource = JSON.stringify(signatureTuple);
-                attempt.attemptSignatureTuple = signatureTuple;
-                attempt.attemptSignatureHash = hashAttemptSignature(signatureSource);
-                return {
-                    tuple: signatureTuple,
-                    hash: attempt.attemptSignatureHash
-                };
-            };
-            const diversificationMatrix = [
-                { rootOrderingProfile: 'objectiveFirst', orderingPolicy: 'objectiveFirst', beamCompositionRule: 'floor-2-wide', rootExpansionFloorCount: 2, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: [] },
-                { rootOrderingProfile: 'knotBuilder', orderingPolicy: 'knotBuilder', beamCompositionRule: 'floor-3-objective', rootExpansionFloorCount: 3, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'off', disabledPrunes: ['mustPassBound'] },
-                { rootOrderingProfile: 'portalFirstTransfer', orderingPolicy: 'portalFirstTransfer', beamCompositionRule: 'adaptive-relaxed', rootExpansionFloorCount: 1, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'agnostic', disabledPrunes: ['mustCrossBound'] },
-                { rootOrderingProfile: 'finishFirst', orderingPolicy: 'finishFirst', beamCompositionRule: 'floor-4-finish', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
-                // 5th entry: maximum pruning relaxation for near-solution flood / must-cross deadlock patterns
-                { rootOrderingProfile: 'endurance', orderingPolicy: 'endurance', beamCompositionRule: 'floor-4-endurance', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['mustPassBound', 'mustCrossBound'] },
-                // Entries 6-8 extend the matrix beyond the prior `% 5` cycle so that late-cascade
-                // retries (timeoutLikeCount >= 5) explore qualitatively different configurations
-                // before any rows recycle. Each adds an axis the original 5 did not vary:
-                //  - row 6: harvestThenFinish + memo-relaxed (low memoStrictness) + length-pruning relaxation
-                //  - row 7: portalCommitted + memo-strict (high memoStrictness) + portal-automaton relaxation
-                //  - row 8: mustCrossFirst + connectivity relaxation, for must-cross-deadlock patterns
-                { rootOrderingProfile: 'harvestThenFinish', orderingPolicy: 'harvestThenFinish', beamCompositionRule: 'floor-3-broad', rootExpansionFloorCount: 3, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'adaptiveMustCross', disabledPrunes: ['minRemOverflow'], memoStrictness: 0.6 },
-                { rootOrderingProfile: 'portalCommitted', orderingPolicy: 'portalCommitted', beamCompositionRule: 'floor-2-portal', rootExpansionFloorCount: 2, forceRootExpansionFloor: false, relaxRootSuppressionFirstLayer: false, portalBiasMode: 'off', disabledPrunes: ['portalAutomaton'], memoStrictness: 1.6 },
-                { rootOrderingProfile: 'mustCrossFirst', orderingPolicy: 'mustCrossFirst', beamCompositionRule: 'floor-4-must-cross', rootExpansionFloorCount: 4, forceRootExpansionFloor: true, relaxRootSuppressionFirstLayer: true, portalBiasMode: 'agnostic', disabledPrunes: ['connectivity'], memoStrictness: 0.8 }
-            ];
-            const applyDeterministicDiversificationMatrix = (attempt, context = {}) => {
-                if (!attempt) return null;
-                const timeoutLikeCount = Math.max(0, Number(context?.timeoutLikeAttemptsSoFar) || 0);
-                const tier = Math.max(0, Number(context?.timeoutEscalationTier) || 0);
-                const familyOffset = context?.timeoutFamilyDiversificationUsed ? 1 : 0;
-                const matrixOffset = Math.max(0, Number(context?.matrixOffset) || 0);
-                const idx = (timeoutLikeCount + tier + familyOffset + matrixOffset) % diversificationMatrix.length;
-                const row = diversificationMatrix[idx];
-                attempt.rootOrderingProfile = row.rootOrderingProfile;
-                attempt.orderingPolicy = row.orderingPolicy;
-                attempt.beamCompositionRule = row.beamCompositionRule;
-                attempt.rootExpansionFloorCount = Math.max(Number(attempt?.rootExpansionFloorCount) || 0, Number(row.rootExpansionFloorCount) || 0);
-                attempt.forceRootExpansionFloor = row.forceRootExpansionFloor;
-                attempt.relaxRootSuppressionFirstLayer = row.relaxRootSuppressionFirstLayer;
-                attempt.portalBiasMode = row.portalBiasMode;
-                attempt.disabledPrunes = canonicalizeDisabledPrunes([...(attempt?.disabledPrunes || []), ...(row.disabledPrunes || [])]);
-                if (Number.isFinite(row.memoStrictness)) attempt.memoStrictness = Number(row.memoStrictness);
-                const seededBase = Number.isFinite(attempt.rootTieSeed) ? Number(attempt.rootTieSeed) : 0;
-                attempt.rootTieSeed = (seededBase ^ ((idx + 1) * 2654435761 >>> 0)) >>> 0;
-                applyAttemptSignature(attempt);
-                return compactDefined({
-                    matrixIndex: idx,
-                    rootOrderingProfile: row.rootOrderingProfile,
-                    beamCompositionRule: row.beamCompositionRule,
-                    portalBiasMode: row.portalBiasMode,
-                    disabledPruneSet: attempt.disabledPrunes.slice()
-                });
-            };
             // Carry over a small window of recent signatures from prior hint-ladder steps so
             // a tier-escalated retry doesn't immediately re-pick the exact configuration the
             // last tier just exhausted. The window was previously 64, which dominated the dedup
@@ -12492,6 +12508,9 @@ function installSolver(APP) {
                     }
                 };
             };
+            // ── AttemptRunner ─────────────────────────────────────────────────────────────
+            // runAttempt: executes one PathfinderSolver.solve call, assembles the options
+            // object from attempt+opts, records telemetry, and returns a normalized result.
             const runAttempt = async (attemptBudgetMs, attemptOpts = {}) => {
                 const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
                 const recentTimeoutTelemetry = attemptsUsed
@@ -12750,6 +12769,7 @@ function installSolver(APP) {
                     featureSignature
                 };
             };
+            // ── Main execution loop (orchestrates all subsystems) ─────────────────────────
             let attemptsUsed = carriedTimeoutAttempts.slice();
             let lastAttempt = null;
             let previousTelemetry = null;
