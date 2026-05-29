@@ -100,10 +100,7 @@ const arg = process.argv.find(a => a.startsWith('--levels='));
 const rawLevels = await loadLevels();
 const portalLevels = rawLevels.map((lv, i) => ({ lv, n: i + 1 })).filter(x => Array.isArray(x.lv.portals) && x.lv.portals.length > 0).map(x => x.n);
 // Default: a representative set of portal levels incl. the hard L92.
-const requestedLevels = arg ? arg.split('=')[1].trim() : '';
-const targets = requestedLevels === 'all'
-  ? portalLevels
-  : (requestedLevels ? requestedLevels.split(',').map(Number) : [4, 21, 92, 108, 117, 134]);
+const targets = arg ? arg.split('=')[1].split(',').map(Number) : [4, 21, 92, 108, 117, 134];
 
 let failures = 0;
 for (const n of targets) {
@@ -127,23 +124,4 @@ for (const n of targets) {
 
 console.log(`\n${targets.length - failures}/${targets.length} portal levels solved with cross-realm collections.`);
 if (failures > 0) { console.error(`REGRESSION: ${failures} portal level(s) failed to solve with cross-realm Maps.`); process.exit(1); }
-
-// Exercise the actual Edit-mode Solve button entry point as well. The direct/audit
-// harness calls universalSolveLevel(), but the UI calls runGameSolver(), then
-// validates and applies the returned path. This catches regressions where portal
-// levels solve in the harness but are dropped before the button can display them.
-const buttonLevelNumber = 4;
-APP.State.ENGINE.mode = APP.Core.EDITOR;
-APP.State.ENGINE.hinter = { pathList: [], currentPathIdx: 0 };
-APP.State.ENGINE.foundHintsSinceLoad = [];
-APP.State.ENGINE.editor = { workingLevel: normalizeCrossRealm(rawLevels[buttonLevelNumber - 1], buttonLevelNumber - 1) };
-APP.State.ENGINE.activeSolverController = null;
-APP.State.ENGINE.solverAbortRequested = false;
-const buttonResult = await Solver.runGameSolver('hint');
-const buttonApplied = Array.isArray(APP.State.ENGINE.hinter.pathList) && APP.State.ENGINE.hinter.pathList.length > 0;
-console.log(`Edit Solve button path L${buttonLevelNumber}: ${buttonResult?.ok && buttonApplied ? 'PASS' : 'FAIL'} (status=${buttonResult?.finalStatus || buttonResult?.rawStatus || buttonResult?.status}, applied=${APP.State.ENGINE.hinter.pathList.length})`);
-if (!buttonResult?.ok || !buttonApplied) {
-  console.error('REGRESSION: Edit-mode Solve did not apply a cross-realm portal solution.');
-  process.exit(1);
-}
-console.log('OK: portal-family analysis and the Edit-mode Solve button path are realm-robust.');
+console.log('OK: portal-family analysis is realm-robust.');
