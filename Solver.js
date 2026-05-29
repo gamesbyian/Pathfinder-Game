@@ -12273,7 +12273,7 @@ function installSolver(APP) {
             };
             const diversifyAndRegisterAttempt = (attempt, context = {}, options = {}) => {
                 if (!attempt) return { allowed: false, reason: 'missing-attempt' };
-                const maxTries = Math.max(1, diversificationMatrix.length);
+                const maxTries = Math.max(1, ATTEMPT_DIVERSIFICATION_MATRIX.length);
                 let lastRegistration = null;
                 for (let offset = 0; offset < maxTries; offset++) {
                     const matrixApplied = applyDeterministicDiversificationMatrix(attempt, { ...context, matrixOffset: offset });
@@ -12922,7 +12922,8 @@ function installSolver(APP) {
 
             const createAttemptRegistry = () => ({
                 register(attempt) {
-                attempt.attemptOrdinal = attemptPlan.currentIndex + 1;
+                const i = attemptPlan.currentIndex;
+                attempt.attemptOrdinal = i + 1;
                 // Segment 1 identity stamp: freeze profile identity once, regardless of later mid-run oscillation.
                 // originalPolicyProfile / policyProfileId / policyConfigHash survive strategy switches so diversity
                 // metrics can be tied to the profile the attempt was provisioned with.
