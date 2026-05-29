@@ -1,0 +1,46 @@
+{
+  "variantId": "disable-referee-rescue-preExpansionRescue",
+  "desc": "Disable: Rescue stage: pre-expansion rescue (interaction-fallback root)",
+  "levels": [
+    {
+      "level": 1,
+      "ok": false,
+      "status": "error",
+      "elapsedMs": 7,
+      "branchReport": []
+    },
+    {
+      "level": 2,
+      "ok": false,
+      "status": "error",
+      "elapsedMs": 16,
+      "branchReport": []
+    },
+    {
+      "level": 3,
+      "ok": false,
+      "status": "error",
+      "elapsedMs": 7,
+      "branchReport": []
+    },
+    {
+      "level": 4,
+      "ok": false,
+      "status": "error",
+      "elapsedMs": 22,
+      "branchReport": []
+    },
+    {
+      "level": 5,
+      "ok": false,
+      "status": "error",
+      "elapsedMs": 12,
+      "branchReport": []
+    }
+  ],
+  "solved": 0,
+  "failed": 5,
+  "budgetMs": 180000,
+  "commitSha": "644cdc4b627f0f3ca89cb1e0ec451a1a893df617",
+  "timestamp": "2026-05-29T09:40:00.417Z"
+}
