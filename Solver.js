@@ -21,8 +21,8 @@
         });
         return out;
     };
-    // Realm-robust "is this a usable Map?" check. `x instanceof Map` is fragile: it
-    // silently returns false for a Map constructed in a different JS realm/context
+    // Realm-robust collection checks. `x instanceof Map` / `x instanceof Set` are fragile: they
+    // silently return false for collections constructed in a different JS realm/context
     // (e.g. when the host page that builds the level and Solver.js do not share the
     // exact same Map constructor). When that happens on a level's portalMap, the
     // portal-family analysis below is skipped and the level is treated as portal-free,
@@ -32,11 +32,17 @@
     // Edit-mode Solve button. Duck-type on the Map surface the solver actually uses
     // (size + get/has/forEach) so portal data is honored regardless of which realm
     // constructed it. A genuine non-Map (null/undefined/plain object) still returns
-    // false, preserving every existing guard's intent.
+    // false, preserving every existing guard's intent. The Set check follows the same
+    // pattern for solver state sets that travel with a prepared level.
     const isUsableMap = (x) => !!x
         && typeof x === 'object'
         && typeof x.forEach === 'function'
         && typeof x.get === 'function'
+        && typeof x.has === 'function'
+        && typeof x.size === 'number';
+    const isUsableSet = (x) => !!x
+        && typeof x === 'object'
+        && typeof x.forEach === 'function'
         && typeof x.has === 'function'
         && typeof x.size === 'number';
     // Deterministic in-place Fisher-Yates shuffle driven by a 32-bit xorshift PRNG.
@@ -1018,7 +1024,7 @@ function installSolver(APP) {
                     const activePortalFamily = (Number.isFinite(opts.activePortalFamily) && opts.activePortalFamily >= 0)
                         ? (opts.activePortalFamily | 0)
                         : -1;
-                    const restrictPortals = activePortalFamily >= 0 && (l.portalFamilyByEntry instanceof Map);
+                    const restrictPortals = activePortalFamily >= 0 && isUsableMap(l.portalFamilyByEntry);
                     class Deque {
                         constructor(initialCapacity = 32) {
                             this.buf = new Array(Math.max(4, initialCapacity | 0));
@@ -1628,7 +1634,7 @@ function installSolver(APP) {
                     let intersections = 0;
                     let portalJumpsSoFar = 0;
                     let dupeSkips = 0;
-                    const gateSet = level.gateSet instanceof Set
+                    const gateSet = isUsableSet(level.gateSet)
                         ? level.gateSet
                         : new Set(Array.isArray(level.gateKeys) ? level.gateKeys : []);
                     const popcount = typeof level._popcountMask === 'function'
@@ -2488,7 +2494,7 @@ function installSolver(APP) {
                     // formula is inadmissible.
                     const key = l?.mustCrossKeys?.[crossIdx];
                     if (key === undefined) return 2;
-                    if (!l?.grid || !(l?.blockSet instanceof Set)) return 2;
+                    if (!l?.grid || !isUsableSet(l?.blockSet)) return 2;
                     const w = Number(l.grid.w) || 0;
                     const h = Number(l.grid.h) || 0;
                     const p = APP.LevelUtils.UNPACK(key);
@@ -3799,8 +3805,8 @@ function installSolver(APP) {
                             && remainingIntsAfterMove === 0
                             && projectedCrossNeed === 0;
                         const obligationOrderState = `${remainingMustAfterMove}|${remainingIntsAfterMove}|${projectedCrossNeed}|${remainingStepsAfterMove}`;
-                        const nextRegion = l.portalRegionByKey instanceof Map ? (l.portalRegionByKey.get(nk) ?? -1) : -1;
-                        const nextFamily = l.portalFamilyByEntry instanceof Map ? (l.portalFamilyByEntry.get(nk) ?? -1) : -1;
+                        const nextRegion = isUsableMap(l.portalRegionByKey) ? (l.portalRegionByKey.get(nk) ?? -1) : -1;
+                        const nextFamily = isUsableMap(l.portalFamilyByEntry) ? (l.portalFamilyByEntry.get(nk) ?? -1) : -1;
                         const currentPortalCoverageMask = typeof state.portal?.portalRequiredCoverageMask === 'bigint' ? state.portal.portalRequiredCoverageMask : 0n;
                         let nextPortalCoverageMask = currentPortalCoverageMask;
                         if (isP && nextFamily >= 0) {
@@ -4202,11 +4208,11 @@ function installSolver(APP) {
                                 }
                             }
 
-                            if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activePhase === 'knot' && activeKnotTarget?.candidate?.cells instanceof Set) {
+                            if (profile.knotBias > 0 && l.reqInt > 0 && intsRemaining > 0 && activePhase === 'knot' && isUsableSet(activeKnotTarget?.candidate?.cells)) {
                                 const knotWeight = Math.max(0.1, phaseProfile.knotPull || 1) * pw('intersectionSetupWeight');
                                 const candidate = activeKnotTarget.candidate;
-                                const targetDist = candidate.distMap instanceof Map ? candidate.distMap.get(nk) : undefined;
-                                const currentTargetDist = candidate.distMap instanceof Map ? candidate.distMap.get(k) : undefined;
+                                const targetDist = isUsableMap(candidate.distMap) ? candidate.distMap.get(nk) : undefined;
+                                const currentTargetDist = isUsableMap(candidate.distMap) ? candidate.distMap.get(k) : undefined;
                                 if (candidate.cells.has(nk)) score -= Math.round(profile.knotBias * 1.2 * knotWeight);
                                 else score += Math.round(profile.knotBias * 0.25 * knotWeight);
                                 if (Number.isFinite(targetDist) && Number.isFinite(currentTargetDist)) {
@@ -4291,7 +4297,7 @@ function installSolver(APP) {
                         const hardConstraintImproved = nextObjectiveGap < currentObjectiveGap;
                         const objectiveImproved = nextObjectiveGap < currentObjectiveGap;
                         const goalAggressive = Number.isFinite(currentGoalDist) && Number.isFinite(nextGoalDist) && nextGoalDist < currentGoalDist;
-                        const knotImproved = !!(activeKnotTarget?.candidate?.distMap instanceof Map) &&
+                        const knotImproved = !!isUsableMap(activeKnotTarget?.candidate?.distMap) &&
                             Number.isFinite(activeKnotTarget.candidate.distMap.get(k)) &&
                             Number.isFinite(activeKnotTarget.candidate.distMap.get(nk)) &&
                             (activeKnotTarget.candidate.distMap.get(nk) < activeKnotTarget.candidate.distMap.get(k));
@@ -4577,7 +4583,7 @@ function installSolver(APP) {
                     const symmetryCommitted = !!(symmetryModel && symmetryModel.committed && (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal'));
                     const knotCandidates = Array.isArray(profile?.knotCandidates) ? profile.knotCandidates : [];
                     const evaluateKnotCandidate = (candidate) => {
-                        if (!candidate || !(candidate.cells instanceof Set) || !(candidate.distMap instanceof Map)) return null;
+                        if (!candidate || !isUsableSet(candidate.cells) || !isUsableMap(candidate.distMap)) return null;
                         const dist = candidate.distMap.get(k);
                         if (!Number.isFinite(dist)) return null;
                         let unresolvedCross = 0;
@@ -4634,11 +4640,11 @@ function installSolver(APP) {
                         }
                         debugStats.lastKnotCandidateId = selectedId;
                     }
-                    const objectivePriority = profile?.objectivePriority instanceof Map
+                    const objectivePriority = isUsableMap(profile?.objectivePriority)
                         ? profile.objectivePriority
-                        : (profile?.objectiveModel?.priorityMap instanceof Map ? profile.objectiveModel.priorityMap : null);
+                        : (isUsableMap(profile?.objectiveModel?.priorityMap) ? profile.objectiveModel.priorityMap : null);
                     const objectiveCount = profile?.objectiveCount || profile?.objectiveModel?.features?.length || 0;
-                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : new Set();
+                    const knotZone = isUsableSet(profile?.knotZone) ? profile.knotZone : new Set();
                     const perimeterThreshold = options?.antiDriftEdgeLock ? 1 : (profile?.perimeterThreshold || 1);
                     const macroSkeleton = options?.macroSkeleton || null;
                     const regionCrossingModel = options?.regionCrossingModel || null;
@@ -5901,7 +5907,7 @@ function installSolver(APP) {
                     const rootDiversificationFamilyByKey = new Map();
                     const startPos = APP.LevelUtils.UNPACK(startKey);
                     const resolveRootFamily = (nk) => {
-                        if (l.portalFamilyByEntry instanceof Map && l.portalFamilyByEntry.has(nk)) {
+                        if (isUsableMap(l.portalFamilyByEntry) && l.portalFamilyByEntry.has(nk)) {
                             const portalFamily = Number(l.portalFamilyByEntry.get(nk));
                             return Number.isFinite(portalFamily) ? `portal-family:${portalFamily}` : 'portal-family:unknown';
                         }
@@ -6932,7 +6938,7 @@ function installSolver(APP) {
                             if (node?.key !== undefined) objectiveDistByKey.set(node.key, level.objectiveDistMaps[idx]);
                         });
                     }
-                    const knotZone = profile?.knotZone instanceof Set ? profile.knotZone : new Set();
+                    const knotZone = isUsableSet(profile?.knotZone) ? profile.knotZone : new Set();
                     const knotDistMap = knotZone.size > 0 ? SolverCore._buildOptimisticDistMap(level, Array.from(knotZone)) : null;
                     const portalHints = profile?.portalHints || {};
                     const portalFamilies = Array.isArray(portalHints.families) ? portalHints.families : [];
@@ -7298,10 +7304,10 @@ function installSolver(APP) {
                     }
                     level.grid.w = gridW;
                     level.grid.h = gridH;
-                    if (!(level.blockSet instanceof Set)) level.blockSet = new Set(level.blockSet || []);
-                    if (!(level.gateSet instanceof Set)) level.gateSet = new Set(level.gateSet || []);
-                    if (!(level.gooseSet instanceof Set)) level.gooseSet = new Set(level.gooseSet || []);
-                    if (!(level.falseGoalKeys instanceof Set)) level.falseGoalKeys = new Set(level.falseGoalKeys || []);
+                    if (!isUsableSet(level.blockSet)) level.blockSet = new Set(level.blockSet || []);
+                    if (!isUsableSet(level.gateSet)) level.gateSet = new Set(level.gateSet || []);
+                    if (!isUsableSet(level.gooseSet)) level.gooseSet = new Set(level.gooseSet || []);
+                    if (!isUsableSet(level.falseGoalKeys)) level.falseGoalKeys = new Set(level.falseGoalKeys || []);
                     if (!Array.isArray(level.gateKeys)) level.gateKeys = Array.from(level.gateSet || []);
                     if (!Array.isArray(level.mustPassKeys)) level.mustPassKeys = [];
                     if (!Array.isArray(level.mustCrossKeys)) level.mustCrossKeys = [];
@@ -7556,7 +7562,7 @@ function installSolver(APP) {
                             for (const key of fam.entries) level.portalFamilyByEntry.set(key, i);
                         }
                         level.portalFamilyCount = portalHints.families.length;
-                        if (portalHints.regionByKey instanceof Map) level.portalRegionByKey = portalHints.regionByKey;
+                        if (isUsableMap(portalHints.regionByKey)) level.portalRegionByKey = portalHints.regionByKey;
                     }
                     if (!level.portalFamilyByEntry.size && Array.isArray(level.portalVisuals)) {
                         for (let i = 0; i < level.portalVisuals.length; i++) {
@@ -10043,7 +10049,7 @@ function installSolver(APP) {
             }
 
             const enrichedKnotCandidates = knotCandidates.map((candidate, idx) => {
-                const cells = candidate.cells instanceof Set ? candidate.cells : new Set();
+                const cells = isUsableSet(candidate.cells) ? candidate.cells : new Set();
                 const cellList = Array.from(cells);
                 const mustCrossHits = cellList.filter((key) => mustCrossSet.has(key)).length;
                 const chokeAvg = cellList.length > 0
@@ -10134,7 +10140,7 @@ function installSolver(APP) {
             const mustCrossSet = new Set(level?.mustCrossKeys || []);
             const gateSet = new Set(level?.gateKeys || []);
             const goalKey = level?.goalKey;
-            const gooseSet = level?.gooseSet instanceof Set ? level.gooseSet : new Set();
+            const gooseSet = isUsableSet(level?.gooseSet) ? level.gooseSet : new Set();
 
             // Build exclusion set: must-cross cells, gates, goal, and geometric bad candidates
             const excluded = new Set(mustCrossSet);
@@ -10186,7 +10192,7 @@ function installSolver(APP) {
                     if (selected.length >= maxBlueprint) break;
                     let best = null;
                     let bestScore = -Infinity;
-                    for (const key of (candidate.cells instanceof Set ? candidate.cells : [])) {
+                    for (const key of (isUsableSet(candidate.cells) ? candidate.cells : [])) {
                         if (excluded.has(key) || selectedSet.has(key)) continue;
                         if (!walkableSet.has(key)) continue;
                         const s = scoreCell(key);
@@ -10433,8 +10439,8 @@ function installSolver(APP) {
                 portalFilterPlacements: new Set([
                     ...(isUsableMap(level?.portalMap) ? Array.from(level.portalMap.keys()) : []),
                     ...(isUsableMap(level?.portalMap) ? Array.from(level.portalMap.values()).map((v) => v?.dest).filter(Number.isFinite) : []),
-                    ...(level?.filterMap instanceof Map ? Array.from(level.filterMap.keys()) : []),
-                    ...(level?.flippingFilterMap instanceof Map ? Array.from(level.flippingFilterMap.keys()) : [])
+                    ...(isUsableMap(level?.filterMap) ? Array.from(level.filterMap.keys()) : []),
+                    ...(isUsableMap(level?.flippingFilterMap) ? Array.from(level.flippingFilterMap.keys()) : [])
                 ]),
                 hazards: new Set(level?.gooseSet || [])
             };
@@ -10621,9 +10627,7 @@ function installSolver(APP) {
             const provablyMandatoryFamilySet = new Set();
             const optionalFamilySet = new Set();
             const walkableKeys = Array.isArray(topology.walkableKeys) ? topology.walkableKeys : [];
-            const walkableSet = (level?.blockSet instanceof Set)
-                ? new Set(walkableKeys)
-                : new Set(walkableKeys);
+            const walkableSet = new Set(walkableKeys);
             const reqLenParity = Math.max(0, Number(level?.reqLen) || 0) & 1;
             const startStates = [];
             const targetStateSet = new Set();
@@ -10686,7 +10690,7 @@ function installSolver(APP) {
                     for (let ei = 0; ei < edges.length; ei++) {
                         const edge = edges[ei];
                         const meta = edgeMetaById.get(edge.edgeId);
-                        if (blockedFamilies instanceof Set && meta?.type === 'portal' && blockedFamilies.has(meta.familyId)) continue;
+                        if (isUsableSet(blockedFamilies) && meta?.type === 'portal' && blockedFamilies.has(meta.familyId)) continue;
                         if (blockedStates?.has(edge.to)) continue;
                         if (!seen.has(edge.to)) {
                             seen.add(edge.to);
@@ -10704,7 +10708,7 @@ function installSolver(APP) {
                 if (baseToTarget?.has(s)) feasibleStates.add(s);
             }
             const hasFeasiblePath = (fromSet, toSet) => {
-                if (!(fromSet instanceof Set) || !(toSet instanceof Set)) return false;
+                if (!isUsableSet(fromSet) || !isUsableSet(toSet)) return false;
                 for (const t of toSet) if (fromSet.has(t)) return true;
                 return false;
             };
@@ -11109,14 +11113,14 @@ function installSolver(APP) {
                 perimeterBias: Number.isFinite(safe.perimeterBias) ? safe.perimeterBias : 0,
                 knotBias: Number.isFinite(safe.knotBias) ? safe.knotBias : 0,
                 portalCommitment: Number.isFinite(safe.portalCommitment) ? safe.portalCommitment : 0,
-                objectivePriority: safe.objectivePriority instanceof Map
+                objectivePriority: isUsableMap(safe.objectivePriority)
                     ? safe.objectivePriority
-                    : (objectiveModel.priorityMap instanceof Map ? objectiveModel.priorityMap : new Map()),
-                knotZone: safe.knotZone instanceof Set ? safe.knotZone : new Set(),
+                    : (isUsableMap(objectiveModel.priorityMap) ? objectiveModel.priorityMap : new Map()),
+                knotZone: isUsableSet(safe.knotZone) ? safe.knotZone : new Set(),
                 symmetryAxis: (safe.symmetryAxis === 'vertical' || safe.symmetryAxis === 'horizontal') ? safe.symmetryAxis : null,
                 portalHints: {
                     families: Array.isArray(portalHints.families) ? portalHints.families : [],
-                    regionByKey: portalHints.regionByKey instanceof Map ? portalHints.regionByKey : new Map(),
+                    regionByKey: isUsableMap(portalHints.regionByKey) ? portalHints.regionByKey : new Map(),
                     bridgeHints: Array.isArray(portalHints.bridgeHints) ? portalHints.bridgeHints : [],
                     mandatoryFamilies: Array.isArray(portalHints.mandatoryFamilies) ? portalHints.mandatoryFamilies : [],
                     // Preserve the rigorous-only set so the hard portalRequiredCoverageMask
@@ -11140,13 +11144,13 @@ function installSolver(APP) {
                     connectedRegionCompactness: Array.isArray(topology.connectedRegionCompactness) ? topology.connectedRegionCompactness : [],
                     meanRegionCompactness: Number.isFinite(topology.meanRegionCompactness) ? topology.meanRegionCompactness : 0,
                     largestRegionRatio: Number.isFinite(topology.largestRegionRatio) ? topology.largestRegionRatio : 0,
-                    chokeScoreMap: topology.chokeScoreMap instanceof Map ? topology.chokeScoreMap : new Map()
+                    chokeScoreMap: isUsableMap(topology.chokeScoreMap) ? topology.chokeScoreMap : new Map()
                 },
                 objectiveModel: {
                     features: Array.isArray(objectiveModel.features) ? objectiveModel.features : [],
-                    priorityMap: objectiveModel.priorityMap instanceof Map
+                    priorityMap: isUsableMap(objectiveModel.priorityMap)
                         ? objectiveModel.priorityMap
-                        : (safe.objectivePriority instanceof Map ? safe.objectivePriority : new Map()),
+                        : (isUsableMap(safe.objectivePriority) ? safe.objectivePriority : new Map()),
                     seedMode: objectiveModel.seedMode || 'legacy-distance'
                 },
                 knotCandidates: knotCandidates.map(c => ({
@@ -11159,8 +11163,8 @@ function installSolver(APP) {
                     revisitPotential: Number.isFinite(c?.revisitPotential) ? c.revisitPotential : 0,
                     portalExitAdjacency: Number.isFinite(c?.portalExitAdjacency) ? c.portalExitAdjacency : 0,
                     revisitVisitTarget: Number.isFinite(c?.revisitVisitTarget) ? c.revisitVisitTarget : 1,
-                    cells: c?.cells instanceof Set ? c.cells : new Set(),
-                    distMap: c?.distMap instanceof Map ? c.distMap : new Map()
+                    cells: isUsableSet(c?.cells) ? c.cells : new Set(),
+                    distMap: isUsableMap(c?.distMap) ? c.distMap : new Map()
                 })),
                 symmetryModel: {
                     axis: (symmetryModel.axis === 'vertical' || symmetryModel.axis === 'horizontal') ? symmetryModel.axis : (safe.symmetryAxis || null),
@@ -11662,7 +11666,7 @@ function installSolver(APP) {
             const mustPassCount = Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0;
             const mustCrossCount = Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0;
             const portalPairs = isUsableMap(level?.portalMap) ? Math.floor(level.portalMap.size / 2) : 0;
-            const blockCount = level?.blockSet instanceof Set ? level.blockSet.size : 0;
+            const blockCount = isUsableSet(level?.blockSet) ? level.blockSet.size : 0;
             const blockDensity = blockCount / area;
             // Density is measured against the navigable board (area minus blocks), not raw
             // area, so block-heavy layouts aren't systematically under-rated. On a board that
@@ -17914,7 +17918,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 const finalStatusNow = finalAttempt?.finalStatus || finalAttempt?.rawStatus || finalAttempt?.status || 'unknown';
                 if (!finalSolved && finalStatusNow !== 'no-solution-proven' && finalStatusNow !== 'aborted'
                     && !APP.State.ENGINE.solverAbortRequested
-                    && level && level.grid && level.blockSet instanceof Set && Array.isArray(level.gateKeys)) {
+                    && level && level.grid && isUsableSet(level.blockSet) && Array.isArray(level.gateKeys)) {
                     const gateSet = new Set(level.gateKeys);
                     const firstMoveSet = new Set();
                     for (const gateKey of gateSet) {
