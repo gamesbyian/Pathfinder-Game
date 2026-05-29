@@ -3491,13 +3491,18 @@
 
             function canonicalCloneLevel(src, options = {}) {
                 const includeHints = !!options.includeHints;
+                const _goalKey = typeof src?.goalKey === 'number' ? src.goalKey : -1;
+                const _gateKeys = Array.isArray(src?.gateKeys) ? src.gateKeys.slice() : [];
+                const _unpack = (k) => APP.LevelUtils.UNPACK(k);
                 const clone = {
                     id: typeof src?.id === 'number' ? src.id : 0,
                     grid: { w: Number(src?.grid?.w) || 0, h: Number(src?.grid?.h) || 0 },
                     reqLen: Number(src?.reqLen) || 0,
                     reqInt: Number(src?.reqInt) || 0,
-                    goalKey: typeof src?.goalKey === 'number' ? src.goalKey : -1,
-                    gateKeys: Array.isArray(src?.gateKeys) ? src.gateKeys.slice() : [],
+                    goalKey: _goalKey,
+                    goal: src?.goal ? { x: src.goal.x, y: src.goal.y } : (() => { const p = _unpack(_goalKey >= 0 ? _goalKey : 0); return { x: p.x + 1, y: p.y + 1 }; })(),
+                    gateKeys: _gateKeys,
+                    gates: Array.isArray(src?.gates) ? src.gates.map(g => ({ x: g.x, y: g.y })) : _gateKeys.map(k => { const p = _unpack(k); return { x: p.x + 1, y: p.y + 1 }; }),
                     blockSet: new Set(src?.blockSet || []),
                     gooseSet: new Set(src?.gooseSet || []),
                     falseGoalKeys: new Set(src?.falseGoalKeys || []),
