@@ -11718,6 +11718,29 @@ function installSolver(APP) {
                     portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
+            // ELP runs before SC so that long-path/knotBuilder profiles reach the DFS before
+            // the conservative harvestThenFinish pass. Ablation data showed ELP winning L7 at
+            // 4302ms when SC was removed, vs template winning at 10350ms when SC ran first and
+            // wasted its budget ahead of ELP. SC budget is pre-subtracted from ELP's remainder
+            // so both allocations are identical to the prior ordering — only execution order changes.
+            if (allowEnduranceLongpath) {
+                const scReserved = !modernStructuralGuidanceNotNeeded ? conservativeBudget : 0;
+                attempts.push({
+                    // Migration note: this absorbs former legacy-adapter rescue behavior as a referee-native profile.
+                    label: 'endurance-longpath',
+                    budgetMs: Math.max(1, total - attempts.reduce((sum, a) => sum + a.budgetMs, 0) - scReserved),
+                    scoringMode: 'endurance',
+                    portalBiasMode: 'off',
+                    structuralMode: true,
+                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
+                    policyProfile: 'knotBuilder',
+                    commitmentPlan: { horizonSteps: Math.max(5, Math.floor(level.reqLen * 0.26)) },
+                    memoStrictness: 1.55,
+                    compatLegacyOutputAlias: true,
+                    portalUsagePolicy: resolvePortalUsagePolicy()
+                });
+            }
+
             if (!modernStructuralGuidanceNotNeeded) {
                 attempts.push({
                     label: 'structural-conservative',
@@ -11735,23 +11758,6 @@ function installSolver(APP) {
                     policyProfile: 'harvestThenFinish',
                     commitmentPlan: { horizonSteps: Math.max(2, Math.floor(level.reqLen * 0.14)) },
                     memoStrictness: 0.85,
-                    portalUsagePolicy: resolvePortalUsagePolicy()
-                });
-            }
-
-            if (allowEnduranceLongpath) {
-                attempts.push({
-                    // Migration note: this absorbs former legacy-adapter rescue behavior as a referee-native profile.
-                    label: 'endurance-longpath',
-                    budgetMs: Math.max(1, total - attempts.reduce((sum, a) => sum + a.budgetMs, 0)),
-                    scoringMode: 'endurance',
-                    portalBiasMode: 'off',
-                    structuralMode: true,
-                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
-                    policyProfile: 'knotBuilder',
-                    commitmentPlan: { horizonSteps: Math.max(5, Math.floor(level.reqLen * 0.26)) },
-                    memoStrictness: 1.55,
-                    compatLegacyOutputAlias: true,
                     portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
@@ -11915,7 +11921,11 @@ function installSolver(APP) {
                 // In disable-mode (disabledAttemptLabels), keep at least one attempt to avoid an empty plan.
                 // In solo-mode (allowedAttemptLabels), an empty result means no applicable technique — let it fail cleanly.
                 if (filtered.length === 0 && attempts.length > 0 && !(__ab.allowedAttemptLabels?.length > 0)) {
-                    filtered = [{ ...attempts[0] }];
+                    filtered = [{ ...attempts[0], __safetyValveApplied: true }];
+                    // Emit a visible warning so misconfiguration is never silent. The kept attempt
+                    // may itself be one of the "disabled" labels (e.g. disable-SM on a level whose
+                    // plan contains only SM), producing an invalid ablation data point.
+                    console.warn(`[Solver] safety-valve: all attempts filtered by disabledAttemptLabels; keeping attempts[0]="${attempts[0]?.label || 'unknown'}". disabled=${JSON.stringify(__ab.disabledAttemptLabels)}. Result for this level is INVALID for ablation analysis.`);
                 }
                 attempts.splice(0, attempts.length, ...filtered);
             }
@@ -12073,6 +12083,7 @@ function installSolver(APP) {
             let autoContradictionRecoveryArmed = !!opts.contradictionRecovery;
             let timeoutFamilyDiversificationUsed = false;
             let timeoutEscalationTier = 0;
+            let skipRemainingTemplateWarmups = false;
             let escalatedAttemptsAdded = 0;
             let consecutiveLowExpansionDetections = 0;
             let previousTimeoutTelemetry = null;
@@ -12945,6 +12956,15 @@ function installSolver(APP) {
                     });
                     continue;
                 }
+                // When every completed warmup attempt scored below the abort threshold, skip
+                // remaining warmup passes — they explore the same hypothesis with the same budget
+                // and will score similarly. The reallocated budget is credited so downstream
+                // analysis can account for skipped attempts. template-best-focus is handled by
+                // the existing bestTemplateScore < 0.2 guard immediately below.
+                if (attempt.templatePhase === 'warmup' && skipRemainingTemplateWarmups) {
+                    templateDiagnostics.reallocatedBudgetMs += attempt.budgetMs;
+                    continue;
+                }
                 if (attempt.label === 'template-best-focus') {
                     if (!bestTemplate || bestTemplateScore < 0.2) {
                         templateDiagnostics.reallocatedBudgetMs += attempt.budgetMs;
@@ -13061,6 +13081,13 @@ function installSolver(APP) {
                     }
                     if (attempt.templatePhase === 'warmup' && templateScore < 0.18) {
                         templateDiagnostics.reallocatedBudgetMs += Math.floor(attempt.budgetMs * 0.25);
+                    }
+                    // Abort remaining warmup passes when a warmup scores extremely low — the
+                    // template hypothesis is wrong for this level geometry and additional warmups
+                    // explore identical terrain. 0.12 is deliberately tighter than the 0.18
+                    // reallocatedBudgetMs threshold to avoid aborting marginal-but-plausible warmups.
+                    if (attempt.templatePhase === 'warmup' && templateScore < 0.12) {
+                        skipRemainingTemplateWarmups = true;
                     }
                 }
                 const pruneBreakdown = computePruneBreakdown(attemptResult?.debug || {});
@@ -16915,9 +16942,10 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             // per-archetype budget override here: near-Hamiltonian high-intersection levels
             // (which need a deeper node budget to close their final knots) are served by the
             // global calibration being generous, not by singling them out.
+            const _wallCeilingMs = (Number.isFinite(opts.wallCeilingMs) && opts.wallCeilingMs > 0) ? opts.wallCeilingMs : null;
             installSearchClock(createSearchClock({
                 deterministic: opts.deterministicSearch !== false,
-                realCeilingMs: Math.max(60000, (Number(budgetMs) || 0) * 8)
+                realCeilingMs: _wallCeilingMs != null ? _wallCeilingMs : Math.max(60000, (Number(budgetMs) || 0) * 8)
             }));
             // Caller-supplied experiment overrides (direct audit harness only). Installed
             // alongside the search clock and torn down in the same finally so they never
@@ -17164,6 +17192,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     forbiddenFirstMoves: Array.isArray(opts.forbiddenFirstMoves)
                         ? opts.forbiddenFirstMoves.filter(Number.isFinite)
                         : null,
+                    wallCeilingMs: (Number.isFinite(opts.wallCeilingMs) && opts.wallCeilingMs > 0) ? opts.wallCeilingMs : null,
                     allowRescueProfiles: executionMode === 'referee-with-compat-profiles',
                     onlyRescueProfiles: false,
                     auditMode: !!opts.auditMode,
