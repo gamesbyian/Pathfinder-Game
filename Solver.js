@@ -288,6 +288,57 @@ function installSolver(APP) {
         }
         return { shouldRun, control, record, getReport };
     }
+
+    // Single source of truth for options forwarded from PathfinderSolver → SolverCore._solveInstance.
+    // Pass `extra` to override computed fields (timeLimit, startTime, startGateArchetype) and inject
+    // per-pass experiment overrides. All other keys are read directly from the options object so a new
+    // option only needs to be added here — not also in every internalOpts construction site.
+    function assembleSolverCoreOpts(opts, extra = {}) {
+        return {
+            timeLimit:                          opts.localTimeLimit ?? opts.timeLimit,
+            startTime:                          opts.startTime,
+            onProgress:                         opts.onProgress,
+            signal:                             opts.signal,
+            dirOrderVariant:                    opts.dirOrderVariant ?? 'default',
+            hazardPolicy:                       opts.hazardPolicy ?? 'forbid',
+            disabledPrunes:                     opts.disabledPrunes ?? [],
+            useFailMemo:                        opts.useFailMemo ?? true,
+            falseGoalPolicy:                    opts.falseGoalPolicy ?? 'forbidIntersect',
+            enableForcedMoves:                  opts.enableForcedMoves ?? true,
+            scoringMode:                        opts.scoringMode ?? 'modern',
+            portalBiasMode:                     opts.portalBiasMode ?? 'adaptiveMustCross',
+            structuralMode:                     opts.structuralMode ?? false,
+            phasePolicy:                        opts.phasePolicy ?? null,
+            structuralTemplate:                 opts.structuralTemplate ?? null,
+            objectiveTrack:                     opts.objectiveTrack ?? null,
+            templateCommitment:                 opts.templateCommitment ?? null,
+            portalLockPolicy:                   opts.portalLockPolicy ?? null,
+            knotBudgetPolicy:                   opts.knotBudgetPolicy ?? null,
+            controlPlane:                       opts.controlPlane ?? null,
+            enableLowExpansionProbe:            opts.enableLowExpansionProbe ?? false,
+            rootExpansionFloorCount:            opts.rootExpansionFloorCount ?? null,
+            forceRootExpansionFloor:            opts.forceRootExpansionFloor ?? false,
+            relaxRootSuppressionFirstLayer:     opts.relaxRootSuppressionFirstLayer ?? false,
+            startGateArchetype:                 opts.startGateArchetype ?? null,
+            forcePhaseArchetype:                opts.forcePhaseArchetype ?? null,
+            antiDriftEdgeLock:                  opts.antiDriftEdgeLock ?? false,
+            suppressPerimeterBias:              opts.suppressPerimeterBias ?? false,
+            contradictionRecoveryMode:          opts.contradictionRecoveryMode ?? false,
+            assertKnownSolvableBounds:          opts.assertKnownSolvableBounds ?? false,
+            forbidPortals:                      opts.forbidPortals ?? false,
+            endgameIDAStarEnabled:              opts.endgameIDAStarEnabled ?? false,
+            endgameIDAStarTriggerDepthRatio:    opts.endgameIDAStarTriggerDepthRatio ?? 0.85,
+            endgameIDAStarBoundCeiling:         opts.endgameIDAStarBoundCeiling ?? 20,
+            endgameIDAStarBudgetFraction:       opts.endgameIDAStarBudgetFraction ?? 0.5,
+            forbiddenPrefixes:                  opts.forbiddenPrefixes ?? null,
+            forbiddenFirstMoves:                opts.forbiddenFirstMoves ?? null,
+            useUnifiedHKBound:                  opts.useUnifiedHKBound ?? false,
+            commitmentPlan:                     opts.commitmentPlan ?? null,
+            memoStrictness:                     opts.memoStrictness ?? null,
+            ...extra,
+        };
+    }
+
     // ======================================================
     // I) APP.Solver
     // Purpose: async hint/solve orchestration and run lifecycle state.
@@ -6768,65 +6819,24 @@ function installSolver(APP) {
                         },
                         applyMove: async (state, gateKey, out) => {
                             await new Promise(r => setTimeout(r, 0));
-                            const internalOpts = {
+                            // Experiment overrides (audit harness only; null in production) force
+                            // orderingPolicy/dirOrderVariant/rootTieSeed so a single CLI flag reaches
+                            // the DFS. forcedPolicyProfile is the per-pass override injected by the
+                            // cascade planner.
+                            const _expOv = getExperimentOverrides();
+                            const _expInj = {};
+                            if (_expOv || forcedPolicyProfile) {
+                                const policy = _expOv?.orderingPolicy || forcedPolicyProfile;
+                                if (policy) _expInj.orderingPolicy = policy;
+                                if (_expOv?.dirOrderVariant) _expInj.dirOrderVariant = _expOv.dirOrderVariant;
+                                if (Number.isFinite(_expOv?.rootTieSeedOffset)) _expInj.rootTieSeed = _expOv.rootTieSeedOffset >>> 0;
+                            }
+                            const internalOpts = assembleSolverCoreOpts(options, {
                                 timeLimit: localTimeLimit,
-                                dirOrderVariant,
                                 startTime,
-                                onProgress,
-                                signal,
-                                hazardPolicy,
-                                disabledPrunes,
-                                useFailMemo,
-                                falseGoalPolicy,
-                                enableForcedMoves,
-                                scoringMode,
-                                portalBiasMode,
-                                structuralMode,
-                                phasePolicy,
-                                structuralTemplate,
-                                objectiveTrack,
-                                templateCommitment,
-                                portalLockPolicy,
-                                knotBudgetPolicy,
-                                controlPlane,
-                                enableLowExpansionProbe,
-                                rootExpansionFloorCount,
-                                forceRootExpansionFloor,
-                                relaxRootSuppressionFirstLayer,
                                 startGateArchetype: state?.startGateArchetype || null,
-                                forcePhaseArchetype,
-                                antiDriftEdgeLock,
-                                suppressPerimeterBias,
-                                // Endgame IDA* options (default-off; archetype dispatch in
-                                // _buildAttemptPlan sets these on planned attempts; PathfinderSolver.solve
-                                // destructures them but the internalOpts wrapper passed to
-                                // _solveInstance was an explicit allowlist — without forwarding here,
-                                // the DFS body always saw options.endgameIDAStarEnabled = undefined
-                                // even when the cascade plan had it set to true).
-                                endgameIDAStarEnabled,
-                                endgameIDAStarTriggerDepthRatio,
-                                endgameIDAStarBoundCeiling,
-                                endgameIDAStarBudgetFraction,
-                                forbiddenPrefixes,
-                                forbiddenFirstMoves,
-                                useUnifiedHKBound,
-                                // The DFS reads its scoring policy / direction order / root-tie
-                                // seed from these option fields, but this internalOpts wrapper is
-                                // an explicit allowlist, so the per-pass forcedPolicyProfile is the
-                                // only policy that normally reaches it. Experiment overrides (audit
-                                // harness only; null in production) force the policy/variant/seed on
-                                // every pass so a single CLI flag actually reaches the search.
-                                ...(() => {
-                                    const ov = getExperimentOverrides();
-                                    if (!ov) return forcedPolicyProfile ? { orderingPolicy: forcedPolicyProfile } : {};
-                                    const inj = {};
-                                    const policy = ov.orderingPolicy || forcedPolicyProfile;
-                                    if (policy) inj.orderingPolicy = policy;
-                                    if (ov.dirOrderVariant) inj.dirOrderVariant = ov.dirOrderVariant;
-                                    if (Number.isFinite(ov.rootTieSeedOffset)) inj.rootTieSeed = ov.rootTieSeedOffset >>> 0;
-                                    return inj;
-                                })()
-                            };
+                                ..._expInj,
+                            });
                             const result = await SolverCore._solveInstance(gateKey, distMap, flipperDistMap, passCellUsageFreq, level, internalOpts, debugStats);
                             if (result === SOLVER_ABORTED) return { kind: 'aborted' };
                             if (result === SOLVER_TIMEOUT) return { kind: 'timeout' };
@@ -7831,7 +7841,9 @@ function installSolver(APP) {
                             forbiddenFirstMoves: Array.isArray(options?.forbiddenFirstMoves)
                                 ? options.forbiddenFirstMoves.filter(Number.isFinite)
                                 : null,
-                            useUnifiedHKBound: !!options?.useUnifiedHKBound
+                            useUnifiedHKBound: !!options?.useUnifiedHKBound,
+                            commitmentPlan: options?.commitmentPlan || null,
+                            memoStrictness: Number(options?.memoStrictness) || 1,
                         });
                         const out = await SearchFramework.runSearch({
                             level,
