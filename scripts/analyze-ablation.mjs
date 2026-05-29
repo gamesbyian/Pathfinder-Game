@@ -1,35 +1,74 @@
 #!/usr/bin/env node
 /**
- * Ablation analysis.
+ * Ablation analysis — single-run and combined multi-run modes.
  *
- * Reads output from solver-ablation.mjs and produces a structured report
- * answering:
- *   - Which techniques are indispensable? (regressions when disabled)
- *   - Which techniques have meaningful standalone coverage?
- *   - Which techniques are redundant or only situationally needed?
- *   - Where does budget sweeping unlock new solves vs just going faster?
- *   - Which levels are "canaries" that require specific technique logic?
- *   - How much time is wasted on pre-solve overhead per level?
- *   - What is the minimum covering technique set?
+ * Single-run: reads one ablation output directory and produces a deep report.
+ * Multi-run:  merges results across multiple directories and produces a
+ *             combined technique-verdict table across the union of tested levels.
  *
  * Usage:
  *   node scripts/analyze-ablation.mjs --input-dir=audits/ablation/run1
- *   node scripts/analyze-ablation.mjs --input-dir=audits/ablation/run1 --output=audits/ablation/run1/analysis.md
- *   node scripts/analyze-ablation.mjs --input-dir=audits/ablation/run1 --json
+ *   node scripts/analyze-ablation.mjs --input-dir=audits/ablation/run1 --output=path/analysis.md
+ *
+ *   # Multi-run: repeat --input-dir, or use --input-dirs for a comma list, or --input-glob
+ *   node scripts/analyze-ablation.mjs \
+ *     --input-dir=audits/ablation/stratified-39 \
+ *     --input-dir=audits/ablation/new-levels-8
+ *   node scripts/analyze-ablation.mjs --input-dirs=audits/ablation/stratified-39,audits/ablation/new-levels-8
+ *   node scripts/analyze-ablation.mjs --input-glob=audits/ablation/\*
  */
 import { readFile, writeFile } from 'node:fs/promises';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
 // ─── CLI ──────────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
+
+// Collect all --input-dir values (may be repeated)
+const inputDirs = [
+  ...args.filter(a => a.startsWith('--input-dir=')).map(a => a.slice('--input-dir='.length)),
+  ...(args.find(a => a.startsWith('--input-dirs='))?.slice('--input-dirs='.length).split(',') ?? []),
+].filter(Boolean);
+
+// --input-glob: expand to matching subdirectories that contain manifest.json
+const inputGlob = args.find(a => a.startsWith('--input-glob='))?.slice('--input-glob='.length);
+if (inputGlob) {
+  // Simple glob: treat as a parent-dir pattern (e.g. audits/ablation/*)
+  const globParent = inputGlob.endsWith('/*') ? inputGlob.slice(0, -2)
+    : inputGlob.endsWith('*') ? path.dirname(inputGlob)
+    : inputGlob;
+  if (existsSync(globParent)) {
+    for (const entry of readdirSync(globParent)) {
+      const full = path.join(globParent, entry);
+      if (statSync(full).isDirectory() && existsSync(path.join(full, 'manifest.json'))) {
+        inputDirs.push(full);
+      }
+    }
+  }
+}
+
 const argMap = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, ...v] = a.split('='); return [k, v.join('=')]; }));
 const argFlags = new Set(args.filter(a => a.startsWith('--') && !a.includes('=')));
 
-const inputDir = argMap.get('--input-dir');
+// Single-dir mode: original --input-dir (or first of multiple)
+const inputDir = inputDirs[0] ?? argMap.get('--input-dir');
+const multiMode = inputDirs.length > 1;
+
 if (!inputDir || !existsSync(inputDir)) {
-  console.error(`Usage: node scripts/analyze-ablation.mjs --input-dir=<path>`);
+  console.error([
+    'Usage (single run):',
+    '  node scripts/analyze-ablation.mjs --input-dir=audits/ablation/run1',
+    '',
+    'Usage (combined multi-run):',
+    '  node scripts/analyze-ablation.mjs --input-dir=dir1 --input-dir=dir2',
+    '  node scripts/analyze-ablation.mjs --input-dirs=dir1,dir2',
+    '  node scripts/analyze-ablation.mjs --input-glob=audits/ablation/*',
+    '',
+    'Common options:',
+    '  --output=PATH    Write report to file in addition to stdout',
+    '  --json           Emit machine-readable JSON instead of text',
+  ].join('\n'));
   process.exit(1);
 }
 const outputPath = argMap.get('--output') || null;
@@ -487,7 +526,282 @@ function analyzeByFeature() {
   return rows;
 }
 
-// ─── Run all analyses ─────────────────────────────────────────────────────────
+// ─── runCombinedAnalysis: multi-run cross-directory aggregation ───────────────
+async function runCombinedAnalysis(dirs, outPath, asJson) {
+  // Load every run
+  const runs = [];
+  for (const dir of dirs) {
+    const manifest = await loadJson(path.join(dir, 'manifest.json'));
+    if (!manifest) { console.warn(`Skipping ${dir}: no manifest.json`); continue; }
+    const variants = manifest.completedVariants || manifest.variants || [];
+    const variantData = {};
+    for (const v of variants) {
+      const file = v.outputFile || `${v.variantId || v.id}.json`;
+      const data = await loadJson(path.join(dir, file));
+      if (data) variantData[v.variantId || v.id] = data;
+    }
+    // Also try loading baseline.json directly (it may not be listed in manifest.variants for disable-one runs)
+    if (!variantData['baseline']) {
+      const base = await loadJson(path.join(dir, 'baseline.json'));
+      if (base) variantData['baseline'] = base;
+    }
+    runs.push({ dir, manifest, variantData, levels: manifest.levels || [] });
+  }
+
+  if (runs.length === 0) {
+    console.error('No valid ablation runs found in provided directories.');
+    process.exit(1);
+  }
+
+  // Union of all level numbers tested across all runs
+  const allLevels = [...new Set(runs.flatMap(r => r.levels))].sort((a, b) => a - b);
+
+  // Collect all technique IDs that appear as disable-X variants across any run
+  const allTechIds = [...new Set(
+    runs.flatMap(r => Object.keys(r.variantData)
+      .filter(k => k.startsWith('disable-'))
+      .map(k => k.slice('disable-'.length)))
+  )].sort();
+
+  // For each technique, for each run that tested it, collect: solved, total, regressions
+  // A "regression" = level that baseline solved in that run but disable-X failed.
+  const techRows = [];
+  for (const techId of allTechIds) {
+    const variantId = `disable-${techId}`;
+    const runResults = [];
+    let totalRegressions = 0;
+    const regressionLevels = new Set();
+    let totalLevelsTested = 0;
+    let totalSolved = 0;
+    let totalDeltaMs = 0; // sum of (disable - baseline) ms across all levels in all runs
+    const slowedLevels = []; // levels where disabling this tech slows by ≥1.5×
+
+    for (const run of runs) {
+      const vData = run.variantData[variantId];
+      if (!vData) continue; // this run didn't test this technique
+      const baseline = run.variantData['baseline'];
+      const baselineLevelMap = new Map((baseline?.levels || []).map(l => [l.level, l]));
+
+      const levels = vData.levels || [];
+      let runRegressions = [];
+      let runSolved = 0;
+
+      for (const l of levels) {
+        const base = baselineLevelMap.get(l.level);
+        if (l.ok) runSolved++;
+        if (base?.ok && !l.ok) {
+          runRegressions.push(l.level);
+          regressionLevels.add(l.level);
+          totalRegressions++;
+        }
+        if (l.ok && base?.ok) {
+          const delta = (l.elapsedMs || 0) - (base.elapsedMs || 0);
+          totalDeltaMs += delta;
+          if (base.elapsedMs > 0 && l.elapsedMs / base.elapsedMs >= 1.5 && delta >= 1000) {
+            slowedLevels.push({
+              level: l.level,
+              baseMs: base.elapsedMs,
+              varMs: l.elapsedMs,
+              multiplier: l.elapsedMs / base.elapsedMs,
+              run: path.basename(run.dir),
+            });
+          }
+        }
+      }
+
+      totalLevelsTested += levels.length;
+      totalSolved += runSolved;
+      runResults.push({
+        run: path.basename(run.dir),
+        levels: levels.length,
+        solved: runSolved,
+        regressions: runRegressions,
+        budget: run.manifest.budgetMs,
+      });
+    }
+
+    if (runResults.length === 0) continue; // never tested
+
+    const verdict = totalRegressions === 0 ? 'REDUNDANT'
+      : totalRegressions <= 2 ? 'SITUATIONAL'
+      : 'INDISPENSABLE';
+
+    slowedLevels.sort((a, b) => b.multiplier - a.multiplier);
+
+    techRows.push({
+      techId, variantId, verdict,
+      totalRegressions,
+      regressionLevels: [...regressionLevels].sort((a, b) => a - b),
+      totalLevelsTested,
+      totalSolved,
+      totalDeltaMs,
+      slowedLevels,
+      runResults,
+    });
+  }
+
+  techRows.sort((a, b) => b.totalRegressions - a.totalRegressions || a.techId.localeCompare(b.techId));
+
+  // Per-run baseline summary
+  const runSummaries = runs.map(r => {
+    const base = r.variantData['baseline'];
+    const levels = base?.levels || [];
+    const solved = levels.filter(l => l.ok).length;
+    const totalMs = levels.reduce((s, l) => s + (l.elapsedMs || 0), 0);
+    const techDist = {};
+    for (const l of levels.filter(l => l.ok)) {
+      const t = l.firstSolvingAttempt || 'unknown';
+      techDist[t] = (techDist[t] || 0) + 1;
+    }
+    return {
+      dir: r.dir,
+      label: path.basename(r.dir),
+      budget: r.manifest.budgetMs,
+      levelCount: r.levels.length,
+      solved,
+      totalMs,
+      topTechs: Object.entries(techDist).sort((a, b) => b[1] - a[1]).slice(0, 5),
+      hasBaseline: !!base,
+    };
+  });
+
+  // ── Render report ──────────────────────────────────────────────────────────
+  const L = [];
+  const h1 = s => L.push(`\n${'═'.repeat(72)}\n${s}\n${'═'.repeat(72)}`);
+  const h2 = s => L.push(`\n── ${s} ${'─'.repeat(Math.max(0, 68 - s.length - 4))}`);
+  const ln = s => L.push(s ?? '');
+
+  h1(`Combined Ablation Analysis (${runs.length} runs)`);
+  ln(`Generated: ${new Date().toISOString()}`);
+  ln(`Runs:`);
+  for (const rs of runSummaries) {
+    ln(`  ${rs.label.padEnd(36)} ${rs.levelCount} levels  budget=${rs.budget}ms  ${rs.hasBaseline ? `baseline: ${rs.solved}/${rs.levelCount} solved` : '(no baseline)'}`);
+  }
+  ln(`Union of all tested levels: ${allLevels.length} levels`);
+  ln(`  L${allLevels.slice(0, 20).join(', L')}${allLevels.length > 20 ? `, … (${allLevels.length - 20} more)` : ''}`);
+
+  // ── Per-run baseline summary ─────────────────────────────────────────────
+  const runsWithBaseline = runSummaries.filter(r => r.hasBaseline);
+  if (runsWithBaseline.length > 0) {
+    h2('PER-RUN BASELINE SUMMARY');
+    for (const rs of runsWithBaseline) {
+      ln(`  ${rs.label}: ${rs.solved}/${rs.levelCount} solved in ${(rs.totalMs/1000).toFixed(1)}s`);
+      for (const [tech, count] of rs.topTechs) {
+        ln(`    ${tech.padEnd(52)} ×${count}`);
+      }
+    }
+  }
+
+  // ── Combined technique-verdict table ─────────────────────────────────────
+  h2('COMBINED TECHNIQUE-VERDICT TABLE');
+  ln(`Verdict across all ${runs.length} run(s) and ${allLevels.length} unique level(s).`);
+  ln(`REDUNDANT = 0 regressions across all runs.  SITUATIONAL = 1-2.  INDISPENSABLE = 3+.`);
+  ln('');
+  const colW = 30;
+  const runLabels = runs.map(r => path.basename(r.dir).slice(0, 14).padEnd(15));
+  ln(`  ${'Technique'.padEnd(colW)} ${'Combined'.padEnd(13)} ${'Regressions'.padEnd(14)} ${runLabels.join(' ')}`);
+  ln(`  ${'─'.repeat(colW + 13 + 14 + runs.length * 16 + 4)}`);
+
+  for (const t of techRows) {
+    const regStr = t.totalRegressions > 0
+      ? `L${t.regressionLevels.slice(0,4).join(',L')}${t.regressionLevels.length > 4 ? '…' : ''}`
+      : 'none';
+    const perRunCols = runs.map(r => {
+      const rr = t.runResults.find(x => x.run === path.basename(r.dir));
+      if (!rr) return '(not run)      ';
+      if (rr.regressions.length === 0) return 'REDUNDANT      ';
+      if (rr.regressions.length <= 2) return `SITUATIONAL(${rr.regressions.length})  `;
+      return `INDISPEN.(${rr.regressions.length})   `;
+    });
+    ln(`  ${t.techId.padEnd(colW)} ${t.verdict.padEnd(13)} ${regStr.padEnd(14)} ${perRunCols.join(' ')}`);
+  }
+
+  // ── Regression detail ────────────────────────────────────────────────────
+  const withRegressions = techRows.filter(t => t.totalRegressions > 0);
+  if (withRegressions.length > 0) {
+    h2('REGRESSION DETAIL');
+    for (const t of withRegressions) {
+      ln(`  ${t.techId} — ${t.totalRegressions} total regression(s): L${t.regressionLevels.join(', L')}`);
+      for (const rr of t.runResults.filter(r => r.regressions.length > 0)) {
+        ln(`    run: ${rr.run} — L${rr.regressions.join(', L')} (budget=${rr.budget}ms)`);
+      }
+    }
+  }
+
+  // ── Timing impact (cross-run aggregate) ─────────────────────────────────
+  const timingRows = techRows.filter(t => Math.abs(t.totalDeltaMs) >= 1000 || t.slowedLevels.length > 0);
+  if (timingRows.length > 0) {
+    h2('TIMING IMPACT (aggregate across all runs)');
+    ln(`  ${'Technique'.padEnd(colW)} ${'Δ total'.padEnd(10)} Worst slowdowns`);
+    ln(`  ${'─'.repeat(72)}`);
+    for (const t of timingRows.slice().sort((a, b) => b.totalDeltaMs - a.totalDeltaMs)) {
+      const sign = t.totalDeltaMs >= 0 ? '+' : '';
+      const worstStr = t.slowedLevels.slice(0, 3).map(s =>
+        `L${s.level}:${s.multiplier.toFixed(1)}× (${s.run})`).join('  ');
+      ln(`  ${t.techId.padEnd(colW)} ${(sign + Math.round(t.totalDeltaMs/1000) + 's').padEnd(10)} ${worstStr}`);
+    }
+  }
+
+  // ── Level coverage map ───────────────────────────────────────────────────
+  h2('LEVEL COVERAGE MAP');
+  ln(`Which runs tested each level, and what the baseline result was.`);
+  ln('');
+  // Build a map: level → {run: {baseline solved?, disable-X results}}
+  const runLabelPad = runs.map(r => path.basename(r.dir).slice(0, 12).padEnd(13));
+  ln(`  ${'Level'.padEnd(8)} ${runLabelPad.join(' ')}`);
+  ln(`  ${'─'.repeat(8 + runs.length * 14)}`);
+  for (const lvl of allLevels) {
+    const cols = runs.map(r => {
+      if (!r.levels.includes(lvl)) return '(---)         ';
+      const base = r.variantData['baseline'];
+      const bl = base?.levels?.find(l => l.level === lvl);
+      if (!bl) return '(no-base)     ';
+      const tech = (bl.firstSolvingAttempt || 'unknown').slice(0, 12);
+      return (bl.ok ? `✓ ${tech}` : `✗ failed`).padEnd(13);
+    });
+    ln(`  L${String(lvl).padEnd(6)} ${cols.join(' ')}`);
+  }
+
+  // ── Summary verdict ──────────────────────────────────────────────────────
+  h2('SUMMARY VERDICT');
+  const indispensable = techRows.filter(t => t.verdict === 'INDISPENSABLE').map(t => t.techId);
+  const situational = techRows.filter(t => t.verdict === 'SITUATIONAL').map(t => t.techId);
+  const redundant = techRows.filter(t => t.verdict === 'REDUNDANT').map(t => t.techId);
+  if (indispensable.length) ln(`INDISPENSABLE (≥3 regressions):  ${indispensable.join(', ')}`);
+  if (situational.length)  ln(`SITUATIONAL   (1–2 regressions): ${situational.join(', ')}`);
+  if (redundant.length)    ln(`REDUNDANT     (0 regressions):   ${redundant.join(', ')}`);
+  ln('');
+  ln(`Combined sample: ${allLevels.length} unique levels across ${runs.length} runs.`);
+  ln(`Caution: a REDUNDANT verdict is only as strong as sample coverage.`);
+  ln(`REDUNDANT techniques tested on ≤10 levels should be retested on a larger set.`);
+  ln('');
+  // Note which techniques have thin coverage
+  for (const t of redundant.map(id => techRows.find(r => r.techId === id)).filter(Boolean)) {
+    if (t.totalLevelsTested < 20) {
+      ln(`  ⚠ ${t.techId}: only ${t.totalLevelsTested} levels tested — verdict may not generalize.`);
+    }
+  }
+
+  const report = L.join('\n');
+
+  if (asJson) {
+    console.log(JSON.stringify({ runs: runSummaries, techniques: techRows, allLevels }, null, 2));
+  } else {
+    console.log(report);
+  }
+  if (outPath) {
+    await writeFile(outPath, report + '\n', 'utf8');
+    console.log(`\nReport saved to ${outPath}`);
+  }
+}
+
+// ─── Multi-run combined analysis ─────────────────────────────────────────────
+if (multiMode) {
+  await runCombinedAnalysis(inputDirs, outputPath, jsonMode);
+  process.exit(0);
+}
+
+// ─── Run all analyses (single-dir mode) ──────────────────────────────────────
 const baselineAnalysis = analyzeBaseline();
 const archetypeEfficiencyAnalysis = analyzeArchetypeEfficiency();
 const disableOneAnalysis = analyzeDisableOne();
