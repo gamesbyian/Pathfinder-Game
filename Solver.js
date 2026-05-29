@@ -161,6 +161,10 @@
             if (Number.isFinite(Number(raw.globalBudgetMultiplier)) && Number(raw.globalBudgetMultiplier) > 0 && Number(raw.globalBudgetMultiplier) !== 1) {
                 out.globalBudgetMultiplier = Number(raw.globalBudgetMultiplier);
             }
+            // Referee branch ablation knobs: { 'referee.recovery.preExpansion': { enabled: false }, ... }
+            if (raw.refereeBranchControls && typeof raw.refereeBranchControls === 'object' && !Array.isArray(raw.refereeBranchControls)) {
+                out.refereeBranchControls = raw.refereeBranchControls;
+            }
         }
         __solverExperimentOverrides = Object.keys(out).length ? out : null;
     };
@@ -233,6 +237,57 @@
     };
 
 function installSolver(APP) {
+    // ─── Referee Branch Context ───────────────────────────────────────────────
+    // Stable IDs for every strategy branch/stage inside _runSolveCascade and
+    // its sub-functions. Pass { refereeBranchControls: { 'id': { enabled: false } } }
+    // in solve() opts to disable specific branches for ablation experiments.
+    // All branches are enabled by default — behavior is fully preserved unless
+    // a control explicitly sets enabled:false.
+    const REFEREE_BRANCH_DEFAULTS = {
+        'referee.guardrail.retryStop':                  { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.portal.agnosticAttempt':               { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.baseline.stage0Core':                  { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.blueprint.planningStageEarly':         { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.blueprint.planningStageSecond':        { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.rapidCollapseDetect':         { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.rapidCollapseFallback':       { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.preExpansion':                { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.harvestThenFinish':           { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.knotBuilder':                 { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.lowExpansionFallback':        { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.mustCrossKnot':               { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.objectiveOrdering':           { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.goalSuppression':             { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.healthyExpansionEndurance':   { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.telemetryFamilySwitch':       { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.recovery.unknownFallback':             { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.rescue.preExpansionRescue':            { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.rescue.memoRelaxedProfile':            { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.rescue.hardHintFallback':              { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+    };
+
+    function createRefereeBranchContext(overrides = {}) {
+        const log = [];
+        function control(id) {
+            const def = REFEREE_BRANCH_DEFAULTS[id] || { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null };
+            return Object.assign({}, def, overrides[id] || {});
+        }
+        function shouldRun(id) {
+            return control(id).enabled !== false;
+        }
+        function record(id, metrics = {}) {
+            log.push({ id, ...metrics });
+        }
+        function getReport() {
+            // Compute uniqueContribution: first branch that solved (ok===true), all prior failed
+            const firstSolveIdx = log.findIndex(e => e.solved);
+            return log.map((e, i) => ({
+                ...e,
+                uniqueContribution: i === firstSolveIdx && e.solved === true,
+            }));
+        }
+        return { shouldRun, control, record, getReport };
+    }
     // ======================================================
     // I) APP.Solver
     // Purpose: async hint/solve orchestration and run lifecycle state.
@@ -16263,6 +16318,19 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 extractStageTelemetry,
                 shouldSwitchFamilyByTelemetryDelta
             } = context;
+            const branchCtx = solveContext.branchCtx;
+            const _vt = () => searchVirtualElapsedMs?.() ?? 0;
+            const _recordBranch = (id, attempted, result, extra = {}) => {
+                branchCtx?.record(id, {
+                    attempted,
+                    solved: attempted ? !!(result?.ok) : false,
+                    status: attempted ? (result?.status || (result?.ok ? 'solved' : 'failed')) : 'skipped',
+                    failureReason: (!attempted || result?.ok) ? null : (result?.status || 'unknown'),
+                    failureCategory: result?.failureTaxonomy?.category || null,
+                    nodesExpanded: result?.debug?.nodesExpanded ?? result?.nodesExpanded ?? null,
+                    ...extra,
+                });
+            };
             const stageHelpers = {
                 runStage,
                 extractStageTelemetry,
@@ -16345,22 +16413,28 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 computeAttemptDeltaMetrics
             });
             if (guardrailBlocked) {
+                _recordBranch('referee.guardrail.retryStop', true, guardrailBlocked);
                 return {
                     last: guardrailBlocked,
                     stagesTried,
                     previousAttempt,
                     previousAttempts,
-                    strategyMetadata
+                    strategyMetadata,
+                    branchReport: branchCtx?.getReport() ?? [],
                 };
             }
+            _recordBranch('referee.guardrail.retryStop', false, null);
 
             const portalTriage = this.analyzePortalNeedAndUsefulness(level);
             const portalAgnosticBudget = this.computePortalAbstinenceBudget(level, portalTriage);
             let portalAgnosticRan = false;
             let portalAgnosticOutcome = 'not-run';
-            if (portalTriage.hasPortals && !portalTriage.topologicallyNecessary && portalAgnosticBudget > 0) {
+            const _portalAgnosticEnabled = branchCtx?.shouldRun('referee.portal.agnosticAttempt') !== false;
+            if (_portalAgnosticEnabled && portalTriage.hasPortals && !portalTriage.topologicallyNecessary && portalAgnosticBudget > 0) {
                 portalAgnosticRan = true;
+                const _t0portal = _vt();
                 const agnosticResult = await this.runPortalAgnosticAttempt(level, portalAgnosticBudget, solveContext, runStage, portalTriage);
+                _recordBranch('referee.portal.agnosticAttempt', true, agnosticResult, { elapsedMs: _vt() - _t0portal, budgetMs: portalAgnosticBudget });
                 if (agnosticResult?.ok) {
                     agnosticResult.diagnostics = compactDefined({
                         ...(agnosticResult.diagnostics || {}),
@@ -16378,11 +16452,15 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         stagesTried,
                         previousAttempt,
                         previousAttempts,
-                        strategyMetadata
+                        strategyMetadata,
+                        branchReport: branchCtx?.getReport() ?? [],
                     };
                 }
                 portalAgnosticOutcome = agnosticResult?.status || 'failed';
-            } else if (portalTriage.hasPortals && portalTriage.topologicallyNecessary) {
+            } else {
+                _recordBranch('referee.portal.agnosticAttempt', false, null, { reason: !_portalAgnosticEnabled ? 'disabled' : !portalTriage.hasPortals ? 'no-portals' : portalTriage.topologicallyNecessary ? 'topology-required' : 'zero-budget' });
+            }
+            if (portalTriage.hasPortals && portalTriage.topologicallyNecessary) {
                 portalAgnosticOutcome = 'skipped-topology-required';
             } else if (portalTriage.hasPortals) {
                 portalAgnosticOutcome = 'skipped-policy';
@@ -16392,6 +16470,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
 
             let stage0ZeroExpansion = false;
             {
+                const _t0stage0 = _vt();
                 last = await runStage({
                     stage: 0,
                     name: 'Stage 0',
@@ -16418,15 +16497,20 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 stage0ZeroExpansion = !last.ok
                     && (last?.debug?.nodesExpanded ?? last?.nodesExpanded ?? 1) === 0
                     && ((searchVirtualElapsedMs() ?? (Date.now() - solveStartTime)) < 150);
+                _recordBranch('referee.baseline.stage0Core', true, last, { elapsedMs: _vt() - _t0stage0, budgetMs: baselineBudget, orderingPolicy: strategyMetadata.orderingPolicy });
 
                 if (!last.ok && last.status !== 'no-solution-proven') {
                     if (enableBlueprintPlanning) {
+                        const _t0bp1 = _vt();
                         const blueprintFirstResult = await this._runBlueprintPlanningStage({
                             last,
                             solveContext,
                             stageHelpers
                         });
                         last = blueprintFirstResult;
+                        _recordBranch('referee.blueprint.planningStageEarly', true, last, { elapsedMs: _vt() - _t0bp1 });
+                    } else {
+                        _recordBranch('referee.blueprint.planningStageEarly', false, null, { reason: 'disabled-by-flag' });
                     }
                     if (last.ok || last.status === 'no-solution-proven') {
                         // already resolved by blueprint-first pass
@@ -16434,6 +16518,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         const failureTaxonomy = classifySolveFailureTaxonomy(last, { level, lastMeaningfulStage: last.stage, goalReachable: isGoalReachableFromAnyGate(level) });
                         last.failureTaxonomy = failureTaxonomy;
                         const rapidCollapseSignature = detectRapidCollapseSignature({ baselineResult: last });
+                        _recordBranch('referee.recovery.rapidCollapseDetect', true, null, { triggered: rapidCollapseSignature.rapidCollapse, reason: rapidCollapseSignature.reason });
                         if (rapidCollapseSignature.rapidCollapse) {
                             const recoveryDisabledPrunes = Array.from(new Set([
                                 ...(Array.isArray(fallbackDisabledPrunes) ? fallbackDisabledPrunes : (complexityStrategy.pruneTogglesByTier?.[Math.min(2, escalationTier)] || [])),
@@ -16456,6 +16541,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                                     orderingPolicy: 'memoRelaxed'
                                 }
                             };
+                            const _t0rc = _vt();
                             last = await runStage({
                                 stage: 1,
                                 name: 'Stage 1',
@@ -16479,6 +16565,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                                     hintLadderState
                                 })
                             });
+                            _recordBranch('referee.recovery.rapidCollapseFallback', true, last, { elapsedMs: _vt() - _t0rc, budgetMs: recoveryBudget });
                             if (!last.ok) {
                                 last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                             }
@@ -16498,6 +16585,8 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                             last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                         }
                         const failureCategory = failureTaxonomy?.category || 'low-expansion-collapse';
+                        const _t0recovery = _vt();
+                        const _lastBeforeRecovery = last;
                         last = await this._runFailureCategoryRecovery({
                             failureCategory,
                             last,
@@ -16505,6 +16594,12 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                             stageHelpers,
                             overrides: { enableDiversifiedRootPass }
                         });
+                        // Map failure category to canonical branch ID for reporting
+                        const _categoryBranchId = failureCategory === 'pre-expansion-failure' ? 'referee.recovery.preExpansion'
+                            : failureCategory === 'low-expansion-collapse'     ? 'referee.recovery.harvestThenFinish'
+                            : failureCategory === 'healthy-expansion-timeout'  ? 'referee.recovery.healthyExpansionEndurance'
+                            :                                                     'referee.recovery.unknownFallback';
+                        _recordBranch(_categoryBranchId, true, last, { elapsedMs: _vt() - _t0recovery, inputCategory: failureCategory });
                         if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
                     }
                 }
@@ -16514,13 +16609,18 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             // unconstrained intersections (reqInt > mustCrossKeys.length). Activates only when
             // blueprintExtraCount > 0, so levels without unconstrained intersections are unaffected.
             if (!last.ok && last.status !== 'no-solution-proven') {
+                const _t0bp2 = _vt();
                 last = await this._runBlueprintPlanningStage({
                     last,
                     solveContext,
                     stageHelpers
                 });
+                _recordBranch('referee.blueprint.planningStageSecond', true, last, { elapsedMs: _vt() - _t0bp2 });
+            } else {
+                _recordBranch('referee.blueprint.planningStageSecond', false, null, { reason: last.ok ? 'already-solved' : 'no-solution-proven' });
             }
 
+            const _t0rescue = _vt();
             last = await this._runRescueProfileStage({
                 last,
                 solveContext,
@@ -16531,6 +16631,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     enableDiversifiedRootPass
                 }
             });
+            _recordBranch('referee.rescue.profileStage', true, last, { elapsedMs: _vt() - _t0rescue });
             if (!last.ok && purpose === 'hint' && !rapidCollapseRecoveryDiagnostics.attempted) {
                 rapidCollapseRecoveryDiagnostics = {
                     attempted: true,
@@ -16542,10 +16643,17 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 };
             }
             if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
+            const _lastBeforeHardHint = last;
+            const _t0hardHint = _vt();
             last = await this._runHardHintFallbackStage({
                 last,
                 solveContext,
                 stageHelpers
+            });
+            _recordBranch('referee.rescue.hardHintFallback', true, last, {
+                elapsedMs: _vt() - _t0hardHint,
+                triggered: !_lastBeforeHardHint.ok,
+                solvedHere: !_lastBeforeHardHint.ok && last.ok,
             });
             last.diagnostics = compactDefined({
                 ...(last.diagnostics || {}),
@@ -16559,7 +16667,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 }
             });
 
-            return { last, stagesTried, previousAttempt, previousAttempts, strategyMetadata };
+            return { last, stagesTried, previousAttempt, previousAttempts, strategyMetadata, branchReport: branchCtx?.getReport() ?? [] };
         },
 
         _createSolveExecutionHelpers({ stagesTried, opts = {} } = {}) {
@@ -16799,6 +16907,10 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     activePolicyLadder
                 }
             };
+            // Referee branch context — enable/disable/report individual strategy paths.
+            // refereeBranchControls may come from direct opts OR from experimentOverrides (ablation harness).
+            const _refereeBranchControls = opts.refereeBranchControls ?? getExperimentOverrides()?.refereeBranchControls ?? {};
+            solveContext.branchCtx = createRefereeBranchContext(_refereeBranchControls);
             // Unified architecture: one referee engine with policy personalities.
             // Migration note: all solving is now referee; historical legacy toggles are compatibility aliases only.
             const {
@@ -16841,7 +16953,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 clearSearchClock();
                 clearExperimentOverrides();
             }
-            const { last, stagesTried: resolvedStagesTried, previousAttempt, previousAttempts, strategyMetadata } = cascadeResult;
+            const { last, stagesTried: resolvedStagesTried, previousAttempt, previousAttempts, strategyMetadata, branchReport } = cascadeResult;
 
             const { attemptDelta } = this._recordSolveAttemptOutcome({
                 last,
@@ -16854,7 +16966,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 extractAttemptQualityMetrics,
                 computeAttemptDeltaMetrics
             });
-            return this._decorateFinalSolveResult({
+            const finalResult = this._decorateFinalSolveResult({
                 last,
                 level,
                 stagesTried: resolvedStagesTried,
@@ -16872,6 +16984,8 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     directionPolicy: complexityStrategy.directionPolicy || {}
                 }
             });
+            if (branchReport?.length) finalResult.refereeBranchReport = branchReport;
+            return finalResult;
         },
 
         async getHint(levelInput, opts = {}) {
@@ -17076,8 +17190,10 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 });
                 const refereeTimeMs = Math.round(performance.now() - refereeStart);
                 const __preCanonAttempts = Array.isArray(solverResult?.attempts) ? solverResult.attempts : [];
+                const __preCanonBranchReport = solverResult?.refereeBranchReport ?? null;
                 solverResult = createCanonicalSolveResult(solverResult || {});
                 if (__preCanonAttempts.length > 0) solverResult.attempts = __preCanonAttempts;
+                if (__preCanonBranchReport?.length) solverResult.refereeBranchReport = __preCanonBranchReport;
                 applyCanonicalSolutionShape(solverResult);
 
                 let finalStatus = solverResult.rawStatus || solverResult.status || 'error';
@@ -17182,7 +17298,9 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     rescueProfileSummary: solverResult.rescueProfileSummary || null,
                     // Compatibility aliases for audit/UI consumers.
                     stage11RescueDelta: solverResult.enduranceRescueDelta || solverResult.stage11RescueDelta || null,
-                    legacyRescueSummary: solverResult.rescueProfileSummary || solverResult.legacyRescueSummary || null
+                    legacyRescueSummary: solverResult.rescueProfileSummary || solverResult.legacyRescueSummary || null,
+                    // Referee branch ablation telemetry — present only when refereeBranchControls supplied.
+                    refereeBranchReport: solverResult.refereeBranchReport?.length ? solverResult.refereeBranchReport : undefined
                 }, compatAliases.executionPath, 'audit-normalizer'), { levelId, purpose, branch: 'normal', auditMode: !!opts.auditMode });
             } catch (err) {
                 const totalSolveTimeMs = Math.round(performance.now() - solveStart);

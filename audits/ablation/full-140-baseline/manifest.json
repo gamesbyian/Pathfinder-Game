@@ -1,7 +1,7 @@
 {
-  "experiment": "disable-one",
-  "timestamp": "2026-05-29T06:00:02.140Z",
-  "commitSha": "1014a4546a48d67d21f8f3006f75594b27f1eaba",
+  "experiment": "baseline",
+  "timestamp": "2026-05-29T08:12:39.382Z",
+  "commitSha": "686b4dab5c63e371062621b82143c41b234c6c9d",
   "budgetMs": 180000,
   "purpose": "hint",
   "levelCount": 140,
@@ -1848,70 +1848,24 @@
   ],
   "variants": [
     {
-      "id": "disable-structural-modern",
-      "desc": "Disable: Primary structural search (modern scoring, perimeterSweep profile)",
-      "config": {
-        "disabledAttemptLabels": [
-          "structural-modern"
-        ]
-      },
-      "outputFile": "disable-structural-modern.json"
-    },
-    {
-      "id": "disable-template",
-      "desc": "Disable: Template-guided warmup passes (template-0/1/2 + template-best-focus)",
-      "config": {
-        "disabledAttemptLabels": [
-          "template"
-        ]
-      },
-      "outputFile": "disable-template.json"
-    },
-    {
-      "id": "disable-archetype",
-      "desc": "Disable: Archetype-dispatched prepended passes (high-intersection-burden etc.)",
-      "config": {
-        "disabledAttemptLabels": [
-          "archetype"
-        ]
-      },
-      "outputFile": "disable-archetype.json"
+      "id": "baseline",
+      "desc": "Baseline (standard solver)",
+      "config": {},
+      "outputFile": "baseline.json"
     }
   ],
-  "completedAt": "2026-05-29T06:50:15.699Z",
-  "totalElapsedMs": 3013558,
+  "completedAt": "2026-05-29T08:20:33.817Z",
+  "totalElapsedMs": 474434,
   "completedVariants": [
     {
-      "variantId": "disable-structural-modern",
-      "outputFile": "disable-structural-modern.json",
+      "variantId": "baseline",
+      "outputFile": "baseline.json",
       "summary": {
         "solved": 140,
         "failed": 0,
         "errors": 0,
         "total": 140,
-        "totalMs": 690776
-      }
-    },
-    {
-      "variantId": "disable-template",
-      "outputFile": "disable-template.json",
-      "summary": {
-        "solved": 139,
-        "failed": 1,
-        "errors": 0,
-        "total": 140,
-        "totalMs": 679201
-      }
-    },
-    {
-      "variantId": "disable-archetype",
-      "outputFile": "disable-archetype.json",
-      "summary": {
-        "solved": 139,
-        "failed": 1,
-        "errors": 0,
-        "total": 140,
-        "totalMs": 1643572
+        "totalMs": 474431
       }
     }
   ]

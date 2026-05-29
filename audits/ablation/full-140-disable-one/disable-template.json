@@ -1,0 +1,3916 @@
+{
+  "variantId": "disable-template",
+  "desc": "Disable: Template-guided warmup passes (template-0/1/2 + template-best-focus)",
+  "config": {
+    "disabledAttemptLabels": [
+      "template"
+    ]
+  },
+  "commitSha": "1014a4546a48d67d21f8f3006f75594b27f1eaba",
+  "timestamp": "2026-05-29T06:22:52.121Z",
+  "budgetMs": 180000,
+  "levelCount": 140,
+  "summary": {
+    "solved": 139,
+    "failed": 1,
+    "errors": 0,
+    "total": 140,
+    "totalMs": 679201
+  },
+  "levels": [
+    {
+      "level": 1,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 81,
+      "nodesExpanded": 1599,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 77,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 77,
+          "budgetMs": 14511,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 2,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 71,
+      "nodesExpanded": 1958,
+      "maxDepth": 14,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 68,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 68,
+          "budgetMs": 14302,
+          "depthReached": 14,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 3,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 12,
+      "nodesExpanded": 202,
+      "maxDepth": 18,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 8,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 8,
+          "budgetMs": 14219,
+          "depthReached": 18,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 4,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 19,
+      "nodesExpanded": 126,
+      "maxDepth": 16,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 10,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 10,
+          "budgetMs": 88,
+          "depthReached": 16,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 5,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 90,
+      "nodesExpanded": 2345,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 86,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 86,
+          "budgetMs": 15254,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 6,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 56,
+      "nodesExpanded": 1461,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 54,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 54,
+          "budgetMs": 15046,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 7,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 8834,
+      "nodesExpanded": 274,
+      "maxDepth": 22,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 7,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 7,
+          "budgetMs": 5730,
+          "depthReached": 22,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 8,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 38,
+      "nodesExpanded": 1154,
+      "maxDepth": 35,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 34,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 34,
+          "budgetMs": 18791,
+          "depthReached": 35,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 9,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 9,
+      "nodesExpanded": 30,
+      "maxDepth": 22,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 4,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 4,
+          "budgetMs": 19070,
+          "depthReached": 22,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 10,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 27,
+      "nodesExpanded": 574,
+      "maxDepth": 22,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 23,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 23,
+          "budgetMs": 14511,
+          "depthReached": 22,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 11,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 80,
+      "nodesExpanded": 2556,
+      "maxDepth": 25,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 71,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 71,
+          "budgetMs": 95,
+          "depthReached": 25,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 12,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 1884,
+      "nodesExpanded": 63368,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 1880,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 1880,
+          "budgetMs": 14923,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 13,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 50,
+      "nodesExpanded": 1770,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 46,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 46,
+          "budgetMs": 14325,
+          "depthReached": 24,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 14,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 15,
+      "nodesExpanded": 111,
+      "maxDepth": 18,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 7,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 7,
+          "budgetMs": 95,
+          "depthReached": 18,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 15,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 7,
+      "nodesExpanded": 34,
+      "maxDepth": 25,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 3,
+          "budgetMs": 14094,
+          "depthReached": 25,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 16,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 10,
+      "nodesExpanded": 229,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 7,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 7,
+          "budgetMs": 14302,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 17,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 77,
+      "nodesExpanded": 2239,
+      "maxDepth": 19,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 66,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 66,
+          "budgetMs": 112,
+          "depthReached": 19,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 18,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 111,
+      "nodesExpanded": 3756,
+      "maxDepth": 16,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 106,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 106,
+          "budgetMs": 14302,
+          "depthReached": 16,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 19,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 12,
+      "nodesExpanded": 90,
+      "maxDepth": 32,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 6,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 6,
+          "budgetMs": 102,
+          "depthReached": 32,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 20,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 65,
+      "nodesExpanded": 1797,
+      "maxDepth": 22,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 58,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 58,
+          "budgetMs": 89,
+          "depthReached": 22,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 21,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 11,
+      "nodesExpanded": 39,
+      "maxDepth": 31,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 5,
+          "budgetMs": 15346,
+          "depthReached": 31,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 22,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 19,
+      "nodesExpanded": 249,
+      "maxDepth": 22,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 11,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 11,
+          "budgetMs": 102,
+          "depthReached": 22,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 23,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 55,
+      "nodesExpanded": 1577,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 52,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 52,
+          "budgetMs": 14511,
+          "depthReached": 24,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 24,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 26,
+      "nodesExpanded": 331,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 22,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 22,
+          "budgetMs": 14720,
+          "depthReached": 24,
+          "policyProfile": "knotBuilder",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 25,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 74,
+      "nodesExpanded": 2218,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 70,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 70,
+          "budgetMs": 14465,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 26,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 88460,
+      "nodesExpanded": 208713,
+      "maxDepth": 82,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5893,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 5893,
+          "budgetMs": 7099,
+          "depthReached": 82,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 27,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 137,
+      "nodesExpanded": 3517,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 125,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 125,
+          "budgetMs": 127,
+          "depthReached": 24,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 28,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 596,
+      "nodesExpanded": 8342,
+      "maxDepth": 50,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 589,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 589,
+          "budgetMs": 15364,
+          "depthReached": 50,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 29,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 97,
+      "nodesExpanded": 1427,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 88,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 88,
+          "budgetMs": 151,
+          "depthReached": 24,
+          "policyProfile": "knotBuilder",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 30,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 13,
+      "nodesExpanded": 22,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "archetype-sparse-near-closure-nearClosureRescue",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-sparse-near-closure-nearClosureRescue",
+          "solved": true,
+          "elapsedMs": 5,
+          "budgetMs": 450,
+          "depthReached": 20,
+          "policyProfile": "nearClosureRescue",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 31,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 30,
+      "nodesExpanded": 522,
+      "maxDepth": 21,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 26,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 26,
+          "budgetMs": 14302,
+          "depthReached": 21,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 32,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 18,
+      "nodesExpanded": 100,
+      "maxDepth": 38,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 9,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 9,
+          "budgetMs": 111,
+          "depthReached": 38,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 33,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 12,
+      "nodesExpanded": 33,
+      "maxDepth": 28,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 5,
+          "budgetMs": 103,
+          "depthReached": 28,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 34,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 2470,
+      "nodesExpanded": 2392,
+      "maxDepth": 21,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 61,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 61,
+          "budgetMs": 5702,
+          "depthReached": 21,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 35,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 9,
+      "nodesExpanded": 73,
+      "maxDepth": 37,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 5,
+          "budgetMs": 14411,
+          "depthReached": 37,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 36,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 2292,
+      "nodesExpanded": 50983,
+      "maxDepth": 28,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 1991,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 1991,
+          "budgetMs": 15555,
+          "depthReached": 28,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 37,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 103,
+      "nodesExpanded": 1376,
+      "maxDepth": 47,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 95,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 95,
+          "budgetMs": 88,
+          "depthReached": 47,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 38,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 86,
+      "nodesExpanded": 3525,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 82,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 82,
+          "budgetMs": 14094,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 39,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 85,
+      "nodesExpanded": 2476,
+      "maxDepth": 26,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 81,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 81,
+          "budgetMs": 14259,
+          "depthReached": 26,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 40,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 26,
+      "nodesExpanded": 138,
+      "maxDepth": 28,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 16,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 16,
+          "budgetMs": 87,
+          "depthReached": 28,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 41,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 280,
+      "nodesExpanded": 7316,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 274,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 274,
+          "budgetMs": 14594,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 42,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 9,
+      "nodesExpanded": 55,
+      "maxDepth": 40,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 4,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 4,
+          "budgetMs": 14094,
+          "depthReached": 40,
+          "policyProfile": "knotBuilder",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 43,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 26,
+      "nodesExpanded": 672,
+      "maxDepth": 42,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 22,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 22,
+          "budgetMs": 14684,
+          "depthReached": 42,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 44,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 16,
+      "nodesExpanded": 52,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 6,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 6,
+          "budgetMs": 81,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 45,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 382,
+      "nodesExpanded": 7829,
+      "maxDepth": 33,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 374,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 374,
+          "budgetMs": 162,
+          "depthReached": 33,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 46,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 137,
+      "nodesExpanded": 3553,
+      "maxDepth": 26,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 129,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 129,
+          "budgetMs": 117,
+          "depthReached": 26,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 47,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 43711,
+      "nodesExpanded": 19167,
+      "maxDepth": 58,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 467,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 467,
+          "budgetMs": 7035,
+          "depthReached": 58,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 48,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 1496,
+      "nodesExpanded": 35826,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 1001,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 1001,
+          "budgetMs": 15847,
+          "depthReached": 24,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 49,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 10,
+      "nodesExpanded": 53,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 5,
+          "budgetMs": 14511,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 50,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 40040,
+      "nodesExpanded": 37811,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 805,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 805,
+          "budgetMs": 6234,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 51,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 7193,
+      "nodesExpanded": 260982,
+      "maxDepth": 42,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 7185,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 7185,
+          "budgetMs": 15113,
+          "depthReached": 42,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 52,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 811,
+      "nodesExpanded": 33789,
+      "maxDepth": 37,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 807,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 807,
+          "budgetMs": 14818,
+          "depthReached": 37,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 53,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 239517,
+      "nodesExpanded": 164760,
+      "maxDepth": 47,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 6177,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 6177,
+          "budgetMs": 16328,
+          "depthReached": 47,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 54,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 8,
+      "nodesExpanded": 50,
+      "maxDepth": 46,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 4,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 4,
+          "budgetMs": 14094,
+          "depthReached": 46,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 55,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 28,
+      "nodesExpanded": 733,
+      "maxDepth": 32,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 23,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 23,
+          "budgetMs": 14094,
+          "depthReached": 32,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 56,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 3370,
+      "nodesExpanded": 93659,
+      "maxDepth": 32,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3035,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 3035,
+          "budgetMs": 16968,
+          "depthReached": 32,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 57,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 247,
+      "nodesExpanded": 8503,
+      "maxDepth": 45,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 234,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 234,
+          "budgetMs": 170,
+          "depthReached": 45,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 58,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 19,
+      "nodesExpanded": 415,
+      "maxDepth": 42,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 14,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 14,
+          "budgetMs": 15071,
+          "depthReached": 42,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 59,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 495,
+      "nodesExpanded": 20806,
+      "maxDepth": 50,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 489,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 489,
+          "budgetMs": 14505,
+          "depthReached": 50,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 60,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 589,
+      "nodesExpanded": 11486,
+      "maxDepth": 36,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 333,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 333,
+          "budgetMs": 17214,
+          "depthReached": 36,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 61,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 43522,
+      "nodesExpanded": 47256,
+      "maxDepth": 50,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 983,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 983,
+          "budgetMs": 7099,
+          "depthReached": 50,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 62,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 1507,
+      "nodesExpanded": 51610,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 1500,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 1500,
+          "budgetMs": 14527,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 63,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 74,
+      "nodesExpanded": 1577,
+      "maxDepth": 50,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 63,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 63,
+          "budgetMs": 168,
+          "depthReached": 50,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 64,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 39,
+      "nodesExpanded": 942,
+      "maxDepth": 40,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 35,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 35,
+          "budgetMs": 14722,
+          "depthReached": 40,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 65,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 24,
+      "nodesExpanded": 410,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 17,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 17,
+          "budgetMs": 150,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 66,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 36,
+      "nodesExpanded": 1179,
+      "maxDepth": 32,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 32,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 32,
+          "budgetMs": 14298,
+          "depthReached": 32,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 67,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 20,
+      "nodesExpanded": 570,
+      "maxDepth": 33,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 17,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 17,
+          "budgetMs": 14329,
+          "depthReached": 33,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 68,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 291,
+      "nodesExpanded": 8840,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 287,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 287,
+          "budgetMs": 15393,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 69,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 41,
+      "nodesExpanded": 1216,
+      "maxDepth": 27,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 33,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 33,
+          "budgetMs": 95,
+          "depthReached": 27,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 70,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 116,
+      "nodesExpanded": 3621,
+      "maxDepth": 40,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 108,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 108,
+          "budgetMs": 128,
+          "depthReached": 40,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 71,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 1106,
+      "nodesExpanded": 40021,
+      "maxDepth": 32,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 1102,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 1102,
+          "budgetMs": 15118,
+          "depthReached": 32,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 72,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 181,
+      "nodesExpanded": 9150,
+      "maxDepth": 62,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 176,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 176,
+          "budgetMs": 14950,
+          "depthReached": 62,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 73,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 98843,
+      "nodesExpanded": 17089,
+      "maxDepth": 60,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 355,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 355,
+          "budgetMs": 5846,
+          "depthReached": 60,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 74,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 3144,
+      "nodesExpanded": 101459,
+      "maxDepth": 56,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3136,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 3136,
+          "budgetMs": 16286,
+          "depthReached": 56,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 75,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 2016,
+      "nodesExpanded": 62852,
+      "maxDepth": 58,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 2009,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 2009,
+          "budgetMs": 15610,
+          "depthReached": 58,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 76,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 53,
+      "nodesExpanded": 2420,
+      "maxDepth": 46,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 49,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 49,
+          "budgetMs": 15053,
+          "depthReached": 46,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 77,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 22,
+      "nodesExpanded": 99,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 9,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 9,
+          "budgetMs": 120,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 78,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 176,
+      "nodesExpanded": 4864,
+      "maxDepth": 59,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 171,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 171,
+          "budgetMs": 14944,
+          "depthReached": 59,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 79,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 85,
+      "nodesExpanded": 2398,
+      "maxDepth": 80,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 72,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 72,
+          "budgetMs": 198,
+          "depthReached": 80,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 80,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 5406,
+      "nodesExpanded": 75858,
+      "maxDepth": 81,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3404,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 3404,
+          "budgetMs": 17664,
+          "depthReached": 81,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 81,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 20,
+      "nodesExpanded": 69,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 8,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 8,
+          "budgetMs": 88,
+          "depthReached": 24,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 82,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 714,
+      "nodesExpanded": 20229,
+      "maxDepth": 25,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 710,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 710,
+          "budgetMs": 14642,
+          "depthReached": 25,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 83,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 74,
+      "nodesExpanded": 2077,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "archetype-sparse-near-closure-nearClosureRescue",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 62,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-sparse-near-closure-nearClosureRescue",
+          "solved": true,
+          "elapsedMs": 62,
+          "budgetMs": 509,
+          "depthReached": 30,
+          "policyProfile": "nearClosureRescue",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 84,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 53,
+      "nodesExpanded": 749,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 40,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 40,
+          "budgetMs": 112,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 85,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 265,
+      "nodesExpanded": 6426,
+      "maxDepth": 18,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 260,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 260,
+          "budgetMs": 14367,
+          "depthReached": 18,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 86,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 22,
+      "nodesExpanded": 117,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 11,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 11,
+          "budgetMs": 88,
+          "depthReached": 24,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 87,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 21,
+      "nodesExpanded": 195,
+      "maxDepth": 22,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 18,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 18,
+          "budgetMs": 14302,
+          "depthReached": 22,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 88,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 10,
+      "nodesExpanded": 206,
+      "maxDepth": 21,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 7,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 7,
+          "budgetMs": 14094,
+          "depthReached": 21,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 89,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 276,
+      "nodesExpanded": 6725,
+      "maxDepth": 32,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 269,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 269,
+          "budgetMs": 14586,
+          "depthReached": 32,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 90,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 18,
+      "nodesExpanded": 224,
+      "maxDepth": 27,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 10,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 10,
+          "budgetMs": 110,
+          "depthReached": 27,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 91,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 10,
+      "nodesExpanded": 20,
+      "maxDepth": 18,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 4,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 4,
+          "budgetMs": 81,
+          "depthReached": 18,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 92,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 27602,
+      "nodesExpanded": 644555,
+      "maxDepth": 99,
+      "firstSolvingAttempt": "archetype-high-intersection-burden-intersectionHarvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 26374,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-high-intersection-burden-intersectionHarvest",
+          "solved": true,
+          "elapsedMs": 26374,
+          "budgetMs": 33750,
+          "depthReached": 99,
+          "policyProfile": "intersectionHarvest",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 93,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 12,
+      "nodesExpanded": 127,
+      "maxDepth": 19,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 6,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 6,
+          "budgetMs": 14302,
+          "depthReached": 19,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 94,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 10,
+      "nodesExpanded": 27,
+      "maxDepth": 25,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 4,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 4,
+          "budgetMs": 88,
+          "depthReached": 25,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 95,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 97,
+      "nodesExpanded": 3510,
+      "maxDepth": 18,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 93,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 93,
+          "budgetMs": 14367,
+          "depthReached": 18,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 96,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 164,
+      "nodesExpanded": 5410,
+      "maxDepth": 23,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 160,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 160,
+          "budgetMs": 14739,
+          "depthReached": 23,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 97,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 11,
+      "nodesExpanded": 39,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 4,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 4,
+          "budgetMs": 95,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 98,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 7,
+      "nodesExpanded": 59,
+      "maxDepth": 29,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 4,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 4,
+          "budgetMs": 14094,
+          "depthReached": 29,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 99,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 14,
+      "nodesExpanded": 276,
+      "maxDepth": 21,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 11,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 11,
+          "budgetMs": 14302,
+          "depthReached": 21,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 100,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 13,
+      "nodesExpanded": 152,
+      "maxDepth": 28,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 6,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 6,
+          "budgetMs": 87,
+          "depthReached": 28,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 101,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 21,
+      "nodesExpanded": 360,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 14,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 14,
+          "budgetMs": 110,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 102,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 59,
+      "nodesExpanded": 1787,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 51,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 51,
+          "budgetMs": 125,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 103,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 82,
+      "nodesExpanded": 3849,
+      "maxDepth": 39,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 78,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 78,
+          "budgetMs": 14094,
+          "depthReached": 39,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 104,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 7,
+      "nodesExpanded": 29,
+      "maxDepth": 27,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 3,
+          "budgetMs": 14135,
+          "depthReached": 27,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 105,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 2967,
+      "nodesExpanded": 54031,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 2023,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 2023,
+          "budgetMs": 17509,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 106,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 11,
+      "nodesExpanded": 29,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 3,
+          "budgetMs": 88,
+          "depthReached": 24,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 107,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 283,
+      "nodesExpanded": 9276,
+      "maxDepth": 35,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 279,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 279,
+          "budgetMs": 15123,
+          "depthReached": 35,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 108,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 25,
+      "nodesExpanded": 378,
+      "maxDepth": 33,
+      "firstSolvingAttempt": "archetype-sparse-near-closure-nearClosureRescue",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 16,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-sparse-near-closure-nearClosureRescue",
+          "solved": true,
+          "elapsedMs": 16,
+          "budgetMs": 563,
+          "depthReached": 33,
+          "policyProfile": "nearClosureRescue",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 109,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 36,
+      "nodesExpanded": 933,
+      "maxDepth": 42,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 26,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 26,
+          "budgetMs": 105,
+          "depthReached": 42,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 110,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 396,
+      "nodesExpanded": 8909,
+      "maxDepth": 22,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 197,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 197,
+          "budgetMs": 15333,
+          "depthReached": 22,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 111,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 27,
+      "nodesExpanded": 617,
+      "maxDepth": 25,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 18,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 18,
+          "budgetMs": 88,
+          "depthReached": 25,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 112,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 124,
+      "nodesExpanded": 6060,
+      "maxDepth": 29,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 120,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 120,
+          "budgetMs": 14302,
+          "depthReached": 29,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 113,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 9,
+      "nodesExpanded": 150,
+      "maxDepth": 33,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 5,
+          "budgetMs": 14094,
+          "depthReached": 33,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 114,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 197,
+      "nodesExpanded": 6700,
+      "maxDepth": 47,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 194,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 194,
+          "budgetMs": 14933,
+          "depthReached": 47,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 115,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 23,
+      "nodesExpanded": 278,
+      "maxDepth": 38,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 16,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 16,
+          "budgetMs": 125,
+          "depthReached": 38,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 116,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 26,
+      "nodesExpanded": 517,
+      "maxDepth": 24,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 21,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 21,
+          "budgetMs": 81,
+          "depthReached": 24,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 117,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 48,
+      "nodesExpanded": 755,
+      "maxDepth": 36,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 31,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 31,
+          "budgetMs": 115,
+          "depthReached": 36,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 118,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 26,
+      "nodesExpanded": 393,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 18,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 18,
+          "budgetMs": 81,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 119,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 2037,
+      "nodesExpanded": 27157,
+      "maxDepth": 44,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 1040,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 1040,
+          "budgetMs": 16634,
+          "depthReached": 44,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 120,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 12,
+      "nodesExpanded": 233,
+      "maxDepth": 26,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 8,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 8,
+          "budgetMs": 14302,
+          "depthReached": 26,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 121,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 95,
+      "nodesExpanded": 3285,
+      "maxDepth": 42,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 92,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 92,
+          "budgetMs": 14922,
+          "depthReached": 42,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 122,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 7,
+      "nodesExpanded": 31,
+      "maxDepth": 26,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 3,
+          "budgetMs": 18791,
+          "depthReached": 26,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 123,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 279,
+      "nodesExpanded": 5613,
+      "maxDepth": 28,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 275,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 275,
+          "budgetMs": 14302,
+          "depthReached": 28,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 124,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 232,
+      "nodesExpanded": 4315,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 115,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 115,
+          "budgetMs": 15451,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 125,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 31,
+      "nodesExpanded": 870,
+      "maxDepth": 36,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 27,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 27,
+          "budgetMs": 14302,
+          "depthReached": 36,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 126,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 54,
+      "nodesExpanded": 2090,
+      "maxDepth": 34,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 48,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 48,
+          "budgetMs": 88,
+          "depthReached": 34,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 127,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 102,
+      "nodesExpanded": 2320,
+      "maxDepth": 48,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 92,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 92,
+          "budgetMs": 152,
+          "depthReached": 48,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 128,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 40,
+      "nodesExpanded": 942,
+      "maxDepth": 40,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 36,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 36,
+          "budgetMs": 14722,
+          "depthReached": 40,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 129,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 8,
+      "nodesExpanded": 76,
+      "maxDepth": 32,
+      "firstSolvingAttempt": "template-side-commitment",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-side-commitment",
+          "solved": true,
+          "elapsedMs": 5,
+          "budgetMs": 14094,
+          "depthReached": 32,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 130,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 603,
+      "nodesExpanded": 16664,
+      "maxDepth": 50,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 595,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 595,
+          "budgetMs": 214,
+          "depthReached": 50,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 131,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 10,
+      "nodesExpanded": 65,
+      "maxDepth": 36,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 5,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 5,
+          "budgetMs": 14511,
+          "depthReached": 36,
+          "policyProfile": "knotBuilder",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 132,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 1020,
+      "nodesExpanded": 587,
+      "maxDepth": 30,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": [],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 133,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 533,
+      "nodesExpanded": 12542,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 528,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 528,
+          "budgetMs": 15231,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 134,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 65,
+      "nodesExpanded": 871,
+      "maxDepth": 53,
+      "firstSolvingAttempt": "archetype-portal-mustcross-constrained-portalCommitted",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 59,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-portal-mustcross-constrained-portalCommitted",
+          "solved": true,
+          "elapsedMs": 59,
+          "budgetMs": 33750,
+          "depthReached": 53,
+          "policyProfile": "portalCommitted",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 135,
+      "ok": false,
+      "status": "no-solution-inconclusive",
+      "elapsedMs": 1332,
+      "nodesExpanded": 1185,
+      "maxDepth": 21,
+      "firstSolvingAttempt": null,
+      "solvingAttemptIdx": -1,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 0,
+      "attemptCount": 0,
+      "attemptSummary": [],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 136,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 7326,
+      "nodesExpanded": 196305,
+      "maxDepth": 29,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 7318,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 7318,
+          "budgetMs": 17747,
+          "depthReached": 29,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 137,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 13,
+      "nodesExpanded": 238,
+      "maxDepth": 38,
+      "firstSolvingAttempt": "template-corner-harvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 9,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-corner-harvest",
+          "solved": true,
+          "elapsedMs": 9,
+          "budgetMs": 14603,
+          "depthReached": 38,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 138,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 17615,
+      "nodesExpanded": 499256,
+      "maxDepth": 99,
+      "firstSolvingAttempt": "archetype-high-intersection-burden-intersectionHarvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 17601,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-high-intersection-burden-intersectionHarvest",
+          "solved": true,
+          "elapsedMs": 17601,
+          "budgetMs": 33750,
+          "depthReached": 99,
+          "policyProfile": "intersectionHarvest",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 139,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 6419,
+      "nodesExpanded": 174659,
+      "maxDepth": 62,
+      "firstSolvingAttempt": "archetype-high-intersection-burden-intersectionHarvest",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 6408,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "archetype-high-intersection-burden-intersectionHarvest",
+          "solved": true,
+          "elapsedMs": 6408,
+          "budgetMs": 33750,
+          "depthReached": 62,
+          "policyProfile": "intersectionHarvest",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 140,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 6322,
+      "nodesExpanded": 149333,
+      "maxDepth": 75,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 6310,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 6310,
+          "budgetMs": 17747,
+          "depthReached": 75,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    }
+  ]
+}
