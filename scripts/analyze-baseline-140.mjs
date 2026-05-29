@@ -48,13 +48,7 @@ const levelClassifications = manifest?.levelClassifications || {};
 function techGroup(label) {
   if (!label) return 'none';
   if (label.startsWith('structural-modern')) return 'structural-modern';
-  if (label.startsWith('structural-conservative')) return 'structural-conservative';
   if (label.startsWith('template')) return 'template';
-  if (label.startsWith('portal-optional-modern')) return 'portal-optional-modern';
-  if (label.startsWith('portal-optional-endurance')) return 'portal-optional-endurance';
-  if (label.startsWith('portal-optional-perimeter')) return 'portal-optional-perimeter';
-  if (label.startsWith('must-cross-horizon')) return 'must-cross-horizon';
-  if (label.startsWith('endurance-longpath')) return 'endurance-longpath';
   if (label.startsWith('archetype')) return 'archetype';
   return label.split(':')[0].split('-').slice(0, 3).join('-');
 }
@@ -136,15 +130,10 @@ function buildStratifiedSample(targetSize = 50) {
     else reasons.set(n, reasons.get(n) + ' + ' + reason);
   };
 
-  // Tier 1: all non-structural-modern, non-structural-conservative winners
-  const tier1Techs = new Set(['template', 'portal-optional-modern', 'portal-optional-endurance', 'portal-optional-perimeter', 'must-cross-horizon', 'endurance-longpath', 'archetype']);
+  // Tier 1: template and archetype winners (structural-modern failed or was bypassed)
+  const tier1Techs = new Set(['template', 'archetype']);
   for (const l of solved) {
     if (tier1Techs.has(l.tech)) addLevel(l.level, `tier1:${l.tech}`);
-  }
-
-  // Tier 2: structural-conservative winners (these are interesting because SM failed)
-  for (const l of solved) {
-    if (l.tech === 'structural-conservative') addLevel(l.level, 'tier2:structural-conservative');
   }
 
   // Tier 3: levels that required stage escalation

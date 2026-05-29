@@ -19,9 +19,9 @@
  *   node scripts/solver-ablation.mjs --experiment=baseline --levels=all
  *   node scripts/solver-ablation.mjs --experiment=disable-one --levels=all
  *   node scripts/solver-ablation.mjs --experiment=full --output-dir=audits/ablation/run1
- *   node scripts/solver-ablation.mjs --experiment=custom --disable=must-cross-horizon
+ *   node scripts/solver-ablation.mjs --experiment=custom --disable=archetype
  *   node scripts/solver-ablation.mjs --experiment=custom --allow=structural-modern --global-budget-multiplier=2
- *   node scripts/solver-ablation.mjs --experiment=technique-budget --techniques=structural-modern,must-cross-horizon
+ *   node scripts/solver-ablation.mjs --experiment=technique-budget --techniques=structural-modern,template
  *   node scripts/solver-ablation.mjs --dry-run --experiment=full
  *
  * OUTPUT

@@ -86,7 +86,7 @@ const deriveLevelFailureSignature = (levelRow = {}) => {
   signature.knownHardCluster = signature.signatureScore >= 2.15;
   signature.recommendedGating = signature.knownHardCluster
     ? {
-        passOrder: ['must-cross-horizon', 'structural-modern', 'portal-optional-modern-no-portal', 'structural-conservative', 'endurance-longpath'],
+        passOrder: ['structural-modern', 'template', 'archetype'],
         budgetMultiplier: Number((1.15 + Math.min(0.35, signature.signatureScore * 0.08)).toFixed(3))
       }
     : {
