@@ -12941,7 +12941,23 @@ function installSolver(APP) {
                         globalSeed: Number.isFinite(attempt?.globalSeed) ? attempt.globalSeed : null,
                         attemptSignatureHash: attempt?.attemptSignatureHash || executionRegistration.hash || null,
                         attemptSignatureTuple: attempt?.attemptSignatureTuple || executionRegistration.tuple || null,
-                        duplicateAttemptSignature: true
+                        duplicateAttemptSignature: true,
+                        nodesExpanded: 0,
+                        pruneBreakdown: computePruneBreakdown({}),
+                        memoHitRate: 0,
+                        dominanceHitRate: 0,
+                        nogoodHitRate: 0,
+                        counterIntegrityStatus: evaluateCounterIntegrity({}, {
+                            expandedNodes: 0,
+                            generatedNodes: 0,
+                            pruneTotal: 0,
+                            pruneBreakdown: computePruneBreakdown({})
+                        }),
+                        statsProvenance: buildStatsProvenance({}, {
+                            sourceModule: 'SolverCore',
+                            sourceFunction: 'runBaselinePolicySweep',
+                            version: '2026-04-18.prune-integrity.v1'
+                        })
                     });
                     continue;
                 }
@@ -13142,7 +13158,11 @@ function installSolver(APP) {
                     dominanceHitRate: dominanceMemoChecks > 0 ? Number((dominanceMemoHits / dominanceMemoChecks).toFixed(5)) : 0,
                     nogoodHitRate: branchesGenerated > 0 ? Number((nogoodRejected / branchesGenerated).toFixed(5)) : 0,
                     counterIntegrityStatus,
-                    statsProvenance: attemptResult?.debug?.statsProvenance || null,
+                    statsProvenance: attemptResult?.debug?.statsProvenance || buildStatsProvenance(attemptResult?.debug || {}, {
+                        sourceModule: 'SolverCore',
+                        sourceFunction: '_solveInstance',
+                        version: '2026-04-18.prune-integrity.v1'
+                    }),
                     retryEscalation: attempt.orderingTweaks || null,
                     trajectorySimilarity: Number.isFinite(attempt?.trajectorySimilarity) ? attempt.trajectorySimilarity : null,
                     trajectorySimilarityPenalty: Number.isFinite(attempt?.trajectorySimilarityPenalty) ? attempt.trajectorySimilarityPenalty : null,
