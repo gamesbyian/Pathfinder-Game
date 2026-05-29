@@ -1,0 +1,246 @@
+{
+  "variantId": "disable-archetype",
+  "desc": "Disable: Archetype-dispatched prepended passes (high-intersection-burden etc.)",
+  "config": {
+    "disabledAttemptLabels": [
+      "archetype"
+    ]
+  },
+  "commitSha": "a71b86e7638457401791a529aafd7a1e17fd0fad",
+  "timestamp": "2026-05-29T05:08:03.616Z",
+  "budgetMs": 180000,
+  "levelCount": 8,
+  "summary": {
+    "solved": 8,
+    "failed": 0,
+    "errors": 0,
+    "total": 8,
+    "totalMs": 40462
+  },
+  "levels": [
+    {
+      "level": 141,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 9,
+      "nodesExpanded": 23,
+      "maxDepth": 20,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 3,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 3,
+          "budgetMs": 460,
+          "depthReached": 20,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 142,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 81,
+      "nodesExpanded": 3014,
+      "maxDepth": 28,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 77,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 77,
+          "budgetMs": 76392,
+          "depthReached": 28,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 143,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 1259,
+      "nodesExpanded": 34228,
+      "maxDepth": 62,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 1254,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 1254,
+          "budgetMs": 90812,
+          "depthReached": 62,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 144,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 110,
+      "nodesExpanded": 1590,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 101,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 101,
+          "budgetMs": 187,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 145,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 25,
+      "nodesExpanded": 140,
+      "maxDepth": 44,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 13,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 13,
+          "budgetMs": 713,
+          "depthReached": 44,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 146,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 210,
+      "nodesExpanded": 4356,
+      "maxDepth": 30,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 205,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 205,
+          "budgetMs": 77647,
+          "depthReached": 30,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 147,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 38726,
+      "nodesExpanded": 2533,
+      "maxDepth": 62,
+      "firstSolvingAttempt": "template-perimeter-cw",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 56,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "template-perimeter-cw",
+          "solved": true,
+          "elapsedMs": 56,
+          "budgetMs": 6629,
+          "depthReached": 62,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    },
+    {
+      "level": 148,
+      "ok": true,
+      "status": "solved",
+      "elapsedMs": 41,
+      "nodesExpanded": 909,
+      "maxDepth": 14,
+      "firstSolvingAttempt": "structural-modern",
+      "solvingAttemptIdx": 0,
+      "overheadBeforeSolveMs": 0,
+      "solveAttemptMs": 37,
+      "attemptCount": 1,
+      "attemptSummary": [
+        {
+          "label": "structural-modern",
+          "solved": true,
+          "elapsedMs": 37,
+          "budgetMs": 516,
+          "depthReached": 14,
+          "policyProfile": "perimeterSweep",
+          "scoringMode": "modern",
+          "status": "solved",
+          "nodesExpanded": null,
+          "timeoutEscalationTier": 0
+        }
+      ],
+      "stagesTriedCount": 0
+    }
+  ]
+}
