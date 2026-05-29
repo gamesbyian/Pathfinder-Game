@@ -11461,7 +11461,7 @@ function installSolver(APP) {
             // closer attempts only consume budget without helping; with this gate they fall
             // back to the standard cascade. Multi-obligation high-density levels are where the
             // archetype's profile mix actually pays for itself.
-            if (reqInt >= 5 && reqLenDensity >= 0.55 && (mustPassCount + mustCrossCount) >= 3) {
+            if (reqInt >= 5 && reqLenDensity >= 0.55 && (mustPassCount + mustCrossCount) >= 3 && (portalPairs > 0 || mustCrossCount > 0)) {
                 archetypes.push('high-intersection-burden');
             }
 
@@ -11527,7 +11527,6 @@ function installSolver(APP) {
                 portalTriage?.topologicallyNecessary
                 || portalTriage?.nonPortalFeasibility?.stronglySuggestsPortalRequired
             );
-            const portalOptionalBranchEligible = portalTerminalCount > 0 && !portalTraversalRequired;
             const resolvePortalUsagePolicy = ({ forbidPortals = false } = {}) => {
                 if (forbidPortals) return 'optional-off';
                 return portalTraversalRequired ? 'required' : 'optional-on';
@@ -11539,12 +11538,8 @@ function installSolver(APP) {
                 + Math.min(0.04, portalCommitment * 0.05)
             ));
             const structuralModernShare = Math.max(0.36, Math.min(0.68, 0.54 + complexityBias));
-            const structuralConservativeShare = Math.max(0.22, Math.min(0.44, 0.34 - (complexityBias * 0.45)));
-            const allowEnduranceLongpath = !!opts.enableEnduranceLongpath;
 
             const modernBudget = Math.max(1, Math.floor(total * structuralModernShare));
-            const conservativeBudget = Math.max(1, Math.floor(total * structuralConservativeShare));
-            const remainingBudget = Math.max(1, total - modernBudget - conservativeBudget);
             const attempts = [];
             const objectiveTracks = this.buildObjectiveOrderBundles(profile || {});
             const defaultTrack = objectiveTracks[0] || null;
@@ -11557,7 +11552,7 @@ function installSolver(APP) {
                 knotCrossBudget: Math.max(0, Math.ceil((level.reqInt || 0) * 0.72)),
                 nonKnotCrossCap: Math.max(0, Math.floor((level.reqInt || 0) * 0.3))
             };
-            if (opts.structuralMode && Array.isArray(profile?.templateCandidates) && profile.templateCandidates.length > 0) {
+            if (Array.isArray(profile?.templateCandidates) && profile.templateCandidates.length > 0) {
                 const templates = profile.templateCandidates.slice(0, 3);
                 const warmupTotal = Math.max(1, Math.floor(modernBudget * 0.58));
                 const perTemplate = Math.max(1, Math.floor(warmupTotal / templates.length));
@@ -11627,135 +11622,6 @@ function installSolver(APP) {
                     useControlPlaneArchetype: modernStructuralGuidanceNotNeeded ? false : true,
                     commitmentPlan: modernStructuralGuidanceNotNeeded ? null : { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
                     memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2,
-                    portalUsagePolicy: resolvePortalUsagePolicy()
-                });
-            }
-            if (portalOptionalBranchEligible) {
-                const noPortalModernBudget = Math.max(1, Math.floor(total * 0.16));
-                const noPortalEnduranceBudget = Math.max(1, Math.floor(total * 0.1));
-                attempts.push({
-                    label: 'portal-optional-modern-no-portal',
-                    budgetMs: noPortalModernBudget,
-                    scoringMode: 'modern',
-                    portalBiasMode: 'off',
-                    forbidPortals: true,
-                    blockPortalEntryCells: true,
-                    structuralMode: true,
-                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                    objectiveTrack: defaultTrack,
-                    templateCommitment: commonTemplateCommitment,
-                    portalLockPolicy: commonPortalLockPolicy,
-                    knotBudgetPolicy: commonKnotBudgetPolicy,
-                    macroSkeleton: defaultSkeleton,
-                    regionCrossingModel,
-                    policyProfile: 'harvestThenFinish',
-                    commitmentPlan: { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.16)) },
-                    memoStrictness: 0.95,
-                    portalUsagePolicy: resolvePortalUsagePolicy({ forbidPortals: true })
-                });
-                attempts.push({
-                    label: 'portal-optional-endurance-no-portal',
-                    budgetMs: noPortalEnduranceBudget,
-                    scoringMode: 'endurance',
-                    portalBiasMode: 'off',
-                    forbidPortals: true,
-                    blockPortalEntryCells: true,
-                    structuralMode: true,
-                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
-                    policyProfile: 'knotBuilder',
-                    commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.2)) },
-                    memoStrictness: 1.25,
-                    portalUsagePolicy: resolvePortalUsagePolicy({ forbidPortals: true })
-                });
-                // On open boards (openness >= 0.52), portal entry cells used as length-matching
-                // waypoints produce many near-solution states with the wrong intersection count.
-                // A perimeterSweep attempt (low goal-attraction, high perimeter-bias) breaks the
-                // symmetry by forcing exploration along the board boundary — matching the structure
-                // of the valid hint solutions for these levels.
-                if (openness >= 0.52) {
-                    const noPortalPerimeterBudget = Math.max(1, Math.floor(total * 0.12));
-                    attempts.push({
-                        label: 'portal-optional-perimeter-no-portal',
-                        budgetMs: noPortalPerimeterBudget,
-                        scoringMode: 'modern',
-                        portalBiasMode: 'off',
-                        forbidPortals: true,
-                        blockPortalEntryCells: true,
-                        structuralMode: true,
-                        phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'perimeterSweep' }),
-                        policyProfile: 'perimeterSweep',
-                        commitmentPlan: { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
-                        memoStrictness: 0.9,
-                        portalUsagePolicy: resolvePortalUsagePolicy({ forbidPortals: true })
-                    });
-                }
-            }
-            // Add a must-cross horizon attempt for any level that has must-cross cells.
-            // This attempt uses the mustCrossFirst profile (mustCrossUrgencyWeight=2.4x) to
-            // bias search toward visiting must-cross cells early in path construction,
-            // addressing the failure class where paths defer must-cross visits until too few
-            // steps remain to close them.
-            const hasMustCrossKeys = (level?.mustCrossKeys?.length > 0) || (Array.isArray(level?.mustCross) && level.mustCross.length > 0);
-            // Previously required allowEnduranceLongpath (which is false for purpose='hint'),
-            // so this attempt never ran during hint/audit solves. Any level with must-cross
-            // cells needs early-visit guidance regardless of purpose; the 10% budget overhead
-            // is justified by the must-cross failure class it addresses.
-            const mustCrossHorizonEligible = hasMustCrossKeys;
-            if (mustCrossHorizonEligible) {
-                const mustCrossHorizonBudget = Math.max(1, Math.floor(total * 0.10));
-                attempts.push({
-                    label: 'must-cross-horizon',
-                    budgetMs: mustCrossHorizonBudget,
-                    scoringMode: 'endurance',
-                    portalBiasMode: 'off',
-                    structuralMode: true,
-                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'harvestThenFinish' }),
-                    policyProfile: 'mustCrossFirst',
-                    commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
-                    memoStrictness: 1.1,
-                    portalUsagePolicy: resolvePortalUsagePolicy()
-                });
-            }
-            // ELP runs before SC so that long-path/knotBuilder profiles reach the DFS before
-            // the conservative harvestThenFinish pass. Ablation data showed ELP winning L7 at
-            // 4302ms when SC was removed, vs template winning at 10350ms when SC ran first and
-            // wasted its budget ahead of ELP. SC budget is pre-subtracted from ELP's remainder
-            // so both allocations are identical to the prior ordering — only execution order changes.
-            if (allowEnduranceLongpath) {
-                const scReserved = !modernStructuralGuidanceNotNeeded ? conservativeBudget : 0;
-                attempts.push({
-                    // Migration note: this absorbs former legacy-adapter rescue behavior as a referee-native profile.
-                    label: 'endurance-longpath',
-                    budgetMs: Math.max(1, total - attempts.reduce((sum, a) => sum + a.budgetMs, 0) - scReserved),
-                    scoringMode: 'endurance',
-                    portalBiasMode: 'off',
-                    structuralMode: true,
-                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: 'knotBuilder' }),
-                    policyProfile: 'knotBuilder',
-                    commitmentPlan: { horizonSteps: Math.max(5, Math.floor(level.reqLen * 0.26)) },
-                    memoStrictness: 1.55,
-                    compatLegacyOutputAlias: true,
-                    portalUsagePolicy: resolvePortalUsagePolicy()
-                });
-            }
-
-            if (!modernStructuralGuidanceNotNeeded) {
-                attempts.push({
-                    label: 'structural-conservative',
-                    budgetMs: Math.max(1, allowEnduranceLongpath ? conservativeBudget : (conservativeBudget + remainingBudget)),
-                    scoringMode: 'modern',
-                    portalBiasMode: 'off',
-                    structuralMode: true,
-                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                    objectiveTrack: defaultTrack,
-                    templateCommitment: commonTemplateCommitment,
-                    portalLockPolicy: commonPortalLockPolicy,
-                    knotBudgetPolicy: commonKnotBudgetPolicy,
-                    macroSkeleton: defaultSkeleton,
-                    regionCrossingModel,
-                    policyProfile: 'harvestThenFinish',
-                    commitmentPlan: { horizonSteps: Math.max(2, Math.floor(level.reqLen * 0.14)) },
-                    memoStrictness: 0.85,
                     portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }

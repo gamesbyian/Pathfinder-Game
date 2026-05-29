@@ -19,9 +19,9 @@
  *   node scripts/solver-ablation.mjs --experiment=baseline --levels=all
  *   node scripts/solver-ablation.mjs --experiment=disable-one --levels=all
  *   node scripts/solver-ablation.mjs --experiment=full --output-dir=audits/ablation/run1
- *   node scripts/solver-ablation.mjs --experiment=custom --disable=must-cross-horizon
+ *   node scripts/solver-ablation.mjs --experiment=custom --disable=archetype
  *   node scripts/solver-ablation.mjs --experiment=custom --allow=structural-modern --global-budget-multiplier=2
- *   node scripts/solver-ablation.mjs --experiment=technique-budget --techniques=structural-modern,must-cross-horizon
+ *   node scripts/solver-ablation.mjs --experiment=technique-budget --techniques=structural-modern,template
  *   node scripts/solver-ablation.mjs --dry-run --experiment=full
  *
  * OUTPUT
@@ -58,11 +58,7 @@ if (argFlags.has('--help') || argFlags.has('-h')) {
   --levels=SPEC            Level spec (default: all). Same format as run-solver-direct.mjs.
   --budget-ms=N            Time budget per level (default: canonical solver budget).
   --techniques=LIST        Comma-separated technique IDs to include (default: all).
-                           Available: ${[
-    'structural-modern','structural-conservative','template',
-    'portal-optional-modern','portal-optional-endurance','portal-optional-perimeter',
-    'must-cross-horizon','endurance-longpath','archetype'
-  ].join(', ')}
+                           Available: structural-modern, template, archetype
   --budget-multipliers=LIST  Comma-separated multipliers for budget-sweep (default: 0.25,0.5,2,4).
   --output-dir=PATH        Output directory (default: audits/ablation/{timestamp}).
   --dry-run                Print variants without running.
@@ -129,15 +125,9 @@ const customAttemptMults = (() => {
 
 // ─── Technique definitions ────────────────────────────────────────────────────
 const ALL_TECHNIQUES = [
-  { id: 'structural-modern',         prefix: 'structural-modern',          desc: 'Primary structural search (modern scoring, perimeterSweep profile)' },
-  { id: 'structural-conservative',   prefix: 'structural-conservative',    desc: 'Conservative structural pass (harvestThenFinish, no portals)' },
-  { id: 'template',                  prefix: 'template',                   desc: 'Template-guided warmup passes (template-0/1/2 + template-best-focus)' },
-  { id: 'portal-optional-modern',    prefix: 'portal-optional-modern-no-portal',   desc: 'Portal-optional modern (portal-eligible levels, no portals)' },
-  { id: 'portal-optional-endurance', prefix: 'portal-optional-endurance-no-portal', desc: 'Portal-optional endurance/knotBuilder (no portals)' },
-  { id: 'portal-optional-perimeter', prefix: 'portal-optional-perimeter-no-portal', desc: 'Portal-optional perimeter sweep (open boards, openness ≥ 0.52)' },
-  { id: 'must-cross-horizon',        prefix: 'must-cross-horizon',         desc: 'Must-cross early visitation (mustCrossFirst profile, endurance scoring)' },
-  { id: 'endurance-longpath',        prefix: 'endurance-longpath',         desc: 'Endurance longpath (portal-heavy / ≥3 objectives)' },
-  { id: 'archetype',                 prefix: 'archetype',                  desc: 'Archetype-dispatched prepended passes (high-intersection-burden etc.)' },
+  { id: 'structural-modern', prefix: 'structural-modern', desc: 'Primary structural search (modern scoring, perimeterSweep profile)' },
+  { id: 'template',          prefix: 'template',          desc: 'Template-guided warmup passes (template-0/1/2 + template-best-focus)' },
+  { id: 'archetype',         prefix: 'archetype',         desc: 'Archetype-dispatched prepended passes (high-intersection-burden etc.)' },
 ];
 
 const techniques = requestedTechniques.length > 0
