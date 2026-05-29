@@ -68,7 +68,7 @@ if (argFlags.has('--help') || argFlags.has('-h')) {
   --dry-run                Print variants without running.
   --verbose                Per-attempt detail.
   --no-history             Skip manifest history copy.
-  --purpose=PURPOSE        hint (default) or solve.
+  --purpose=PURPOSE        hint (default; solve is no longer supported).
   --max-level-wall-ms=N    Wall-time cap per level (default: 5× budget). Prevents
                            virtual/wall divergence on pathological solo runs.
 
@@ -136,7 +136,7 @@ const ALL_TECHNIQUES = [
   { id: 'portal-optional-endurance', prefix: 'portal-optional-endurance-no-portal', desc: 'Portal-optional endurance/knotBuilder (no portals)' },
   { id: 'portal-optional-perimeter', prefix: 'portal-optional-perimeter-no-portal', desc: 'Portal-optional perimeter sweep (open boards, openness ≥ 0.52)' },
   { id: 'must-cross-horizon',        prefix: 'must-cross-horizon',         desc: 'Must-cross early visitation (mustCrossFirst profile, endurance scoring)' },
-  { id: 'endurance-longpath',        prefix: 'endurance-longpath',         desc: 'Endurance longpath (portal-heavy / ≥3 objectives, purpose=solve only)' },
+  { id: 'endurance-longpath',        prefix: 'endurance-longpath',         desc: 'Endurance longpath (portal-heavy / ≥3 objectives)' },
   { id: 'archetype',                 prefix: 'archetype',                  desc: 'Archetype-dispatched prepended passes (high-intersection-burden etc.)' },
 ];
 

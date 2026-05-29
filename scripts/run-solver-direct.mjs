@@ -63,8 +63,7 @@ Solver options (all forwarded into Solver.solveLevel):
                                  run-level-audit.mjs (single, csv, range, all).
                                  Default: all.
   --budget-ms=N                Time budget per solve (default: 180000).
-  --purpose=PURPOSE            'hint' (default) or 'solve'. Hint enables the
-                                 hint-ladder rescue paths; solve is barer.
+  --purpose=PURPOSE            'hint' (only supported value; kept for compatibility).
   --forbidden-first-moves=LIST Cell keys (comma-separated) to forbid at depth 0.
                                  Useful for forcing different first moves on
                                  L92-style levels.

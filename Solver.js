@@ -11339,7 +11339,7 @@ function installSolver(APP) {
                 structuralMode: true,
                 enableEnduranceLongpath: true,
                 allowRandomizedExploration: false,
-                purpose: opts.purpose || 'solve'
+                purpose: opts.purpose || 'hint'
             });
             enduranceResult.mode = 'endurance';
             enduranceResult.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: 'endurance', phase: 'finish-compress', enduranceProfile: true });
@@ -11540,9 +11540,7 @@ function installSolver(APP) {
             ));
             const structuralModernShare = Math.max(0.36, Math.min(0.68, 0.54 + complexityBias));
             const structuralConservativeShare = Math.max(0.22, Math.min(0.44, 0.34 - (complexityBias * 0.45)));
-            const allowEnduranceLongpath = opts.enableEnduranceLongpath !== undefined
-                ? !!opts.enableEnduranceLongpath
-                : ((opts.purpose === 'hint' ? false : true) && (portalCommitment > 0.2 || objectiveCount >= 3));
+            const allowEnduranceLongpath = !!opts.enableEnduranceLongpath;
 
             const modernBudget = Math.max(1, Math.floor(total * structuralModernShare));
             const conservativeBudget = Math.max(1, Math.floor(total * structuralConservativeShare));
@@ -13321,7 +13319,7 @@ function installSolver(APP) {
                 }
                 if (APP.State.ENGINE.flags?.refereeDebug || APP.State.ENGINE.flags?.debugSolver) {
                     const levelLabel = (typeof level.id === 'number') ? level.id + 1 : 'unknown';
-                    console.log(`[Solver][${opts.purpose || 'solve'}][L${levelLabel}] baseline attempt=${attempt.label || 'unnamed'} status=${attemptResult.status} scoringMode=${attempt.scoringMode} portalBiasMode=${attempt.portalBiasMode} budgetMs=${attempt.budgetMs} branchFactor=${quality.branchFactor.toFixed(3)} maxProgress=${quality.maxProgress.toFixed(3)}`);
+                    console.log(`[Solver][${opts.purpose || 'hint'}][L${levelLabel}] baseline attempt=${attempt.label || 'unnamed'} status=${attemptResult.status} scoringMode=${attempt.scoringMode} portalBiasMode=${attempt.portalBiasMode} budgetMs=${attempt.budgetMs} branchFactor=${quality.branchFactor.toFixed(3)} maxProgress=${quality.maxProgress.toFixed(3)}`);
                 }
                 if (attemptResult.ok) {
                     const elapsedMs = Date.now() - started;
@@ -15449,7 +15447,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     phasePolicy: solveContext?.strategy?.resolvedPhasePolicy || null,
                     profile: level?.solverProfile,
                     controlPlane: this.createControlPlane(level?.solverProfile || {}),
-                    purpose: solveContext?.purpose || 'solve',
+                    purpose: solveContext?.purpose || 'hint',
                     allowRandomizedExploration: false,
                     portalTriage,
                     rootTieProfile: 'stable-diversified',
@@ -15501,7 +15499,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     keySignals: level.solverProfile?.strategySubtypeSignals || {}
                 });
             }
-            const purpose = opts.purpose || 'solve';
+            const purpose = opts.purpose || 'hint';
             const complexityClass = level.solverProfile?.complexityClass || 'standard';
             const strategySubtype = level.solverProfile?.strategySubtype || 'corridor_commitment';
             const complexityStrategyCandidate = this.getComplexityStrategy(complexityClass, strategySubtype);
@@ -15516,7 +15514,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             // harness (audits/metrics/*.json) on a per-level basis.
             const SOLVER_MAX_TIME_MULTIPLIER = 2;
             const scaleSolverBudget = (ms) => Math.max(1, Math.floor(ms * SOLVER_MAX_TIME_MULTIPLIER));
-            const defaultBudget = purpose === 'hint' ? scaleSolverBudget(5000) : scaleSolverBudget(15000);
+            const defaultBudget = scaleSolverBudget(5000);
             const key = getLevelAttemptKey(level, purpose);
             const prev = attemptHistory[key] || { timesTried: 0, lastStageReached: -1, lastStatus: null, attempts: [] };
             const timesTried = prev.timesTried + 1;
@@ -15530,22 +15528,15 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     { tier: 1, key: 'hint-tier-1', minBudgetMs: scaleSolverBudget(15000), orderingPolicy: 'knotBuilder',        rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off',                rescueMode: 'alternate-rescue' },
                     { tier: 2, key: 'hint-tier-2', minBudgetMs: scaleSolverBudget(60000), orderingPolicy: 'objectiveFirst',     rootSeedMode: 'diversified',                portalBiasMode: 'adaptiveMustCross',  rescueMode: 'alternate-rescue' },
                     { tier: 3, key: 'hint-tier-3', minBudgetMs: scaleSolverBudget(60000), orderingPolicy: 'profile-default', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'profile-default', rescueMode: 'alternate-rescue' }
-                ],
-                solve: [
-                    { tier: 0, key: 'solve-tier-0', minBudgetMs: scaleSolverBudget(15000), orderingPolicy: 'profile-default', rootSeedMode: 'default', portalBiasMode: 'profile-default', rescueMode: 'default' },
-                    { tier: 1, key: 'solve-tier-1', minBudgetMs: scaleSolverBudget(60000), orderingPolicy: 'harvestThenFinish', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off', rescueMode: 'alternate-rescue' },
-                    { tier: 2, key: 'solve-tier-2', minBudgetMs: scaleSolverBudget(180000), orderingPolicy: 'objectiveFirst', rootSeedMode: 'diversified', portalBiasMode: 'adaptiveMustCross', rescueMode: 'alternate-rescue' }
                 ]
             };
-            const activePolicyLadder = policyLadderByPurpose[purpose] || policyLadderByPurpose.solve;
+            const activePolicyLadder = policyLadderByPurpose[purpose] || policyLadderByPurpose.hint;
             const maxTier = activePolicyLadder.length - 1;
             const policyTier = Math.max(0, Math.min(maxTier, escalationTier));
             const activeTierPolicy = activePolicyLadder[policyTier] || activePolicyLadder[0];
             const tierMinBudget = Number(activeTierPolicy?.minBudgetMs) || defaultBudget;
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
-            const tierBudgets = purpose === 'hint'
-                ? [scaleSolverBudget(5000), scaleSolverBudget(15000), scaleSolverBudget(60000)]
-                : [scaleSolverBudget(15000), scaleSolverBudget(60000), scaleSolverBudget(180000)];
+            const tierBudgets = [scaleSolverBudget(5000), scaleSolverBudget(15000), scaleSolverBudget(60000)];
             const allowRandomizedExploration = !!opts.allowRandomizedExploration;
             const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
             const enableBlueprintPlanning = opts.enableBlueprintPlanning !== false;
@@ -17005,7 +16996,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
         }
     };
 
-        const startRun = ({ label = 'Solve search running…', mode = 'solve', estimatedMaxMs = 0, detail = 'Preparing solver…' } = {}) => {
+        const startRun = ({ label = 'Hint search running…', mode = 'hint', estimatedMaxMs = 0, detail = 'Preparing solver…' } = {}) => {
             if (APP.State.ENGINE.activeSolverController) return null;
             APP.State.ENGINE.activeSolverController = new AbortController();
             APP.State.ENGINE.solverAbortRequested = false;
@@ -17038,7 +17029,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             APP.UI.setButtonState('solverCloseBtn', { enabled: true });
         };
 
-        const applySolutionsToEngine = (solutionEntries, purpose = 'solve') => {
+        const applySolutionsToEngine = (solutionEntries, purpose = 'hint') => {
             const normalizedEntries = normalizeSolutionEntries(solutionEntries);
             const paths = normalizedEntries.map(sol => sol.path);
             if (!Array.isArray(paths) || paths.length === 0) return;
@@ -17056,21 +17047,15 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             APP.State.ENGINE.hinter.source = 'dynamic';
             APP.State.ENGINE.hinter.currentPathIdx = 0;
             APP.Solver.startHintAnimation();
-            APP.UI.showMessage(purpose === 'hint' ? 'Hint found.' : 'Solved.', 'text-emerald-600');
+            APP.UI.showMessage('Hint found.', 'text-emerald-600');
         };
 
             const solveLevel = async (level, opts = {}) => {
                 level = SavedHintArchitecture.toHintBlindSolverLevel(level);
             const guardSolveResult = (summary = {}, context = {}) => (typeof guardSolveResultSchema === 'function' ? guardSolveResultSchema(summary, context) : summary);
-            const requestedPurpose = opts.purpose || 'solve';
-            // Unify orchestration across UI and direct harnesses:
-            // run the same hint-ladder capable referee flow by default, regardless of
-            // whether caller labels intent as "hint" or "solve". Callers can opt out
-            // explicitly when they truly want a bare solve-profile run.
-            const purpose = opts.disableHintLadderOrchestration === true
-                ? requestedPurpose
-                : 'hint';
-            const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : (purpose === 'hint' ? 5000 : 15000);
+            const requestedPurpose = opts.purpose || 'hint';
+            const purpose = 'hint';
+            const timeBudgetMs = Number.isFinite(opts.timeBudgetMs) ? opts.timeBudgetMs : 5000;
             const requestedExecutionMode = typeof opts.executionMode === 'string' ? opts.executionMode : '';
             const compatibilityRequestedRefereeOnly = opts.allowReferee === false || opts.disableLegacyFallback === true;
             const executionMode = normalizeSolverExecutionMode(
@@ -17139,8 +17124,8 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     totalSolveTimeMs: 0
                 };
                 const controller = startRun({
-                    label: purpose === 'hint' ? 'Hint search running…' : 'Solve search running…',
-                    mode: 'solve',
+                    label: 'Hint search running…',
+                    mode: 'hint',
                     estimatedMaxMs: Number(opts.estimatedMaxMs) || 0,
                     detail: opts.detailLabel || 'Preparing solver…'
                 });
@@ -17172,11 +17157,11 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             try {
                 const hist = attemptHistory[levelAttemptKey] || { timesTried: 0, lastStatus: null, guardrailStop: false };
                 const autoTier = (!hist.guardrailStop && hist.timesTried > 0 && ['timeout', 'no-solution-inconclusive'].includes(hist.lastStatus))
-                    ? (purpose === 'hint' ? Math.min(2, hist.timesTried) : 1)
+                    ? Math.min(2, hist.timesTried)
                     : 0;
                 const escalationTier = Math.max(requestedEscalationTier, autoTier);
                 if (!opts.auditMode && escalationTier === 1) APP.UI.showMessage('Retrying with alt order + longer budget…', 'text-amber-600');
-                if (!opts.auditMode && escalationTier >= 2) APP.UI.showMessage(purpose === 'hint' ? 'Deep hint search: diversified policy ladder active.' : 'Deep search on: extended search mode.', 'text-amber-700');
+                if (!opts.auditMode && escalationTier >= 2) APP.UI.showMessage('Deep hint search: diversified policy ladder active.', 'text-amber-700');
                 const refereeStart = performance.now();
                 // Unified architecture: outer callers invoke Referee once and receive one normalized solve result.
                 let solverResult = await Referee.solve(level, {
@@ -17744,26 +17729,19 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             }, 0);
 
 
-            function buildCanonicalSolvePlan(purpose = 'solve', startTier = 0) {
+            function buildCanonicalSolvePlan(purpose = 'hint', startTier = 0) {
                 const tier0 = Math.max(0, startTier);
                 const tier1 = Math.max(tier0, 1);
                 const tier2 = Math.max(tier1, 2);
-                if (purpose === 'hint') {
-                    return [
-                        { tier: tier0, maxMs: 5000, label: 'Baseline hint search' },
-                        { tier: tier1, maxMs: 9000, label: 'Expanded hint search' },
-                        { tier: tier2, maxMs: 15000, label: 'Deep diversified hint search' }
-                    ];
-                }
                 return [
-                    { tier: tier0, maxMs: 15000, label: 'Baseline solve search' },
-                    { tier: tier1, maxMs: 60000, label: 'Expanded solve search' },
-                    { tier: tier2, maxMs: 180000, label: 'Deep diversified solve search' }
+                    { tier: tier0, maxMs: 5000, label: 'Baseline hint search' },
+                    { tier: tier1, maxMs: 9000, label: 'Expanded hint search' },
+                    { tier: tier2, maxMs: 15000, label: 'Deep diversified hint search' }
                 ];
             }
 
             async function runCanonicalSolveFlow(level, opts = {}) {
-                const purpose = opts.purpose || 'solve';
+                const purpose = opts.purpose || 'hint';
                 const requestedTier = Number.isFinite(Number(opts.escalationTier))
                     ? Math.max(0, Math.floor(Number(opts.escalationTier)))
                     : 0;
@@ -17843,7 +17821,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 return finalAttempt || { ok: false, status: 'error', rawStatus: 'error', solution: [], solutions: [] };
             }
 
-            const buildUnifiedSolveInvocationOptions = ({ purpose = 'solve', escalationTier = 0, overrides = {} } = {}) => {
+            const buildUnifiedSolveInvocationOptions = ({ purpose = 'hint', escalationTier = 0, overrides = {} } = {}) => {
                 const requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
                 return {
                     purpose,
@@ -17921,14 +17899,14 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             async function runUnifiedSolverFlow(levelInput, opts = {}) {
                 const preparedLevel = prepareLevelForSolver(levelInput, opts);
                 const invocation = buildUnifiedSolveInvocationOptions({
-                    purpose: opts.purpose || 'solve',
+                    purpose: opts.purpose || 'hint',
                     escalationTier: opts.escalationTier ?? opts.tier ?? 0,
                     overrides: opts
                 });
                 return runCanonicalSolveFlow(preparedLevel, invocation);
             }
 
-            async function runGameSolver(purpose = 'solve', escalationTier = 0) {
+            async function runGameSolver(purpose = 'hint', escalationTier = 0) {
                 if (APP.Solver.isRunning()) {
                     APP.UI.showSolverAlreadyRunning();
                     return { ok: false, reason: 'already-running' };
@@ -17950,8 +17928,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     allowReferee: true,
                     resetAttemptHistory: 'level',
                     onAttemptStart: ({ attempt, index, total, elapsedBeforeMs, totalMaxMs }) => {
-                        const attemptType = purpose === 'hint' ? 'Hint' : 'Solve';
-                        APP.UI.setModalContent('searchLabel', `${attemptType} attempt ${index}/${total}: ${attempt.label}`, 'text');
+                        APP.UI.setModalContent('searchLabel', `Hint attempt ${index}/${total}: ${attempt.label}`, 'text');
                         APP.UI.setSolverDetailText(`Trying tier ${attempt.tier}. If this attempt fails, next: ${index < total ? `attempt ${index + 1}` : 'stop and report result'}.`);
                         if (totalMaxMs > 0) APP.UI.setSolverProgress((elapsedBeforeMs / totalMaxMs) * 100);
                     },
@@ -17961,12 +17938,12 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         const provenNoSolution = statusNow === 'no-solution-proven';
                         const aborted = statusNow === 'aborted' || APP.State.ENGINE.solverAbortRequested;
                         if (stop) {
-                            if (solved) APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished: ${purpose === 'hint' ? 'hint found' : 'solution found'}.`);
+                            if (solved) APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished: hint found.`);
                             else if (provenNoSolution) APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished: puzzle proven unsolved.`);
                             else if (aborted) APP.UI.setSolverDetailText(`Attempt ${index}/${total} cancelled by user.`);
-                            else APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished with no ${purpose === 'hint' ? 'hint' : 'solution'}.`);
+                            else APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished with no hint.`);
                         } else {
-                            APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished with no ${purpose === 'hint' ? 'hint' : 'solution'}. Next: attempt ${index + 1}/${total}.`);
+                            APP.UI.setSolverDetailText(`Attempt ${index}/${total} finished with no hint. Next: attempt ${index + 1}/${total}.`);
                         }
                     }
                 });
@@ -18007,11 +17984,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else {
-                    if (purpose === 'hint') {
-                        APP.UI.showMessage('No hint found after full automated search.', 'text-amber-600');
-                    } else {
-                        APP.UI.showMessage('No solution found after full automated search.', 'text-amber-600');
-                    }
+                    APP.UI.showMessage('No hint found after full automated search.', 'text-amber-600');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }
                 return solverResult;
