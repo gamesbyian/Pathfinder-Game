@@ -21,6 +21,24 @@
         });
         return out;
     };
+    // Realm-robust "is this a usable Map?" check. `x instanceof Map` is fragile: it
+    // silently returns false for a Map constructed in a different JS realm/context
+    // (e.g. when the host page that builds the level and Solver.js do not share the
+    // exact same Map constructor). When that happens on a level's portalMap, the
+    // portal-family analysis below is skipped and the level is treated as portal-free,
+    // so portal-heavy puzzles become unsolvable through that entry point while the
+    // in-module script path (whose Maps are built by this same realm) still works —
+    // exactly the UI-vs-script asymmetry that left portal levels unsolved from the
+    // Edit-mode Solve button. Duck-type on the Map surface the solver actually uses
+    // (size + get/has/forEach) so portal data is honored regardless of which realm
+    // constructed it. A genuine non-Map (null/undefined/plain object) still returns
+    // false, preserving every existing guard's intent.
+    const isUsableMap = (x) => !!x
+        && typeof x === 'object'
+        && typeof x.forEach === 'function'
+        && typeof x.get === 'function'
+        && typeof x.has === 'function'
+        && typeof x.size === 'number';
     // Deterministic in-place Fisher-Yates shuffle driven by a 32-bit xorshift PRNG.
     // The diversified search passes (dirOrderVariant === 'random') previously used
     // unseeded Math.random(), which made solver outcomes non-reproducible run to run.
@@ -7501,7 +7519,7 @@ function installSolver(APP) {
                         };
                         level.mustCrossKeys.forEach(pushTransit);
                         pushTransit(level.goalKey);
-                        if (level.portalMap instanceof Map) {
+                        if (isUsableMap(level.portalMap)) {
                             level.portalMap.forEach((_, portalKey) => pushTransit(portalKey));
                         }
                         const transitDistMaps = transitKeys.map(k => SolverCore._buildOptimisticDistMap(level, [k]));
@@ -10291,7 +10309,7 @@ function installSolver(APP) {
             };
             aug.mustCrossKeys.forEach(pushTransit);
             pushTransit(aug.goalKey);
-            if (aug.portalMap instanceof Map) aug.portalMap.forEach((_, pk) => pushTransit(pk));
+            if (isUsableMap(aug.portalMap)) aug.portalMap.forEach((_, pk) => pushTransit(pk));
             const transitDistMaps = transitKeys.map(k => SolverCore._buildOptimisticDistMap(aug, [k]));
             const transitKeyToIdx = new Map();
             for (let i = 0; i < transitKeys.length; i++) transitKeyToIdx.set(transitKeys[i], i);
@@ -10413,8 +10431,8 @@ function installSolver(APP) {
                 gatesAndGoals: new Set([...(level?.gateKeys || []), level?.goalKey, ...(level?.falseGoalKeys || [])].filter(Number.isFinite)),
                 mustObjectives: new Set([...(level?.mustPassKeys || []), ...(level?.mustCrossKeys || [])]),
                 portalFilterPlacements: new Set([
-                    ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.keys()) : []),
-                    ...(level?.portalMap instanceof Map ? Array.from(level.portalMap.values()).map((v) => v?.dest).filter(Number.isFinite) : []),
+                    ...(isUsableMap(level?.portalMap) ? Array.from(level.portalMap.keys()) : []),
+                    ...(isUsableMap(level?.portalMap) ? Array.from(level.portalMap.values()).map((v) => v?.dest).filter(Number.isFinite) : []),
                     ...(level?.filterMap instanceof Map ? Array.from(level.filterMap.keys()) : []),
                     ...(level?.flippingFilterMap instanceof Map ? Array.from(level.flippingFilterMap.keys()) : [])
                 ]),
@@ -10547,7 +10565,7 @@ function installSolver(APP) {
             const portalBridgeHints = [];
             const seenPortalPair = new Set();
             const pairByFamilyId = new Map();
-            if (level?.portalMap instanceof Map) {
+            if (isUsableMap(level?.portalMap)) {
                 level.portalMap.forEach((v, fromKey) => {
                     const toKey = v?.dest;
                     if (!Number.isFinite(toKey) || toKey < 0) return;
@@ -11643,7 +11661,7 @@ function installSolver(APP) {
             const area = Math.max(1, w * h);
             const mustPassCount = Array.isArray(level?.mustPassKeys) ? level.mustPassKeys.length : 0;
             const mustCrossCount = Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0;
-            const portalPairs = level?.portalMap instanceof Map ? Math.floor(level.portalMap.size / 2) : 0;
+            const portalPairs = isUsableMap(level?.portalMap) ? Math.floor(level.portalMap.size / 2) : 0;
             const blockCount = level?.blockSet instanceof Set ? level.blockSet.size : 0;
             const blockDensity = blockCount / area;
             // Density is measured against the navigable board (area minus blocks), not raw
@@ -12605,7 +12623,7 @@ function installSolver(APP) {
                 // add all portal entry cells to blockSet so the solver treats them as blocks.
                 // PathfinderSolver.solve() does Object.create(level) internally and rebuilds all
                 // distance maps fresh, so this modified level is safe to pass.
-                const solveLevel = (attemptOpts.blockPortalEntryCells && attemptForbidPortals && level?.portalMap instanceof Map && level.portalMap.size > 0)
+                const solveLevel = (attemptOpts.blockPortalEntryCells && attemptForbidPortals && isUsableMap(level?.portalMap) && level.portalMap.size > 0)
                     ? Object.assign(Object.create(level), { blockSet: new Set([...level.blockSet, ...level.portalMap.keys()]) })
                     : level;
                 const r = await PathfinderSolver.solve(solveLevel, normalizeSolveAttemptOptions({
@@ -15201,7 +15219,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             const walkableKeys = (level?.solverProfile?.topology?.walkableKeys || []).filter((k) => !level?.blockSet?.has(k));
             const walkableSet = new Set(walkableKeys);
             const portalIncoming = new Map();
-            if (level?.portalMap instanceof Map) {
+            if (isUsableMap(level?.portalMap)) {
                 level.portalMap.forEach((edge, fromKey) => {
                     const dest = Number(edge?.dest);
                     if (!Number.isFinite(dest) || !walkableSet.has(fromKey) || !walkableSet.has(dest)) return;
@@ -17908,7 +17926,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                             if (level.blockSet.has(nk) || gateSet.has(nk)) continue;
                             firstMoveSet.add(nk);
                         }
-                        const gPortal = level.portalMap instanceof Map ? level.portalMap.get(gateKey) : null;
+                        const gPortal = isUsableMap(level.portalMap) ? level.portalMap.get(gateKey) : null;
                         if (gPortal && Number.isFinite(gPortal.dest) && !gateSet.has(gPortal.dest)) firstMoveSet.add(gPortal.dest);
                     }
                     const firstMoves = [...firstMoveSet];
