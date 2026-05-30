@@ -11376,22 +11376,6 @@ function installSolver(APP) {
             return resolved;
         },
 
-        allocateStageBudgets(totalMs, profile = null) {
-            const total = Math.max(1000, Math.floor(totalMs || 15000));
-            const routePressure = profile?.routePressure || 0;
-            const objectiveCount = profile?.objectiveCount || 0;
-            const portalWeight = profile?.portalCommitment > 0 ? 1 : 0;
-            const structuralWeight = Math.min(0.18, Math.max(0, (routePressure - 0.8) * 0.12) + Math.min(0.08, objectiveCount * 0.01) + (portalWeight * 0.04));
-            const stage0Ratio = Math.max(0.12, 0.2 - structuralWeight * 0.7);
-            const stage1Ratio = Math.max(0.2, 0.4 - structuralWeight * 0.5);
-            const stage2Ratio = Math.min(0.42, 0.2 + structuralWeight);
-            const stage0 = Math.min(Math.floor(total * stage0Ratio), Math.max(500, total - 3500));
-            const stage1 = Math.min(Math.floor(total * stage1Ratio), Math.max(1500, total - stage0 - 2000));
-            const stage2 = Math.min(Math.floor(total * stage2Ratio), Math.max(1000, total - stage0 - stage1 - 500));
-            const stage3 = Math.max(500, total - stage0 - stage1 - stage2);
-            return { stage0, stage1, stage2, stage3, total };
-        },
-
         getOrderingPolicyConfig(policy = 'default', opts = {}) {
             const allowShuffle = !!opts.allowShuffle;
             const byPolicy = {
@@ -11407,14 +11391,6 @@ function installSolver(APP) {
                 nearClosureRescue: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'nearClosureRescue' }
             };
             return byPolicy[policy] || byPolicy.default;
-        },
-
-        buildOrderingPolicyListForFailure(category, opts = {}) {
-            if (category === 'shallowCollapse') return ['harvestThenFinish', 'knotBuilder'];
-            if (category === 'deepTimeout') return ['endurance', 'perimeterSweep'];
-            if (category === 'unknownFailure') return ['portalFirstTransfer', 'harvestThenFinish'];
-            const allowRandom = !!opts.allowRandomizedExploration;
-            return allowRandom ? ['shuffle'] : ['alt'];
         },
 
         async runBaselinePolicySweep(level, budgetMs, opts = {}) {
@@ -11547,37 +11523,6 @@ function installSolver(APP) {
                 featureSignature
             });
             return result;
-        },
-
-        async runSanityMode(level, budgetMs, opts = {}) {
-            const disabledPrunes = Array.from(new Set([
-                ...(Array.isArray(opts.disabledPrunes) ? opts.disabledPrunes : []),
-                'mustPassBound', 'mustCrossBound', 'connectivity'
-            ]));
-            const sanityResult = await this.runStage2Fallback(level, budgetMs, disabledPrunes, {
-                portalBiasMode: opts.portalBiasMode || 'off',
-                phasePolicy: null,
-                enableLowExpansionProbe: true
-            });
-            sanityResult.mode = 'sanity';
-            sanityResult.contradictionRecoveryActivated = !!opts.contradictionRecovery;
-            sanityResult.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: 'default', phase: 'objective-harvest', contradictionRecovery: !!opts.contradictionRecovery });
-            return sanityResult;
-        },
-
-        async runEnduranceMode(level, budgetMs, opts = {}) {
-            const enduranceResult = await this.runBaselinePolicySweep(level, budgetMs, {
-                ...opts,
-                orderingPolicy: 'endurance',
-                scoringMode: 'modern',
-                structuralMode: true,
-                enableEnduranceLongpath: true,
-                allowRandomizedExploration: false,
-                purpose: opts.purpose || 'hint'
-            });
-            enduranceResult.mode = 'endurance';
-            enduranceResult.orderingPolicySummary = compactDefined({ layer: 'adaptive-ordering', policy: 'endurance', phase: 'finish-compress', enduranceProfile: true });
-            return enduranceResult;
         },
 
         buildContradictionGuard(level, debug = {}, diagnostics = {}, attemptOpts = {}) {
@@ -14983,108 +14928,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 contradictionGuardTriggered: !!lastAttempt?.debug?.contradictionGuard?.triggered
             };
         },
-
-        async runStage2Fallback(level, budgetMs, disabledPrunes = ['mustPassBound', 'mustCrossBound', 'connectivity'], opts = {}) {
-            const started = Date.now();
-                const resolveRun = async (runBudgetMs, runOpts = {}) => {
-                const hasPortalBounds = (level?.portalMap?.size || 0) > 0;
-                const r = await PathfinderSolver.solve(level, {
-                    timeLimit: runBudgetMs,
-                    debug: true,
-                    debugLevel: (typeof level.id === 'number' ? level.id + 1 : null),
-                    disabledPrunes: runOpts.disabledPrunes || disabledPrunes,
-                    portalBiasMode: runOpts.portalBiasMode || opts.portalBiasMode || 'adaptiveMustCross',
-                    phasePolicy: runOpts.phasePolicy !== undefined ? runOpts.phasePolicy : (opts.phasePolicy || null),
-                    enableLowExpansionProbe: !!opts.enableLowExpansionProbe,
-                    contradictionRecoveryMode: !!opts.contradictionRecovery,
-                    assertKnownSolvableBounds: hasPortalBounds
-                });
-                const solution = normalizeSolutionEntries(r?.solution ?? r?.solutions ?? []);
-                if (r?.ok && solution.length > 0) {
-                    return withZeroExpansionSummary({ ok: true, status: 'solved', solution, solutions: solution, debug: r?.debug || {} }, 'triage-resolve', 'profile-triage');
-                }
-                const debug = r?.debug || {};
-                const depthZeroDebug = ensureDepthZeroDebug(debug);
-                if (depthZeroDebug && !depthZeroDebug.startState && debug.startState) depthZeroDebug.startState = debug.startState;
-                if (depthZeroDebug && !depthZeroDebug.startNeighborTrace && debug.startNeighborTrace) depthZeroDebug.startNeighborTrace = debug.startNeighborTrace;
-                const triageDiag = buildSearchDiagnostics(debug, debug.status || 'unknown');
-                if (triageDiag.preExpansionExit && !depthZeroDebug?.depthZeroReason) {
-                    setDepthZeroReason(debug, debug.status === 'timeout' ? 'returned-without-expansion' : 'status-error-before-expansion', {
-                        returnedBeforeExpansion: true,
-                        stage: 'triage-resolve'
-                    });
-                }
-                if (triageDiag.preExpansionExit && !getPreExpansionAbort(debug)) {
-                    setPreExpansionAbort(debug, {
-                        code: debug.status === 'timeout' ? 'status-returned-before-expansion' : 'status-returned-before-expansion',
-                        message: `Solver returned status ${debug.status || 'unknown'} before root candidate expansion.`,
-                        phase: Number.isFinite(getStartStateDebug(debug)?.startNeighborsCount)
-                            ? 'after-start-neighbor-enumeration-before-root-expansion'
-                            : 'before-start-neighbor-enumeration',
-                        source: 'Referee.runStage2Fallback/resolveRun',
-                        details: {
-                            status: debug.status || 'unknown',
-                            statusPath: 'triage-resolve'
-                        }
-                    });
-                }
-                if (debug.status === 'timeout') return withZeroExpansionSummary({ ok: false, status: 'timeout', solution: [], solutions: [], debug }, 'triage-resolve', 'profile-triage');
-                return withZeroExpansionSummary({ ok: false, status: 'no-solution-inconclusive', solution: [], solutions: [], debug }, 'triage-resolve', 'profile-triage');
-            };
-
-            // Root-cause guard: triage runs were occasionally returning inconclusive with almost zero expansion.
-            // If that happens under relaxed prune settings, force a second pass with parity disabled and portal bias off
-            // so stale/over-strict branch filtering cannot terminate triage before meaningful exploration.
-            let outcome = await resolveRun(budgetMs);
-            const primaryDiag = buildSearchDiagnostics(outcome?.debug, outcome?.status);
-            const shouldForceProbe = !!opts.enableLowExpansionProbe
-                && outcome?.status === 'no-solution-inconclusive'
-                && primaryDiag.returnedWithoutExpansion
-                && isGoalReachableFromAnyGate(level);
-            if (shouldForceProbe) {
-                const probeDisabled = Array.from(new Set([...(disabledPrunes || []), 'parity']));
-                const probeBudgetMs = Math.max(1200, Math.floor(budgetMs * 0.8));
-                const probe = await resolveRun(probeBudgetMs, {
-                    disabledPrunes: probeDisabled,
-                    portalBiasMode: 'off',
-                    phasePolicy: null
-                });
-                const probeDiag = buildSearchDiagnostics(probe?.debug, probe?.status);
-                const probeHasRicherDepth0 = (!!probe?.debug?.startState || !!probe?.debug?.startNeighborTrace
-                    || (probe?.debug?.depth0?.reason && probe?.debug?.depth0?.reason !== 'no-solution'));
-                const outcomeHasDepth0 = (!!outcome?.debug?.startState || !!outcome?.debug?.startNeighborTrace
-                    || (outcome?.debug?.depth0?.reason && outcome?.debug?.depth0?.reason !== 'no-solution'));
-                if ((probe?.ok && !outcome?.ok)
-                    || ((probe?.status === 'timeout') && outcome?.status !== 'timeout')
-                    || ((probe?.status === 'no-solution-inconclusive') && (probe?.debug?.nodesExpanded || 0) > (outcome?.debug?.nodesExpanded || 0))
-                    || (probe?.status === outcome?.status && probeHasRicherDepth0 && !outcomeHasDepth0)
-                    || (probeHasRicherDepth0 && primaryDiag.returnedWithoutExpansion && !outcomeHasDepth0)) {
-                    outcome = probe;
-                }
-                outcome.debug = {
-                    ...(outcome.debug || {}),
-                    triageProbe: {
-                        triggered: true,
-                        reason: 'returned-without-expansion',
-                        initial: primaryDiag,
-                        probe: probeDiag,
-                        probeDisabledPrunes: probeDisabled,
-                        probeBudgetMs
-                    }
-                };
-            }
-
-            const elapsedMs = Date.now() - started;
-            return withZeroExpansionSummary({
-                ok: !!outcome.ok,
-                status: outcome.status,
-                solution: outcome.solution || [],
-                solutions: outcome.solutions || [],
-                elapsedMs,
-                stats: { debug: outcome.debug || {} }
-            }, 'triage-final', 'triage-wrapper');
-        },
-
 
         _forEachNoPortalNeighbor(level, fromKey, fn) {
             const x = fromKey & 0xFFFF;
