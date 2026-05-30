@@ -1,250 +1,2596 @@
 {
-  "timestamp": "2026-05-30T11:03:24.318Z",
-  "commitSha": "01f5d779f9d3fc334037b8fa601f0433edefde1e",
-  "budgetMs": 10000,
-  "levelFilter": [
-    19,
-    37,
-    43,
-    53,
-    57,
-    59,
-    60,
-    61,
-    62,
-    63,
-    64,
-    73,
-    75
-  ],
-  "solved": 0,
-  "failed": 13,
+  "timestamp": "2026-05-30T15:04:30.595Z",
+  "commitSha": "289238058c2eed3e1f012c3430fd28cf1bbd5dc1",
+  "budgetMs": 30000,
+  "levelFilter": "all",
+  "solved": 148,
+  "failed": 0,
   "errors": 0,
-  "total": 13,
-  "totalMs": 130014,
+  "total": 148,
+  "totalMs": 36291,
   "levels": [
     {
-      "level": 19,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "level": 1,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65539,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327682,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327683,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 393223,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 5,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 0,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 10000
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 6,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 7,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 6,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 8,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 9,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 10,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 11,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131075,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 12,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 524292,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 13,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 14,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 589832,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 15,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 16,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 196609,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 17,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 524289,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 18,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 19,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 20,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 21,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131075,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 22,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131079,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 23,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131078,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 24,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 25,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 26,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 458759,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 27,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 28,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 589833,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 29,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 524290,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 30,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 31,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327680,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 32,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 33,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 34,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 35,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 36,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 524289,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 37,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 262145,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 5001
-        },
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 38,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131078,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 39,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 262150,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 40,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 41,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
         {
           "gateKey": 65540,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 5000
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 42,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 43,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 327685,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 5001
-        },
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 44,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
         {
-          "gateKey": 9,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 5000
+          "gateKey": 262144,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 45,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 46,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 524289,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 47,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131072,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 48,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 589824,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 49,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 8,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 50,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 589824,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 51,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 52,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 262147,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 53,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 0,
-          "profile": "mustCrossFirst",
-          "ok": false,
-          "elapsedMs": 5001
-        },
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 54,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
         {
-          "gateKey": 9,
-          "profile": "mustCrossFirst",
-          "ok": false,
-          "elapsedMs": 4999
+          "gateKey": 1,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 55,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 56,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 57,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 11,
-          "profile": "portalFirstTransfer",
-          "ok": false,
-          "elapsedMs": 10001
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 58,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65541,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 59,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 65537,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 5001
-        },
-        {
-          "gateKey": 655370,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 5000
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 60,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 65537,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 10001
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
         }
       ]
     },
     {
       "level": 61,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 65537,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 10000
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 62,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 131072,
-          "profile": "mustCrossFirst",
-          "ok": false,
-          "elapsedMs": 5001
-        },
-        {
-          "gateKey": 589835,
-          "profile": "mustCrossFirst",
-          "ok": false,
-          "elapsedMs": 4999
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
         }
       ]
     },
     {
       "level": 63,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 65537,
-          "profile": "mustCrossFirst",
-          "ok": false,
-          "elapsedMs": 10000
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 64,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 393221,
-          "profile": "mustCrossFirst",
-          "ok": false,
-          "elapsedMs": 10001
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 65,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 66,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327683,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 67,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131075,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 68,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 69,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65539,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 70,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 393218,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 71,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 196612,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 72,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 458759,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 73,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10002,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 0,
-          "profile": "harvestThenFinish",
-          "ok": false,
-          "elapsedMs": 10002
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 74,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 655370,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
         }
       ]
     },
     {
       "level": 75,
-      "status": "timeout",
-      "ok": false,
-      "elapsedMs": 10001,
-      "solvedBy": null,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
       "attempts": [
         {
           "gateKey": 393218,
-          "profile": "mustCrossFirst",
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 76,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 77,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 524290,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 78,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65546,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 79,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 80,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 458752,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 81,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 82,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 83,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 84,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131081,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 85,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 86,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 87,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 88,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 393218,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 89,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 90,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 91,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 92,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 93,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 94,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 196610,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 95,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327682,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 96,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 97,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65540,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 98,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65541,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 99,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 100,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131080,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 101,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 102,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327682,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 103,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 104,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 105,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327682,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 106,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131077,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 107,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 4,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 108,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 109,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 110,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 111,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 524293,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 112,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 113,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 114,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 1,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 115,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 116,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 117,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 6,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 118,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 119,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 120,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327683,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 121,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 4,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 122,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 123,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65544,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 124,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 125,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 126,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 127,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 128,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 393221,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 129,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327684,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 130,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 131,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 262149,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 132,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 196612,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 133,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 458759,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 134,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 393222,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 135,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 136,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 262146,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 137,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 4,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 138,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 139,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 327690,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 140,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "hint",
+      "attempts": [
+        {
+          "gateKey": 458756,
+          "profile": "hint",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 141,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "nearClosureRescue",
+      "attempts": [
+        {
+          "gateKey": 196608,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 142,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 27,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262144,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 27
+        }
+      ]
+    },
+    {
+      "level": 143,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 9235,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
           "ok": false,
-          "elapsedMs": 10001
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "sideCommitment",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "objectiveFirst",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "objectiveFirst",
+          "template": "perimeterCCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "sideXLow",
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 144,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 54,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 53
+        }
+      ]
+    },
+    {
+      "level": 145,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 15017,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "finishFirst",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "objectiveFirst",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "knotBuilder",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "portalCommitted",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "closureCommitment",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "default",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "ok": true,
+          "elapsedMs": 15
+        }
+      ]
+    },
+    {
+      "level": 146,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 47,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 47
+        }
+      ]
+    },
+    {
+      "level": 147,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 11828,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "sideCommitment",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "objectiveFirst",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "objectiveFirst",
+          "template": "perimeterCCW",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "sideXLow",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "sideXHigh",
+          "ok": false,
+          "elapsedMs": 1154
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "sideYLow",
+          "ok": true,
+          "elapsedMs": 288
+        }
+      ]
+    },
+    {
+      "level": 148,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 2
         }
       ]
     }
