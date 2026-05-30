@@ -1,0 +1,252 @@
+{
+  "timestamp": "2026-05-30T11:03:24.318Z",
+  "commitSha": "01f5d779f9d3fc334037b8fa601f0433edefde1e",
+  "budgetMs": 10000,
+  "levelFilter": [
+    19,
+    37,
+    43,
+    53,
+    57,
+    59,
+    60,
+    61,
+    62,
+    63,
+    64,
+    73,
+    75
+  ],
+  "solved": 0,
+  "failed": 13,
+  "errors": 0,
+  "total": 13,
+  "totalMs": 130014,
+  "levels": [
+    {
+      "level": 19,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 10000
+        }
+      ]
+    },
+    {
+      "level": 37,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 5001
+        },
+        {
+          "gateKey": 65540,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 5000
+        }
+      ]
+    },
+    {
+      "level": 43,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 327685,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 5001
+        },
+        {
+          "gateKey": 9,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 5000
+        }
+      ]
+    },
+    {
+      "level": 53,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "mustCrossFirst",
+          "ok": false,
+          "elapsedMs": 5001
+        },
+        {
+          "gateKey": 9,
+          "profile": "mustCrossFirst",
+          "ok": false,
+          "elapsedMs": 4999
+        }
+      ]
+    },
+    {
+      "level": 57,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 11,
+          "profile": "portalFirstTransfer",
+          "ok": false,
+          "elapsedMs": 10001
+        }
+      ]
+    },
+    {
+      "level": 59,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 5001
+        },
+        {
+          "gateKey": 655370,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 5000
+        }
+      ]
+    },
+    {
+      "level": 60,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 10001
+        }
+      ]
+    },
+    {
+      "level": 61,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 10000
+        }
+      ]
+    },
+    {
+      "level": 62,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 131072,
+          "profile": "mustCrossFirst",
+          "ok": false,
+          "elapsedMs": 5001
+        },
+        {
+          "gateKey": 589835,
+          "profile": "mustCrossFirst",
+          "ok": false,
+          "elapsedMs": 4999
+        }
+      ]
+    },
+    {
+      "level": 63,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "mustCrossFirst",
+          "ok": false,
+          "elapsedMs": 10000
+        }
+      ]
+    },
+    {
+      "level": 64,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 393221,
+          "profile": "mustCrossFirst",
+          "ok": false,
+          "elapsedMs": 10001
+        }
+      ]
+    },
+    {
+      "level": 73,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10002,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "ok": false,
+          "elapsedMs": 10002
+        }
+      ]
+    },
+    {
+      "level": 75,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 10001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 393218,
+          "profile": "mustCrossFirst",
+          "ok": false,
+          "elapsedMs": 10001
+        }
+      ]
+    }
+  ]
+}
