@@ -15097,8 +15097,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
             const tierBudgets = [scaleSolverBudget(5000), scaleSolverBudget(15000), scaleSolverBudget(60000)];
             const allowRandomizedExploration = !!opts.allowRandomizedExploration;
-            const allowRandomizedExplorationOnExpensiveTiers = !!opts.allowRandomizedExplorationOnExpensiveTiers;
-            const enableBlueprintPlanning = opts.enableBlueprintPlanning !== false;
             const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
             const forcePreExpansionRescue = !!opts.forcePreExpansionRescue;
             const hintLadderState = opts.hintLadderState && typeof opts.hintLadderState === 'object' ? opts.hintLadderState : null;
@@ -15141,8 +15139,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 budgetMs,
                 tierBudgets,
                 allowRandomizedExploration,
-                allowRandomizedExplorationOnExpensiveTiers,
-                enableBlueprintPlanning,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
                 hintLadderState,
@@ -16044,7 +16040,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 budgetMs,
                 tierBudgets,
                 allowRandomizedExploration,
-                allowRandomizedExplorationOnExpensiveTiers,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
                 hintLadderState,
@@ -16075,7 +16070,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 flags: {
                     objectivesAreInteriorDominant,
                     allowRandomizedExploration,
-                    allowRandomizedExplorationOnExpensiveTiers,
                     autoEscalate,
                     forcePreExpansionRescue,
                     fallbackDisabledPrunes
