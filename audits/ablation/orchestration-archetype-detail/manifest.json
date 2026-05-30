@@ -1981,5 +1981,42 @@
       },
       "outputFile": "disable-archetype-sparse-near-closure.json"
     }
+  ],
+  "completedAt": "2026-05-30T06:16:24.123Z",
+  "totalElapsedMs": 1653234,
+  "completedVariants": [
+    {
+      "variantId": "disable-archetype-high-intersection-burden",
+      "outputFile": "disable-archetype-high-intersection-burden.json",
+      "summary": {
+        "solved": 147,
+        "failed": 1,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 1134760
+      }
+    },
+    {
+      "variantId": "disable-archetype-portal-mustcross-constrained",
+      "outputFile": "disable-archetype-portal-mustcross-constrained.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 261889
+      }
+    },
+    {
+      "variantId": "disable-archetype-sparse-near-closure",
+      "outputFile": "disable-archetype-sparse-near-closure.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 256570
+      }
+    }
   ]
 }
