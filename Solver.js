@@ -12,6 +12,10 @@
     // value so a UI-invoked solve reproduces the audited result exactly. Single-source
     // this here so the two paths can never drift again.
     const CANONICAL_SOLVE_TIME_BUDGET_MS = 180000;
+    // Build stamp surfaced in the Solve-button diagnostics so a user can confirm at a
+    // glance that the page they loaded actually contains the latest solver code (i.e.
+    // production was redeployed). Bump when changing the UI Solve diagnostics.
+    const UI_SOLVE_DIAG_BUILD = 'solve-diag-2026-05-30';
 
     const compactDefined = (obj = {}) => {
         const out = {};
@@ -18050,14 +18054,41 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     return { ok: false, reason: 'already-running' };
                 }
                 APP.Solver.stopHintAnimation();
+                // --- Solve-path diagnostics (browser console). Tagged + build-stamped so a
+                // user can confirm they are running fresh code and we can see exactly where a
+                // portal level diverges from a non-portal one. Never allowed to throw. ---
+                const diag = (stage, data) => { try { console.info('[PF-SolveDiag]', UI_SOLVE_DIAG_BUILD, stage, data); } catch (_) { /* ignore */ } };
                 const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                diag('click', {
+                    mode: APP.State.ENGINE.mode,
+                    portalMapSize: activeLevel?.portalMap?.size ?? 'n/a',
+                    portalVisuals: activeLevel?.portalVisuals?.length ?? 'n/a',
+                    pendingPortal: APP.State.ENGINE.editor?.pendingPortal ?? null,
+                    goalKey: activeLevel?.goalKey,
+                    gateKeys: activeLevel?.gateKeys?.length ?? 'n/a',
+                    reqLen: activeLevel?.reqLen,
+                    reqInt: activeLevel?.reqInt
+                });
                 // Denormalize → re-normalize via normalizeRawLevelForSolver so the UI
                 // Solve button uses identical level preparation to the direct script:
                 // fresh Maps built in Solver.js's own realm, portal data rebuilt from
                 // raw coords. This avoids the deepCloneLevel → canonicalCloneLevel path
                 // which can produce collections from the host page's realm that the
                 // solver's portal-family analysis may not handle correctly.
-                const rawLevelSnapshot = APP.LevelUtils.denormalizeLevel(activeLevel);
+                let rawLevelSnapshot;
+                try {
+                    rawLevelSnapshot = APP.LevelUtils.denormalizeLevel(activeLevel);
+                } catch (denormErr) {
+                    diag('denormalize-threw', { message: denormErr?.message });
+                    rawLevelSnapshot = null;
+                }
+                diag('rawSnapshot', {
+                    portals: rawLevelSnapshot?.portals?.length ?? 'denormalize-failed',
+                    goal: rawLevelSnapshot?.goal ?? null,
+                    gates: rawLevelSnapshot?.gates?.length ?? 'n/a',
+                    reqLen: rawLevelSnapshot?.reqLen,
+                    reqInt: rawLevelSnapshot?.reqInt
+                });
                 const levelNumber = Number.isFinite(activeLevel?.id) ? activeLevel.id + 1 : null;
                 const requestedTier = Number.isFinite(Number(escalationTier)) ? Math.max(0, Math.floor(Number(escalationTier))) : 0;
                 const solverResult = await runUnifiedSolverFlow(rawLevelSnapshot, {
@@ -18104,17 +18135,26 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                     allowRefereeRequested: true,
                     escalationTierUsed: requestedTier
                 });
+                diag('solverResult', {
+                    ok: !!solverResult?.ok,
+                    status: solverResult?.status,
+                    rawStatus: solverResult?.rawStatus,
+                    finalStatus: solverResult?.finalStatus,
+                    solutionEntries: (solverResult?.solution ?? solverResult?.solutions ?? []).length
+                });
                 const canonical = normalizeSolutionEntries(solverResult.solution ?? solverResult.solutions ?? []);
                 solverResult.solution = canonical;
                 solverResult.solutions = canonical;
                 const normalizedEntries = solverResult.ok ? canonical : [];
                 const validationLevel = normalizeRawLevelForSolver(rawLevelSnapshot, levelNumber);
                 const validEntries = [];
-                normalizedEntries.forEach((entry) => {
+                normalizedEntries.forEach((entry, idx) => {
                     const validation = APP.Solver.validateCandidatePath(validationLevel, entry.path);
                     if (validation?.ok) validEntries.push({ path: validation.path });
+                    else diag('validation-rejected', { entry: idx, reason: validation?.reason, pathLen: Array.isArray(entry?.path) ? entry.path.length : 'n/a' });
                 });
                 const normalizedPaths = validEntries.map(sol => sol.path).filter(path => Array.isArray(path) && path.length > 0);
+                diag('validation', { entries: normalizedEntries.length, accepted: validEntries.length, applicablePaths: normalizedPaths.length });
                 if (solverResult.ok && canonical.length > 0 && normalizedPaths.length === 0) {
                     console.warn('Solver returned invalid or malformed solution entries.', { purpose, solution: canonical });
                     APP.UI.showMessage('Solver returned invalid solution data.', 'text-amber-600');
@@ -18123,14 +18163,18 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 }
 
                 if (normalizedPaths.length > 0) {
+                    diag('outcome', { branch: 'applied-hint', paths: normalizedPaths.length });
                     APP.Solver.applySolutionsToEngine(validEntries, purpose);
                 } else if (solverResult.rawStatus === 'no-solution-proven') {
+                    diag('outcome', { branch: 'no-solution-proven' });
                     APP.UI.showMessage('No solution exists for this level.', 'text-amber-600');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else if (solverResult.status === 'aborted') {
+                    diag('outcome', { branch: 'aborted' });
                     APP.UI.showMessage('Solver cancelled.', 'text-amber-600');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 } else {
+                    diag('outcome', { branch: 'no-hint-found' });
                     APP.UI.showMessage('No hint found after full automated search.', 'text-amber-600');
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 }
