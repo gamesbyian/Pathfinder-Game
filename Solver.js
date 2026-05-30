@@ -10675,7 +10675,7 @@ function installSolver(APP) {
             if (!controlPlane?.activeHypothesis || !Array.isArray(controlPlane?.rankedHypotheses)) return false;
             const currentConf = Number(controlPlane.activeHypothesis.confidence) || 0;
             const nextIdx = (controlPlane.activeIndex || 0) + 1;
-            if (currentConf >= 0.26 || nextIdx >= controlPlane.rankedHypotheses.length) return false;
+            if (currentConf >= 0.35 || nextIdx >= controlPlane.rankedHypotheses.length) return false;
             const candidate = controlPlane.rankedHypotheses[nextIdx];
             if (!candidate) return false;
             controlPlane.activeIndex = nextIdx;
@@ -11409,27 +11409,6 @@ function installSolver(APP) {
                         memoStrictness: 1.35,
                         portalUsagePolicy: resolvePortalUsagePolicy()
                     });
-                });
-                const reserve = Math.max(1, modernBudget - warmupTotal);
-                attempts.push({
-                    label: 'template-best-focus',
-                    budgetMs: reserve,
-                    scoringMode: 'modern',
-                    portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
-                    structuralMode: true,
-                    phasePolicy: SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                    structuralTemplate: null,
-                    objectiveTrack: defaultTrack,
-                    templateCommitment: commonTemplateCommitment,
-                    portalLockPolicy: commonPortalLockPolicy,
-                    knotBudgetPolicy: commonKnotBudgetPolicy,
-                    macroSkeleton: defaultSkeleton,
-                    regionCrossingModel,
-                    templatePhase: 'reallocated',
-                    policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
-                    commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
-                    memoStrictness: 1.35,
-                    portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
             // Level-agnostic: every level is treated as a fresh challenge. The solver does not
@@ -12382,8 +12361,6 @@ function installSolver(APP) {
             let attemptsUsed = carriedTimeoutAttempts.slice();
             let lastAttempt = null;
             let previousTelemetry = null;
-            let bestTemplate = null;
-            let bestTemplateScore = -Infinity;
             let retryFingerprintDupes = Number.isFinite(sharedHintLadderState?.retryFingerprintDupes)
                 ? Math.max(0, Number(sharedHintLadderState.retryFingerprintDupes))
                 : 0;
@@ -12561,20 +12538,10 @@ function installSolver(APP) {
                 // When every completed warmup attempt scored below the abort threshold, skip
                 // remaining warmup passes — they explore the same hypothesis with the same budget
                 // and will score similarly. The reallocated budget is credited so downstream
-                // analysis can account for skipped attempts. template-best-focus is handled by
-                // the existing bestTemplateScore < 0.2 guard immediately below.
+                // analysis can account for skipped attempts.
                 if (attempt.templatePhase === 'warmup' && skipRemainingTemplateWarmups) {
                     templateDiagnostics.reallocatedBudgetMs += attempt.budgetMs;
                     return { allowed: false, reason: 'warmup-skipped' };
-                }
-                if (attempt.label === 'template-best-focus') {
-                    if (!bestTemplate || bestTemplateScore < 0.2) {
-                        templateDiagnostics.reallocatedBudgetMs += attempt.budgetMs;
-                        return { allowed: false, reason: 'template-focus-no-best' };
-                    }
-                    attempt.structuralTemplate = bestTemplate;
-                    attempt.portalBiasMode = bestTemplate?.weightOverrides?.portalBiasMode || attempt.portalBiasMode;
-                    attempt.label = `template-best-focus:${bestTemplate.id}`;
                 }
                 // Cross-attempt prefix-divergence guard. Collect deepest-frontier path
                 // prefixes from prior timed-out attempts so the inner solver's _getNeighbors
@@ -12692,10 +12659,6 @@ function installSolver(APP) {
                         branchFactor: Number(quality.branchFactor.toFixed(3)),
                         terminatedEarly: attempt.templatePhase === 'warmup' && templateScore < 0.18
                     });
-                    if (attempt.templatePhase === 'warmup' && templateScore > bestTemplateScore) {
-                        bestTemplateScore = templateScore;
-                        bestTemplate = attempt.structuralTemplate;
-                    }
                     if (attempt.templatePhase === 'warmup' && templateScore < 0.18) {
                         templateDiagnostics.reallocatedBudgetMs += Math.floor(attempt.budgetMs * 0.25);
                     }
@@ -15083,10 +15046,8 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             const requestedBudget = opts.timeBudgetMs || defaultBudget;
             const policyLadderByPurpose = {
                 hint: [
-                    { tier: 0, key: 'hint-tier-0', minBudgetMs: scaleSolverBudget(5000),  orderingPolicy: 'profile-default',   rootSeedMode: 'default',                    portalBiasMode: 'profile-default',    rescueMode: 'default' },
-                    { tier: 1, key: 'hint-tier-1', minBudgetMs: scaleSolverBudget(15000), orderingPolicy: 'knotBuilder',        rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off',                rescueMode: 'alternate-rescue' },
-                    { tier: 2, key: 'hint-tier-2', minBudgetMs: scaleSolverBudget(60000), orderingPolicy: 'objectiveFirst',     rootSeedMode: 'diversified',                portalBiasMode: 'adaptiveMustCross',  rescueMode: 'alternate-rescue' },
-                    { tier: 3, key: 'hint-tier-3', minBudgetMs: scaleSolverBudget(60000), orderingPolicy: 'profile-default', rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'profile-default', rescueMode: 'alternate-rescue' }
+                    { tier: 0, key: 'hint-tier-0', minBudgetMs: scaleSolverBudget(5000),  orderingPolicy: 'profile-default', rootSeedMode: 'default',                    portalBiasMode: 'profile-default', rescueMode: 'default' },
+                    { tier: 1, key: 'hint-tier-1', minBudgetMs: scaleSolverBudget(15000), orderingPolicy: 'knotBuilder',     rootSeedMode: 'broader-candidate-seed-set', portalBiasMode: 'off',             rescueMode: 'alternate-rescue' }
                 ]
             };
             const activePolicyLadder = policyLadderByPurpose[purpose] || policyLadderByPurpose.hint;

@@ -58,7 +58,11 @@ if (argFlags.has('--help') || argFlags.has('-h')) {
   --levels=SPEC            Level spec (default: all). Same format as run-solver-direct.mjs.
   --budget-ms=N            Time budget per level (default: canonical solver budget).
   --techniques=LIST        Comma-separated technique IDs to include (default: all).
-                           Available: structural-modern, template, archetype
+                           Available: template, archetype, all-escalation, escalation-tier-1..5,
+                           template-corner-harvest, template-perimeter, template-side-commitment,
+                           template-portal-bridge-first, archetype-high-intersection-burden,
+                           archetype-portal-mustcross-constrained, archetype-sparse-near-closure
+  --group=NAME             Run only techniques in a group (coarse|escalation|template-detail|archetype-detail)
   --budget-multipliers=LIST  Comma-separated multipliers for budget-sweep (default: 0.25,0.5,2,4).
   --output-dir=PATH        Output directory (default: audits/ablation/{timestamp}).
   --dry-run                Print variants without running.
@@ -103,6 +107,7 @@ const purpose = argMap.get('--purpose') || 'hint';
 const dryRun = argFlags.has('--dry-run');
 const verbose = argFlags.has('--verbose');
 const requestedTechniques = parseList(argMap.get('--techniques') || '');
+const requestedGroup = argMap.get('--group') || null;
 const requestedMultipliers = parseList(argMap.get('--budget-multipliers') || '').map(Number).filter(Number.isFinite).filter(m => m > 0);
 const outputDirArg = argMap.get('--output-dir') || null;
 
@@ -124,15 +129,36 @@ const customAttemptMults = (() => {
 })();
 
 // ─── Technique definitions ────────────────────────────────────────────────────
+// Groups: 'coarse' = top-level components; 'escalation' = individual tiers;
+//         'template-detail' = individual template types; 'archetype-detail' = individual archetypes.
+// Use --techniques=ID1,ID2 to run a subset, or --group=NAME to run a whole group.
 const ALL_TECHNIQUES = [
-  { id: 'structural-modern', prefix: 'structural-modern', desc: 'Primary structural search (modern scoring, perimeterSweep profile)' },
-  { id: 'template',          prefix: 'template',          desc: 'Template-guided warmup passes (template-0/1/2 + template-best-focus)' },
-  { id: 'archetype',         prefix: 'archetype',         desc: 'Archetype-dispatched prepended passes (high-intersection-burden etc.)' },
+  // Coarse-grained top-level components
+  { id: 'template',  prefix: 'template',  group: 'coarse', desc: 'All template-guided warmup passes' },
+  { id: 'archetype', prefix: 'archetype', group: 'coarse', desc: 'All archetype-dispatched prepended passes' },
+  // Escalation tier granularity
+  { id: 'all-escalation',    prefix: 'escalation-tier',   group: 'escalation', desc: 'All escalation tiers (1-5)' },
+  { id: 'escalation-tier-1', prefix: 'escalation-tier-1', group: 'escalation', desc: 'Escalation T1: memo disabled' },
+  { id: 'escalation-tier-2', prefix: 'escalation-tier-2', group: 'escalation', desc: 'Escalation T2: bounds relaxed' },
+  { id: 'escalation-tier-3', prefix: 'escalation-tier-3', group: 'escalation', desc: 'Escalation T3: portal relaxed' },
+  { id: 'escalation-tier-4', prefix: 'escalation-tier-4', group: 'escalation', desc: 'Escalation T4: diversified order' },
+  { id: 'escalation-tier-5', prefix: 'escalation-tier-5', group: 'escalation', desc: 'Escalation T5: near-closure rescue' },
+  // Individual template types
+  { id: 'template-corner-harvest',      prefix: 'template-corner-harvest',      group: 'template-detail', desc: 'Template: corner-harvest' },
+  { id: 'template-perimeter',           prefix: 'template-perimeter',           group: 'template-detail', desc: 'Template: perimeter (cw + ccw)' },
+  { id: 'template-side-commitment',     prefix: 'template-side-commitment',     group: 'template-detail', desc: 'Template: side-commitment' },
+  { id: 'template-portal-bridge-first', prefix: 'template-portal-bridge-first', group: 'template-detail', desc: 'Template: portal-bridge-first' },
+  // Individual archetypes
+  { id: 'archetype-high-intersection-burden',    prefix: 'archetype-high-intersection-burden',    group: 'archetype-detail', desc: 'Archetype: high-intersection-burden' },
+  { id: 'archetype-portal-mustcross-constrained',prefix: 'archetype-portal-mustcross-constrained',group: 'archetype-detail', desc: 'Archetype: portal-mustcross-constrained' },
+  { id: 'archetype-sparse-near-closure',         prefix: 'archetype-sparse-near-closure',         group: 'archetype-detail', desc: 'Archetype: sparse-near-closure' },
 ];
 
 const techniques = requestedTechniques.length > 0
   ? ALL_TECHNIQUES.filter(t => requestedTechniques.includes(t.id))
-  : ALL_TECHNIQUES;
+  : requestedGroup
+    ? ALL_TECHNIQUES.filter(t => t.group === requestedGroup)
+    : ALL_TECHNIQUES;
 
 // ─── Variant builder ──────────────────────────────────────────────────────────
 function buildVariants() {
@@ -224,7 +250,7 @@ function buildVariants() {
 const variants = buildVariants();
 
 if (dryRun) {
-  console.log(`Dry run: ${variants.length} variant(s) would be executed against ${levelFilter ? [...levelFilter].length : 140} level(s).\n`);
+  console.log(`Dry run: ${variants.length} variant(s) would be executed against ${levelFilter ? [...levelFilter].length : 'all'} level(s).\n`);
   for (const v of variants) {
     console.log(`  [${v.id}]  ${v.desc}`);
     console.log(`    config: ${JSON.stringify(v.config)}`);
