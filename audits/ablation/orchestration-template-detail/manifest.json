@@ -1996,5 +1996,53 @@
       },
       "outputFile": "disable-template-portal-bridge-first.json"
     }
+  ],
+  "completedAt": "2026-05-30T06:02:15.692Z",
+  "totalElapsedMs": 1107945,
+  "completedVariants": [
+    {
+      "variantId": "disable-template-corner-harvest",
+      "outputFile": "disable-template-corner-harvest.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 253098
+      }
+    },
+    {
+      "variantId": "disable-template-perimeter",
+      "outputFile": "disable-template-perimeter.json",
+      "summary": {
+        "solved": 147,
+        "failed": 1,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 334451
+      }
+    },
+    {
+      "variantId": "disable-template-side-commitment",
+      "outputFile": "disable-template-side-commitment.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 266610
+      }
+    },
+    {
+      "variantId": "disable-template-portal-bridge-first",
+      "outputFile": "disable-template-portal-bridge-first.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 253772
+      }
+    }
   ]
 }

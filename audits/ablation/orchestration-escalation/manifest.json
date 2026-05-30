@@ -2026,5 +2026,75 @@
       },
       "outputFile": "disable-escalation-tier-5.json"
     }
+  ],
+  "completedAt": "2026-05-30T06:01:55.621Z",
+  "totalElapsedMs": 1390796,
+  "completedVariants": [
+    {
+      "variantId": "disable-all-escalation",
+      "outputFile": "disable-all-escalation.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 198364
+      }
+    },
+    {
+      "variantId": "disable-escalation-tier-1",
+      "outputFile": "disable-escalation-tier-1.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 218552
+      }
+    },
+    {
+      "variantId": "disable-escalation-tier-2",
+      "outputFile": "disable-escalation-tier-2.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 243234
+      }
+    },
+    {
+      "variantId": "disable-escalation-tier-3",
+      "outputFile": "disable-escalation-tier-3.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 240962
+      }
+    },
+    {
+      "variantId": "disable-escalation-tier-4",
+      "outputFile": "disable-escalation-tier-4.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 244274
+      }
+    },
+    {
+      "variantId": "disable-escalation-tier-5",
+      "outputFile": "disable-escalation-tier-5.json",
+      "summary": {
+        "solved": 148,
+        "failed": 0,
+        "errors": 0,
+        "total": 148,
+        "totalMs": 245388
+      }
+    }
   ]
 }
