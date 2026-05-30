@@ -14945,7 +14945,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             const activeTierPolicy = activePolicyLadder[policyTier] || activePolicyLadder[0];
             const tierMinBudget = Number(activeTierPolicy?.minBudgetMs) || defaultBudget;
             const budgetMs = Math.max(requestedBudget, tierMinBudget);
-            const tierBudgets = [scaleSolverBudget(5000), scaleSolverBudget(15000), scaleSolverBudget(60000)];
             const allowRandomizedExploration = !!opts.allowRandomizedExploration;
             const fallbackDisabledPrunes = Array.isArray(opts.fallbackDisabledPrunes) && opts.fallbackDisabledPrunes.length ? opts.fallbackDisabledPrunes : null;
             const forcePreExpansionRescue = !!opts.forcePreExpansionRescue;
@@ -14987,7 +14986,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 activeTierPolicy,
                 tierMinBudget,
                 budgetMs,
-                tierBudgets,
+
                 allowRandomizedExploration,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
@@ -15099,21 +15098,16 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 : basePolicyPortalBias;
             const basePolicyRootSeed = activeTierPolicy?.rootSeedMode || (shouldForcePivot ? 'broader-candidate-seed-set' : (enableDiversifiedRootPass ? 'diversified' : 'default'));
             const basePolicyRescueMode = activeTierPolicy?.rescueMode || (shouldForcePivot ? 'alternate-rescue' : 'default');
-            const hardHintFallbackStage = purpose === 'hint'
-                && timesTried >= 4
-                && ['timeout', 'no-solution-inconclusive'].includes(prev.lastStatus || '')
-                && escalationTier >= 2;
             const strategyMetadata = compactDefined({
                 attemptOrdinal: timesTried,
-                policyKey: hardHintFallbackStage ? `${activeTierPolicy?.key || 'policy'}-hard` : (activeTierPolicy?.key || null),
+                policyKey: activeTierPolicy?.key || null,
                 policyTier,
                 forcedPivot: shouldForcePivot,
                 pivotTrigger: shouldForcePivot ? 'flat-or-negative-delta' : null,
-                orderingPolicy: hardHintFallbackStage ? 'portalFirstTransfer' : basePolicyOrdering,
-                portalBiasMode: hardHintFallbackStage ? 'off' : tunedPortalBiasMode,
-                rootSeedMode: hardHintFallbackStage ? 'diversified-aggressive' : basePolicyRootSeed,
-                rescueMode: hardHintFallbackStage ? 'alternate-rescue' : basePolicyRescueMode,
-                hardHintFallbackStage,
+                orderingPolicy: basePolicyOrdering,
+                portalBiasMode: tunedPortalBiasMode,
+                rootSeedMode: basePolicyRootSeed,
+                rescueMode: basePolicyRescueMode,
                 budgetMs,
                 previousDelta: previousAttempt?.delta || null
             });
@@ -15163,7 +15157,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 portalBiasMode: first?.strategy?.portalBiasMode || null,
                 rootSeedMode: first?.strategy?.rootSeedMode || null,
                 rescueMode: first?.strategy?.rescueMode || null,
-                hardHintFallbackStage: !!first?.strategy?.hardHintFallbackStage,
                 budgetMs: Number(first?.strategy?.budgetMs) || 0
             }) === JSON.stringify({
                 policyKey: second?.strategy?.policyKey || null,
@@ -15171,7 +15164,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 portalBiasMode: second?.strategy?.portalBiasMode || null,
                 rootSeedMode: second?.strategy?.rootSeedMode || null,
                 rescueMode: second?.strategy?.rescueMode || null,
-                hardHintFallbackStage: !!second?.strategy?.hardHintFallbackStage,
                 budgetMs: Number(second?.strategy?.budgetMs) || 0
             });
             return sameStrategy && progressGap <= 0.01 && nodesGap <= 20 && depthGap <= 1 && rootGap <= 0;
@@ -15360,59 +15352,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             return last;
         },
 
-        async _runHardHintFallbackStage({
-            last,
-            solveContext,
-            stageHelpers
-        }) {
-            const { runStage } = stageHelpers;
-            const {
-                level,
-                purpose,
-                controlPlane,
-                budgets: { budgetMs, tierBudgets },
-                policyTier,
-                strategy: { hintLadderState },
-                derived: { strategyMetadata },
-                flags: { objectivesAreInteriorDominant }
-            } = solveContext;
-            const resolvedPolicyTier = Number.isFinite(policyTier) ? policyTier : (Number(solveContext?.strategy?.policyTier) || 0);
-            if (!last.ok && last.status !== 'no-solution-proven' && strategyMetadata.hardHintFallbackStage) {
-                const hardFallbackBudget = Math.max(1500, Math.floor(Math.max(budgetMs, tierBudgets[Math.min(2, resolvedPolicyTier)] || budgetMs) * 0.55));
-                const hardFallbackAttempt = await runStage({
-                    stage: 6,
-                    name: 'Stage 6',
-                    variant: 'hint-hard-diversified-fallback',
-                    budgetMs: hardFallbackBudget,
-                    run: () => this.runBaselinePolicySweep(level, hardFallbackBudget, {
-                        orderingPolicy: 'portalFirstTransfer',
-                        portalBiasMode: 'off',
-                        phasePolicy: null,
-                        profile: level.solverProfile,
-                        controlPlane,
-                        refereeRootDiversification: true,
-                        scoringMode: 'endurance',
-                        structuralMode: true,
-                        enableEnduranceLongpath: true,
-                        allowRandomizedExploration: false,
-                        adaptiveOrderingPhase: 'portal-transfer',
-                        purpose,
-                        rootCandidateGeneratorVariant: 'interaction-fallback',
-                        preferMacroSkeleton: true,
-                        suppressPerimeterBias: objectivesAreInteriorDominant,
-                        hintLadderState
-                    })
-                });
-                hardFallbackAttempt.routingDecision = compactDefined({
-                    category: hardFallbackAttempt.failureTaxonomy?.category || 'hint-hard-fallback',
-                    mode: 'hard-diversified-fallback',
-                    trigger: 'repeated-inconclusive-hint-presses'
-                });
-                return hardFallbackAttempt;
-            }
-            return last;
-        },
-
         _decorateFinalSolveResult({
             last,
             level,
@@ -15515,7 +15454,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 level,
                 purpose,
                 controlPlane,
-                budgets: { budgetMs, tierBudgets },
+                budgets: { budgetMs },
                 strategy: {
                     prev,
                     timesTried,
@@ -15698,18 +15637,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 };
             }
             if (!last.ok) last.rapidCollapseRecovery = rapidCollapseRecoveryDiagnostics;
-            const _lastBeforeHardHint = last;
-            const _t0hardHint = _vt();
-            last = await this._runHardHintFallbackStage({
-                last,
-                solveContext,
-                stageHelpers
-            });
-            _recordBranch('referee.rescue.hardHintFallback', true, last, {
-                elapsedMs: _vt() - _t0hardHint,
-                triggered: !_lastBeforeHardHint.ok,
-                solvedHere: !_lastBeforeHardHint.ok && last.ok,
-            });
             last.diagnostics = compactDefined({
                 ...(last.diagnostics || {}),
                 portalTriage: {
@@ -15888,7 +15815,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 activeTierPolicy,
                 tierMinBudget,
                 budgetMs,
-                tierBudgets,
+
                 allowRandomizedExploration,
                 fallbackDisabledPrunes,
                 forcePreExpansionRescue,
@@ -15914,8 +15841,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 budgets: {
                     defaultBudget,
                     tierMinBudget,
-                    budgetMs,
-                    tierBudgets
+                    budgetMs
                 },
                 flags: {
                     objectivesAreInteriorDominant,
