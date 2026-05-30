@@ -11272,11 +11272,6 @@ function installSolver(APP) {
             const mustCrossCount = Array.isArray(level?.mustCrossKeys) ? level.mustCrossKeys.length : 0;
             const portalPairs = isUsableMap(level?.portalMap) ? Math.floor(level.portalMap.size / 2) : 0;
             const blockCount = level?.blockSet instanceof Set ? level.blockSet.size : 0;
-            const blockDensity = blockCount / area;
-            // Density is measured against the navigable board (area minus blocks), not raw
-            // area, so block-heavy layouts aren't systematically under-rated. On a board that
-            // is half blocks, a path that fills the free cells reads as dense even though it
-            // covers only half of the raw grid.
             const freeArea = Math.max(1, area - blockCount);
             const reqLenDensity = reqLen > 0 ? reqLen / freeArea : 0;
             const archetypes = [];
@@ -11293,21 +11288,6 @@ function installSolver(APP) {
             // archetype's profile mix actually pays for itself.
             if (reqInt >= 5 && reqLenDensity >= 0.55 && (mustPassCount + mustCrossCount) >= 3 && (portalPairs > 0 || mustCrossCount > 0)) {
                 archetypes.push('high-intersection-burden');
-            }
-
-            // Portal-mustCross-mix with constrained geometry: portals + mustCross obligations
-            // + significant block density create tight corridors where portal-traversal must
-            // be committed early. portalCommitted + knotBuilder profiles help here.
-            if (mustCrossCount >= 2 && portalPairs >= 2 && blockDensity >= 0.2) {
-                archetypes.push('portal-mustcross-constrained');
-            }
-
-            // Sparse near-closure: low reqInt, no mustCross, but multiple portals and a
-            // short path relative to area. The hard part is closing the final-mile shell
-            // rather than building geometry. nearClosureRescue profile concentrates on
-            // closure-residual ordering and prune relaxation around the goal.
-            if (reqInt <= 1 && mustCrossCount === 0 && portalPairs >= 2 && reqLenDensity < 0.4 && mustPassCount >= 1) {
-                archetypes.push('sparse-near-closure');
             }
 
             return archetypes;
@@ -11335,13 +11315,6 @@ function installSolver(APP) {
                 { policyProfile: 'closureCommitment',   budgetFraction: 0.15, scoringMode: 'closure-focal-lex' },
                 { policyProfile: 'mustCrossFirst',      budgetFraction: 0.10 }
             ],
-            'portal-mustcross-constrained': [
-                { policyProfile: 'portalCommitted', budgetFraction: 0.25 },
-                { policyProfile: 'knotBuilder',     budgetFraction: 0.25 }
-            ],
-            'sparse-near-closure': [
-                { policyProfile: 'nearClosureRescue', budgetFraction: 0.45 }
-            ]
         },
 
         _buildAttemptPlan({ level, budgetMs, profile, opts = {}, controlPlane }) {
@@ -11417,90 +11390,6 @@ function installSolver(APP) {
             // come from the cascade definition above, the same for every level.
             const orderedAttempts = attempts.map((attempt) => ({ ...attempt }));
 
-            // ── Escalation tiers promoted from PathfinderSolver.solve() internal loop ─────────
-            // These were formerly hidden inside PathfinderSolver.solve() as a post-primary fallback.
-            // They are now explicit named attempt configs so Referee owns all attempt sequencing.
-            // Each config is tried by runBaselineStage after the primary attempts above fail.
-            // Budget: 22% of total per tier (progress-weighted bonus dropped for architectural
-            // clarity; can be re-added per-tier via budgetMs customisation if needed).
-            {
-                const _esc = Math.max(400, Math.floor(total * 0.22));
-                const _basePortalBias = opts.portalBiasMode || 'adaptiveMustCross';
-                orderedAttempts.push(
-                    {
-                        id: 'attempt.escalation.memoDisabled',
-                        label: 'escalation-tier-1-memo-disabled',
-                        budgetMs: _esc,
-                        disabledPrunes: [],
-                        useFailMemo: false,
-                        portalBiasMode: _basePortalBias,
-                        dirOrderVariant: 'default',
-                        contradictionRecovery: true,
-                        scoringMode: 'modern'
-                    },
-                    {
-                        id: 'attempt.escalation.boundsRelaxed',
-                        label: 'escalation-tier-2-bounds-relaxed',
-                        budgetMs: _esc,
-                        disabledPrunes: ['mustPassBound', 'mustCrossBound'],
-                        useFailMemo: false,
-                        portalBiasMode: _basePortalBias,
-                        dirOrderVariant: 'default',
-                        contradictionRecovery: true,
-                        scoringMode: 'modern'
-                    },
-                    {
-                        id: 'attempt.escalation.portalRelaxed',
-                        label: 'escalation-tier-3-portal-relaxed',
-                        budgetMs: _esc,
-                        disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
-                        useFailMemo: false,
-                        portalBiasMode: 'off',
-                        dirOrderVariant: 'default',
-                        contradictionRecovery: true,
-                        scoringMode: 'modern'
-                    },
-                    {
-                        id: 'attempt.escalation.diversifiedOrder',
-                        label: 'escalation-tier-4-diversified-order',
-                        budgetMs: _esc,
-                        disabledPrunes: ['mustPassBound', 'mustCrossBound', 'portalAutomaton'],
-                        useFailMemo: false,
-                        portalBiasMode: 'off',
-                        dirOrderVariant: 'random',
-                        contradictionRecovery: true,
-                        scoringMode: 'modern'
-                    },
-                    {
-                        id: 'attempt.escalation.nearClosureRescue',
-                        label: 'escalation-tier-5-near-closure-rescue',
-                        budgetMs: _esc,
-                        disabledPrunes: ['mustCrossBound', 'portalAutomaton'],
-                        useFailMemo: false,
-                        portalBiasMode: 'off',
-                        dirOrderVariant: 'random',
-                        contradictionRecovery: true,
-                        scoringMode: 'modern',
-                        policyProfile: 'nearClosureRescue',
-                        forcedPolicyProfile: 'nearClosureRescue'
-                    }
-                );
-                // Diagnostic sanity attempt: only in debug/audit mode. Disables memo+bounds
-                // to surface false "no-solution" caused by overly strict pruning or memo.
-                // Formerly an inline block at the bottom of PathfinderSolver.solve().
-                if (opts.debug || opts.auditMode || opts.enableDiagnosticSanityPass) {
-                    orderedAttempts.push({
-                        id: 'attempt.diagnostic.sanityBoundsMemoDisabled',
-                        label: 'diagnostic-sanity-bounds-memo-disabled',
-                        budgetMs: Math.max(900, Math.floor(total * 0.30)),
-                        disabledPrunes: ['mustPassBound', 'mustCrossBound', 'dominanceMemo'],
-                        useFailMemo: false,
-                        portalBiasMode: _basePortalBias,
-                        scoringMode: 'modern',
-                        contradictionRecovery: false
-                    });
-                }
-            }
 
             // Structural archetype dispatch: classify the level by its OWN geometry (reqInt,
             // reqLen, area, portal pair count, mustCross/mustPass count, block density). The
