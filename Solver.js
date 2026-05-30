@@ -804,10 +804,8 @@ function installSolver(APP) {
                     objectiveFirst:      { direction: { goalAttractionWeight: 0.7,  objectiveAttractionWeight: 1.65, finishCommitmentWeight: 0.65, portalSetupWeight: 1.25, portalCommitmentWeight: 1.2  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 0.85 }, urgency: { mustPassUrgencyWeight: 1.85, mustCrossUrgencyWeight: 1.8,  intersectionSetupWeight: 1.2  }, pathology: { antiDeadCorridorWeight: 1.1,  antiDitherWeight: 1,    revisitPenaltyWeight: 0.9  } },
                     finishFirst:         { direction: { goalAttractionWeight: 1.45, objectiveAttractionWeight: 0.85, finishCommitmentWeight: 1.75, portalSetupWeight: 0.9,  portalCommitmentWeight: 1    }, coverage: { perimeterBiasWeight: 0.75, slackPreservationWeight: 1.5  }, urgency: { mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1.05, intersectionSetupWeight: 0.8  }, pathology: { antiDeadCorridorWeight: 1.25, antiDitherWeight: 1.3,  revisitPenaltyWeight: 1.3  } },
                     nearClosureRescue:   { direction: { goalAttractionWeight: 1.55, objectiveAttractionWeight: 1.25, finishCommitmentWeight: 1.9,  portalSetupWeight: 0.95, portalCommitmentWeight: 1.1  }, coverage: { perimeterBiasWeight: 0.8,  slackPreservationWeight: 1.45 }, urgency: { mustPassUrgencyWeight: 1.6,  mustCrossUrgencyWeight: 1.7,  intersectionSetupWeight: 1.2  }, pathology: { antiDeadCorridorWeight: 1.2,  antiDitherWeight: 1.2,  revisitPenaltyWeight: 1.1  } },
-                    lengthHarvest:       { direction: { goalAttractionWeight: 0.7,  objectiveAttractionWeight: 0.95, finishCommitmentWeight: 0.55, portalSetupWeight: 0.95, portalCommitmentWeight: 0.8  }, coverage: { perimeterBiasWeight: 1.45, slackPreservationWeight: 1.35 }, urgency: { mustPassUrgencyWeight: 1.05, mustCrossUrgencyWeight: 1,    intersectionSetupWeight: 1.05 }, pathology: { antiDeadCorridorWeight: 1.15, antiDitherWeight: 0.85, revisitPenaltyWeight: 0.85 } },
                     knotBuilder:         { direction: { goalAttractionWeight: 0.8,  objectiveAttractionWeight: 1,    finishCommitmentWeight: 0.7,  portalSetupWeight: 1,    portalCommitmentWeight: 0.9  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 1.1  }, urgency: { mustPassUrgencyWeight: 1.1,  mustCrossUrgencyWeight: 1.35, intersectionSetupWeight: 1.9  }, pathology: { antiDeadCorridorWeight: 1,    antiDitherWeight: 0.9,  revisitPenaltyWeight: 0.8  } },
                     portalCommitted:     { direction: { goalAttractionWeight: 0.95, objectiveAttractionWeight: 1.2,  finishCommitmentWeight: 1,    portalSetupWeight: 1.95, portalCommitmentWeight: 2    }, coverage: { perimeterBiasWeight: 0.9,  slackPreservationWeight: 1.1  }, urgency: { mustPassUrgencyWeight: 1.2,  mustCrossUrgencyWeight: 1.3,  intersectionSetupWeight: 1    }, pathology: { antiDeadCorridorWeight: 1.15, antiDitherWeight: 1.25, revisitPenaltyWeight: 1.1  } },
-                    endurance:           { direction: { goalAttractionWeight: 0.85, objectiveAttractionWeight: 1.05, finishCommitmentWeight: 0.8,  portalSetupWeight: 1.1,  portalCommitmentWeight: 1.1  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 1.2  }, urgency: { mustPassUrgencyWeight: 1,    mustCrossUrgencyWeight: 1,    intersectionSetupWeight: 1.15 }, pathology: { antiDeadCorridorWeight: 0.9,  antiDitherWeight: 0.75, revisitPenaltyWeight: 0.75 } },
                     mustCrossFirst:      { direction: { goalAttractionWeight: 0.65, objectiveAttractionWeight: 1.5,  finishCommitmentWeight: 0.6,  portalSetupWeight: 1.0,  portalCommitmentWeight: 0.9  }, coverage: { perimeterBiasWeight: 1.1,  slackPreservationWeight: 1.05 }, urgency: { mustPassUrgencyWeight: 1.6,  mustCrossUrgencyWeight: 2.4,  intersectionSetupWeight: 1.1  }, pathology: { antiDeadCorridorWeight: 1.05, antiDitherWeight: 0.9,  revisitPenaltyWeight: 0.85 } },
                     // intersectionHarvest: tuned for the high-intersection-burden structural
                     // archetype (reqInt ≥ 5 AND reqLen/area ≥ 0.55). Drops mustPass/mustCross
@@ -830,12 +828,11 @@ function installSolver(APP) {
                     closureCommitment:   { direction: { goalAttractionWeight: 1.5,  objectiveAttractionWeight: 1.3,  finishCommitmentWeight: 2.0,  portalSetupWeight: 1.0,  portalCommitmentWeight: 1.1  }, coverage: { perimeterBiasWeight: 0.8,  slackPreservationWeight: 0.6  }, urgency: { mustPassUrgencyWeight: 2.0,  mustCrossUrgencyWeight: 2.0,  intersectionSetupWeight: 0.8  }, pathology: { antiDeadCorridorWeight: 1.0,  antiDitherWeight: 0.4,  revisitPenaltyWeight: 0.4  } }
                 },
                 // Phase multipliers apply on top of the base profile. Keys must match active weight names.
-                // lengthHarvestWeight and antiTrapWeight entries removed (dead weights).
                 SOLVER_POLICY_PHASE_MULTIPLIERS: {
-                    harvest:    { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, nearClosureRescue: { finishCommitmentWeight: 0.85, mustPassUrgencyWeight: 1.15, mustCrossUrgencyWeight: 1.15, goalAttractionWeight: 0.9 }, lengthHarvest: { perimeterBiasWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, endurance: { antiDitherWeight: 0.8, revisitPenaltyWeight: 0.8 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.15, goalAttractionWeight: 0.75 }, intersectionHarvest: { intersectionSetupWeight: 1.15, mustPassUrgencyWeight: 0.7, mustCrossUrgencyWeight: 0.7, goalAttractionWeight: 0.7 }, closureCommitment: { mustPassUrgencyWeight: 1.1, mustCrossUrgencyWeight: 1.1, finishCommitmentWeight: 1.1 } },
-                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, nearClosureRescue: { finishCommitmentWeight: 1.1, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, endurance: { antiDitherWeight: 0.85 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.15, objectiveAttractionWeight: 1.1 }, intersectionHarvest: { intersectionSetupWeight: 1.3, mustPassUrgencyWeight: 0.8, mustCrossUrgencyWeight: 0.8 }, closureCommitment: { mustPassUrgencyWeight: 1.15, mustCrossUrgencyWeight: 1.15, finishCommitmentWeight: 1.2 } },
-                    knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, nearClosureRescue: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.25, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.25 }, lengthHarvest: { intersectionSetupWeight: 0.85 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, endurance: { intersectionSetupWeight: 1.2 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.1, intersectionSetupWeight: 1.15 }, intersectionHarvest: { intersectionSetupWeight: 1.5, mustCrossUrgencyWeight: 0.85 }, closureCommitment: { mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, finishCommitmentWeight: 1.3, goalAttractionWeight: 1.1 } },
-                    finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, nearClosureRescue: { goalAttractionWeight: 1.45, finishCommitmentWeight: 1.55, mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1.3, slackPreservationWeight: 1.25 }, lengthHarvest: { goalAttractionWeight: 0.85, finishCommitmentWeight: 0.7 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, endurance: { finishCommitmentWeight: 0.9, antiDitherWeight: 0.7 }, mustCrossFirst: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.2 }, intersectionHarvest: { intersectionSetupWeight: 0.9, finishCommitmentWeight: 1.0, goalAttractionWeight: 1.05 }, closureCommitment: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, mustPassUrgencyWeight: 1.3, mustCrossUrgencyWeight: 1.3 } }
+                    harvest:    { perimeterSweep: { perimeterBiasWeight: 1.2, antiDitherWeight: 0.8, finishCommitmentWeight: 0.7 }, harvestThenFinish: { objectiveAttractionWeight: 1.12, finishCommitmentWeight: 0.8 }, portalFirstTransfer: { portalSetupWeight: 1.3, portalCommitmentWeight: 1.25, goalAttractionWeight: 0.8 }, objectiveFirst: { objectiveAttractionWeight: 1.2, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, goalAttractionWeight: 0.8 }, finishFirst: { finishCommitmentWeight: 0.7, goalAttractionWeight: 0.85 }, nearClosureRescue: { finishCommitmentWeight: 0.85, mustPassUrgencyWeight: 1.15, mustCrossUrgencyWeight: 1.15, goalAttractionWeight: 0.9 }, knotBuilder: { intersectionSetupWeight: 1.1 }, portalCommitted: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.15 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.15, goalAttractionWeight: 0.75 }, intersectionHarvest: { intersectionSetupWeight: 1.15, mustPassUrgencyWeight: 0.7, mustCrossUrgencyWeight: 0.7, goalAttractionWeight: 0.7 }, closureCommitment: { mustPassUrgencyWeight: 1.1, mustCrossUrgencyWeight: 1.1, finishCommitmentWeight: 1.1 } },
+                    transition: { perimeterSweep: { perimeterBiasWeight: 1.1, objectiveAttractionWeight: 0.9 }, harvestThenFinish: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, portalFirstTransfer: { portalSetupWeight: 1.2, portalCommitmentWeight: 1.35 }, objectiveFirst: { objectiveAttractionWeight: 1.15, mustPassUrgencyWeight: 1.1 }, finishFirst: { finishCommitmentWeight: 1 }, nearClosureRescue: { finishCommitmentWeight: 1.1, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, objectiveAttractionWeight: 1.1 }, knotBuilder: { intersectionSetupWeight: 1.25 }, portalCommitted: { portalCommitmentWeight: 1.25 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.15, objectiveAttractionWeight: 1.1 }, intersectionHarvest: { intersectionSetupWeight: 1.3, mustPassUrgencyWeight: 0.8, mustCrossUrgencyWeight: 0.8 }, closureCommitment: { mustPassUrgencyWeight: 1.15, mustCrossUrgencyWeight: 1.15, finishCommitmentWeight: 1.2 } },
+                    knot:       { perimeterSweep: { perimeterBiasWeight: 0.9, intersectionSetupWeight: 1.1 }, harvestThenFinish: { goalAttractionWeight: 0.9, mustCrossUrgencyWeight: 1.15 }, portalFirstTransfer: { portalCommitmentWeight: 1.25, intersectionSetupWeight: 1.15 }, objectiveFirst: { goalAttractionWeight: 0.9 }, finishFirst: { finishCommitmentWeight: 1.2, goalAttractionWeight: 1.2 }, nearClosureRescue: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.25, mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.25 }, knotBuilder: { intersectionSetupWeight: 1.35, mustCrossUrgencyWeight: 1.2 }, portalCommitted: { portalCommitmentWeight: 1.3, antiDitherWeight: 1.2 }, mustCrossFirst: { mustCrossUrgencyWeight: 1.1, intersectionSetupWeight: 1.15 }, intersectionHarvest: { intersectionSetupWeight: 1.5, mustCrossUrgencyWeight: 0.85 }, closureCommitment: { mustPassUrgencyWeight: 1.2, mustCrossUrgencyWeight: 1.2, finishCommitmentWeight: 1.3, goalAttractionWeight: 1.1 } },
+                    finish:     { perimeterSweep: { goalAttractionWeight: 1.1, finishCommitmentWeight: 1.15 }, harvestThenFinish: { goalAttractionWeight: 1.35, finishCommitmentWeight: 1.4 }, portalFirstTransfer: { goalAttractionWeight: 1.15, portalCommitmentWeight: 1.1, finishCommitmentWeight: 1.2 }, objectiveFirst: { goalAttractionWeight: 1.2, finishCommitmentWeight: 1.25 }, finishFirst: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, slackPreservationWeight: 1.3 }, nearClosureRescue: { goalAttractionWeight: 1.45, finishCommitmentWeight: 1.55, mustPassUrgencyWeight: 1.25, mustCrossUrgencyWeight: 1.3, slackPreservationWeight: 1.25 }, knotBuilder: { intersectionSetupWeight: 0.8, finishCommitmentWeight: 0.8 }, portalCommitted: { portalCommitmentWeight: 1.2, goalAttractionWeight: 1.15 }, mustCrossFirst: { goalAttractionWeight: 1.15, finishCommitmentWeight: 1.2 }, intersectionHarvest: { intersectionSetupWeight: 0.9, finishCommitmentWeight: 1.0, goalAttractionWeight: 1.05 }, closureCommitment: { goalAttractionWeight: 1.4, finishCommitmentWeight: 1.5, mustPassUrgencyWeight: 1.3, mustCrossUrgencyWeight: 1.3 } }
                 },
                 // Segment 1 (portfolio diversification): map existing policy profiles onto a compact family taxonomy.
                 // Families group profiles that share a dominant behavioral axis so attempt identity and diversity
@@ -843,7 +840,6 @@ function installSolver(APP) {
                 SOLVER_POLICY_FAMILY_OF_PROFILE: {
                     default: 'baseline',
                     perimeterSweep: 'portal-conservative',
-                    lengthHarvest: 'portal-conservative',
                     harvestThenFinish: 'obligation-first',
                     objectiveFirst: 'obligation-first',
                     knotBuilder: 'obligation-first',
@@ -853,8 +849,7 @@ function installSolver(APP) {
                     portalCommitted: 'portal-aggressive',
                     finishFirst: 'goal-distance',
                     nearClosureRescue: 'endgame-closure',
-                    closureCommitment: 'endgame-closure',
-                    endurance: 'endgame-closure'
+                    closureCommitment: 'endgame-closure'
                 },
                 SOLVER_POLICY_FAMILY_DEFAULT: 'baseline',
                 // Attempt seed namespace: deterministic function of (globalSeed, levelId, attemptOrdinal, profileId)
@@ -11014,46 +11009,18 @@ function installSolver(APP) {
         },
         getComplexityStrategy(complexityClass = 'standard', strategySubtype = 'corridor_commitment') {
             const strategyByClass = {
-                'portal-heavy': {
-                    stageOrder: ['fast', 'portalSweep', 'strict', 'alt', 'switch', 'fallback'],
-                    budgetSplit: { fast: 0.16, portalSweep: 0.18, strict: 0.17, alt: 0.13, switch: 0.16, fallback: 0.2 },
-                    portalBiasMode: 'aggressive',
-                    pruneTogglesByTier: [[], ['distance'], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],
-                    directionPolicy: { fast: 'default', portalSweep: 'alt', alt: 'alt', allowRandomized: false }
-                },
-                'objective-dense': {
-                    stageOrder: ['fast', 'strict', 'retained', 'alt', 'switch', 'fallback'],
-                    budgetSplit: { fast: 0.12, strict: 0.2, retained: 0.18, alt: 0.14, switch: 0.16, fallback: 0.2 },
-                    portalBiasMode: 'adaptiveMustCross',
-                    pruneTogglesByTier: [[], [], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],
-                    directionPolicy: { fast: 'default', alt: 'alt', allowRandomized: false }
-                },
-                'route-pressure': {
-                    stageOrder: ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback'],
-                    budgetSplit: { fast: 0.1, alt: 0.16, strict: 0.2, retained: 0.18, switch: 0.16, fallback: 0.2 },
-                    portalBiasMode: 'adaptiveMustCross',
-                    pruneTogglesByTier: [[], ['distance'], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],
-                    directionPolicy: { fast: 'default', alt: 'alt', allowRandomized: true }
-                },
-                'standard': {
-                    stageOrder: ['fast', 'alt', 'strict', 'retained', 'switch', 'fallback'],
-                    budgetSplit: { fast: 0.14, alt: 0.17, strict: 0.17, retained: 0.14, switch: 0.18, fallback: 0.2 },
-                    portalBiasMode: 'adaptiveMustCross',
-                    pruneTogglesByTier: [[], [], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],
-                    directionPolicy: { fast: 'default', alt: 'alt', allowRandomized: false }
-                }
+                'portal-heavy':     { portalBiasMode: 'aggressive',       pruneTogglesByTier: [[], ['distance'], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']], directionPolicy: { allowRandomized: false } },
+                'objective-dense':  { portalBiasMode: 'adaptiveMustCross', pruneTogglesByTier: [[], [], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],         directionPolicy: { allowRandomized: false } },
+                'route-pressure':   { portalBiasMode: 'adaptiveMustCross', pruneTogglesByTier: [[], ['distance'], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']], directionPolicy: { allowRandomized: true  } },
+                'standard':         { portalBiasMode: 'adaptiveMustCross', pruneTogglesByTier: [[], [], ['mustPassBound', 'mustCrossBound', 'connectivity', 'distance', 'parity']],         directionPolicy: { allowRandomized: false } }
             };
             const fallbackStrategy = strategyByClass.standard;
             const base = (strategyByClass[complexityClass] && typeof strategyByClass[complexityClass] === 'object')
                 ? strategyByClass[complexityClass]
                 : fallbackStrategy;
             const subtypeOverrides = {
-                macro_sweep: { stageOrder: ['fast', 'macroSkeleton', 'strict', 'retained', 'switch', 'fallback'], budgetSplit: { fast: 0.1, macroSkeleton: 0.2, strict: 0.21, retained: 0.16, switch: 0.15, fallback: 0.18 }, directionPolicy: { ...base.directionPolicy, allowRandomized: false } },
-                portal_macro_hybrid: { stageOrder: ['fast', 'portalSweep', 'macroSkeleton', 'strict', 'switch', 'fallback'], budgetSplit: { fast: 0.1, portalSweep: 0.19, macroSkeleton: 0.19, strict: 0.18, switch: 0.14, fallback: 0.2 }, portalBiasMode: 'aggressive' },
-                choke_knot: { stageOrder: ['fast', 'strict', 'retained', 'switch', 'alt', 'fallback'], budgetSplit: { fast: 0.1, strict: 0.24, retained: 0.2, switch: 0.16, alt: 0.12, fallback: 0.18 } },
-                objective_order: { stageOrder: ['fast', 'strict', 'retained', 'alt', 'switch', 'fallback'], budgetSplit: { fast: 0.1, strict: 0.23, retained: 0.22, alt: 0.12, switch: 0.14, fallback: 0.19 } },
-                filter_commitment: { stageOrder: ['fast', 'strict', 'alt', 'retained', 'switch', 'fallback'], budgetSplit: { fast: 0.13, strict: 0.22, alt: 0.14, retained: 0.18, switch: 0.14, fallback: 0.19 } },
-                symmetric_split: { stageOrder: ['fast', 'strict', 'switch', 'retained', 'alt', 'fallback'], budgetSplit: { fast: 0.12, strict: 0.23, switch: 0.18, retained: 0.17, alt: 0.11, fallback: 0.19 } }
+                portal_macro_hybrid: { portalBiasMode: 'aggressive' },
+                route_pressure:      { directionPolicy: { ...base.directionPolicy, allowRandomized: true } }
             };
             const resolved = { ...base, ...(subtypeOverrides[strategySubtype] || {}) };
             if (!resolved || typeof resolved !== 'object') return { ...fallbackStrategy };
@@ -11070,7 +11037,7 @@ function installSolver(APP) {
                 harvestThenFinish: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'harvestThenFinish' },
                 portalFirstTransfer: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'portalFirstTransfer' },
                 knotBuilder: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'knotBuilder' },
-                endurance: { dirOrderVariant: 'random', allowRandomizedExploration: true, policyName: 'endurance' },
+                endurance: { dirOrderVariant: 'random', allowRandomizedExploration: true, policyName: 'default' },
                 memoRelaxed: { dirOrderVariant: 'alt', allowRandomizedExploration: false, policyName: 'memoRelaxed' },
                 nearClosureRescue: { dirOrderVariant: 'default', allowRandomizedExploration: false, policyName: 'nearClosureRescue' }
             };
@@ -11394,7 +11361,6 @@ function installSolver(APP) {
                 if (forbidPortals) return 'optional-off';
                 return portalTraversalRequired ? 'required' : 'optional-on';
             };
-            const modernStructuralGuidanceNotNeeded = routePressure < 0.4 && objectiveCount <= 1 && portalCommitment === 0;
             const complexityBias = Math.max(0, Math.min(0.18,
                 Math.max(0, (routePressure - 0.95) * 0.08)
                 + Math.min(0.06, objectiveCount * 0.008)
@@ -11463,28 +11429,6 @@ function installSolver(APP) {
                     policyProfile: (controlPlane.activeHypothesis?.archetype || 'harvestThenFinish'),
                     commitmentPlan: { horizonSteps: Math.max(4, Math.floor(level.reqLen * 0.22)) },
                     memoStrictness: 1.35,
-                    portalUsagePolicy: resolvePortalUsagePolicy()
-                });
-            } else {
-                attempts.push({
-                    label: 'structural-modern',
-                    budgetMs: modernStructuralGuidanceNotNeeded ? total : modernBudget,
-                    scoringMode: 'modern',
-                    portalBiasMode: opts.portalBiasMode || 'adaptiveMustCross',
-                    structuralMode: !modernStructuralGuidanceNotNeeded,
-                    phasePolicy: modernStructuralGuidanceNotNeeded ? null : SolverCore.deriveDynamicPhasePolicy(profile || {}, { hypothesis: controlPlane.activeHypothesis, activeArchetype: controlPlane.activeHypothesis?.archetype }),
-                    objectiveTrack: defaultTrack,
-                    templateCommitment: modernStructuralGuidanceNotNeeded ? null : commonTemplateCommitment,
-                    portalLockPolicy: modernStructuralGuidanceNotNeeded ? null : commonPortalLockPolicy,
-                    knotBudgetPolicy: modernStructuralGuidanceNotNeeded ? null : commonKnotBudgetPolicy,
-                    macroSkeleton: modernStructuralGuidanceNotNeeded ? null : defaultSkeleton,
-                    regionCrossingModel: modernStructuralGuidanceNotNeeded ? null : regionCrossingModel,
-                    policyProfile: modernStructuralGuidanceNotNeeded ? null : 'perimeterSweep',
-                    orderingPolicy: modernStructuralGuidanceNotNeeded ? 'default' : null,
-                    startGateArchetype: null,
-                    useControlPlaneArchetype: modernStructuralGuidanceNotNeeded ? false : true,
-                    commitmentPlan: modernStructuralGuidanceNotNeeded ? null : { horizonSteps: Math.max(3, Math.floor(level.reqLen * 0.18)) },
-                    memoStrictness: modernStructuralGuidanceNotNeeded ? 1.0 : 1.2,
                     portalUsagePolicy: resolvePortalUsagePolicy()
                 });
             }
@@ -15168,10 +15112,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 : null;
             const solveStartTime = Date.now();
             const controlPlane = this.createControlPlane(level.solverProfile || {});
-            const lowComplexityLevel = (level.solverProfile?.objectiveCount || 0) <= 1
-                && (level.solverProfile?.topology?.bridgeCount || 0) <= 1
-                && (level.solverProfile?.topology?.articulationPointCount || 0) <= 2
-                && (!Array.isArray(level.solverProfile?.portalHints?.mandatoryFamilies) || level.solverProfile.portalHints.mandatoryFamilies.length === 0);
             const stagesTried = [];
             return {
                 requestedTierRaw,
@@ -15211,8 +15151,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 forbiddenFirstMoves,
                 stagesTried,
                 solveStartTime,
-                controlPlane,
-                lowComplexityLevel
+                controlPlane
             };
         },
 
@@ -15681,8 +15620,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
             last.complexityStrategy = {
                 portalBiasMode: complexityStrategy.portalBiasMode,
                 pruneTogglesByTier: complexityStrategy.pruneTogglesByTier || [],
-                stageOrder: complexityStrategy.stageOrder || [],
-                budgetSplit: complexityStrategy.budgetSplit || {},
                 directionPolicy: complexityStrategy.directionPolicy || {}
             };
             // Side-channel: log enrichment metadata (classification, archetype, timing) without
@@ -16116,8 +16053,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 forbiddenFirstMoves,
                 stagesTried,
                 solveStartTime,
-                controlPlane,
-                lowComplexityLevel
+                controlPlane
             } = this._prepareSolveContext(levelInput, opts);
             const solveContext = {
                 level,
@@ -16128,8 +16064,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 complexity: {
                     class: complexityClass,
                     strategySubtype,
-                    strategy: complexityStrategy,
-                    lowComplexityLevel
+                    strategy: complexityStrategy
                 },
                 budgets: {
                     defaultBudget,
@@ -16251,8 +16186,6 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 complexityStrategy: {
                     portalBiasMode: resolvedPortalBiasMode,
                     pruneTogglesByTier: complexityStrategy.pruneTogglesByTier || [],
-                    stageOrder: complexityStrategy.stageOrder || [],
-                    budgetSplit: complexityStrategy.budgetSplit || {},
                     directionPolicy: complexityStrategy.directionPolicy || {}
                 }
             });
