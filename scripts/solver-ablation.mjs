@@ -77,6 +77,8 @@ if (argFlags.has('--help') || argFlags.has('-h')) {
   --allow=t1,t2            Whitelist: run only these technique prefixes.
   --global-budget-multiplier=N  Multiply all attempt budgets by N.
   --attempt-budget-multipliers=t1:N1,t2:N2  Per-technique budget multipliers.
+  --branch-disable=id1,id2 Disable REFEREE_BRANCH_DEFAULTS entries by ID.
+                           e.g. referee.adaptation.mitmConnector,referee.adaptation.nearClosureFloodRescue
 `);
   process.exit(0);
 }
@@ -116,6 +118,7 @@ const customDisable = parseList(argMap.get('--disable') || '');
 const customAllow = parseList(argMap.get('--allow') || '');
 const customGlobalMultiplier = argMap.get('--global-budget-multiplier') ? Number(argMap.get('--global-budget-multiplier')) : null;
 const maxLevelWallMsArg = argMap.get('--max-level-wall-ms') ? Number(argMap.get('--max-level-wall-ms')) : null;
+const branchDisableIds = parseList(argMap.get('--branch-disable') || '');
 
 const customAttemptMults = (() => {
   const raw = argMap.get('--attempt-budget-multipliers') || '';
@@ -174,17 +177,28 @@ function buildVariants() {
     if (customAllow.length > 0) config.allowedAttemptLabels = customAllow;
     if (customGlobalMultiplier != null && Number.isFinite(customGlobalMultiplier)) config.globalBudgetMultiplier = customGlobalMultiplier;
     if (Object.keys(customAttemptMults).length > 0) config.attemptBudgetMultipliers = customAttemptMults;
+    if (branchDisableIds.length > 0) {
+      config.refereeBranchControls = Object.fromEntries(branchDisableIds.map(id => [id, { enabled: false }]));
+    }
     const desc = [
       customDisable.length > 0 ? `disable=[${customDisable.join(',')}]` : null,
       customAllow.length > 0 ? `allow=[${customAllow.join(',')}]` : null,
       customGlobalMultiplier != null ? `globalMult=${customGlobalMultiplier}` : null,
+      branchDisableIds.length > 0 ? `branchDisable=[${branchDisableIds.join(',')}]` : null,
     ].filter(Boolean).join(', ') || 'no modifications';
     variants.push({ id: 'custom', desc: `Custom: ${desc}`, config, outputFile: 'custom.json' });
     return variants;
   }
 
   if (['baseline', 'full'].includes(experiment)) {
-    variants.push({ id: 'baseline', desc: 'Baseline (standard solver)', config: {}, outputFile: 'baseline.json' });
+    const baseConfig = {};
+    if (branchDisableIds.length > 0) {
+      baseConfig.refereeBranchControls = Object.fromEntries(branchDisableIds.map(id => [id, { enabled: false }]));
+    }
+    const baseDesc = branchDisableIds.length > 0
+      ? `Baseline with branchDisable=[${branchDisableIds.join(',')}]`
+      : 'Baseline (standard solver)';
+    variants.push({ id: 'baseline', desc: baseDesc, config: baseConfig, outputFile: 'baseline.json' });
   }
 
   if (['disable-one', 'full'].includes(experiment)) {

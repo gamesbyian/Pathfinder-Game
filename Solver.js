@@ -286,6 +286,8 @@ function installSolver(APP) {
         'referee.rescue.preExpansionRescue':            { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
         'referee.rescue.memoRelaxedProfile':            { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
         'referee.rescue.hardHintFallback':              { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.adaptation.mitmConnector':             { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
+        'referee.adaptation.nearClosureFloodRescue':    { enabled: true, force: false, budgetMultiplier: 1, maxRuns: null },
     };
 
     function createRefereeBranchContext(overrides = {}) {
@@ -13042,7 +13044,8 @@ function installSolver(APP) {
                         nextAttempt.forbiddenFirstMoves = Array.from(new Set([...replayForbidden, ...replayRecent]));
                         setAdaptationReason('timeout-progressive-replay-with-novelty', { timeoutReplayCandidate: true, preservedPolicy: nextAttempt.policyProfile });
                     }
-                    if (timeoutProne && nextAttempt && currentAttemptEntry) {
+                    if (timeoutProne && nextAttempt && currentAttemptEntry
+                        && (getExperimentOverrides()?.refereeBranchControls?.['referee.adaptation.mitmConnector']?.enabled !== false)) {
                         const buildMitmBridgeRoute = (meetKey, options = {}) => {
                             if (!Number.isFinite(meetKey) || !Number.isFinite(l?.goal?.k)) return null;
                             const goalKey = l.goal.k;
@@ -13970,7 +13973,8 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         });
                         return targetAttempt;
                     };
-                    if (nearSolutionFloodDetected && nextAttempt) {
+                    if (nearSolutionFloodDetected && nextAttempt
+                        && (getExperimentOverrides()?.refereeBranchControls?.['referee.adaptation.nearClosureFloodRescue']?.enabled !== false)) {
                         const priorBudget = Math.max(1, Number(attempt?.budgetMs) || Number(nextAttempt?.budgetMs) || 1);
                         configureNearClosureRescueAttempt(nextAttempt, priorBudget);
                         // Bound-plateau path: the standard rescue body's prune-disable + profile
@@ -14009,7 +14013,8 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                         }
                         return;
                     }
-                    if (nearSolutionFloodDetected && !nextAttempt) {
+                    if (nearSolutionFloodDetected && !nextAttempt
+                        && (getExperimentOverrides()?.refereeBranchControls?.['referee.adaptation.nearClosureFloodRescue']?.enabled !== false)) {
                         const rescueAttempt = configureNearClosureRescueAttempt({
                             ...(attempt || {}),
                             label: `${attempt?.label || 'attempt'}-near-closure-rescue`
