@@ -1,0 +1,2591 @@
+{
+  "timestamp": "2026-05-30T12:03:43.039Z",
+  "commitSha": "289238058c2eed3e1f012c3430fd28cf1bbd5dc1",
+  "budgetMs": 30000,
+  "levelFilter": "all",
+  "solved": 126,
+  "failed": 22,
+  "errors": 0,
+  "total": 148,
+  "totalMs": 863502,
+  "levels": [
+    {
+      "level": 1,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 8,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 7
+        }
+      ]
+    },
+    {
+      "level": 2,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 7,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327682,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 7
+        }
+      ]
+    },
+    {
+      "level": 3,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 357,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 74
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "ok": false,
+          "elapsedMs": 37
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 27
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "sideCommitment",
+          "ok": false,
+          "elapsedMs": 15
+        },
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 11
+        },
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 12
+        },
+        {
+          "gateKey": 0,
+          "profile": "objectiveFirst",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 12
+        },
+        {
+          "gateKey": 0,
+          "profile": "objectiveFirst",
+          "template": "perimeterCCW",
+          "ok": false,
+          "elapsedMs": 12
+        },
+        {
+          "gateKey": 0,
+          "profile": "harvestThenFinish",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 11
+        },
+        {
+          "gateKey": 0,
+          "profile": "objectiveFirst",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 12
+        },
+        {
+          "gateKey": 0,
+          "profile": "knotBuilder",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 11
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 11
+        },
+        {
+          "gateKey": 0,
+          "profile": "mustCrossFirst",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 12
+        },
+        {
+          "gateKey": 0,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 11
+        },
+        {
+          "gateKey": 0,
+          "profile": "finishFirst",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 21
+        },
+        {
+          "gateKey": 0,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 13
+        },
+        {
+          "gateKey": 0,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 13
+        },
+        {
+          "gateKey": 0,
+          "profile": "portalCommitted",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 13
+        },
+        {
+          "gateKey": 0,
+          "profile": "closureCommitment",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 13
+        },
+        {
+          "gateKey": 0,
+          "profile": "default",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 13
+        },
+        {
+          "gateKey": 327683,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 4,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 196610,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 5,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 34,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 34
+        }
+      ]
+    },
+    {
+      "level": 6,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 19,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 19
+        }
+      ]
+    },
+    {
+      "level": 7,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 61,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 6,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 61
+        }
+      ]
+    },
+    {
+      "level": 8,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 4,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 4
+        }
+      ]
+    },
+    {
+      "level": 9,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 10,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 11,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 7,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131075,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 7
+        }
+      ]
+    },
+    {
+      "level": 12,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 6,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 524292,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 6
+        }
+      ]
+    },
+    {
+      "level": 13,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 14,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 15,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 16,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 196609,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 17,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 10,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 10
+        }
+      ]
+    },
+    {
+      "level": 18,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 12,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 12
+        }
+      ]
+    },
+    {
+      "level": 19,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 44,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 44
+        }
+      ]
+    },
+    {
+      "level": 20,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 63,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 62
+        }
+      ]
+    },
+    {
+      "level": 21,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 15009,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 15001
+        },
+        {
+          "gateKey": 131075,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 8
+        }
+      ]
+    },
+    {
+      "level": 22,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 23,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 24,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 25,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 5,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 5
+        }
+      ]
+    },
+    {
+      "level": 26,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 10066,
+      "solvedBy": "intersectionHarvest",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 10001
+        },
+        {
+          "gateKey": 458759,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 64
+        }
+      ]
+    },
+    {
+      "level": 27,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 147,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 147
+        }
+      ]
+    },
+    {
+      "level": 28,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 4563,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 589833,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 4563
+        }
+      ]
+    },
+    {
+      "level": 29,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 19,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 19
+        }
+      ]
+    },
+    {
+      "level": 30,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 31,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327680,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 32,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 4,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 4
+        }
+      ]
+    },
+    {
+      "level": 33,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 34,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 8,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 8
+        }
+      ]
+    },
+    {
+      "level": 35,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 7,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 7
+        }
+      ]
+    },
+    {
+      "level": 36,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 524289,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 37,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 12768,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 12768
+        }
+      ]
+    },
+    {
+      "level": 38,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131078,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 39,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 98,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262146,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 98
+        }
+      ]
+    },
+    {
+      "level": 40,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 41,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65540,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 42,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 43,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 327685,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 15001
+        },
+        {
+          "gateKey": 9,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 15000
+        }
+      ]
+    },
+    {
+      "level": 44,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 4,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 45,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 4004,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 4004
+        }
+      ]
+    },
+    {
+      "level": 46,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 524289,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 47,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 120,
+      "solvedBy": "intersectionHarvest",
+      "attempts": [
+        {
+          "gateKey": 131072,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 120
+        }
+      ]
+    },
+    {
+      "level": 48,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 293,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327680,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 293
+        }
+      ]
+    },
+    {
+      "level": 49,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 8,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 50,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 767,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 589824,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 767
+        }
+      ]
+    },
+    {
+      "level": 51,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 52,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262147,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 53,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 15001
+        },
+        {
+          "gateKey": 9,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 15000
+        }
+      ]
+    },
+    {
+      "level": 54,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 1,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 55,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 56,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 9744,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 9744
+        }
+      ]
+    },
+    {
+      "level": 57,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 16413,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 11,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 16413
+        }
+      ]
+    },
+    {
+      "level": 58,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 63,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65541,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 63
+        }
+      ]
+    },
+    {
+      "level": 59,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 15001
+        },
+        {
+          "gateKey": 655370,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 15000
+        }
+      ]
+    },
+    {
+      "level": 60,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 61,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 62,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 26459,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131072,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 15001
+        },
+        {
+          "gateKey": 589835,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 11458
+        }
+      ]
+    },
+    {
+      "level": 63,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 64,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 393221,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 65,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 8487,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 8487
+        }
+      ]
+    },
+    {
+      "level": 66,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 55,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327683,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 55
+        }
+      ]
+    },
+    {
+      "level": 67,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131075,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 68,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 65,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 63
+        }
+      ]
+    },
+    {
+      "level": 69,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65539,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 70,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 258,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131078,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 258
+        }
+      ]
+    },
+    {
+      "level": 71,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2604,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 196612,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2604
+        }
+      ]
+    },
+    {
+      "level": 72,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 458759,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 73,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 74,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 126,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 126
+        }
+      ]
+    },
+    {
+      "level": 75,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 9,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 393218,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 9
+        }
+      ]
+    },
+    {
+      "level": 76,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 587,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 587
+        }
+      ]
+    },
+    {
+      "level": 77,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 798,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 524290,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 797
+        }
+      ]
+    },
+    {
+      "level": 78,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 655361,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 15001
+        },
+        {
+          "gateKey": 65546,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 15000
+        }
+      ]
+    },
+    {
+      "level": 79,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 80,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 22,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 458752,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 22
+        }
+      ]
+    },
+    {
+      "level": 81,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 82,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 185,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 184
+        }
+      ]
+    },
+    {
+      "level": 83,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 84,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 767,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 589826,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 767
+        }
+      ]
+    },
+    {
+      "level": 85,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 86,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 87,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 0,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 0
+        }
+      ]
+    },
+    {
+      "level": 88,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 393218,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 89,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 211,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 210
+        }
+      ]
+    },
+    {
+      "level": 90,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 415,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 415
+        }
+      ]
+    },
+    {
+      "level": 91,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 92,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 93,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131073,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 94,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 196610,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 95,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 7,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327682,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 7
+        }
+      ]
+    },
+    {
+      "level": 96,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 129,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 129
+        }
+      ]
+    },
+    {
+      "level": 97,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65540,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 98,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65541,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 99,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 100,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131080,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 101,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 10515,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 10514
+        }
+      ]
+    },
+    {
+      "level": 102,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327682,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 103,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 104,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 105,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 327682,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 106,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 15002,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 15001
+        },
+        {
+          "gateKey": 131077,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 107,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 59,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 4,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 59
+        }
+      ]
+    },
+    {
+      "level": 108,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 109,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1005,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1005
+        }
+      ]
+    },
+    {
+      "level": 110,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 21,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 21
+        }
+      ]
+    },
+    {
+      "level": 111,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 10003,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 10001
+        },
+        {
+          "gateKey": 65544,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 112,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 113,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 114,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 27255,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 1,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 27254
+        }
+      ]
+    },
+    {
+      "level": 115,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 12,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 12
+        }
+      ]
+    },
+    {
+      "level": 116,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 117,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 6,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 118,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 14,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 14
+        }
+      ]
+    },
+    {
+      "level": 119,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 8,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 8
+        }
+      ]
+    },
+    {
+      "level": 120,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 381,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327683,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 380
+        }
+      ]
+    },
+    {
+      "level": 121,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1107,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 4,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 1107
+        }
+      ]
+    },
+    {
+      "level": 122,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 123,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65544,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 124,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 125,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327681,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 126,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 4552,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 4552
+        }
+      ]
+    },
+    {
+      "level": 127,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 30000
+        }
+      ]
+    },
+    {
+      "level": 128,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 393221,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 129,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 318,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327684,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 318
+        }
+      ]
+    },
+    {
+      "level": 130,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 131,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262149,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    },
+    {
+      "level": 132,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 4,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 196612,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 4
+        }
+      ]
+    },
+    {
+      "level": 133,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 458759,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 134,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 10,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 393222,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": true,
+          "elapsedMs": 10
+        }
+      ]
+    },
+    {
+      "level": 135,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 4,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": true,
+          "elapsedMs": 4
+        }
+      ]
+    },
+    {
+      "level": 136,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 262146,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 137,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 17043,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 4,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 17043
+        }
+      ]
+    },
+    {
+      "level": 138,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 139,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 655365,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 15001
+        },
+        {
+          "gateKey": 327690,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 15000
+        }
+      ]
+    },
+    {
+      "level": 140,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 458756,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 141,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 1,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 196608,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 1
+        }
+      ]
+    },
+    {
+      "level": 142,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 13,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262144,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 13
+        }
+      ]
+    },
+    {
+      "level": 143,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 144,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 55,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 54
+        }
+      ]
+    },
+    {
+      "level": 145,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 146,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 54,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 53
+        }
+      ]
+    },
+    {
+      "level": 147,
+      "status": "timeout",
+      "ok": false,
+      "elapsedMs": 30001,
+      "solvedBy": null,
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": false,
+          "elapsedMs": 30001
+        }
+      ]
+    },
+    {
+      "level": 148,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "ok": true,
+          "elapsedMs": 2
+        }
+      ]
+    }
+  ]
+}

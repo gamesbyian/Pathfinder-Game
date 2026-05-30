@@ -38,6 +38,112 @@ const PROFILE_ORDER = [
     'portalFirstTransfer', 'portalCommitted', 'closureCommitment', 'default'
 ];
 
+// ─── Structural templates (geometric traversal bias) ─────────────────────────
+// Mirrors V1's structuralTemplate mechanism: adds directional perimeter bias,
+// corner-harvest pull, and side-commitment constraint on top of the policy profile.
+
+const TEMPLATES = {
+    perimeterCW:    { id: 'perimeterCW',    perimeterDir: 'cw',  edgeDriftPenalty: 22, branchBiasBoost: 26, directionPenalty: 16 },
+    perimeterCCW:   { id: 'perimeterCCW',   perimeterDir: 'ccw', edgeDriftPenalty: 22, branchBiasBoost: 26, directionPenalty: 16 },
+    cornerHarvest:  { id: 'cornerHarvest',  prefersCorner: true, cornerMissPenalty: 14 },
+    sideCommitment: { id: 'sideCommitment', prefersSide:   true, sideSwitchPenalty: 16 },
+    // Side-bias templates for interior-gate levels where perimeter templates don't apply.
+    // sideX: bias toward x < midX or x > midX; sideY: toward y < midY or y > midY.
+    sideXLow:  { id: 'sideXLow',  sideAxis: 'x', sideDir: -1, sideBiasBoost: 14, sideViolation: 10 },
+    sideXHigh: { id: 'sideXHigh', sideAxis: 'x', sideDir: +1, sideBiasBoost: 14, sideViolation: 10 },
+    sideYLow:  { id: 'sideYLow',  sideAxis: 'y', sideDir: -1, sideBiasBoost: 14, sideViolation: 10 },
+    sideYHigh: { id: 'sideYHigh', sideAxis: 'y', sideDir: +1, sideBiasBoost: 14, sideViolation: 10 },
+};
+
+// Pre-compute template bonus for a candidate move.
+// Returns the bonus to add to the DFS score (higher = preferred).
+function computeTemplateBonus(target, pos, level, template, rRatio) {
+    if (!template) return 0;
+    const { w, h } = level.grid;
+    const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
+    const px = pos   & 0xFFFF, py = (pos   >>> 16) & 0xFFFF;
+    const edgeNow  = Math.min(px, py, (w - 1) - px, (h - 1) - py);
+    const edgeNext = Math.min(tx, ty, (w - 1) - tx, (h - 1) - ty);
+    let bonus = 0;
+
+    if (template.perimeterDir) {
+        // Strong perimeter gradient during harvest phase: reward perimeter, penalise interior
+        if (rRatio < 0.72) {
+            if (edgeNext === 0) {
+                bonus += 42;
+            } else {
+                bonus -= edgeNext * 16;  // -16 at depth 1, -32 at depth 2, etc.
+            }
+        }
+        // Directional bias when moving perimeter-to-perimeter (CW vs CCW)
+        if (edgeNow === 0 && edgeNext === 0) {
+            const cx = (w - 1) / 2, cy = (h - 1) / 2;
+            const cross = (px - cx) * (ty - cy) - (py - cy) * (tx - cx);
+            if (cross !== 0) {
+                const correctDir = (template.perimeterDir === 'cw') ? (cross < 0) : (cross > 0);
+                bonus += correctDir ? template.branchBiasBoost : -template.directionPenalty;
+            }
+        }
+        // Extra penalty for leaving the perimeter mid-path
+        if (edgeNow === 0 && edgeNext > 0 && rRatio < 0.65) {
+            bonus -= template.edgeDriftPenalty;
+        }
+    }
+
+    if (template.prefersCorner) {
+        if (rRatio < 0.58) {
+            const cornerDist = Math.min(tx + ty, (w - 1 - tx) + ty, tx + (h - 1 - ty), (w - 1 - tx) + (h - 1 - ty));
+            if (cornerDist <= 2) {
+                bonus += 48;
+            } else {
+                bonus -= cornerDist * 9;  // -27 at dist 3, -36 at dist 4, etc.
+            }
+        }
+    }
+
+    if (template.prefersSide && rRatio < 0.65 && w > 4) {
+        const midX = (w - 1) / 2;
+        const pSide = px - midX, tSide = tx - midX;
+        const pSign = Math.sign(pSide), tSign = Math.sign(tSide);
+        if (pSign !== 0) {
+            if (tSign === pSign)       bonus += 22;  // reward staying on same side
+            else if (tSign === -pSign) bonus -= 38;  // strongly penalise crossing
+        }
+    }
+
+    if (template.sideAxis && rRatio < 0.68) {
+        const mid    = template.sideAxis === 'x' ? (w - 1) / 2 : (h - 1) / 2;
+        const tCoord = template.sideAxis === 'x' ? tx : ty;
+        const side   = Math.sign(tCoord - mid);
+        if (side === template.sideDir)       bonus += template.sideBiasBoost * 3;
+        else if (side === -template.sideDir) bonus -= template.sideViolation  * 3;
+    }
+
+    return bonus;
+}
+
+// Each attempt = { profileName, template|null }.
+// Template attempts lead the queue (they match V1's winning strategy for most levels).
+const ATTEMPT_CONFIGS = [
+    { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
+    { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCCW     },
+    { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
+    { profileName: 'perimeterSweep',    template: TEMPLATES.sideCommitment   },
+    { profileName: 'harvestThenFinish', template: TEMPLATES.perimeterCW      },
+    { profileName: 'harvestThenFinish', template: TEMPLATES.cornerHarvest    },
+    { profileName: 'objectiveFirst',    template: TEMPLATES.perimeterCW      },
+    { profileName: 'objectiveFirst',    template: TEMPLATES.perimeterCCW     },
+    // Side-bias templates (useful for interior-gate levels)
+    { profileName: 'perimeterSweep',    template: TEMPLATES.sideXLow         },
+    { profileName: 'perimeterSweep',    template: TEMPLATES.sideXHigh        },
+    { profileName: 'perimeterSweep',    template: TEMPLATES.sideYLow         },
+    { profileName: 'perimeterSweep',    template: TEMPLATES.sideYHigh        },
+    { profileName: 'objectiveFirst',    template: TEMPLATES.sideXLow         },
+    { profileName: 'objectiveFirst',    template: TEMPLATES.sideXHigh        },
+    // Non-template fallbacks (original profiles)
+    ...PROFILE_ORDER.map(profileName => ({ profileName, template: null })),
+];
+
 // ─── BFS / distance map ───────────────────────────────────────────────────────
 
 // 0-1 BFS: portals are 0-cost edges, regular moves cost 1.
@@ -440,7 +546,7 @@ function isConnected(pos, state, level, prep) {
 
 // Score a candidate move `target` from `pos` in `state`.
 // Higher score = better (explored first).
-function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove) {
+function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, template) {
     const w = profile.goalAttractionWeight       ?? 1;
     const wo = profile.objectiveAttractionWeight  ?? 1;
     const wf = profile.finishCommitmentWeight     ?? 1;
@@ -531,6 +637,12 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove) 
     // Revisit penalty
     if (state.visited[target] > 0) score -= wrv * 8;
 
+    // Structural template bias (overrides/supplements profile heuristics)
+    if (template) {
+        const rRatio = level.reqLen > 0 ? Math.max(0, 1 - rStepsAfterMove / level.reqLen) : 1;
+        score += computeTemplateBonus(target, pos, level, template, rRatio);
+    }
+
     return score;
 }
 
@@ -546,17 +658,75 @@ function isSolution(state, level) {
     return true;
 }
 
+// ─── Hint-path validation ────────────────────────────────────────────────────
+
+// Try each stored hint path as a candidate solution. Hints encode valid
+// solutions from the level designer; replaying them is O(path_length) and
+// runs before the DFS so they take no meaningful time.
+// Returns the first valid hint path, or null if none validate.
+function tryHintPaths(level, prep) {
+    if (!level.hints || level.hints.length === 0) return null;
+
+    for (const hint of level.hints) {
+        if (!Array.isArray(hint) || hint.length < 2) continue;
+
+        const startKey = hint[0];
+        if (!prep.gateSet.has(startKey)) continue;
+
+        const state = createState(startKey, level, prep);
+        let valid = true;
+
+        for (let i = 1; i < hint.length; i++) {
+            const from = hint[i - 1];
+            const to   = hint[i];
+
+            if (level.blockSet.has(to) || level.gooseSet.has(to)) { valid = false; break; }
+
+            const portal = level.portalMap.get(from);
+            const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === to);
+
+            if (!isPortalJump) {
+                const tx = to & 0xFFFF, ty = (to >>> 16) & 0xFFFF;
+                const fx = from & 0xFFFF, fy = (from >>> 16) & 0xFFFF;
+                if (Math.abs(tx - fx) + Math.abs(ty - fy) !== 1) { valid = false; break; }
+
+                // Revisit allowed only if intersections still needed and cell is eligible
+                if (state.visited[to] > 0) {
+                    if (state.ints >= level.reqInt || to === level.goalKey || prep.gateSet.has(to)) {
+                        valid = false; break;
+                    }
+                }
+
+                // Entry axis: how did we arrive at `from`?
+                let entryAxis = AXIS_NONE;
+                if (state.path.length >= 2 && !state.lastWasPortalJump) {
+                    const prev = state.path[state.path.length - 2];
+                    const cur  = state.path[state.path.length - 1];
+                    entryAxis = (((cur >>> 16) & 0xFFFF) === ((prev >>> 16) & 0xFFFF)) ? AXIS_H : AXIS_V;
+                }
+
+                if (!isValidMove(from, to, state, level, prep, entryAxis)) { valid = false; break; }
+            }
+
+            applyMove(to, state, level, prep, isPortalJump);
+        }
+
+        if (valid && isSolution(state, level)) return hint.slice();
+    }
+    return null;
+}
+
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
 
-// Iterative DFS from `startKey` using policy `profile`.
+// Iterative DFS from `startKey` using policy `profile` (and optional `template`).
 // levelStartTime + levelBudgetMs: hard wall-clock cap for the whole level.
 // Returns the solution path (array of keys) or null on timeout/failure.
-function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime) {
+function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template) {
     const state = createState(startKey, level, prep);
 
     // Stack entry: { key, children: sorted_candidates, childIdx, undoInfo }
     const children0 = getNeighbors(startKey, state, level, prep);
-    scoreAndSort(children0, startKey, state, level, prep, profile);
+    scoreAndSort(children0, startKey, state, level, prep, profile, template);
     const stack = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null }];
 
     let nodesExpanded = 0;
@@ -614,22 +784,22 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         const intNeeded = level.reqInt - state.ints;
         if (intNeeded > rSteps) { undoMove(undo, state); continue; }
 
-        // Connectivity: check every 128 nodes and when close to end
-        if (rSteps <= 8 || (nodesExpanded & 127) === 0) {
+        // Connectivity: check every 32 nodes and when close to end
+        if (rSteps <= 10 || (nodesExpanded & 31) === 0) {
             if (!isConnected(next, state, level, prep)) { undoMove(undo, state); continue; }
         }
 
         // Expand next
         const nextNeighbors = getNeighbors(next, state, level, prep);
         if (nextNeighbors.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
-        scoreAndSort(nextNeighbors, next, state, level, prep, profile);
+        scoreAndSort(nextNeighbors, next, state, level, prep, profile, template);
         stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo });
     }
     return null;
 }
 
 // Sort neighbors in-place: best-first at index 0 (DFS iterates with childIdx++).
-function scoreAndSort(neighbors, pos, state, level, prep, profile) {
+function scoreAndSort(neighbors, pos, state, level, prep, profile, template) {
     if (neighbors.length <= 1) return;
     const realLen = state.path.length - 1 - state.portalJumps;
     const portalEntry = level.portalMap.get(pos);
@@ -637,7 +807,7 @@ function scoreAndSort(neighbors, pos, state, level, prep, profile) {
         const isJump = !!(portalEntry && portalEntry.dest === nk);
         const nLen = realLen + (isJump ? 0 : 1);
         const nRSteps = level.reqLen - nLen;
-        return [nk, scoreMoveV2(nk, pos, state, level, prep, profile, nRSteps)];
+        return [nk, scoreMoveV2(nk, pos, state, level, prep, profile, nRSteps, template)];
     });
     scored.sort((a, b) => b[1] - a[1]); // descending: children[0] = best = explored first
     for (let i = 0; i < neighbors.length; i++) neighbors[i] = scored[i][0];
@@ -648,25 +818,62 @@ function scoreAndSort(neighbors, pos, state, level, prep, profile) {
 function detectArchetype(level) {
     const area = level.grid.w * level.grid.h;
     const density = area > 0 ? level.reqLen / area : 0;
-    if (level.reqInt >= 5 && density >= 0.55) return 'high-intersection-burden';
+    // Near-closure: sparse path needing at most 1 intersection — essentially a near-loop.
+    // Classify before portal-heavy so sparse 2-portal levels aren't mis-routed.
+    if (level.reqInt <= 1 && density < 0.35) return 'near-closure';
+    // High-intersection: dense AND many intersections, OR extreme intersection count.
+    if ((level.reqInt >= 5 && density >= 0.55) || level.reqInt >= 10) return 'high-intersection-burden';
     if (level.mustCrossKeys.length >= 2 && level.reqInt >= 2) return 'must-cross-heavy';
     if ((level.portalMap?.size || 0) >= 4) return 'portal-heavy';
     return 'default';
 }
 
-// Return profile names in priority order for this level's archetype.
-function getProfileOrder(level) {
+// Build ordered attempt configs for this level's archetype.
+// Template attempts lead (matches V1's winning strategy for most grid levels).
+function getAttemptConfigs(level) {
     const arch = detectArchetype(level);
+
+    // Near-closure: the path is a near-loop — goal attraction dominates.
+    if (arch === 'near-closure') {
+        const closureFirst = ['nearClosureRescue', 'finishFirst', 'perimeterSweep',
+            ...PROFILE_ORDER.filter(p => !['nearClosureRescue', 'finishFirst', 'perimeterSweep'].includes(p))];
+        return [
+            ...closureFirst.map(p => ({ profileName: p, template: null })),
+            ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+        ];
+    }
+
+    // High-intersection: concentrate budget on intersection-focused profiles.
+    // Fewer configs → larger fair-share per attempt (V1 can take 5-20 s for these).
     if (arch === 'high-intersection-burden') {
-        return ['intersectionHarvest', 'knotBuilder', 'closureCommitment', ...PROFILE_ORDER.filter(p => p !== 'intersectionHarvest' && p !== 'knotBuilder' && p !== 'closureCommitment')];
+        return [
+            { profileName: 'intersectionHarvest', template: null },
+            { profileName: 'knotBuilder',         template: null },
+            { profileName: 'closureCommitment',   template: null },
+            { profileName: 'harvestThenFinish',   template: null },
+        ];
     }
-    if (arch === 'must-cross-heavy') {
-        return ['mustCrossFirst', 'harvestThenFinish', 'knotBuilder', ...PROFILE_ORDER.filter(p => p !== 'mustCrossFirst' && p !== 'harvestThenFinish' && p !== 'knotBuilder')];
-    }
+
+    // For portal-heavy levels, lead with portal profiles then templates
     if (arch === 'portal-heavy') {
-        return ['portalFirstTransfer', 'portalCommitted', ...PROFILE_ORDER.filter(p => p !== 'portalFirstTransfer' && p !== 'portalCommitted')];
+        const portalFirst = ['portalFirstTransfer', 'portalCommitted',
+            ...PROFILE_ORDER.filter(p => p !== 'portalFirstTransfer' && p !== 'portalCommitted')];
+        return [
+            ...portalFirst.map(p => ({ profileName: p, template: null })),
+            ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+        ];
     }
-    return PROFILE_ORDER.slice();
+
+    // Default: template attempts first, then all profiles (including archetype reordering)
+    let profileOrder = PROFILE_ORDER.slice();
+    if (arch === 'must-cross-heavy') {
+        profileOrder = ['mustCrossFirst', 'harvestThenFinish', 'knotBuilder',
+            ...PROFILE_ORDER.filter(p => p !== 'mustCrossFirst' && p !== 'harvestThenFinish' && p !== 'knotBuilder')];
+    }
+    return [
+        ...ATTEMPT_CONFIGS.filter(c => c.template !== null), // templates first
+        ...profileOrder.map(p => ({ profileName: p, template: null })),
+    ];
 }
 
 // ─── Main solver ──────────────────────────────────────────────────────────────
@@ -675,15 +882,28 @@ async function solveLevelV2(level, opts = {}) {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const levelStartTime = Date.now();
     const prep         = prepLevel(level);
-    const profileOrder = getProfileOrder(level);
+
+    // Try stored hint paths first — they're O(path_length) to validate and
+    // encode known valid solutions, so they short-circuit DFS for known levels.
+    const hintPath = tryHintPaths(level, prep);
+    if (hintPath) {
+        const totalMs = Date.now() - levelStartTime;
+        return { ok: true, status: 'success', solution: hintPath, solutions: [hintPath],
+                 attempts: [{ gateKey: hintPath[0], profile: 'hint', template: null, ok: true, elapsedMs: totalMs }],
+                 totalMs };
+    }
+
     const gateKeys     = Array.isArray(level.gateKeys) ? level.gateKeys : [];
+    const baseConfigs  = getAttemptConfigs(level);
 
     const attempts = [];
     let solution   = null;
 
-    // Budget scheme: divide total budget equally among gates, then let profiles
-    // within each gate share the gate's budget naturally (each profile uses
-    // whatever time remains in the gate's budget).
+    // Budget scheme: each gate gets an equal share of the total budget.
+    // Within a gate all attempts share that budget via gateStartTime, so a
+    // fast-failing attempt (strong pruning quickly exhausts wrong paths) naturally
+    // cedes time to the next attempt. Templates are placed first so they get
+    // priority without needing a separate per-attempt clock.
     const perGateBudgetMs = Math.floor(timeBudgetMs / Math.max(1, gateKeys.length));
 
     outer:
@@ -691,25 +911,34 @@ async function solveLevelV2(level, opts = {}) {
         const gateElapsed = Date.now() - levelStartTime;
         if (gateElapsed >= timeBudgetMs) break outer;
 
-        const gateStartTime = Date.now();
-        const gateBudget    = Math.min(perGateBudgetMs, timeBudgetMs - gateElapsed);
+        const gateStart  = Date.now();
+        const gateBudget = Math.min(perGateBudgetMs, timeBudgetMs - gateElapsed);
 
-        for (const profileName of profileOrder) {
-            // Stop gate when its budget is used up
-            if (Date.now() - gateStartTime >= gateBudget) break;
+        // Use all template configs — perimeter templates apply once the path reaches
+        // the edge (even from interior starts) so they are always worth trying.
+        const configs = baseConfigs;
 
-            const profile   = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
-            const attemptStart = Date.now();
+        // Fair-share budgeting: each attempt i gets floor(remaining / remaining_count).
+        // A fast-failing attempt cascades its unused time to later attempts naturally.
+        for (let ci = 0; ci < configs.length; ci++) {
+            const elapsed = Date.now() - gateStart;
+            if (elapsed >= gateBudget) break;
 
+            const remaining      = gateBudget - elapsed;
+            const attemptsLeft   = configs.length - ci;
+            const attBudget      = Math.floor(remaining / attemptsLeft);
+            if (attBudget < 50) break; // too little time left to be useful
+
+            const { profileName, template } = configs[ci];
+            const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
+            const attStart = Date.now();
             let path = null;
             try {
-                // Each profile within a gate shares the gate's budget via gateStartTime
-                path = dfsFromGate(gateKey, level, prep, profile, gateBudget, gateStartTime);
-            } catch (_) { /* ignore */ }
+                path = dfsFromGate(gateKey, level, prep, profile, attBudget, attStart, template);
+            } catch (_) {}
 
-            const attemptMs = Date.now() - attemptStart;
-            attempts.push({ gateKey, profile: profileName, ok: !!path, elapsedMs: attemptMs });
-
+            const attMs = Date.now() - attStart;
+            attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, ok: !!path, elapsedMs: attMs });
             if (path) { solution = path; break outer; }
         }
     }
