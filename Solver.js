@@ -3726,10 +3726,19 @@ function installSolver(APP) {
                     if (assertKnownSolvableBounds && depth === 0 && startNeighborBoundSanity && startNeighborBoundSanity.legalBranches > 0) {
                         const ok = startNeighborBoundSanity.satisfiedBranches > 0;
                         if (!ok) {
-                            const msg = `[PortalBoundAssert] Level ${(Number.isFinite(l?.id) ? l.id + 1 : '?')} start-neighbor sanity failed: no legal branch satisfied portal-aware bound. legal=${startNeighborBoundSanity.legalBranches}`;
-                            const shouldThrow = !!APP.State?.ENGINE?.isDevMode && !options?.auditMode;
-                            if (shouldThrow) throw new Error(msg);
-                            console.warn(msg);
+                            // Diagnostic only — NEVER throw. This counts a start branch as
+                            // "satisfied" only when portalAwareBound <= rSteps, but the actual
+                            // root prune (see boundThreshold below) accepts bound <= rSteps*1.05.
+                            // So a portal level with legal, solvable start branches inside that
+                            // 5% slack legitimately leaves satisfiedBranches at 0. Previously this
+                            // threw when isDevMode was on, which aborted an otherwise-successful
+                            // solve and made the Edit-mode Solve button report "no hint" on every
+                            // portal level for dev users — while the non-dev path, the direct
+                            // script, and the audit harness (all of which only warned) solved the
+                            // identical level. The search itself handles these levels correctly, so
+                            // this stays a console warning in all modes; the UI now matches the
+                            // script regardless of dev mode.
+                            console.warn(`[PortalBoundAssert] Level ${(Number.isFinite(l?.id) ? l.id + 1 : '?')} start-neighbor sanity: no legal branch satisfied the strict portal-aware bound (legal=${startNeighborBoundSanity.legalBranches}); search continues (non-fatal).`);
                         }
                     }
                     return { valid, stageTrace, startNeighborBoundSanity, candidatesCount: candidates.length };
