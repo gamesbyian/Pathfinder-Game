@@ -123,8 +123,14 @@
     // budget, OR (safety net) the real wall-clock ceiling has been exceeded. The
     // wall-clock arm guarantees termination even for a loop whose node counter is
     // not wired to the clock.
-    const searchBudgetExpired = (virtualStart, limitMs) => {
-        if ((searchNow() - virtualStart) > limitMs) return true;
+    const searchBudgetExpired = (virtualStart, limitMs, realStart = null) => {
+        const limit = Number(limitMs);
+        if (!Number.isFinite(limit) || limit <= 0) return false;
+        // Deterministic searches still need a per-attempt wall-clock guard: the
+        // virtual node clock budgets expanded nodes, but expensive per-node scoring
+        // can otherwise let an attempt report a winner after its fair-share budget.
+        if ((searchNow() - virtualStart) >= limit) return true;
+        if (Number.isFinite(realStart) && (Date.now() - realStart) >= limit) return true;
         if (__searchClock && __searchClock.realCeilingMs > 0 && (Date.now() - __searchClock.realStart) > __searchClock.realCeilingMs) return true;
         return false;
     };
@@ -319,6 +325,7 @@ function installSolver(APP) {
         return {
             timeLimit:                          opts.localTimeLimit ?? opts.timeLimit,
             startTime:                          opts.startTime,
+            realStartTime:                      opts.realStartTime,
             onProgress:                         opts.onProgress,
             signal:                             opts.signal,
             dirOrderVariant:                    opts.dirOrderVariant ?? 'default',
@@ -424,6 +431,7 @@ function installSolver(APP) {
                                                     : ((typeof attempt.label === 'string' ? attempt.label.length : 0) + ((Number(attempt.attemptOrdinal) || 0) * 17)),
             rootTieProfile:                     attempt.rootTieProfile || base.rootTieProfile || 'stable',
             rootDiversityTelemetry:             def.rootDiversityTelemetry || null,
+            realStartTime:                      Date.now(),
         };
         if (overrides) Object.assign(result, overrides);
         return result;
@@ -6046,7 +6054,7 @@ function installSolver(APP) {
                             }
                             return SOLVER_ABORTED;
                         }
-                        if (searchBudgetExpired(options.startTime, options.timeLimit)) {
+                        if (searchBudgetExpired(options.startTime, options.timeLimit, options.realStartTime)) {
                             captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                             snapshotTimeoutFrontierDiagnostics(debugStats, stack);
                             recordPhaseAttempt('timeout');
@@ -6329,6 +6337,10 @@ function installSolver(APP) {
                         }
                         if (lastK === l.goalKey) {
                             if (realLen === l.reqLen && state.ints === l.reqInt) {
+                                if (searchBudgetExpired(options.startTime, options.timeLimit, options.realStartTime)) {
+                                    this._popStateZeroAlloc(state, searchCtx, transLog, l, options, debugStats);
+                                    return SOLVER_TIMEOUT;
+                                }
                                 if (this._checkFinalConstraints(state, l)) {
                                     captureProgressSample({ debugStats, state, stack, startTimeMs: progressStartTimeMs, level: l, force: true });
                                     recordPhaseAttempt('solved');
@@ -6856,6 +6868,7 @@ function installSolver(APP) {
                     level,
                     purpose = 'search',
                     timeLimit,
+                    realStartTime,
                     signal,
                     onProgress = () => {},
                     onStateUpdate = () => {},
@@ -6897,7 +6910,7 @@ function installSolver(APP) {
                                 out.stop = true;
                                 break;
                             }
-                            if (timeLimit && out.startTime && searchBudgetExpired(out.startTime, timeLimit)) {
+                            if (timeLimit && out.startTime && searchBudgetExpired(out.startTime, timeLimit, realStartTime)) {
                                 out.timedOut = true;
                                 break;
                             }
@@ -7025,6 +7038,7 @@ function installSolver(APP) {
                         distMap,
                         flipperDistMap,
                         startTime,
+                        realStartTime = null,
                         localTimeLimit,
                         onProgress,
                         signal,
@@ -7121,6 +7135,7 @@ function installSolver(APP) {
                             const internalOpts = toCoreSolveOptions(options, {
                                 timeLimit: localTimeLimit,
                                 startTime,
+                                realStartTime,
                                 startGateArchetype: state?.startGateArchetype || null,
                                 ..._expInj,
                             });
@@ -7266,6 +7281,7 @@ function installSolver(APP) {
                     level = SavedHintArchitecture.toHintBlindSolverLevel(level);
                     const { timeLimit = 105000, maxSolutions = 5, onProgress = () => {}, onStateUpdate = () => {}, signal = null, hazardPolicy = 'forbid', debug = false, debugLevel = null, dirOrderVariant = 'default', disabledPrunes = null, scoringMode = 'modern', portalBiasMode = 'adaptiveMustCross', structuralMode = false, phasePolicy = null, structuralTemplate = null, objectiveTrack = null, templateCommitment = null, portalLockPolicy = null, knotBudgetPolicy = null, controlPlane = null, enableLowExpansionProbe = false, contradictionRecoveryMode = false, assertKnownSolvableBounds = false, suppressPerimeterBias = false, rootExpansionFloorCount = null, forceRootExpansionFloor = false, relaxRootSuppressionFirstLayer = false, forbidPortals = false, useFailMemo = true, endgameIDAStarEnabled = false, endgameIDAStarTriggerDepthRatio = 0.85, endgameIDAStarBoundCeiling = 20, endgameIDAStarBudgetFraction = 0.5 } = options;
                     const startTime = searchNow();
+                    const realStartTime = Number.isFinite(options.realStartTime) ? options.realStartTime : Date.now();
                     const perfStart = performance.now();
                     const foundSolutions = [];
                     const debugStats = debug ? createSolverDebugStats(debugLevel ?? ((typeof level.id === "number") ? level.id + 1 : null)) : null;
@@ -8167,6 +8183,7 @@ function installSolver(APP) {
                             level,
                             purpose: 'hint',
                             timeLimit: localTimeLimit,
+                            realStartTime,
                             signal,
                             onProgress,
                             onStateUpdate,
