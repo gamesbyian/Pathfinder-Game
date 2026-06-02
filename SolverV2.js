@@ -67,13 +67,16 @@ function computeTemplateBonus(target, pos, level, template, rRatio) {
     let bonus = 0;
 
     if (template.perimeterDir) {
-        // Strong perimeter gradient during harvest phase: reward perimeter, penalise interior
-        if (rRatio < 0.72) {
-            if (edgeNext === 0) {
-                bonus += 42;
-            } else {
-                bonus -= edgeNext * 16;  // -16 at depth 1, -32 at depth 2, etc.
-            }
+        // Phase-aware perimeter gradient: mirrors V1's harvest→knot transition.
+        // During harvest (rRatio<0.45): full perimeter pull. During knot (rRatio>0.45):
+        // gradually relax so the solver can build interior intersections.
+        const perimScale = rRatio > 0.45
+            ? Math.max(0.22, 1.0 - (rRatio - 0.45) * 1.42)
+            : 1.0;
+        if (edgeNext === 0) {
+            bonus += Math.round(42 * perimScale);
+        } else {
+            bonus -= Math.round(edgeNext * 16 * perimScale);
         }
         // Directional bias when moving perimeter-to-perimeter (CW vs CCW)
         if (edgeNow === 0 && edgeNext === 0) {
@@ -84,9 +87,9 @@ function computeTemplateBonus(target, pos, level, template, rRatio) {
                 bonus += correctDir ? template.branchBiasBoost : -template.directionPenalty;
             }
         }
-        // Extra penalty for leaving the perimeter mid-path
-        if (edgeNow === 0 && edgeNext > 0 && rRatio < 0.65) {
-            bonus -= template.edgeDriftPenalty;
+        // Penalty for leaving perimeter, scaled with phase (relaxes in knot phase)
+        if (edgeNow === 0 && edgeNext > 0) {
+            bonus -= Math.round(template.edgeDriftPenalty * perimScale);
         }
     }
 
@@ -131,6 +134,7 @@ const ATTEMPT_CONFIGS = [
     { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
     { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
     { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCCW     },
+    { profileName: 'perimeterSweep',    template: TEMPLATES.sideCommitment   },
     // Non-template fallbacks (all profiles)
     ...PROFILE_ORDER.map(profileName => ({ profileName, template: null })),
 ];
@@ -262,6 +266,16 @@ function prepLevel(level) {
         prep.mcPairDist[i] = [];
         for (let j = 0; j < mcN; j++) {
             prep.mcPairDist[i][j] = i === j ? 0 : (prep.mustCrossDistMaps[j].get(level.mustCrossKeys[i]) ?? Infinity);
+        }
+    }
+
+    // Pairwise BFS distances between must-pass cells (for MST lower bound).
+    const mpN = level.mustPassKeys.length;
+    prep.mpPairDist = [];
+    for (let i = 0; i < mpN; i++) {
+        prep.mpPairDist[i] = [];
+        for (let j = 0; j < mpN; j++) {
+            prep.mpPairDist[i][j] = i === j ? 0 : (prep.mustPassDistMaps[j].get(level.mustPassKeys[i]) ?? Infinity);
         }
     }
 
@@ -554,18 +568,78 @@ function mcMSTLowerBound(pos, remain, state, level, prep) {
     return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
 }
 
+// MST lower bound for must-pass: MST({pos, MP1, MP2, ...}) + minGoalDist.
+// Mirrors mcMSTLowerBound — uses shared _mstEdges/_ufPar globals.
+function mpMSTLowerBound(pos, remain, level, prep) {
+    const k = remain.length; // k >= 2
+    const nodeCount = k + 1; // 0=pos, 1..k = MP[remain[...]]
+    let eCount = 0;
+    for (let a = 0; a < k; a++) {
+        const d = prep.mustPassDistMaps[remain[a]].get(pos) ?? Infinity;
+        if (!Number.isFinite(d)) return Infinity;
+        _mstEdges[eCount * 3]     = d;
+        _mstEdges[eCount * 3 + 1] = 0;
+        _mstEdges[eCount * 3 + 2] = a + 1;
+        eCount++;
+    }
+    for (let a = 0; a < k; a++) {
+        for (let b = a + 1; b < k; b++) {
+            const d = prep.mpPairDist[remain[a]][remain[b]];
+            if (!Number.isFinite(d)) return Infinity;
+            _mstEdges[eCount * 3]     = d;
+            _mstEdges[eCount * 3 + 1] = a + 1;
+            _mstEdges[eCount * 3 + 2] = b + 1;
+            eCount++;
+        }
+    }
+    for (let i = 1; i < eCount; i++) {
+        const w = _mstEdges[i * 3], u = _mstEdges[i * 3 + 1], v = _mstEdges[i * 3 + 2];
+        let j = i - 1;
+        while (j >= 0 && _mstEdges[j * 3] > w) {
+            _mstEdges[(j + 1) * 3]     = _mstEdges[j * 3];
+            _mstEdges[(j + 1) * 3 + 1] = _mstEdges[j * 3 + 1];
+            _mstEdges[(j + 1) * 3 + 2] = _mstEdges[j * 3 + 2];
+            j--;
+        }
+        _mstEdges[(j + 1) * 3]     = w;
+        _mstEdges[(j + 1) * 3 + 1] = u;
+        _mstEdges[(j + 1) * 3 + 2] = v;
+    }
+    for (let i = 0; i < nodeCount; i++) _ufPar[i] = i;
+    let mstW = 0, added = 0;
+    for (let e = 0; e < eCount && added < nodeCount - 1; e++) {
+        const pu = _ufFind(_mstEdges[e * 3 + 1]), pv = _ufFind(_mstEdges[e * 3 + 2]);
+        if (pu !== pv) { _ufPar[pu] = pv; mstW += _mstEdges[e * 3]; added++; }
+    }
+    if (added < nodeCount - 1) return Infinity;
+    let minGoal = Infinity;
+    for (const i of remain) {
+        const d = prep.mustPassToGoalDist[i];
+        if (Number.isFinite(d)) minGoal = Math.min(minGoal, d);
+    }
+    return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
+}
+
 // Lower bound: must visit every unsatisfied must-pass then reach goal.
-// Uses max over all unsatisfied MPs of (dist(pos→MP) + dist(MP→goal)).
+// Uses per-cell max bound, upgraded to MST joint bound when ≥2 MPs remain
+// (same pattern as mustCrossLowerBound — MST is tighter than max-of-individual).
 function mustPassLowerBound(pos, state, level, prep) {
     if (state.mustMask === 0n) return 0;
     const n = level.mustPassKeys.length;
+    const remain = [];
     let lb = 0;
     for (let i = 0; i < n; i++) {
         if ((state.mustMask & (1n << BigInt(i))) === 0n) continue;
+        remain.push(i);
         const dToMp   = prep.mustPassDistMaps[i].get(pos) ?? Infinity;
         const dMpGoal = prep.mustPassToGoalDist[i];
         if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) return Infinity;
         lb = Math.max(lb, dToMp + dMpGoal);
+    }
+    if (remain.length >= 2 && prep.mpPairDist) {
+        const mst = mpMSTLowerBound(pos, remain, level, prep);
+        if (!Number.isFinite(mst)) return Infinity;
+        lb = Math.max(lb, mst);
     }
     return lb;
 }
@@ -619,10 +693,12 @@ const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
 const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit avoids wrap)
 
-// Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos.
+// Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos,
+// and (for non-MC levels) that enough fresh cells exist to complete the path.
 // Flood fill traverses cells that are either unvisited, or (if intersections still needed)
 // visited exactly once. Gate cells (other than starting gate) are treated as walls.
-// This is a SAW-style pruning — much stronger than traversing all non-blocked cells.
+// Volume check (V1 _checkTopology): freshCells + intNeeded >= rSteps prunes branches
+// that are isolated in a sub-region too small to complete the required path length.
 function isConnected(pos, state, level, prep) {
     const { w, h } = level.grid;
     const intNeeded = level.reqInt - state.ints;
@@ -630,12 +706,16 @@ function isConnected(pos, state, level, prep) {
     //   0 intersections remaining: only unvisited cells
     //   N intersections remaining: cells visited up to N times may be re-entered
     const maxVisit = intNeeded > 0 ? 1 : 0;
+    const hasMC = level.mustCrossKeys.length > 0;
 
     _reachGen++;
     const gen = _reachGen;
     let qHead = 0, qTail = 0;
     _reachGenBuf[pos] = gen;
     _reachQ[qTail++] = pos;
+    // freshVolume counts reachable fresh cells + pos itself (matching V1's _checkTopology volume count).
+    // Even though pos is already visited, V1 includes the start cell in its volume tally.
+    let freshVolume = 1;
 
     while (qHead < qTail) {
         const k = _reachQ[qHead++];
@@ -646,13 +726,17 @@ function isConnected(pos, state, level, prep) {
             const d = portal.dest;
             if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
                 (state.visited[d] <= maxVisit || d === pos)) {
-                _reachGenBuf[d] = gen; _reachQ[qTail++] = d;
+                _reachGenBuf[d] = gen;
+                if (state.visited[d] === 0) freshVolume++;
+                _reachQ[qTail++] = d;
             }
         }
         const addNeighbor = (nk) => {
             if (_reachGenBuf[nk] !== gen && !level.blockSet.has(nk) && !level.gooseSet.has(nk) &&
                 !prep.gateSet.has(nk) && (state.visited[nk] <= maxVisit || nk === pos)) {
-                _reachGenBuf[nk] = gen; _reachQ[qTail++] = nk;
+                _reachGenBuf[nk] = gen;
+                if (state.visited[nk] === 0) freshVolume++;
+                _reachQ[qTail++] = nk;
             }
         };
         if (x + 1 < w) addNeighbor(k + 1);
@@ -667,6 +751,14 @@ function isConnected(pos, state, level, prep) {
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
         if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
+    }
+    // Volume check (mirrors V1's _checkTopology): not enough accessible fresh cells to finish.
+    // Disabled for MC levels (2 visits from 1 cell skews count) and portal levels
+    // (portal jumps visit a destination cell for 0 path steps, inflating freshVolume).
+    const hasPortal = level.portalMap.size > 0;
+    if (!hasMC && !hasPortal) {
+        const rSteps = level.reqLen - (state.path.length - 1 - state.portalJumps);
+        if (freshVolume + intNeeded < rSteps) return false;
     }
     return true;
 }
@@ -691,9 +783,6 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     // Harvest (early path, rRatio < 0.45): weaken goal pull so the DFS builds
     // structural layout before committing to a direction.
     // Finish (late path, rRatio > 0.82): strengthen goal pull to commit to ending.
-    // Perimeter scaling is intentionally left flat — per-profile perimeterBiasWeight
-    // and template bonuses already handle structural layout; boosting perimeter here
-    // would dominate over MC-urgency for interior MC cells, causing regressions.
     const rRatio = level.reqLen > 0 ? Math.max(0, 1 - rStepsAfterMove / level.reqLen) : 1;
     let phaseGoalScale = 1.0;
     if (rRatio < 0.45) {
@@ -702,7 +791,13 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
         const t = (rRatio - 0.82) / 0.18;
         phaseGoalScale = 1.0 + t * 1.8;                   // 1.0 at 0.82, 2.8 at 1.0
     }
-    const phasePerimScale = 1.0;
+    // Phase-based perimeter scaling: mirrors V1's harvest→knot transition.
+    // V1 drops perimeterBias from 1.65 (harvest) to 0.45 (knot) so the solver can
+    // leave the perimeter to build intersections / MC crossings in the mid phase.
+    // Only applies to directional CW/CCW templates to avoid disturbing non-perimeter configs.
+    const phasePerimScale = (template && template.perimeterDir && rRatio > 0.45)
+        ? Math.max(0.22, 1.0 - (rRatio - 0.45) * 1.42)  // 1.0→0.22 over rRatio 0.45→1.0
+        : 1.0;
 
     let score = 0;
 
@@ -913,7 +1008,7 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         const intNeeded = level.reqInt - state.ints;
         if (intNeeded > rSteps) { undoMove(undo, state); continue; }
 
-        // Connectivity: check every 32 nodes and when close to end
+        // Connectivity + volume check: every 32 nodes and always near end.
         if (rSteps <= 10 || (nodesExpanded & 31) === 0) {
             if (!isConnected(next, state, level, prep)) { undoMove(undo, state); continue; }
         }
@@ -976,25 +1071,26 @@ function getAttemptConfigs(level) {
         ];
     }
 
-    // High-intersection: concentrate budget on intersection-focused profiles.
-    // For dense levels (near-Hamiltonian), also try perimeter/corner templates since the
-    // path needs to cover most of the grid — structural guidance matters.
+    // High-intersection: two sub-cases split by reqInt.
     if (arch === 'high-intersection-burden') {
-        const profiles = [
+        if (level.reqInt >= 7) {
+            // Very high reqInt (L61=8, L92=8, L138=8, L139=11): intersectionHarvest needs
+            // maximum time. V1 uses 20s for L92, 14s for L138, 5.6s for L139 — with only
+            // 2 configs each gets 15s, insufficient for L92. Single intersectionHarvest
+            // config gets the full 30s budget; if it fails early, knotBuilder gets surplus.
+            return [
+                { profileName: 'intersectionHarvest', template: null },
+            ];
+        }
+        // Medium-high reqInt (L130=6, L143=5, L147=4): perimeter templates work
+        // (V1: L143 via perimeterCCW 1.7s, L130 via perimeterCW 0.4s).
+        // 4 configs × 7.5s each; intersectionHarvest/knotBuilder as fallbacks.
+        return [
+            { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCW  },
+            { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCCW },
             { profileName: 'intersectionHarvest', template: null },
             { profileName: 'knotBuilder',         template: null },
-            { profileName: 'closureCommitment',   template: null },
-            { profileName: 'harvestThenFinish',   template: null },
         ];
-        if (density >= 0.55) {
-            // Near-Hamiltonian density: prepend perimeter/corner templates
-            const denseTemplates = ATTEMPT_CONFIGS.filter(c =>
-                c.template !== null &&
-                (c.template.perimeterDir || c.template.prefersCorner)
-            );
-            return [...denseTemplates, ...profiles];
-        }
-        return profiles;
     }
 
     // For portal-heavy levels, lead with portal profiles then templates
