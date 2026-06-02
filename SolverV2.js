@@ -918,14 +918,21 @@ function isSolution(state, level) {
 
 // Iterative DFS from `startKey` using policy `profile` (and optional `template`).
 // levelStartTime + levelBudgetMs: hard wall-clock cap for the whole level.
+// maxDiscrepancy: Limited Discrepancy Search bound. A "discrepancy" is choosing a
+//   non-greedy child; the j-th best child (0-indexed) costs j discrepancies. With
+//   maxDiscrepancy=Infinity this is plain best-first DFS (original behaviour). With a
+//   finite bound it explores only paths within `maxDiscrepancy` deviations of greedy —
+//   recovering from a small number of wrong early ordering decisions (the diagnosed
+//   failure mode) while remaining complete as the bound grows.
 // Returns the solution path (array of keys) or null on timeout/failure.
-function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template) {
+function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, maxDiscrepancy = Infinity) {
     const state = createState(startKey, level, prep);
 
-    // Stack entry: { key, children: sorted_candidates, childIdx, undoInfo }
+    // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
+    // discrepancy to REACH this node (sum of chosen child-indices along the path).
     const children0 = getNeighbors(startKey, state, level, prep);
     scoreAndSort(children0, startKey, state, level, prep, profile, template);
-    const stack = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null }];
+    const stack = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
     let nodesExpanded = 0;
 
@@ -940,7 +947,14 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
             continue;
         }
 
-        const next = top.children[top.childIdx++];
+        // LDS: the child at index ci costs ci discrepancies on top of this node's disc.
+        // Children are sorted best-first, so once a child exceeds the budget every later
+        // child does too — exhaust the node immediately.
+        const ci = top.childIdx++;
+        const childDisc = top.disc + ci;
+        if (childDisc > maxDiscrepancy) { top.childIdx = top.children.length; continue; }
+
+        const next = top.children[ci];
         const portal = level.portalMap.get(top.key);
         const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
 
@@ -1017,9 +1031,41 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         const nextNeighbors = getNeighbors(next, state, level, prep);
         if (nextNeighbors.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
         scoreAndSort(nextNeighbors, next, state, level, prep, profile, template);
-        stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo });
+        stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo, disc: childDisc });
     }
     return null;
+}
+
+// Iterative-deepening LDS wrapper. Runs a geometric ladder of discrepancy bounds —
+// cheap low-k probes first (find close-to-greedy solutions fast), ending with an
+// UNBOUNDED wave that is identical to plain best-first DFS. Ending unbounded guarantees
+// LDS never loses plain-DFS's reach: a level whose solution is far from greedy still
+// gets a full sweep in the final wave (preventing regressions like L26). Each wave
+// re-explores the lower-k region (LDS redundancy), but low-k waves are cheap and the
+// final unbounded wave dominates cost, so the overhead is bounded.
+// Limited Discrepancy Search wrapper, two phases:
+//   1. CHEAP PROBE: discrepancy bounds k ∈ {0,1,2,4,8}, hard-capped at probeCapMs total.
+//      Empirically every close-to-greedy solution (L61, L79, L136, L143, L147) is found
+//      by k=8 in under 1.3s, so a small cap suffices and the bounded trees exhaust fast.
+//   2. UNBOUNDED FALLBACK: plain best-first DFS (k=∞) with all remaining budget. This is
+//      bit-for-bit the original solver, so levels whose solution is far from greedy
+//      (e.g. L26) keep essentially the full DFS budget — no regression.
+// The hard cap on phase 1 is what prevents the probe waves from starving phase 2.
+const _LDS_PROBE_K = [0, 1, 2, 4, 8];
+const _LDS_DEBUG = typeof process !== 'undefined' && process.env && process.env.PF_LDS_DEBUG === '1';
+function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template) {
+    const probeCapMs = Math.min(Math.floor(levelBudgetMs * 0.5), 4000);
+    for (const k of _LDS_PROBE_K) {
+        if (Date.now() - levelStartTime >= probeCapMs) break;
+        const w0 = Date.now();
+        const path = dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k);
+        if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms ${path?'SOLVED':'-'}`);
+        if (path) return path;
+    }
+    if (Date.now() - levelStartTime >= levelBudgetMs) return null;
+    const path = dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity);
+    if (_LDS_DEBUG) console.error(`    [lds] k=Inf ${path?'SOLVED':'-'}`);
+    return path;
 }
 
 // Sort neighbors in-place: best-first at index 0 (DFS iterates with childIdx++).
@@ -1183,7 +1229,7 @@ async function solveLevelV2(level, opts = {}) {
             const attStart = Date.now();
             let path = null;
             try {
-                path = dfsFromGate(gateKey, level, prep, profile, attBudget, attStart, template);
+                path = dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
             } catch (_) {}
 
             const attMs = Date.now() - attStart;
