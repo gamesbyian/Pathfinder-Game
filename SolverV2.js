@@ -123,24 +123,15 @@ function computeTemplateBonus(target, pos, level, template, rRatio) {
 }
 
 // Each attempt = { profileName, template|null }.
-// Template attempts lead the queue (they match V1's winning strategy for most levels).
+// Trimmed to only the two templates that account for ~90% of wins in full audits
+// (perimeterSweep+cornerHarvest: 78 wins, perimeterSweep+perimeterCW: 34 wins).
+// Removing dead templates reduces config count from 26→15, giving each attempt ~2000ms
+// instead of ~1154ms.
 const ATTEMPT_CONFIGS = [
+    { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
     { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
     { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCCW     },
-    { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
-    { profileName: 'perimeterSweep',    template: TEMPLATES.sideCommitment   },
-    { profileName: 'harvestThenFinish', template: TEMPLATES.perimeterCW      },
-    { profileName: 'harvestThenFinish', template: TEMPLATES.cornerHarvest    },
-    { profileName: 'objectiveFirst',    template: TEMPLATES.perimeterCW      },
-    { profileName: 'objectiveFirst',    template: TEMPLATES.perimeterCCW     },
-    // Side-bias templates (useful for interior-gate levels)
-    { profileName: 'perimeterSweep',    template: TEMPLATES.sideXLow         },
-    { profileName: 'perimeterSweep',    template: TEMPLATES.sideXHigh        },
-    { profileName: 'perimeterSweep',    template: TEMPLATES.sideYLow         },
-    { profileName: 'perimeterSweep',    template: TEMPLATES.sideYHigh        },
-    { profileName: 'objectiveFirst',    template: TEMPLATES.sideXLow         },
-    { profileName: 'objectiveFirst',    template: TEMPLATES.sideXHigh        },
-    // Non-template fallbacks (original profiles)
+    // Non-template fallbacks (all profiles)
     ...PROFILE_ORDER.map(profileName => ({ profileName, template: null })),
 ];
 
@@ -241,6 +232,39 @@ function prepLevel(level) {
     // Objectives = must-pass + must-cross (for scoring)
     prep.objectiveKeys = Array.from(new Set([...level.mustPassKeys, ...level.mustCrossKeys]));
     prep.objectiveDistMaps = prep.objectiveKeys.map(k => buildDistMap(level, [k]));
+
+    // Approach-cell distance maps for must-cross 2nd visits.
+    // After the 1st pass via axis A, the 2nd pass must enter from axis B.
+    // We precompute BFS distances to the cells immediately adjacent on each axis
+    // so the scorer/pruner can guide toward the correct perpendicular approach.
+    const { w, h } = level.grid;
+    const isOpen = k => {
+        const kx = k & 0xFFFF, ky = (k >>> 16) & 0xFFFF;
+        return kx >= 0 && kx < w && ky >= 0 && ky < h && !level.blockSet.has(k) && !level.gooseSet.has(k);
+    };
+    prep.mcApproachDistMaps = level.mustCrossKeys.map(mcKey => {
+        const mcX = mcKey & 0xFFFF, mcY = (mcKey >>> 16) & 0xFFFF;
+        // V-approach: enter MC from above or below (need to be in same column, y±1)
+        const vSrc = [PACK(mcX, mcY - 1), PACK(mcX, mcY + 1)].filter(isOpen);
+        // H-approach: enter MC from left or right (need to be in same row, x±1)
+        const hSrc = [PACK(mcX - 1, mcY), PACK(mcX + 1, mcY)].filter(isOpen);
+        return {
+            v: vSrc.length > 0 ? buildDistMap(level, vSrc) : new Map(),
+            h: hSrc.length > 0 ? buildDistMap(level, hSrc) : new Map(),
+        };
+    });
+
+    // Pairwise BFS distances between must-cross cells (for MST lower bound).
+    // mcPairDist[i][j] = dist from mustCrossKeys[i] to mustCrossKeys[j].
+    const mcN = level.mustCrossKeys.length;
+    prep.mcPairDist = [];
+    for (let i = 0; i < mcN; i++) {
+        prep.mcPairDist[i] = [];
+        for (let j = 0; j < mcN; j++) {
+            prep.mcPairDist[i][j] = i === j ? 0 : (prep.mustCrossDistMaps[j].get(level.mustCrossKeys[i]) ?? Infinity);
+        }
+    }
+
     return prep;
 }
 
@@ -453,6 +477,83 @@ function isValidMove(from, target, state, level, prep, entryAxis) {
 
 // ─── Pruning ──────────────────────────────────────────────────────────────────
 
+// Union-find backing store for Kruskal's MST (max 6 nodes: pos + up to 5 MC cells)
+const _ufPar = new Int32Array(8);
+function _ufFind(x) { while (_ufPar[x] !== x) { _ufPar[x] = _ufPar[_ufPar[x]]; x = _ufPar[x]; } return x; }
+
+// MST-based joint lower bound for ≥2 remaining must-cross cells.
+// Computes a Kruskal MST of {current_pos} ∪ {remaining MC cells} and adds
+// the minimum MC-to-goal distance.  Returns a lower bound on remaining steps.
+// edges scratch array avoids heap allocation on the hot path.
+const _mstEdges = new Float64Array(30); // weight, u, v packed as triples (max 10 edges * 3 = 30)
+function mcMSTLowerBound(pos, remain, state, level, prep) {
+    const k = remain.length; // k >= 2
+    const nodeCount = k + 1; // 0=pos, 1..k = MC[remain[...]]
+
+    // Compute pos→MCi distance (use approach map for 2nd-visit cells)
+    let eCount = 0;
+    for (let a = 0; a < k; a++) {
+        const i = remain[a];
+        let d;
+        if (state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
+            const mcKey = level.mustCrossKeys[i];
+            const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
+            const aMap  = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
+            d = aMap.size > 0 ? ((aMap.get(pos) ?? Infinity) + 1) : (prep.mustCrossDistMaps[i].get(pos) ?? Infinity);
+        } else {
+            d = prep.mustCrossDistMaps[i].get(pos) ?? Infinity;
+        }
+        if (!Number.isFinite(d)) return Infinity;
+        _mstEdges[eCount * 3]     = d;
+        _mstEdges[eCount * 3 + 1] = 0;
+        _mstEdges[eCount * 3 + 2] = a + 1;
+        eCount++;
+    }
+    // MC[i] ↔ MC[j] pairwise edges
+    for (let a = 0; a < k; a++) {
+        for (let b = a + 1; b < k; b++) {
+            const d = prep.mcPairDist[remain[a]][remain[b]];
+            if (!Number.isFinite(d)) return Infinity;
+            _mstEdges[eCount * 3]     = d;
+            _mstEdges[eCount * 3 + 1] = a + 1;
+            _mstEdges[eCount * 3 + 2] = b + 1;
+            eCount++;
+        }
+    }
+
+    // Sort edges by weight (insertion sort — tiny arrays)
+    for (let i = 1; i < eCount; i++) {
+        const w = _mstEdges[i * 3], u = _mstEdges[i * 3 + 1], v = _mstEdges[i * 3 + 2];
+        let j = i - 1;
+        while (j >= 0 && _mstEdges[j * 3] > w) {
+            _mstEdges[(j + 1) * 3]     = _mstEdges[j * 3];
+            _mstEdges[(j + 1) * 3 + 1] = _mstEdges[j * 3 + 1];
+            _mstEdges[(j + 1) * 3 + 2] = _mstEdges[j * 3 + 2];
+            j--;
+        }
+        _mstEdges[(j + 1) * 3]     = w;
+        _mstEdges[(j + 1) * 3 + 1] = u;
+        _mstEdges[(j + 1) * 3 + 2] = v;
+    }
+
+    // Kruskal's MST
+    for (let i = 0; i < nodeCount; i++) _ufPar[i] = i;
+    let mstW = 0, added = 0;
+    for (let e = 0; e < eCount && added < nodeCount - 1; e++) {
+        const pu = _ufFind(_mstEdges[e * 3 + 1]), pv = _ufFind(_mstEdges[e * 3 + 2]);
+        if (pu !== pv) { _ufPar[pu] = pv; mstW += _mstEdges[e * 3]; added++; }
+    }
+    if (added < nodeCount - 1) return Infinity;
+
+    // Min dist from any remaining MC cell to goal
+    let minGoal = Infinity;
+    for (const i of remain) {
+        const d = prep.mustCrossToGoalDist[i];
+        if (Number.isFinite(d)) minGoal = Math.min(minGoal, d);
+    }
+    return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
+}
+
 // Lower bound: must visit every unsatisfied must-pass then reach goal.
 // Uses max over all unsatisfied MPs of (dist(pos→MP) + dist(MP→goal)).
 function mustPassLowerBound(pos, state, level, prep) {
@@ -470,19 +571,47 @@ function mustPassLowerBound(pos, state, level, prep) {
 }
 
 // Lower bound: must visit every unfinished must-cross at least once more, then reach goal.
-// Uses max over all unfinished MCs of (dist(pos→MC) + dist(MC→goal)).
+// When a MC cell has already been crossed once, the 2nd pass must approach from the
+// perpendicular axis — use the precomputed approach-cell distance map for a tighter bound.
+// For ≥2 remaining MC cells, also uses an MST joint lower bound (tighter than max over
+// individual bounds), which prunes wrong subtrees much earlier.
 function mustCrossLowerBound(pos, state, level, prep) {
     if (state.mustCrossMask === 0n) return 0;
     const n = level.mustCrossKeys.length;
     let lb = 0;
+    const remain = [];
     for (let i = 0; i < n; i++) {
         if ((state.mustCrossMask & (1n << BigInt(i))) === 0n) continue;
-        const d = prep.mustCrossDistMaps[i].get(pos) ?? Infinity;
-        if (!Number.isFinite(d)) return Infinity;
+        remain.push(i);
         const dMcGoal = prep.mustCrossToGoalDist[i];
         if (!Number.isFinite(dMcGoal)) return Infinity;
+
+        if (state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
+            // 2nd visit needed: must reach an approach cell on the perpendicular axis first.
+            const mcKey  = level.mustCrossKeys[i];
+            const usedH  = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
+            const aMap   = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
+            if (aMap.size > 0) {
+                const dToApproach = aMap.get(pos) ?? Infinity;
+                if (!Number.isFinite(dToApproach)) return Infinity;
+                // approach cell → 1 step into MC → exit → goal
+                lb = Math.max(lb, dToApproach + 1 + dMcGoal);
+                continue;
+            }
+        }
+
+        const d = prep.mustCrossDistMaps[i].get(pos) ?? Infinity;
+        if (!Number.isFinite(d)) return Infinity;
         lb = Math.max(lb, d + dMcGoal);
     }
+
+    // MST joint bound: tighter than max-of-individual when ≥2 MC cells remain.
+    if (remain.length >= 2 && prep.mcPairDist) {
+        const mst = mcMSTLowerBound(pos, remain, state, level, prep);
+        if (!Number.isFinite(mst)) return Infinity;
+        lb = Math.max(lb, mst);
+    }
+
     return lb;
 }
 
@@ -558,6 +687,23 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     const wdt = profile.antiDitherWeight          ?? 1;
     const wrv = profile.revisitPenaltyWeight      ?? 1;
 
+    // Phase-based multipliers — mirroring V1's harvest/finish phase policy.
+    // Harvest (early path, rRatio < 0.45): weaken goal pull so the DFS builds
+    // structural layout before committing to a direction.
+    // Finish (late path, rRatio > 0.82): strengthen goal pull to commit to ending.
+    // Perimeter scaling is intentionally left flat — per-profile perimeterBiasWeight
+    // and template bonuses already handle structural layout; boosting perimeter here
+    // would dominate over MC-urgency for interior MC cells, causing regressions.
+    const rRatio = level.reqLen > 0 ? Math.max(0, 1 - rStepsAfterMove / level.reqLen) : 1;
+    let phaseGoalScale = 1.0;
+    if (rRatio < 0.45) {
+        phaseGoalScale = 0.65 + (rRatio / 0.45) * 0.35;  // 0.65 at rRatio=0, 1.0 at 0.45
+    } else if (rRatio > 0.82) {
+        const t = (rRatio - 0.82) / 0.18;
+        phaseGoalScale = 1.0 + t * 1.8;                   // 1.0 at 0.82, 2.8 at 1.0
+    }
+    const phasePerimScale = 1.0;
+
     let score = 0;
 
     // Goal attraction: reward moves that reduce distance to goal
@@ -565,7 +711,7 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     const goalDistTarget = prep.distMap.get(target) ?? Infinity;
     if (Number.isFinite(goalDistCur) && Number.isFinite(goalDistTarget)) {
         const gain = goalDistCur - goalDistTarget;
-        score += w * gain * 10;
+        score += w * phaseGoalScale * gain * 10;
     }
 
     // Finish commitment: bonus when close to goal (small rSteps)
@@ -606,6 +752,24 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     if (state.mustCrossMask !== 0n) {
         for (let i = 0; i < level.mustCrossKeys.length; i++) {
             if ((state.mustCrossMask & (1n << BigInt(i))) === 0n) continue;
+
+            if (state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
+                // 2nd visit needed: guide toward the perpendicular-axis approach cells,
+                // not the MC cell itself (which is axis-blocked from the used direction).
+                const mcKey = level.mustCrossKeys[i];
+                const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
+                const aMap  = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
+                if (aMap.size > 0) {
+                    const dCur    = aMap.get(pos)    ?? Infinity;
+                    const dTarget = aMap.get(target) ?? Infinity;
+                    if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
+                        score += wmc * (dCur - dTarget) * 15;
+                    }
+                    continue;
+                }
+            }
+
+            // 1st visit (or approach map unavailable): standard urgency toward MC cell
             const dCur    = prep.mustCrossDistMaps[i].get(pos)    ?? Infinity;
             const dTarget = prep.mustCrossDistMaps[i].get(target) ?? Infinity;
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
@@ -626,7 +790,7 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     // Perimeter bias: prefer cells on the grid edge
     const gw = level.grid.w, gh = level.grid.h;
     const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
-    if (tx === 0 || ty === 0 || tx === gw - 1 || ty === gh - 1) score += wp * 3;
+    if (tx === 0 || ty === 0 || tx === gw - 1 || ty === gh - 1) score += wp * phasePerimScale * 3;
 
     // Anti-dither: penalise immediate U-turns
     if (state.path.length >= 2) {
@@ -638,10 +802,7 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     if (state.visited[target] > 0) score -= wrv * 8;
 
     // Structural template bias (overrides/supplements profile heuristics)
-    if (template) {
-        const rRatio = level.reqLen > 0 ? Math.max(0, 1 - rStepsAfterMove / level.reqLen) : 1;
-        score += computeTemplateBonus(target, pos, level, template, rRatio);
-    }
+    if (template) score += computeTemplateBonus(target, pos, level, template, rRatio);
 
     return score;
 }
@@ -656,64 +817,6 @@ function isSolution(state, level) {
     if (state.mustMask !== 0n)               return false;
     if (state.mustCrossMask !== 0n)          return false;
     return true;
-}
-
-// ─── Hint-path validation ────────────────────────────────────────────────────
-
-// Try each stored hint path as a candidate solution. Hints encode valid
-// solutions from the level designer; replaying them is O(path_length) and
-// runs before the DFS so they take no meaningful time.
-// Returns the first valid hint path, or null if none validate.
-function tryHintPaths(level, prep) {
-    if (!level.hints || level.hints.length === 0) return null;
-
-    for (const hint of level.hints) {
-        if (!Array.isArray(hint) || hint.length < 2) continue;
-
-        const startKey = hint[0];
-        if (!prep.gateSet.has(startKey)) continue;
-
-        const state = createState(startKey, level, prep);
-        let valid = true;
-
-        for (let i = 1; i < hint.length; i++) {
-            const from = hint[i - 1];
-            const to   = hint[i];
-
-            if (level.blockSet.has(to) || level.gooseSet.has(to)) { valid = false; break; }
-
-            const portal = level.portalMap.get(from);
-            const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === to);
-
-            if (!isPortalJump) {
-                const tx = to & 0xFFFF, ty = (to >>> 16) & 0xFFFF;
-                const fx = from & 0xFFFF, fy = (from >>> 16) & 0xFFFF;
-                if (Math.abs(tx - fx) + Math.abs(ty - fy) !== 1) { valid = false; break; }
-
-                // Revisit allowed only if intersections still needed and cell is eligible
-                if (state.visited[to] > 0) {
-                    if (state.ints >= level.reqInt || to === level.goalKey || prep.gateSet.has(to)) {
-                        valid = false; break;
-                    }
-                }
-
-                // Entry axis: how did we arrive at `from`?
-                let entryAxis = AXIS_NONE;
-                if (state.path.length >= 2 && !state.lastWasPortalJump) {
-                    const prev = state.path[state.path.length - 2];
-                    const cur  = state.path[state.path.length - 1];
-                    entryAxis = (((cur >>> 16) & 0xFFFF) === ((prev >>> 16) & 0xFFFF)) ? AXIS_H : AXIS_V;
-                }
-
-                if (!isValidMove(from, to, state, level, prep, entryAxis)) { valid = false; break; }
-            }
-
-            applyMove(to, state, level, prep, isPortalJump);
-        }
-
-        if (valid && isSolution(state, level)) return hint.slice();
-    }
-    return null;
 }
 
 // ─── Core DFS ─────────────────────────────────────────────────────────────────
@@ -756,6 +859,18 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         // Over-intersection prune
         if (state.ints > level.reqInt) { undoMove(undo, state); continue; }
 
+        // Intersection ceiling: ints + remaining_MC_crossings must not exceed reqInt.
+        // Each pending MC cell will contribute exactly 1 intersection (its 2nd-axis visit).
+        // If current ints + guaranteed future MC ints already exceeds reqInt, prune.
+        // This eliminates paths with non-MC crossings on levels where all intersections
+        // must come from MC cells (e.g. L53: mc=3, reqInt=3 → zero non-MC crossings).
+        if (state.mustCrossMask !== 0n && level.mustCrossKeys.length > 0) {
+            let mcRemaining = 0;
+            let m = state.mustCrossMask;
+            while (m !== 0n) { mcRemaining += Number(m & 1n); m >>= 1n; }
+            if (state.ints + mcRemaining > level.reqInt) { undoMove(undo, state); continue; }
+        }
+
         // Solution check (only when at goal)
         if (next === level.goalKey) {
             if (isSolution(state, level)) return state.path.slice();
@@ -767,6 +882,20 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         // Distance bound: min steps from next to goal must fit in remaining steps
         const goalDist = prep.distMap.get(next) ?? Infinity;
         if (!Number.isFinite(goalDist) || goalDist > rSteps) { undoMove(undo, state); continue; }
+
+        // Parity pruning (V1 line 6559): on a portal-free grid every step flips (x+y)%2.
+        // Always apply at depth 1 (catches globally infeasible gates, e.g. L53 gate 2).
+        // Apply deep parity (full DFS) only for corridor-rich levels (≥10 blocks): these
+        // levels have tightly constrained paths where parity cuts many dead-end corridors.
+        // For open levels with few blocks, deep parity changes search order adversely.
+        if (level.portalMap.size === 0) {
+            const posP  = ((next & 0xFFFF) + ((next >>> 16) & 0xFFFF)) & 1;
+            const goalP = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
+            const firstStep = (realLen === 1);
+            if ((firstStep || level.blockSet.size >= 10) && (posP ^ goalP ^ (rSteps & 1)) !== 0) {
+                undoMove(undo, state); continue;
+            }
+        }
 
         // Must-pass lower bound: dist(next→MP) + dist(MP→goal) ≤ rSteps
         if (state.mustMask !== 0n) {
@@ -822,7 +951,9 @@ function detectArchetype(level) {
     // Classify before portal-heavy so sparse 2-portal levels aren't mis-routed.
     if (level.reqInt <= 1 && density < 0.35) return 'near-closure';
     // High-intersection: dense AND many intersections, OR extreme intersection count.
-    if ((level.reqInt >= 5 && density >= 0.55) || level.reqInt >= 10) return 'high-intersection-burden';
+    // Second clause catches density 0.45-0.54 with reqInt≥5 (e.g. L61, L143)
+    // and near-Hamiltonian density≥0.55 with reqInt≥4 (e.g. L147).
+    if ((level.reqInt >= 5 && density >= 0.45) || (level.reqInt >= 4 && density >= 0.55) || level.reqInt >= 10) return 'high-intersection-burden';
     if (level.mustCrossKeys.length >= 2 && level.reqInt >= 2) return 'must-cross-heavy';
     if ((level.portalMap?.size || 0) >= 4) return 'portal-heavy';
     return 'default';
@@ -832,6 +963,8 @@ function detectArchetype(level) {
 // Template attempts lead (matches V1's winning strategy for most grid levels).
 function getAttemptConfigs(level) {
     const arch = detectArchetype(level);
+    const area    = level.grid.w * level.grid.h;
+    const density = area > 0 ? level.reqLen / area : 0;
 
     // Near-closure: the path is a near-loop — goal attraction dominates.
     if (arch === 'near-closure') {
@@ -844,14 +977,24 @@ function getAttemptConfigs(level) {
     }
 
     // High-intersection: concentrate budget on intersection-focused profiles.
-    // Fewer configs → larger fair-share per attempt (V1 can take 5-20 s for these).
+    // For dense levels (near-Hamiltonian), also try perimeter/corner templates since the
+    // path needs to cover most of the grid — structural guidance matters.
     if (arch === 'high-intersection-burden') {
-        return [
+        const profiles = [
             { profileName: 'intersectionHarvest', template: null },
             { profileName: 'knotBuilder',         template: null },
             { profileName: 'closureCommitment',   template: null },
             { profileName: 'harvestThenFinish',   template: null },
         ];
+        if (density >= 0.55) {
+            // Near-Hamiltonian density: prepend perimeter/corner templates
+            const denseTemplates = ATTEMPT_CONFIGS.filter(c =>
+                c.template !== null &&
+                (c.template.perimeterDir || c.template.prefersCorner)
+            );
+            return [...denseTemplates, ...profiles];
+        }
+        return profiles;
     }
 
     // For portal-heavy levels, lead with portal profiles then templates
@@ -864,15 +1007,22 @@ function getAttemptConfigs(level) {
         ];
     }
 
-    // Default: template attempts first, then all profiles (including archetype reordering)
-    let profileOrder = PROFILE_ORDER.slice();
+    // Must-cross-heavy: 3-config list giving each attempt 10000ms (30s ÷ 3).
+    // cornerHarvest first: solves L62 (<100ms), L75 (8600ms), L114 (6200ms).
+    // CW second: solves L64 (7541ms), L128 (7544ms) — reached only after cornerHarvest times out.
+    // harvestThenFinish as general fallback.
     if (arch === 'must-cross-heavy') {
-        profileOrder = ['mustCrossFirst', 'harvestThenFinish', 'knotBuilder',
-            ...PROFILE_ORDER.filter(p => p !== 'mustCrossFirst' && p !== 'harvestThenFinish' && p !== 'knotBuilder')];
+        return [
+            { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
+            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
+            { profileName: 'harvestThenFinish', template: null                       },
+        ];
     }
+
+    // Default: trimmed template set first, then all profiles.
     return [
-        ...ATTEMPT_CONFIGS.filter(c => c.template !== null), // templates first
-        ...profileOrder.map(p => ({ profileName: p, template: null })),
+        ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+        ...PROFILE_ORDER.map(p => ({ profileName: p, template: null })),
     ];
 }
 
@@ -882,37 +1032,40 @@ async function solveLevelV2(level, opts = {}) {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
     const levelStartTime = Date.now();
     const prep         = prepLevel(level);
-
-    // Try stored hint paths first — they're O(path_length) to validate and
-    // encode known valid solutions, so they short-circuit DFS for known levels.
-    const hintPath = tryHintPaths(level, prep);
-    if (hintPath) {
-        const totalMs = Date.now() - levelStartTime;
-        return { ok: true, status: 'success', solution: hintPath, solutions: [hintPath],
-                 attempts: [{ gateKey: hintPath[0], profile: 'hint', template: null, ok: true, elapsedMs: totalMs }],
-                 totalMs };
-    }
-
     const gateKeys     = Array.isArray(level.gateKeys) ? level.gateKeys : [];
     const baseConfigs  = getAttemptConfigs(level);
 
     const attempts = [];
     let solution   = null;
 
-    // Budget scheme: each gate gets an equal share of the total budget.
-    // Within a gate all attempts share that budget via gateStartTime, so a
-    // fast-failing attempt (strong pruning quickly exhausts wrong paths) naturally
-    // cedes time to the next attempt. Templates are placed first so they get
-    // priority without needing a separate per-attempt clock.
-    const perGateBudgetMs = Math.floor(timeBudgetMs / Math.max(1, gateKeys.length));
+    // Pre-filter gates by parity feasibility on portal-free grids.
+    // A gate is infeasible if (gate_parity ^ goal_parity ^ reqLen_parity) != 0.
+    // Filtering infeasible gates concentrates the budget on gates that can succeed,
+    // avoiding the case where a slow-to-exhaust infeasible gate consumes half the budget.
+    let activeGates = gateKeys;
+    if (level.portalMap.size === 0) {
+        const goalP = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
+        const feasible = gateKeys.filter(gk => {
+            const gP = ((gk & 0xFFFF) + ((gk >>> 16) & 0xFFFF)) & 1;
+            return (gP ^ goalP ^ (level.reqLen & 1)) === 0;
+        });
+        if (feasible.length > 0) activeGates = feasible;
+    }
 
+    // Budget scheme: fair-share per gate with redistribution.
+    // Each gate gets floor(remaining_time / remaining_gates). Fast-finishing gates
+    // donate their saved time to later gates. This ensures no single gate can
+    // monopolise the budget (e.g. a 2-gate level always sees both gates).
     outer:
-    for (const gateKey of gateKeys) {
+    for (let gi = 0; gi < activeGates.length; gi++) {
+        const gateKey     = activeGates[gi];
         const gateElapsed = Date.now() - levelStartTime;
         if (gateElapsed >= timeBudgetMs) break outer;
 
-        const gateStart  = Date.now();
-        const gateBudget = Math.min(perGateBudgetMs, timeBudgetMs - gateElapsed);
+        const gateStart   = Date.now();
+        const timeLeft    = timeBudgetMs - gateElapsed;
+        const gatesLeft   = activeGates.length - gi;
+        const gateBudget  = Math.floor(timeLeft / gatesLeft);
 
         // Use all template configs — perimeter templates apply once the path reaches
         // the edge (even from interior starts) so they are always worth trying.
