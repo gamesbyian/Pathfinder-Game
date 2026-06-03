@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
-const html = await readFile(new URL('../Solver.js', import.meta.url), 'utf8');
+const html = await readFile(new URL('./legacysolver.js', import.meta.url), 'utf8');
 const helperToken = 'const deriveHeuristicFeatureFlags = (level = {}, context = {}) => {';
 const helperStart = html.indexOf(helperToken);
 if (helperStart < 0) {

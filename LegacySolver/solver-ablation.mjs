@@ -278,7 +278,7 @@ if (typeof globalThis.window === 'undefined') globalThis.window = { __PF_DISABLE
 if (typeof globalThis.document === 'undefined') globalThis.document = { addEventListener() {}, getElementById: () => null, createElement: () => ({ classList: { add() {}, remove() {} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('../Solver.js');
+const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./legacysolver.js');
 const budgetMs = Number(budgetMsArg || CANONICAL_SOLVE_TIME_BUDGET_MS);
 const maxLevelWallMs = maxLevelWallMsArg ?? (budgetMs * 5);
 

@@ -109,7 +109,7 @@ if (typeof globalThis.document === 'undefined') globalThis.document = { addEvent
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
 // ─── Solver setup ─────────────────────────────────────────────────────────────
-const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('../Solver.js');
+const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./legacysolver.js');
 const budgetMs = Number(budgetMsArg || CANONICAL_SOLVE_TIME_BUDGET_MS);
 const maxLevelWallMs = budgetMs * 5;
 

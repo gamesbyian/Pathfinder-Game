@@ -181,7 +181,7 @@ if (typeof globalThis.performance === 'undefined') {
   globalThis.performance = { now: () => Date.now() };
 }
 
-const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('../Solver.js');
+const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./legacysolver.js');
 
 // Default per-stage budget shared with the UI Solve path (Solver.js runGameSolver).
 const budgetMs = Number(budgetMsArg || CANONICAL_SOLVE_TIME_BUDGET_MS);

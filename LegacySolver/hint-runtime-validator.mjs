@@ -8,7 +8,7 @@ if (typeof globalThis.window === 'undefined') {
   globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
 }
 
-const { installSolver } = await import('../Solver.js');
+const { installSolver } = await import('./legacysolver.js');
 
 const args = process.argv.slice(2);
 const argMap = new Map(args.filter(a => a.startsWith('--')).map(a => { const [k, v] = a.split('='); return [k, v ?? '']; }));

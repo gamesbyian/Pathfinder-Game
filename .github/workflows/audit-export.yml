@@ -25,10 +25,7 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
-
-      - name: Run full New Hint audit export
+      - name: Run full SolverV2 audit export
         run: npm run audit:newhint:full
 
       - name: Guard audit output
