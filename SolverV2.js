@@ -15,6 +15,8 @@ const AXIS_H = 1; // horizontal move (dx != 0)
 const AXIS_V = 2; // vertical move (dy != 0)
 const AXIS_NONE = 0;
 
+function _popcount(n) { let c = 0; for (let x = n; x; x >>>= 1) c += x & 1; return c; }
+
 // ─── Policy profiles (exact weights from V1 SolverCore.SOLVER_POLICY_PROFILES) ──
 
 const POLICY_PROFILES = {
@@ -284,6 +286,54 @@ function prepLevel(level) {
     const _mpN = level.mustPassKeys.length, _mcN = level.mustCrossKeys.length;
     prep.initialMustMask      = _mpN > 0 ? ((1n << BigInt(_mpN)) - 1n) : 0n;
     prep.initialMustCrossMask = _mcN > 0 ? ((1n << BigInt(_mcN)) - 1n) : 0n;
+    // DFS must-pass scoring: sparse/medium-density levels (< 0.70) get full must-pass
+    // urgency scoring via initialMustMask so the DFS is guided toward must-pass cells.
+    // Near-Hamiltonian levels (density ≥ 0.70, e.g. L26 at 0.82) keep mustMask=0n to
+    // avoid disrupting the tightly-ordered dense traversal; mpVisitedMask still enforces
+    // must-pass correctness in isSolution/pruning for those levels.
+    const _area = level.grid.w * level.grid.h;
+    prep.mustMaskForDFS = (_area > 0 && level.reqLen / _area >= 0.70) ? 0n : prep.initialMustMask;
+
+    // Flipper index data for the global-flip mechanism.
+    const _fKeys = [...level.flippingFilterMap.keys()];
+    prep.flipperIndexMap  = new Map(_fKeys.map((k, i) => [k, i]));
+    prep.flipperInitAxes  = new Uint8Array(_fKeys.map(k => level.flippingFilterMap.get(k)));
+
+    // Flipper approach distance maps for urgency scoring.
+    // Two entries per flipper (indexed by fi):
+    //   flipperApproachEven[fi]: BFS from approach cells when usedCount is even (axis = initial)
+    //   flipperApproachOdd[fi]:  BFS from approach cells when usedCount is odd  (axis = flipped)
+    // Approach cells are the cells adjacent to the flipper in its required entry direction,
+    // excluding blocks, other flippers, and gate cells (gates can't be re-entered as approach).
+    // Empty map means the flipper is inaccessible at that parity without going through another
+    // flipper first (e.g. F1 in L140 at even parity: only reachable via F2 from the west).
+    prep.flipperApproachEven = [];
+    prep.flipperApproachOdd  = [];
+    if (_fKeys.length > 0) {
+        const { w: _fw, h: _fh } = level.grid;
+        const _fGateSet = new Set(level.gateKeys);
+        const _isFlipperApproach = k => {
+            if (k < 0) return false;
+            const kx = k & 0xFFFF, ky = (k >>> 16) & 0xFFFF;
+            return kx < _fw && ky < _fh
+                && !level.blockSet.has(k) && !level.flippingFilterMap.has(k) && !_fGateSet.has(k);
+        };
+        for (let fi = 0; fi < _fKeys.length; fi++) {
+            const fKey = _fKeys[fi];
+            const fx = fKey & 0xFFFF, fy = (fKey >>> 16) & 0xFFFF;
+            const initAx = prep.flipperInitAxes[fi];
+            for (const parityOdd of [false, true]) {
+                const ax = parityOdd ? (initAx === AXIS_H ? AXIS_V : AXIS_H) : initAx;
+                const cands = ax === AXIS_V
+                    ? [fy > 0    ? PACK(fx, fy - 1) : -1, fy < _fh - 1 ? PACK(fx, fy + 1) : -1]
+                    : [fx > 0    ? PACK(fx - 1, fy) : -1, fx < _fw - 1 ? PACK(fx + 1, fy) : -1];
+                const sources = cands.filter(_isFlipperApproach);
+                const dmap = sources.length > 0 ? buildDistMap(level, sources) : new Map();
+                if (parityOdd) prep.flipperApproachOdd.push(dmap);
+                else           prep.flipperApproachEven.push(dmap);
+            }
+        }
+    }
 
     return prep;
 }
@@ -297,23 +347,31 @@ function createState(startKey, level, prep) {
         visited:    new Uint16Array(KEY_SPACE),   // visit count per cell
         edgeUsage:  new Uint8Array(KEY_SPACE),    // bit1=H used, bit2=V used
         ints:       0,
-        mustMask:      0n,                        // DFS uses heuristic guidance; beam uses _beamResetState
+        mustMask:      prep.mustMaskForDFS,        // 0n for dense levels; initialMustMask for sparse/medium
         mustCrossMask: prep.initialMustCrossMask,
         crossCounts:   new Uint8Array(cn),
+        // uint32 bitmask: bit i set when mustPassKeys[i] has been visited at least once.
+        // Used by isSolution, mustPassLowerBound, isConnected. For dense levels where
+        // mustMask stays 0n (no scoring activation), this is the authoritative must-pass check.
+        mpVisitedMask: 0,
         portalJumps:   0,
-        flipperCounts: new Uint8Array(KEY_SPACE), // how many times each flipper cell crossed
+        flipperUsedMask: 0,                       // bit i set when flipper i has been used (global-flip rule)
         lastWasPortalJump: false,                 // was last move a portal jump?
     };
     state.visited[startKey] = 1;
     // Apply start-cell effects
     const mpIdx = prep.mustPassIndex.get(startKey);
-    if (mpIdx !== undefined) state.mustMask &= ~(1n << BigInt(mpIdx));
+    if (mpIdx !== undefined) {
+        state.mustMask &= ~(1n << BigInt(mpIdx));
+        state.mpVisitedMask |= (1 << mpIdx);
+    }
     const mcIdx = prep.mustCrossIndex.get(startKey);
     if (mcIdx !== undefined) {
         state.crossCounts[mcIdx] = 1;
         // mustCrossMask bit stays set (still need one more visit)
     }
-    if (level.flippingFilterMap.has(startKey)) state.flipperCounts[startKey]++;
+    const _fsi = prep.flipperIndexMap.get(startKey);
+    if (_fsi !== undefined) state.flipperUsedMask |= (1 << _fsi);
     return state;
 }
 
@@ -350,11 +408,13 @@ function applyMove(target, state, level, prep, isPortalJump) {
     const wasIntAdded = prevVisited > 0 && target !== level.goalKey && !prep.gateSet.has(target);
     if (wasIntAdded) state.ints++;
 
-    // Must-pass: clear bit on first visit
+    // Must-pass: clear mustMask bit + set mpVisitedMask bit on first visit
     const prevMustMask = state.mustMask;
+    const prevMpVisitedMask = state.mpVisitedMask;
     const mpIdx = prep.mustPassIndex.get(target);
     if (mpIdx !== undefined && prevVisited === 0) {
         state.mustMask &= ~(1n << BigInt(mpIdx));
+        state.mpVisitedMask |= (1 << mpIdx);
     }
 
     // Must-cross: accumulate crosses
@@ -367,9 +427,12 @@ function applyMove(target, state, level, prep, isPortalJump) {
         if (state.crossCounts[mcIdx] >= 2) state.mustCrossMask &= ~(1n << BigInt(mcIdx));
     }
 
-    // Flipping filter update
-    const prevFlipCount = state.flipperCounts[target];
-    if (level.flippingFilterMap.has(target) && !isPortalJump) state.flipperCounts[target]++;
+    // Flipping filter update (global-flip rule: mark flipper as used)
+    const prevFlipperUsedMask = state.flipperUsedMask;
+    if (!isPortalJump) {
+        const _fi = prep.flipperIndexMap.get(target);
+        if (_fi !== undefined) state.flipperUsedMask |= (1 << _fi);
+    }
 
     const prevLastWasPortalJump = state.lastWasPortalJump;
     state.lastWasPortalJump = isPortalJump;
@@ -378,9 +441,9 @@ function applyMove(target, state, level, prep, isPortalJump) {
         target, from, moveAxis, axisBit, isPortalJump,
         prevVisited, prevEdgeFrom, prevEdgeTarget,
         wasIntAdded,
-        prevMustMask, mpIdx,
+        prevMustMask, prevMpVisitedMask, mpIdx,
         prevMustCrossMask, mcIdx, prevCrossCount,
-        prevFlipCount, hadFlipper: level.flippingFilterMap.has(target),
+        prevFlipperUsedMask,
         prevLastWasPortalJump,
     };
 }
@@ -392,10 +455,11 @@ function undoMove(undo, state) {
     state.edgeUsage[undo.target]  = undo.prevEdgeTarget;
     if (undo.isPortalJump) state.portalJumps--;
     if (undo.wasIntAdded) state.ints--;
-    state.mustMask      = undo.prevMustMask;
-    state.mustCrossMask = undo.prevMustCrossMask;
+    state.mustMask          = undo.prevMustMask;
+    state.mpVisitedMask     = undo.prevMpVisitedMask;
+    state.mustCrossMask     = undo.prevMustCrossMask;
     if (undo.mcIdx !== undefined) state.crossCounts[undo.mcIdx] = undo.prevCrossCount;
-    if (undo.hadFlipper) state.flipperCounts[undo.target] = undo.prevFlipCount;
+    state.flipperUsedMask   = undo.prevFlipperUsedMask;
     state.lastWasPortalJump = undo.prevLastWasPortalJump;
 }
 
@@ -469,6 +533,19 @@ function isValidMove(from, target, state, level, prep, entryAxis) {
         if (state.edgeUsage[from] & axisBit) return false;
     }
 
+    // Must-cross cell lock prevention: if 'from' is an unsatisfied MC cell with exactly
+    // 1 visit, turning here (exiting in the axis perpendicular to entry) would set both
+    // axis bits on the cell — permanently blocking any future 2nd visit.
+    // A valid 2nd crossing requires re-entering via the UNUSED axis, which is only
+    // possible if the 1st pass was straight-through (same axis entry and exit).
+    const _mcLockIdx = prep.mustCrossIndex.get(from);
+    if (_mcLockIdx !== undefined && state.crossCounts[_mcLockIdx] === 1
+            && (state.mustCrossMask & (1n << BigInt(_mcLockIdx))) !== 0n) {
+        const _eH = (state.edgeUsage[from] & AXIS_H) !== 0;
+        const _eV = (state.edgeUsage[from] & AXIS_V) !== 0;
+        if ((_eH && !_eV && moveAxis === AXIS_V) || (!_eH && _eV && moveAxis === AXIS_H)) return false;
+    }
+
     // Regular filter axis check
     const filterFrom   = level.filterMap.get(from);
     const filterTarget = level.filterMap.get(target);
@@ -481,13 +558,16 @@ function isValidMove(from, target, state, level, prep, entryAxis) {
         if (entryAxis !== moveAxis) return false;
     }
 
-    // Flipping filter axis check on entry into target.
-    // The axis filter only applies starting from the 2nd crossing (count >= 1).
-    // On first crossing (count === 0) only the exit-guard (above) constrains direction.
-    const flipTarget = level.flippingFilterMap.get(target);
-    if (flipTarget !== undefined && state.flipperCounts[target] >= 1) {
-        const count  = state.flipperCounts[target];
-        const curAx  = (count % 2 === 0) ? flipTarget : (flipTarget === AXIS_H ? AXIS_V : AXIS_H);
+    // Flipping-filter entry: must match target flipper's current orientation.
+    // Global rule: using flipper i flips all OTHER unused flippers.
+    // Current axis of unused flipper fi = initial_axis[fi] XOR (odd usedCount → flip).
+    // Used flippers are locked (orientation frozen) and cannot be re-entered.
+    const fi = prep.flipperIndexMap.get(target);
+    if (fi !== undefined) {
+        if (state.flipperUsedMask & (1 << fi)) return false;
+        const usedCount = _popcount(state.flipperUsedMask);
+        const initAx    = prep.flipperInitAxes[fi];
+        const curAx     = (usedCount & 1) === 0 ? initAx : (initAx === AXIS_H ? AXIS_V : AXIS_H);
         if (curAx !== moveAxis) return false;
     }
 
@@ -629,12 +709,15 @@ function mpMSTLowerBound(pos, remain, level, prep) {
 // Uses per-cell max bound, upgraded to MST joint bound when ≥2 MPs remain
 // (same pattern as mustCrossLowerBound — MST is tighter than max-of-individual).
 function mustPassLowerBound(pos, state, level, prep) {
-    if (state.mustMask === 0n) return 0;
     const n = level.mustPassKeys.length;
+    if (n === 0) return 0;
+    // Use mpVisitedMask (uint32) — works for both DFS (mustMask=0n) and beam.
+    const mpAllMask = (1 << n) - 1;
+    if ((state.mpVisitedMask & mpAllMask) === mpAllMask) return 0;
     const remain = [];
     let lb = 0;
     for (let i = 0; i < n; i++) {
-        if ((state.mustMask & (1n << BigInt(i))) === 0n) continue;
+        if (state.mpVisitedMask & (1 << i)) continue;
         remain.push(i);
         const dToMp   = prep.mustPassDistMaps[i].get(pos) ?? Infinity;
         const dMpGoal = prep.mustPassToGoalDist[i];
@@ -752,7 +835,7 @@ function isConnected(pos, state, level, prep) {
 
     if (_reachGenBuf[level.goalKey] !== gen) return false;
     for (let i = 0; i < level.mustPassKeys.length; i++) {
-        if ((state.mustMask & (1n << BigInt(i))) !== 0n && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
+        if (!(state.mpVisitedMask & (1 << i)) && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
         if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
@@ -879,6 +962,29 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
         }
     }
 
+    // Flipping filter approach urgency (harvest phase only, rRatio < 0.45).
+    // Rewards moves toward the entry zone of each accessible unused flipper.
+    // This is critical when flipper access is order-dependent (global-flip rule):
+    // e.g. L140 where F2 (axisV) must be approached from above/below before F1 becomes
+    // accessible from a non-flipper cell — without this urgency the beam/DFS goes west
+    // toward the nearer MC/MP cells and never reaches the east-side flippers.
+    // Scale 2.0: strong enough to overcome goal-attraction bias (~6.5/step) without
+    // dominating the scoring at later phases where we need intersection flexibility.
+    if (rRatio < 0.45 && prep.flipperApproachEven.length > 0) {
+        const _parityOdd = (_popcount(state.flipperUsedMask) & 1) === 1;
+        const _aMaps = _parityOdd ? prep.flipperApproachOdd : prep.flipperApproachEven;
+        for (let _fi = 0; _fi < _aMaps.length; _fi++) {
+            if (state.flipperUsedMask & (1 << _fi)) continue;
+            const _aMap = _aMaps[_fi];
+            if (_aMap.size === 0) continue;
+            const _dCur    = _aMap.get(pos)    ?? Infinity;
+            const _dTarget = _aMap.get(target) ?? Infinity;
+            if (Number.isFinite(_dCur) && Number.isFinite(_dTarget)) {
+                score += 2.0 * (_dCur - _dTarget) * 5;
+            }
+        }
+    }
+
     // Intersection setup: reward second visit to a non-gate, non-goal cell if ints needed
     const intNeeded = level.reqInt - state.ints;
     if (intNeeded > 0 && state.visited[target] > 0 && target !== level.goalKey && !prep.gateSet.has(target)) {
@@ -917,6 +1023,12 @@ function isSolution(state, level) {
     if (state.ints !== level.reqInt)         return false;
     if (state.mustMask !== 0n)               return false;
     if (state.mustCrossMask !== 0n)          return false;
+    // Dense-level DFS (density≥0.70) keeps mustMask=0n to avoid disrupting near-Hamiltonian
+    // orderings. For those levels the mustMask check above always passes, so we enforce
+    // must-pass correctness via mpVisitedMask. For all other paths this check is redundant
+    // with mustMask but harmless — both fields are always kept in sync.
+    const n = level.mustPassKeys.length;
+    if (n > 0 && (state.mpVisitedMask & ((1 << n) - 1)) !== ((1 << n) - 1)) return false;
     return true;
 }
 
@@ -1013,7 +1125,7 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         }
 
         // Must-pass lower bound: dist(next→MP) + dist(MP→goal) ≤ rSteps
-        if (state.mustMask !== 0n) {
+        if (level.mustPassKeys.length > 0) {
             const mpLB = mustPassLowerBound(next, state, level, prep);
             if (!Number.isFinite(mpLB) || mpLB > rSteps) { undoMove(undo, state); continue; }
         }
@@ -1084,19 +1196,24 @@ function _beamResetState(ws, startKey, level, prep) {
         const k = wsP[i];
         ws.visited[k]   = 0;
         ws.edgeUsage[k] = 0;
-        if (ws.flipperCounts[k]) ws.flipperCounts[k] = 0;
     }
     wsP.length = 1; wsP[0] = startKey;
     ws.ints = 0; ws.portalJumps = 0; ws.lastWasPortalJump = false;
-    ws.mustMask      = prep.initialMustMask;
-    ws.mustCrossMask = prep.initialMustCrossMask;
+    ws.mustMask         = prep.initialMustMask;
+    ws.mustCrossMask    = prep.initialMustCrossMask;
+    ws.mpVisitedMask    = 0;
+    ws.flipperUsedMask  = 0;
     ws.crossCounts.fill(0);
     ws.visited[startKey] = 1;
     const mpIdx = prep.mustPassIndex.get(startKey);
-    if (mpIdx !== undefined) ws.mustMask &= ~(1n << BigInt(mpIdx));
+    if (mpIdx !== undefined) {
+        ws.mustMask &= ~(1n << BigInt(mpIdx));
+        ws.mpVisitedMask |= (1 << mpIdx);
+    }
     const mcIdx = prep.mustCrossIndex.get(startKey);
     if (mcIdx !== undefined) ws.crossCounts[mcIdx] = 1;
-    if (level.flippingFilterMap.has(startKey)) ws.flipperCounts[startKey]++;
+    const _fsi = prep.flipperIndexMap.get(startKey);
+    if (_fsi !== undefined) ws.flipperUsedMask |= (1 << _fsi);
 }
 
 // Synchronous beam search: maintain a frontier of up to `beamWidth` partial paths,
@@ -1156,7 +1273,7 @@ function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime,
                     const gp = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
                     if ((realLen === 1 || level.blockSet.size >= 10) && ((pp ^ gp ^ (rSteps & 1)) !== 0)) ok = false;
                 }
-                if (ok && ws.mustMask !== 0n) {
+                if (ok && level.mustPassKeys.length > 0) {
                     const lb = mustPassLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
@@ -1284,7 +1401,34 @@ function getAttemptConfigs(level) {
     // L64/L128; mustCrossFirst solves L136; objectiveFirst solves L105).
     // Beam fallbacks for L53 (all DFS fail): mustCrossFirst (strong wmc=2.4 pull toward
     // diagonal MC cells), objectiveFirst, perimeterCW (V1 solved L53 via CW in 1.976s).
+    //
+    // For levels with many must-pass constraints (≥3, e.g. L140: 4mp+2mc+4flippers on 14×14),
+    // the path is long (reqLen=75) so beam sweeps need ~3s each to complete 75 steps.
+    // With only 8 configs at 30s budget: 3750ms each — enough for the beam to finish.
+    // Beam width 2000: narrow enough for speed while still keeping the correct path alive
+    // (flipper approach urgency in scoreMoveV2 makes the correct east-first path top-ranked).
     if (arch === 'must-cross-heavy') {
+        if (level.mustPassKeys.length >= 3) {
+            // Flipper-heavy levels (≥2 flipping filters) with many objectives need a wide-beam
+            // intersectionHarvest as the sole config so it receives the full time budget.
+            // Empirically: beam[50000] intersectionHarvest solves L140 in ~20s; any split
+            // reduces the per-attempt budget below that threshold and the level times out.
+            if (level.flippingFilterMap.size >= 2) {
+                return [
+                    { profileName: 'intersectionHarvest', template: null, beamWidth: 50000 },
+                ];
+            }
+            return [
+                { profileName: 'objectiveFirst',     template: null,                   beamWidth: 2000 },
+                { profileName: 'mustCrossFirst',     template: null,                   beamWidth: 2000 },
+                { profileName: 'perimeterSweep',     template: TEMPLATES.perimeterCCW, beamWidth: 2000 },
+                { profileName: 'intersectionHarvest',template: null,                   beamWidth: 2000 },
+                { profileName: 'harvestThenFinish',  template: null,                   beamWidth: 2000 },
+                { profileName: 'knotBuilder',        template: null,                   beamWidth: 2000 },
+                { profileName: 'objectiveFirst',     template: null },  // DFS fallback
+                { profileName: 'intersectionHarvest',template: null },  // DFS fallback
+            ];
+        }
         return [
             { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
             { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
