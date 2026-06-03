@@ -296,7 +296,8 @@ function prepLevel(level) {
     // avoid disrupting the tightly-ordered dense traversal; mpVisitedMask still enforces
     // must-pass correctness in isSolution/pruning for those levels.
     const _navArea = Math.max(1, level.grid.w * level.grid.h
-        - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size);
+        - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size
+        - level.gateKeys.length);
     prep.mustMaskForDFS = (level.reqLen / _navArea >= 0.70) ? 0n : prep.initialMustMask;
 
     // Flipper index data for the global-flip mechanism.
@@ -1315,7 +1316,8 @@ function scoreAndSort(neighbors, pos, state, level, prep, profile, template) {
 
 function detectArchetype(level) {
     const _navArea = Math.max(1, level.grid.w * level.grid.h
-        - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size);
+        - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size
+        - level.gateKeys.length);
     const density = level.reqLen / _navArea;
     // Near-closure: sparse path needing at most 1 intersection — essentially a near-loop.
     // Classify before portal-heavy so sparse 2-portal levels aren't mis-routed.
