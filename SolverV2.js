@@ -67,13 +67,16 @@ function computeTemplateBonus(target, pos, level, template, rRatio) {
     let bonus = 0;
 
     if (template.perimeterDir) {
-        // Strong perimeter gradient during harvest phase: reward perimeter, penalise interior
-        if (rRatio < 0.72) {
-            if (edgeNext === 0) {
-                bonus += 42;
-            } else {
-                bonus -= edgeNext * 16;  // -16 at depth 1, -32 at depth 2, etc.
-            }
+        // Phase-aware perimeter gradient: mirrors V1's harvest→knot transition.
+        // During harvest (rRatio<0.45): full perimeter pull. During knot (rRatio>0.45):
+        // gradually relax so the solver can build interior intersections.
+        const perimScale = rRatio > 0.45
+            ? Math.max(0.22, 1.0 - (rRatio - 0.45) * 1.42)
+            : 1.0;
+        if (edgeNext === 0) {
+            bonus += Math.round(42 * perimScale);
+        } else {
+            bonus -= Math.round(edgeNext * 16 * perimScale);
         }
         // Directional bias when moving perimeter-to-perimeter (CW vs CCW)
         if (edgeNow === 0 && edgeNext === 0) {
@@ -84,9 +87,9 @@ function computeTemplateBonus(target, pos, level, template, rRatio) {
                 bonus += correctDir ? template.branchBiasBoost : -template.directionPenalty;
             }
         }
-        // Extra penalty for leaving the perimeter mid-path
-        if (edgeNow === 0 && edgeNext > 0 && rRatio < 0.65) {
-            bonus -= template.edgeDriftPenalty;
+        // Penalty for leaving perimeter, scaled with phase (relaxes in knot phase)
+        if (edgeNow === 0 && edgeNext > 0) {
+            bonus -= Math.round(template.edgeDriftPenalty * perimScale);
         }
     }
 
@@ -131,6 +134,7 @@ const ATTEMPT_CONFIGS = [
     { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
     { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
     { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCCW     },
+    { profileName: 'perimeterSweep',    template: TEMPLATES.sideCommitment   },
     // Non-template fallbacks (all profiles)
     ...PROFILE_ORDER.map(profileName => ({ profileName, template: null })),
 ];
@@ -262,6 +266,16 @@ function prepLevel(level) {
         prep.mcPairDist[i] = [];
         for (let j = 0; j < mcN; j++) {
             prep.mcPairDist[i][j] = i === j ? 0 : (prep.mustCrossDistMaps[j].get(level.mustCrossKeys[i]) ?? Infinity);
+        }
+    }
+
+    // Pairwise BFS distances between must-pass cells (for MST lower bound).
+    const mpN = level.mustPassKeys.length;
+    prep.mpPairDist = [];
+    for (let i = 0; i < mpN; i++) {
+        prep.mpPairDist[i] = [];
+        for (let j = 0; j < mpN; j++) {
+            prep.mpPairDist[i][j] = i === j ? 0 : (prep.mustPassDistMaps[j].get(level.mustPassKeys[i]) ?? Infinity);
         }
     }
 
@@ -554,18 +568,78 @@ function mcMSTLowerBound(pos, remain, state, level, prep) {
     return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
 }
 
+// MST lower bound for must-pass: MST({pos, MP1, MP2, ...}) + minGoalDist.
+// Mirrors mcMSTLowerBound — uses shared _mstEdges/_ufPar globals.
+function mpMSTLowerBound(pos, remain, level, prep) {
+    const k = remain.length; // k >= 2
+    const nodeCount = k + 1; // 0=pos, 1..k = MP[remain[...]]
+    let eCount = 0;
+    for (let a = 0; a < k; a++) {
+        const d = prep.mustPassDistMaps[remain[a]].get(pos) ?? Infinity;
+        if (!Number.isFinite(d)) return Infinity;
+        _mstEdges[eCount * 3]     = d;
+        _mstEdges[eCount * 3 + 1] = 0;
+        _mstEdges[eCount * 3 + 2] = a + 1;
+        eCount++;
+    }
+    for (let a = 0; a < k; a++) {
+        for (let b = a + 1; b < k; b++) {
+            const d = prep.mpPairDist[remain[a]][remain[b]];
+            if (!Number.isFinite(d)) return Infinity;
+            _mstEdges[eCount * 3]     = d;
+            _mstEdges[eCount * 3 + 1] = a + 1;
+            _mstEdges[eCount * 3 + 2] = b + 1;
+            eCount++;
+        }
+    }
+    for (let i = 1; i < eCount; i++) {
+        const w = _mstEdges[i * 3], u = _mstEdges[i * 3 + 1], v = _mstEdges[i * 3 + 2];
+        let j = i - 1;
+        while (j >= 0 && _mstEdges[j * 3] > w) {
+            _mstEdges[(j + 1) * 3]     = _mstEdges[j * 3];
+            _mstEdges[(j + 1) * 3 + 1] = _mstEdges[j * 3 + 1];
+            _mstEdges[(j + 1) * 3 + 2] = _mstEdges[j * 3 + 2];
+            j--;
+        }
+        _mstEdges[(j + 1) * 3]     = w;
+        _mstEdges[(j + 1) * 3 + 1] = u;
+        _mstEdges[(j + 1) * 3 + 2] = v;
+    }
+    for (let i = 0; i < nodeCount; i++) _ufPar[i] = i;
+    let mstW = 0, added = 0;
+    for (let e = 0; e < eCount && added < nodeCount - 1; e++) {
+        const pu = _ufFind(_mstEdges[e * 3 + 1]), pv = _ufFind(_mstEdges[e * 3 + 2]);
+        if (pu !== pv) { _ufPar[pu] = pv; mstW += _mstEdges[e * 3]; added++; }
+    }
+    if (added < nodeCount - 1) return Infinity;
+    let minGoal = Infinity;
+    for (const i of remain) {
+        const d = prep.mustPassToGoalDist[i];
+        if (Number.isFinite(d)) minGoal = Math.min(minGoal, d);
+    }
+    return Number.isFinite(minGoal) ? mstW + minGoal : Infinity;
+}
+
 // Lower bound: must visit every unsatisfied must-pass then reach goal.
-// Uses max over all unsatisfied MPs of (dist(pos→MP) + dist(MP→goal)).
+// Uses per-cell max bound, upgraded to MST joint bound when ≥2 MPs remain
+// (same pattern as mustCrossLowerBound — MST is tighter than max-of-individual).
 function mustPassLowerBound(pos, state, level, prep) {
     if (state.mustMask === 0n) return 0;
     const n = level.mustPassKeys.length;
+    const remain = [];
     let lb = 0;
     for (let i = 0; i < n; i++) {
         if ((state.mustMask & (1n << BigInt(i))) === 0n) continue;
+        remain.push(i);
         const dToMp   = prep.mustPassDistMaps[i].get(pos) ?? Infinity;
         const dMpGoal = prep.mustPassToGoalDist[i];
         if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) return Infinity;
         lb = Math.max(lb, dToMp + dMpGoal);
+    }
+    if (remain.length >= 2 && prep.mpPairDist) {
+        const mst = mpMSTLowerBound(pos, remain, level, prep);
+        if (!Number.isFinite(mst)) return Infinity;
+        lb = Math.max(lb, mst);
     }
     return lb;
 }
@@ -619,10 +693,12 @@ const _reachQ   = new Int32Array(512); // BFS queue; max grid is 15x15=225 cells
 let _reachGen   = 0;
 const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit avoids wrap)
 
-// Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos.
+// Connectivity prune: checks that goal + unsatisfied objectives are reachable from pos,
+// and (for non-MC levels) that enough fresh cells exist to complete the path.
 // Flood fill traverses cells that are either unvisited, or (if intersections still needed)
 // visited exactly once. Gate cells (other than starting gate) are treated as walls.
-// This is a SAW-style pruning — much stronger than traversing all non-blocked cells.
+// Volume check (V1 _checkTopology): freshCells + intNeeded >= rSteps prunes branches
+// that are isolated in a sub-region too small to complete the required path length.
 function isConnected(pos, state, level, prep) {
     const { w, h } = level.grid;
     const intNeeded = level.reqInt - state.ints;
@@ -630,12 +706,16 @@ function isConnected(pos, state, level, prep) {
     //   0 intersections remaining: only unvisited cells
     //   N intersections remaining: cells visited up to N times may be re-entered
     const maxVisit = intNeeded > 0 ? 1 : 0;
+    const hasMC = level.mustCrossKeys.length > 0;
 
     _reachGen++;
     const gen = _reachGen;
     let qHead = 0, qTail = 0;
     _reachGenBuf[pos] = gen;
     _reachQ[qTail++] = pos;
+    // freshVolume counts reachable fresh cells + pos itself (matching V1's _checkTopology volume count).
+    // Even though pos is already visited, V1 includes the start cell in its volume tally.
+    let freshVolume = 1;
 
     while (qHead < qTail) {
         const k = _reachQ[qHead++];
@@ -646,13 +726,17 @@ function isConnected(pos, state, level, prep) {
             const d = portal.dest;
             if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
                 (state.visited[d] <= maxVisit || d === pos)) {
-                _reachGenBuf[d] = gen; _reachQ[qTail++] = d;
+                _reachGenBuf[d] = gen;
+                if (state.visited[d] === 0) freshVolume++;
+                _reachQ[qTail++] = d;
             }
         }
         const addNeighbor = (nk) => {
             if (_reachGenBuf[nk] !== gen && !level.blockSet.has(nk) && !level.gooseSet.has(nk) &&
                 !prep.gateSet.has(nk) && (state.visited[nk] <= maxVisit || nk === pos)) {
-                _reachGenBuf[nk] = gen; _reachQ[qTail++] = nk;
+                _reachGenBuf[nk] = gen;
+                if (state.visited[nk] === 0) freshVolume++;
+                _reachQ[qTail++] = nk;
             }
         };
         if (x + 1 < w) addNeighbor(k + 1);
@@ -667,6 +751,15 @@ function isConnected(pos, state, level, prep) {
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
         if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
+    }
+    // Volume check (mirrors V1's _checkTopology): not enough accessible fresh cells to finish.
+    // Disabled for portal levels only (portal jumps visit a destination cell for 0 path
+    // steps, inflating freshVolume). MC levels use the same formula since intNeeded
+    // accounts for the extra revisit steps — the double-count concern was unfounded.
+    const hasPortal = level.portalMap.size > 0;
+    if (!hasPortal) {
+        const rSteps = level.reqLen - (state.path.length - 1 - state.portalJumps);
+        if (freshVolume + intNeeded < rSteps) return false;
     }
     return true;
 }
@@ -691,9 +784,6 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     // Harvest (early path, rRatio < 0.45): weaken goal pull so the DFS builds
     // structural layout before committing to a direction.
     // Finish (late path, rRatio > 0.82): strengthen goal pull to commit to ending.
-    // Perimeter scaling is intentionally left flat — per-profile perimeterBiasWeight
-    // and template bonuses already handle structural layout; boosting perimeter here
-    // would dominate over MC-urgency for interior MC cells, causing regressions.
     const rRatio = level.reqLen > 0 ? Math.max(0, 1 - rStepsAfterMove / level.reqLen) : 1;
     let phaseGoalScale = 1.0;
     if (rRatio < 0.45) {
@@ -702,7 +792,13 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
         const t = (rRatio - 0.82) / 0.18;
         phaseGoalScale = 1.0 + t * 1.8;                   // 1.0 at 0.82, 2.8 at 1.0
     }
-    const phasePerimScale = 1.0;
+    // Phase-based perimeter scaling: mirrors V1's harvest→knot transition.
+    // V1 drops perimeterBias from 1.65 (harvest) to 0.45 (knot) so the solver can
+    // leave the perimeter to build intersections / MC crossings in the mid phase.
+    // Only applies to directional CW/CCW templates to avoid disturbing non-perimeter configs.
+    const phasePerimScale = (template && template.perimeterDir && rRatio > 0.45)
+        ? Math.max(0.22, 1.0 - (rRatio - 0.45) * 1.42)  // 1.0→0.22 over rRatio 0.45→1.0
+        : 1.0;
 
     let score = 0;
 
@@ -823,14 +919,21 @@ function isSolution(state, level) {
 
 // Iterative DFS from `startKey` using policy `profile` (and optional `template`).
 // levelStartTime + levelBudgetMs: hard wall-clock cap for the whole level.
+// maxDiscrepancy: Limited Discrepancy Search bound. A "discrepancy" is choosing a
+//   non-greedy child; the j-th best child (0-indexed) costs j discrepancies. With
+//   maxDiscrepancy=Infinity this is plain best-first DFS (original behaviour). With a
+//   finite bound it explores only paths within `maxDiscrepancy` deviations of greedy —
+//   recovering from a small number of wrong early ordering decisions (the diagnosed
+//   failure mode) while remaining complete as the bound grows.
 // Returns the solution path (array of keys) or null on timeout/failure.
-function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template) {
+function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, maxDiscrepancy = Infinity) {
     const state = createState(startKey, level, prep);
 
-    // Stack entry: { key, children: sorted_candidates, childIdx, undoInfo }
+    // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
+    // discrepancy to REACH this node (sum of chosen child-indices along the path).
     const children0 = getNeighbors(startKey, state, level, prep);
     scoreAndSort(children0, startKey, state, level, prep, profile, template);
-    const stack = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null }];
+    const stack = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
     let nodesExpanded = 0;
 
@@ -845,7 +948,14 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
             continue;
         }
 
-        const next = top.children[top.childIdx++];
+        // LDS: the child at index ci costs ci discrepancies on top of this node's disc.
+        // Children are sorted best-first, so once a child exceeds the budget every later
+        // child does too — exhaust the node immediately.
+        const ci = top.childIdx++;
+        const childDisc = top.disc + ci;
+        if (childDisc > maxDiscrepancy) { top.childIdx = top.children.length; continue; }
+
+        const next = top.children[ci];
         const portal = level.portalMap.get(top.key);
         const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
 
@@ -913,7 +1023,7 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         const intNeeded = level.reqInt - state.ints;
         if (intNeeded > rSteps) { undoMove(undo, state); continue; }
 
-        // Connectivity: check every 32 nodes and when close to end
+        // Connectivity + volume check: every 32 nodes and always near end.
         if (rSteps <= 10 || (nodesExpanded & 31) === 0) {
             if (!isConnected(next, state, level, prep)) { undoMove(undo, state); continue; }
         }
@@ -922,7 +1032,154 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         const nextNeighbors = getNeighbors(next, state, level, prep);
         if (nextNeighbors.length === 0 && rSteps > 0) { undoMove(undo, state); continue; }
         scoreAndSort(nextNeighbors, next, state, level, prep, profile, template);
-        stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo });
+        stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo, disc: childDisc });
+    }
+    return null;
+}
+
+// Iterative-deepening LDS wrapper. Runs a geometric ladder of discrepancy bounds —
+// cheap low-k probes first (find close-to-greedy solutions fast), ending with an
+// UNBOUNDED wave that is identical to plain best-first DFS. Ending unbounded guarantees
+// LDS never loses plain-DFS's reach: a level whose solution is far from greedy still
+// gets a full sweep in the final wave (preventing regressions like L26). Each wave
+// re-explores the lower-k region (LDS redundancy), but low-k waves are cheap and the
+// final unbounded wave dominates cost, so the overhead is bounded.
+// Limited Discrepancy Search wrapper, two phases:
+//   1. CHEAP PROBE: discrepancy bounds k ∈ {0,1,2,4,8}, hard-capped at probeCapMs total.
+//      Empirically every close-to-greedy solution (L61, L79, L136, L143, L147) is found
+//      by k=8 in under 1.3s, so a small cap suffices and the bounded trees exhaust fast.
+//   2. UNBOUNDED FALLBACK: plain best-first DFS (k=∞) with all remaining budget. This is
+//      bit-for-bit the original solver, so levels whose solution is far from greedy
+//      (e.g. L26) keep essentially the full DFS budget — no regression.
+// The hard cap on phase 1 is what prevents the probe waves from starving phase 2.
+const _LDS_PROBE_K = [0, 1, 2, 4, 8];
+const _LDS_DEBUG = typeof process !== 'undefined' && process.env && process.env.PF_LDS_DEBUG === '1';
+function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template) {
+    const probeCapMs = Math.min(Math.floor(levelBudgetMs * 0.5), 4000);
+    for (const k of _LDS_PROBE_K) {
+        if (Date.now() - levelStartTime >= probeCapMs) break;
+        const w0 = Date.now();
+        const path = dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k);
+        if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms ${path?'SOLVED':'-'}`);
+        if (path) return path;
+    }
+    if (Date.now() - levelStartTime >= levelBudgetMs) return null;
+    const path = dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity);
+    if (_LDS_DEBUG) console.error(`    [lds] k=Inf ${path?'SOLVED':'-'}`);
+    return path;
+}
+
+// ─── Beam search ─────────────────────────────────────────────────────────────
+
+// Reset ws back to start-of-level (single occupied cell: startKey).
+// Zeros only the cells in ws.path (O(path_length)), not the full KEY_SPACE arrays.
+function _beamResetState(ws, startKey, level, prep) {
+    const wsP = ws.path, wsN = wsP.length;
+    for (let i = 0; i < wsN; i++) {
+        const k = wsP[i];
+        ws.visited[k]   = 0;
+        ws.edgeUsage[k] = 0;
+        if (ws.flipperCounts[k]) ws.flipperCounts[k] = 0;
+    }
+    wsP.length = 1; wsP[0] = startKey;
+    ws.ints = 0; ws.portalJumps = 0; ws.lastWasPortalJump = false;
+    const n = level.mustPassKeys.length, cn = level.mustCrossKeys.length;
+    ws.mustMask      = n  > 0 ? ((1n << BigInt(n))  - 1n) : 0n;
+    ws.mustCrossMask = cn > 0 ? ((1n << BigInt(cn)) - 1n) : 0n;
+    ws.crossCounts.fill(0);
+    ws.visited[startKey] = 1;
+    const mpIdx = prep.mustPassIndex.get(startKey);
+    if (mpIdx !== undefined) ws.mustMask &= ~(1n << BigInt(mpIdx));
+    const mcIdx = prep.mustCrossIndex.get(startKey);
+    if (mcIdx !== undefined) ws.crossCounts[mcIdx] = 1;
+    if (level.flippingFilterMap.has(startKey)) ws.flipperCounts[startKey]++;
+}
+
+// Synchronous beam search: maintain a frontier of up to `beamWidth` partial paths,
+// all at the same depth. At each step expand every frontier state, score all valid
+// one-step extensions, and keep the top-beamWidth by cumulative score.
+// Uses a single reusable mutable state (KEY_SPACE arrays allocated once, cells
+// zeroed per-frontier-state via _beamResetState) to avoid repeated large allocations.
+function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth) {
+    const ws = createState(startKey, level, prep);
+    let frontier = [{ path: [startKey], score: 0 }];
+
+    while (frontier.length > 0) {
+        if (Date.now() - startTime > budgetMs) return null;
+
+        const cands = [];
+
+        for (const { path, score: acc } of frontier) {
+            // Reset ws to startKey state, then replay this frontier path.
+            _beamResetState(ws, startKey, level, prep);
+            for (let i = 1; i < path.length; i++) {
+                const from = path[i - 1], to = path[i];
+                const p = level.portalMap.get(from);
+                const isJump = !!(p && !ws.lastWasPortalJump && p.dest === to);
+                applyMove(to, ws, level, prep, isJump);
+            }
+
+            const pos = path[path.length - 1];
+            if (pos === level.goalKey) {
+                if (isSolution(ws, level)) return path;
+                continue;
+            }
+
+            const neighbors = getNeighbors(pos, ws, level, prep);
+            for (const next of neighbors) {
+                const pAtPos = level.portalMap.get(pos);
+                const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
+                const undo = applyMove(next, ws, level, prep, isJump);
+                const realLen = ws.path.length - 1 - ws.portalJumps;
+                const rSteps  = level.reqLen - realLen;
+                let ok = realLen <= level.reqLen && ws.ints <= level.reqInt;
+
+                if (ok && ws.mustCrossMask !== 0n) {
+                    let mcR = 0, m = ws.mustCrossMask;
+                    while (m) { mcR += Number(m & 1n); m >>= 1n; }
+                    if (ws.ints + mcR > level.reqInt) ok = false;
+                }
+                if (ok && next === level.goalKey) {
+                    if (isSolution(ws, level)) { undoMove(undo, ws); return [...path, next]; }
+                    ok = false;
+                }
+                if (ok) {
+                    const gd = prep.distMap.get(next) ?? Infinity;
+                    if (!Number.isFinite(gd) || gd > rSteps) ok = false;
+                }
+                if (ok && level.portalMap.size === 0) {
+                    const pp = ((next & 0xFFFF) + ((next >>> 16) & 0xFFFF)) & 1;
+                    const gp = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
+                    if ((realLen === 1 || level.blockSet.size >= 10) && ((pp ^ gp ^ (rSteps & 1)) !== 0)) ok = false;
+                }
+                if (ok && ws.mustMask !== 0n) {
+                    const lb = mustPassLowerBound(next, ws, level, prep);
+                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
+                }
+                if (ok && ws.mustCrossMask !== 0n) {
+                    const lb = mustCrossLowerBound(next, ws, level, prep);
+                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
+                }
+                if (ok && (level.reqInt - ws.ints) > rSteps) ok = false;
+                // Connectivity: check near end and every 8 path steps (catches dead ends early).
+                if (ok && (rSteps <= 20 || (realLen & 7) === 0)) {
+                    if (!isConnected(next, ws, level, prep)) ok = false;
+                }
+                if (ok) {
+                    const mv = scoreMoveV2(next, pos, ws, level, prep, profile, rSteps, template);
+                    cands.push({ path: [...path, next], score: acc + mv });
+                }
+                undoMove(undo, ws);
+            }
+        }
+
+        if (cands.length === 0) break;
+        if (cands.length > beamWidth) {
+            cands.sort((a, b) => b.score - a.score);
+            frontier = cands.slice(0, beamWidth);
+        } else {
+            frontier = cands;
+        }
     }
     return null;
 }
@@ -976,25 +1233,35 @@ function getAttemptConfigs(level) {
         ];
     }
 
-    // High-intersection: concentrate budget on intersection-focused profiles.
-    // For dense levels (near-Hamiltonian), also try perimeter/corner templates since the
-    // path needs to cover most of the grid — structural guidance matters.
+    // High-intersection: two sub-cases split by reqInt.
     if (arch === 'high-intersection-burden') {
-        const profiles = [
-            { profileName: 'intersectionHarvest', template: null },
-            { profileName: 'knotBuilder',         template: null },
-            { profileName: 'closureCommitment',   template: null },
-            { profileName: 'harvestThenFinish',   template: null },
-        ];
-        if (density >= 0.55) {
-            // Near-Hamiltonian density: prepend perimeter/corner templates
-            const denseTemplates = ATTEMPT_CONFIGS.filter(c =>
-                c.template !== null &&
-                (c.template.perimeterDir || c.template.prefersCorner)
-            );
-            return [...denseTemplates, ...profiles];
+        if (level.reqInt >= 7) {
+            // Very high reqInt (L61=8, L92=8, L138=8, L139=11).
+            // V1 needed 20s (L92), 14.5s (L138), 5.6s (L139) using beam search.
+            // Beam search placed first so it receives maximum budget; DFS fallbacks
+            // cover L61 (solves in 75ms via DFS intersectionHarvest).
+            return [
+                { profileName: 'intersectionHarvest', template: null, beamWidth: 5000 },
+                { profileName: 'objectiveFirst',      template: null, beamWidth: 5000 },
+                { profileName: 'intersectionHarvest', template: null },
+                { profileName: 'objectiveFirst',      template: null },
+            ];
         }
-        return profiles;
+        // Medium-high reqInt (L130=6, L143=5, L147=4).
+        // V1 solved L130 in 362ms via perimeterCW template; L143 via perimeterCCW 1.7s.
+        // Beam variants placed first so they receive the larger share of budget;
+        // DFS fallbacks cover L143/L147 which already pass via DFS.
+        return [
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW,  beamWidth: 2000 },
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW, beamWidth: 2000 },
+            { profileName: 'intersectionHarvest', template: null,                   beamWidth: 2000 },
+            { profileName: 'objectiveFirst',      template: null,                   beamWidth: 2000 },
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
+            { profileName: 'objectiveFirst',      template: null                   },
+            { profileName: 'intersectionHarvest', template: null                   },
+            { profileName: 'knotBuilder',         template: null                   },
+        ];
     }
 
     // For portal-heavy levels, lead with portal profiles then templates
@@ -1007,15 +1274,20 @@ function getAttemptConfigs(level) {
         ];
     }
 
-    // Must-cross-heavy: 3-config list giving each attempt 10000ms (30s ÷ 3).
-    // cornerHarvest first: solves L62 (<100ms), L75 (8600ms), L114 (6200ms).
-    // CW second: solves L64 (7541ms), L128 (7544ms) — reached only after cornerHarvest times out.
-    // harvestThenFinish as general fallback.
+    // Must-cross-heavy: DFS first (cornerHarvest solves L62/L75/L114; perimeterCW solves
+    // L64/L128; mustCrossFirst solves L136; objectiveFirst solves L105).
+    // Beam fallbacks for L53 (all DFS fail): mustCrossFirst (strong wmc=2.4 pull toward
+    // diagonal MC cells), objectiveFirst, perimeterCW (V1 solved L53 via CW in 1.976s).
     if (arch === 'must-cross-heavy') {
         return [
             { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
             { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
+            { profileName: 'mustCrossFirst',    template: null                       },
+            { profileName: 'objectiveFirst',    template: null                       },
             { profileName: 'harvestThenFinish', template: null                       },
+            { profileName: 'mustCrossFirst',    template: null,                    beamWidth: 2000 },
+            { profileName: 'objectiveFirst',    template: null,                    beamWidth: 2000 },
+            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW,   beamWidth: 2000 },
         ];
     }
 
@@ -1082,16 +1354,18 @@ async function solveLevelV2(level, opts = {}) {
             const attBudget      = Math.floor(remaining / attemptsLeft);
             if (attBudget < 50) break; // too little time left to be useful
 
-            const { profileName, template } = configs[ci];
+            const { profileName, template, beamWidth } = configs[ci];
             const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
             const attStart = Date.now();
             let path = null;
             try {
-                path = dfsFromGate(gateKey, level, prep, profile, attBudget, attStart, template);
+                path = beamWidth
+                    ? beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth)
+                    : dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
             } catch (_) {}
 
             const attMs = Date.now() - attStart;
-            attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, ok: !!path, elapsedMs: attMs });
+            attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, beamWidth: beamWidth ?? null, ok: !!path, elapsedMs: attMs });
             if (path) { solution = path; break outer; }
         }
     }
