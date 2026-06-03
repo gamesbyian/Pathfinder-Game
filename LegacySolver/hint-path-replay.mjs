@@ -33,7 +33,7 @@ if (typeof globalThis.window === 'undefined') {
   globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
 }
 
-const { installSolver } = await import('../Solver.js');
+const { installSolver } = await import('./legacysolver.js');
 
 // --- CLI args ---
 const args = process.argv.slice(2);

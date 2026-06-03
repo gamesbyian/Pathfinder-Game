@@ -475,7 +475,8 @@
         compactDefined,
         deriveHeuristicFeatureFlagsSafely,
         toHeuristicFeatureSignature
-    } from './Solver.js';
+    } from './LegacySolver/legacysolver.js';
+    import { installSolverV2 } from './SolverV2.js';
 
     const APP = {};
 
@@ -1615,13 +1616,14 @@
     })();
 
     // ======================================================
-    // I) APP.Solver
-    // Implementation lives in ./Solver.js (extracted module).
-    // installSolver(APP) wires APP.Solver onto the host APP namespace.
-    // The named heuristic-flag helpers imported above are also defined in
-    // Solver.js so other sections of this module can call them directly.
+    // I) APP.Solver / APP.SolverV2
+    // APP.Solver: legacy V1 solver — wired for hint animation, path validation,
+    //   and trap-spot analysis. Implementation in LegacySolver/legacysolver.js.
+    // APP.SolverV2: active solver used by the Solve button in edit mode.
+    //   Implementation in SolverV2.js.
     // ======================================================
     installSolver(APP);
+    installSolverV2(APP);
 
 
 
@@ -4676,13 +4678,46 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         document.getElementById('closeEditorHelpX').onclick = () => APP.UI.closeModal('editorHelpModal');
         document.getElementById('editMegaSolver').onclick = async () => {
             APP.UI.closeAllModals();
+            if (APP.State.ENGINE.activeSolverController) return;
+            let abortResolve;
+            const abortPromise = new Promise(res => { abortResolve = () => res({ ok: false, status: 'aborted' }); });
+            const abortPoll = setInterval(() => { if (APP.State.ENGINE.solverAbortRequested) { clearInterval(abortPoll); abortResolve(); } }, 100);
+            APP.State.ENGINE.activeSolverController = { cancel: () => { APP.UI.setSolverAbortRequested(true); } };
+            APP.State.ENGINE.solverAbortRequested = false;
             try {
-                const solveResult = await APP.Solver.runGameSolver('hint');
-                if (solveResult?.reason === 'already-running') return;
+                APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
+                APP.UI.setSolverControlsEnabled(false);
+                APP.UI.setSolverTimerText('0.0s');
+                APP.UI.setSolverDetailText('Searching…');
+                APP.UI.setSolverProgress(0);
+                const rawLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.editor.workingLevel);
+                const level = APP.SolverV2.prepareLevelForSolver(rawLevel, { source: 'raw' });
+                const budgetMs = 30000;
+                const t0 = Date.now();
+                const timerInterval = setInterval(() => {
+                    const elapsed = (Date.now() - t0) / 1000;
+                    APP.UI.setSolverTimerText(`${elapsed.toFixed(1)}s`);
+                    APP.UI.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
+                }, 100);
+                const result = await Promise.race([APP.SolverV2.solve(level, { timeBudgetMs: budgetMs }), abortPromise]);
+                clearInterval(timerInterval);
+                if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
+                    if (!Array.isArray(APP.State.ENGINE.foundHintsSinceLoad)) APP.State.ENGINE.foundHintsSinceLoad = [];
+                    APP.State.ENGINE.foundHintsSinceLoad.unshift(result.solution);
+                    APP.UI.setSolverProgress(100);
+                    APP.UI.showMessage('Solution found!', 'text-green-400 font-bold');
+                } else if (result.status !== 'aborted') {
+                    APP.UI.showMessage('No solution found within time limit.', 'text-yellow-400 font-bold');
+                }
             } catch (err) {
-                console.error('Solve failed:', err);
-                APP.UI.showMessage(`Solve failed: ${err?.message || 'Unexpected solver error.'}`, 'text-red-500 font-bold');
+                console.error('SolverV2 failed:', err);
+                APP.UI.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
+            } finally {
+                clearInterval(abortPoll);
+                APP.State.ENGINE.activeSolverController = null;
+                APP.State.ENGINE.solverAbortRequested = false;
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                APP.UI.setSolverControlsEnabled(true);
             }
         };
         document.getElementById('editCopyMetrics').onclick = () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const len = APP.Engine.getRealLength(); APP.UI.setInputValue('editReqLen', len); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.intersections); APP.Editor.applyMetricsFromUI(); APP.UI.showMessage("Metrics Set", "text-white font-black"); } };
