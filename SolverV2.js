@@ -484,7 +484,7 @@ function getNeighbors(pos, state, level, prep) {
         const prev = state.path[pathLen - 2];
         // Check if the last step into pos was a portal jump (prev=portalSrc, pos=portalDest)
         // In that case entry axis is NONE (we teleported).
-        const wasJump = arrivedViaPortal; // already handled above — but here it's always false
+        const wasJump = arrivedViaPortal;
         if (!wasJump) {
             const px = prev & 0xFFFF, py = (prev >>> 16) & 0xFFFF;
             entryAxis = (py === y) ? AXIS_H : AXIS_V;
