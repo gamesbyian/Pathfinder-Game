@@ -753,10 +753,11 @@ function isConnected(pos, state, level, prep) {
         if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
     }
     // Volume check (mirrors V1's _checkTopology): not enough accessible fresh cells to finish.
-    // Disabled for MC levels (2 visits from 1 cell skews count) and portal levels
-    // (portal jumps visit a destination cell for 0 path steps, inflating freshVolume).
+    // Disabled for portal levels only (portal jumps visit a destination cell for 0 path
+    // steps, inflating freshVolume). MC levels use the same formula since intNeeded
+    // accounts for the extra revisit steps — the double-count concern was unfounded.
     const hasPortal = level.portalMap.size > 0;
-    if (!hasMC && !hasPortal) {
+    if (!hasPortal) {
         const rSteps = level.reqLen - (state.path.length - 1 - state.portalJumps);
         if (freshVolume + intNeeded < rSteps) return false;
     }
@@ -1123,19 +1124,24 @@ function getAttemptConfigs(level) {
             // Very high reqInt (L61=8, L92=8, L138=8, L139=11): intersectionHarvest needs
             // maximum time. V1 uses 20s for L92, 14s for L138, 5.6s for L139 — with only
             // 2 configs each gets 15s, insufficient for L92. Single intersectionHarvest
-            // config gets the full 30s budget; if it fails early, knotBuilder gets surplus.
+            // config gets the full 30s budget; if it fails early, objectiveFirst gets surplus.
+            // V1 solved L138 (14.5s) and L139 (5.6s) with objectiveFirst ordering +
+            // intersectionHarvest profile; adding objectiveFirst as 2nd attempt.
             return [
                 { profileName: 'intersectionHarvest', template: null },
+                { profileName: 'objectiveFirst',      template: null },
             ];
         }
         // Medium-high reqInt (L130=6, L143=5, L147=4): perimeter templates work
         // (V1: L143 via perimeterCCW 1.7s, L130 via perimeterCW 0.4s).
-        // 4 configs × 7.5s each; intersectionHarvest/knotBuilder as fallbacks.
+        // V1 solved L130 via objectiveFirst+perimeterCW in 362ms; add template-free
+        // objectiveFirst so pure objective urgency can guide without template fighting it.
         return [
-            { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCW  },
-            { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCCW },
-            { profileName: 'intersectionHarvest', template: null },
-            { profileName: 'knotBuilder',         template: null },
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
+            { profileName: 'objectiveFirst',      template: null                   },
+            { profileName: 'intersectionHarvest', template: null                   },
+            { profileName: 'knotBuilder',         template: null                   },
         ];
     }
 
@@ -1149,14 +1155,19 @@ function getAttemptConfigs(level) {
         ];
     }
 
-    // Must-cross-heavy: 3-config list giving each attempt 10000ms (30s ÷ 3).
-    // cornerHarvest first: solves L62 (<100ms), L75 (8600ms), L114 (6200ms).
-    // CW second: solves L64 (7541ms), L128 (7544ms) — reached only after cornerHarvest times out.
-    // harvestThenFinish as general fallback.
+    // Must-cross-heavy: 5-config list, fair-share (6s each when prev fails fast).
+    // cornerHarvest: solves L62, L75, L114. perimeterCW: solves L64, L128.
+    // mustCrossFirst (no template): strong MC pull without template fighting interior cells.
+    //   V1 solved L53 via mustCrossFirst+perimeterCW in 1976ms; template-free works better
+    //   in V2 since perimeterCW interior penalty (-64 at edgeDist=4) overrides wmc=2.4 pull.
+    // objectiveFirst (no template): for L105 (V1: objectiveFirst+perimeterCW 1801ms).
+    // harvestThenFinish: general fallback, solves L136 in ~1.3s.
     if (arch === 'must-cross-heavy') {
         return [
             { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
             { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
+            { profileName: 'mustCrossFirst',    template: null                       },
+            { profileName: 'objectiveFirst',    template: null                       },
             { profileName: 'harvestThenFinish', template: null                       },
         ];
     }
