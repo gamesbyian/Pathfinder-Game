@@ -183,6 +183,18 @@ function buildDistMap(level, sourceKeys) {
     return map;
 }
 
+// Build a BFS distance map from approach cells on one side of a flipper or MC cell.
+// ax=AXIS_V → sources above/below (cx, cy±1); ax=AXIS_H → sources left/right (cx±1, cy).
+// filterFn(k) returns true for cells that qualify as approach sources.
+function _buildAxisApproachMap(level, cx, cy, ax, filterFn) {
+    const { w, h } = level.grid;
+    const cands = ax === AXIS_V
+        ? [cy > 0     ? PACK(cx, cy - 1) : -1, cy < h - 1 ? PACK(cx, cy + 1) : -1]
+        : [cx > 0     ? PACK(cx - 1, cy) : -1, cx < w - 1 ? PACK(cx + 1, cy) : -1];
+    const sources = cands.filter(k => k >= 0 && filterFn(k));
+    return sources.length > 0 ? buildDistMap(level, sources) : new Map();
+}
+
 // ─── Level normalisation ──────────────────────────────────────────────────────
 
 function normalizeRawLevelV2(rawLevel, levelNumber = null) {
@@ -244,20 +256,12 @@ function prepLevel(level) {
     // After the 1st pass via axis A, the 2nd pass must enter from axis B.
     // We precompute BFS distances to the cells immediately adjacent on each axis
     // so the scorer/pruner can guide toward the correct perpendicular approach.
-    const { w, h } = level.grid;
-    const isOpen = k => {
-        const kx = k & 0xFFFF, ky = (k >>> 16) & 0xFFFF;
-        return kx >= 0 && kx < w && ky >= 0 && ky < h && !level.blockSet.has(k) && !level.gooseSet.has(k);
-    };
+    const _mcFilter = k => !level.blockSet.has(k) && !level.gooseSet.has(k);
     prep.mcApproachDistMaps = level.mustCrossKeys.map(mcKey => {
         const mcX = mcKey & 0xFFFF, mcY = (mcKey >>> 16) & 0xFFFF;
-        // V-approach: enter MC from above or below (need to be in same column, y±1)
-        const vSrc = [PACK(mcX, mcY - 1), PACK(mcX, mcY + 1)].filter(isOpen);
-        // H-approach: enter MC from left or right (need to be in same row, x±1)
-        const hSrc = [PACK(mcX - 1, mcY), PACK(mcX + 1, mcY)].filter(isOpen);
         return {
-            v: vSrc.length > 0 ? buildDistMap(level, vSrc) : new Map(),
-            h: hSrc.length > 0 ? buildDistMap(level, hSrc) : new Map(),
+            v: _buildAxisApproachMap(level, mcX, mcY, AXIS_V, _mcFilter),
+            h: _buildAxisApproachMap(level, mcX, mcY, AXIS_H, _mcFilter),
         };
     });
 
@@ -291,8 +295,9 @@ function prepLevel(level) {
     // Near-Hamiltonian levels (density ≥ 0.70, e.g. L26 at 0.82) keep mustMask=0n to
     // avoid disrupting the tightly-ordered dense traversal; mpVisitedMask still enforces
     // must-pass correctness in isSolution/pruning for those levels.
-    const _area = level.grid.w * level.grid.h;
-    prep.mustMaskForDFS = (_area > 0 && level.reqLen / _area >= 0.70) ? 0n : prep.initialMustMask;
+    const _navArea = Math.max(1, level.grid.w * level.grid.h
+        - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size);
+    prep.mustMaskForDFS = (level.reqLen / _navArea >= 0.70) ? 0n : prep.initialMustMask;
 
     // Flipper index data for the global-flip mechanism.
     const _fKeys = [...level.flippingFilterMap.keys()];
@@ -310,25 +315,15 @@ function prepLevel(level) {
     prep.flipperApproachEven = [];
     prep.flipperApproachOdd  = [];
     if (_fKeys.length > 0) {
-        const { w: _fw, h: _fh } = level.grid;
         const _fGateSet = new Set(level.gateKeys);
-        const _isFlipperApproach = k => {
-            if (k < 0) return false;
-            const kx = k & 0xFFFF, ky = (k >>> 16) & 0xFFFF;
-            return kx < _fw && ky < _fh
-                && !level.blockSet.has(k) && !level.flippingFilterMap.has(k) && !_fGateSet.has(k);
-        };
+        const _ffFilter = k => !level.blockSet.has(k) && !level.flippingFilterMap.has(k) && !_fGateSet.has(k);
         for (let fi = 0; fi < _fKeys.length; fi++) {
             const fKey = _fKeys[fi];
             const fx = fKey & 0xFFFF, fy = (fKey >>> 16) & 0xFFFF;
             const initAx = prep.flipperInitAxes[fi];
             for (const parityOdd of [false, true]) {
                 const ax = parityOdd ? (initAx === AXIS_H ? AXIS_V : AXIS_H) : initAx;
-                const cands = ax === AXIS_V
-                    ? [fy > 0    ? PACK(fx, fy - 1) : -1, fy < _fh - 1 ? PACK(fx, fy + 1) : -1]
-                    : [fx > 0    ? PACK(fx - 1, fy) : -1, fx < _fw - 1 ? PACK(fx + 1, fy) : -1];
-                const sources = cands.filter(_isFlipperApproach);
-                const dmap = sources.length > 0 ? buildDistMap(level, sources) : new Map();
+                const dmap = _buildAxisApproachMap(level, fx, fy, ax, _ffFilter);
                 if (parityOdd) prep.flipperApproachOdd.push(dmap);
                 else           prep.flipperApproachEven.push(dmap);
             }
@@ -1092,9 +1087,7 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
         // This eliminates paths with non-MC crossings on levels where all intersections
         // must come from MC cells (e.g. L53: mc=3, reqInt=3 → zero non-MC crossings).
         if (state.mustCrossMask !== 0n && level.mustCrossKeys.length > 0) {
-            let mcRemaining = 0;
-            let m = state.mustCrossMask;
-            while (m !== 0n) { mcRemaining += Number(m & 1n); m >>= 1n; }
+            const mcRemaining = _popcount(Number(state.mustCrossMask));
             if (state.ints + mcRemaining > level.reqInt) { undoMove(undo, state); continue; }
         }
 
@@ -1256,9 +1249,7 @@ function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime,
                 let ok = realLen <= level.reqLen && ws.ints <= level.reqInt;
 
                 if (ok && ws.mustCrossMask !== 0n) {
-                    let mcR = 0, m = ws.mustCrossMask;
-                    while (m) { mcR += Number(m & 1n); m >>= 1n; }
-                    if (ws.ints + mcR > level.reqInt) ok = false;
+                    if (ws.ints + _popcount(Number(ws.mustCrossMask)) > level.reqInt) ok = false;
                 }
                 if (ok && next === level.goalKey) {
                     if (isSolution(ws, level)) { undoMove(undo, ws); return [...path, next]; }
@@ -1323,8 +1314,9 @@ function scoreAndSort(neighbors, pos, state, level, prep, profile, template) {
 // ─── Archetype detection ──────────────────────────────────────────────────────
 
 function detectArchetype(level) {
-    const area = level.grid.w * level.grid.h;
-    const density = area > 0 ? level.reqLen / area : 0;
+    const _navArea = Math.max(1, level.grid.w * level.grid.h
+        - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size);
+    const density = level.reqLen / _navArea;
     // Near-closure: sparse path needing at most 1 intersection — essentially a near-loop.
     // Classify before portal-heavy so sparse 2-portal levels aren't mis-routed.
     if (level.reqInt <= 1 && density < 0.35) return 'near-closure';
@@ -1414,8 +1406,14 @@ function getAttemptConfigs(level) {
             // Empirically: beam[50000] intersectionHarvest solves L140 in ~20s; any split
             // reduces the per-attempt budget below that threshold and the level times out.
             if (level.flippingFilterMap.size >= 2) {
+                // beam[50000] intersectionHarvest needs the full 30s budget for L140
+                // (25+ seconds under GC pressure from prior levels). minBudgetFraction=1.0
+                // gives it the entire gate budget; DFS fallbacks consume whatever is left
+                // if the beam finishes early, acting as a backstop for future levels.
                 return [
-                    { profileName: 'intersectionHarvest', template: null, beamWidth: 50000 },
+                    { profileName: 'intersectionHarvest', template: null, beamWidth: 50000, minBudgetFraction: 1.0 },
+                    { profileName: 'objectiveFirst',      template: null },
+                    { profileName: 'intersectionHarvest', template: null },
                 ];
             }
             return [
@@ -1527,7 +1525,11 @@ async function solveLevelV2(level, opts = {}) {
 
                 const remaining    = gateBudget - elapsed;
                 const attemptsLeft = baseConfigs.length - ci;
-                const attBudget    = Math.floor(remaining / attemptsLeft);
+                const minFrac      = baseConfigs[ci].minBudgetFraction ?? 0;
+                const evenShare    = Math.floor(remaining / attemptsLeft);
+                const attBudget    = minFrac > 0
+                    ? Math.max(Math.floor(remaining * minFrac), evenShare)
+                    : evenShare;
                 if (attBudget < 50) break;
 
                 const { profileName, template, beamWidth } = baseConfigs[ci];

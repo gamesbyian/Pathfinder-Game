@@ -1,19 +1,19 @@
 {
-  "timestamp": "2026-06-03T15:11:10.369Z",
-  "commitSha": "18f37ccfe0599e24aa71c60ff26cc8dcf1e75120",
+  "timestamp": "2026-06-03T20:30:52.217Z",
+  "commitSha": "d2691e72bb218cca3c00f4f382c4624de8b8879d",
   "budgetMs": 30000,
   "levelFilter": "all",
   "solved": 148,
   "failed": 0,
   "errors": 0,
   "total": 148,
-  "totalMs": 107074,
+  "totalMs": 118008,
   "levels": [
     {
       "level": 1,
       "status": "success",
       "ok": true,
-      "elapsedMs": 8,
+      "elapsedMs": 7,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -30,7 +30,7 @@
       "level": 2,
       "status": "success",
       "ok": true,
-      "elapsedMs": 9,
+      "elapsedMs": 7,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -39,7 +39,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 9
+          "elapsedMs": 7
         }
       ]
     },
@@ -47,7 +47,7 @@
       "level": 3,
       "status": "success",
       "ok": true,
-      "elapsedMs": 453,
+      "elapsedMs": 486,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -56,7 +56,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 45
+          "elapsedMs": 51
         },
         {
           "gateKey": 0,
@@ -64,7 +64,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30
+          "elapsedMs": 41
         },
         {
           "gateKey": 0,
@@ -72,7 +72,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 16
+          "elapsedMs": 18
         },
         {
           "gateKey": 0,
@@ -80,7 +80,7 @@
           "template": "sideCommitment",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 50
+          "elapsedMs": 37
         },
         {
           "gateKey": 0,
@@ -88,7 +88,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30
+          "elapsedMs": 28
         },
         {
           "gateKey": 0,
@@ -104,7 +104,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 30
+          "elapsedMs": 27
         },
         {
           "gateKey": 0,
@@ -112,7 +112,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 26
+          "elapsedMs": 29
         },
         {
           "gateKey": 0,
@@ -120,7 +120,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 25
+          "elapsedMs": 27
         },
         {
           "gateKey": 0,
@@ -128,7 +128,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 23
+          "elapsedMs": 33
         },
         {
           "gateKey": 0,
@@ -136,7 +136,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 28
+          "elapsedMs": 27
         },
         {
           "gateKey": 0,
@@ -144,7 +144,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 23
+          "elapsedMs": 27
         },
         {
           "gateKey": 0,
@@ -152,7 +152,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 22
+          "elapsedMs": 30
         },
         {
           "gateKey": 0,
@@ -160,7 +160,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 25
+          "elapsedMs": 27
         },
         {
           "gateKey": 0,
@@ -168,7 +168,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 24
+          "elapsedMs": 26
         },
         {
           "gateKey": 0,
@@ -176,7 +176,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 25
+          "elapsedMs": 26
         },
         {
           "gateKey": 327683,
@@ -184,7 +184,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 2
+          "elapsedMs": 3
         }
       ]
     },
@@ -192,7 +192,7 @@
       "level": 4,
       "status": "success",
       "ok": true,
-      "elapsedMs": 15,
+      "elapsedMs": 12,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -201,7 +201,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 15
+          "elapsedMs": 9
         }
       ]
     },
@@ -209,7 +209,7 @@
       "level": 5,
       "status": "success",
       "ok": true,
-      "elapsedMs": 9,
+      "elapsedMs": 8,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -218,7 +218,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 9
+          "elapsedMs": 8
         }
       ]
     },
@@ -226,7 +226,7 @@
       "level": 6,
       "status": "success",
       "ok": true,
-      "elapsedMs": 15,
+      "elapsedMs": 29,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -235,7 +235,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 15
+          "elapsedMs": 29
         }
       ]
     },
@@ -243,7 +243,7 @@
       "level": 7,
       "status": "success",
       "ok": true,
-      "elapsedMs": 35,
+      "elapsedMs": 32,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -252,7 +252,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 35
+          "elapsedMs": 32
         }
       ]
     },
@@ -260,7 +260,7 @@
       "level": 8,
       "status": "success",
       "ok": true,
-      "elapsedMs": 10,
+      "elapsedMs": 9,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -269,7 +269,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 10
+          "elapsedMs": 9
         }
       ]
     },
@@ -328,7 +328,7 @@
       "level": 12,
       "status": "success",
       "ok": true,
-      "elapsedMs": 4,
+      "elapsedMs": 5,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -337,7 +337,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 4
+          "elapsedMs": 5
         }
       ]
     },
@@ -345,7 +345,7 @@
       "level": 13,
       "status": "success",
       "ok": true,
-      "elapsedMs": 5,
+      "elapsedMs": 7,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -354,7 +354,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 5
+          "elapsedMs": 7
         }
       ]
     },
@@ -379,7 +379,7 @@
       "level": 15,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2,
+      "elapsedMs": 3,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -388,7 +388,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 2
+          "elapsedMs": 3
         }
       ]
     },
@@ -396,7 +396,7 @@
       "level": 16,
       "status": "success",
       "ok": true,
-      "elapsedMs": 12,
+      "elapsedMs": 13,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -405,7 +405,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 12
+          "elapsedMs": 13
         }
       ]
     },
@@ -430,7 +430,7 @@
       "level": 18,
       "status": "success",
       "ok": true,
-      "elapsedMs": 0,
+      "elapsedMs": 2,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -439,7 +439,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 0
+          "elapsedMs": 2
         }
       ]
     },
@@ -447,7 +447,7 @@
       "level": 19,
       "status": "success",
       "ok": true,
-      "elapsedMs": 97,
+      "elapsedMs": 93,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -456,7 +456,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 97
+          "elapsedMs": 93
         }
       ]
     },
@@ -464,7 +464,7 @@
       "level": 20,
       "status": "success",
       "ok": true,
-      "elapsedMs": 15,
+      "elapsedMs": 18,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -473,7 +473,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 15
+          "elapsedMs": 18
         }
       ]
     },
@@ -506,7 +506,7 @@
       "level": 22,
       "status": "success",
       "ok": true,
-      "elapsedMs": 3,
+      "elapsedMs": 2,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -515,7 +515,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 3
+          "elapsedMs": 2
         }
       ]
     },
@@ -523,7 +523,7 @@
       "level": 23,
       "status": "success",
       "ok": true,
-      "elapsedMs": 4,
+      "elapsedMs": 3,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -532,7 +532,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 4
+          "elapsedMs": 3
         }
       ]
     },
@@ -540,7 +540,7 @@
       "level": 24,
       "status": "success",
       "ok": true,
-      "elapsedMs": 3,
+      "elapsedMs": 5,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -549,7 +549,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 3
+          "elapsedMs": 5
         }
       ]
     },
@@ -557,7 +557,7 @@
       "level": 25,
       "status": "success",
       "ok": true,
-      "elapsedMs": 5,
+      "elapsedMs": 7,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -566,7 +566,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 4
+          "elapsedMs": 7
         }
       ]
     },
@@ -574,7 +574,7 @@
       "level": 26,
       "status": "success",
       "ok": true,
-      "elapsedMs": 14115,
+      "elapsedMs": 14517,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -583,7 +583,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 906
+          "elapsedMs": 1045
         },
         {
           "gateKey": 131074,
@@ -591,7 +591,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 793
+          "elapsedMs": 988
         },
         {
           "gateKey": 131074,
@@ -599,7 +599,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 649
+          "elapsedMs": 767
         },
         {
           "gateKey": 131074,
@@ -607,7 +607,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 601
+          "elapsedMs": 751
         },
         {
           "gateKey": 131074,
@@ -615,7 +615,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1411
+          "elapsedMs": 1290
         },
         {
           "gateKey": 131074,
@@ -623,7 +623,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1410
+          "elapsedMs": 1290
         },
         {
           "gateKey": 131074,
@@ -631,7 +631,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1410
+          "elapsedMs": 1290
         },
         {
           "gateKey": 131074,
@@ -639,7 +639,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1410
+          "elapsedMs": 1290
         },
         {
           "gateKey": 131074,
@@ -647,7 +647,7 @@
           "template": null,
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 1410
+          "elapsedMs": 1290
         },
         {
           "gateKey": 458759,
@@ -655,7 +655,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 971
+          "elapsedMs": 1120
         },
         {
           "gateKey": 458759,
@@ -663,7 +663,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 918
+          "elapsedMs": 1036
         },
         {
           "gateKey": 458759,
@@ -671,7 +671,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 600
+          "elapsedMs": 697
         },
         {
           "gateKey": 458759,
@@ -679,7 +679,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 466
+          "elapsedMs": 571
         },
         {
           "gateKey": 458759,
@@ -687,7 +687,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1159
+          "elapsedMs": 1092
         }
       ]
     },
@@ -695,7 +695,7 @@
       "level": 27,
       "status": "success",
       "ok": true,
-      "elapsedMs": 23,
+      "elapsedMs": 28,
       "solvedBy": "portalFirstTransfer",
       "attempts": [
         {
@@ -704,7 +704,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 23
+          "elapsedMs": 28
         }
       ]
     },
@@ -712,7 +712,7 @@
       "level": 28,
       "status": "success",
       "ok": true,
-      "elapsedMs": 29,
+      "elapsedMs": 36,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -721,7 +721,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 29
+          "elapsedMs": 36
         }
       ]
     },
@@ -746,7 +746,7 @@
       "level": 30,
       "status": "success",
       "ok": true,
-      "elapsedMs": 1,
+      "elapsedMs": 4,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -755,7 +755,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1
+          "elapsedMs": 4
         }
       ]
     },
@@ -772,12 +772,63 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1
+          "elapsedMs": 2
         }
       ]
     },
     {
       "level": 32,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 9,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 9
+        }
+      ]
+    },
+    {
+      "level": 33,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 3,
+      "solvedBy": "nearClosureRescue",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 34,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 6,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 5,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 6
+        }
+      ]
+    },
+    {
+      "level": 35,
       "status": "success",
       "ok": true,
       "elapsedMs": 8,
@@ -794,14 +845,48 @@
       ]
     },
     {
-      "level": 33,
+      "level": 36,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 20,
+      "solvedBy": "nearClosureRescue",
+      "attempts": [
+        {
+          "gateKey": 524289,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 20
+        }
+      ]
+    },
+    {
+      "level": 37,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 22,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 262145,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 22
+        }
+      ]
+    },
+    {
+      "level": 38,
       "status": "success",
       "ok": true,
       "elapsedMs": 6,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
-          "gateKey": 65537,
+          "gateKey": 131078,
           "profile": "nearClosureRescue",
           "template": null,
           "beamWidth": null,
@@ -811,95 +896,10 @@
       ]
     },
     {
-      "level": 34,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 5,
-      "solvedBy": "perimeterSweep",
-      "attempts": [
-        {
-          "gateKey": 5,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 5
-        }
-      ]
-    },
-    {
-      "level": 35,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 7,
-      "solvedBy": "perimeterSweep",
-      "attempts": [
-        {
-          "gateKey": 5,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 7
-        }
-      ]
-    },
-    {
-      "level": 36,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 19,
-      "solvedBy": "nearClosureRescue",
-      "attempts": [
-        {
-          "gateKey": 524289,
-          "profile": "nearClosureRescue",
-          "template": null,
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 18
-        }
-      ]
-    },
-    {
-      "level": 37,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 17,
-      "solvedBy": "perimeterSweep",
-      "attempts": [
-        {
-          "gateKey": 262145,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 17
-        }
-      ]
-    },
-    {
-      "level": 38,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 5,
-      "solvedBy": "nearClosureRescue",
-      "attempts": [
-        {
-          "gateKey": 131078,
-          "profile": "nearClosureRescue",
-          "template": null,
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 5
-        }
-      ]
-    },
-    {
       "level": 39,
       "status": "success",
       "ok": true,
-      "elapsedMs": 4,
+      "elapsedMs": 6,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -908,7 +908,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 4
+          "elapsedMs": 5
         }
       ]
     },
@@ -916,7 +916,7 @@
       "level": 40,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2,
+      "elapsedMs": 3,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -925,7 +925,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 2
+          "elapsedMs": 3
         }
       ]
     },
@@ -933,7 +933,7 @@
       "level": 41,
       "status": "success",
       "ok": true,
-      "elapsedMs": 8,
+      "elapsedMs": 7,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -942,7 +942,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 8
+          "elapsedMs": 6
         }
       ]
     },
@@ -950,16 +950,16 @@
       "level": 42,
       "status": "success",
       "ok": true,
-      "elapsedMs": 9,
-      "solvedBy": "nearClosureRescue",
+      "elapsedMs": 189,
+      "solvedBy": "perimeterSweep",
       "attempts": [
         {
           "gateKey": 0,
-          "profile": "nearClosureRescue",
-          "template": null,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 9
+          "elapsedMs": 189
         }
       ]
     },
@@ -967,7 +967,7 @@
       "level": 43,
       "status": "success",
       "ok": true,
-      "elapsedMs": 12,
+      "elapsedMs": 13,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -976,7 +976,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 12
+          "elapsedMs": 13
         }
       ]
     },
@@ -984,7 +984,7 @@
       "level": 44,
       "status": "success",
       "ok": true,
-      "elapsedMs": 1,
+      "elapsedMs": 3,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -993,7 +993,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1
+          "elapsedMs": 3
         }
       ]
     },
@@ -1018,7 +1018,7 @@
       "level": 46,
       "status": "success",
       "ok": true,
-      "elapsedMs": 8,
+      "elapsedMs": 10,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1027,7 +1027,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 8
+          "elapsedMs": 10
         }
       ]
     },
@@ -1035,7 +1035,7 @@
       "level": 47,
       "status": "success",
       "ok": true,
-      "elapsedMs": 1428,
+      "elapsedMs": 3453,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1044,7 +1044,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 415
+          "elapsedMs": 527
         },
         {
           "gateKey": 131072,
@@ -1052,7 +1052,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 535
+          "elapsedMs": 629
         },
         {
           "gateKey": 131072,
@@ -1060,7 +1060,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 205
+          "elapsedMs": 246
         },
         {
           "gateKey": 131072,
@@ -1068,7 +1068,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 201
+          "elapsedMs": 250
         },
         {
           "gateKey": 131072,
@@ -1076,7 +1076,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 71
+          "elapsedMs": 1801
         }
       ]
     },
@@ -1084,7 +1084,7 @@
       "level": 48,
       "status": "success",
       "ok": true,
-      "elapsedMs": 40,
+      "elapsedMs": 45,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1093,7 +1093,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 40
+          "elapsedMs": 45
         }
       ]
     },
@@ -1101,7 +1101,7 @@
       "level": 49,
       "status": "success",
       "ok": true,
-      "elapsedMs": 5,
+      "elapsedMs": 6,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1110,7 +1110,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 5
+          "elapsedMs": 6
         }
       ]
     },
@@ -1118,7 +1118,7 @@
       "level": 50,
       "status": "success",
       "ok": true,
-      "elapsedMs": 29,
+      "elapsedMs": 31,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1127,7 +1127,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 29
+          "elapsedMs": 31
         }
       ]
     },
@@ -1144,7 +1144,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 8
+          "elapsedMs": 7
         }
       ]
     },
@@ -1152,7 +1152,7 @@
       "level": 52,
       "status": "success",
       "ok": true,
-      "elapsedMs": 7,
+      "elapsedMs": 8,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1161,7 +1161,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 7
+          "elapsedMs": 8
         }
       ]
     },
@@ -1169,7 +1169,7 @@
       "level": 53,
       "status": "success",
       "ok": true,
-      "elapsedMs": 19227,
+      "elapsedMs": 19350,
       "solvedBy": "mustCrossFirst",
       "attempts": [
         {
@@ -1218,7 +1218,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 476
+          "elapsedMs": 599
         }
       ]
     },
@@ -1226,7 +1226,7 @@
       "level": 54,
       "status": "success",
       "ok": true,
-      "elapsedMs": 30,
+      "elapsedMs": 36,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1235,7 +1235,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 30
+          "elapsedMs": 36
         }
       ]
     },
@@ -1243,7 +1243,7 @@
       "level": 55,
       "status": "success",
       "ok": true,
-      "elapsedMs": 14,
+      "elapsedMs": 15,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1252,7 +1252,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 14
+          "elapsedMs": 15
         }
       ]
     },
@@ -1260,7 +1260,7 @@
       "level": 56,
       "status": "success",
       "ok": true,
-      "elapsedMs": 61,
+      "elapsedMs": 80,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1269,7 +1269,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 61
+          "elapsedMs": 80
         }
       ]
     },
@@ -1277,7 +1277,7 @@
       "level": 57,
       "status": "success",
       "ok": true,
-      "elapsedMs": 115,
+      "elapsedMs": 132,
       "solvedBy": "portalFirstTransfer",
       "attempts": [
         {
@@ -1286,7 +1286,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 114
+          "elapsedMs": 132
         }
       ]
     },
@@ -1294,7 +1294,7 @@
       "level": 58,
       "status": "success",
       "ok": true,
-      "elapsedMs": 58,
+      "elapsedMs": 65,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1303,7 +1303,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 58
+          "elapsedMs": 65
         }
       ]
     },
@@ -1328,7 +1328,7 @@
       "level": 60,
       "status": "success",
       "ok": true,
-      "elapsedMs": 4,
+      "elapsedMs": 5,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1337,7 +1337,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 4
+          "elapsedMs": 5
         }
       ]
     },
@@ -1345,7 +1345,7 @@
       "level": 61,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2477,
+      "elapsedMs": 2948,
       "solvedBy": "intersectionHarvest",
       "attempts": [
         {
@@ -1354,7 +1354,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 1108
+          "elapsedMs": 1348
         },
         {
           "gateKey": 65537,
@@ -1362,7 +1362,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 1273
+          "elapsedMs": 1491
         },
         {
           "gateKey": 65537,
@@ -1370,7 +1370,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 96
+          "elapsedMs": 109
         }
       ]
     },
@@ -1378,79 +1378,11 @@
       "level": 62,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2,
-      "solvedBy": "perimeterSweep",
-      "attempts": [
-        {
-          "gateKey": 131072,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 2
-        }
-      ]
-    },
-    {
-      "level": 63,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 16,
-      "solvedBy": "perimeterSweep",
-      "attempts": [
-        {
-          "gateKey": 65537,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 15
-        }
-      ]
-    },
-    {
-      "level": 64,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 88,
-      "solvedBy": "perimeterSweep",
-      "attempts": [
-        {
-          "gateKey": 393221,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 88
-        }
-      ]
-    },
-    {
-      "level": 65,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 4,
-      "solvedBy": "portalFirstTransfer",
-      "attempts": [
-        {
-          "gateKey": 65537,
-          "profile": "portalFirstTransfer",
-          "template": null,
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 4
-        }
-      ]
-    },
-    {
-      "level": 66,
-      "status": "success",
-      "ok": true,
       "elapsedMs": 3,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
-          "gateKey": 327683,
+          "gateKey": 131072,
           "profile": "perimeterSweep",
           "template": "cornerHarvest",
           "beamWidth": null,
@@ -1460,31 +1392,82 @@
       ]
     },
     {
-      "level": 67,
+      "level": 63,
       "status": "success",
       "ok": true,
-      "elapsedMs": 43,
+      "elapsedMs": 14,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
-          "gateKey": 131075,
+          "gateKey": 65537,
           "profile": "perimeterSweep",
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 43
+          "elapsedMs": 13
         }
       ]
     },
     {
-      "level": 68,
+      "level": 64,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 95,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 393221,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 95
+        }
+      ]
+    },
+    {
+      "level": 65,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 10,
+      "solvedBy": "portalFirstTransfer",
+      "attempts": [
+        {
+          "gateKey": 65537,
+          "profile": "portalFirstTransfer",
+          "template": null,
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 10
+        }
+      ]
+    },
+    {
+      "level": 66,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 6,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 327683,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 6
+        }
+      ]
+    },
+    {
+      "level": 67,
       "status": "success",
       "ok": true,
       "elapsedMs": 48,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
-          "gateKey": 131074,
+          "gateKey": 131075,
           "profile": "perimeterSweep",
           "template": "cornerHarvest",
           "beamWidth": null,
@@ -1494,10 +1477,27 @@
       ]
     },
     {
+      "level": 68,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 53,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 131074,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 52
+        }
+      ]
+    },
+    {
       "level": 69,
       "status": "success",
       "ok": true,
-      "elapsedMs": 7,
+      "elapsedMs": 3,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1506,7 +1506,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 7
+          "elapsedMs": 3
         }
       ]
     },
@@ -1548,7 +1548,7 @@
       "level": 72,
       "status": "success",
       "ok": true,
-      "elapsedMs": 53,
+      "elapsedMs": 63,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1557,7 +1557,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 53
+          "elapsedMs": 63
         }
       ]
     },
@@ -1565,7 +1565,7 @@
       "level": 73,
       "status": "success",
       "ok": true,
-      "elapsedMs": 1064,
+      "elapsedMs": 1085,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1574,7 +1574,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1064
+          "elapsedMs": 1085
         }
       ]
     },
@@ -1582,7 +1582,7 @@
       "level": 74,
       "status": "success",
       "ok": true,
-      "elapsedMs": 503,
+      "elapsedMs": 506,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1591,7 +1591,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 503
+          "elapsedMs": 506
         }
       ]
     },
@@ -1599,7 +1599,7 @@
       "level": 75,
       "status": "success",
       "ok": true,
-      "elapsedMs": 8,
+      "elapsedMs": 10,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1608,7 +1608,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 7
+          "elapsedMs": 10
         }
       ]
     },
@@ -1616,7 +1616,7 @@
       "level": 76,
       "status": "success",
       "ok": true,
-      "elapsedMs": 71,
+      "elapsedMs": 80,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1625,7 +1625,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 71
+          "elapsedMs": 80
         }
       ]
     },
@@ -1633,7 +1633,7 @@
       "level": 77,
       "status": "success",
       "ok": true,
-      "elapsedMs": 21,
+      "elapsedMs": 24,
       "solvedBy": "portalFirstTransfer",
       "attempts": [
         {
@@ -1642,7 +1642,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 21
+          "elapsedMs": 24
         }
       ]
     },
@@ -1650,7 +1650,7 @@
       "level": 78,
       "status": "success",
       "ok": true,
-      "elapsedMs": 582,
+      "elapsedMs": 587,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1659,7 +1659,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 582
+          "elapsedMs": 587
         }
       ]
     },
@@ -1667,7 +1667,7 @@
       "level": 79,
       "status": "success",
       "ok": true,
-      "elapsedMs": 4000,
+      "elapsedMs": 4029,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1692,7 +1692,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 249
+          "elapsedMs": 278
         }
       ]
     },
@@ -1700,7 +1700,7 @@
       "level": 80,
       "status": "success",
       "ok": true,
-      "elapsedMs": 980,
+      "elapsedMs": 984,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1717,7 +1717,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 42
+          "elapsedMs": 46
         }
       ]
     },
@@ -1725,7 +1725,7 @@
       "level": 81,
       "status": "success",
       "ok": true,
-      "elapsedMs": 3,
+      "elapsedMs": 4,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1734,7 +1734,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 3
+          "elapsedMs": 4
         }
       ]
     },
@@ -1759,7 +1759,7 @@
       "level": 83,
       "status": "success",
       "ok": true,
-      "elapsedMs": 3,
+      "elapsedMs": 4,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1768,7 +1768,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 3
+          "elapsedMs": 4
         }
       ]
     },
@@ -1793,7 +1793,7 @@
       "level": 85,
       "status": "success",
       "ok": true,
-      "elapsedMs": 27,
+      "elapsedMs": 29,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1802,7 +1802,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 27
+          "elapsedMs": 29
         }
       ]
     },
@@ -1810,7 +1810,7 @@
       "level": 86,
       "status": "success",
       "ok": true,
-      "elapsedMs": 19,
+      "elapsedMs": 21,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1819,7 +1819,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 19
+          "elapsedMs": 21
         }
       ]
     },
@@ -1845,12 +1845,12 @@
       "status": "success",
       "ok": true,
       "elapsedMs": 2,
-      "solvedBy": "nearClosureRescue",
+      "solvedBy": "perimeterSweep",
       "attempts": [
         {
           "gateKey": 393218,
-          "profile": "nearClosureRescue",
-          "template": null,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
           "elapsedMs": 2
@@ -1861,7 +1861,7 @@
       "level": 89,
       "status": "success",
       "ok": true,
-      "elapsedMs": 6,
+      "elapsedMs": 9,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1870,7 +1870,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 6
+          "elapsedMs": 9
         }
       ]
     },
@@ -1878,7 +1878,7 @@
       "level": 90,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2,
+      "elapsedMs": 4,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1887,7 +1887,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 2
+          "elapsedMs": 4
         }
       ]
     },
@@ -1895,7 +1895,7 @@
       "level": 91,
       "status": "success",
       "ok": true,
-      "elapsedMs": 3,
+      "elapsedMs": 4,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1904,7 +1904,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 3
+          "elapsedMs": 4
         }
       ]
     },
@@ -1912,7 +1912,7 @@
       "level": 92,
       "status": "success",
       "ok": true,
-      "elapsedMs": 6957,
+      "elapsedMs": 8284,
       "solvedBy": "objectiveFirst",
       "attempts": [
         {
@@ -1921,7 +1921,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": false,
-          "elapsedMs": 3599
+          "elapsedMs": 4180
         },
         {
           "gateKey": 393217,
@@ -1929,7 +1929,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 3358
+          "elapsedMs": 4104
         }
       ]
     },
@@ -1937,7 +1937,7 @@
       "level": 93,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1954,7 +1954,7 @@
       "level": 94,
       "status": "success",
       "ok": true,
-      "elapsedMs": 1,
+      "elapsedMs": 2,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -1963,7 +1963,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1
+          "elapsedMs": 2
         }
       ]
     },
@@ -1971,7 +1971,7 @@
       "level": 95,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1988,7 +1988,7 @@
       "level": 96,
       "status": "success",
       "ok": true,
-      "elapsedMs": 35,
+      "elapsedMs": 40,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -1997,7 +1997,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 35
+          "elapsedMs": 40
         }
       ]
     },
@@ -2005,62 +2005,11 @@
       "level": 97,
       "status": "success",
       "ok": true,
-      "elapsedMs": 7,
-      "solvedBy": "nearClosureRescue",
-      "attempts": [
-        {
-          "gateKey": 65540,
-          "profile": "nearClosureRescue",
-          "template": null,
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 7
-        }
-      ]
-    },
-    {
-      "level": 98,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 13,
-      "solvedBy": "nearClosureRescue",
-      "attempts": [
-        {
-          "gateKey": 65541,
-          "profile": "nearClosureRescue",
-          "template": null,
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 13
-        }
-      ]
-    },
-    {
-      "level": 99,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 4,
-      "solvedBy": "nearClosureRescue",
-      "attempts": [
-        {
-          "gateKey": 65538,
-          "profile": "nearClosureRescue",
-          "template": null,
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 4
-        }
-      ]
-    },
-    {
-      "level": 100,
-      "status": "success",
-      "ok": true,
       "elapsedMs": 9,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
-          "gateKey": 131080,
+          "gateKey": 65540,
           "profile": "nearClosureRescue",
           "template": null,
           "beamWidth": null,
@@ -2070,10 +2019,61 @@
       ]
     },
     {
+      "level": 98,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 17,
+      "solvedBy": "nearClosureRescue",
+      "attempts": [
+        {
+          "gateKey": 65541,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 17
+        }
+      ]
+    },
+    {
+      "level": 99,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 5,
+      "solvedBy": "nearClosureRescue",
+      "attempts": [
+        {
+          "gateKey": 65538,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 5
+        }
+      ]
+    },
+    {
+      "level": 100,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 10,
+      "solvedBy": "nearClosureRescue",
+      "attempts": [
+        {
+          "gateKey": 131080,
+          "profile": "nearClosureRescue",
+          "template": null,
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 10
+        }
+      ]
+    },
+    {
       "level": 101,
       "status": "success",
       "ok": true,
-      "elapsedMs": 3,
+      "elapsedMs": 4,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2082,7 +2082,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 3
+          "elapsedMs": 4
         }
       ]
     },
@@ -2090,7 +2090,7 @@
       "level": 102,
       "status": "success",
       "ok": true,
-      "elapsedMs": 22,
+      "elapsedMs": 24,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2099,7 +2099,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 22
+          "elapsedMs": 24
         }
       ]
     },
@@ -2124,7 +2124,7 @@
       "level": 104,
       "status": "success",
       "ok": true,
-      "elapsedMs": 15,
+      "elapsedMs": 18,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2133,7 +2133,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 15
+          "elapsedMs": 18
         }
       ]
     },
@@ -2141,7 +2141,7 @@
       "level": 105,
       "status": "success",
       "ok": true,
-      "elapsedMs": 4,
+      "elapsedMs": 5,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2150,7 +2150,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 3
+          "elapsedMs": 4
         }
       ]
     },
@@ -2158,7 +2158,7 @@
       "level": 106,
       "status": "success",
       "ok": true,
-      "elapsedMs": 941,
+      "elapsedMs": 943,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2175,7 +2175,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 3
+          "elapsedMs": 5
         }
       ]
     },
@@ -2200,7 +2200,7 @@
       "level": 108,
       "status": "success",
       "ok": true,
-      "elapsedMs": 539,
+      "elapsedMs": 585,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2209,7 +2209,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 539
+          "elapsedMs": 585
         }
       ]
     },
@@ -2217,7 +2217,7 @@
       "level": 109,
       "status": "success",
       "ok": true,
-      "elapsedMs": 7,
+      "elapsedMs": 5,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2226,7 +2226,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 7
+          "elapsedMs": 5
         }
       ]
     },
@@ -2293,28 +2293,11 @@
       "level": 113,
       "status": "success",
       "ok": true,
-      "elapsedMs": 3,
-      "solvedBy": "perimeterSweep",
-      "attempts": [
-        {
-          "gateKey": 5,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 3
-        }
-      ]
-    },
-    {
-      "level": 114,
-      "status": "success",
-      "ok": true,
       "elapsedMs": 8,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
-          "gateKey": 1,
+          "gateKey": 5,
           "profile": "perimeterSweep",
           "template": "cornerHarvest",
           "beamWidth": null,
@@ -2324,10 +2307,27 @@
       ]
     },
     {
+      "level": 114,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 6,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 1,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 6
+        }
+      ]
+    },
+    {
       "level": 115,
       "status": "success",
       "ok": true,
-      "elapsedMs": 9,
+      "elapsedMs": 11,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2336,7 +2336,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 9
+          "elapsedMs": 11
         }
       ]
     },
@@ -2361,7 +2361,7 @@
       "level": 117,
       "status": "success",
       "ok": true,
-      "elapsedMs": 18,
+      "elapsedMs": 24,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2370,7 +2370,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 18
+          "elapsedMs": 24
         }
       ]
     },
@@ -2395,7 +2395,7 @@
       "level": 119,
       "status": "success",
       "ok": true,
-      "elapsedMs": 14,
+      "elapsedMs": 15,
       "solvedBy": "portalFirstTransfer",
       "attempts": [
         {
@@ -2404,7 +2404,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 14
+          "elapsedMs": 15
         }
       ]
     },
@@ -2412,7 +2412,7 @@
       "level": 120,
       "status": "success",
       "ok": true,
-      "elapsedMs": 1,
+      "elapsedMs": 2,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2421,7 +2421,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1
+          "elapsedMs": 2
         }
       ]
     },
@@ -2446,7 +2446,7 @@
       "level": 122,
       "status": "success",
       "ok": true,
-      "elapsedMs": 5,
+      "elapsedMs": 7,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2455,7 +2455,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 5
+          "elapsedMs": 7
         }
       ]
     },
@@ -2464,12 +2464,12 @@
       "status": "success",
       "ok": true,
       "elapsedMs": 3,
-      "solvedBy": "nearClosureRescue",
+      "solvedBy": "perimeterSweep",
       "attempts": [
         {
           "gateKey": 65544,
-          "profile": "nearClosureRescue",
-          "template": null,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
           "elapsedMs": 3
@@ -2480,7 +2480,7 @@
       "level": 124,
       "status": "success",
       "ok": true,
-      "elapsedMs": 7,
+      "elapsedMs": 8,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2489,7 +2489,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 7
+          "elapsedMs": 8
         }
       ]
     },
@@ -2497,7 +2497,7 @@
       "level": 125,
       "status": "success",
       "ok": true,
-      "elapsedMs": 4,
+      "elapsedMs": 5,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2506,7 +2506,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 4
+          "elapsedMs": 5
         }
       ]
     },
@@ -2514,16 +2514,16 @@
       "level": 126,
       "status": "success",
       "ok": true,
-      "elapsedMs": 523,
-      "solvedBy": "nearClosureRescue",
+      "elapsedMs": 5,
+      "solvedBy": "perimeterSweep",
       "attempts": [
         {
           "gateKey": 131074,
-          "profile": "nearClosureRescue",
-          "template": null,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 523
+          "elapsedMs": 5
         }
       ]
     },
@@ -2531,7 +2531,7 @@
       "level": 127,
       "status": "success",
       "ok": true,
-      "elapsedMs": 11,
+      "elapsedMs": 14,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2540,7 +2540,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 10
+          "elapsedMs": 14
         }
       ]
     },
@@ -2548,7 +2548,7 @@
       "level": 128,
       "status": "success",
       "ok": true,
-      "elapsedMs": 84,
+      "elapsedMs": 98,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2557,7 +2557,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 84
+          "elapsedMs": 98
         }
       ]
     },
@@ -2565,7 +2565,7 @@
       "level": 129,
       "status": "success",
       "ok": true,
-      "elapsedMs": 10,
+      "elapsedMs": 14,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2574,7 +2574,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 10
+          "elapsedMs": 14
         }
       ]
     },
@@ -2582,7 +2582,7 @@
       "level": 130,
       "status": "success",
       "ok": true,
-      "elapsedMs": 1719,
+      "elapsedMs": 2099,
       "solvedBy": "intersectionHarvest",
       "attempts": [
         {
@@ -2591,7 +2591,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 564
+          "elapsedMs": 689
         },
         {
           "gateKey": 0,
@@ -2599,7 +2599,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 540
+          "elapsedMs": 664
         },
         {
           "gateKey": 0,
@@ -2607,7 +2607,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": true,
-          "elapsedMs": 614
+          "elapsedMs": 746
         }
       ]
     },
@@ -2632,11 +2632,28 @@
       "level": 132,
       "status": "success",
       "ok": true,
-      "elapsedMs": 5,
+      "elapsedMs": 4,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
           "gateKey": 196612,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 4
+        }
+      ]
+    },
+    {
+      "level": 133,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 5,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 458759,
           "profile": "perimeterSweep",
           "template": "cornerHarvest",
           "beamWidth": null,
@@ -2646,27 +2663,10 @@
       ]
     },
     {
-      "level": 133,
-      "status": "success",
-      "ok": true,
-      "elapsedMs": 1,
-      "solvedBy": "perimeterSweep",
-      "attempts": [
-        {
-          "gateKey": 458759,
-          "profile": "perimeterSweep",
-          "template": "cornerHarvest",
-          "beamWidth": null,
-          "ok": true,
-          "elapsedMs": 1
-        }
-      ]
-    },
-    {
       "level": 134,
       "status": "success",
       "ok": true,
-      "elapsedMs": 8,
+      "elapsedMs": 5,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2675,7 +2675,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 7
+          "elapsedMs": 4
         }
       ]
     },
@@ -2683,7 +2683,7 @@
       "level": 135,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2,
+      "elapsedMs": 3,
       "solvedBy": "portalFirstTransfer",
       "attempts": [
         {
@@ -2692,7 +2692,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 2
+          "elapsedMs": 3
         }
       ]
     },
@@ -2700,7 +2700,7 @@
       "level": 136,
       "status": "success",
       "ok": true,
-      "elapsedMs": 6,
+      "elapsedMs": 10,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2709,7 +2709,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 6
+          "elapsedMs": 10
         }
       ]
     },
@@ -2717,7 +2717,7 @@
       "level": 137,
       "status": "success",
       "ok": true,
-      "elapsedMs": 7,
+      "elapsedMs": 6,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2734,7 +2734,7 @@
       "level": 138,
       "status": "success",
       "ok": true,
-      "elapsedMs": 3002,
+      "elapsedMs": 3785,
       "solvedBy": "intersectionHarvest",
       "attempts": [
         {
@@ -2743,7 +2743,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 3002
+          "elapsedMs": 3785
         }
       ]
     },
@@ -2751,7 +2751,7 @@
       "level": 139,
       "status": "success",
       "ok": true,
-      "elapsedMs": 1426,
+      "elapsedMs": 1689,
       "solvedBy": "intersectionHarvest",
       "attempts": [
         {
@@ -2760,7 +2760,7 @@
           "template": null,
           "beamWidth": 5000,
           "ok": true,
-          "elapsedMs": 1426
+          "elapsedMs": 1689
         }
       ]
     },
@@ -2768,7 +2768,7 @@
       "level": 140,
       "status": "success",
       "ok": true,
-      "elapsedMs": 22226,
+      "elapsedMs": 26645,
       "solvedBy": "intersectionHarvest",
       "attempts": [
         {
@@ -2777,7 +2777,7 @@
           "template": null,
           "beamWidth": 50000,
           "ok": true,
-          "elapsedMs": 22226
+          "elapsedMs": 26644
         }
       ]
     },
@@ -2785,7 +2785,7 @@
       "level": 141,
       "status": "success",
       "ok": true,
-      "elapsedMs": 13,
+      "elapsedMs": 9,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2794,7 +2794,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 13
+          "elapsedMs": 8
         }
       ]
     },
@@ -2802,7 +2802,7 @@
       "level": 142,
       "status": "success",
       "ok": true,
-      "elapsedMs": 292,
+      "elapsedMs": 334,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2811,7 +2811,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 292
+          "elapsedMs": 334
         }
       ]
     },
@@ -2819,7 +2819,7 @@
       "level": 143,
       "status": "success",
       "ok": true,
-      "elapsedMs": 13717,
+      "elapsedMs": 14045,
       "solvedBy": "objectiveFirst",
       "attempts": [
         {
@@ -2828,7 +2828,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 797
+          "elapsedMs": 941
         },
         {
           "gateKey": 0,
@@ -2836,7 +2836,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 796
+          "elapsedMs": 955
         },
         {
           "gateKey": 0,
@@ -2844,7 +2844,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 542
+          "elapsedMs": 672
         },
         {
           "gateKey": 0,
@@ -2852,7 +2852,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 513
+          "elapsedMs": 611
         },
         {
           "gateKey": 0,
@@ -2860,7 +2860,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 5471
+          "elapsedMs": 5365
         },
         {
           "gateKey": 0,
@@ -2868,7 +2868,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 5471
+          "elapsedMs": 5365
         },
         {
           "gateKey": 0,
@@ -2876,7 +2876,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 126
+          "elapsedMs": 136
         }
       ]
     },
@@ -2884,7 +2884,7 @@
       "level": 144,
       "status": "success",
       "ok": true,
-      "elapsedMs": 17,
+      "elapsedMs": 19,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2893,7 +2893,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 16
+          "elapsedMs": 19
         }
       ]
     },
@@ -2901,7 +2901,7 @@
       "level": 145,
       "status": "success",
       "ok": true,
-      "elapsedMs": 45,
+      "elapsedMs": 46,
       "solvedBy": "nearClosureRescue",
       "attempts": [
         {
@@ -2910,7 +2910,7 @@
           "template": null,
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 45
+          "elapsedMs": 46
         }
       ]
     },
@@ -2918,7 +2918,7 @@
       "level": 146,
       "status": "success",
       "ok": true,
-      "elapsedMs": 2,
+      "elapsedMs": 1,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2927,7 +2927,7 @@
           "template": "cornerHarvest",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 1
+          "elapsedMs": 0
         }
       ]
     },
@@ -2935,7 +2935,7 @@
       "level": 147,
       "status": "success",
       "ok": true,
-      "elapsedMs": 7492,
+      "elapsedMs": 7832,
       "solvedBy": "perimeterSweep",
       "attempts": [
         {
@@ -2944,7 +2944,7 @@
           "template": "perimeterCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 259
+          "elapsedMs": 326
         },
         {
           "gateKey": 0,
@@ -2952,7 +2952,7 @@
           "template": "perimeterCCW",
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 342
+          "elapsedMs": 421
         },
         {
           "gateKey": 0,
@@ -2960,7 +2960,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 339
+          "elapsedMs": 427
         },
         {
           "gateKey": 0,
@@ -2968,7 +2968,7 @@
           "template": null,
           "beamWidth": 2000,
           "ok": false,
-          "elapsedMs": 416
+          "elapsedMs": 518
         },
         {
           "gateKey": 0,
@@ -2976,7 +2976,7 @@
           "template": "perimeterCW",
           "beamWidth": null,
           "ok": false,
-          "elapsedMs": 5729
+          "elapsedMs": 5662
         },
         {
           "gateKey": 0,
@@ -2984,7 +2984,7 @@
           "template": "perimeterCCW",
           "beamWidth": null,
           "ok": true,
-          "elapsedMs": 407
+          "elapsedMs": 478
         }
       ]
     },
