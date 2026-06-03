@@ -236,6 +236,7 @@ function prepLevel(level) {
     // Objectives = must-pass + must-cross (for scoring)
     prep.objectiveKeys = Array.from(new Set([...level.mustPassKeys, ...level.mustCrossKeys]));
     prep.objectiveDistMaps = prep.objectiveKeys.map(k => buildDistMap(level, [k]));
+    prep.objectiveKeyToIndex = new Map(prep.objectiveKeys.map((k, i) => [k, i]));
 
     // Approach-cell distance maps for must-cross 2nd visits.
     // After the 1st pass via axis A, the 2nd pass must enter from axis B.
@@ -279,21 +280,25 @@ function prepLevel(level) {
         }
     }
 
+    // Cache initial BigInt masks so createState / _beamResetState avoid recomputing them.
+    const _mpN = level.mustPassKeys.length, _mcN = level.mustCrossKeys.length;
+    prep.initialMustMask      = _mpN > 0 ? ((1n << BigInt(_mpN)) - 1n) : 0n;
+    prep.initialMustCrossMask = _mcN > 0 ? ((1n << BigInt(_mcN)) - 1n) : 0n;
+
     return prep;
 }
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
 function createState(startKey, level, prep) {
-    const n = prep.mustPassKeys ? level.mustPassKeys.length : 0;
     const cn = level.mustCrossKeys.length;
     const state = {
         path: [startKey],
         visited:    new Uint16Array(KEY_SPACE),   // visit count per cell
         edgeUsage:  new Uint8Array(KEY_SPACE),    // bit1=H used, bit2=V used
         ints:       0,
-        mustMask:   n  > 0 ? ((1n << BigInt(n))  - 1n) : 0n,
-        mustCrossMask: cn > 0 ? ((1n << BigInt(cn)) - 1n) : 0n,
+        mustMask:      0n,                        // DFS uses heuristic guidance; beam uses _beamResetState
+        mustCrossMask: prep.initialMustCrossMask,
         crossCounts:   new Uint8Array(cn),
         portalJumps:   0,
         flipperCounts: new Uint8Array(KEY_SPACE), // how many times each flipper cell crossed
@@ -824,7 +829,7 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
             const satisfied = (mpIdx !== undefined && (state.mustMask & (1n << BigInt(mpIdx))) === 0n)
                            || (mcIdx !== undefined && (state.mustCrossMask & (1n << BigInt(mcIdx))) === 0n);
             if (satisfied) continue;
-            const d = prep.objectiveDistMaps[prep.objectiveKeys.indexOf(objKey)]?.get(target) ?? Infinity;
+            const d = prep.objectiveDistMaps[prep.objectiveKeyToIndex.get(objKey)].get(target) ?? Infinity;
             if (Number.isFinite(d)) bestObjDist = Math.min(bestObjDist, d);
         }
         if (Number.isFinite(bestObjDist)) {
@@ -1083,9 +1088,8 @@ function _beamResetState(ws, startKey, level, prep) {
     }
     wsP.length = 1; wsP[0] = startKey;
     ws.ints = 0; ws.portalJumps = 0; ws.lastWasPortalJump = false;
-    const n = level.mustPassKeys.length, cn = level.mustCrossKeys.length;
-    ws.mustMask      = n  > 0 ? ((1n << BigInt(n))  - 1n) : 0n;
-    ws.mustCrossMask = cn > 0 ? ((1n << BigInt(cn)) - 1n) : 0n;
+    ws.mustMask      = prep.initialMustMask;
+    ws.mustCrossMask = prep.initialMustCrossMask;
     ws.crossCounts.fill(0);
     ws.visited[startKey] = 1;
     const mpIdx = prep.mustPassIndex.get(startKey);
@@ -1224,9 +1228,11 @@ function getAttemptConfigs(level) {
     const density = area > 0 ? level.reqLen / area : 0;
 
     // Near-closure: the path is a near-loop — goal attraction dominates.
+    // harvestThenFinish placed 2nd (after nearClosureRescue) to handle single-gate
+    // near-closure levels like L108 without wasting budget on finishFirst/perimeterSweep.
     if (arch === 'near-closure') {
-        const closureFirst = ['nearClosureRescue', 'finishFirst', 'perimeterSweep',
-            ...PROFILE_ORDER.filter(p => !['nearClosureRescue', 'finishFirst', 'perimeterSweep'].includes(p))];
+        const closureFirst = ['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep',
+            ...PROFILE_ORDER.filter(p => !['nearClosureRescue', 'harvestThenFinish', 'finishFirst', 'perimeterSweep'].includes(p))];
         return [
             ...closureFirst.map(p => ({ profileName: p, template: null })),
             ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
@@ -1324,49 +1330,76 @@ async function solveLevelV2(level, opts = {}) {
         if (feasible.length > 0) activeGates = feasible;
     }
 
-    // Budget scheme: fair-share per gate with redistribution.
-    // Each gate gets floor(remaining_time / remaining_gates). Fast-finishing gates
-    // donate their saved time to later gates. This ensures no single gate can
-    // monopolise the budget (e.g. a 2-gate level always sees both gates).
-    outer:
-    for (let gi = 0; gi < activeGates.length; gi++) {
-        const gateKey     = activeGates[gi];
-        const gateElapsed = Date.now() - levelStartTime;
-        if (gateElapsed >= timeBudgetMs) break outer;
+    // Near-closure with multiple gates: interleave configs across gates (config-outer,
+    // gate-inner). This prevents Gate 1 exhausting its full budget before Gate 2 ever
+    // gets to try Config 1 — crucial when Gate 1 is structurally infeasible but parity-
+    // feasible (L21, L106, L111): Gate 2 solves in ~10ms via nearClosureRescue but would
+    // otherwise wait 15s while Gate 1 cycles through all 16 configs.
+    const arch = detectArchetype(level);
+    if (arch === 'near-closure' && activeGates.length > 1) {
+        let pairsLeft = baseConfigs.length * activeGates.length;
+        outer:
+        for (let ci = 0; ci < baseConfigs.length; ci++) {
+            for (let gi = 0; gi < activeGates.length; gi++) {
+                const elapsed = Date.now() - levelStartTime;
+                if (elapsed >= timeBudgetMs) break outer;
+                const attBudget = Math.floor((timeBudgetMs - elapsed) / pairsLeft);
+                if (attBudget < 50) break outer;
 
-        const gateStart   = Date.now();
-        const timeLeft    = timeBudgetMs - gateElapsed;
-        const gatesLeft   = activeGates.length - gi;
-        const gateBudget  = Math.floor(timeLeft / gatesLeft);
+                const gateKey = activeGates[gi];
+                const { profileName, template, beamWidth } = baseConfigs[ci];
+                const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
+                const attStart = Date.now();
+                let path = null;
+                try {
+                    path = beamWidth
+                        ? beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth)
+                        : dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
+                } catch (_) {}
+                const attMs = Date.now() - attStart;
+                attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, beamWidth: beamWidth ?? null, ok: !!path, elapsedMs: attMs });
+                pairsLeft--;
+                if (path) { solution = path; break outer; }
+            }
+        }
+    } else {
+        // Budget scheme: fair-share per gate with redistribution.
+        // Each gate gets floor(remaining_time / remaining_gates). Fast-finishing gates
+        // donate their saved time to later gates.
+        outer:
+        for (let gi = 0; gi < activeGates.length; gi++) {
+            const gateKey     = activeGates[gi];
+            const gateElapsed = Date.now() - levelStartTime;
+            if (gateElapsed >= timeBudgetMs) break outer;
 
-        // Use all template configs — perimeter templates apply once the path reaches
-        // the edge (even from interior starts) so they are always worth trying.
-        const configs = baseConfigs;
+            const gateStart  = Date.now();
+            const timeLeft   = timeBudgetMs - gateElapsed;
+            const gatesLeft  = activeGates.length - gi;
+            const gateBudget = Math.floor(timeLeft / gatesLeft);
 
-        // Fair-share budgeting: each attempt i gets floor(remaining / remaining_count).
-        // A fast-failing attempt cascades its unused time to later attempts naturally.
-        for (let ci = 0; ci < configs.length; ci++) {
-            const elapsed = Date.now() - gateStart;
-            if (elapsed >= gateBudget) break;
+            for (let ci = 0; ci < baseConfigs.length; ci++) {
+                const elapsed = Date.now() - gateStart;
+                if (elapsed >= gateBudget) break;
 
-            const remaining      = gateBudget - elapsed;
-            const attemptsLeft   = configs.length - ci;
-            const attBudget      = Math.floor(remaining / attemptsLeft);
-            if (attBudget < 50) break; // too little time left to be useful
+                const remaining    = gateBudget - elapsed;
+                const attemptsLeft = baseConfigs.length - ci;
+                const attBudget    = Math.floor(remaining / attemptsLeft);
+                if (attBudget < 50) break;
 
-            const { profileName, template, beamWidth } = configs[ci];
-            const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
-            const attStart = Date.now();
-            let path = null;
-            try {
-                path = beamWidth
-                    ? beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth)
-                    : dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
-            } catch (_) {}
+                const { profileName, template, beamWidth } = baseConfigs[ci];
+                const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
+                const attStart = Date.now();
+                let path = null;
+                try {
+                    path = beamWidth
+                        ? beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth)
+                        : dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
+                } catch (_) {}
 
-            const attMs = Date.now() - attStart;
-            attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, beamWidth: beamWidth ?? null, ok: !!path, elapsedMs: attMs });
-            if (path) { solution = path; break outer; }
+                const attMs = Date.now() - attStart;
+                attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, beamWidth: beamWidth ?? null, ok: !!path, elapsedMs: attMs });
+                if (path) { solution = path; break outer; }
+            }
         }
     }
 
