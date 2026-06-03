@@ -1069,6 +1069,121 @@ function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, levelStar
     return path;
 }
 
+// ─── Beam search ─────────────────────────────────────────────────────────────
+
+// Reset ws back to start-of-level (single occupied cell: startKey).
+// Zeros only the cells in ws.path (O(path_length)), not the full KEY_SPACE arrays.
+function _beamResetState(ws, startKey, level, prep) {
+    const wsP = ws.path, wsN = wsP.length;
+    for (let i = 0; i < wsN; i++) {
+        const k = wsP[i];
+        ws.visited[k]   = 0;
+        ws.edgeUsage[k] = 0;
+        if (ws.flipperCounts[k]) ws.flipperCounts[k] = 0;
+    }
+    wsP.length = 1; wsP[0] = startKey;
+    ws.ints = 0; ws.portalJumps = 0; ws.lastWasPortalJump = false;
+    const n = level.mustPassKeys.length, cn = level.mustCrossKeys.length;
+    ws.mustMask      = n  > 0 ? ((1n << BigInt(n))  - 1n) : 0n;
+    ws.mustCrossMask = cn > 0 ? ((1n << BigInt(cn)) - 1n) : 0n;
+    ws.crossCounts.fill(0);
+    ws.visited[startKey] = 1;
+    const mpIdx = prep.mustPassIndex.get(startKey);
+    if (mpIdx !== undefined) ws.mustMask &= ~(1n << BigInt(mpIdx));
+    const mcIdx = prep.mustCrossIndex.get(startKey);
+    if (mcIdx !== undefined) ws.crossCounts[mcIdx] = 1;
+    if (level.flippingFilterMap.has(startKey)) ws.flipperCounts[startKey]++;
+}
+
+// Synchronous beam search: maintain a frontier of up to `beamWidth` partial paths,
+// all at the same depth. At each step expand every frontier state, score all valid
+// one-step extensions, and keep the top-beamWidth by cumulative score.
+// Uses a single reusable mutable state (KEY_SPACE arrays allocated once, cells
+// zeroed per-frontier-state via _beamResetState) to avoid repeated large allocations.
+function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth) {
+    const ws = createState(startKey, level, prep);
+    let frontier = [{ path: [startKey], score: 0 }];
+
+    while (frontier.length > 0) {
+        if (Date.now() - startTime > budgetMs) return null;
+
+        const cands = [];
+
+        for (const { path, score: acc } of frontier) {
+            // Reset ws to startKey state, then replay this frontier path.
+            _beamResetState(ws, startKey, level, prep);
+            for (let i = 1; i < path.length; i++) {
+                const from = path[i - 1], to = path[i];
+                const p = level.portalMap.get(from);
+                const isJump = !!(p && !ws.lastWasPortalJump && p.dest === to);
+                applyMove(to, ws, level, prep, isJump);
+            }
+
+            const pos = path[path.length - 1];
+            if (pos === level.goalKey) {
+                if (isSolution(ws, level)) return path;
+                continue;
+            }
+
+            const neighbors = getNeighbors(pos, ws, level, prep);
+            for (const next of neighbors) {
+                const pAtPos = level.portalMap.get(pos);
+                const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
+                const undo = applyMove(next, ws, level, prep, isJump);
+                const realLen = ws.path.length - 1 - ws.portalJumps;
+                const rSteps  = level.reqLen - realLen;
+                let ok = realLen <= level.reqLen && ws.ints <= level.reqInt;
+
+                if (ok && ws.mustCrossMask !== 0n) {
+                    let mcR = 0, m = ws.mustCrossMask;
+                    while (m) { mcR += Number(m & 1n); m >>= 1n; }
+                    if (ws.ints + mcR > level.reqInt) ok = false;
+                }
+                if (ok && next === level.goalKey) {
+                    if (isSolution(ws, level)) { undoMove(undo, ws); return [...path, next]; }
+                    ok = false;
+                }
+                if (ok) {
+                    const gd = prep.distMap.get(next) ?? Infinity;
+                    if (!Number.isFinite(gd) || gd > rSteps) ok = false;
+                }
+                if (ok && level.portalMap.size === 0) {
+                    const pp = ((next & 0xFFFF) + ((next >>> 16) & 0xFFFF)) & 1;
+                    const gp = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
+                    if ((realLen === 1 || level.blockSet.size >= 10) && ((pp ^ gp ^ (rSteps & 1)) !== 0)) ok = false;
+                }
+                if (ok && ws.mustMask !== 0n) {
+                    const lb = mustPassLowerBound(next, ws, level, prep);
+                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
+                }
+                if (ok && ws.mustCrossMask !== 0n) {
+                    const lb = mustCrossLowerBound(next, ws, level, prep);
+                    if (!Number.isFinite(lb) || lb > rSteps) ok = false;
+                }
+                if (ok && (level.reqInt - ws.ints) > rSteps) ok = false;
+                // Connectivity: check near end and every 8 path steps (catches dead ends early).
+                if (ok && (rSteps <= 20 || (realLen & 7) === 0)) {
+                    if (!isConnected(next, ws, level, prep)) ok = false;
+                }
+                if (ok) {
+                    const mv = scoreMoveV2(next, pos, ws, level, prep, profile, rSteps, template);
+                    cands.push({ path: [...path, next], score: acc + mv });
+                }
+                undoMove(undo, ws);
+            }
+        }
+
+        if (cands.length === 0) break;
+        if (cands.length > beamWidth) {
+            cands.sort((a, b) => b.score - a.score);
+            frontier = cands.slice(0, beamWidth);
+        } else {
+            frontier = cands;
+        }
+    }
+    return null;
+}
+
 // Sort neighbors in-place: best-first at index 0 (DFS iterates with childIdx++).
 function scoreAndSort(neighbors, pos, state, level, prep, profile, template) {
     if (neighbors.length <= 1) return;
@@ -1121,22 +1236,26 @@ function getAttemptConfigs(level) {
     // High-intersection: two sub-cases split by reqInt.
     if (arch === 'high-intersection-burden') {
         if (level.reqInt >= 7) {
-            // Very high reqInt (L61=8, L92=8, L138=8, L139=11): intersectionHarvest needs
-            // maximum time. V1 uses 20s for L92, 14s for L138, 5.6s for L139 — with only
-            // 2 configs each gets 15s, insufficient for L92. Single intersectionHarvest
-            // config gets the full 30s budget; if it fails early, objectiveFirst gets surplus.
-            // V1 solved L138 (14.5s) and L139 (5.6s) with objectiveFirst ordering +
-            // intersectionHarvest profile; adding objectiveFirst as 2nd attempt.
+            // Very high reqInt (L61=8, L92=8, L138=8, L139=11).
+            // V1 needed 20s (L92), 14.5s (L138), 5.6s (L139) using beam search.
+            // Beam search placed first so it receives maximum budget; DFS fallbacks
+            // cover L61 (solves in 75ms via DFS intersectionHarvest).
             return [
+                { profileName: 'intersectionHarvest', template: null, beamWidth: 5000 },
+                { profileName: 'objectiveFirst',      template: null, beamWidth: 5000 },
                 { profileName: 'intersectionHarvest', template: null },
                 { profileName: 'objectiveFirst',      template: null },
             ];
         }
-        // Medium-high reqInt (L130=6, L143=5, L147=4): perimeter templates work
-        // (V1: L143 via perimeterCCW 1.7s, L130 via perimeterCW 0.4s).
-        // V1 solved L130 via objectiveFirst+perimeterCW in 362ms; add template-free
-        // objectiveFirst so pure objective urgency can guide without template fighting it.
+        // Medium-high reqInt (L130=6, L143=5, L147=4).
+        // V1 solved L130 in 362ms via perimeterCW template; L143 via perimeterCCW 1.7s.
+        // Beam variants placed first so they receive the larger share of budget;
+        // DFS fallbacks cover L143/L147 which already pass via DFS.
         return [
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW,  beamWidth: 2000 },
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW, beamWidth: 2000 },
+            { profileName: 'intersectionHarvest', template: null,                   beamWidth: 2000 },
+            { profileName: 'objectiveFirst',      template: null,                   beamWidth: 2000 },
             { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
             { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
             { profileName: 'objectiveFirst',      template: null                   },
@@ -1155,13 +1274,10 @@ function getAttemptConfigs(level) {
         ];
     }
 
-    // Must-cross-heavy: 5-config list, fair-share (6s each when prev fails fast).
-    // cornerHarvest: solves L62, L75, L114. perimeterCW: solves L64, L128.
-    // mustCrossFirst (no template): strong MC pull without template fighting interior cells.
-    //   V1 solved L53 via mustCrossFirst+perimeterCW in 1976ms; template-free works better
-    //   in V2 since perimeterCW interior penalty (-64 at edgeDist=4) overrides wmc=2.4 pull.
-    // objectiveFirst (no template): for L105 (V1: objectiveFirst+perimeterCW 1801ms).
-    // harvestThenFinish: general fallback, solves L136 in ~1.3s.
+    // Must-cross-heavy: DFS first (cornerHarvest solves L62/L75/L114; perimeterCW solves
+    // L64/L128; mustCrossFirst solves L136; objectiveFirst solves L105).
+    // Beam fallbacks for L53 (all DFS fail): mustCrossFirst (strong wmc=2.4 pull toward
+    // diagonal MC cells), objectiveFirst, perimeterCW (V1 solved L53 via CW in 1.976s).
     if (arch === 'must-cross-heavy') {
         return [
             { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
@@ -1169,6 +1285,9 @@ function getAttemptConfigs(level) {
             { profileName: 'mustCrossFirst',    template: null                       },
             { profileName: 'objectiveFirst',    template: null                       },
             { profileName: 'harvestThenFinish', template: null                       },
+            { profileName: 'mustCrossFirst',    template: null,                    beamWidth: 2000 },
+            { profileName: 'objectiveFirst',    template: null,                    beamWidth: 2000 },
+            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW,   beamWidth: 2000 },
         ];
     }
 
@@ -1235,16 +1354,18 @@ async function solveLevelV2(level, opts = {}) {
             const attBudget      = Math.floor(remaining / attemptsLeft);
             if (attBudget < 50) break; // too little time left to be useful
 
-            const { profileName, template } = configs[ci];
+            const { profileName, template, beamWidth } = configs[ci];
             const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
             const attStart = Date.now();
             let path = null;
             try {
-                path = dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
+                path = beamWidth
+                    ? beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth)
+                    : dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
             } catch (_) {}
 
             const attMs = Date.now() - attStart;
-            attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, ok: !!path, elapsedMs: attMs });
+            attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, beamWidth: beamWidth ?? null, ok: !!path, elapsedMs: attMs });
             if (path) { solution = path; break outer; }
         }
     }
