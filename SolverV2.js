@@ -848,6 +848,187 @@ function isConnected(pos, state, level, prep) {
     return true;
 }
 
+// Like isConnected but skips goal-reachability — for trap spot enumeration where
+// any cell can be the endpoint and goal reachability is not required.
+function isConnectedForTrap(pos, state, level, prep) {
+    const { w, h } = level.grid;
+    const intNeeded = level.reqInt - state.ints;
+    const maxVisit = intNeeded > 0 ? 1 : 0;
+
+    _reachGen++;
+    const gen = _reachGen;
+    let qHead = 0, qTail = 0;
+    _reachGenBuf[pos] = gen;
+    _reachQ[qTail++] = pos;
+    let freshVolume = 1;
+
+    while (qHead < qTail) {
+        const k = _reachQ[qHead++];
+        const x = k & 0xFFFF, y = (k >>> 16) & 0xFFFF;
+        const portal = level.portalMap.get(k);
+        if (portal) {
+            const d = portal.dest;
+            if (_reachGenBuf[d] !== gen && !level.blockSet.has(d) && !level.gooseSet.has(d) &&
+                (state.visited[d] <= maxVisit || d === pos)) {
+                _reachGenBuf[d] = gen;
+                if (state.visited[d] === 0) freshVolume++;
+                _reachQ[qTail++] = d;
+            }
+        }
+        const addNeighbor = (nk) => {
+            if (_reachGenBuf[nk] !== gen && !level.blockSet.has(nk) && !level.gooseSet.has(nk) &&
+                !prep.gateSet.has(nk) && (state.visited[nk] <= maxVisit || nk === pos)) {
+                _reachGenBuf[nk] = gen;
+                if (state.visited[nk] === 0) freshVolume++;
+                _reachQ[qTail++] = nk;
+            }
+        };
+        if (x + 1 < w) addNeighbor(k + 1);
+        if (x > 0)     addNeighbor(k - 1);
+        if (y + 1 < h) addNeighbor(k + 0x10000);
+        if (y > 0)     addNeighbor(k - 0x10000);
+    }
+
+    for (let i = 0; i < level.mustPassKeys.length; i++) {
+        if (!(state.mpVisitedMask & (1 << i)) && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
+    }
+    for (let i = 0; i < level.mustCrossKeys.length; i++) {
+        if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
+    }
+    const hasPortal = level.portalMap.size > 0;
+    if (!hasPortal) {
+        const rSteps = level.reqLen - (state.path.length - 1 - state.portalJumps);
+        if (freshVolume + intNeeded < rSteps) return false;
+    }
+    return true;
+}
+
+// DFS from startKey recording every cell that can serve as a valid false-goal location.
+// A valid trap spot is any cell where a path of exactly reqLen steps from the gate
+// satisfies all win conditions (length, intersections, must-pass, must-cross).
+// Adds found cells to validSpots. Returns true on full completion, false on timeout.
+async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime, validSpots, yieldFn) {
+    const state = createState(startKey, level, prep);
+    const neighbors0 = getNeighbors(startKey, state, level, prep);
+    const stack = [{ key: startKey, children: neighbors0, childIdx: 0, undoInfo: null }];
+    const mpN = level.mustPassKeys.length;
+    const mpAllMask = mpN > 0 ? (1 << mpN) - 1 : 0;
+    const mcN = level.mustCrossKeys.length;
+
+    let nodesExpanded = 0;
+    let lastYield = startTime;
+
+    while (stack.length > 0) {
+        if ((++nodesExpanded & 255) === 0) {
+            const now = Date.now();
+            if (now - startTime > budgetMs) return false;
+            if (yieldFn && now - lastYield >= 50) {
+                lastYield = now;
+                await yieldFn();
+            }
+        }
+
+        const top = stack[stack.length - 1];
+        if (top.childIdx >= top.children.length) {
+            if (top.undoInfo) undoMove(top.undoInfo, state);
+            stack.pop();
+            continue;
+        }
+
+        const next = top.children[top.childIdx++];
+        const portal = level.portalMap.get(top.key);
+        const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
+        const undo = applyMove(next, state, level, prep, isPortalJump);
+
+        const realLen = state.path.length - 1 - state.portalJumps;
+
+        if (realLen > level.reqLen) { undoMove(undo, state); continue; }
+        if (state.ints > level.reqInt) { undoMove(undo, state); continue; }
+
+        if (state.mustCrossMask !== 0n && mcN > 0) {
+            const mcRemaining = _popcount(Number(state.mustCrossMask));
+            if (state.ints + mcRemaining > level.reqInt) { undoMove(undo, state); continue; }
+        }
+
+        if (realLen === level.reqLen) {
+            if (state.ints === level.reqInt &&
+                state.mustCrossMask === 0n &&
+                (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
+                next !== level.goalKey) {
+                validSpots.add(next);
+            }
+            undoMove(undo, state);
+            continue;
+        }
+
+        const rSteps = level.reqLen - realLen;
+
+        if (mpAllMask !== 0 && (state.mpVisitedMask & mpAllMask) !== mpAllMask) {
+            let mpLB = 0;
+            for (let i = 0; i < mpN; i++) {
+                if (state.mpVisitedMask & (1 << i)) continue;
+                const d = prep.mustPassDistMaps[i].get(next) ?? Infinity;
+                if (!Number.isFinite(d)) { mpLB = Infinity; break; }
+                if (d > mpLB) mpLB = d;
+            }
+            if (!Number.isFinite(mpLB) || mpLB > rSteps) { undoMove(undo, state); continue; }
+        }
+
+        if (state.mustCrossMask !== 0n) {
+            let mcLB = 0;
+            for (let i = 0; i < mcN; i++) {
+                if ((state.mustCrossMask & (1n << BigInt(i))) === 0n) continue;
+                const d = prep.mustCrossDistMaps[i].get(next) ?? Infinity;
+                if (!Number.isFinite(d)) { mcLB = Infinity; break; }
+                if (d > mcLB) mcLB = d;
+            }
+            if (!Number.isFinite(mcLB) || mcLB > rSteps) { undoMove(undo, state); continue; }
+        }
+
+        const intNeeded = level.reqInt - state.ints;
+        if (intNeeded > rSteps) { undoMove(undo, state); continue; }
+
+        if (rSteps <= 10 || (nodesExpanded & 31) === 0) {
+            if (!isConnectedForTrap(next, state, level, prep)) { undoMove(undo, state); continue; }
+        }
+
+        const nextNeighbors = getNeighbors(next, state, level, prep);
+        if (nextNeighbors.length === 0) { undoMove(undo, state); continue; }
+        stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo });
+    }
+    return true;
+}
+
+// Finds all valid trap spot positions across all gates. Returns a result object
+// compatible with APP.Solver.findTrapSpots: { ok, status, spots, timedOut, gatesProcessed, elapsedMs, timeLimit }.
+async function findTrapSpotsV2(level, opts = {}) {
+    const startTime = Date.now();
+    const budgetMs = opts.timeLimit ?? 30000;
+    const yieldFn = opts.yieldFn ?? null;
+    const prep = prepLevel(level);
+    const validSpots = new Set();
+    let gatesProcessed = 0;
+    let timedOut = false;
+
+    for (const gateKey of level.gateKeys) {
+        if (Date.now() - startTime >= budgetMs) { timedOut = true; break; }
+        let completed;
+        try {
+            completed = await dfsEnumerateTrapSpots(gateKey, level, prep, budgetMs, startTime, validSpots, yieldFn);
+        } catch (err) {
+            if (err?.message === 'SolverV2:cancelled') {
+                return { ok: false, status: 'aborted', spots: validSpots, timedOut: false, gatesProcessed, elapsedMs: Date.now() - startTime, timeLimit: budgetMs };
+            }
+            completed = false;
+        }
+        gatesProcessed++;
+        if (!completed) { timedOut = true; break; }
+    }
+
+    const elapsedMs = Date.now() - startTime;
+    return { ok: true, status: timedOut ? 'timeout' : 'done', spots: validSpots, timedOut, gatesProcessed, elapsedMs, timeLimit: budgetMs };
+}
+
 // ─── Move scoring ─────────────────────────────────────────────────────────────
 
 // Score a candidate move `target` from `pos` in `state`.
@@ -1593,6 +1774,14 @@ function installSolverV2(APP) {
         universalSolveLevel,
         solveLevel: universalSolveLevel,
         solve: (level, opts = {}) => solveLevelV2(level, opts),
+        findTrapSpots: (level, opts = {}) => findTrapSpotsV2(level, opts),
+        getTrapSpotBudgetMs: (level) => {
+            const area = (level.grid?.w || 0) * (level.grid?.h || 0);
+            const special = (level.mustPassKeys?.length || 0) + (level.mustCrossKeys?.length || 0) +
+                (level.portalMap?.size || 0) + (level.filterMap?.size || 0) +
+                (level.flippingFilterMap?.size || 0);
+            return Math.min(120000, Math.max(3000, 2500 + area * 15 + (level.reqLen || 0) * 40 + special * 120));
+        },
         // Expose internals for testing
         _normalizeRawLevel: normalizeRawLevelV2,
         _buildDistMap: buildDistMap,
