@@ -1,3 +1,5 @@
+import { deriveTokens, isSeedTheme, randomSeeds } from './theme-engine.js';
+
 export function installThemes(APP) {
     APP.Themes = (() => {
 
@@ -144,6 +146,21 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function normalizeTheme(theme, key = 'theme') {
+        // Expand seed-format themes into full base objects first
+        if (isSeedTheme(theme)) {
+            const base = deriveTokens(theme.seeds);
+            if (theme.overrides) {
+                for (const k of Object.keys(theme.overrides)) {
+                    const src = theme.overrides[k];
+                    if (src && typeof src === 'object' && !Array.isArray(src) && base[k] && typeof base[k] === 'object') {
+                        base[k] = { ...base[k], ...src };
+                    } else {
+                        base[k] = src;
+                    }
+                }
+            }
+            return normalizeTheme(base, key);
+        }
         const t = theme || {};
         t.btns = t.btns || {};
         t.modal = t.modal || {};
@@ -354,8 +371,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.editor.toolIcon = t.editor.toolIcon || t.btns.muteIcon;
         t.editor.paletteShadow = t.editor.paletteShadow || '0 0 0 2px rgba(59,130,246,0.3)';
 
-        t.layout.border = t.layout.border || t.layout.mainBorder || t.modal.border;
-        t.layout.divider = t.layout.divider || t.layout.headerLeftBorder || t.layout.exportBorder || t.modal.border;
+        t.layout.border = t.layout.border || t.modal.border;
+        t.layout.divider = t.layout.divider || t.modal.border;
 
         t.themeEditor.panelBg = t.themeEditor.panelBg || 'rgba(0,0,0,0.05)';
         t.themeEditor.swatchBorder = t.themeEditor.swatchBorder || t.modal.border;
@@ -775,7 +792,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const getThemeUndoStacksStore = () => themeUndoStacks;
         const getOriginalThemesStore = () => originalThemes;
 
-        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore };
+        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore, deriveTokens, isSeedTheme, randomSeeds };
         Object.defineProperty(api, 'THEMES', { get: () => getThemeRegistry() });
         return api;
     })();
