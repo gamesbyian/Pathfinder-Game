@@ -154,10 +154,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#cbd5e1",
-            "headerLeftBorder": "#e2e8f0",
-            "exportBorder": "#f1f5f9",
-            "editorPanelBorder": "#f1f5f9"
+            "border": "#cbd5e1",
+            "divider": "#e2e8f0"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -1044,10 +1042,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#ff9900",
-            "headerLeftBorder": "#333333",
-            "exportBorder": "#ff9900",
-            "editorPanelBorder": "#ff9900"
+            "border": "#ff9900",
+            "divider": "#333333"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -1236,10 +1232,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#ff0800",
-            "headerLeftBorder": "#ff9999",
-            "exportBorder": "#ff0800",
-            "editorPanelBorder": "#ff0800"
+            "border": "#ff0800",
+            "divider": "#ff9999"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -1428,10 +1422,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#d4c271",
-            "headerLeftBorder": "#e6dfc8",
-            "exportBorder": "#d4c271",
-            "editorPanelBorder": "#d4c271"
+            "border": "#d4c271",
+            "divider": "#e6dfc8"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -1620,10 +1612,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#79875f",
-            "headerLeftBorder": "#354536",
-            "exportBorder": "#354536",
-            "editorPanelBorder": "#354536"
+            "border": "#79875f",
+            "divider": "#354536"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -1812,10 +1802,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#9400d3",
-            "headerLeftBorder": "#e2e8f0",
-            "exportBorder": "#e2e8f0",
-            "editorPanelBorder": "#e2e8f0"
+            "border": "#9400d3",
+            "divider": "#e2e8f0"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -2004,10 +1992,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#a855f7",
-            "headerLeftBorder": "#581c87",
-            "exportBorder": "#581c87",
-            "editorPanelBorder": "#581c87"
+            "border": "#a855f7",
+            "divider": "#581c87"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -2196,10 +2182,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#3b82f6",
-            "headerLeftBorder": "#334155",
-            "exportBorder": "#334155",
-            "editorPanelBorder": "#334155"
+            "border": "#3b82f6",
+            "divider": "#334155"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -2388,10 +2372,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#ff69b4",
-            "headerLeftBorder": "#ffb6c1",
-            "exportBorder": "#ffb6c1",
-            "editorPanelBorder": "#ffb6c1"
+            "border": "#ff69b4",
+            "divider": "#ffb6c1"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -2580,10 +2562,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#000000",
-            "headerLeftBorder": "#cccccc",
-            "exportBorder": "#cccccc",
-            "editorPanelBorder": "#cccccc"
+            "border": "#000000",
+            "divider": "#cccccc"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -2772,10 +2752,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#ff007f",
-            "headerLeftBorder": "#3d1c5e",
-            "exportBorder": "#3d1c5e",
-            "editorPanelBorder": "#3d1c5e"
+            "border": "#ff007f",
+            "divider": "#3d1c5e"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -2964,10 +2942,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#ff4d6d",
-            "headerLeftBorder": "#ffb3c6",
-            "exportBorder": "#ffb3c6",
-            "editorPanelBorder": "#ffb3c6"
+            "border": "#ff4d6d",
+            "divider": "#ffb3c6"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -3156,10 +3132,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#555d50",
-            "headerLeftBorder": "#b0b7c6",
-            "exportBorder": "#b0b7c6",
-            "editorPanelBorder": "#b0b7c6"
+            "border": "#555d50",
+            "divider": "#b0b7c6"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -3348,10 +3322,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#0c2340",
-            "headerLeftBorder": "#b0b7bc",
-            "exportBorder": "#b0b7bc",
-            "editorPanelBorder": "#b0b7bc"
+            "border": "#0c2340",
+            "divider": "#b0b7bc"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -3540,10 +3512,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#d22b2b",
-            "headerLeftBorder": "#ffe8a1",
-            "exportBorder": "#ffe8a1",
-            "editorPanelBorder": "#ffe8a1"
+            "border": "#d22b2b",
+            "divider": "#ffe8a1"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -3732,10 +3702,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#4a7c49",
-            "headerLeftBorder": "#c2e0c2",
-            "exportBorder": "#c2e0c2",
-            "editorPanelBorder": "#c2e0c2"
+            "border": "#4a7c49",
+            "divider": "#c2e0c2"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -3924,10 +3892,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#ffd700",
-            "headerLeftBorder": "#5c4a10",
-            "exportBorder": "#5c4a10",
-            "editorPanelBorder": "#5c4a10"
+            "border": "#ffd700",
+            "divider": "#5c4a10"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -4116,10 +4082,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#5b7c2f",
-            "headerLeftBorder": "#c9bb8e",
-            "exportBorder": "#c9bb8e",
-            "editorPanelBorder": "#c9bb8e"
+            "border": "#5b7c2f",
+            "divider": "#c9bb8e"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -4308,10 +4272,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#006400",
-            "headerLeftBorder": "#a5d6a7",
-            "exportBorder": "#a5d6a7",
-            "editorPanelBorder": "#a5d6a7"
+            "border": "#006400",
+            "divider": "#a5d6a7"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -4500,10 +4462,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#002868",
-            "headerLeftBorder": "#b3c6d6",
-            "exportBorder": "#b3c6d6",
-            "editorPanelBorder": "#b3c6d6"
+            "border": "#002868",
+            "divider": "#b3c6d6"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -4692,10 +4652,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#000000",
-            "headerLeftBorder": "#d7ccc8",
-            "exportBorder": "#d7ccc8",
-            "editorPanelBorder": "#d7ccc8"
+            "border": "#000000",
+            "divider": "#d7ccc8"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -4884,10 +4842,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#8fbc8f",
-            "headerLeftBorder": "#d7ccc8",
-            "exportBorder": "#d7ccc8",
-            "editorPanelBorder": "#d7ccc8"
+            "border": "#8fbc8f",
+            "divider": "#d7ccc8"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -5076,10 +5032,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#5c8397",
-            "headerLeftBorder": "#b5a8b3",
-            "exportBorder": "#b5a8b3",
-            "editorPanelBorder": "#b5a8b3"
+            "border": "#5c8397",
+            "divider": "#b5a8b3"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -5268,10 +5222,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#c8102e",
-            "headerLeftBorder": "#cbd5e1",
-            "exportBorder": "#cbd5e1",
-            "editorPanelBorder": "#cbd5e1"
+            "border": "#c8102e",
+            "divider": "#cbd5e1"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -5460,10 +5412,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#008b8b",
-            "headerLeftBorder": "#aaaaaa",
-            "exportBorder": "#aaaaaa",
-            "editorPanelBorder": "#aaaaaa"
+            "border": "#008b8b",
+            "divider": "#aaaaaa"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",
@@ -5652,10 +5602,8 @@ window.THEMES = {
             "paletteShadow": "0 0 0 2px rgba(59,130,246,0.3)"
         },
         "layout": {
-            "mainBorder": "#ffffff",
-            "headerLeftBorder": "#444444",
-            "exportBorder": "#444444",
-            "editorPanelBorder": "#444444"
+            "border": "#ffffff",
+            "divider": "#444444"
         },
         "themeEditor": {
             "panelBg": "rgba(0,0,0,0.05)",

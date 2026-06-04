@@ -354,8 +354,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.editor.toolIcon = t.editor.toolIcon || t.btns.muteIcon;
         t.editor.paletteShadow = t.editor.paletteShadow || '0 0 0 2px rgba(59,130,246,0.3)';
 
-        t.layout.border = t.layout.border || t.layout.mainBorder || t.modal.border;
-        t.layout.divider = t.layout.divider || t.layout.headerLeftBorder || t.layout.exportBorder || t.modal.border;
+        t.layout.border = t.layout.border || t.modal.border;
+        t.layout.divider = t.layout.divider || t.modal.border;
 
         t.themeEditor.panelBg = t.themeEditor.panelBg || 'rgba(0,0,0,0.05)';
         t.themeEditor.swatchBorder = t.themeEditor.swatchBorder || t.modal.border;
