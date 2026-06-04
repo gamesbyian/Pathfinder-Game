@@ -4590,7 +4590,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
             if (isVisible) APP.UI.closeModal('editorHelpModal');
             APP.UI.closeAllModals();
-            if (APP.Solver.isRunning()) {
+            if (APP.Solver.isRunning() || APP.State.ENGINE.activeSolverController) {
                 APP.UI.showSolverAlreadyRunning();
                 return;
             }
@@ -4600,32 +4600,76 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const validation = APP.Editor.validateWorkingLevel();
             if (!validation?.ok) {
                 APP.UI.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'text-red-500 font-bold');
-                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                 return;
             }
-            const searchLevel = APP.LevelUtils.deepCloneLevel(l);
-            const budgetMs = APP.SolverV2.getTrapSpotBudgetMs(searchLevel);
-            const res = await APP.SolverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs });
-            APP.Editor.setTrapSpots(res.spots || new Set());
-            APP.Renderer.render();
-            if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
-            else if (res.status !== 'aborted' && res.timedOut) {
-                APP.UI.showMessage('Search timed out; results incomplete.', 'text-amber-300 font-black');
-                const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
-                if (retry) {
-                    // TEMP (2026-03-29): trap-spot retry ceiling doubled a second time from 240000ms to 480000ms (4x original 120000ms).
-                    // Revert target ceiling to 120000ms to return to original baseline.
-                    const retryBudgetMs = Math.min(480000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
-                    const retryLevel = APP.LevelUtils.deepCloneLevel(l);
-                    const retryRes = await APP.SolverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs });
-                    APP.Editor.setTrapSpots(retryRes.spots || new Set());
-                    APP.Renderer.render();
-                    if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
-                    else if (retryRes.status !== 'aborted' && retryRes.timedOut) APP.UI.showMessage('Retry timed out; results incomplete.', 'text-amber-300 font-black');
-                    else if (retryRes.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
+            const yieldFn = async () => { await new Promise(r => setTimeout(r, 0)); };
+            APP.State.ENGINE.activeSolverController = { cancel: () => {}, abort: () => {} };
+            try {
+                APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
+                APP.UI.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
+                APP.UI.setSolverDetailText('Scanning from each gate…');
+                APP.UI.setSolverTimerText('0.0s');
+                APP.UI.setSolverProgress(0);
+                await new Promise(r => setTimeout(r, 0));
+                const searchLevel = APP.LevelUtils.deepCloneLevel(l);
+                const budgetMs = APP.SolverV2.getTrapSpotBudgetMs(searchLevel);
+                const t0 = Date.now();
+                const overlayMinTimer = new Promise(r => setTimeout(r, 400));
+                const timerInterval = setInterval(() => {
+                    APP.UI.setSolverTimerText(`${((Date.now() - t0) / 1000).toFixed(1)}s`);
+                }, 100);
+                let res;
+                try {
+                    res = await APP.SolverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn });
+                    await overlayMinTimer;
+                } finally {
+                    clearInterval(timerInterval);
                 }
-            } else if (res.status !== 'aborted') APP.UI.showMessage('No spots found.', 'text-white font-black');
-            APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                APP.Editor.setTrapSpots(res.spots || new Set());
+                APP.Renderer.render();
+                if (APP.State.ENGINE.editor.validTrapSpots.size > 0) {
+                    APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, 'text-white font-black');
+                } else if (res.timedOut) {
+                    APP.UI.showMessage('Search timed out; results incomplete.', 'text-amber-300 font-black');
+                    const retry = window.confirm('Trap spot search timed out. Retry with a longer budget?');
+                    if (retry) {
+                        // TEMP (2026-03-29): trap-spot retry ceiling doubled a second time from 240000ms to 480000ms (4x original 120000ms).
+                        // Revert target ceiling to 120000ms to return to original baseline.
+                        const retryBudgetMs = Math.min(480000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
+                        const retryLevel = APP.LevelUtils.deepCloneLevel(l);
+                        APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
+                        APP.UI.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
+                        APP.UI.setSolverDetailText('Retrying with longer budget…');
+                        APP.UI.setSolverTimerText('0.0s');
+                        APP.UI.setSolverProgress(0);
+                        await new Promise(r => setTimeout(r, 0));
+                        const t1 = Date.now();
+                        const retryTimer = setInterval(() => { APP.UI.setSolverTimerText(`${((Date.now() - t1) / 1000).toFixed(1)}s`); }, 100);
+                        let retryRes;
+                        try {
+                            retryRes = await APP.SolverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn });
+                        } finally {
+                            clearInterval(retryTimer);
+                        }
+                        APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                        APP.Editor.setTrapSpots(retryRes.spots || new Set());
+                        APP.Renderer.render();
+                        if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
+                        else if (retryRes.timedOut) APP.UI.showMessage('Retry timed out; results incomplete.', 'text-amber-300 font-black');
+                        else APP.UI.showMessage('No spots found.', 'text-white font-black');
+                    }
+                } else {
+                    APP.UI.showMessage('No spots found.', 'text-white font-black');
+                }
+            } catch (err) {
+                console.error('Trap search failed:', err);
+                APP.UI.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+            } finally {
+                APP.State.ENGINE.activeSolverController = null;
+                APP.UI.setSolverControlsEnabled(true);
+            }
         };
         const palettePointerStarts = new Map();
         APP.UI.bindAll('.palette-item[data-type]', 'pointerdown', (e, el) => {
