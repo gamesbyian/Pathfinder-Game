@@ -1,3 +1,5 @@
+import { deriveTokens, isSeedTheme, randomSeeds } from './theme-engine.js';
+
 export function installThemes(APP) {
     APP.Themes = (() => {
 
@@ -144,6 +146,21 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     function normalizeTheme(theme, key = 'theme') {
+        // Expand seed-format themes into full base objects first
+        if (isSeedTheme(theme)) {
+            const base = deriveTokens(theme.seeds);
+            if (theme.overrides) {
+                for (const k of Object.keys(theme.overrides)) {
+                    const src = theme.overrides[k];
+                    if (src && typeof src === 'object' && !Array.isArray(src) && base[k] && typeof base[k] === 'object') {
+                        base[k] = { ...base[k], ...src };
+                    } else {
+                        base[k] = src;
+                    }
+                }
+            }
+            return normalizeTheme(base, key);
+        }
         const t = theme || {};
         t.btns = t.btns || {};
         t.modal = t.modal || {};
@@ -775,7 +792,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const getThemeUndoStacksStore = () => themeUndoStacks;
         const getOriginalThemesStore = () => originalThemes;
 
-        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore };
+        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore, deriveTokens, isSeedTheme, randomSeeds };
         Object.defineProperty(api, 'THEMES', { get: () => getThemeRegistry() });
         return api;
     })();
