@@ -4704,6 +4704,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 const level = APP.SolverV2.prepareLevelForSolver(rawLevel, { source: 'raw' });
                 const budgetMs = 30000;
                 const t0 = Date.now();
+                const overlayMinTimer = new Promise(r => setTimeout(r, 400));
                 const timerInterval = setInterval(() => {
                     const elapsed = (Date.now() - t0) / 1000;
                     APP.UI.setSolverTimerText(`${elapsed.toFixed(1)}s`);
@@ -4712,6 +4713,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 let result;
                 try {
                     result = await APP.SolverV2.solve(level, { timeBudgetMs: budgetMs, yieldFn });
+                    await overlayMinTimer;
                 } finally {
                     clearInterval(timerInterval);
                 }
