@@ -1165,16 +1165,18 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
 // The hard cap on phase 1 is what prevents the probe waves from starving phase 2.
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
 const _LDS_DEBUG = typeof process !== 'undefined' && process.env && process.env.PF_LDS_DEBUG === '1';
-function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template) {
+async function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, yieldFn) {
     const probeCapMs = Math.min(Math.floor(levelBudgetMs * 0.5), 4000);
     for (const k of _LDS_PROBE_K) {
         if (Date.now() - levelStartTime >= probeCapMs) break;
+        if (yieldFn) await yieldFn();
         const w0 = Date.now();
         const path = dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k);
         if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms ${path?'SOLVED':'-'}`);
         if (path) return path;
     }
     if (Date.now() - levelStartTime >= levelBudgetMs) return null;
+    if (yieldFn) await yieldFn();
     const path = dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity);
     if (_LDS_DEBUG) console.error(`    [lds] k=Inf ${path?'SOLVED':'-'}`);
     return path;
@@ -1215,12 +1217,16 @@ function _beamResetState(ws, startKey, level, prep) {
 // one-step extensions, and keep the top-beamWidth by cumulative score.
 // Uses a single reusable mutable state (KEY_SPACE arrays allocated once, cells
 // zeroed per-frontier-state via _beamResetState) to avoid repeated large allocations.
-function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth) {
+async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn) {
     const ws = createState(startKey, level, prep);
     let frontier = [{ path: [startKey], score: 0 }];
 
     while (frontier.length > 0) {
         if (Date.now() - startTime > budgetMs) return null;
+        if (yieldFn) {
+            await yieldFn(); // yield between beam passes; throws on cancellation
+            if (Date.now() - startTime > budgetMs) return null;
+        }
 
         const cands = [];
 
@@ -1452,6 +1458,7 @@ function getAttemptConfigs(level) {
 
 async function solveLevelV2(level, opts = {}) {
     const timeBudgetMs = Number(opts.timeBudgetMs) > 0 ? Number(opts.timeBudgetMs) : 30000;
+    const yieldFn      = typeof opts.yieldFn === 'function' ? opts.yieldFn : null;
     const levelStartTime = Date.now();
     const prep         = prepLevel(level);
     const gateKeys     = Array.isArray(level.gateKeys) ? level.gateKeys : [];
@@ -1497,9 +1504,11 @@ async function solveLevelV2(level, opts = {}) {
                 let path = null;
                 try {
                     path = beamWidth
-                        ? beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth)
-                        : dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
-                } catch (_) {}
+                        ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn)
+                        : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
+                } catch (err) {
+                    if (err?.message === 'SolverV2:cancelled') throw err;
+                }
                 const attMs = Date.now() - attStart;
                 attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, beamWidth: beamWidth ?? null, ok: !!path, elapsedMs: attMs });
                 pairsLeft--;
@@ -1540,9 +1549,11 @@ async function solveLevelV2(level, opts = {}) {
                 let path = null;
                 try {
                     path = beamWidth
-                        ? beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth)
-                        : dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template);
-                } catch (_) {}
+                        ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn)
+                        : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
+                } catch (err) {
+                    if (err?.message === 'SolverV2:cancelled') throw err;
+                }
 
                 const attMs = Date.now() - attStart;
                 attempts.push({ gateKey, profile: profileName, template: template?.id ?? null, beamWidth: beamWidth ?? null, ok: !!path, elapsedMs: attMs });
