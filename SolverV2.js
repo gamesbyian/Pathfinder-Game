@@ -1619,9 +1619,21 @@ function getAttemptConfigs(level) {
         // V1 solved L130 in 362ms via perimeterCW template; L143 via perimeterCCW 1.7s.
         // Beam variants placed first so they receive the larger share of budget;
         // DFS fallbacks cover L143/L147 which already pass via DFS.
+        //
+        // Long-path multi-gate levels (L149: 15×15, reqLen=125, 3 gates) starve the
+        // leading perimeter beam: the gate budget is divided by the gate count, and the
+        // even per-config share then divides by the config count, so the winning
+        // perimeterCW beam (needs ~3.3s to walk 125 depths) gets only ~budget/(gates·9)
+        // ≈ 1.1s at the 30s default and times out — even though it solves outright in
+        // 3.3s when given room. Give the two perimeter beams a budget floor in this case
+        // so the proven winner completes. The floor is gated on reqLen≥90 AND gates≥2 so
+        // the single-gate levels in this bucket (L130/L143/L147) keep their even-share and
+        // their DFS fallbacks are not squeezed.
+        const longMultiGate = level.reqLen >= 90 && (level.gateKeys?.length || 0) >= 2;
+        const beamFloor = longMultiGate ? 0.45 : 0;
         return [
-            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW,  beamWidth: 2000 },
-            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW, beamWidth: 2000 },
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW,  beamWidth: 2000, minBudgetFraction: beamFloor },
+            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW, beamWidth: 2000, minBudgetFraction: beamFloor },
             { profileName: 'intersectionHarvest', template: null,                   beamWidth: 2000 },
             { profileName: 'objectiveFirst',      template: null,                   beamWidth: 2000 },
             { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
