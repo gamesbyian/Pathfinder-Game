@@ -668,8 +668,29 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const currentThemeKey = APP.State.ENGINE.runtime.currentTheme || 'classic';
         const currentTheme = themes[currentThemeKey] || themes.classic || {};
         const uniformThemeNameColor = (currentTheme.text && (currentTheme.text.themeName || currentTheme.text.modal)) || '#000000';
-        const themeKeys = Object.keys(themes).filter(key => key !== 'classic' && key !== 'chaos');
-        themeKeys.forEach(key => { const t = themes[key] || themes.classic; const btn = document.createElement('div'); btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none"; btn.style.background = 'transparent'; btn.style.border = '0'; btn.style.boxShadow = 'none'; btn.style.borderRadius = '0'; btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); }; const circle = document.createElement('div'); circle.className = "w-12 h-12 rounded-full border-4 shadow-md"; circle.style.backgroundColor = t.headerRight || '#000'; circle.style.borderColor = t.canvasBg || '#fff'; const label = document.createElement('span'); label.className = "text-[0.65rem] font-black uppercase tracking-widest"; label.style.color = uniformThemeNameColor; label.innerText = key; btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn); });
+        const otherKeys = Object.keys(themes).filter(key => key !== 'classic' && key !== 'chaos');
+        const themeKeys = ['classic', ...otherKeys, 'chaos'];
+        themeKeys.forEach(key => {
+            const t = themes[key] || themes.classic;
+            const btn = document.createElement('div');
+            btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none";
+            btn.style.background = 'transparent'; btn.style.border = '0'; btn.style.boxShadow = 'none'; btn.style.borderRadius = '0';
+            btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); };
+            const circle = document.createElement('div');
+            circle.className = "w-12 h-12 rounded-full border-4 shadow-md";
+            if (key === 'chaos') {
+                circle.style.background = 'conic-gradient(red, orange, yellow, green, blue, violet, red)';
+                circle.style.borderColor = '#ffffff';
+            } else {
+                circle.style.backgroundColor = t.headerRight || '#000';
+                circle.style.borderColor = t.canvasBg || '#fff';
+            }
+            const label = document.createElement('span');
+            label.className = "text-[0.65rem] font-black uppercase tracking-widest";
+            label.style.color = uniformThemeNameColor;
+            label.innerText = key;
+            btn.appendChild(circle); btn.appendChild(label); grid.appendChild(btn);
+        });
     }
 
     function replaceThemeColor(themeKey, oldColor, newColor, category) {
