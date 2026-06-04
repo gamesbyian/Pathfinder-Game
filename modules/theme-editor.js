@@ -103,7 +103,7 @@ export function installThemeEditor(APP) {
             ghost.style.width = '32px';
             ghost.style.height = '32px';
             if (color) ghost.style.backgroundColor = color;
-            ghost.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-main-border').trim() || '#000';
+            ghost.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-border').trim() || '#000';
             ghost.className = 'flex items-center justify-center rounded shadow-lg border-2 border-dashed fixed pointer-events-none z-[1000]';
             ghost.innerHTML = '';
             ghost.style.display = 'flex';
@@ -212,7 +212,7 @@ export function installThemeEditor(APP) {
             container.appendChild(header);
             const t = APP.Themes.THEMES[themeKey] || {};
             const toColorSet = (arr) => new Set(arr.filter(c => c && typeof c === 'string' && c !== 'rainbow'));
-            const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border, t.loading?.panelBorder, t.loading?.track, t.search?.megaStatusBorder, t.shell?.btnBorder, t.shell?.muteBorder, t.header?.divider, t.layout?.mainBorder, t.layout?.headerLeftBorder, t.layout?.exportBorder, t.layout?.editorPanelBorder, t.themeEditor?.swatchBorder]);
+            const lineColors = toColorSet([t.modal?.border, t.palette?.border, t.palette?.itemBorder, t.win?.border, t.alert?.stroke, t.ctrlArea?.border, t.mega?.outputBorder, t.mega?.primaryBorder, t.mega?.secondaryBorder, t.mega?.geminiBorder, t.mega?.copyBorder, t.ghostBorder, t.leave?.border, t.loading?.panelBorder, t.loading?.track, t.search?.megaStatusBorder, t.shell?.btnBorder, t.shell?.muteBorder, t.header?.divider, t.layout?.border, t.layout?.divider, t.themeEditor?.swatchBorder]);
             const btnColors = toColorSet([...Object.values(t.btns || {}), t.leave?.bg, t.leave?.hover, t.shell?.btnBg, t.shell?.btnBgHover, t.shell?.muteBg, t.shell?.muteBgHover, t.header?.navBg, t.header?.navBgHover, t.themeEditor?.panelBg, t.btns?.hintHover]);
             const gridColors = toColorSet([t.colors?.gate, t.colors?.goal, t.colors?.block, t.colors?.pin, t.colors?.pinUnflipped, t.colors?.filter, t.colors?.portal, t.colors?.cross, t.colors?.portalPending, t.colors?.bombBlastRing, t.colors?.bombBlastRays, t.path, t.grid]);
             const miscColors = toColorSet([t.bodyBg, t.canvasBg, t.headerLeft, t.headerRight, t.controls, t.ghostBg, t.modal?.bg, t.modal?.panelBg, t.output?.bg, t.palette?.bg, t.palette?.itemBg, t.palette?.toolBg, t.win?.bg, t.alert?.bg, t.ctrlArea?.bg, t.mega?.outputBg, t.mega?.primaryBg, t.mega?.secondaryBg, t.mega?.geminiBg, t.mega?.copyBg, t.burst, t.check, t.loading?.overlayBg, t.loading?.panelBg, t.search?.overlayBg, t.jumpscare?.gooseBg, t.jumpscare?.bombBg, t.editor?.inputBg]);
