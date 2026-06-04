@@ -1,4 +1,4 @@
-// Solver.js
+// LegacySolver.js
 // Extracted from index.html. The contents below preserve the original solver
 // code verbatim so behavior is unchanged. Two top-level pieces are exported:
 //   - heuristic-flag helpers (also referenced from outside the solver in
@@ -27,7 +27,7 @@
     };
     // Realm-robust "is this a usable Map?" check. `x instanceof Map` is fragile: it
     // silently returns false for a Map constructed in a different JS realm/context
-    // (e.g. when the host page that builds the level and Solver.js do not share the
+    // (e.g. when the host page that builds the level and LegacySolver.js do not share the
     // exact same Map constructor). When that happens on a level's portalMap, the
     // portal-family analysis below is skipped and the level is treated as portal-free,
     // so portal-heavy puzzles become unsolvable through that entry point while the
@@ -2791,7 +2791,7 @@ function installSolver(APP) {
                     // Scale knotIntsRemainingMax to reqInt for high-intersection-burden levels.
                     // Default is 2, meaning knot phase only fires when ≤2 intersections remain
                     // (i.e., when the search has already built all but the last two). The
-                    // intersection-setup bonus (Solver.js:3180) fires only in knot phase — so on
+                    // intersection-setup bonus (LegacySolver.js:3180) fires only in knot phase — so on
                     // high-reqInt levels (e.g. L92 reqInt=8) the bonus is unavailable while the
                     // search is BUILDING the bulk of the intersections, leaving the heuristic
                     // without a strong intersection-setup gradient when it needs one most.
@@ -15984,7 +15984,7 @@ const zeroExpansionTimeoutGuard = attemptResult.status === 'timeout'
                 });
                 // Denormalize → re-normalize via normalizeRawLevelForSolver so the UI
                 // Solve button uses identical level preparation to the direct script:
-                // fresh Maps built in Solver.js's own realm, portal data rebuilt from
+                // fresh Maps built in LegacySolver.js's own realm, portal data rebuilt from
                 // raw coords. This avoids the deepCloneLevel → canonicalCloneLevel path
                 // which can produce collections from the host page's realm that the
                 // solver's portal-family analysis may not handle correctly.

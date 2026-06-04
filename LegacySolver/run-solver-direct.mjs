@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Direct Node-based solver driver. No Playwright, no browser. Loads Solver.js
+ * Direct Node-based solver driver. No Playwright, no browser. Loads LegacySolver.js
  * via installSolver(APP) with a minimal Node shim, normalizes levels from
  * levels.js, then calls Solver.solveLevel(level, opts) for each
  * target level and writes per-level JSON results.
@@ -146,7 +146,7 @@ const formatLevelTag = (levelSet) => {
 };
 
 const levelFilter = parseLevelSpec(argMap.get('--levels'));
-// Default budget is resolved after Solver.js is imported (see CANONICAL_SOLVE_TIME_BUDGET_MS
+// Default budget is resolved after LegacySolver.js is imported (see CANONICAL_SOLVE_TIME_BUDGET_MS
 // below) so the audit harness and the UI Solve button share one source of truth.
 const budgetMsArg = argMap.get('--budget-ms');
 const purpose = argMap.get('--purpose') || 'hint';
@@ -162,8 +162,8 @@ const outputFile = argMap.get('--output') || 'audits/local-direct/latest.json';
 const verbose = argFlags.has('--verbose');
 const writeHistory = !argFlags.has('--no-history');
 
-// --- Browser stub before loading Solver.js ---
-// Solver.js installs a module-level setTimeout for auto-diagnostics. Stub
+// --- Browser stub before loading LegacySolver.js ---
+// LegacySolver.js installs a module-level setTimeout for auto-diagnostics. Stub
 // window to disable that path; otherwise it tries to access browser APIs.
 if (typeof globalThis.window === 'undefined') {
   globalThis.window = {
@@ -181,9 +181,9 @@ if (typeof globalThis.performance === 'undefined') {
   globalThis.performance = { now: () => Date.now() };
 }
 
-const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./legacysolver.js');
+const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./LegacySolver.js');
 
-// Default per-stage budget shared with the UI Solve path (Solver.js runGameSolver).
+// Default per-stage budget shared with the UI Solve path (LegacySolver.js runGameSolver).
 const budgetMs = Number(budgetMsArg || CANONICAL_SOLVE_TIME_BUDGET_MS);
 
 // --- APP shim (extends hint-path-replay's shim with solveLevel needs) ---
@@ -296,7 +296,7 @@ const buildSolveOpts = () => {
   if (rootOrderingVariant) opts.rootOrderingVariant = rootOrderingVariant;
   // The per-stage cascade hard-codes orderingPolicy/dirOrderVariant and never forwards
   // the root-seed knobs, so the bare opts above only reach telemetry, not the search.
-  // experimentOverrides is the channel the solver actually honors (Solver.js
+  // experimentOverrides is the channel the solver actually honors (LegacySolver.js
   // installExperimentOverrides): a solve-scoped override that reaches every attempt.
   const experimentOverrides = {};
   if (orderingPolicy) experimentOverrides.orderingPolicy = orderingPolicy;
@@ -305,7 +305,7 @@ const buildSolveOpts = () => {
   if (rootOrderingVariant) experimentOverrides.rootOrderingVariant = rootOrderingVariant;
   if (Object.keys(experimentOverrides).length) opts.experimentOverrides = experimentOverrides;
   // Mirror the browser hint-ladder by also piggybacking forbiddenFirstMoves on
-  // hintLadderState. The runAttempt closure (Solver.js:11987) prefers
+  // hintLadderState. The runAttempt closure (LegacySolver.js:11987) prefers
   // hintLadderState.forbiddenFirstMoves over opts.forbiddenFirstMoves, and
   // hintLadderState is propagated through every cascade pass (the direct opts
   // entry only reaches stage 0). This gives the option a path to every inner

@@ -6,12 +6,12 @@
  * Background: runGameSolver previously used deepCloneLevel → canonicalCloneLevel
  * (the "UI path") to prepare the level for the solver. canonicalCloneLevel is
  * defined in the host page (index.html), so the Maps it creates belong to the
- * host realm — not Solver.js's module realm. This caused portal-family analysis
+ * host realm — not LegacySolver.js's module realm. This caused portal-family analysis
  * to silently skip portal-heavy puzzles, making them unsolvable from the Solve
  * button while the direct script still worked.
  *
  * The fix: runGameSolver now calls denormalizeLevel → normalizeRawLevelForSolver,
- * which rebuilds fresh Maps entirely within Solver.js's own realm (the "raw path").
+ * which rebuilds fresh Maps entirely within LegacySolver.js's own realm (the "raw path").
  * This test verifies that the round-trip correctly preserves all portal data so
  * portal levels remain solvable through that entry point.
  *
@@ -22,12 +22,12 @@ import vm from 'node:vm';
 import path from 'node:path';
 import process from 'node:process';
 
-// Browser-ish stubs so Solver.js's module-level code is inert in Node.
+// Browser-ish stubs so LegacySolver.js's module-level code is inert in Node.
 if (typeof globalThis.window === 'undefined') globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
 if (typeof globalThis.document === 'undefined') globalThis.document = { addEventListener() {}, getElementById: () => null, createElement: () => ({ classList: { add() {}, remove() {} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./legacysolver.js');
+const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./LegacySolver.js');
 
 const PACK = (x, y) => (y << 16) | x;
 const UNPACK = (k) => ({ x: k & 0xFFFF, y: (k >> 16) & 0xFFFF });

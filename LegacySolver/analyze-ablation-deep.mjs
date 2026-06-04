@@ -550,7 +550,7 @@ const experiments = [
     name: 'Archetype classifier tightening validation',
     goal: 'Confirm narrowing high-intersection-burden to require portals OR mustCross removes L139 false fires.',
     action: 'Run baseline with modified classifier. Verify: L92 still solved, L139 faster, no new regressions.',
-    command: '(Requires Solver.js modification + targeted re-run)'
+    command: '(Requires LegacySolver.js modification + targeted re-run)'
   },
   {
     priority: 5,

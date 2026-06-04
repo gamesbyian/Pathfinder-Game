@@ -86,7 +86,7 @@ function normalizeRaw(raw) {
 }
 
 // --- Validate a single hint path against level constraints ---
-// Mirrors the logic in validateCandidatePath (Solver.js:13622) and
+// Mirrors the logic in validateCandidatePath (LegacySolver.js:13622) and
 // areWinMetricsSatisfied (index.html:2339).
 function validateHintPath(raw, hintPath, levelNumber) {
   const level = normalizeRaw(raw);
