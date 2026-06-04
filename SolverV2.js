@@ -922,7 +922,7 @@ async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime,
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
             if (now - startTime > budgetMs) return false;
-            if (yieldFn && now - lastYield >= 50) {
+            if (yieldFn && now - lastYield >= 16) {
                 lastYield = now;
                 await yieldFn();
             }
@@ -1220,7 +1220,7 @@ function isSolution(state, level) {
 //   recovering from a small number of wrong early ordering decisions (the diagnosed
 //   failure mode) while remaining complete as the bound grows.
 // Returns the solution path (array of keys) or null on timeout/failure.
-function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, maxDiscrepancy = Infinity) {
+async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, maxDiscrepancy = Infinity, yieldFn = null) {
     const state = createState(startKey, level, prep);
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
@@ -1230,10 +1230,18 @@ function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTi
     const stack = [{ key: startKey, children: children0, childIdx: 0, undoInfo: null, disc: 0 }];
 
     let nodesExpanded = 0;
+    let lastYield = levelStartTime;
 
     while (stack.length > 0) {
-        // Budget check every 256 nodes (cheap enough not to dominate per-node cost)
-        if ((++nodesExpanded & 255) === 0 && Date.now() - levelStartTime > levelBudgetMs) return null;
+        // Budget + yield check every 256 nodes.
+        if ((++nodesExpanded & 255) === 0) {
+            const now = Date.now();
+            if (now - levelStartTime > levelBudgetMs) return null;
+            if (yieldFn && now - lastYield >= 16) {
+                lastYield = now;
+                await yieldFn();
+            }
+        }
 
         const top = stack[stack.length - 1];
         if (top.childIdx >= top.children.length) {
@@ -1352,13 +1360,13 @@ async function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, lev
         if (Date.now() - levelStartTime >= probeCapMs) break;
         if (yieldFn) await yieldFn();
         const w0 = Date.now();
-        const path = dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k);
+        const path = await dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k, yieldFn);
         if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms ${path?'SOLVED':'-'}`);
         if (path) return path;
     }
     if (Date.now() - levelStartTime >= levelBudgetMs) return null;
     if (yieldFn) await yieldFn();
-    const path = dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity);
+    const path = await dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn);
     if (_LDS_DEBUG) console.error(`    [lds] k=Inf ${path?'SOLVED':'-'}`);
     return path;
 }
