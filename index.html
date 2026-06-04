@@ -4604,8 +4604,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                 return;
             }
             const searchLevel = APP.LevelUtils.deepCloneLevel(l);
-            const budgetMs = APP.Solver.getTrapSpotBudgetMs(searchLevel);
-            const res = await APP.Solver.findTrapSpots(searchLevel, { timeLimit: budgetMs });
+            const budgetMs = APP.SolverV2.getTrapSpotBudgetMs(searchLevel);
+            const res = await APP.SolverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs });
             APP.Editor.setTrapSpots(res.spots || new Set());
             APP.Renderer.render();
             if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, "text-white font-black");
@@ -4617,7 +4617,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
                     // Revert target ceiling to 120000ms to return to original baseline.
                     const retryBudgetMs = Math.min(480000, Math.max((res.timeLimit || budgetMs) * 2, 10000));
                     const retryLevel = APP.LevelUtils.deepCloneLevel(l);
-                    const retryRes = await APP.Solver.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs });
+                    const retryRes = await APP.SolverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs });
                     APP.Editor.setTrapSpots(retryRes.spots || new Set());
                     APP.Renderer.render();
                     if (APP.State.ENGINE.editor.validTrapSpots.size > 0) APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
