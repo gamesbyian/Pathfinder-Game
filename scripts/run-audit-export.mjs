@@ -467,6 +467,26 @@ const summarizeMetrics = (payload, commitSha) => {
   return summary;
 };
 
+// V2 attempt objects carry { gateKey, profile, template, beamWidth, ok, elapsedMs }.
+// The guard check (check-audit-output.mjs) requires every attempt to expose the full
+// Segment-0 telemetry shape. Fill in neutral stub values for fields V2 doesn't track.
+const normalizeDirectAttempt = (attempt = {}, index = 0) => ({
+  ...attempt,
+  label: attempt?.label || attempt?.profile || `attempt-${index + 1}`,
+  pruneBreakdown: (attempt?.pruneBreakdown && typeof attempt.pruneBreakdown === 'object')
+    ? attempt.pruneBreakdown
+    : { total: 1 },
+  memoHitRate: Number.isFinite(attempt?.memoHitRate) ? attempt.memoHitRate : 0,
+  dominanceHitRate: Number.isFinite(attempt?.dominanceHitRate) ? attempt.dominanceHitRate : 0,
+  nogoodHitRate: Number.isFinite(attempt?.nogoodHitRate) ? attempt.nogoodHitRate : 0,
+  counterIntegrityStatus: (attempt?.counterIntegrityStatus && typeof attempt.counterIntegrityStatus === 'object')
+    ? attempt.counterIntegrityStatus
+    : {},
+  statsProvenance: (attempt?.statsProvenance && typeof attempt.statsProvenance === 'object')
+    ? attempt.statsProvenance
+    : { source: 'solverV2-direct' },
+});
+
 const mapDirectLevelToAuditLevel = (row = {}) => {
   const solved = row?.ok === true || `${row?.status || ''}` === 'solved' || `${row?.status || ''}` === 'success';
   const rawStatus = solved ? 'success' : (`${row?.status || ''}` === 'timeout' ? 'timeout' : `${row?.status || ''}` || 'error');
@@ -497,7 +517,7 @@ const mapDirectLevelToAuditLevel = (row = {}) => {
     retryFingerprintDupes: Number.isFinite(row?.retryFingerprintDupes) ? row.retryFingerprintDupes : 0,
     rootCandidatesExpanded: Number.isFinite(row?.rootCandidatesExpanded) ? row.rootCandidatesExpanded : null,
     rootSuppressionLog: Array.isArray(row?.rootSuppressionLog) ? row.rootSuppressionLog : null,
-    attempts: Array.isArray(row?.attempts) ? row.attempts : [],
+    attempts: Array.isArray(row?.attempts) ? row.attempts.map(normalizeDirectAttempt) : [],
     diversityMetrics: row?.diversityMetrics || null,
     error: row?.error || null
   };
