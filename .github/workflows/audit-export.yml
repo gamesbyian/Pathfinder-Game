@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'levels.js'
+      - 'SolverV2.js'
+      - 'solverv2.js'
 
 permissions:
   contents: write
