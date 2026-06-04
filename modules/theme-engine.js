@@ -157,15 +157,20 @@ export function deriveTokens(seeds) {
         return hslToHex({ h: hsl.h + diff * 0.60, s: Math.max(55, hsl.s), l: Math.max(38, Math.min(62, hsl.l)) });
     })();
 
-    // mode/orient buttons – always very dark
-    const actionDarkBg = bgLight ? darken(primary, 0.42) : '#0f172a';
+    // mode/orient buttons – always very dark; on dark themes use a dark tint of bg
+    const actionDarkBg = bgLight ? darken(primary, 0.42) : lighten(bg, 0.12);
 
-    // utility buttons (mute, copy, gen)
-    const utilBtnBg = bgLight ? mix(surface, border, 0.6) : mix(surface, bg, 0.35);
+    // utility buttons (mute, copy, gen) – guard against near-black on fully-dark themes
+    const utilBtnBgRaw = bgLight ? mix(surface, border, 0.6) : mix(surface, bg, 0.35);
+    const utilBtnBg = hexToHsl(utilBtnBgRaw).l < 10 ? lighten(bg, 0.15) : utilBtnBgRaw;
 
     // output panel (code / solution display)
-    const outputBg   = bgLight ? '#0f172a' : mix(bg, surface, 0.3);
-    const outputText = bgLight ? lighten(primary, 0.28) : lighten(primary, 0.38);
+    // dark themes: slightly lighten bg rather than mixing two near-identical darks
+    const outputBg = bgLight ? '#0f172a' : (luminance(bg) > 0.15 ? darken(bg, 0.25) : lighten(bg, 0.10));
+    const outputTextRaw = bgLight ? lighten(primary, 0.28) : lighten(primary, 0.38);
+    const outputText = contrastRatio(outputBg, outputTextRaw) >= 3.5
+        ? outputTextRaw
+        : (contrastRatio(outputBg, lighten(primary, 0.50)) >= 3.5 ? lighten(primary, 0.50) : '#dce4f0');
 
     // modal / overlay
     const controlsBg  = surfaceLight ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.35)';
@@ -185,6 +190,15 @@ export function deriveTokens(seeds) {
 
     // header sub-label opacity
     const headerSubLabel = onSecondary === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)';
+
+    // win text: prefer neutral but fall back to something that actually contrasts with the surface
+    const winText = contrastRatio(surface, neutral) >= 3.0
+        ? neutral
+        : (contrastRatio(surface, textMuted) >= 3.0 ? textMuted : text);
+
+    // alert bg: fall back to secondary when primary is too dark to distinguish
+    const alertBg     = hexToHsl(primary).l < 20 ? secondary : primaryD;
+    const alertStroke = isLight(alertBg) ? darken(alertBg, 0.2) : lighten(alertBg, 0.3);
 
     return {
         bodyBg: bg,
@@ -259,13 +273,13 @@ export function deriveTokens(seeds) {
         win: {
             bg: surface,
             border: primary,
-            text: neutral,
+            text: winText,
             accent: bgLight ? primaryDD : primaryL,
         },
 
         alert: {
-            bg: primaryD,
-            stroke: primaryL,
+            bg: alertBg,
+            stroke: alertStroke,
         },
 
         ctrlArea: {
