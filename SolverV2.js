@@ -331,6 +331,19 @@ function prepLevel(level) {
         }
     }
 
+    // Cells that can never be valid false-goal (trap spot) locations:
+    // goal, gates, must-pass, must-cross, filters, flipping filters, portal terminals.
+    // A false goal cannot share a cell with any other object.
+    prep.trapInvalidSet = new Set([
+        level.goalKey,
+        ...level.gateKeys,
+        ...level.mustPassKeys,
+        ...level.mustCrossKeys,
+        ...level.filterMap.keys(),
+        ...level.flippingFilterMap.keys(),
+        ...level.portalMap.keys(),
+    ]);
+
     return prep;
 }
 
@@ -907,10 +920,13 @@ function isConnectedForTrap(pos, state, level, prep) {
 // A valid trap spot is any cell where a path of exactly reqLen steps from the gate
 // satisfies all win conditions (length, intersections, must-pass, must-cross).
 // Adds found cells to validSpots. Returns true on full completion, false on timeout.
+//
+// Forced-move optimisation: after taking a move, if the reached cell has exactly one
+// valid forward neighbor we follow that chain inline without pushing stack frames,
+// bundling all undo tokens onto a single frame at the first real branching point.
+// Corridors that previously cost O(b^20) stack frames cost O(1) after compression.
 async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime, validSpots, yieldFn) {
     const state = createState(startKey, level, prep);
-    const neighbors0 = getNeighbors(startKey, state, level, prep);
-    const stack = [{ key: startKey, children: neighbors0, childIdx: 0, undoInfo: null }];
     const mpN = level.mustPassKeys.length;
     const mpAllMask = mpN > 0 ? (1 << mpN) - 1 : 0;
     const mcN = level.mustCrossKeys.length;
@@ -918,83 +934,123 @@ async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime,
     let nodesExpanded = 0;
     let lastYield = startTime;
 
+    // Each frame: { key, children, childIdx, undoChain }
+    // undoChain holds every applyMove undo needed to reach `key` from the previous
+    // frame's key; popping the frame undoes them in reverse.
+    const stack = [{ key: startKey, children: getNeighbors(startKey, state, level, prep), childIdx: 0, undoChain: [] }];
+
     while (stack.length > 0) {
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
             if (now - startTime > budgetMs) return false;
-            if (yieldFn && now - lastYield >= 16) {
-                lastYield = now;
-                await yieldFn();
-            }
+            if (yieldFn && now - lastYield >= 16) { lastYield = now; await yieldFn(); }
         }
 
         const top = stack[stack.length - 1];
+
         if (top.childIdx >= top.children.length) {
-            if (top.undoInfo) undoMove(top.undoInfo, state);
+            const ch = top.undoChain;
+            for (let ui = ch.length - 1; ui >= 0; ui--) undoMove(ch[ui], state);
             stack.pop();
             continue;
         }
 
+        // ── Apply move from top.key → next ────────────────────────────────────
         const next = top.children[top.childIdx++];
-        const portal = level.portalMap.get(top.key);
-        const isPortalJump = !!(portal && !state.lastWasPortalJump && portal.dest === next);
-        const undo = applyMove(next, state, level, prep, isPortalJump);
+        const _pt = level.portalMap.get(top.key);
+        const undo = applyMove(next, state, level, prep, !!(_pt && !state.lastWasPortalJump && _pt.dest === next));
+        let curRealLen = state.path.length - 1 - state.portalJumps;
 
-        const realLen = state.path.length - 1 - state.portalJumps;
-
-        if (realLen > level.reqLen) { undoMove(undo, state); continue; }
-        if (state.ints > level.reqInt) { undoMove(undo, state); continue; }
-
-        if (state.mustCrossMask !== 0n && mcN > 0) {
-            const mcRemaining = _popcount(Number(state.mustCrossMask));
-            if (state.ints + mcRemaining > level.reqInt) { undoMove(undo, state); continue; }
-        }
-
-        if (realLen === level.reqLen) {
-            if (state.ints === level.reqInt &&
-                state.mustCrossMask === 0n &&
+        // Basic pruning for the first step
+        if (curRealLen > level.reqLen || state.ints > level.reqInt) { undoMove(undo, state); continue; }
+        if (state.mustCrossMask !== 0n && mcN > 0 &&
+            state.ints + _popcount(Number(state.mustCrossMask)) > level.reqInt) { undoMove(undo, state); continue; }
+        if (curRealLen === level.reqLen) {
+            if (state.ints === level.reqInt && state.mustCrossMask === 0n &&
                 (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
-                next !== level.goalKey) {
-                validSpots.add(next);
-            }
+                !prep.trapInvalidSet.has(next)) validSpots.add(next);
             undoMove(undo, state);
             continue;
         }
 
-        const rSteps = level.reqLen - realLen;
+        // ── Forced-move chain ─────────────────────────────────────────────────
+        // Follow cells with exactly one valid neighbor without creating frames.
+        const undoChain = [undo];
+        let cur = next;
+        let chainDone = false;
+        let chainNeighbors = null;
 
-        if (mpAllMask !== 0 && (state.mpVisitedMask & mpAllMask) !== mpAllMask) {
-            let mpLB = 0;
-            for (let i = 0; i < mpN; i++) {
-                if (state.mpVisitedMask & (1 << i)) continue;
-                const d = prep.mustPassDistMaps[i].get(next) ?? Infinity;
-                if (!Number.isFinite(d)) { mpLB = Infinity; break; }
-                if (d > mpLB) mpLB = d;
+        while (true) {
+            const curNeighbors = getNeighbors(cur, state, level, prep);
+
+            if (curNeighbors.length === 0) { chainDone = true; break; }
+
+            if (curNeighbors.length !== 1) {
+                // Real branching point — run full pruning once for the whole chain
+                const rSteps = level.reqLen - curRealLen;
+
+                if (mpAllMask !== 0 && (state.mpVisitedMask & mpAllMask) !== mpAllMask) {
+                    let mpLB = 0;
+                    for (let i = 0; i < mpN; i++) {
+                        if (state.mpVisitedMask & (1 << i)) continue;
+                        const d = prep.mustPassDistMaps[i].get(cur) ?? Infinity;
+                        if (!Number.isFinite(d)) { mpLB = Infinity; break; }
+                        if (d > mpLB) mpLB = d;
+                    }
+                    if (!Number.isFinite(mpLB) || mpLB > rSteps) { chainDone = true; break; }
+                }
+
+                if (state.mustCrossMask !== 0n) {
+                    let mcLB = 0;
+                    for (let i = 0; i < mcN; i++) {
+                        if ((state.mustCrossMask & (1n << BigInt(i))) === 0n) continue;
+                        const d = prep.mustCrossDistMaps[i].get(cur) ?? Infinity;
+                        if (!Number.isFinite(d)) { mcLB = Infinity; break; }
+                        if (d > mcLB) mcLB = d;
+                    }
+                    if (!Number.isFinite(mcLB) || mcLB > rSteps) { chainDone = true; break; }
+                }
+
+                if (level.reqInt - state.ints > rSteps) { chainDone = true; break; }
+
+                if (!isConnectedForTrap(cur, state, level, prep)) { chainDone = true; break; }
+
+                chainNeighbors = curNeighbors;
+                break;
             }
-            if (!Number.isFinite(mpLB) || mpLB > rSteps) { undoMove(undo, state); continue; }
-        }
 
-        if (state.mustCrossMask !== 0n) {
-            let mcLB = 0;
-            for (let i = 0; i < mcN; i++) {
-                if ((state.mustCrossMask & (1n << BigInt(i))) === 0n) continue;
-                const d = prep.mustCrossDistMaps[i].get(next) ?? Infinity;
-                if (!Number.isFinite(d)) { mcLB = Infinity; break; }
-                if (d > mcLB) mcLB = d;
+            // Forced move: exactly 1 neighbor — apply inline, no frame
+            const forcedNext = curNeighbors[0];
+            const _pc = level.portalMap.get(cur);
+            const forcedUndo = applyMove(forcedNext, state, level, prep, !!(_pc && !state.lastWasPortalJump && _pc.dest === forcedNext));
+            curRealLen = state.path.length - 1 - state.portalJumps;
+
+            // Light pruning after each forced step
+            if (curRealLen > level.reqLen || state.ints > level.reqInt) {
+                undoMove(forcedUndo, state); chainDone = true; break;
             }
-            if (!Number.isFinite(mcLB) || mcLB > rSteps) { undoMove(undo, state); continue; }
+            if (state.mustCrossMask !== 0n && mcN > 0 &&
+                state.ints + _popcount(Number(state.mustCrossMask)) > level.reqInt) {
+                undoMove(forcedUndo, state); chainDone = true; break;
+            }
+            if (curRealLen === level.reqLen) {
+                if (state.ints === level.reqInt && state.mustCrossMask === 0n &&
+                    (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
+                    !prep.trapInvalidSet.has(forcedNext)) validSpots.add(forcedNext);
+                undoMove(forcedUndo, state); chainDone = true; break;
+            }
+
+            undoChain.push(forcedUndo);
+            cur = forcedNext;
         }
 
-        const intNeeded = level.reqInt - state.ints;
-        if (intNeeded > rSteps) { undoMove(undo, state); continue; }
-
-        if (rSteps <= 10 || (nodesExpanded & 31) === 0) {
-            if (!isConnectedForTrap(next, state, level, prep)) { undoMove(undo, state); continue; }
+        if (chainDone) {
+            for (let ui = undoChain.length - 1; ui >= 0; ui--) undoMove(undoChain[ui], state);
+            continue;
         }
 
-        const nextNeighbors = getNeighbors(next, state, level, prep);
-        if (nextNeighbors.length === 0) { undoMove(undo, state); continue; }
-        stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo });
+        // Push a single frame at the branching point with the bundled undo chain
+        stack.push({ key: cur, children: chainNeighbors, childIdx: 0, undoChain });
     }
     return true;
 }
