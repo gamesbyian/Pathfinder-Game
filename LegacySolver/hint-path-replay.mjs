@@ -26,14 +26,14 @@ import vm from 'node:vm';
 import path from 'node:path';
 import process from 'node:process';
 
-// Solver.js references `window` for runtime feature flags (auto-diagnostic timer
+// LegacySolver.js references `window` for runtime feature flags (auto-diagnostic timer
 // etc.). Provide a stub before import so the module-level setTimeout doesn't
 // crash. We disable auto-diagnostics; the replay path doesn't need them.
 if (typeof globalThis.window === 'undefined') {
   globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
 }
 
-const { installSolver } = await import('./legacysolver.js');
+const { installSolver } = await import('./LegacySolver.js');
 
 // --- CLI args ---
 const args = process.argv.slice(2);
@@ -123,7 +123,7 @@ async function loadAllLevels() {
   return levels;
 }
 
-// --- Normalize a raw level into the shape Solver.js expects ---
+// --- Normalize a raw level into the shape LegacySolver.js expects ---
 // Mirrors index.html's normalizeLevel: 1-indexed coords → 0-indexed packed keys.
 function normalizeRaw(raw) {
   const adj = (v) => v - 1;

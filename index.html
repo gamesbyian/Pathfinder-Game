@@ -475,7 +475,7 @@
         compactDefined,
         deriveHeuristicFeatureFlagsSafely,
         toHeuristicFeatureSignature
-    } from './LegacySolver/legacysolver.js';
+    } from './LegacySolver/LegacySolver.js';
     import { installSolverV2 } from './SolverV2.js';
 
     const APP = {};
@@ -1618,7 +1618,7 @@
     // ======================================================
     // I) APP.Solver / APP.SolverV2
     // APP.Solver: legacy V1 solver — wired for hint animation, path validation,
-    //   and trap-spot analysis. Implementation in LegacySolver/legacysolver.js.
+    //   and trap-spot analysis. Implementation in LegacySolver/LegacySolver.js.
     // APP.SolverV2: active solver used by the Solve button in edit mode.
     //   Implementation in SolverV2.js.
     // ======================================================

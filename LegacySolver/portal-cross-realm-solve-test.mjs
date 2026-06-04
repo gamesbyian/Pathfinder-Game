@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 /**
  * Regression test: portal levels must solve even when the level's Map/Set
- * collections were constructed in a different JS realm than Solver.js.
+ * collections were constructed in a different JS realm than LegacySolver.js.
  *
  * Background: the solver's portal-family analysis used to be gated on
  * `level.portalMap instanceof Map`. `instanceof` is realm-fragile — a Map built
  * by a different global (e.g. the host page that constructs the level vs. the
- * Solver.js module) is NOT `instanceof` the checking realm's Map, so the guard
+ * LegacySolver.js module) is NOT `instanceof` the checking realm's Map, so the guard
  * silently treated portal levels as portal-free. Portal-heavy puzzles (e.g. L92)
  * then became unsolvable through the affected entry point while the in-module
  * script path still worked — the reported "Solve button can't solve portal
@@ -14,7 +14,7 @@
  *
  * This test rebuilds real portal levels with their collections allocated in a
  * separate vm realm (so `instanceof Map`/`instanceof Set` are false from
- * Solver.js's perspective) and asserts the solver still solves them.
+ * LegacySolver.js's perspective) and asserts the solver still solves them.
  *
  * Usage: node scripts/portal-cross-realm-solve-test.mjs [--levels=4,21,92]
  */
@@ -23,12 +23,12 @@ import vm from 'node:vm';
 import path from 'node:path';
 import process from 'node:process';
 
-// Browser-ish stubs so Solver.js's module-level code is inert in Node.
+// Browser-ish stubs so LegacySolver.js's module-level code is inert in Node.
 if (typeof globalThis.window === 'undefined') globalThis.window = { __PF_DISABLE_AUTO_PORTAL_VALIDATOR_DIAGNOSTICS__: true };
 if (typeof globalThis.document === 'undefined') globalThis.document = { addEventListener() {}, getElementById: () => null, createElement: () => ({ classList: { add() {}, remove() {} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./legacysolver.js');
+const { installSolver, CANONICAL_SOLVE_TIME_BUDGET_MS } = await import('./LegacySolver.js');
 
 const PACK = (x, y) => (y << 16) | x;
 const UNPACK = (k) => ({ x: k & 0xFFFF, y: (k >> 16) & 0xFFFF });
