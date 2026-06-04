@@ -519,7 +519,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const panel = APP.UI.getEl('editorLineGridPanel'); if (panel) { panel.style.borderTopColor = t.layout.editorPanelBorder; panel.style.borderRightColor = t.layout.editorPanelBorder; }
             const dragGhost = APP.UI.getEl('dragGhost'); if (dragGhost) dragGhost.style.borderColor = t.layout.mainBorder;
             const winModalContent = APP.UI.getEl('winModalContent'); APP.UI.getEl('winCircle').style.backgroundColor = t.win.bg; APP.UI.getEl('winCircle').style.borderColor = t.win.border; winModalContent.querySelector('h2').style.color = t.text.winAccent; winModalContent.querySelector('p').style.color = t.text.win; APP.UI.getEl('nextLevelModalBtn').style.color = t.text.winAccent; APP.UI.getEl('dismissWinModalBtn').style.color = t.text.winAccent;
-        };
         APP.Persistence.persistSessionState();
         APP.State.ENGINE.rainbowActive = (name === 'classic');
         APP.State.ENGINE.isDirty = true;
