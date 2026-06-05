@@ -36,7 +36,7 @@ export function installInput(APP) {
                 if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isPencilMode) {
                     const idx = APP.State.ENGINE.path.indexOf(k); let shouldReverse = false;
                     if (idx !== -1) { if (idx < APP.State.ENGINE.path.length / 2) shouldReverse = true; } else { const headP = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); const tailP = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[0]); const distHead = Math.abs(p.x - headP.x) + Math.abs(p.y - headP.y); const distTail = Math.abs(p.x - tailP.x) + Math.abs(p.y - tailP.y); if (distTail < distHead) shouldReverse = true; }
-                    if (shouldReverse) { APP.State.ENGINE.path.reverse(); const newJumps = new Set(); APP.State.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(APP.State.ENGINE.path.length - jIdx)); APP.State.ENGINE.isPortalJump = newJumps; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); }
+                    if (shouldReverse) { APP.State.ENGINE.path.reverse(); const newJumps = new Set(); APP.State.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(APP.State.ENGINE.path.length - 1 - jIdx)); APP.State.ENGINE.isPortalJump = newJumps; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); }
                 }
                 const lastIdx = APP.State.ENGINE.path.lastIndexOf(k);
                 const headKey = APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1];
@@ -50,7 +50,8 @@ export function installInput(APP) {
                 const shouldTapBacktrack = lastIdx !== -1
                     && lastIdx < APP.State.ENGINE.path.length - 1
                     && isContiguousOrthBacktrack
-                    && !activeLevel.mustCrossKeys.includes(k);
+                    && !activeLevel.mustCrossKeys.includes(k)
+                    && !APP.State.ENGINE.path.slice(lastIdx + 1).some(segK => activeLevel.mustCrossKeys.includes(segK));
                 if (shouldTapBacktrack) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, lastIdx); APP.Engine.setLogicState(APP.Core.DRAGGING); return; }
                 APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' });
             } else {

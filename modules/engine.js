@@ -70,9 +70,7 @@ export function installEngine(APP) {
                 if (APP.State.ENGINE.mode !== APP.Core.EDITOR && activeLevel.gooseSet.has(key)) {
                     APP.State.ENGINE.undoStack.push(createSnapshot());
                     if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift();
-                    const headKey = APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1];
-                    const headVisitCount = headKey === undefined ? 0 : (APP.State.ENGINE.visitedCounts.get(headKey) || 0);
-                    const justCreatedIntersection = APP.State.ENGINE.path.length > 1 && headVisitCount > 1;
+                    const justCreatedIntersection = APP.State.ENGINE.path.length > 1 && (APP.State.ENGINE.visitedCounts.get(key) || 0) > 0;
                     if (justCreatedIntersection) {
                         APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2);
                     }
@@ -301,11 +299,16 @@ export function installEngine(APP) {
                 APP.UI.showGooseJumpScare();
                 APP.Engine.setOverlayState(APP.Core.GOOSE_OVERLAY);
                 setTimeout(() => {
-                    APP.UI.hideGooseJumpScare();
-                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                    if (APP.State.ENGINE.overlayState === APP.Core.GOOSE_OVERLAY) {
+                        APP.UI.hideGooseJumpScare();
+                        APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                    }
                 }, 2500);
             }
 
+
+            let bombTimer1 = null;
+            let bombTimer2 = null;
 
             function triggerBombDetonation(key) {
                 APP.State.ENGINE.armedFalseGoals.delete(key);
@@ -313,10 +316,12 @@ export function installEngine(APP) {
                 APP.Engine.setOverlayState(APP.Core.FALSE_GOAL_ANIMATING);
                 APP.UI.showBombDetonation();
                 APP.Core.SOUND_BUS.play("C2", "8n");
-                setTimeout(() => {
+                bombTimer1 = setTimeout(() => {
+                    bombTimer1 = null;
                     APP.UI.showBombDetonation({ explodedMarkup: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="var(--theme-bomb-blast-ring)" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="var(--theme-bomb-blast-rays)" stroke-width="8"/></svg>` });
                     APP.Core.SOUND_BUS.play("F1", "4n");
-                    setTimeout(() => {
+                    bombTimer2 = setTimeout(() => {
+                        bombTimer2 = null;
                         APP.UI.hideBombDetonation({ resetMarkup: `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>` });
                         APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                     }, 1000);
@@ -370,7 +375,6 @@ export function installEngine(APP) {
                 APP.State.ENGINE.undoStack = [];
                 APP.State.ENGINE.revealedGeese.clear();
                 APP.State.ENGINE.gooseEncounteredThisLevel = false;
-                APP.State.ENGINE.armedFalseGoals.clear();
                 APP.State.ENGINE.detonatedFalseGoals.clear();
                 document.getElementById('editorPalette').classList.toggle('hidden', !isEd);
                 document.getElementById('playMetrics').classList.toggle('hidden', isEd);
@@ -424,6 +428,7 @@ export function installEngine(APP) {
             }
 
             function loadLevel(idx, keepVariant = false) {
+                clearTimeout(bombTimer1); clearTimeout(bombTimer2); bombTimer1 = null; bombTimer2 = null;
                 if (APP.State.ENGINE.activeSolverController) return;
 
                 const levels = APP.Data.getLevels();
@@ -572,7 +577,7 @@ export function installEngine(APP) {
             const VALID_LOGIC_TRANSITIONS = {
                 [APP.Core.IDLE]: [APP.Core.DRAGGING, APP.Core.EDIT_DRAG, APP.Core.THEME_DRAG, APP.Core.RESOLVED],
                 [APP.Core.DRAGGING]: [APP.Core.IDLE, APP.Core.PORTAL_PAUSE, APP.Core.RESOLVED, APP.Core.HAZARD_TRIGGERED],
-                [APP.Core.PORTAL_PAUSE]: [APP.Core.DRAGGING, APP.Core.IDLE],
+                [APP.Core.PORTAL_PAUSE]: [APP.Core.DRAGGING, APP.Core.IDLE, APP.Core.RESOLVED],
                 [APP.Core.RESOLVED]: [APP.Core.IDLE],
                 [APP.Core.HAZARD_TRIGGERED]: [APP.Core.IDLE],
                 [APP.Core.EDIT_DRAG]: [APP.Core.IDLE],
@@ -580,7 +585,7 @@ export function installEngine(APP) {
             };
 
             function setLogicState(newState) {
-                if (!VALID_LOGIC_TRANSITIONS[APP.State.ENGINE.logicState].includes(newState) && newState !== APP.Core.IDLE) {
+                if (newState !== APP.Core.IDLE && !VALID_LOGIC_TRANSITIONS[APP.State.ENGINE.logicState]?.includes(newState)) {
                     console.warn(`Blocked Logic Transition: ${APP.State.ENGINE.logicState} -> ${newState}`);
                     return false;
                 }
