@@ -329,7 +329,7 @@ export function installThemeEditor(APP) {
             const canUndo = undoStacks[themeKey] && undoStacks[themeKey].length > 0;
             if (!canUndo) { undoBtn.disabled = true; undoBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
             undoBtn.onclick = () => {
-                if (canUndo) {
+                if (undoStacks[themeKey] && undoStacks[themeKey].length > 0) {
                     const prev = undoStacks[themeKey].pop();
                     APP.Themes.THEMES[themeKey] = APP.Core.deepClone(prev);
                     renderAll();
