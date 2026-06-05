@@ -115,14 +115,6 @@ export function randomSeeds() {
     return { bg: rc(), surface: rc(), primary: rc(), secondary: rc(), neutral: rc(), text: rc(), border: rc(), path: rc() };
 }
 
-// ---- semantic button colors ----
-// Guide, hint, saved/editNew use fixed semantic hues so users learn them across all themes.
-// Lightness adapts to the theme's dark/light mode.
-
-function semanticColor(hue, saturation, bgLight) {
-    return hslToHex({ h: hue, s: saturation, l: bgLight ? 42 : 56 });
-}
-
 // ---- main derivation ----
 
 export function deriveTokens(seeds) {
@@ -145,16 +137,20 @@ export function deriveTokens(seeds) {
     const primaryDD = darken(primary, 0.30);
     const primaryL  = lighten(primary, 0.22);
 
-    // semantic action button colors (fixed hues, adaptive lightness)
-    const guideColor   = semanticColor(268, 68, bgLight);  // violet
-    const hintColor    = semanticColor(26,  78, bgLight);  // amber
-    const successColor = semanticColor(153, 65, bgLight);  // emerald
+    // action button colors: hues rotate 60°/180°/300° off primary so they're always
+    // mutually distinct and always distinct from the `whoa` button (which is primary).
+    // Saturation tracks the theme's energy; lightness adapts to dark/light mode.
+    const primaryHsl    = hexToHsl(primary);
+    const actionBtnSat  = Math.min(85, Math.max(50, primaryHsl.s * 0.6 + 32));
+    const actionBtnL    = bgLight ? 42 : 56;
+    const guideColor    = hslToHex({ h: (primaryHsl.h + 60)  % 360, s: actionBtnSat, l: actionBtnL });
+    const hintColor     = hslToHex({ h: (primaryHsl.h + 180) % 360, s: actionBtnSat, l: actionBtnL });
+    const successColor  = hslToHex({ h: (primaryHsl.h + 300) % 360, s: actionBtnSat, l: actionBtnL });
 
     // portal: shift primary towards magenta-violet (h=300) by 60%
     const portalColor = (() => {
-        const hsl = hexToHsl(primary);
-        const diff = ((300 - hsl.h + 540) % 360) - 180;
-        return hslToHex({ h: hsl.h + diff * 0.60, s: Math.max(55, hsl.s), l: Math.max(38, Math.min(62, hsl.l)) });
+        const diff = ((300 - primaryHsl.h + 540) % 360) - 180;
+        return hslToHex({ h: primaryHsl.h + diff * 0.60, s: Math.max(55, primaryHsl.s), l: Math.max(38, Math.min(62, primaryHsl.l)) });
     })();
 
     // mode/orient buttons – always very dark; on dark themes use a dark tint of bg
