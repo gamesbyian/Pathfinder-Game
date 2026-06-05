@@ -158,8 +158,9 @@ export function deriveTokens(seeds) {
         return hslToHex({ h: primaryHsl.h + diff * 0.60, s: Math.max(55, primaryHsl.s), l: Math.max(38, Math.min(62, primaryHsl.l)) });
     })();
 
-    // mode/orient buttons – always very dark; on dark themes use a dark tint of bg
-    const actionDarkBg = bgLight ? darken(primary, 0.42) : lighten(bg, 0.12);
+    // mode/orient (Edit/Play) buttons: primary hue at a fixed accessible lightness band
+    // L=32 on light themes (deep but clearly coloured), L=48 on dark themes (medium, visible)
+    const actionDarkBg = hslToHex({ h: primaryHsl.h, s: primaryHsl.s, l: bgLight ? 32 : 48 });
 
     // utility buttons (mute, copy, gen) – guard against near-black on fully-dark themes
     const utilBtnBgRaw = bgLight ? mix(surface, border, 0.6) : mix(surface, bg, 0.35);
