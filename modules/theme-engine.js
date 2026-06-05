@@ -141,16 +141,15 @@ export function deriveTokens(seeds) {
     // so buttons always feel like they belong to the current theme.
     const primaryHsl    = hexToHsl(primary);
     const secondaryHsl  = hexToHsl(secondary);
-    const btnL          = bgLight ? 40 : 52;
+    const btnL          = bgLight ? 40 : 38;
     // Near-achromatic seeds get only a slight saturation nudge; chromatic seeds get boosted
     const guideSat      = primaryHsl.s   < 8 ? primaryHsl.s + 3   : Math.min(90, Math.max(25, primaryHsl.s   + 12));
     const hintSat       = secondaryHsl.s < 8 ? secondaryHsl.s + 3 : Math.min(90, Math.max(25, secondaryHsl.s + 12));
     const blendSat      = Math.min(90, Math.max(25, (guideSat + hintSat) / 2));
     const guideColor    = hslToHex({ h: primaryHsl.h,   s: guideSat, l: btnL });
     const hintColor     = hslToHex({ h: secondaryHsl.h, s: hintSat,  l: btnL });
-    const savedHueDiff  = ((secondaryHsl.h - primaryHsl.h + 540) % 360) - 180;
-    const savedHue      = ((primaryHsl.h + savedHueDiff * 0.5) + 360) % 360;
-    const successColor  = hslToHex({ h: savedHue, s: blendSat, l: btnL });
+    const successHue    = (secondaryHsl.h + 30) % 360;
+    const successColor  = hslToHex({ h: successHue, s: blendSat, l: btnL });
 
     // portal: shift primary towards magenta-violet (h=300) by 60%
     const portalColor = (() => {

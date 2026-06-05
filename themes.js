@@ -22,7 +22,10 @@ window.THEMES = {
     },
 
     dark: {
-        seeds: { bg:'#020617', surface:'#111827',  primary:'#1e3a8a', secondary:'#7f1d1d', neutral:'#475569', text:'#f8fafc', border:'#334155', path:'#22c55e' }
+        seeds: { bg:'#020617', surface:'#111827',  primary:'#1e3a8a', secondary:'#7f1d1d', neutral:'#475569', text:'#f8fafc', border:'#334155', path:'#22c55e' },
+        overrides: {
+            btns: { modeToggle:'#4c1d96', orient:'#4c1d96' },
+        }
     },
 
     tron: {
