@@ -177,6 +177,34 @@ export function installPersistence(APP) {
             APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode);
         }
 
+        async function submitLevel(levelData) {
+            if (!db) throw new Error('No Firebase connection');
+            const user = auth?.currentUser;
+            if (!user) throw new Error('Not signed in');
+            const col = db.collection('artifacts').doc(appId).collection('submissions');
+            await col.add({
+                levelData,
+                submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                submittedBy: user.uid
+            });
+        }
+
+        async function loadPublishedLevels() {
+            if (!db) return [];
+            try {
+                const snapshot = await Promise.race([
+                    db.collection('artifacts').doc(appId).collection('published_levels')
+                        .orderBy('sortOrder')
+                        .get(),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
+                ]);
+                return snapshot.docs.map(doc => doc.data().levelData).filter(Boolean);
+            } catch (e) {
+                console.warn('[Persistence] loadPublishedLevels failed', e);
+                return [];
+            }
+        }
+
         return {
             initAuth,
             syncProgress,
@@ -185,7 +213,9 @@ export function installPersistence(APP) {
             hasConfig: !!firebaseConfigRaw,
             getCurrentUser: () => auth?.currentUser,
             persistSessionState,
-            applySessionState
+            applySessionState,
+            submitLevel,
+            loadPublishedLevels
         };
     })();
 }

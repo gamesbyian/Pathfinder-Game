@@ -348,6 +348,128 @@ export function installInput(APP) {
         document.getElementById('undoBtn').onclick = () => { APP.UI.closeAllModals(); if(APP.State.ENGINE.undoStack.length) APP.Engine.applySnapshot(APP.State.ENGINE.undoStack.pop()); };
         document.getElementById('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = (APP.State.ENGINE.foundHintsSinceLoad || []).filter(path => APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level), path)?.ok); if (!hints.length) { APP.UI.showMessage("No valid hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); APP.UI.setSolutionOutput(hintText); await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
         document.getElementById('editGenBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.setButtonState('editGenBtn', { enabled: true }); APP.Editor.generateLevelString(); };
+
+        document.getElementById('editSubmitBtn').onclick = async () => {
+            APP.UI.closeAllModals();
+            if (APP.State.ENGINE.activeSolverController) {
+                APP.UI.showMessage('Solver is running, please wait.', 'text-yellow-400 font-bold');
+                return;
+            }
+            APP.Editor.applyMetricsFromUI();
+            const l = APP.State.ENGINE.editor.workingLevel;
+            const validation = APP.Editor.validateWorkingLevel();
+            if (!validation?.ok) {
+                APP.UI.showMessage(validation?.reasons?.[0] || 'Fix errors first.', 'text-red-500 font-bold');
+                return;
+            }
+            const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0;
+            const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0;
+            if (!reqLen) {
+                APP.UI.showMessage('Set a length target before submitting.', 'text-red-500 font-bold');
+                return;
+            }
+
+            // Collect existing valid hints
+            const validateHintPath = (candidatePath) => {
+                const lv = APP.LevelUtils.deepCloneLevel(l);
+                lv.reqLen = reqLen; lv.reqInt = reqInt;
+                return APP.Solver.validateCandidatePath(lv, candidatePath);
+            };
+            const normalizedHints = [];
+            const seen = new Set();
+            const pushUniqueHint = (candidatePath) => {
+                const res = validateHintPath(candidatePath);
+                if (!res?.ok) return;
+                const key = JSON.stringify(res.path);
+                if (seen.has(key)) return;
+                seen.add(key);
+                normalizedHints.push(res.path);
+            };
+            (Array.isArray(l.hints) ? l.hints : []).forEach(pushUniqueHint);
+            (Array.isArray(APP.State.ENGINE.foundHintsSinceLoad) ? APP.State.ENGINE.foundHintsSinceLoad : []).forEach(pushUniqueHint);
+            if (APP.State.ENGINE.path.length > 1) pushUniqueHint(APP.State.ENGINE.path);
+
+            // If no hints found yet, run solver
+            if (normalizedHints.length === 0) {
+                let _cancelled = false;
+                const cancelSolve = () => { _cancelled = true; APP.UI.setModalContent('searchLabel', 'Stopping…', 'text'); };
+                const yieldFn = async () => { await new Promise(r => setTimeout(r, 0)); if (_cancelled) throw new Error('SolverV2:cancelled'); };
+                APP.State.ENGINE.activeSolverController = { cancel: cancelSolve, abort: cancelSolve };
+                const abortPoll = setInterval(() => { if (APP.State.ENGINE.solverAbortRequested) cancelSolve(); }, 100);
+                try {
+                    APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
+                    APP.UI.setSolverControlsEnabled(false);
+                    APP.UI.setModalContent('searchLabel', 'Solving level for submission…', 'text');
+                    APP.UI.setSolverDetailText('Searching…');
+                    APP.UI.setSolverTimerText('0.0s');
+                    APP.UI.setSolverProgress(0);
+                    await new Promise(r => setTimeout(r, 0));
+                    const solveLevel = APP.LevelUtils.deepCloneLevel(l);
+                    solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
+                    const budgetMs = 30000;
+                    const t0 = Date.now();
+                    const timerInterval = setInterval(() => {
+                        const elapsed = (Date.now() - t0) / 1000;
+                        APP.UI.setSolverTimerText(`${elapsed.toFixed(1)}s`);
+                        APP.UI.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
+                    }, 100);
+                    let result;
+                    try {
+                        result = await APP.SolverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
+                    } finally {
+                        clearInterval(timerInterval);
+                    }
+                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                    if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
+                        pushUniqueHint(result.solution);
+                    } else if (!_cancelled) {
+                        APP.UI.showMessage('No solution found; submitting without hints.', 'text-amber-300 font-bold');
+                        await new Promise(r => setTimeout(r, 1500));
+                    }
+                } catch (err) {
+                    APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                    if (err?.message === 'SolverV2:cancelled') return;
+                    APP.UI.showMessage('Solver error; submitting without hints.', 'text-amber-300 font-bold');
+                    await new Promise(r => setTimeout(r, 1500));
+                } finally {
+                    clearInterval(abortPoll);
+                    APP.State.ENGINE.activeSolverController = null;
+                    APP.State.ENGINE.solverAbortRequested = false;
+                    APP.UI.setSolverControlsEnabled(true);
+                }
+            }
+
+            // Build level export object
+            const hints = normalizedHints.slice(0, 5);
+            const levelData = {
+                grid: l.grid,
+                gates: APP.LevelUtils.expCoords(l.gateKeys),
+                goal: { x: APP.LevelUtils.UNPACK(l.goalKey).x + 1, y: APP.LevelUtils.UNPACK(l.goalKey).y + 1 },
+                falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys),
+                reqLen, reqInt,
+                blocks: APP.LevelUtils.expCoords(l.blockSet),
+                mustPass: APP.LevelUtils.expCoords(l.mustPassKeys),
+                mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys),
+                filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
+                flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
+                portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x + 1, y1: APP.LevelUtils.UNPACK(pv.k1).y + 1, x2: APP.LevelUtils.UNPACK(pv.k2).x + 1, y2: APP.LevelUtils.UNPACK(pv.k2).y + 1 })),
+                geese: APP.LevelUtils.expCoords(l.gooseSet),
+                hints
+            };
+
+            try {
+                APP.UI.setButtonState('editSubmitBtn', { enabled: false });
+                APP.UI.showMessage('Submitting…', 'text-white font-black');
+                await APP.Persistence.submitLevel(levelData);
+                APP.UI.showMessage('Level submitted!', 'text-emerald-400 font-black');
+            } catch (err) {
+                console.error('[Submit] failed:', err);
+                APP.UI.showMessage(err?.message === 'Not signed in' ? 'Not signed in.' : `Submit failed: ${err?.message || 'Error'}`, 'text-red-500 font-bold');
+            } finally {
+                APP.UI.setButtonState('editSubmitBtn', { enabled: true });
+            }
+        };
+
         const copyCurrentPath = async () => {
             APP.UI.closeAllModals();
             if (APP.State.ENGINE.path.length > 0) {
