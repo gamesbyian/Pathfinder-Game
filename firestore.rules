@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.token.email == 'ianmakesjokes@gmail.com';
+    }
+
+    // Existing player-progress and session collections (unchanged)
+    match /artifacts/{appId}/users/{uid}/data/{doc} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // User-submitted levels: any authenticated user can create their own.
+    // Only the admin can read or delete.
+    match /artifacts/{appId}/submissions/{submissionId} {
+      allow create: if request.auth != null
+                    && request.resource.data.submittedBy == request.auth.uid;
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // Admin-approved published levels: anyone can read, only admin can write.
+    match /artifacts/{appId}/published_levels/{levelId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

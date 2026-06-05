@@ -385,7 +385,9 @@ export function installEngine(APP) {
                 const exportArea = document.getElementById('exportArea');
                 document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editGenBtn').classList.toggle('hidden', !isEd);
+                document.getElementById('editSubmitBtn').classList.toggle('hidden', !isEd);
                 APP.UI.setButtonState('editGenBtn', { enabled: true });
+                APP.UI.setButtonState('editSubmitBtn', { enabled: true });
                 document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode);
                 document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode);
                 if (isEd) {

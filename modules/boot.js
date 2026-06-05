@@ -25,6 +25,15 @@ export function installBoot(APP) {
                 }
                 if (APP.Loader.getStatus().phase === 'failed') return;
 
+                if (APP.Persistence.hasConfig) {
+                    try {
+                        const published = await APP.Persistence.loadPublishedLevels();
+                        if (published.length > 0) APP.Data.appendLevels(published);
+                    } catch (e) {
+                        console.warn('[Boot] Published levels load failed', e);
+                    }
+                }
+
                 APP.Themes.ensureThemeLeaveColors();
                 APP.Themes.applyTheme(persistedSession.currentTheme);
                 APP.Engine.loadLevel(persistedSession.levelIdx);

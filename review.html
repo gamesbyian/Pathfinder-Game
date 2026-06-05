@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinder Level Review</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore-compat.js"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; }
+        canvas { image-rendering: pixelated; }
+        .submission-card { cursor: pointer; transition: all 0.15s; }
+        .submission-card.selected { border-color: #3b82f6 !important; background: #eff6ff; }
+        .submission-card:hover:not(.selected) { border-color: #94a3b8; }
+        #hintTimeline button { min-width: 2rem; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+<!-- Auth screen -->
+<div id="authScreen" class="min-h-screen flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-xl p-10 flex flex-col items-center gap-6 max-w-sm w-full">
+        <h1 class="text-2xl font-black uppercase tracking-tight">Level Review</h1>
+        <p class="text-slate-500 text-sm text-center">Sign in with the admin Google account to access submissions.</p>
+        <button id="signInBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Sign in with Google</button>
+        <p id="authError" class="text-red-500 text-sm text-center hidden"></p>
+    </div>
+</div>
+
+<!-- Main review UI -->
+<div id="reviewApp" class="hidden">
+    <header class="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+        <h1 class="text-lg font-black uppercase tracking-tight">Pathfinder — Level Review</h1>
+        <div class="flex items-center gap-4">
+            <span id="headerUserEmail" class="text-sm text-slate-500"></span>
+            <button id="signOutBtn" class="text-sm text-slate-500 hover:text-slate-800 transition underline">Sign out</button>
+        </div>
+    </header>
+
+    <div class="flex h-[calc(100vh-57px)]">
+        <!-- Left panel: submission list -->
+        <aside class="w-72 bg-white border-r border-slate-200 flex flex-col overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-widest text-slate-500">Submissions</span>
+                <span id="submissionCount" class="text-xs font-bold text-slate-400">—</span>
+            </div>
+            <div id="submissionList" class="flex-1 overflow-y-auto p-2 flex flex-col gap-2">
+                <p class="text-slate-400 text-sm text-center py-8">Loading…</p>
+            </div>
+        </aside>
+
+        <!-- Right panel: detail view -->
+        <main id="detailPanel" class="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+            <div id="noSelection" class="flex-1 flex items-center justify-center text-slate-400 text-sm">
+                Select a submission on the left.
+            </div>
+
+            <div id="detailContent" class="hidden flex flex-col gap-6 max-w-3xl mx-auto w-full">
+                <!-- Level canvas + controls -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
+                    <div class="flex items-start gap-5">
+                        <canvas id="levelCanvas" width="400" height="400" class="rounded-xl border border-slate-200 shrink-0" style="width:320px;height:320px;"></canvas>
+                        <div class="flex-1 flex flex-col gap-3">
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Grid</p>
+                                <p id="infoGrid" class="font-bold text-slate-700">—</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Targets</p>
+                                <p id="infoTargets" class="font-bold text-slate-700">—</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Submitted</p>
+                                <p id="infoSubmitted" class="font-bold text-slate-700 text-sm">—</p>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Hints</p>
+                                <p id="infoHints" class="font-bold text-slate-700">—</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hint controls -->
+                    <div id="hintControls" class="flex flex-col gap-2 border-t border-slate-100 pt-4 hidden">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-black uppercase tracking-widest text-slate-400">Hints</span>
+                            <div id="hintTimeline" class="flex gap-1 flex-wrap"></div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="hintPlayBtn" class="bg-blue-600 text-white text-xs font-bold px-4 py-1.5 rounded-lg hover:bg-blue-700 transition">Play</button>
+                            <button id="hintStopBtn" class="bg-slate-200 text-slate-700 text-xs font-bold px-4 py-1.5 rounded-lg hover:bg-slate-300 transition">Reset</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
+                    <h2 class="text-sm font-black uppercase tracking-widest text-slate-500">Actions</h2>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm font-bold text-slate-600">Sort order</label>
+                            <input id="sortOrderInput" type="number" min="1" step="1" placeholder="e.g. 52"
+                                class="w-24 border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-bold text-center focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </div>
+                        <button id="approveBtn" class="bg-emerald-600 text-white font-black text-sm px-6 py-2 rounded-xl hover:bg-emerald-700 transition shadow-sm">Approve</button>
+                        <button id="rejectBtn" class="bg-red-600 text-white font-black text-sm px-6 py-2 rounded-xl hover:bg-red-700 transition shadow-sm">Reject</button>
+                    </div>
+                    <p id="actionStatus" class="text-sm font-bold hidden"></p>
+                </div>
+
+                <!-- Raw JSON (collapsed by default) -->
+                <details class="bg-white rounded-2xl shadow-sm border border-slate-200">
+                    <summary class="px-5 py-3 text-xs font-black uppercase tracking-widest text-slate-400 cursor-pointer select-none">Raw Level Data</summary>
+                    <pre id="rawJson" class="px-5 pb-5 text-[0.65rem] font-mono text-slate-600 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed"></pre>
+                </details>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+// ─── Firebase setup ───────────────────────────────────────────────────────────
+const ADMIN_EMAIL = 'ianmakesjokes@gmail.com';
+const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
+
+let db = null;
+let auth = null;
+
+if (firebaseConfigRaw) {
+    try {
+        const config = JSON.parse(firebaseConfigRaw);
+        firebase.initializeApp(config);
+        auth = firebase.auth();
+        db = firebase.firestore();
+    } catch (e) {
+        console.error('Firebase init failed', e);
+        showAuthError('Firebase init failed: ' + e.message);
+    }
+} else {
+    showAuthError('No Firebase config found. Make sure this page is served via Firebase Hosting.');
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+function showAuthError(msg) {
+    const el = document.getElementById('authError');
+    if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+}
+
+document.getElementById('signInBtn').onclick = async () => {
+    if (!auth) return;
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        provider.setCustomParameters({ hd: 'gmail.com' });
+        await auth.signInWithPopup(provider);
+    } catch (e) {
+        showAuthError('Sign-in failed: ' + e.message);
+    }
+};
+
+document.getElementById('signOutBtn').onclick = () => auth?.signOut();
+
+auth?.onAuthStateChanged((user) => {
+    if (!user) {
+        document.getElementById('authScreen').classList.remove('hidden');
+        document.getElementById('reviewApp').classList.add('hidden');
+        return;
+    }
+    if (user.email !== ADMIN_EMAIL) {
+        auth.signOut();
+        showAuthError('Access denied. Sign in as ' + ADMIN_EMAIL);
+        return;
+    }
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('reviewApp').classList.remove('hidden');
+    document.getElementById('headerUserEmail').textContent = user.email;
+    loadSubmissions();
+});
+
+// ─── Submissions ──────────────────────────────────────────────────────────────
+let submissions = [];
+let selectedId = null;
+let unsubscribe = null;
+
+function loadSubmissions() {
+    if (!db) return;
+    if (unsubscribe) unsubscribe();
+    const col = db.collection('artifacts').doc(appId).collection('submissions')
+                   .orderBy('submittedAt', 'desc');
+    unsubscribe = col.onSnapshot((snap) => {
+        submissions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        document.getElementById('submissionCount').textContent = submissions.length;
+        renderList();
+        if (selectedId) {
+            const still = submissions.find(s => s.id === selectedId);
+            if (still) selectSubmission(selectedId);
+            else clearDetail();
+        }
+    }, (err) => console.error('Snapshot error', err));
+}
+
+function renderList() {
+    const list = document.getElementById('submissionList');
+    if (submissions.length === 0) {
+        list.innerHTML = '<p class="text-slate-400 text-sm text-center py-8">No submissions yet.</p>';
+        return;
+    }
+    list.innerHTML = '';
+    for (const s of submissions) {
+        const card = document.createElement('div');
+        card.className = 'submission-card rounded-xl border border-slate-200 bg-white p-3 flex flex-col gap-1';
+        card.dataset.id = s.id;
+        const ld = s.levelData || {};
+        const grid = ld.grid ? `${ld.grid.w}×${ld.grid.h}` : '?';
+        const hintCount = Array.isArray(ld.hints) ? ld.hints.length : 0;
+        const date = s.submittedAt?.toDate ? s.submittedAt.toDate().toLocaleDateString() : '?';
+        card.innerHTML = `
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-black uppercase tracking-widest text-slate-500">${grid} grid</span>
+                <span class="text-xs text-slate-400">${date}</span>
+            </div>
+            <div class="text-xs text-slate-500">Len ${ld.reqLen || '?'} &nbsp;·&nbsp; ×${ld.reqInt || '0'} &nbsp;·&nbsp; ${hintCount} hint${hintCount !== 1 ? 's' : ''}</div>
+        `;
+        if (s.id === selectedId) card.classList.add('selected');
+        card.addEventListener('click', () => selectSubmission(s.id));
+        list.appendChild(card);
+    }
+}
+
+function clearDetail() {
+    selectedId = null;
+    document.getElementById('noSelection').classList.remove('hidden');
+    document.getElementById('detailContent').classList.add('hidden');
+}
+
+// ─── Detail view ──────────────────────────────────────────────────────────────
+let currentLevel = null;
+let currentHints = [];
+let activeHintIdx = 0;
+let hintAnimFrame = 0;
+let hintAnimTimer = null;
+
+function selectSubmission(id) {
+    selectedId = id;
+    document.querySelectorAll('.submission-card').forEach(c => c.classList.toggle('selected', c.dataset.id === id));
+    const sub = submissions.find(s => s.id === id);
+    if (!sub) return clearDetail();
+
+    stopHint();
+    currentLevel = sub.levelData || {};
+    currentHints = Array.isArray(currentLevel.hints) ? currentLevel.hints : [];
+    activeHintIdx = 0;
+
+    document.getElementById('noSelection').classList.add('hidden');
+    document.getElementById('detailContent').classList.remove('hidden');
+
+    const grid = currentLevel.grid;
+    document.getElementById('infoGrid').textContent = grid ? `${grid.w} × ${grid.h}` : '?';
+    document.getElementById('infoTargets').textContent = `Length ${currentLevel.reqLen || 0} · Crosses ${currentLevel.reqInt || 0}`;
+    document.getElementById('infoHints').textContent = `${currentHints.length} hint${currentHints.length !== 1 ? 's' : ''}`;
+    const date = sub.submittedAt?.toDate ? sub.submittedAt.toDate().toLocaleString() : 'unknown';
+    document.getElementById('infoSubmitted').textContent = date;
+
+    // Hint timeline buttons
+    const timeline = document.getElementById('hintTimeline');
+    timeline.innerHTML = '';
+    currentHints.forEach((_, i) => {
+        const btn = document.createElement('button');
+        btn.className = `text-xs font-bold px-2 py-1 rounded border transition ${i === 0 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'}`;
+        btn.textContent = i + 1;
+        btn.onclick = () => { activeHintIdx = i; stopHint(); renderLevel(); updateHintTimeline(); };
+        timeline.appendChild(btn);
+    });
+    document.getElementById('hintControls').classList.toggle('hidden', currentHints.length === 0);
+
+    document.getElementById('actionStatus').classList.add('hidden');
+    document.getElementById('rawJson').textContent = JSON.stringify(currentLevel, null, 2);
+
+    renderLevel();
+}
+
+function updateHintTimeline() {
+    const buttons = document.getElementById('hintTimeline').children;
+    for (let i = 0; i < buttons.length; i++) {
+        buttons[i].className = `text-xs font-bold px-2 py-1 rounded border transition ${i === activeHintIdx ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'}`;
+    }
+}
+
+function renderLevel(pathSlice = null) {
+    const canvas = document.getElementById('levelCanvas');
+    if (!currentLevel || !currentLevel.grid) return;
+    LevelRenderer.render(canvas, currentLevel, pathSlice);
+}
+
+// Hint playback
+document.getElementById('hintPlayBtn').onclick = () => {
+    if (!currentHints[activeHintIdx]) return;
+    stopHint();
+    hintAnimFrame = 0;
+    const path = currentHints[activeHintIdx];
+    hintAnimTimer = setInterval(() => {
+        hintAnimFrame++;
+        renderLevel(path.slice(0, hintAnimFrame));
+        if (hintAnimFrame >= path.length) stopHint();
+    }, 60);
+};
+document.getElementById('hintStopBtn').onclick = () => { stopHint(); renderLevel(); };
+
+function stopHint() {
+    if (hintAnimTimer) { clearInterval(hintAnimTimer); hintAnimTimer = null; }
+}
+
+// ─── Approve / Reject ─────────────────────────────────────────────────────────
+function setActionStatus(msg, color) {
+    const el = document.getElementById('actionStatus');
+    el.textContent = msg;
+    el.className = `text-sm font-bold ${color}`;
+    el.classList.remove('hidden');
+}
+
+document.getElementById('approveBtn').onclick = async () => {
+    if (!selectedId || !db) return;
+    const sortOrder = parseInt(document.getElementById('sortOrderInput').value);
+    if (!Number.isFinite(sortOrder) || sortOrder < 1) {
+        setActionStatus('Enter a valid sort order first.', 'text-red-500');
+        return;
+    }
+    document.getElementById('approveBtn').disabled = true;
+    document.getElementById('rejectBtn').disabled = true;
+    try {
+        const batch = db.batch();
+        const publishRef = db.collection('artifacts').doc(appId).collection('published_levels').doc();
+        batch.set(publishRef, {
+            levelData: currentLevel,
+            approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            sortOrder
+        });
+        const subRef = db.collection('artifacts').doc(appId).collection('submissions').doc(selectedId);
+        batch.delete(subRef);
+        await batch.commit();
+        setActionStatus('Approved! Level added to published_levels.', 'text-emerald-600');
+    } catch (e) {
+        setActionStatus('Approve failed: ' + e.message, 'text-red-500');
+        console.error(e);
+    } finally {
+        document.getElementById('approveBtn').disabled = false;
+        document.getElementById('rejectBtn').disabled = false;
+    }
+};
+
+document.getElementById('rejectBtn').onclick = async () => {
+    if (!selectedId || !db) return;
+    if (!confirm('Delete this submission? This cannot be undone.')) return;
+    document.getElementById('approveBtn').disabled = true;
+    document.getElementById('rejectBtn').disabled = true;
+    try {
+        await db.collection('artifacts').doc(appId).collection('submissions').doc(selectedId).delete();
+        setActionStatus('Rejected and deleted.', 'text-slate-500');
+    } catch (e) {
+        setActionStatus('Reject failed: ' + e.message, 'text-red-500');
+        console.error(e);
+    } finally {
+        document.getElementById('approveBtn').disabled = false;
+        document.getElementById('rejectBtn').disabled = false;
+    }
+};
+
+// ─── Level Renderer ───────────────────────────────────────────────────────────
+const LevelRenderer = (() => {
+    const PORTAL_COLORS = ['#ef4444','#22c55e','#3b82f6','#f59e0b','#a855f7','#06b6d4','#84cc16','#f43f5e'];
+    const unpack = k => ({ x: k & 0xFFFF, y: (k >>> 16) & 0xFFFF });
+
+    function render(canvas, level, hintPathSlice = null) {
+        const ctx = canvas.getContext('2d');
+        const { w, h } = level.grid;
+        const cw = canvas.width / w;
+        const ch = canvas.height / h;
+        const sz = Math.min(cw, ch);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Grid
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i <= w; i++) { ctx.beginPath(); ctx.moveTo(i * cw, 0); ctx.lineTo(i * cw, canvas.height); ctx.stroke(); }
+        for (let j = 0; j <= h; j++) { ctx.beginPath(); ctx.moveTo(0, j * ch); ctx.lineTo(canvas.width, j * ch); ctx.stroke(); }
+
+        const cx = x0 => (x0 + 0.5) * cw;
+        const cy = y0 => (y0 + 0.5) * ch;
+
+        // Blocks
+        ctx.fillStyle = '#cbd5e1';
+        for (const b of (level.blocks || [])) {
+            ctx.fillRect((b.x - 1) * cw + 1, (b.y - 1) * ch + 1, cw - 2, ch - 2);
+        }
+
+        // MustCross (corner brackets)
+        for (const mc of (level.mustCross || [])) {
+            drawMustCross(ctx, cx(mc.x - 1), cy(mc.y - 1), sz);
+        }
+
+        // Filters
+        for (const f of (level.filters || [])) {
+            drawFilter(ctx, cx(f.x - 1), cy(f.y - 1), sz, f.axis, '#000000', false);
+        }
+        for (const f of (level.flippingFilters || [])) {
+            drawFilter(ctx, cx(f.x - 1), cy(f.y - 1), sz, f.axis, '#000000', true);
+        }
+
+        // Portals
+        for (let i = 0; i < (level.portals || []).length; i++) {
+            const p = level.portals[i];
+            const color = PORTAL_COLORS[i % PORTAL_COLORS.length];
+            drawPortal(ctx, cx(p.x1 - 1), cy(p.y1 - 1), sz, color);
+            drawPortal(ctx, cx(p.x2 - 1), cy(p.y2 - 1), sz, color);
+        }
+
+        // Geese
+        for (const g of (level.geese || [])) {
+            drawGoose(ctx, cx(g.x - 1), cy(g.y - 1), sz);
+        }
+
+        // MustPass (pins)
+        for (const mp of (level.mustPass || [])) {
+            drawMustPass(ctx, cx(mp.x - 1), cy(mp.y - 1), sz);
+        }
+
+        // FalseGoals
+        for (const fg of (level.falseGoals || [])) {
+            drawFalseGoal(ctx, cx(fg.x - 1), cy(fg.y - 1), sz);
+        }
+
+        // Hint path
+        if (hintPathSlice && hintPathSlice.length > 1) {
+            drawHintPath(ctx, hintPathSlice, cw, ch);
+        }
+
+        // Gates (drawn on top)
+        for (const g of (level.gates || [])) {
+            drawGate(ctx, cx(g.x - 1), cy(g.y - 1), sz);
+        }
+
+        // Goal (drawn on top)
+        if (level.goal) {
+            drawGoal(ctx, cx(level.goal.x - 1), cy(level.goal.y - 1), sz);
+        }
+    }
+
+    function drawGate(ctx, sx, sy, sz) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(-Math.PI / 4);
+        ctx.strokeStyle = '#3b82f6';
+        ctx.lineWidth = sz * 0.09;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const s = sz * 0.32;
+        // Left chevron
+        ctx.beginPath(); ctx.moveTo(-s * 0.8, -s * 0.6); ctx.lineTo(0, 0); ctx.lineTo(-s * 0.8, s * 0.6); ctx.stroke();
+        // Right chevron
+        ctx.beginPath(); ctx.moveTo(s * 0.2, -s * 0.6); ctx.lineTo(s, 0); ctx.lineTo(s * 0.2, s * 0.6); ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawGoal(ctx, sx, sy, sz) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        const r = sz * 0.32;
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = sz * 0.09; ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.43, 0, Math.PI * 2);
+        ctx.fillStyle = '#ef4444'; ctx.fill();
+        ctx.restore();
+    }
+
+    function drawFalseGoal(ctx, sx, sy, sz) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        const r = sz * 0.28;
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.fillStyle = '#334155'; ctx.fill();
+        // Red dot on fuse (simplified)
+        ctx.beginPath(); ctx.arc(r * 0.8, -r * 0.8, r * 0.15, 0, Math.PI * 2);
+        ctx.fillStyle = '#ef4444'; ctx.fill();
+        ctx.restore();
+    }
+
+    function drawMustPass(ctx, sx, sy, sz) {
+        ctx.save();
+        ctx.translate(sx, sy + sz * 0.1);
+        ctx.rotate(-15 * Math.PI / 180);
+        const scale = sz / 35;
+        ctx.scale(scale, scale);
+        ctx.beginPath();
+        ctx.moveTo(-1, 0); ctx.lineTo(1, 0); ctx.lineTo(1.5, -12); ctx.lineTo(-1.5, -12); ctx.closePath();
+        ctx.fillStyle = '#94a3b8'; ctx.fill();
+        ctx.beginPath(); ctx.arc(0, -18, 7, 0, Math.PI * 2);
+        ctx.fillStyle = '#64748b'; ctx.fill();
+        ctx.restore();
+    }
+
+    function drawMustCross(ctx, sx, sy, sz) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.strokeStyle = '#000000'; ctx.lineWidth = sz * 0.06; ctx.globalAlpha = 0.3;
+        const outer = sz * 0.38, inner = sz * 0.16;
+        ctx.beginPath(); ctx.moveTo(-outer, -inner); ctx.lineTo(-inner, -inner); ctx.lineTo(-inner, -outer); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(outer, -inner); ctx.lineTo(inner, -inner); ctx.lineTo(inner, -outer); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(-outer, inner); ctx.lineTo(-inner, inner); ctx.lineTo(-inner, outer); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(outer, inner); ctx.lineTo(inner, inner); ctx.lineTo(inner, outer); ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+
+    function drawFilter(ctx, sx, sy, sz, axis, color, isFlipping) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        if (axis === 2) ctx.rotate(Math.PI / 2); // V filter: rotate H bars 90°
+        ctx.fillStyle = color; ctx.globalAlpha = 0.25;
+        const fw = sz * 0.42, ft = sz * 0.08, fx = -sz * 0.4;
+        ctx.fillRect(fx, -fw / 2, sz * 0.8, ft);
+        ctx.fillRect(fx, fw / 2 - ft, sz * 0.8, ft);
+        if (isFlipping) {
+            ctx.globalAlpha = 0.7;
+            ctx.fillStyle = color;
+            ctx.font = `900 ${sz * 0.38}px sans-serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('↺', 0, 0);
+        }
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+
+    function drawPortal(ctx, sx, sy, sz, color) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        const r = sz * 0.28;
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2);
+        ctx.strokeStyle = color; ctx.lineWidth = sz * 0.08;
+        ctx.setLineDash([sz * 0.09, sz * 0.07]);
+        ctx.stroke(); ctx.setLineDash([]);
+        ctx.beginPath(); ctx.arc(0, 0, r * 0.66, 0, Math.PI * 2);
+        ctx.fillStyle = color; ctx.globalAlpha = 0.15; ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.restore();
+    }
+
+    function drawGoose(ctx, sx, sy, sz) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        const m = v => -sz / 2 + (v / 100 * sz);
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.moveTo(m(30), m(0)); ctx.lineTo(m(70), m(0)); ctx.lineTo(m(100), m(30));
+        ctx.lineTo(m(100), m(70)); ctx.lineTo(m(70), m(100)); ctx.lineTo(m(30), m(100));
+        ctx.lineTo(m(0), m(70)); ctx.lineTo(m(0), m(30)); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.moveTo(m(60), m(45)); ctx.lineTo(m(60), m(25));
+        ctx.quadraticCurveTo(m(60), m(18), m(68), m(18));
+        ctx.quadraticCurveTo(m(75), m(18), m(75), m(25));
+        ctx.lineTo(m(75), m(35)); ctx.lineTo(m(68), m(35)); ctx.lineTo(m(68), m(45)); ctx.closePath(); ctx.fill();
+        ctx.restore();
+    }
+
+    function drawHintPath(ctx, path, cw, ch) {
+        ctx.save();
+        ctx.strokeStyle = '#3b82f6'; ctx.lineWidth = Math.min(cw, ch) * 0.22;
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        for (let i = 0; i < path.length; i++) {
+            const { x, y } = unpack(path[i]);
+            const sx = (x + 0.5) * cw, sy = (y + 0.5) * ch;
+            if (i === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+        }
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        // Start dot
+        if (path.length > 0) {
+            const { x, y } = unpack(path[0]);
+            ctx.beginPath(); ctx.arc((x + 0.5) * cw, (y + 0.5) * ch, Math.min(cw, ch) * 0.13, 0, Math.PI * 2);
+            ctx.fillStyle = '#3b82f6'; ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    return { render };
+})();
+</script>
+</body>
+</html>

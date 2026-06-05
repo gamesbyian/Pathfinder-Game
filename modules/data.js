@@ -34,8 +34,14 @@ export function installData(APP) {
             return true;
         };
 
+        const appendLevels = (rawLevels) => {
+            if (!Array.isArray(rawLevels) || rawLevels.length === 0) return;
+            _levels = [..._levels, ...clone(rawLevels).map(normalizeRawLevel)];
+        };
+
         return {
             ingest,
+            appendLevels,
             getLevels: () => _levels,
             getLevel: (index) => _levels[index],
             getThemes: () => _themes,
