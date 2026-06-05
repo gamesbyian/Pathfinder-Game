@@ -1,10 +1,4 @@
 export function installBoot(APP) {
-    // APP.Boot lifecycle guarantees:
-    // - start() is the single authoritative init entrypoint.
-    // - loader/init errors route through APP.Loader.fail(...) and stop further boot progression.
-    // - successful path reaches APP.Loader.finish() exactly once.
-    // APP.Boot Public API: start().
-    // Owns the single initialization entrypoint and orchestrates auth/progress sync, loader completion, and post-load system startup.
     APP.Boot = (() => {
         let started = false;
 
@@ -21,11 +15,7 @@ export function installBoot(APP) {
             try {
                 APP.Persistence.syncProgress();
                 if (APP.Persistence.hasConfig) {
-                    Promise.resolve(APP.Persistence.initAuth())
-                        .then(
-                            () => { APP.Persistence.syncProgress(); },
-                            () => { APP.Persistence.syncProgress(); }
-                        );
+                    APP.Persistence.initAuth().finally(() => APP.Persistence.syncProgress());
                 }
 
                 const mode = await APP.Loader.init();
@@ -58,7 +48,7 @@ export function installBoot(APP) {
             console.error('[Startup] Input init failed; continuing boot.', err);
         }
 
-        Promise.resolve(APP.Boot.start())
+        APP.Boot.start()
             .then(() => {
                 if (inputInitError) {
                     try { APP.UI.reportError('startup-input-init', inputInitError); } catch (_) {}

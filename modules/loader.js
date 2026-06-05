@@ -132,7 +132,6 @@ export function installLoader(APP) {
             progress: state.progress,
             hasLoaded: state.hasLoaded,
             hasFinished: state.hasFinished,
-            status: state.status,
             mode: state.mode
         });
 
