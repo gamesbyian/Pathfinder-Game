@@ -62,57 +62,8 @@
             #playMetrics { gap: clamp(0.7rem, 2.1vw, 1rem); max-width: clamp(12.8rem, 91%, 16.5rem); }
             #editorMetrics { gap: clamp(0.55rem, 1.8vw, 0.85rem); max-width: clamp(12.6rem, 90%, 16rem); }
         }
-        @media (orientation: landscape) {
-            #headerRight { padding-inline: clamp(0.55rem, 1.5vw, 1rem); }
-            #playMetrics { gap: clamp(1.05rem, 2.1vw, 1.5rem); }
-            #editorMetrics { gap: clamp(0.95rem, 1.8vw, 1.3rem); }
-        }
-        .app-layout.forced-landscape #headerRight { padding-inline: clamp(0.55rem, 1.5vw, 1rem); }
-        .app-layout.forced-landscape #playMetrics { gap: clamp(1.05rem, 2.1vw, 1.5rem); }
-        .app-layout.forced-landscape #editorMetrics { gap: clamp(0.95rem, 1.8vw, 1.3rem); }
         #levelInfoWrap { min-width: 0; display: flex; flex-direction: column; align-items: center; }
         #levelNavigator { display: flex; flex-direction: column; gap: calc(var(--ui-gap-tight) * 0.55); align-items: center; }
-
-        @media (orientation: landscape) and (max-width: 899px) {
-            #headerMiddle { flex-basis: clamp(7.5rem, 30%, 10rem); }
-            #headerRight { flex-basis: clamp(8.75rem, 40%, 14rem); padding-inline: clamp(0.25rem, 1vw, 0.5rem); }
-        }
-
-        @media (orientation: landscape) and (min-width: 900px) {
-            #headerMiddle { flex-basis: clamp(11rem, 24vw, 13rem); }
-            #headerRight { flex-basis: clamp(14.5rem, 34vw, 20rem); }
-            .app-layout { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: calc(var(--ui-gap) * 1.6); }
-            .layout-left-pane { width: clamp(21rem, 34vw, 30rem); max-height: 96vh; overflow: hidden; padding-right: var(--ui-gap-tight); display: flex; flex-direction: column; gap: var(--ui-gap-tight); }
-            .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
-            #gameButtonGrid:not(.hidden), #editorButtonGrid:not(.hidden) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-gap-tight); }
-            #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
-            .landscape-editor-tools #editorPalette { --palette-cell-size: clamp(2.55rem, 4.1vw, 3.05rem); --palette-grid-gap: clamp(0.28rem, 0.7vw, 0.42rem); }
-            .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, var(--palette-cell-size)); }
-        }
-        .app-layout.forced-landscape { max-width: min(98vw, 180vh); display: flex; flex-direction: row-reverse; align-items: flex-start; gap: calc(var(--ui-gap) * 1.6); }
-        .app-layout.forced-landscape .layout-left-pane { width: clamp(21rem, 34vw, 30rem); max-height: 96vh; overflow: hidden; padding-right: var(--ui-gap-tight); display: flex; flex-direction: column; gap: var(--ui-gap-tight); }
-        .app-layout.forced-landscape .layout-right-pane { width: min(58vh, 52vw); flex-shrink: 0; }
-        .app-layout.forced-landscape #gameButtonGrid:not(.hidden), .app-layout.forced-landscape #editorButtonGrid:not(.hidden) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-gap-tight); }
-        .app-layout.forced-landscape #solutionOutput { flex: 0 1 14rem; max-width: 14rem; }
-        .app-layout.forced-landscape .landscape-editor-tools #editorPalette { --palette-cell-size: clamp(2.55rem, 4.1vw, 3.05rem); --palette-grid-gap: clamp(0.28rem, 0.7vw, 0.42rem); }
-        .app-layout.forced-landscape .landscape-editor-tools .palette-grid { grid-template-columns: repeat(4, var(--palette-cell-size)); }
-        .landscape-editor-tools { width: 100%; }
-        .landscape-editor-tools .palette-grid { flex-grow: 0; margin-left: 0; gap: var(--palette-grid-gap, var(--ui-gap-tight)); }
-        .landscape-editor-tools .palette-grid .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); }
-        .landscape-editor-tools #editUndoGridBtn { width: var(--palette-cell-size) !important; height: calc((2 * var(--palette-cell-size)) + (1 * var(--palette-grid-gap, var(--ui-gap-tight)))) !important; }
-        .landscape-editor-tools #editorPaletteLayout { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "line palette"; gap: 0; align-items: stretch; }
-        .landscape-editor-tools #editorLineGridPanel { grid-area: line; border-top: 0; border-right: 1px solid var(--theme-divider); padding: 0; justify-content: flex-start; align-items: stretch; flex-direction: column; }
-        .landscape-editor-tools #editorItemPalettePanel { grid-area: palette; }
-        .landscape-editor-tools #lineGridTools { display: flex; flex-direction: column; gap: var(--ui-gap-tight); align-items: stretch; width: 7rem; }
-        .landscape-editor-tools #lineToolRow, .landscape-editor-tools #lineSetRow, .landscape-editor-tools #gridRotateMirrorRow, .landscape-editor-tools #gridSizeButtonsRow { justify-content: center; }
-        .landscape-editor-tools #editorItemPalettePanel { justify-content: center; }
-        .landscape-editor-tools #lineSetRow #editCopyMetrics { width: 100%; min-width: 0; }
-        .landscape-editor-tools #gridControlArea { flex-direction: column; gap: var(--ui-gap-tight); align-items: stretch; max-width: none; flex-grow: 0; padding: var(--ui-gap-tight); margin-top: 0.15rem; }
-        .landscape-editor-tools #gridLabelRow { justify-content: center; padding: 0; }
-        .landscape-editor-tools #gridSizeLabel { margin-right: 0; }
-        .landscape-editor-tools #gridSizeButtonsRow { display: flex; gap: var(--ui-gap-tight); padding: 0; }
-        .landscape-editor-tools #gridSizeButtonsRow #gridSizePlusBtn { margin-left: 0; }
-        .landscape-editor-tools #gridRotateMirrorRow { padding-right: 0; }
 
         .screen-modal { position: absolute; inset: 0; z-index: 70; background: var(--theme-modal-bg); backdrop-filter: blur(12px); padding: var(--ui-pad); }
         .screen-modal-top { z-index: 75; }
@@ -126,10 +77,6 @@
         .palette-item.selected { border-color: var(--theme-gate); box-shadow: var(--theme-editor-palette-shadow); }
         .palette-item:active { transform: scale(0.95); }
         #editUndoGridBtn { width: var(--palette-cell-size) !important; height: 100% !important; }
-        .landscape-editor-tools #editorItemPalettePanel { display: flex; }
-        .landscape-editor-tools .palette-grid { flex: none; width: max-content; grid-template-columns: repeat(4, var(--palette-cell-size)); }
-        .landscape-editor-tools .palette-grid .palette-item { width: var(--palette-cell-size); height: var(--palette-cell-size); aspect-ratio: auto; }
-
         .editor-input { background: var(--theme-editor-input-bg); color: var(--theme-editor-input-text); border: 1px solid var(--theme-editor-input-border); border-radius: 0.5rem; width: 4rem; text-align: center; font-weight: 800; font-size: 1.5rem; line-height: 1; padding: 0.25rem 0; outline: none; transition: border-color 0.2s; }
 
         #mainGamePane { border-color: var(--theme-border); }
@@ -148,7 +95,6 @@
         #gridSizeLabel { margin-right: 0.35rem; }
         #gridSizeButtonsRow { padding-inline: 0.25rem; }
         #gridRotateMirrorRow { padding-right: 0.25rem; }
-        .landscape-editor-tools #editorLineGridPanel { flex-wrap: nowrap; row-gap: 0; }
         #hintBtn:hover, .export-action-btn:hover { background: var(--theme-hint-hover); }
         .action-btn-group button, #hintBtn, #editCopyMetrics { color: var(--theme-action-btn-text); }
         .editor-tool-icon { color: var(--theme-editor-tool-icon); }
@@ -457,8 +403,7 @@
         </div>
     </div>
 
-    <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2 landscape-editor-tools">
-        <button id="orientationToggleBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[5.25rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Landscape</button>
+    <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2">
         <button id="openThemeModalBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Themes</button>
         <button id="modeToggleShellBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[5.25rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Editor</button>
         <button id="muteBtn" class="backdrop-blur-md w-10 h-10 rounded-lg flex items-center justify-center transition shrink-0 shadow-md border bg-[var(--theme-shell-mute-bg)] text-[var(--theme-shell-mute-text)] border-[var(--theme-shell-mute-border)] hover:bg-[var(--theme-shell-mute-bg-hover)]">
