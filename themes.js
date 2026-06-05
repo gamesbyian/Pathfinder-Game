@@ -228,7 +228,6 @@ window.THEMES = {
     sock_hop: {
         seeds: { bg:'#e0ffff', surface:'#ffffff',  primary:'#008b8b', secondary:'#ff69b4', neutral:'#aaaaaa', text:'#004444', border:'#66cccc', path:'#ff1493' },
         overrides: {
-            btns: { saved:'#cc1155', editNew:'#cc1155' },
             colors: { portal:'#cc33aa' },
         }
     },
