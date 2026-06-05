@@ -441,8 +441,13 @@ export function installInput(APP) {
             APP.Editor.markEditorInputsDirty();
             APP.Editor.applyMetricsFromUI();
         });
-        document.getElementById('modeToggleBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.enterEditorMode(); };
-        document.getElementById('editModeToggleBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); APP.Editor.exitEditorMode(); });
+        document.getElementById('modeToggleShellBtn').onclick = () => {
+            if (APP.State.ENGINE.mode === APP.Core.EDITOR) {
+                tryNavigate(() => { APP.UI.closeAllModals(); APP.Editor.exitEditorMode(); });
+            } else {
+                APP.UI.closeAllModals(); APP.Editor.enterEditorMode();
+            }
+        };
 
         document.getElementById('editTrapSpotsBtn').onclick = async () => {
             const isVisible = APP.UI.isModalOpen('editorHelpModal');

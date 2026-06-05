@@ -598,11 +598,14 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('openThemeModalBtn').style.backgroundColor = t.shell.btnBg;
         APP.UI.getEl('openThemeModalBtn').style.color = t.shell.btnText;
         APP.UI.getEl('openThemeModalBtn').style.borderColor = t.shell.btnBorder;
+        APP.UI.getEl('modeToggleShellBtn').style.backgroundColor = t.shell.btnBg;
+        APP.UI.getEl('modeToggleShellBtn').style.color = t.shell.btnText;
+        APP.UI.getEl('modeToggleShellBtn').style.borderColor = t.shell.btnBorder;
         APP.UI.getEl('orientationToggleBtn').style.backgroundColor = t.btns.orient;
         APP.UI.getEl('orientationToggleBtn').style.color = t.text.shellBtn;
         APP.UI.getEl('orientationToggleBtn').style.borderColor = t.grid;
 
-        ['resetBtn','undoBtn','whoaBtn','guideBtn','modeToggleBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editModeToggleBtn','editCopyMetrics','hintBtn'].forEach(id => {
+        ['resetBtn','undoBtn','whoaBtn','guideBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editCopyMetrics','hintBtn'].forEach(id => {
             const el = APP.UI.getEl(id);
             if (el) el.style.color = t.text.actionBtn;
         });
@@ -612,8 +615,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('editHelpBtn').style.backgroundColor = t.btns.guide;
         APP.UI.getEl('editMegaSolver').style.backgroundColor = t.btns.solve;
         APP.UI.getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs;
-        APP.UI.getEl('modeToggleBtn').style.backgroundColor = t.btns.modeToggle;
-        APP.UI.getEl('editModeToggleBtn').style.backgroundColor = t.btns.modeToggle;
 
         const muteBtn = APP.UI.getEl('muteBtn');
         muteBtn.style.backgroundColor = t.shell.muteBg;
