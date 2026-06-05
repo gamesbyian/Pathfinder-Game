@@ -601,9 +601,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('modeToggleShellBtn').style.backgroundColor = t.shell.btnBg;
         APP.UI.getEl('modeToggleShellBtn').style.color = t.shell.btnText;
         APP.UI.getEl('modeToggleShellBtn').style.borderColor = t.shell.btnBorder;
-        APP.UI.getEl('orientationToggleBtn').style.backgroundColor = t.btns.orient;
-        APP.UI.getEl('orientationToggleBtn').style.color = t.text.shellBtn;
-        APP.UI.getEl('orientationToggleBtn').style.borderColor = t.grid;
 
         ['resetBtn','undoBtn','whoaBtn','guideBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editCopyMetrics','hintBtn'].forEach(id => {
             const el = APP.UI.getEl(id);

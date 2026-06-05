@@ -232,27 +232,13 @@ export function installUI(APP) {
             const gamePane = document.getElementById('gamePane');
             const controlsPane = document.getElementById('controlsPane');
             if (!pal || !gamePane || !controlsPane) return;
-            const inLandscape = APP.State.ENGINE.ui.isLandscapeLayout;
-            if (inLandscape && APP.State.ENGINE.mode === APP.Core.EDITOR) {
-                if (pal.parentElement !== controlsPane) controlsPane.insertBefore(pal, controlsPane.firstChild);
-                setClassState(pal, 'landscape-editor-tools', true);
-            } else {
-                if (pal.parentElement !== gamePane.parentElement) gamePane.parentElement.insertBefore(pal, controlsPane);
-                setClassState(pal, 'landscape-editor-tools', false);
-            }
+            if (pal.parentElement !== gamePane.parentElement) gamePane.parentElement.insertBefore(pal, controlsPane);
         };
 
         const updateLayoutMode = () => {
-            const viewport = getViewportDimensions();
-            const naturalLandscape = window.matchMedia('(orientation: landscape)').matches && viewport.width >= 900;
-            APP.State.ENGINE.ui.isLandscapeLayout = naturalLandscape || APP.State.ENGINE.ui.forceLandscapeLayout;
-            const appLayout = document.getElementById('appLayout');
-            setClassState(appLayout, 'forced-landscape', APP.State.ENGINE.ui.forceLandscapeLayout && !naturalLandscape);
             APP.UI.syncEditorPalettePlacement();
             measureGridModalRect();
             requestAnimationFrame(() => measureGridModalRect());
-            const orientationBtn = document.getElementById('orientationToggleBtn');
-            setTextContent(orientationBtn, APP.State.ENGINE.ui.forceLandscapeLayout ? 'Standard' : 'Landscape');
         };
 
         const updateAppScale = () => {
