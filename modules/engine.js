@@ -1,7 +1,7 @@
 export function installEngine(APP) {
     APP.Engine = (() => {
-        let refs = { ENGINE: null, UI: null };
-        const bind = ({ ENGINE: engineRef, UI: uiRef }) => { refs = { ENGINE: engineRef, UI: uiRef }; };
+        let refs = { ENGINE: null };
+        const bind = ({ ENGINE: engineRef }) => { refs = { ENGINE: engineRef }; };
         const init = bind;
 
             function areWinMetricsSatisfied(state = APP.State.ENGINE, level = (state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel)) {
@@ -49,7 +49,7 @@ export function installEngine(APP) {
                     APP.Core.SOUND_BUS.play("E4", "32n");
                     return "valid";
                 }
-                if ([APP.Core.HAZARD_TRIGGERED].includes(APP.State.ENGINE.logicState) && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
+                if (APP.State.ENGINE.logicState === APP.Core.HAZARD_TRIGGERED && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
                 if (!APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
                     isStrict: true,
                     mode: APP.State.ENGINE.mode,
@@ -255,11 +255,40 @@ export function installEngine(APP) {
                 return null;
             }
 
-            function attemptMoveTo(target, opts = {}) { if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return; if (!APP.State.ENGINE.path.length) return; const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) { if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING); else return; } if (target.x === headPos.x && target.y === headPos.y) return; const pathSteps = buildStraightPathSteps(headPos, target); for (const step of pathSteps) { const result = processStep(step); if (result === null || result === "goose" || result === "detonate") break; } if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true; }
+            function attemptMoveTo(target, opts = {}) {
+                if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return;
+                if (!APP.State.ENGINE.path.length) return;
+                const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]);
+                if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) {
+                    if (target.x !== headPos.x || target.y !== headPos.y) APP.Engine.setLogicState(APP.Core.DRAGGING);
+                    else return;
+                }
+                if (target.x === headPos.x && target.y === headPos.y) return;
+                const pathSteps = buildStraightPathSteps(headPos, target);
+                for (const step of pathSteps) {
+                    const result = processStep(step);
+                    if (result === null || result === "goose" || result === "detonate") break;
+                }
+                if (pathSteps.length > 0) APP.State.ENGINE.isDirty = true;
+            }
 
-            function checkWinCondition() { if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) { APP.Engine.setLogicState(APP.Core.RESOLVED); APP.UI.renderWinExportPanel({ solutionOutput: JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''), showExportArea: APP.State.ENGINE.isDevMode }); if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx); APP.UI.openModal('winModal'); APP.Core.SOUND_BUS.play("C5", "8n"); } }
+            function checkWinCondition() {
+                if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) {
+                    APP.Engine.setLogicState(APP.Core.RESOLVED);
+                    APP.UI.renderWinExportPanel({ solutionOutput: JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''), showExportArea: APP.State.ENGINE.isDevMode });
+                    if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx);
+                    APP.UI.openModal('winModal');
+                    APP.Core.SOUND_BUS.play("C5", "8n");
+                }
+            }
 
-            function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { if (!path.length || [APP.Core.HAZARD_TRIGGERED].includes(logicState) || mode === APP.Core.EDITOR) return false; const last = path[path.length - 1]; if (last !== level.goalKey) return false; const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections }; return APP.Engine.areWinMetricsSatisfied(stubState, level); }
+            function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) {
+                if (!path.length || logicState === APP.Core.HAZARD_TRIGGERED || mode === APP.Core.EDITOR) return false;
+                const last = path[path.length - 1];
+                if (last !== level.goalKey) return false;
+                const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections };
+                return APP.Engine.areWinMetricsSatisfied(stubState, level);
+            }
 
             function checkFalseGoalCondition() {
                 const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
@@ -296,13 +325,87 @@ export function installEngine(APP) {
 
 
 
-            function createSnapshot() { return { path: [...APP.State.ENGINE.path], isPortalJump: new Set(APP.State.ENGINE.isPortalJump), activeGateKey: APP.State.ENGINE.activeGateKey, logicState: APP.State.ENGINE.logicState, detonatedFalseGoals: new Set(APP.State.ENGINE.detonatedFalseGoals) }; }
+            function createSnapshot() {
+                return {
+                    path: [...APP.State.ENGINE.path],
+                    isPortalJump: new Set(APP.State.ENGINE.isPortalJump),
+                    activeGateKey: APP.State.ENGINE.activeGateKey,
+                    logicState: APP.State.ENGINE.logicState,
+                    detonatedFalseGoals: new Set(APP.State.ENGINE.detonatedFalseGoals)
+                };
+            }
 
-            function applySnapshot(snap) { APP.State.ENGINE.path = [...snap.path]; APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump); APP.State.ENGINE.activeGateKey = snap.activeGateKey; const restoredLogicState = snap.logicState === APP.Core.HAZARD_TRIGGERED ? APP.Core.IDLE : snap.logicState; APP.Engine.setLogicState(APP.Core.IDLE); if (restoredLogicState !== APP.Core.IDLE) APP.Engine.setLogicState(restoredLogicState); APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals); const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel; const armed = new Set(l?.falseGoalKeys || []); APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k)); APP.State.ENGINE.armedFalseGoals = armed; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("", ""); }
+            function applySnapshot(snap) {
+                APP.State.ENGINE.path = [...snap.path];
+                APP.State.ENGINE.isPortalJump = new Set(snap.isPortalJump);
+                APP.State.ENGINE.activeGateKey = snap.activeGateKey;
+                const restoredLogicState = snap.logicState === APP.Core.HAZARD_TRIGGERED ? APP.Core.IDLE : snap.logicState;
+                APP.Engine.setLogicState(APP.Core.IDLE);
+                if (restoredLogicState !== APP.Core.IDLE) APP.Engine.setLogicState(restoredLogicState);
+                APP.State.ENGINE.detonatedFalseGoals = new Set(snap.detonatedFalseGoals);
+                const l = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                const armed = new Set(l?.falseGoalKeys || []);
+                APP.State.ENGINE.detonatedFalseGoals.forEach(k => armed.delete(k));
+                APP.State.ENGINE.armedFalseGoals = armed;
+                APP.Engine.rebuildDerivedPathState(APP.State.ENGINE);
+                APP.State.ENGINE.isDirty = true;
+                APP.UI.showMessage("", "");
+            }
 
-            function updatePlayModeLayout() { if (APP.State.ENGINE.mode !== APP.Core.PLAY) return; APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode); APP.UI.setClassState('modeToggleBtn', 'hidden', !APP.State.ENGINE.isDevMode); }
+            function updatePlayModeLayout() {
+                if (APP.State.ENGINE.mode !== APP.Core.PLAY) return;
+                APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode);
+                APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode);
+                APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode);
+                APP.UI.setClassState('modeToggleBtn', 'hidden', !APP.State.ENGINE.isDevMode);
+            }
 
-            function switchMode(newMode) { const isEd = newMode === APP.Core.EDITOR; APP.State.ENGINE.mode = newMode; APP.UI.setSolutionOutput(''); APP.Engine.setLogicState(APP.Core.IDLE); APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE); APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.undoStack = []; APP.State.ENGINE.revealedGeese.clear(); APP.State.ENGINE.gooseEncounteredThisLevel = false; APP.State.ENGINE.armedFalseGoals.clear(); APP.State.ENGINE.detonatedFalseGoals.clear(); document.getElementById('editorPalette').classList.toggle('hidden', !isEd); document.getElementById('playMetrics').classList.toggle('hidden', isEd); document.getElementById('editorMetrics').classList.toggle('hidden', !isEd); document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd); document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd); const exportArea = document.getElementById('exportArea'); document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd); document.getElementById('editGenBtn').classList.toggle('hidden', !isEd); APP.UI.setButtonState('editGenBtn', { enabled: true }); document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode); if (isEd) { APP.State.ENGINE.variant = 0; APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level); APP.State.ENGINE.editor.isPencilMode = false; APP.State.ENGINE.editor.undoStack = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.editor.emptyClickCount = 0; APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0); APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0); APP.State.ENGINE.editor.isModified = false; exportArea.classList.remove('hidden'); updatePencilState(); } else { updatePlayModeLayout(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); } APP.UI.updateAppScale(); APP.UI.updateViewport(); APP.UI.syncEditorPalettePlacement(); APP.Persistence.updateCompletionUI(); APP.UI.showMessage("", ""); APP.State.ENGINE.isDirty = true; }
+            function switchMode(newMode) {
+                const isEd = newMode === APP.Core.EDITOR;
+                APP.State.ENGINE.mode = newMode;
+                APP.UI.setSolutionOutput('');
+                APP.Engine.setLogicState(APP.Core.IDLE);
+                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                APP.Engine.PathNavigator.clear(APP.State.ENGINE);
+                APP.State.ENGINE.undoStack = [];
+                APP.State.ENGINE.revealedGeese.clear();
+                APP.State.ENGINE.gooseEncounteredThisLevel = false;
+                APP.State.ENGINE.armedFalseGoals.clear();
+                APP.State.ENGINE.detonatedFalseGoals.clear();
+                document.getElementById('editorPalette').classList.toggle('hidden', !isEd);
+                document.getElementById('playMetrics').classList.toggle('hidden', isEd);
+                document.getElementById('editorMetrics').classList.toggle('hidden', !isEd);
+                document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd);
+                document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd);
+                const exportArea = document.getElementById('exportArea');
+                document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd);
+                document.getElementById('editGenBtn').classList.toggle('hidden', !isEd);
+                APP.UI.setButtonState('editGenBtn', { enabled: true });
+                document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode);
+                document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode);
+                if (isEd) {
+                    APP.State.ENGINE.variant = 0;
+                    APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level);
+                    APP.State.ENGINE.editor.isPencilMode = false;
+                    APP.State.ENGINE.editor.undoStack = [];
+                    APP.State.ENGINE.editor.validTrapSpots.clear();
+                    APP.State.ENGINE.editor.emptyClickCount = 0;
+                    APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0);
+                    APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0);
+                    APP.State.ENGINE.editor.isModified = false;
+                    exportArea.classList.remove('hidden');
+                    updatePencilState();
+                } else {
+                    updatePlayModeLayout();
+                    APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true });
+                }
+                APP.UI.updateAppScale();
+                APP.UI.updateViewport();
+                APP.UI.syncEditorPalettePlacement();
+                APP.Persistence.updateCompletionUI();
+                APP.UI.showMessage("", "");
+                APP.State.ENGINE.isDirty = true;
+            }
 
             function updatePencilState() {
                 const btn = document.getElementById('editPencilBtn');
@@ -321,50 +424,29 @@ export function installEngine(APP) {
             }
 
             function loadLevel(idx, keepVariant = false) {
-
                 if (APP.State.ENGINE.activeSolverController) return;
 
                 const levels = APP.Data.getLevels();
-
                 if (!levels || !APP.Data.getLevel(idx)) return;
-
-
 
                 APP.State.ENGINE.levelIdx = idx;
 
                 const isEditor = APP.State.ENGINE.mode === APP.Core.EDITOR;
-
-                if (isEditor) { APP.State.ENGINE.variant = 0; }
-
-                else if (!keepVariant) { APP.State.ENGINE.variant = Math.floor(Math.random() * 8); }
-
-
-
+                if (isEditor) APP.State.ENGINE.variant = 0;
+                else if (!keepVariant) APP.State.ENGINE.variant = Math.floor(Math.random() * 8);
 
                 APP.Engine.setLogicState(APP.Core.IDLE);
-
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
 
-
-
                 APP.State.ENGINE.level = APP.LevelUtils.normalizeLevel(idx);
-
                 APP.LevelUtils.assertLevelShape(APP.State.ENGINE.level);
-
                 APP.Engine.PathNavigator.clear(APP.State.ENGINE);
-
                 APP.State.ENGINE.undoStack = [];
-
                 APP.State.ENGINE.revealedGeese.clear();
-
                 APP.State.ENGINE.ripples = [];
-
                 APP.State.ENGINE.gooseEncounteredThisLevel = false;
-
                 APP.State.ENGINE.armedFalseGoals = new Set(APP.State.ENGINE.level.falseGoalKeys || []);
-
                 APP.State.ENGINE.detonatedFalseGoals = new Set();
-
                 APP.State.ENGINE.foundHintsSinceLoad = [];
                 APP.State.ENGINE.hinter.pathList = [];
                 APP.State.ENGINE.hinter.currentPathIdx = 0;
@@ -376,42 +458,26 @@ export function installEngine(APP) {
                 APP.State.ENGINE.hinter.fadeStartMs = 0;
 
                 if (isEditor) {
-
                     APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level);
-
                     APP.State.ENGINE.editor.isPencilMode = false;
-
                     APP.State.ENGINE.editor.undoStack = [];
-
                     APP.State.ENGINE.editor.validTrapSpots.clear();
-
                     APP.State.ENGINE.editor.emptyClickCount = 0;
-
                     APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0);
-
                     APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0);
-
                     APP.State.ENGINE.editor.isModified = false;
-
                     updatePencilState();
-
                 }
 
                 APP.UI.updateLevelDisplay(idx, false);
-
                 APP.UI.closeModal('winModal');
-
                 APP.UI.showMessage("", "");
                 APP.UI.setSolutionOutput('');
-
                 APP.UI.updateAppScale();
-
                 APP.UI.updateViewport();
-
                 APP.Persistence.updateCompletionUI();
                 APP.Persistence.persistSessionState();
                 APP.State.ENGINE.isDirty = true;
-
             }
 
             function loop() {
@@ -456,9 +522,12 @@ export function installEngine(APP) {
                         }
                     }
                 }
-                if (APP.State.ENGINE.visualFlipCount !== undefined) {
-                    if (APP.State.ENGINE.visualFlipCount < APP.State.ENGINE.flipCount) { APP.State.ENGINE.visualFlipCount = Math.min(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount + 0.15); APP.State.ENGINE.isDirty = true; }
-                    else if (APP.State.ENGINE.visualFlipCount > APP.State.ENGINE.flipCount) { APP.State.ENGINE.visualFlipCount = Math.max(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount - 0.15); APP.State.ENGINE.isDirty = true; }
+                if (APP.State.ENGINE.visualFlipCount < APP.State.ENGINE.flipCount) {
+                    APP.State.ENGINE.visualFlipCount = Math.min(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount + 0.15);
+                    APP.State.ENGINE.isDirty = true;
+                } else if (APP.State.ENGINE.visualFlipCount > APP.State.ENGINE.flipCount) {
+                    APP.State.ENGINE.visualFlipCount = Math.max(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount - 0.15);
+                    APP.State.ENGINE.isDirty = true;
                 }
                 const hasContinuousAnimation = APP.State.ENGINE.ripples.length > 0 || APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING;
                 if (hasContinuousAnimation) APP.State.ENGINE.isDirty = true;
@@ -544,7 +613,6 @@ export function installEngine(APP) {
 
         return {
             init,
-            bind,
             loadLevel(levelObjOrIdx, options = {}) {
                 if (typeof levelObjOrIdx === 'number') return loadLevel(levelObjOrIdx, !!options.keepVariant);
                 if (!refs.ENGINE) return;
@@ -565,7 +633,6 @@ export function installEngine(APP) {
                 refs.ENGINE.detonatedFalseGoals = new Set();
             },
             handlePrimaryGridInput(k, opts) { return attemptMoveTo(k, opts); },
-            handleCellClick(k, opts) { return attemptMoveTo(k, opts); },
             attemptMoveTo(target, opts) { return attemptMoveTo(target, opts); },
             processStep(key) { return processStep(key); },
             checkWinCondition() { return checkWinCondition(); },
@@ -591,5 +658,5 @@ export function installEngine(APP) {
         };
     })();
 
-    APP.Engine.init({ ENGINE: APP.State.ENGINE, UI: APP.UI });
+    APP.Engine.init({ ENGINE: APP.State.ENGINE });
 }

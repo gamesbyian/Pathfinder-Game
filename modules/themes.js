@@ -102,9 +102,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
     }
 
     const getCurrentTheme = () => APP.State.ENGINE.runtime.currentTheme;
-    // ======================================================
-    // I) Themes
-    // ======================================================
+    const getTheme = (id) => getThemeRegistry()[id];
 
     const CLASSIC_LEAVE = { bg: '#dc2626', hover: '#b91c1c', text: '#ffffff', border: '#b91c1c' };
 
@@ -441,7 +439,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc() },
             search: { overlayBg: rc(), megaStatusText: rc(), megaStatusBorder: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() },
             jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() },
-            shell: { btnBg: rc(), btnBgHover: rc(), btnText: rc(), btnBorder: rc(), auditBg: rc(), auditBgHover: rc(), auditText: rc(), auditBorder: rc(), muteBg: rc(), muteBgHover: rc(), muteText: rc(), muteBorder: rc() },
+            shell: { btnBg: rc(), btnBgHover: rc(), btnText: rc(), btnBorder: rc(), muteBg: rc(), muteBgHover: rc(), muteText: rc(), muteBorder: rc() },
             header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() },
             editor: { inputBg: rc(), inputText: rc(), inputBorder: rc(), inputFocus: rc(), toolIcon: rc(), paletteShadow: `0 0 0 2px ${rc()}66` },
             layout: { border: rc(), divider: rc() },
@@ -455,7 +453,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const themes = getThemeRegistry();
         if (name === 'chaos') { themes.chaos = buildChaosTheme(); }
         APP.State.ENGINE.runtime.currentTheme = name;
-        APP.Themes.currentTheme = APP.State.ENGINE.runtime.currentTheme;
         const t = themes[name];
         const root = document.documentElement;
 
@@ -782,7 +779,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const getThemeUndoStacksStore = () => themeUndoStacks;
         const getOriginalThemesStore = () => originalThemes;
 
-        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore, deriveTokens, isSeedTheme, randomSeeds };
+        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, getTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore, deriveTokens, isSeedTheme, randomSeeds };
         Object.defineProperty(api, 'THEMES', { get: () => getThemeRegistry() });
         return api;
     })();

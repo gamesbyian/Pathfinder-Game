@@ -1,20 +1,10 @@
 export function installInput(APP) {
     APP.Input = (() => {
         let initialized = false;
-        let consecutiveSolveFails = 0;
-        const resetSearchEscalation = () => {
-            consecutiveSolveFails = 0;
-        };
         const init = () => {
             if (initialized) return;
             initialized = true;
             APP.State.ENGINE.ui.gamepadGridPrimaryAction = () => {};
-            const originalLoadLevel = APP.Engine.loadLevel.bind(APP.Engine);
-            APP.Engine.loadLevel = (...args) => {
-                const result = originalLoadLevel(...args);
-                resetSearchEscalation();
-                return result;
-            };
         const tryNavigate = (actionFn) => { if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isModified) { APP.State.ENGINE.runtime.pendingAction = actionFn; APP.UI.openModal('unsavedModal'); } else { actionFn(); } };
         document.getElementById('unsavedStayBtn').onclick = () => { APP.UI.closeAllModals(); APP.State.ENGINE.runtime.pendingAction = null; APP.UI.closeModal('unsavedModal'); };
         document.getElementById('unsavedLeaveBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.closeModal('unsavedModal'); if (APP.State.ENGINE.runtime.pendingAction) APP.State.ENGINE.runtime.pendingAction(); };
@@ -27,7 +17,6 @@ export function installInput(APP) {
 
         const handleDown = (e) => {
             if (APP.State.ENGINE.activeSolverController || APP.State.ENGINE.logicState === APP.Core.RESOLVED || [APP.Core.HINT_ANIMATING, APP.Core.FALSE_GOAL_ANIMATING, APP.Core.GOOSE_OVERLAY, APP.Core.SOLVER_RUNNING].includes(APP.State.ENGINE.overlayState)) return;
-            const pathBeforeMove = APP.State.ENGINE.path.join(',');
             const p = APP.LevelUtils.getGridCoord(e); const k = APP.LevelUtils.PACK(p.x, p.y); const activeLevel = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
             APP.State.ENGINE.resetStreak = 0;
             APP.State.ENGINE.runtime.tapStartCoord = { x: p.x, y: p.y };
@@ -71,7 +60,6 @@ export function installInput(APP) {
                     if (bestGate !== null) { APP.State.ENGINE.activeGateKey = bestGate; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, bestGate, false); APP.Engine.setLogicState(APP.Core.DRAGGING); if (bestGate !== k) { APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' }); } }
                 }
             }
-            if (APP.State.ENGINE.path.join(',') !== pathBeforeMove) resetSearchEscalation();
         };
 
         const handleUp = (e) => {
@@ -360,8 +348,17 @@ export function installInput(APP) {
         document.getElementById('undoBtn').onclick = () => { APP.UI.closeAllModals(); if(APP.State.ENGINE.undoStack.length) APP.Engine.applySnapshot(APP.State.ENGINE.undoStack.pop()); };
         document.getElementById('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = (APP.State.ENGINE.foundHintsSinceLoad || []).filter(path => APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level), path)?.ok); if (!hints.length) { APP.UI.showMessage("No valid hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); APP.UI.setSolutionOutput(hintText); await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
         document.getElementById('editGenBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.setButtonState('editGenBtn', { enabled: true }); APP.Editor.generateLevelString(); };
-        document.getElementById('devCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
-        document.getElementById('editCopyBtn').onclick = async () => { APP.UI.closeAllModals(); if (APP.State.ENGINE.path.length > 0) { const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''); APP.UI.setSolutionOutput(pathStr); await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage("Path Copied", "text-white font-black"); } };
+        const copyCurrentPath = async () => {
+            APP.UI.closeAllModals();
+            if (APP.State.ENGINE.path.length > 0) {
+                const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, '');
+                APP.UI.setSolutionOutput(pathStr);
+                await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' });
+                APP.UI.showMessage("Path Copied", "text-white font-black");
+            }
+        };
+        document.getElementById('devCopyBtn').onclick = copyCurrentPath;
+        document.getElementById('editCopyBtn').onclick = copyCurrentPath;
 
         const hintBtn = document.getElementById('hintBtn');
         const showSavedHint = () => {

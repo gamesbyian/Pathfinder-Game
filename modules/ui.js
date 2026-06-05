@@ -401,7 +401,6 @@ export function installUI(APP) {
         const closeAllModals = () => {
             ['guideModal', 'editorHelpModal', 'winModal', 'themeModal', 'unsavedModal'].forEach(id => closeModal(id));
         };
-        const showMessageCompat = (text = '', className = '') => showMessage(text, className);
 
         const reportError = (kind, payload) => {
             const details = payload?.message || payload?.reason || 'Unknown initialization failure.';
@@ -445,6 +444,6 @@ export function installUI(APP) {
             return { update, getPaletteIconSVG, isPointerOverPalette };
         })();
 
-        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, setSolverDetailText, setSolverProgress, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage: showMessageCompat, showSolverAlreadyRunning, reportError, setSolverAbortRequested, copyText, EditorDragGhost };
+        return { initDom, getEl, setStatus, setProgress, showOverlay, hideOverlay, setOverlayOpacity, openModal, closeModal, toggleModal, isModalOpen, setModalContent, setFieldValue, appendFieldLine, setSolutionOutput, renderMetricsPanel, renderWinExportPanel, updateLevelDisplay, clearElement, setButtonLabel, setButtonState, setSearchIndicatorVisible, setSolverControlsEnabled, setSolverTimerText, setSolverDetailText, setSolverProgress, applyOverlayState, setClassState, clearClass, bindAll, addClasses, removeClasses, setInlineStyle, setRootCssVar, setBodyStyle, setTextContent, setInputValue, updateAppScale, updateLayoutMode, syncEditorPalettePlacement, updateViewport, getValue, getChecked, getNumber, clearPaletteSelection, setPaletteSelectedByType, showGooseJumpScare, hideGooseJumpScare, showBombDetonation, hideBombDetonation, setCompletionBurstVisible, flashMessage, closeAllModals, showMessage, showSolverAlreadyRunning, reportError, setSolverAbortRequested, copyText, EditorDragGhost };
     })();
 }

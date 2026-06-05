@@ -69,11 +69,8 @@ export function installCore(APP) {
         SOUND_BUS.armUnlock();
 
         const deepClone = (value) => {
-            try {
-                if (typeof structuredClone === 'function') return structuredClone(value);
-            } catch (_) { /* fallthrough */ }
-            try { return JSON.parse(JSON.stringify(value)); }
-            catch (_) { return value; }
+            try { return structuredClone(value); }
+            catch (_) { return JSON.parse(JSON.stringify(value)); }
         };
 
         return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS, deepClone };

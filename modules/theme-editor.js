@@ -221,7 +221,6 @@ export function installThemeEditor(APP) {
                 const swatch = document.createElement('div');
                 const swatchIdx = nextSwatchIdx++;
                 const swatchClasses = "w-9 h-9 md:w-10 md:h-10 rounded shadow-sm border cursor-pointer hover:scale-110 transition-transform box-border shrink-0";
-                // Ensure the element can be found via .closest('.theme-swatch')
                 swatch.className = `theme-swatch ${swatchClasses}`;
                 swatch.style.backgroundColor = c;
                 swatch.style.pointerEvents = 'auto';

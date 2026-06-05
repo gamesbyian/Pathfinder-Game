@@ -43,11 +43,11 @@ export function installState(APP) {
         themeTapCategory: null,
         progressSet: new Set(),
         foundHintsSinceLoad: [],
-        editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true }
-        ,ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false }
-        ,runtime: { currentTheme: 'classic', messageTimer: null, pendingAction: null, activePointerId: null, tapStartCoord: null, tapMoved: false }
-        ,gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null }
-        ,flags: { useRefereeSolver: true, refereeDebug: false, warnNonCanonicalLevelFields: false }
+        editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true },
+        ui: { isLandscapeLayout: false, forceLandscapeLayout: false, focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false },
+        runtime: { currentTheme: 'classic', pendingAction: null, activePointerId: null, tapStartCoord: null, tapMoved: false },
+        gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null },
+        flags: { useRefereeSolver: true, refereeDebug: false, warnNonCanonicalLevelFields: false }
     };
         return { ENGINE };
     })();

@@ -154,7 +154,7 @@ export function installRenderer(APP) {
                                 const s = getScreenPos(p.x, p.y);
                                 const t = jumpTravel / Math.max(totalLength, 1);
                                 const colorIndex = Math.floor(t * colors.length) % colors.length;
-                                drawDot(s.sx, s.sy, colorIndex >= 0 ? colors[colorIndex] : colors[0]);
+                                drawDot(s.sx, s.sy, colors[colorIndex]);
                             } else {
                                 const p1 = APP.LevelUtils.UNPACK(pathArr[i - 1]);
                                 const p2 = APP.LevelUtils.UNPACK(pathArr[i]);

@@ -8,16 +8,15 @@ export function installData(APP) {
 
         const normalizeRawLevel = (raw) => {
             if (!raw || typeof raw !== 'object') return raw;
-            const level = raw;
-            if (!level.grid || typeof level.grid !== 'object') level.grid = { w: 10, h: 10 };
-            if (typeof level.grid.w !== 'number') level.grid.w = 10;
-            if (typeof level.grid.h !== 'number') level.grid.h = 10;
-            return level;
+            if (!raw.grid || typeof raw.grid !== 'object') raw.grid = { w: 10, h: 10 };
+            if (typeof raw.grid.w !== 'number') raw.grid.w = 10;
+            if (typeof raw.grid.h !== 'number') raw.grid.h = 10;
+            return raw;
         };
 
         const ingest = (opts = {}) => {
             const levelSource = Array.isArray(window.LEVELS) ? window.LEVELS : (Array.isArray(window.RAW_LEVELS) ? window.RAW_LEVELS : []);
-            const baseThemes = (typeof APP !== 'undefined' && APP.Themes && APP.Themes.THEMES && typeof APP.Themes.THEMES === 'object') ? APP.Themes.THEMES : {};
+            const baseThemes = (APP.Themes?.THEMES && typeof APP.Themes.THEMES === 'object') ? APP.Themes.THEMES : {};
             const sourceThemes = (window.THEMES && typeof window.THEMES === 'object') ? window.THEMES : {};
 
             _levels = clone(levelSource).map(normalizeRawLevel);
@@ -40,7 +39,7 @@ export function installData(APP) {
             getLevels: () => _levels,
             getLevel: (index) => _levels[index],
             getThemes: () => _themes,
-            getTheme: (id) => (_themes ? _themes[id] : undefined),
+            getTheme: (id) => _themes[id],
             isLoaded: () => _loaded
         };
     })();
