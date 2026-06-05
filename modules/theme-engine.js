@@ -145,11 +145,8 @@ export function deriveTokens(seeds) {
     // Near-achromatic seeds get only a slight saturation nudge; chromatic seeds get boosted
     const guideSat      = primaryHsl.s   < 8 ? primaryHsl.s + 3   : Math.min(90, Math.max(25, primaryHsl.s   + 12));
     const hintSat       = secondaryHsl.s < 8 ? secondaryHsl.s + 3 : Math.min(90, Math.max(25, secondaryHsl.s + 12));
-    const blendSat      = Math.min(90, Math.max(25, (guideSat + hintSat) / 2));
     const guideColor    = hslToHex({ h: primaryHsl.h,   s: guideSat, l: btnL });
     const hintColor     = hslToHex({ h: secondaryHsl.h, s: hintSat,  l: btnL });
-    const successHue    = (secondaryHsl.h + 30) % 360;
-    const successColor  = hslToHex({ h: successHue, s: blendSat, l: btnL });
 
     // portal: shift primary towards magenta-violet (h=300) by 60%
     const portalColor = (() => {
@@ -223,7 +220,6 @@ export function deriveTokens(seeds) {
             guide: guideColor,
             whoa: primary,
             hint: hintColor,
-            saved: successColor,
             mega: guideColor,
             mute: utilBtnBg,
             muteIcon: neutral,
@@ -234,7 +230,7 @@ export function deriveTokens(seeds) {
             solve: guideColor,
             editClear: secondary,
             editBombs: lighten(secondary, 0.07),
-            editNew: successColor,
+            editNew: hintColor,
         },
 
         modal: {

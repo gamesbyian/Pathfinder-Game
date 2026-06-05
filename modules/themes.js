@@ -194,7 +194,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.ghostBg = t.ghostBg || t.canvasBg;
         t.ghostBorder = t.ghostBorder || t.headerRight;
 
-        const btnFallbacks = { undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight, hint: t.headerRight, saved: t.headerRight, mega: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight, copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, orient: t.headerRight, solve: t.headerRight, editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight };
+        const btnFallbacks = { undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight, hint: t.headerRight, mega: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight, copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, orient: t.headerRight, solve: t.headerRight, editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight };
         Object.keys(btnFallbacks).forEach(btnKey => { t.btns[btnKey] = t.btns[btnKey] || btnFallbacks[btnKey]; });
 
         t.modal.bg = t.modal.bg || 'rgba(248, 250, 252, 0.95)';
@@ -341,8 +341,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             t.shell.btnBgHover = darkenHex(t.shell.btnBg, 0.9);
             t.shell.muteBg = t.btns.mute || t.btns.orient || shellBase;
             t.shell.muteBgHover = darkenHex(t.shell.muteBg, 0.9);
-            t.shell.auditBg = t.btns.saved || t.btns.solve || t.btns.guide || shellBase;
-            t.shell.auditBgHover = darkenHex(t.shell.auditBg, 0.9);
         }
         t.shell.btnBg = t.shell.btnBg || t.btns.orient || t.btns.modeToggle || t.btns.mute;
         t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.92);
@@ -354,10 +352,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         t.alert.text = pickContrastText(t.alert.bg, '#ffffff', '#0f172a');
         t.shell.muteText = keepOrImproveContrast(t.shell.muteBg, t.shell.muteText || t.btns.muteIcon);
         t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
-        t.shell.auditBg = t.shell.auditBg || t.shell.btnBg;
-        t.shell.auditBgHover = t.shell.auditBgHover || darkenHex(t.shell.auditBg, 0.92);
-        t.shell.auditText = keepOrImproveContrast(t.shell.auditBg, t.shell.auditText || t.shell.btnText);
-        t.shell.auditBorder = t.shell.auditBorder || t.shell.btnBorder || t.modal.border;
 
         t.header.navBg = t.header.navBg || 'rgba(255,255,255,0.2)';
         t.header.navBgHover = t.header.navBgHover || 'rgba(255,255,255,0.3)';
@@ -434,7 +428,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         return normalizeTheme({
             bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(),
             controls: rc(), metricText: rc(),
-            btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), saved: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() },
+            btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() },
             modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc(), closeHover: rc() },
             output: { bg: rc(), text: rc() },
             colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc() },
@@ -539,10 +533,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         root.style.setProperty('--theme-shell-btn-bg-hover', t.shell.btnBgHover);
         root.style.setProperty('--theme-shell-btn-text', t.shell.btnText);
         root.style.setProperty('--theme-shell-btn-border', t.shell.btnBorder);
-        root.style.setProperty('--theme-shell-audit-bg', t.shell.auditBg);
-        root.style.setProperty('--theme-shell-audit-bg-hover', t.shell.auditBgHover);
-        root.style.setProperty('--theme-shell-audit-text', t.shell.auditText);
-        root.style.setProperty('--theme-shell-audit-border', t.shell.auditBorder);
         root.style.setProperty('--theme-shell-mute-bg', t.shell.muteBg);
         root.style.setProperty('--theme-shell-mute-bg-hover', t.shell.muteBgHover);
         root.style.setProperty('--theme-shell-mute-text', t.shell.muteText);
