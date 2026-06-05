@@ -228,20 +228,10 @@ window.THEMES = {
     sock_hop: {
         seeds: { bg:'#e0ffff', surface:'#ffffff',  primary:'#008b8b', secondary:'#ff69b4', neutral:'#aaaaaa', text:'#004444', border:'#66cccc', path:'#ff1493' },
         overrides: {
+            btns: { saved:'#cc1155', editNew:'#cc1155' },
             colors: { portal:'#cc33aa' },
         }
     },
 
-    ultra_modern: {
-        seeds: { bg:'#111111', surface:'#1a1a1a',  primary:'#00ffff', secondary:'#ff007f', neutral:'#444444', text:'#00ffff', border:'#ffffff', path:'#bf00ff' },
-        overrides: {
-            headerLeft: '#000000',
-            headerRight: '#222222',
-            btns: { modeToggle:'#000000', orient:'#000000', whoa:'#222222' },
-            colors: { gate:'#00ffff', goal:'#ff007f', portal:'#bf00ff', filter:'#00ffff', cross:'#ffffff' },
-            win: { border:'#00ffff', accent:'#00ffff' },
-            alert: { bg:'#222222', stroke:'#00ffff' },
-        }
-    },
 
 };
