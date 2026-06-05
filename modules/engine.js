@@ -362,7 +362,6 @@ export function installEngine(APP) {
                 APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode);
                 APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode);
                 APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode);
-                APP.UI.setClassState('modeToggleBtn', 'hidden', !APP.State.ENGINE.isDevMode);
             }
 
             function switchMode(newMode) {
@@ -381,6 +380,8 @@ export function installEngine(APP) {
                 document.getElementById('editorMetrics').classList.toggle('hidden', !isEd);
                 document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd);
                 document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd);
+                const shellToggle = document.getElementById('modeToggleShellBtn');
+                if (shellToggle) shellToggle.textContent = isEd ? 'Play Game' : 'Editor';
                 const exportArea = document.getElementById('exportArea');
                 document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editGenBtn').classList.toggle('hidden', !isEd);
