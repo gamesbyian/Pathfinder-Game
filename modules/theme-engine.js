@@ -137,15 +137,20 @@ export function deriveTokens(seeds) {
     const primaryDD = darken(primary, 0.30);
     const primaryL  = lighten(primary, 0.22);
 
-    // action button colors: hues rotate 60°/180°/300° off primary so they're always
-    // mutually distinct and always distinct from the `whoa` button (which is primary).
-    // Saturation tracks the theme's energy; lightness adapts to dark/light mode.
+    // action button colors: all derive from theme's primary and secondary
+    // so buttons always feel like they belong to the current theme.
     const primaryHsl    = hexToHsl(primary);
-    const actionBtnSat  = Math.min(85, Math.max(50, primaryHsl.s * 0.6 + 32));
-    const actionBtnL    = bgLight ? 42 : 56;
-    const guideColor    = hslToHex({ h: (primaryHsl.h + 60)  % 360, s: actionBtnSat, l: actionBtnL });
-    const hintColor     = hslToHex({ h: (primaryHsl.h + 180) % 360, s: actionBtnSat, l: actionBtnL });
-    const successColor  = hslToHex({ h: (primaryHsl.h + 300) % 360, s: actionBtnSat, l: actionBtnL });
+    const secondaryHsl  = hexToHsl(secondary);
+    const btnL          = bgLight ? 40 : 52;
+    // Near-achromatic seeds get only a slight saturation nudge; chromatic seeds get boosted
+    const guideSat      = primaryHsl.s   < 8 ? primaryHsl.s + 3   : Math.min(90, Math.max(25, primaryHsl.s   + 12));
+    const hintSat       = secondaryHsl.s < 8 ? secondaryHsl.s + 3 : Math.min(90, Math.max(25, secondaryHsl.s + 12));
+    const blendSat      = Math.min(90, Math.max(25, (guideSat + hintSat) / 2));
+    const guideColor    = hslToHex({ h: primaryHsl.h,   s: guideSat, l: btnL });
+    const hintColor     = hslToHex({ h: secondaryHsl.h, s: hintSat,  l: btnL });
+    const savedHueDiff  = ((secondaryHsl.h - primaryHsl.h + 540) % 360) - 180;
+    const savedHue      = ((primaryHsl.h + savedHueDiff * 0.5) + 360) % 360;
+    const successColor  = hslToHex({ h: savedHue, s: blendSat, l: btnL });
 
     // portal: shift primary towards magenta-violet (h=300) by 60%
     const portalColor = (() => {
@@ -193,7 +198,7 @@ export function deriveTokens(seeds) {
         : (contrastRatio(surface, textMuted) >= 3.0 ? textMuted : text);
 
     // alert bg: fall back to secondary when primary is too dark to distinguish
-    const alertBg     = hexToHsl(primary).l < 20 ? secondary : primaryD;
+    const alertBg     = primaryHsl.l < 20 ? secondary : primaryD;
     const alertStroke = isLight(alertBg) ? darken(alertBg, 0.2) : lighten(alertBg, 0.3);
 
     return {
