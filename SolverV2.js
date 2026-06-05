@@ -1276,7 +1276,7 @@ function isSolution(state, level) {
 //   recovering from a small number of wrong early ordering decisions (the diagnosed
 //   failure mode) while remaining complete as the bound grows.
 // Returns the solution path (array of keys) or null on timeout/failure.
-async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, maxDiscrepancy = Infinity, yieldFn = null) {
+async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, maxDiscrepancy = Infinity, yieldFn = null, out = null) {
     const state = createState(startKey, level, prep);
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
@@ -1292,7 +1292,7 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
         // Budget + yield check every 256 nodes.
         if ((++nodesExpanded & 255) === 0) {
             const now = Date.now();
-            if (now - levelStartTime > levelBudgetMs) return null;
+            if (now - levelStartTime > levelBudgetMs) { if (out) out.timedOut = true; return null; }
             if (yieldFn && now - lastYield >= 16) {
                 lastYield = now;
                 await yieldFn();
@@ -1413,12 +1413,13 @@ const _LDS_DEBUG = typeof process !== 'undefined' && process.env && process.env.
 async function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, yieldFn) {
     const probeCapMs = Math.min(Math.floor(levelBudgetMs * 0.5), 4000);
     for (const k of _LDS_PROBE_K) {
-        if (Date.now() - levelStartTime >= probeCapMs) break;
         if (yieldFn) await yieldFn();
         const w0 = Date.now();
-        const path = await dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k, yieldFn);
-        if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms ${path?'SOLVED':'-'}`);
+        const probeOut = { timedOut: false };
+        const path = await dfsFromGate(startKey, level, prep, profile, probeCapMs, levelStartTime, template, k, yieldFn, probeOut);
+        if (_LDS_DEBUG) console.error(`    [lds] k=${k} ${Date.now()-w0}ms ${path?'SOLVED':probeOut.timedOut?'timeout':'exhausted'}`);
         if (path) return path;
+        if (probeOut.timedOut) break;
     }
     if (Date.now() - levelStartTime >= levelBudgetMs) return null;
     if (yieldFn) await yieldFn();
