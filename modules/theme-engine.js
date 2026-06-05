@@ -220,7 +220,6 @@ export function deriveTokens(seeds) {
             guide: guideColor,
             whoa: primary,
             hint: hintColor,
-            saved: guideColor,
             mega: guideColor,
             mute: utilBtnBg,
             muteIcon: neutral,
