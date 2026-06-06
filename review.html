@@ -22,13 +22,9 @@
 
 <!-- Auth screen -->
 <div id="authScreen" class="min-h-screen flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-xl p-10 flex flex-col gap-4 max-w-sm w-full">
+    <div class="bg-white rounded-2xl shadow-xl p-10 flex flex-col gap-4 max-w-sm w-full items-center">
         <h1 class="text-2xl font-black uppercase tracking-tight text-center">Level Review</h1>
-        <input id="authEmail" type="email" placeholder="Email" autocomplete="username"
-            class="border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-        <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password"
-            class="border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
-        <button id="signInBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Sign in</button>
+        <p id="authStatus" class="text-slate-500 text-sm text-center">Signing in…</p>
         <p id="authError" class="text-red-500 text-sm text-center hidden"></p>
     </div>
 </div>
@@ -126,7 +122,7 @@
 
 <script>
 // ─── Firebase setup ───────────────────────────────────────────────────────────
-const ADMIN_EMAIL = 'ianmakesjokes@gmail.com';
+const ADMIN_UID = typeof __admin_uid !== 'undefined' ? __admin_uid : null;
 const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
 
@@ -144,30 +140,16 @@ if (firebaseConfigRaw) {
         showAuthError('Firebase init failed: ' + e.message);
     }
 } else {
-    showAuthError('No Firebase config found. Make sure this page is served via Firebase Hosting.');
+    showAuthError('No Firebase config found.');
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 function showAuthError(msg) {
     const el = document.getElementById('authError');
     if (el) { el.textContent = msg; el.classList.remove('hidden'); }
+    const st = document.getElementById('authStatus');
+    if (st) st.classList.add('hidden');
 }
-
-document.getElementById('signInBtn').onclick = async () => {
-    if (!auth) return;
-    const email = document.getElementById('authEmail').value.trim();
-    const password = document.getElementById('authPassword').value;
-    if (!email || !password) { showAuthError('Enter your email and password.'); return; }
-    try {
-        await auth.signInWithEmailAndPassword(email, password);
-    } catch (e) {
-        showAuthError('Sign-in failed: ' + (e.code === 'auth/invalid-credential' ? 'Wrong email or password.' : e.message));
-    }
-};
-
-document.getElementById('authPassword').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('signInBtn').click();
-});
 
 document.getElementById('signOutBtn').onclick = () => auth?.signOut();
 
@@ -175,18 +157,27 @@ auth?.onAuthStateChanged((user) => {
     if (!user) {
         document.getElementById('authScreen').classList.remove('hidden');
         document.getElementById('reviewApp').classList.add('hidden');
+        const st = document.getElementById('authStatus');
+        if (st) { st.textContent = 'Signing in…'; st.classList.remove('hidden'); }
         return;
     }
-    if (user.email !== ADMIN_EMAIL) {
+    if (!ADMIN_UID || user.uid !== ADMIN_UID) {
         auth.signOut();
-        showAuthError('Access denied. Sign in as ' + ADMIN_EMAIL);
+        showAuthError('Access denied. Your UID: ' + user.uid);
         return;
     }
     document.getElementById('authScreen').classList.add('hidden');
     document.getElementById('reviewApp').classList.remove('hidden');
-    document.getElementById('headerUserEmail').textContent = user.email;
+    document.getElementById('headerUserEmail').textContent = 'Admin';
     loadSubmissions();
 });
+
+// Kick off anonymous sign-in automatically
+if (auth) {
+    auth.signInAnonymously().catch(e => {
+        showAuthError('Sign-in failed: ' + e.message);
+    });
+}
 
 // ─── Submissions ──────────────────────────────────────────────────────────────
 let submissions = [];
