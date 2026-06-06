@@ -3,7 +3,7 @@
 // This file is safe to commit to a public repo — Firebase security is enforced by firestore.rules.
 
 window.__firebase_config = JSON.stringify({
-    apiKey:            "YOUR_API_KEY",
+    apiKey:            "AIzaSyAPIU2IvsuslyXE3zWqEQb3wowAmr_gUQ0",
     authDomain:        "pathfinder-game-23e29.firebaseapp.com",
     projectId:         "pathfinder-game-23e29",
     storageBucket:     "pathfinder-game-23e29.appspot.com",
