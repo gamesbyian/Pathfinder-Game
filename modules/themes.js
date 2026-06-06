@@ -623,13 +623,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('muteSlash').style.color = t.shell.muteText;
 
         APP.UI.getEl('devCopyBtn').style.backgroundColor = t.btns.copy;
-        APP.UI.getEl('editCopyBtn').style.backgroundColor = t.btns.copy;
         APP.UI.getEl('devGenBtn').style.backgroundColor = t.btns.gen;
-        APP.UI.getEl('editGenBtn').style.backgroundColor = t.btns.gen;
         APP.UI.getEl('devCopyBtn').style.color = t.text.utilityBtn;
-        APP.UI.getEl('editCopyBtn').style.color = t.text.utilityBtn;
         APP.UI.getEl('devGenBtn').style.color = t.text.utilityBtnGen;
-        APP.UI.getEl('editGenBtn').style.color = t.text.utilityBtnGen;
 
         APP.UI.getEl('exportLabel').style.color = t.text.metric;
         Array.from(document.querySelectorAll('.metric-label')).forEach(el => el.style.color = t.text.metric);

@@ -334,7 +334,7 @@
                 <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-4 pt-2 text-left">
                     <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Building & Testing</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Pick a tool from the palette to start building! You can tap the grid to place objects or even drag them directly into position. Use the <strong>Pencil</strong> to sketch out paths and see how your level plays. Dragging items off the grid will remove them.</p></section>
                     <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Solving</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Click <strong>Hint</strong> to automatically find valid solutions. It requires target metrics (Length/Crosses) to be properly set beforehand.</p></section>
-                    <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Exporting Level Data</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Once you've built something great, click <strong>Generate</strong> to export your level data. If you've drawn a valid solution or used the solver, it will automatically include that as a helpful hint for players! You can also use <strong>Copy Path</strong> to grab the raw coordinate array anytime.</p></section>
+                    <section><h4 class="font-bold mb-1 text-[1rem] uppercase tracking-wider text-[var(--theme-modal-accent)]">Submitting Levels</h4><p class="serif-desc leading-relaxed text-[0.95rem] text-[var(--theme-modal-text)]">Once you've built something great, click <strong>Submit</strong> to send your level for review. If you've drawn a valid solution or used the solver, it will automatically include that as a helpful hint for players.</p></section>
                 </div>
             </div>
             <div id="winModal" class="screen-modal hidden flex flex-col items-center justify-center modal-content">
@@ -451,9 +451,6 @@
                     <div id="exportBtnStack" class="flex flex-col gap-2 w-[7rem] shrink-0">
                         <button id="devCopyBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
                         <button id="devGenBtn" class="export-action-btn flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Copy Hints</button>
-                        <button id="editCopyBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.55rem] transition uppercase px-1 leading-none">Copy Path</button>
-                        <button id="editGenBtn" class="export-action-btn hidden flex-1 bg-slate-200 text-slate-600 rounded-lg font-black text-[0.6rem] transition uppercase">Generate</button>
-                        <button id="editSubmitBtn" class="export-action-btn hidden flex-1 bg-emerald-600 text-white rounded-lg font-black text-[0.6rem] transition uppercase">Submit</button>
                     </div>
                 </div>
             </div>
