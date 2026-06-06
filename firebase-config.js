@@ -3,12 +3,12 @@
 // This file is safe to commit to a public repo — Firebase security is enforced by firestore.rules.
 
 window.__firebase_config = JSON.stringify({
-    apiKey:            "YOUR_API_KEY",
-    authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-    projectId:         "YOUR_PROJECT_ID",
-    storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId:             "YOUR_APP_ID"
+    apiKey:            "AIzaSyAcft3RDXdUCeKsM8YyApXms0aZ7RuD7J4",
+    authDomain:        "pathfinder-game-23e29.firebaseapp.com",
+    projectId:         "pathfinder-game-23e29",
+    storageBucket:     "pathfinder-game-23e29.appspot.com",
+    messagingSenderId: "237409490276",
+    appId:             "1:237409490276:web:84f94798654b829de79671"
 });
 
 // A stable identifier for this app's Firestore namespace.
