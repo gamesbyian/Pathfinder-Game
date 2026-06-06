@@ -392,6 +392,7 @@ export function installEngine(APP) {
                 document.getElementById('editMegaSolver').classList.toggle('hidden', isReview);
                 document.getElementById('editTrapSpotsBtn').classList.toggle('hidden', isReview);
                 document.getElementById('editHelpBtn').classList.toggle('hidden', isReview);
+                document.getElementById('reviewHintBtn').classList.toggle('hidden', !isReview);
                 document.getElementById('reviewSubmitBtn').classList.toggle('hidden', !isReview);
                 document.getElementById('reviewApproveBtn').classList.toggle('hidden', !isReview);
                 document.getElementById('reviewRejectBtn').classList.toggle('hidden', !isReview);

@@ -504,6 +504,19 @@ export function installInput(APP) {
 
         document.getElementById('editSubmitBtn').onclick = () => submitWorkingLevel('editSubmitBtn', null);
 
+        document.getElementById('reviewHintBtn').onclick = () => {
+            APP.UI.closeAllModals();
+            if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+            const wl = APP.State.ENGINE.editor.workingLevel;
+            if (!wl?.hints?.length) { APP.UI.showMessage('No saved hint.', 'text-white font-black'); return; }
+            APP.State.ENGINE.hinter.pathList = wl.hints;
+            APP.State.ENGINE.hinter.currentPathIdx = APP.State.ENGINE.hinter.source === 'saved'
+                ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % wl.hints.length
+                : 0;
+            APP.State.ENGINE.hinter.source = 'saved';
+            APP.Solver.startHintAnimation();
+        };
+
         document.getElementById('reviewSubmitBtn').onclick = () => submitWorkingLevel('reviewSubmitBtn', async (sm) => {
             sm.detail.textContent = 'Refreshing review queue…';
             try {
