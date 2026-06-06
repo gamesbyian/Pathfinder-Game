@@ -15,4 +15,4 @@ window.__firebase_config = JSON.stringify({
 window.__app_id = "pathfinder-standalone";
 
 // Anonymous UID of the admin account — used by review.html and Firestore rules.
-window.__admin_uid = "1GRCcANlSdSaDXGtZWtwGaoFqXG2";
+window.__admin_uid = "hcHlsaDKoxfSX6UvOaQJell5w383";
