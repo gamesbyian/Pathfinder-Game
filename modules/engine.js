@@ -410,6 +410,7 @@ export function installEngine(APP) {
                     updatePencilState();
                 } else if (isReview) {
                     APP.State.ENGINE.review.savedPlayLevelIdx = APP.State.ENGINE.levelIdx;
+                    APP.State.ENGINE.editor.workingLevel = null;
                     APP.State.ENGINE.editor.isPencilMode = false;
                     APP.State.ENGINE.editor.undoStack = [];
                     APP.State.ENGINE.editor.isModified = false;
