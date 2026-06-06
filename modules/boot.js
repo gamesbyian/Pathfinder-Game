@@ -40,6 +40,12 @@ export function installBoot(APP) {
                 APP.Engine.updatePlayModeLayout();
                 APP.Engine.loop();
                 APP.Loader.finish();
+
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('mode') === 'review') {
+                    const overlay = document.getElementById('reviewAuthOverlay');
+                    if (overlay) overlay.classList.remove('hidden');
+                }
             } catch (error) {
                 APP.Loader.fail('boot', error);
             }

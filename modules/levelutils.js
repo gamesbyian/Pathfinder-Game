@@ -221,10 +221,23 @@ export function installLevelUtils(APP) {
 
             function assertLevelShape(level) { if (!level) throw new Error("Level object is null"); if (level.goalKey === undefined || level.goalKey === -1) throw new Error("Level missing goal"); if (!Array.isArray(level.gateKeys) || level.gateKeys.length === 0) throw new Error("Level missing gates"); if (!level.grid || !level.grid.w || !level.grid.h) throw new Error("Grid dimensions missing"); }
 
+            function processRawLevel(raw, id = null) {
+                if (!raw || !raw.goal || !raw.gates) return null;
+                const adj = (v) => v - 1;
+                const l = { id, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: (raw.gates || []).map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: (raw.mustPass || []).map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))), mustCrossKeys: (raw.mustCross || []).map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))), hints: raw.hints || [], hasParityBreaker: false };
+                (raw.blocks || []).forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y))));
+                (raw.geese || []).forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y))));
+                (raw.filters || []).forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis));
+                (raw.flippingFilters || []).forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis));
+                (raw.falseGoals || []).forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y))));
+                (raw.portals || []).forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2 }); l.portalMap.set(k2, { dest: k1 }); l.portalVisuals.push({ k1, k2 }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; });
+                return l;
+            }
+
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
             transformAxis, getGridCoord, canonicalCloneLevel, deepCloneLevel, normalizeLevel, denormalizeLevel,
-            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, getRawLevels, resolvePortal, getPortalDisplayColor, isValidMove
+            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, processRawLevel, getRawLevels, resolvePortal, getPortalDisplayColor, isValidMove
         };
     })();
 }

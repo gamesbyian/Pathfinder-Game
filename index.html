@@ -131,6 +131,14 @@
 
 <div id="dragGhost" class="flex items-center justify-center bg-white rounded-lg border-2 border-dashed"></div>
 
+<div id="reviewAuthOverlay" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
+    <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
+        <h2 class="text-xl font-black text-white mb-2 uppercase tracking-tighter">Level Review</h2>
+        <p id="reviewAuthStatus" class="text-sm text-slate-400 mb-4">Sign in with your Google account to review submissions.</p>
+        <button id="reviewSignInBtn" class="w-full h-12 bg-white text-slate-900 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-slate-100 transition">Sign in with Google</button>
+    </div>
+</div>
+
 <div id="loadingOverlay" class="fixed inset-0 z-[100] bg-[var(--theme-loading-overlay-bg)] backdrop-blur-sm flex items-center justify-center p-8 transition-opacity duration-500">
     <div class="w-full max-w-xs bg-[var(--theme-loading-panel-bg)] p-6 rounded-2xl border border-[var(--theme-loading-panel-border)] shadow-2xl">
         <div class="flex justify-between items-end mb-4">
@@ -382,6 +390,8 @@
                 <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
                 <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
+                <button id="reviewApproveBtn" class="hidden flex-1 h-10 bg-emerald-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Approve</button>
+                <button id="reviewRejectBtn" class="hidden flex-1 h-10 bg-red-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Reject</button>
             </div>
             <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
                 <p id="message" class="font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
