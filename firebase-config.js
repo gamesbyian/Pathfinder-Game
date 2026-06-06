@@ -12,4 +12,4 @@ window.__firebase_config = JSON.stringify({
 });
 
 // A stable identifier for this app's Firestore namespace.
-window.__app_id = "pathfinder-game";
+window.__app_id = "pathfinder-standalone";
