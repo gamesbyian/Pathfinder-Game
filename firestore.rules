@@ -4,7 +4,7 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null &&
-             request.auth.uid == 'hcHlsaDKoxfSX6UvOaQJell5w383';
+             request.auth.token.email == 'ianmakesjokes@gmail.com';
     }
 
     // Existing player-progress and session collections (unchanged)
