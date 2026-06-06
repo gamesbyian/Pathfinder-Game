@@ -347,7 +347,6 @@ export function installInput(APP) {
 
         document.getElementById('undoBtn').onclick = () => { APP.UI.closeAllModals(); if(APP.State.ENGINE.undoStack.length) APP.Engine.applySnapshot(APP.State.ENGINE.undoStack.pop()); };
         document.getElementById('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = (APP.State.ENGINE.foundHintsSinceLoad || []).filter(path => APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level), path)?.ok); if (!hints.length) { APP.UI.showMessage("No valid hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); APP.UI.setSolutionOutput(hintText); await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
-        document.getElementById('editGenBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.setButtonState('editGenBtn', { enabled: true }); APP.Editor.generateLevelString(); };
 
         // Shared submit logic used by both editor and review mode.
         // triggerBtnId: button to disable during submit.
@@ -547,8 +546,6 @@ export function installInput(APP) {
             }
         };
 
-        document.getElementById('editSubmitBtn').onclick = () => submitWorkingLevel('editSubmitBtn', null);
-
         document.getElementById('reviewHintBtn').onclick = () => {
             APP.UI.closeAllModals();
             if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
@@ -562,26 +559,30 @@ export function installInput(APP) {
             APP.Solver.startHintAnimation();
         };
 
-        document.getElementById('reviewSubmitBtn').onclick = () => submitWorkingLevel('reviewSubmitBtn', async (sm) => {
-            sm.setStep('smStep-save', 'running', 'Refreshing review queue…');
-            try {
-                const subs = await APP.Persistence.loadSubmissions();
-                APP.State.ENGINE.review.submissions = subs;
-                const safeIdx = Math.min(APP.State.ENGINE.review.currentIdx, Math.max(0, subs.length - 1));
-                if (subs.length > 0) {
-                    APP.Engine.loadReviewLevel(safeIdx);
-                } else {
-                    APP.State.ENGINE.editor.workingLevel = null;
-                    APP.State.ENGINE.isDirty = true;
-                    APP.UI.updateLevelDisplay(0, false, '0/0');
+        document.getElementById('reviewSubmitBtn').onclick = () => {
+            const afterReviewSubmit = async (sm) => {
+                sm.setStep('smStep-save', 'running', 'Refreshing review queue…');
+                try {
+                    const subs = await APP.Persistence.loadSubmissions();
+                    APP.State.ENGINE.review.submissions = subs;
+                    const safeIdx = Math.min(APP.State.ENGINE.review.currentIdx, Math.max(0, subs.length - 1));
+                    if (subs.length > 0) {
+                        APP.Engine.loadReviewLevel(safeIdx);
+                    } else {
+                        APP.State.ENGINE.editor.workingLevel = null;
+                        APP.State.ENGINE.isDirty = true;
+                        APP.UI.updateLevelDisplay(0, false, '0/0');
+                    }
+                } catch (e) {
+                    console.warn('[ReviewSubmit] Queue refresh failed:', e);
                 }
-            } catch (e) {
-                console.warn('[ReviewSubmit] Queue refresh failed:', e);
-            }
-            sm.setStep('smStep-save', 'ok', 'Queued for review');
-            sm.dismiss.classList.remove('hidden');
-            setTimeout(() => sm.el.classList.add('hidden'), 4000);
-        });
+                sm.setStep('smStep-save', 'ok', 'Queued for review');
+                sm.dismiss.classList.remove('hidden');
+                setTimeout(() => sm.el.classList.add('hidden'), 4000);
+            };
+            const afterSuccess = APP.State.ENGINE.mode === APP.Core.REVIEW ? afterReviewSubmit : null;
+            submitWorkingLevel('reviewSubmitBtn', afterSuccess);
+        };
 
         const copyCurrentPath = async () => {
             APP.UI.closeAllModals();
@@ -593,7 +594,6 @@ export function installInput(APP) {
             }
         };
         document.getElementById('devCopyBtn').onclick = copyCurrentPath;
-        document.getElementById('editCopyBtn').onclick = copyCurrentPath;
 
         const hintBtn = document.getElementById('hintBtn');
         const showSavedHint = () => {

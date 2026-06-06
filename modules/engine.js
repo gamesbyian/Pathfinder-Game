@@ -385,23 +385,18 @@ export function installEngine(APP) {
                 const shellToggle = document.getElementById('modeToggleShellBtn');
                 if (shellToggle) shellToggle.textContent = isReview ? 'Exit Review' : (isEd ? 'Play Game' : 'Editor');
                 const exportArea = document.getElementById('exportArea');
-                document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd);
-                document.getElementById('editGenBtn').classList.toggle('hidden', !isEd);
-                document.getElementById('editSubmitBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editResetGrid').classList.toggle('hidden', isReview);
                 document.getElementById('editMegaSolver').classList.toggle('hidden', false);
                 document.getElementById('editTrapSpotsBtn').classList.toggle('hidden', isReview);
                 document.getElementById('editHelpBtn').classList.toggle('hidden', isReview);
                 document.getElementById('reviewHintBtn').classList.toggle('hidden', !isReview);
-                document.getElementById('reviewSubmitBtn').classList.toggle('hidden', !isReview);
+                document.getElementById('reviewSubmitBtn').classList.toggle('hidden', !isEdOrReview);
                 document.getElementById('reviewApproveBtn').classList.toggle('hidden', !isReview);
                 document.getElementById('reviewRejectBtn').classList.toggle('hidden', !isReview);
-                APP.UI.setButtonState('editGenBtn', { enabled: true });
-                APP.UI.setButtonState('editSubmitBtn', { enabled: true });
+                APP.UI.setButtonState('reviewSubmitBtn', { enabled: true });
                 document.getElementById('devCopyBtn').classList.toggle('hidden', isEdOrReview || !APP.State.ENGINE.isDevMode);
                 document.getElementById('devGenBtn').classList.toggle('hidden', isEdOrReview || !APP.State.ENGINE.isDevMode);
-                if (isEd) exportArea.classList.remove('hidden');
-                else exportArea.classList.add('hidden');
+                exportArea.classList.add('hidden');
                 if (isEd) {
                     APP.State.ENGINE.variant = 0;
                     APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level);
