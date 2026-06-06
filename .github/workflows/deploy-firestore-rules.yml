@@ -17,9 +17,6 @@ jobs:
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
-      - name: Show authenticated service account
-        run: gcloud auth list
-
       - name: Deploy Firestore rules
         run: |
           set -e
@@ -38,16 +35,11 @@ jobs:
           RULESET_NAME=$(echo "$RULESET" | jq -r '.name')
           echo "Created ruleset: $RULESET_NAME"
 
-          echo "=== Existing releases ==="
-          curl -s "$API/releases" -H "Authorization: Bearer $TOKEN"
-          echo ""
-
           RELEASE_BODY=$(jq -n \
             --arg n "projects/$PROJECT/releases/cloud.firestore" \
             --arg r "$RULESET_NAME" \
             '{"name":$n,"rulesetName":$r}')
 
-          echo "=== Trying PATCH ==="
           PATCH_RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X PATCH "$API/releases/cloud.firestore" \
             -H "Authorization: Bearer $TOKEN" \
@@ -55,16 +47,12 @@ jobs:
             -d "$(jq -n --arg r "$RULESET_NAME" \
                    '{"release":{"rulesetName":$r},"updateMask":"rulesetName"}')")
           PATCH_CODE=$(echo "$PATCH_RESPONSE" | tail -1)
-          PATCH_RESP=$(echo "$PATCH_RESPONSE" | head -n -1)
-          echo "PATCH HTTP $PATCH_CODE: $PATCH_RESP"
 
           if [ "$PATCH_CODE" -lt 400 ]; then
-            echo "Firestore rules deployed successfully (updated)."
+            echo "Firestore rules deployed successfully."
             exit 0
           fi
 
-          echo "=== Trying POST (create) ==="
-          echo "Body: $RELEASE_BODY"
           POST_RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X POST "$API/releases" \
             -H "Authorization: Bearer $TOKEN" \
@@ -72,10 +60,10 @@ jobs:
             -d "$RELEASE_BODY")
           POST_CODE=$(echo "$POST_RESPONSE" | tail -1)
           POST_RESP=$(echo "$POST_RESPONSE" | head -n -1)
-          echo "POST HTTP $POST_CODE: $POST_RESP"
 
           if [ "$POST_CODE" -ge 400 ]; then
+            echo "Release deploy failed (HTTP $POST_CODE): $POST_RESP"
             exit 1
           fi
 
-          echo "Firestore rules deployed successfully (created)."
+          echo "Firestore rules deployed successfully."
