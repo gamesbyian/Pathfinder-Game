@@ -259,7 +259,7 @@ export function installPersistence(APP) {
                 }));
             } catch (e) {
                 console.warn('[Persistence] loadSubmissions failed', e);
-                return [];
+                throw e;
             }
         }
 

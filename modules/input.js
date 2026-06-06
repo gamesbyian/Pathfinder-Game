@@ -355,6 +355,10 @@ export function installInput(APP) {
                 APP.UI.showMessage('Solver is running, please wait.', 'text-yellow-400 font-bold');
                 return;
             }
+            if (!APP.Persistence.getCurrentUser()) {
+                APP.UI.showMessage('Not signed in. Please wait or refresh.', 'text-red-500 font-bold');
+                return;
+            }
             APP.Editor.applyMetricsFromUI();
             const l = APP.State.ENGINE.editor.workingLevel;
             const validation = APP.Editor.validateWorkingLevel();
@@ -609,12 +613,17 @@ export function installInput(APP) {
             if (statusEl) statusEl.textContent = 'Signing in…';
             try {
                 await APP.Persistence.initAdminAuth();
-                const overlay = document.getElementById('reviewAuthOverlay');
-                if (overlay) overlay.classList.add('hidden');
-                APP.State.ENGINE.review.submissions = [];
-                APP.State.ENGINE.review.currentIdx = 0;
-                APP.Engine.switchMode(APP.Core.REVIEW);
-                if (statusEl) statusEl.textContent = 'Loading submissions…';
+            } catch (err) {
+                if (statusEl) statusEl.textContent = err?.message || 'Sign-in failed.';
+                btn.disabled = false;
+                return;
+            }
+            const overlay = document.getElementById('reviewAuthOverlay');
+            if (overlay) overlay.classList.add('hidden');
+            APP.State.ENGINE.review.submissions = [];
+            APP.State.ENGINE.review.currentIdx = 0;
+            APP.Engine.switchMode(APP.Core.REVIEW);
+            try {
                 const subs = await APP.Persistence.loadSubmissions();
                 APP.State.ENGINE.review.submissions = subs;
                 if (subs.length === 0) {
@@ -623,8 +632,7 @@ export function installInput(APP) {
                     APP.Engine.loadReviewLevel(0);
                 }
             } catch (err) {
-                if (statusEl) statusEl.textContent = err?.message || 'Sign-in failed.';
-                btn.disabled = false;
+                APP.UI.showMessage(`Load failed: ${err?.message || err}`, 'text-red-500 font-bold');
             }
         };
 
