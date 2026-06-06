@@ -461,14 +461,35 @@ export function installInput(APP) {
                 hints
             };
 
+            const sm = {
+                el: document.getElementById('submitModal'),
+                heading: document.getElementById('submitModalHeading'),
+                detail: document.getElementById('submitModalDetail'),
+                spinner: document.getElementById('submitModalSpinner'),
+                dismiss: document.getElementById('submitModalDismissBtn'),
+            };
+            sm.heading.textContent = 'Submitting';
+            sm.heading.style.color = '';
+            sm.detail.textContent = 'Saving level to server…';
+            sm.spinner.classList.remove('hidden');
+            sm.dismiss.classList.add('hidden');
+            sm.el.classList.remove('hidden');
             try {
                 APP.UI.setButtonState('editSubmitBtn', { enabled: false });
-                APP.UI.showMessage('Submitting…', 'text-white font-black');
                 await APP.Persistence.submitLevel(levelData);
-                APP.UI.showMessage('Level submitted!', 'text-emerald-400 font-black', 5000);
+                sm.heading.textContent = 'Submitted!';
+                sm.heading.style.color = '#34d399';
+                sm.detail.textContent = 'Level sent for review.';
+                sm.spinner.classList.add('hidden');
+                sm.dismiss.classList.remove('hidden');
+                setTimeout(() => sm.el.classList.add('hidden'), 4000);
             } catch (err) {
                 console.error('[Submit] failed:', err);
-                APP.UI.showMessage(err?.message === 'Not signed in' ? 'Not signed in.' : `Submit failed: ${err?.message || 'Error'}`, 'text-red-500 font-bold', 5000);
+                sm.heading.textContent = 'Submit Failed';
+                sm.heading.style.color = '#f87171';
+                sm.detail.textContent = err?.message === 'Not signed in' ? 'Not signed in. Refresh the page.' : (err?.message || 'Unknown error');
+                sm.spinner.classList.add('hidden');
+                sm.dismiss.classList.remove('hidden');
             } finally {
                 APP.UI.setButtonState('editSubmitBtn', { enabled: true });
             }
@@ -623,16 +644,39 @@ export function installInput(APP) {
             APP.State.ENGINE.review.submissions = [];
             APP.State.ENGINE.review.currentIdx = 0;
             APP.Engine.switchMode(APP.Core.REVIEW);
+
+            const rlm = {
+                el: document.getElementById('reviewLoadModal'),
+                heading: document.getElementById('reviewLoadHeading'),
+                detail: document.getElementById('reviewLoadDetail'),
+                spinner: document.getElementById('reviewLoadSpinner'),
+                dismiss: document.getElementById('reviewLoadDismissBtn'),
+            };
+            rlm.heading.textContent = 'Loading Submissions';
+            rlm.heading.style.color = '';
+            rlm.detail.textContent = 'Fetching from server…';
+            rlm.spinner.classList.remove('hidden');
+            rlm.dismiss.classList.add('hidden');
+            rlm.el.classList.remove('hidden');
             try {
                 const subs = await APP.Persistence.loadSubmissions();
                 APP.State.ENGINE.review.submissions = subs;
                 if (subs.length === 0) {
-                    APP.UI.showMessage('No submissions.', 'text-slate-400');
+                    rlm.heading.textContent = 'No Submissions';
+                    rlm.heading.style.color = '#94a3b8';
+                    rlm.detail.textContent = 'No levels are waiting for review.';
+                    rlm.spinner.classList.add('hidden');
+                    rlm.dismiss.classList.remove('hidden');
                 } else {
+                    rlm.el.classList.add('hidden');
                     APP.Engine.loadReviewLevel(0);
                 }
             } catch (err) {
-                APP.UI.showMessage(`Load failed: ${err?.message || err}`, 'text-red-500 font-bold', 8000);
+                rlm.heading.textContent = 'Load Failed';
+                rlm.heading.style.color = '#f87171';
+                rlm.detail.textContent = err?.message || String(err);
+                rlm.spinner.classList.add('hidden');
+                rlm.dismiss.classList.remove('hidden');
             }
         };
 
@@ -683,6 +727,9 @@ export function installInput(APP) {
                 APP.UI.showMessage('Reject failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
             }
         };
+
+        document.getElementById('reviewLoadDismissBtn').onclick = () => document.getElementById('reviewLoadModal').classList.add('hidden');
+        document.getElementById('submitModalDismissBtn').onclick = () => document.getElementById('submitModal').classList.add('hidden');
 
         document.getElementById('editTrapSpotsBtn').onclick = async () => {
             const isVisible = APP.UI.isModalOpen('editorHelpModal');
