@@ -35,12 +35,24 @@ jobs:
           RULESET_NAME=$(echo "$RULESET" | jq -r '.name')
           echo "Created ruleset: $RULESET_NAME"
 
-          curl -sf -X PATCH "$API/releases/cloud.firestore" \
+          PATCH_BODY=$(jq -n \
+            --arg n "projects/$PROJECT/releases/cloud.firestore" \
+            --arg r "$RULESET_NAME" \
+            '{"name":$n,"rulesetName":$r}')
+
+          PATCH_RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X PATCH "$API/releases/cloud.firestore?updateMask=rulesetName" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d "$(jq -n \
-                  --arg n "projects/$PROJECT/releases/cloud.firestore" \
-                  --arg r "$RULESET_NAME" \
-                  '{"release":{"name":$n,"rulesetName":$r}}')"
+            -d "$PATCH_BODY")
+
+          HTTP_CODE=$(echo "$PATCH_RESPONSE" | tail -1)
+          PATCH_BODY_RESP=$(echo "$PATCH_RESPONSE" | head -n -1)
+
+          if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "Release update failed (HTTP $HTTP_CODE):"
+            echo "$PATCH_BODY_RESP"
+            exit 1
+          fi
 
           echo "Firestore rules deployed successfully."
