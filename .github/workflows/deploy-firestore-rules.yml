@@ -35,37 +35,44 @@ jobs:
           RULESET_NAME=$(echo "$RULESET" | jq -r '.name')
           echo "Created ruleset: $RULESET_NAME"
 
+          echo "=== Existing releases ==="
+          curl -s "$API/releases" -H "Authorization: Bearer $TOKEN"
+          echo ""
+
           RELEASE_BODY=$(jq -n \
             --arg n "projects/$PROJECT/releases/cloud.firestore" \
             --arg r "$RULESET_NAME" \
             '{"name":$n,"rulesetName":$r}')
 
-          # Try to update an existing release; create it if this is the first deploy
+          echo "=== Trying PATCH ==="
           PATCH_RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X PATCH "$API/releases/cloud.firestore" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d "$(jq -n --arg r "$RULESET_NAME" \
                    '{"release":{"rulesetName":$r},"updateMask":"rulesetName"}')")
+          PATCH_CODE=$(echo "$PATCH_RESPONSE" | tail -1)
+          PATCH_RESP=$(echo "$PATCH_RESPONSE" | head -n -1)
+          echo "PATCH HTTP $PATCH_CODE: $PATCH_RESP"
 
-          HTTP_CODE=$(echo "$PATCH_RESPONSE" | tail -1)
-          RESP_BODY=$(echo "$PATCH_RESPONSE" | head -n -1)
-
-          if [ "$HTTP_CODE" -eq 404 ]; then
-            echo "No existing release found — creating for the first time."
-            CREATE_RESPONSE=$(curl -s -w "\n%{http_code}" \
-              -X POST "$API/releases" \
-              -H "Authorization: Bearer $TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "$RELEASE_BODY")
-            HTTP_CODE=$(echo "$CREATE_RESPONSE" | tail -1)
-            RESP_BODY=$(echo "$CREATE_RESPONSE" | head -n -1)
+          if [ "$PATCH_CODE" -lt 400 ]; then
+            echo "Firestore rules deployed successfully (updated)."
+            exit 0
           fi
 
-          if [ "$HTTP_CODE" -ge 400 ]; then
-            echo "Release deploy failed (HTTP $HTTP_CODE):"
-            echo "$RESP_BODY"
+          echo "=== Trying POST (create) ==="
+          echo "Body: $RELEASE_BODY"
+          POST_RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "$API/releases" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$RELEASE_BODY")
+          POST_CODE=$(echo "$POST_RESPONSE" | tail -1)
+          POST_RESP=$(echo "$POST_RESPONSE" | head -n -1)
+          echo "POST HTTP $POST_CODE: $POST_RESP"
+
+          if [ "$POST_CODE" -ge 400 ]; then
             exit 1
           fi
 
-          echo "Firestore rules deployed successfully."
+          echo "Firestore rules deployed successfully (created)."
