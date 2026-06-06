@@ -176,7 +176,13 @@ export function installPersistence(APP) {
             const isComplete = APP.State.ENGINE.progressSet.has(APP.State.ENGINE.levelIdx);
             const isPlayMode = APP.State.ENGINE.mode === APP.Core.PLAY;
             const isReview = APP.State.ENGINE.mode === APP.Core.REVIEW;
-            APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode, isReview ? '??' : null);
+            let reviewDisplay = null;
+            if (isReview) {
+                const subs = APP.State.ENGINE.review.submissions;
+                const idx = APP.State.ENGINE.review.currentIdx;
+                reviewDisplay = subs.length > 0 ? `${idx + 1}/${subs.length}` : '0/0';
+            }
+            APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode, reviewDisplay);
         }
 
         function waitForUser(timeoutMs = 8000) {

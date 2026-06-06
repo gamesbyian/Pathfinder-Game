@@ -388,7 +388,11 @@ export function installEngine(APP) {
                 document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editGenBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editSubmitBtn').classList.toggle('hidden', !isEd);
-                document.getElementById('editNewLevel').classList.toggle('hidden', isReview);
+                document.getElementById('editResetGrid').classList.toggle('hidden', isReview);
+                document.getElementById('editMegaSolver').classList.toggle('hidden', isReview);
+                document.getElementById('editTrapSpotsBtn').classList.toggle('hidden', isReview);
+                document.getElementById('editHelpBtn').classList.toggle('hidden', isReview);
+                document.getElementById('reviewSubmitBtn').classList.toggle('hidden', !isReview);
                 document.getElementById('reviewApproveBtn').classList.toggle('hidden', !isReview);
                 document.getElementById('reviewRejectBtn').classList.toggle('hidden', !isReview);
                 APP.UI.setButtonState('editGenBtn', { enabled: true });
@@ -448,7 +452,7 @@ export function installEngine(APP) {
             function loadReviewLevel(idx) {
                 const subs = APP.State.ENGINE.review.submissions;
                 if (!subs || !subs.length) {
-                    APP.UI.updateLevelDisplay(0, false, '??');
+                    APP.UI.updateLevelDisplay(0, false, '0/0');
                     return;
                 }
                 const safeIdx = Math.max(0, Math.min(idx, subs.length - 1));
@@ -469,7 +473,7 @@ export function installEngine(APP) {
                 APP.State.ENGINE.detonatedFalseGoals.clear();
                 APP.UI.setInputValue('editReqLen', normalized.reqLen || 0);
                 APP.UI.setInputValue('editReqInt', normalized.reqInt || 0);
-                APP.UI.updateLevelDisplay(safeIdx, false, '??');
+                APP.UI.updateLevelDisplay(safeIdx, false, `${safeIdx + 1}/${subs.length}`);
                 APP.UI.updateAppScale();
                 APP.UI.updateViewport();
                 APP.State.ENGINE.isDirty = true;

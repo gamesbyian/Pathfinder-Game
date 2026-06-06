@@ -349,7 +349,10 @@ export function installInput(APP) {
         document.getElementById('devGenBtn').onclick = async () => { APP.UI.closeAllModals(); const hints = (APP.State.ENGINE.foundHintsSinceLoad || []).filter(path => APP.Solver.validateCandidatePath(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level), path)?.ok); if (!hints.length) { APP.UI.showMessage("No valid hints found yet.", ""); return; } const hintText = JSON.stringify(hints).replace(/\s/g, ''); APP.UI.setSolutionOutput(hintText); await APP.UI.copyText(hintText, { fallbackElId: 'solutionOutput' }); APP.UI.showMessage(`Copied ${hints.length} hint${hints.length === 1 ? '' : 's'}`, ""); };
         document.getElementById('editGenBtn').onclick = () => { APP.UI.closeAllModals(); APP.UI.setButtonState('editGenBtn', { enabled: true }); APP.Editor.generateLevelString(); };
 
-        document.getElementById('editSubmitBtn').onclick = async () => {
+        // Shared submit logic used by both editor and review mode.
+        // triggerBtnId: button to disable during submit.
+        // afterSuccess: optional async fn(sm) called after Firestore write succeeds.
+        const submitWorkingLevel = async (triggerBtnId, afterSuccess) => {
             APP.UI.closeAllModals();
             if (APP.State.ENGINE.activeSolverController) {
                 APP.UI.showMessage('Solver is running, please wait.', 'text-yellow-400 font-bold');
@@ -475,14 +478,18 @@ export function installInput(APP) {
             sm.dismiss.classList.add('hidden');
             sm.el.classList.remove('hidden');
             try {
-                APP.UI.setButtonState('editSubmitBtn', { enabled: false });
+                APP.UI.setButtonState(triggerBtnId, { enabled: false });
                 await APP.Persistence.submitLevel(levelData);
                 sm.heading.textContent = 'Submitted!';
                 sm.heading.style.color = '#34d399';
-                sm.detail.textContent = 'Level sent for review.';
-                sm.spinner.classList.add('hidden');
-                sm.dismiss.classList.remove('hidden');
-                setTimeout(() => sm.el.classList.add('hidden'), 4000);
+                if (afterSuccess) {
+                    await afterSuccess(sm);
+                } else {
+                    sm.detail.textContent = 'Level sent for review.';
+                    sm.spinner.classList.add('hidden');
+                    sm.dismiss.classList.remove('hidden');
+                    setTimeout(() => sm.el.classList.add('hidden'), 4000);
+                }
             } catch (err) {
                 console.error('[Submit] failed:', err);
                 sm.heading.textContent = 'Submit Failed';
@@ -491,9 +498,33 @@ export function installInput(APP) {
                 sm.spinner.classList.add('hidden');
                 sm.dismiss.classList.remove('hidden');
             } finally {
-                APP.UI.setButtonState('editSubmitBtn', { enabled: true });
+                APP.UI.setButtonState(triggerBtnId, { enabled: true });
             }
         };
+
+        document.getElementById('editSubmitBtn').onclick = () => submitWorkingLevel('editSubmitBtn', null);
+
+        document.getElementById('reviewSubmitBtn').onclick = () => submitWorkingLevel('reviewSubmitBtn', async (sm) => {
+            sm.detail.textContent = 'Refreshing review queue…';
+            try {
+                const subs = await APP.Persistence.loadSubmissions();
+                APP.State.ENGINE.review.submissions = subs;
+                const safeIdx = Math.min(APP.State.ENGINE.review.currentIdx, Math.max(0, subs.length - 1));
+                if (subs.length > 0) {
+                    APP.Engine.loadReviewLevel(safeIdx);
+                } else {
+                    APP.State.ENGINE.editor.workingLevel = null;
+                    APP.State.ENGINE.isDirty = true;
+                    APP.UI.updateLevelDisplay(0, false, '0/0');
+                }
+            } catch (e) {
+                console.warn('[ReviewSubmit] Queue refresh failed:', e);
+            }
+            sm.detail.textContent = 'Level sent for review.';
+            sm.spinner.classList.add('hidden');
+            sm.dismiss.classList.remove('hidden');
+            setTimeout(() => sm.el.classList.add('hidden'), 4000);
+        });
 
         const copyCurrentPath = async () => {
             APP.UI.closeAllModals();
