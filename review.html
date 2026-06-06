@@ -250,7 +250,8 @@ function selectSubmission(id) {
 
     stopHint();
     currentLevel = sub.levelData || {};
-    currentHints = Array.isArray(currentLevel.hints) ? currentLevel.hints : [];
+    currentHints = (Array.isArray(currentLevel.hints) ? currentLevel.hints : [])
+        .map(h => typeof h === 'string' ? JSON.parse(h) : h);
     activeHintIdx = 0;
 
     document.getElementById('noSelection').classList.add('hidden');
@@ -332,8 +333,12 @@ document.getElementById('approveBtn').onclick = async () => {
     try {
         const batch = db.batch();
         const publishRef = db.collection('artifacts').doc(appId).collection('published_levels').doc();
+        const decodedLevel = {
+            ...currentLevel,
+            hints: (currentLevel.hints || []).map(h => typeof h === 'string' ? JSON.parse(h) : h)
+        };
         batch.set(publishRef, {
-            levelData: currentLevel,
+            levelData: decodedLevel,
             approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
             sortOrder
         });
