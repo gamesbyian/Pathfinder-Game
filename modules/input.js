@@ -363,38 +363,79 @@ export function installInput(APP) {
                 return;
             }
 
-            // Set up modal references early so validation errors can use it
-            const sm = {
-                el: document.getElementById('submitModal'),
-                heading: document.getElementById('submitModalHeading'),
-                detail: document.getElementById('submitModalDetail'),
-                spinner: document.getElementById('submitModalSpinner'),
-                dismiss: document.getElementById('submitModalDismissBtn'),
+            // Step-list modal helpers
+            const smEl = document.getElementById('submitModal');
+            const smDismiss = document.getElementById('submitModalDismissBtn');
+            const resetModal = () => {
+                ['smStep-validate','smStep-solve','smStep-save'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    const icon = el.querySelector('.sm-icon');
+                    icon.innerHTML = '○';
+                    icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm';
+                    el.querySelector('.sm-label').className = 'sm-label text-sm text-slate-400';
+                    const det = el.querySelector('.sm-detail');
+                    det.innerHTML = '';
+                    det.classList.add('hidden');
+                });
+                smDismiss.classList.add('hidden');
             };
-            const showModalError = (heading, reasons) => {
-                sm.heading.textContent = heading;
-                sm.heading.style.color = '#f87171';
-                sm.detail.innerHTML = (Array.isArray(reasons) ? reasons : [reasons]).map(r => `• ${r}`).join('<br>');
-                sm.spinner.classList.add('hidden');
-                sm.dismiss.classList.remove('hidden');
-                sm.el.classList.remove('hidden');
+            const setStep = (stepId, status, detail = null) => {
+                const el = document.getElementById(stepId);
+                if (!el) return;
+                const icon = el.querySelector('.sm-icon');
+                const label = el.querySelector('.sm-label');
+                const detailEl = el.querySelector('.sm-detail');
+                if (status === 'running') {
+                    icon.innerHTML = '<div class="w-3 h-3 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>';
+                    icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center';
+                    label.className = 'sm-label text-sm text-white font-semibold';
+                } else if (status === 'ok') {
+                    icon.innerHTML = '✓';
+                    icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-emerald-400 font-bold';
+                    label.className = 'sm-label text-sm text-white';
+                } else if (status === 'warn') {
+                    icon.innerHTML = '⚠';
+                    icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-amber-400';
+                    label.className = 'sm-label text-sm text-amber-300';
+                } else if (status === 'error') {
+                    icon.innerHTML = '✗';
+                    icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-red-400 font-bold';
+                    label.className = 'sm-label text-sm text-red-300';
+                }
+                if (detail !== null) {
+                    detailEl.innerHTML = (Array.isArray(detail) ? detail : [detail])
+                        .map(r => `<p class="text-xs text-slate-400 leading-snug">• ${r}</p>`).join('');
+                    detailEl.classList.remove('hidden');
+                }
             };
+            const sm = { el: smEl, dismiss: smDismiss, setStep };
 
+            resetModal();
+            smEl.classList.remove('hidden');
+
+            // Step 1: Validate structure
+            setStep('smStep-validate', 'running');
+            await new Promise(r => setTimeout(r, 0)); // let the DOM paint
             APP.Editor.applyMetricsFromUI();
             const l = APP.State.ENGINE.editor.workingLevel;
             const validation = APP.Editor.validateWorkingLevel();
-            if (!validation?.ok) {
-                showModalError('Invalid Level', validation.reasons?.length ? validation.reasons : ['Fix errors first.']);
-                return;
-            }
             const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0;
             const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0;
-            if (!reqLen) {
-                showModalError('Missing Target', ['Set a path length target before submitting.']);
+            if (!validation?.ok) {
+                setStep('smStep-validate', 'error', validation.reasons?.length ? validation.reasons : ['Fix errors first.']);
+                smDismiss.classList.remove('hidden');
                 return;
             }
+            if (!reqLen) {
+                setStep('smStep-validate', 'error', ['Set a path length target before submitting.']);
+                smDismiss.classList.remove('hidden');
+                return;
+            }
+            setStep('smStep-validate', 'ok', 'Structure valid');
 
-            // Collect existing valid hints
+            // Step 2: Find solutions
+            setStep('smStep-solve', 'running');
             const validateHintPath = (candidatePath) => {
                 const lv = APP.LevelUtils.deepCloneLevel(l);
                 lv.reqLen = reqLen; lv.reqInt = reqInt;
@@ -414,7 +455,6 @@ export function installInput(APP) {
             (Array.isArray(APP.State.ENGINE.foundHintsSinceLoad) ? APP.State.ENGINE.foundHintsSinceLoad : []).forEach(pushUniqueHint);
             if (APP.State.ENGINE.path.length > 1) pushUniqueHint(APP.State.ENGINE.path);
 
-            // If no hints found yet, run solver
             if (normalizedHints.length === 0) {
                 let _cancelled = false;
                 const cancelSolve = () => { _cancelled = true; APP.UI.setModalContent('searchLabel', 'Stopping…', 'text'); };
@@ -450,7 +490,11 @@ export function installInput(APP) {
                     }
                 } catch (err) {
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
-                    if (err?.message === 'SolverV2:cancelled') return;
+                    if (err?.message === 'SolverV2:cancelled') {
+                        setStep('smStep-solve', 'warn', 'Solver cancelled');
+                        smDismiss.classList.remove('hidden');
+                        return;
+                    }
                 } finally {
                     clearInterval(abortPoll);
                     APP.State.ENGINE.activeSolverController = null;
@@ -459,7 +503,14 @@ export function installInput(APP) {
                 }
             }
 
-            // Build level export object
+            const verified = normalizedHints.length > 0;
+            setStep('smStep-solve', verified ? 'ok' : 'warn',
+                verified
+                    ? `${normalizedHints.length} solution${normalizedHints.length > 1 ? 's' : ''} confirmed`
+                    : 'No solution found — will submit for manual review');
+
+            // Step 3: Save to server
+            setStep('smStep-save', 'running');
             const hints = normalizedHints.slice(0, 5);
             const levelData = {
                 grid: l.grid,
@@ -476,37 +527,21 @@ export function installInput(APP) {
                 geese: APP.LevelUtils.expCoords(l.gooseSet),
                 hints
             };
-
-            // Show verification status in modal before the Firestore write
-            const verified = normalizedHints.length > 0;
-            sm.heading.textContent = verified ? 'Verified ✓' : 'No Solution Found';
-            sm.heading.style.color = verified ? '#34d399' : '#fbbf24';
-            sm.detail.textContent = verified
-                ? `${normalizedHints.length} valid solution${normalizedHints.length > 1 ? 's' : ''} confirmed — saving…`
-                : 'Structure valid but no solution found — submitting for manual review…';
-            sm.spinner.classList.remove('hidden');
-            sm.dismiss.classList.add('hidden');
-            sm.el.classList.remove('hidden');
             try {
                 APP.UI.setButtonState(triggerBtnId, { enabled: false });
                 await APP.Persistence.submitLevel(levelData);
-                sm.heading.textContent = 'Submitted!';
-                sm.heading.style.color = '#34d399';
+                setStep('smStep-save', 'ok', 'Queued for review');
                 if (afterSuccess) {
                     await afterSuccess(sm);
                 } else {
-                    sm.detail.textContent = verified ? 'Level verified and sent for review.' : 'Submitted without confirmed solution.';
-                    sm.spinner.classList.add('hidden');
-                    sm.dismiss.classList.remove('hidden');
-                    setTimeout(() => sm.el.classList.add('hidden'), 4000);
+                    smDismiss.classList.remove('hidden');
+                    setTimeout(() => smEl.classList.add('hidden'), 4000);
                 }
             } catch (err) {
                 console.error('[Submit] failed:', err);
-                sm.heading.textContent = 'Submit Failed';
-                sm.heading.style.color = '#f87171';
-                sm.detail.textContent = err?.message === 'Not signed in' ? 'Not signed in. Refresh the page.' : (err?.message || 'Unknown error');
-                sm.spinner.classList.add('hidden');
-                sm.dismiss.classList.remove('hidden');
+                const errMsg = err?.message === 'Not signed in' ? 'Not signed in — refresh the page.' : (err?.message || 'Unknown error');
+                setStep('smStep-save', 'error', errMsg);
+                smDismiss.classList.remove('hidden');
             } finally {
                 APP.UI.setButtonState(triggerBtnId, { enabled: true });
             }
@@ -528,7 +563,7 @@ export function installInput(APP) {
         };
 
         document.getElementById('reviewSubmitBtn').onclick = () => submitWorkingLevel('reviewSubmitBtn', async (sm) => {
-            sm.detail.textContent = 'Refreshing review queue…';
+            sm.setStep('smStep-save', 'running', 'Refreshing review queue…');
             try {
                 const subs = await APP.Persistence.loadSubmissions();
                 APP.State.ENGINE.review.submissions = subs;
@@ -543,8 +578,7 @@ export function installInput(APP) {
             } catch (e) {
                 console.warn('[ReviewSubmit] Queue refresh failed:', e);
             }
-            sm.detail.textContent = 'Level sent for review.';
-            sm.spinner.classList.add('hidden');
+            sm.setStep('smStep-save', 'ok', 'Queued for review');
             sm.dismiss.classList.remove('hidden');
             setTimeout(() => sm.el.classList.add('hidden'), 4000);
         });
