@@ -421,22 +421,22 @@
     <div id="playControls" class="bg-white p-3 rounded-2xl shadow-xl border border-slate-200 relative">
         <div class="relative">
             <div id="gameButtonGrid" class="flex gap-1.5 action-btn-group">
-                <div id="hintBtn" class="flex-1 h-10 font-bold rounded-lg shadow-md transition-all duration-200 text-[0.65rem] uppercase tracking-wider flex items-center justify-center z-20 cursor-pointer relative">Hint</div>
-                <button id="resetBtn" class="flex-1 h-10 bg-red-500 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Reset</button>
-                <button id="undoBtn" class="flex-1 h-10 bg-slate-600 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Undo</button>
-                <button id="whoaBtn" class="flex-1 h-10 bg-blue-500 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Whoa</button>
                 <button id="guideBtn" class="flex-1 h-10 bg-purple-600 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Guide</button>
+                <div id="hintBtn" class="flex-1 h-10 font-bold rounded-lg shadow-md transition-all duration-200 text-[0.65rem] uppercase tracking-wider flex items-center justify-center z-20 cursor-pointer relative">Hint</div>
+                <button id="whoaBtn" class="flex-1 h-10 bg-blue-500 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Whoa</button>
+                <button id="undoBtn" class="flex-1 h-10 bg-slate-600 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Undo</button>
+                <button id="resetBtn" class="flex-1 h-10 bg-red-500 font-bold rounded-lg shadow-md transition-all text-[0.65rem] uppercase tracking-wider">Reset</button>
             </div>
             <div id="editorButtonGrid" class="hidden flex gap-1.5">
-                <button id="editResetGrid" class="flex-1 h-10 bg-red-600 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Clear</button>
-                <button id="editNewLevel" class="flex-1 h-10 bg-emerald-600 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">New</button>
-                <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
-                <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
                 <button id="editHelpBtn" class="flex-1 h-10 bg-slate-500 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Guide</button>
+                <button id="editNewLevel" class="flex-1 h-10 bg-emerald-600 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">New</button>
+                <button id="editResetGrid" class="flex-1 h-10 bg-red-600 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Clear</button>
+                <button id="editTrapSpotsBtn" class="flex-1 h-10 bg-orange-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">BOMBS?</button>
                 <button id="reviewHintBtn" class="hidden flex-1 h-10 font-bold rounded-lg text-[0.65rem] uppercase tracking-wider">Hint</button>
+                <button id="editMegaSolver" class="flex-1 h-10 bg-fuchsia-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Solve</button>
                 <button id="reviewSubmitBtn" class="hidden flex-1 h-10 bg-sky-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Submit</button>
-                <button id="reviewApproveBtn" class="hidden flex-1 h-10 bg-emerald-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Approve</button>
                 <button id="reviewRejectBtn" class="hidden flex-1 h-10 bg-red-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Reject</button>
+                <button id="reviewApproveBtn" class="hidden flex-1 h-10 bg-emerald-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Approve</button>
             </div>
             <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
                 <p id="message" class="font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
