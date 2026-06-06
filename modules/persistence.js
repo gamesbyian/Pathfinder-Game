@@ -14,6 +14,7 @@ export function installPersistence(APP) {
                 firebase.initializeApp(config);
                 auth = firebase.auth();
                 db = firebase.firestore();
+                db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
             } catch (e) {
                 console.warn('[Persistence] Firebase init failed; running in local-only mode.', e);
                 auth = null;
@@ -207,12 +208,17 @@ export function installPersistence(APP) {
             if (!db) throw new Error('No Firebase connection');
             const user = await waitForUser();
             if (!user) throw new Error('Not signed in');
+            console.log('[Submit] Writing to Firestore as uid:', user.uid);
             const col = db.collection('artifacts').doc(appId).collection('submissions');
-            await col.add({
-                levelData: encodeHints(levelData),
-                submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                submittedBy: user.uid
-            });
+            await Promise.race([
+                col.add({
+                    levelData: encodeHints(levelData),
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    submittedBy: user.uid
+                }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore write timed out after 20s — check network or Firebase rules')), 20000))
+            ]);
+            console.log('[Submit] Firestore write acknowledged.');
         }
 
         async function loadPublishedLevels() {
