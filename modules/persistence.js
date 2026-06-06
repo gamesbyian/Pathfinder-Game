@@ -191,13 +191,24 @@ export function installPersistence(APP) {
             });
         }
 
+        // Firestore doesn't support nested arrays; encode each hint path as a JSON string.
+        function encodeHints(levelData) {
+            if (!Array.isArray(levelData?.hints) || !levelData.hints.length) return levelData;
+            return { ...levelData, hints: levelData.hints.map(h => JSON.stringify(h)) };
+        }
+
+        function decodeHints(levelData) {
+            if (!Array.isArray(levelData?.hints) || !levelData.hints.length) return levelData;
+            return { ...levelData, hints: levelData.hints.map(h => typeof h === 'string' ? JSON.parse(h) : h) };
+        }
+
         async function submitLevel(levelData) {
             if (!db) throw new Error('No Firebase connection');
             const user = await waitForUser();
             if (!user) throw new Error('Not signed in');
             const col = db.collection('artifacts').doc(appId).collection('submissions');
             await col.add({
-                levelData,
+                levelData: encodeHints(levelData),
                 submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 submittedBy: user.uid
             });
@@ -212,7 +223,7 @@ export function installPersistence(APP) {
                         .get(),
                     new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3000))
                 ]);
-                return snapshot.docs.map(doc => doc.data().levelData).filter(Boolean);
+                return snapshot.docs.map(doc => decodeHints(doc.data().levelData)).filter(Boolean);
             } catch (e) {
                 console.warn('[Persistence] loadPublishedLevels failed', e);
                 return [];
