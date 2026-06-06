@@ -40,29 +40,27 @@ jobs:
             --arg r "$RULESET_NAME" \
             '{"name":$n,"rulesetName":$r}')
 
-          PATCH_RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X PATCH "$API/releases/cloud.firestore" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$(jq -n --arg r "$RULESET_NAME" \
-                   '{"release":{"rulesetName":$r},"updateMask":"rulesetName"}')")
-          PATCH_CODE=$(echo "$PATCH_RESPONSE" | tail -1)
+          deploy_release() {
+            curl -s -w "\n%{http_code}" \
+              -X POST "$API/releases" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$RELEASE_BODY"
+          }
 
-          if [ "$PATCH_CODE" -lt 400 ]; then
-            echo "Firestore rules deployed successfully."
-            exit 0
+          RESPONSE=$(deploy_release)
+          CODE=$(echo "$RESPONSE" | tail -1)
+
+          if [ "$CODE" -eq 409 ]; then
+            echo "Release exists — deleting and recreating."
+            curl -sf -X DELETE "$API/releases/cloud.firestore" \
+              -H "Authorization: Bearer $TOKEN"
+            RESPONSE=$(deploy_release)
+            CODE=$(echo "$RESPONSE" | tail -1)
           fi
 
-          POST_RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X POST "$API/releases" \
-            -H "Authorization: Bearer $TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "$RELEASE_BODY")
-          POST_CODE=$(echo "$POST_RESPONSE" | tail -1)
-          POST_RESP=$(echo "$POST_RESPONSE" | head -n -1)
-
-          if [ "$POST_CODE" -ge 400 ]; then
-            echo "Release deploy failed (HTTP $POST_CODE): $POST_RESP"
+          if [ "$CODE" -ge 400 ]; then
+            echo "Deploy failed (HTTP $CODE): $(echo "$RESPONSE" | head -n -1)"
             exit 1
           fi
 
