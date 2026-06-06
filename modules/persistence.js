@@ -177,12 +177,13 @@ export function installPersistence(APP) {
             APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode);
         }
 
-        function waitForUser(timeoutMs = 6000) {
+        function waitForUser(timeoutMs = 8000) {
             if (!auth) return Promise.resolve(null);
             if (auth.currentUser) return Promise.resolve(auth.currentUser);
             return new Promise((resolve) => {
                 const timer = setTimeout(() => { unsub(); resolve(null); }, timeoutMs);
                 const unsub = auth.onAuthStateChanged((user) => {
+                    if (!user) return; // keep waiting — sign-in still in progress
                     clearTimeout(timer);
                     unsub();
                     resolve(user);
