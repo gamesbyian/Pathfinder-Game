@@ -389,7 +389,7 @@ export function installEngine(APP) {
                 document.getElementById('editGenBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editSubmitBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editResetGrid').classList.toggle('hidden', isReview);
-                document.getElementById('editMegaSolver').classList.toggle('hidden', isReview);
+                document.getElementById('editMegaSolver').classList.toggle('hidden', false);
                 document.getElementById('editTrapSpotsBtn').classList.toggle('hidden', isReview);
                 document.getElementById('editHelpBtn').classList.toggle('hidden', isReview);
                 document.getElementById('reviewHintBtn').classList.toggle('hidden', !isReview);
