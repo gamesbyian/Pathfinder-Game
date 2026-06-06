@@ -36,9 +36,8 @@ jobs:
           echo "Created ruleset: $RULESET_NAME"
 
           PATCH_BODY=$(jq -n \
-            --arg n "projects/$PROJECT/releases/cloud.firestore" \
             --arg r "$RULESET_NAME" \
-            '{"name":$n,"rulesetName":$r}')
+            '{"release":{"rulesetName":$r}}')
 
           PATCH_RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X PATCH "$API/releases/cloud.firestore?updateMask=rulesetName" \
