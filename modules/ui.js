@@ -344,14 +344,14 @@ export function installUI(APP) {
             }, duration);
         };
 
-        const showMessage = (text = '', className = '') => {
+        const showMessage = (text = '', className = '', durationMs = 2000) => {
             setStatus(text, 'info', className || '');
             const overlay = getEl('alertOverlay');
             if (!overlay) return;
             if (text === '') { setInlineStyle(overlay, 'opacity', '0'); return; }
             setInlineStyle(overlay, 'opacity', '1');
             if (messageTimer) clearTimeout(messageTimer);
-            messageTimer = setTimeout(() => { setInlineStyle(overlay, 'opacity', '0'); }, 2000);
+            messageTimer = setTimeout(() => { setInlineStyle(overlay, 'opacity', '0'); }, durationMs);
         };
 
         const showSolverAlreadyRunning = () => {

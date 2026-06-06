@@ -465,10 +465,10 @@ export function installInput(APP) {
                 APP.UI.setButtonState('editSubmitBtn', { enabled: false });
                 APP.UI.showMessage('Submitting…', 'text-white font-black');
                 await APP.Persistence.submitLevel(levelData);
-                APP.UI.showMessage('Level submitted!', 'text-emerald-400 font-black');
+                APP.UI.showMessage('Level submitted!', 'text-emerald-400 font-black', 5000);
             } catch (err) {
                 console.error('[Submit] failed:', err);
-                APP.UI.showMessage(err?.message === 'Not signed in' ? 'Not signed in.' : `Submit failed: ${err?.message || 'Error'}`, 'text-red-500 font-bold');
+                APP.UI.showMessage(err?.message === 'Not signed in' ? 'Not signed in.' : `Submit failed: ${err?.message || 'Error'}`, 'text-red-500 font-bold', 5000);
             } finally {
                 APP.UI.setButtonState('editSubmitBtn', { enabled: true });
             }
@@ -632,7 +632,7 @@ export function installInput(APP) {
                     APP.Engine.loadReviewLevel(0);
                 }
             } catch (err) {
-                APP.UI.showMessage(`Load failed: ${err?.message || err}`, 'text-red-500 font-bold');
+                APP.UI.showMessage(`Load failed: ${err?.message || err}`, 'text-red-500 font-bold', 8000);
             }
         };
 
