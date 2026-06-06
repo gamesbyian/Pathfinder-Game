@@ -19,6 +19,10 @@ export function installEditor(APP) {
                 const gateSet = new Set(l.gateKeys);
                 // Count orthogonal sides reachable by the path (not blocked by edge/obstacle/filter)
                 const accessibleSides = (cx, cy, gatesBlock = false) => {
+                    // A flipping filter not adjacent to this cell can be crossed first,
+                    // flipping all others — so it exempts adjacent blocking flipping filters.
+                    const adjKeys = new Set([[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy]) => APP.LevelUtils.PACK(cx+dx, cy+dy)));
+                    const hasFreeFlip = Array.from(l.flippingFilterMap.keys()).some(fk => !adjKeys.has(fk));
                     let n = 0;
                     for (const [dx, dy, horiz] of [[1,0,true],[-1,0,true],[0,1,false],[0,-1,false]]) {
                         const nx = cx + dx, ny = cy + dy;
@@ -27,7 +31,8 @@ export function installEditor(APP) {
                         if (l.blockSet.has(nk) || l.gooseSet.has(nk) || l.falseGoalKeys.has(nk)) continue;
                         if (gatesBlock && gateSet.has(nk)) continue;
                         const ba = horiz ? APP.Core.V : APP.Core.H;
-                        if (l.filterMap.get(nk) === ba || l.flippingFilterMap.get(nk) === ba) continue;
+                        if (l.filterMap.get(nk) === ba) continue;
+                        if (!hasFreeFlip && l.flippingFilterMap.get(nk) === ba) continue;
                         n++;
                     }
                     return n;
