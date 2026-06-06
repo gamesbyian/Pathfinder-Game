@@ -174,7 +174,8 @@ export function installUI(APP) {
         const updateLevelDisplay = (index, isComplete = false, displayOverride = null) => {
             const lvlStr = displayOverride !== null ? displayOverride : `${index + 1}`;
             setModalContent('levelTitle', lvlStr, 'text');
-            setInlineStyle('levelTitle', 'fontSize', lvlStr.length >= 3 ? '2.5rem' : '');
+            const fs = lvlStr.length >= 5 ? '1.6rem' : lvlStr.length >= 3 ? '2.5rem' : '';
+            setInlineStyle('levelTitle', 'fontSize', fs);
             setCompletionBurstVisible(!!isComplete);
         };
         const getValue = (idOrEl, fallback = '') => {
