@@ -171,8 +171,8 @@ export function installUI(APP) {
             const exportAreaEl = resolveEl('winExportArea');
             if (exportAreaEl) exportAreaEl.classList.toggle('hidden', !showExportArea);
         };
-        const updateLevelDisplay = (index, isComplete = false) => {
-            const lvlStr = `${index + 1}`;
+        const updateLevelDisplay = (index, isComplete = false, displayOverride = null) => {
+            const lvlStr = displayOverride !== null ? displayOverride : `${index + 1}`;
             setModalContent('levelTitle', lvlStr, 'text');
             setInlineStyle('levelTitle', 'fontSize', lvlStr.length >= 3 ? '2.5rem' : '');
             setCompletionBurstVisible(!!isComplete);

@@ -49,7 +49,7 @@ export function installEngine(APP) {
                     APP.Core.SOUND_BUS.play("E4", "32n");
                     return "valid";
                 }
-                if (APP.State.ENGINE.logicState === APP.Core.HAZARD_TRIGGERED && APP.State.ENGINE.mode !== APP.Core.EDITOR) return null;
+                if (APP.State.ENGINE.logicState === APP.Core.HAZARD_TRIGGERED && APP.State.ENGINE.mode !== APP.Core.EDITOR && APP.State.ENGINE.mode !== APP.Core.REVIEW) return null;
                 if (!APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
                     isStrict: true,
                     mode: APP.State.ENGINE.mode,
@@ -67,7 +67,7 @@ export function installEngine(APP) {
                 APP.State.ENGINE.isDirty = true;
                 if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.State.ENGINE.editor.isModified = true;
 
-                if (APP.State.ENGINE.mode !== APP.Core.EDITOR && activeLevel.gooseSet.has(key)) {
+                if (APP.State.ENGINE.mode !== APP.Core.EDITOR && APP.State.ENGINE.mode !== APP.Core.REVIEW && activeLevel.gooseSet.has(key)) {
                     APP.State.ENGINE.undoStack.push(createSnapshot());
                     if(APP.State.ENGINE.undoStack.length > 200) APP.State.ENGINE.undoStack.shift();
                     const justCreatedIntersection = APP.State.ENGINE.path.length > 1 && (APP.State.ENGINE.visitedCounts.get(key) || 0) > 0;
@@ -207,7 +207,7 @@ export function installEngine(APP) {
                     crossedSet: nextState.crossedFlippingFilters
                 })) return null;
                 if (!options.skipTIntersectionCheck && wouldCreateBlockedTIntersection(nextState, key, level)) return null;
-                if (nextState.mode !== APP.Core.EDITOR && level.gooseSet.has(key)) return { state: nextState, result: "goose" };
+                if (nextState.mode !== APP.Core.EDITOR && nextState.mode !== APP.Core.REVIEW && level.gooseSet.has(key)) return { state: nextState, result: "goose" };
                 pushTapRouteStep(nextState, key, false, level);
                 if (nextState.armedFalseGoals.has(key) && APP.Engine.areWinMetricsSatisfied(nextState, level)) return { state: nextState, result: "detonate" };
                 const portal = APP.LevelUtils.resolvePortal(level, key);
@@ -254,7 +254,7 @@ export function installEngine(APP) {
             }
 
             function attemptMoveTo(target, opts = {}) {
-                if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) return;
+                if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) && !APP.State.ENGINE.editor.isPencilMode) return;
                 if (!APP.State.ENGINE.path.length) return;
                 const headPos = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]);
                 if (APP.State.ENGINE.logicState === APP.Core.PORTAL_PAUSE) {
@@ -281,7 +281,7 @@ export function installEngine(APP) {
             }
 
             function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) {
-                if (!path.length || logicState === APP.Core.HAZARD_TRIGGERED || mode === APP.Core.EDITOR) return false;
+                if (!path.length || logicState === APP.Core.HAZARD_TRIGGERED || mode === APP.Core.EDITOR || mode === APP.Core.REVIEW) return false;
                 const last = path[path.length - 1];
                 if (last !== level.goalKey) return false;
                 const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections };
@@ -366,6 +366,8 @@ export function installEngine(APP) {
 
             function switchMode(newMode) {
                 const isEd = newMode === APP.Core.EDITOR;
+                const isReview = newMode === APP.Core.REVIEW;
+                const isEdOrReview = isEd || isReview;
                 APP.State.ENGINE.mode = newMode;
                 APP.UI.setSolutionOutput('');
                 APP.Engine.setLogicState(APP.Core.IDLE);
@@ -375,21 +377,26 @@ export function installEngine(APP) {
                 APP.State.ENGINE.revealedGeese.clear();
                 APP.State.ENGINE.gooseEncounteredThisLevel = false;
                 APP.State.ENGINE.detonatedFalseGoals.clear();
-                document.getElementById('editorPalette').classList.toggle('hidden', !isEd);
-                document.getElementById('playMetrics').classList.toggle('hidden', isEd);
-                document.getElementById('editorMetrics').classList.toggle('hidden', !isEd);
-                document.getElementById('gameButtonGrid').classList.toggle('hidden', isEd);
-                document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEd);
+                document.getElementById('editorPalette').classList.toggle('hidden', !isEdOrReview);
+                document.getElementById('playMetrics').classList.toggle('hidden', isEdOrReview);
+                document.getElementById('editorMetrics').classList.toggle('hidden', !isEdOrReview);
+                document.getElementById('gameButtonGrid').classList.toggle('hidden', isEdOrReview);
+                document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEdOrReview);
                 const shellToggle = document.getElementById('modeToggleShellBtn');
-                if (shellToggle) shellToggle.textContent = isEd ? 'Play Game' : 'Editor';
+                if (shellToggle) shellToggle.textContent = isReview ? 'Exit Review' : (isEd ? 'Play Game' : 'Editor');
                 const exportArea = document.getElementById('exportArea');
                 document.getElementById('editCopyBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editGenBtn').classList.toggle('hidden', !isEd);
                 document.getElementById('editSubmitBtn').classList.toggle('hidden', !isEd);
+                document.getElementById('editNewLevel').classList.toggle('hidden', isReview);
+                document.getElementById('reviewApproveBtn').classList.toggle('hidden', !isReview);
+                document.getElementById('reviewRejectBtn').classList.toggle('hidden', !isReview);
                 APP.UI.setButtonState('editGenBtn', { enabled: true });
                 APP.UI.setButtonState('editSubmitBtn', { enabled: true });
-                document.getElementById('devCopyBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode);
-                document.getElementById('devGenBtn').classList.toggle('hidden', isEd || !APP.State.ENGINE.isDevMode);
+                document.getElementById('devCopyBtn').classList.toggle('hidden', isEdOrReview || !APP.State.ENGINE.isDevMode);
+                document.getElementById('devGenBtn').classList.toggle('hidden', isEdOrReview || !APP.State.ENGINE.isDevMode);
+                if (isEd) exportArea.classList.remove('hidden');
+                else exportArea.classList.add('hidden');
                 if (isEd) {
                     APP.State.ENGINE.variant = 0;
                     APP.State.ENGINE.editor.workingLevel = APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.level);
@@ -400,7 +407,14 @@ export function installEngine(APP) {
                     APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0);
                     APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0);
                     APP.State.ENGINE.editor.isModified = false;
-                    exportArea.classList.remove('hidden');
+                    updatePencilState();
+                } else if (isReview) {
+                    APP.State.ENGINE.review.savedPlayLevelIdx = APP.State.ENGINE.levelIdx;
+                    APP.State.ENGINE.editor.isPencilMode = false;
+                    APP.State.ENGINE.editor.undoStack = [];
+                    APP.State.ENGINE.editor.isModified = false;
+                    APP.State.ENGINE.editor.validTrapSpots.clear();
+                    APP.State.ENGINE.editor.emptyClickCount = 0;
                     updatePencilState();
                 } else {
                     updatePlayModeLayout();
@@ -428,6 +442,34 @@ export function installEngine(APP) {
                 svg.setAttribute('fill', 'currentColor');
                 svg.setAttribute('stroke', 'none');
                 svg.innerHTML = APP.State.ENGINE.editor.isPencilMode ? activePencilIcon : inactivePencilIcon;
+            }
+
+            function loadReviewLevel(idx) {
+                const subs = APP.State.ENGINE.review.submissions;
+                if (!subs || !subs.length) {
+                    APP.UI.updateLevelDisplay(0, false, '??');
+                    return;
+                }
+                const safeIdx = Math.max(0, Math.min(idx, subs.length - 1));
+                APP.State.ENGINE.review.currentIdx = safeIdx;
+                const rawLevel = subs[safeIdx].levelData;
+                const normalized = APP.LevelUtils.processRawLevel(rawLevel, safeIdx);
+                if (!normalized) {
+                    APP.UI.showMessage('Could not load submission.', 'text-red-500 font-bold');
+                    return;
+                }
+                APP.State.ENGINE.editor.workingLevel = normalized;
+                APP.State.ENGINE.editor.undoStack = [];
+                APP.State.ENGINE.editor.isModified = false;
+                APP.Engine.PathNavigator.clear(APP.State.ENGINE);
+                APP.State.ENGINE.undoStack = [];
+                APP.State.ENGINE.revealedGeese.clear();
+                APP.State.ENGINE.gooseEncounteredThisLevel = false;
+                APP.State.ENGINE.detonatedFalseGoals.clear();
+                APP.UI.setInputValue('editReqLen', normalized.reqLen || 0);
+                APP.UI.setInputValue('editReqInt', normalized.reqInt || 0);
+                APP.UI.updateLevelDisplay(safeIdx, false, '??');
+                APP.State.ENGINE.isDirty = true;
             }
 
             function loadLevel(idx, keepVariant = false) {
@@ -654,6 +696,7 @@ export function installEngine(APP) {
             getPackedPath() { return [...(refs.ENGINE?.path || [])]; },
             getIntersections() { return refs.ENGINE?.intersections ?? 0; },
             updatePlayModeLayout,
+            loadReviewLevel,
             loop,
             switchMode,
             setLogicState,

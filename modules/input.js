@@ -21,7 +21,7 @@ export function installInput(APP) {
             APP.State.ENGINE.resetStreak = 0;
             APP.State.ENGINE.runtime.tapStartCoord = { x: p.x, y: p.y };
             APP.State.ENGINE.runtime.tapMoved = false;
-            if (APP.State.ENGINE.mode === APP.Core.EDITOR && !APP.State.ENGINE.editor.isPencilMode) {
+            if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) && !APP.State.ENGINE.editor.isPencilMode) {
                 const occupied = activeLevel.gateKeys.includes(k) || activeLevel.goalKey === k || activeLevel.falseGoalKeys.has(k) || activeLevel.blockSet.has(k) || activeLevel.gooseSet.has(k) || activeLevel.filterMap.has(k) || activeLevel.flippingFilterMap.has(k) || activeLevel.portalMap.has(k) || activeLevel.mustPassKeys.includes(k) || activeLevel.mustCrossKeys.includes(k);
                 if (occupied) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.State.ENGINE.editor.draggedObject = APP.Editor.pickUpObject(k); if (APP.State.ENGINE.editor.draggedObject) { APP.Engine.setLogicState(APP.Core.EDIT_DRAG); APP.UI.EditorDragGhost.update({ visible: true, cellSize: APP.State.ENGINE.viewport.cellW, type: APP.State.ENGINE.editor.draggedObject.type }); } } else if (APP.State.ENGINE.editor.selectedTool) { APP.State.ENGINE.editor.emptyClickCount = 0; APP.Editor.placeEditorObject(k); } else { APP.State.ENGINE.editor.emptyClickCount++; if (APP.State.ENGINE.editor.emptyClickCount >= 2) { APP.UI.showMessage("Click pencil to draw.", "text-white font-bold"); } } return;
             }
@@ -33,7 +33,7 @@ export function installInput(APP) {
                     APP.Engine.setLogicState(APP.Core.DRAGGING);
                     return;
                 }
-                if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isPencilMode) {
+                if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) && APP.State.ENGINE.editor.isPencilMode) {
                     const idx = APP.State.ENGINE.path.indexOf(k); let shouldReverse = false;
                     if (idx !== -1) { if (idx < APP.State.ENGINE.path.length / 2) shouldReverse = true; } else { const headP = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1]); const tailP = APP.LevelUtils.UNPACK(APP.State.ENGINE.path[0]); const distHead = Math.abs(p.x - headP.x) + Math.abs(p.y - headP.y); const distTail = Math.abs(p.x - tailP.x) + Math.abs(p.y - tailP.y); if (distTail < distHead) shouldReverse = true; }
                     if (shouldReverse) { APP.State.ENGINE.path.reverse(); const newJumps = new Set(); APP.State.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(APP.State.ENGINE.path.length - 1 - jIdx)); APP.State.ENGINE.isPortalJump = newJumps; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); }
@@ -56,7 +56,7 @@ export function installInput(APP) {
                 APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' });
             } else {
                 if (!activeLevel) return;
-                if (APP.State.ENGINE.mode === APP.Core.EDITOR && APP.State.ENGINE.editor.isPencilMode) { APP.State.ENGINE.activeGateKey = null; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, k, false); APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' }); } else {
+                if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) && APP.State.ENGINE.editor.isPencilMode) { APP.State.ENGINE.activeGateKey = null; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, k, false); APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' }); } else {
                     let bestGate = null; if (activeLevel.gateKeys.includes(k)) { bestGate = k; } else { let minDist = Infinity; for (let i = 0; i < activeLevel.gateKeys.length; i++) { const gk = activeLevel.gateKeys[i]; const gp = APP.LevelUtils.UNPACK(gk); if (p.x === gp.x || p.y === gp.y) { const dist = Math.abs(p.x - gp.x) + Math.abs(p.y - gp.y); if (dist > 0 && dist < minDist) { minDist = dist; bestGate = gk; } } } }
                     if (bestGate !== null) { APP.State.ENGINE.activeGateKey = bestGate; APP.Engine.PathNavigator.pushStep(APP.State.ENGINE, bestGate, false); APP.Engine.setLogicState(APP.Core.DRAGGING); if (bestGate !== k) { APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' }); } }
                 }
@@ -79,7 +79,7 @@ export function installInput(APP) {
                 APP.Engine.setLogicState(APP.Core.IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
                 if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
             }
-            if (APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG && APP.State.ENGINE.mode === APP.Core.EDITOR) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); APP.UI.showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; APP.Engine.setLogicState(APP.Core.IDLE); } if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.setLogicState(APP.Core.IDLE);
+            if (APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG && (APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW)) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); APP.UI.showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; APP.Engine.setLogicState(APP.Core.IDLE); } if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.setLogicState(APP.Core.IDLE);
         };
 
         APP.Renderer.getCanvas().addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (APP.State.ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); APP.State.ENGINE.runtime.activePointerId = e.pointerId; APP.Renderer.getCanvas().setPointerCapture(APP.State.ENGINE.runtime.activePointerId); handleDown(e); });
@@ -98,7 +98,7 @@ export function installInput(APP) {
                     return;
                 }
             }
-            if (APP.State.ENGINE.mode === APP.Core.EDITOR && (APP.State.ENGINE.editor.draggedObject || (APP.State.ENGINE.editor.selectedTool && APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG))) {
+            if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) && (APP.State.ENGINE.editor.draggedObject || (APP.State.ENGINE.editor.selectedTool && APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG))) {
                 const type = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool;
                 const isOverPalette = APP.UI.EditorDragGhost.isPointerOverPalette(e.clientX, e.clientY);
                 APP.UI.EditorDragGhost.update({
@@ -516,8 +516,34 @@ export function installInput(APP) {
         });
         const handleWinClose = (callback) => { const circle = document.getElementById('winCircle'); circle.classList.add('animate-spin-grow-fade'); setTimeout(() => { circle.classList.remove('animate-spin-grow-fade'); APP.UI.closeModal('winModal'); callback(); }, 1000); };
         document.getElementById('copyWinDataBtn').onclick = async () => { if (document.getElementById('winSolutionOutput').value) await APP.UI.copyText(document.getElementById('winSolutionOutput').value, { fallbackElId: 'winSolutionOutput' }); };
-        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1); APP.UI.setSolutionOutput(''); });
-        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => { APP.UI.closeAllModals(); if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return; const levels = APP.LevelUtils.getRawLevels(); APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0); APP.UI.setSolutionOutput(''); });
+        document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => {
+            APP.UI.closeAllModals();
+            if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+            if (APP.State.ENGINE.mode === APP.Core.REVIEW) {
+                const subs = APP.State.ENGINE.review.submissions;
+                if (!subs.length) return;
+                const newIdx = APP.State.ENGINE.review.currentIdx > 0 ? APP.State.ENGINE.review.currentIdx - 1 : subs.length - 1;
+                APP.Engine.loadReviewLevel(newIdx);
+            } else {
+                const levels = APP.LevelUtils.getRawLevels();
+                APP.Engine.loadLevel(APP.State.ENGINE.levelIdx > 0 ? APP.State.ENGINE.levelIdx - 1 : levels.length - 1);
+                APP.UI.setSolutionOutput('');
+            }
+        });
+        document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => {
+            APP.UI.closeAllModals();
+            if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+            if (APP.State.ENGINE.mode === APP.Core.REVIEW) {
+                const subs = APP.State.ENGINE.review.submissions;
+                if (!subs.length) return;
+                const newIdx = APP.State.ENGINE.review.currentIdx < subs.length - 1 ? APP.State.ENGINE.review.currentIdx + 1 : 0;
+                APP.Engine.loadReviewLevel(newIdx);
+            } else {
+                const levels = APP.LevelUtils.getRawLevels();
+                APP.Engine.loadLevel(APP.State.ENGINE.levelIdx < levels.length - 1 ? APP.State.ENGINE.levelIdx + 1 : 0);
+                APP.UI.setSolutionOutput('');
+            }
+        });
         document.getElementById('nextLevelModalBtn').onclick = () => { const levels = APP.LevelUtils.getRawLevels(); handleWinClose(() => { if (APP.State.ENGINE.levelIdx < levels.length - 1) APP.Engine.loadLevel(APP.State.ENGINE.levelIdx + 1); }); };
         document.getElementById('dismissWinModalBtn').onclick = () => handleWinClose(() => { APP.Engine.setLogicState(APP.Core.IDLE); });
 
@@ -563,10 +589,90 @@ export function installInput(APP) {
             APP.Editor.applyMetricsFromUI();
         });
         document.getElementById('modeToggleShellBtn').onclick = () => {
-            if (APP.State.ENGINE.mode === APP.Core.EDITOR) {
+            if (APP.State.ENGINE.mode === APP.Core.REVIEW) {
+                tryNavigate(() => {
+                    APP.UI.closeAllModals();
+                    APP.State.ENGINE.levelIdx = APP.State.ENGINE.review.savedPlayLevelIdx;
+                    APP.Engine.switchMode(APP.Core.PLAY);
+                });
+            } else if (APP.State.ENGINE.mode === APP.Core.EDITOR) {
                 tryNavigate(() => { APP.UI.closeAllModals(); APP.Editor.exitEditorMode(); });
             } else {
                 APP.UI.closeAllModals(); APP.Editor.enterEditorMode();
+            }
+        };
+
+        document.getElementById('reviewSignInBtn').onclick = async () => {
+            const statusEl = document.getElementById('reviewAuthStatus');
+            const btn = document.getElementById('reviewSignInBtn');
+            btn.disabled = true;
+            if (statusEl) statusEl.textContent = 'Signing in…';
+            try {
+                await APP.Persistence.initAdminAuth();
+                const overlay = document.getElementById('reviewAuthOverlay');
+                if (overlay) overlay.classList.add('hidden');
+                APP.State.ENGINE.review.submissions = [];
+                APP.State.ENGINE.review.currentIdx = 0;
+                APP.Engine.switchMode(APP.Core.REVIEW);
+                if (statusEl) statusEl.textContent = 'Loading submissions…';
+                const subs = await APP.Persistence.loadSubmissions();
+                APP.State.ENGINE.review.submissions = subs;
+                if (subs.length === 0) {
+                    APP.UI.showMessage('No submissions.', 'text-slate-400');
+                } else {
+                    APP.Engine.loadReviewLevel(0);
+                }
+            } catch (err) {
+                if (statusEl) statusEl.textContent = err?.message || 'Sign-in failed.';
+                btn.disabled = false;
+            }
+        };
+
+        document.getElementById('reviewApproveBtn').onclick = async () => {
+            const subs = APP.State.ENGINE.review.submissions;
+            const idx = APP.State.ENGINE.review.currentIdx;
+            if (!subs.length || !APP.State.ENGINE.editor.workingLevel) return;
+            const sub = subs[idx];
+            APP.Editor.applyMetricsFromUI();
+            const levelData = APP.LevelUtils.denormalizeLevel(APP.State.ENGINE.editor.workingLevel);
+            try {
+                APP.UI.showMessage('Approving…', 'text-white font-black');
+                await APP.Persistence.approveSubmission(sub.id, levelData, Date.now());
+                APP.State.ENGINE.review.submissions.splice(idx, 1);
+                if (APP.State.ENGINE.review.submissions.length === 0) {
+                    APP.UI.showMessage('No more submissions.', 'text-slate-400');
+                    APP.State.ENGINE.editor.workingLevel = null;
+                    APP.State.ENGINE.isDirty = true;
+                } else {
+                    const newIdx = Math.min(idx, APP.State.ENGINE.review.submissions.length - 1);
+                    APP.Engine.loadReviewLevel(newIdx);
+                    APP.UI.showMessage('Approved!', 'text-emerald-400 font-black');
+                }
+            } catch (err) {
+                APP.UI.showMessage('Approve failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
+            }
+        };
+
+        document.getElementById('reviewRejectBtn').onclick = async () => {
+            const subs = APP.State.ENGINE.review.submissions;
+            const idx = APP.State.ENGINE.review.currentIdx;
+            if (!subs.length) return;
+            const sub = subs[idx];
+            try {
+                APP.UI.showMessage('Rejecting…', 'text-white font-black');
+                await APP.Persistence.rejectSubmission(sub.id);
+                APP.State.ENGINE.review.submissions.splice(idx, 1);
+                if (APP.State.ENGINE.review.submissions.length === 0) {
+                    APP.UI.showMessage('No more submissions.', 'text-slate-400');
+                    APP.State.ENGINE.editor.workingLevel = null;
+                    APP.State.ENGINE.isDirty = true;
+                } else {
+                    const newIdx = Math.min(idx, APP.State.ENGINE.review.submissions.length - 1);
+                    APP.Engine.loadReviewLevel(newIdx);
+                    APP.UI.showMessage('Rejected.', 'text-slate-400');
+                }
+            } catch (err) {
+                APP.UI.showMessage('Reject failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
             }
         };
 
@@ -687,7 +793,7 @@ export function installInput(APP) {
         document.getElementById('editPencilBtn').onclick = () => { APP.UI.closeAllModals(); APP.Editor.togglePencilMode(); };
 
         const eraserBtn = document.getElementById('editEraserBtn'); let eraserTimer = null, eraserFired = false;
-        eraserBtn.addEventListener('pointerdown', (e) => { if (APP.State.ENGINE.mode !== APP.Core.EDITOR) return; eraserTimer = setTimeout(() => { APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.UI.showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
+        eraserBtn.addEventListener('pointerdown', (e) => { if (APP.State.ENGINE.mode !== APP.Core.EDITOR && APP.State.ENGINE.mode !== APP.Core.REVIEW) return; eraserTimer = setTimeout(() => { APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.UI.showMessage("Cleared", "text-white font-black"); eraserFired = true; }, 1500); });
         const handleEraserRelease = () => { if (eraserTimer) { clearTimeout(eraserTimer); if (!eraserFired) { if (APP.State.ENGINE.path.length > 1) APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, APP.State.ENGINE.path.length - 2); else APP.Engine.PathNavigator.clear(APP.State.ENGINE); } eraserTimer = null; eraserFired = false; } };
         eraserBtn.addEventListener('pointerup', handleEraserRelease); eraserBtn.addEventListener('pointerleave', handleEraserRelease);
 

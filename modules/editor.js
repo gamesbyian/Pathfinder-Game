@@ -215,7 +215,7 @@ export function installEditor(APP) {
                 refs.ENGINE.editor.isModified = true;
             },
             handlePaletteToolPointerDown(toolType, options = {}) {
-                if (refs.ENGINE.mode !== APP.Core.EDITOR) return;
+                if (refs.ENGINE.mode !== APP.Core.EDITOR && refs.ENGINE.mode !== APP.Core.REVIEW) return;
                 if (refs.ENGINE.overlayState !== APP.Core.OVERLAY_NONE) return;
                 refs.ENGINE.editor.draggedFromGrid = false;
                 refs.ENGINE.editor.emptyClickCount = 0;

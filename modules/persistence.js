@@ -174,7 +174,8 @@ export function installPersistence(APP) {
         function updateCompletionUI() {
             const isComplete = APP.State.ENGINE.progressSet.has(APP.State.ENGINE.levelIdx);
             const isPlayMode = APP.State.ENGINE.mode === APP.Core.PLAY;
-            APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode);
+            const isReview = APP.State.ENGINE.mode === APP.Core.REVIEW;
+            APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode, isReview ? '??' : null);
         }
 
         function waitForUser(timeoutMs = 8000) {
@@ -230,6 +231,57 @@ export function installPersistence(APP) {
             }
         }
 
+        async function initAdminAuth() {
+            if (!auth) throw new Error('No Firebase connection');
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            await auth.signInWithPopup(provider);
+            const user = auth.currentUser;
+            if (!user || user.email !== 'ianmakesjokes@gmail.com') {
+                await auth.signOut();
+                throw new Error('Access denied for ' + (user?.email || 'unknown account'));
+            }
+            return user;
+        }
+
+        async function loadSubmissions() {
+            if (!db) return [];
+            try {
+                const snapshot = await db.collection('artifacts').doc(appId)
+                    .collection('submissions')
+                    .orderBy('submittedAt', 'asc')
+                    .get();
+                return snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    levelData: decodeHints(doc.data().levelData || {}),
+                    submittedAt: doc.data().submittedAt,
+                    submittedBy: doc.data().submittedBy
+                }));
+            } catch (e) {
+                console.warn('[Persistence] loadSubmissions failed', e);
+                return [];
+            }
+        }
+
+        async function approveSubmission(submissionId, levelData, sortOrder) {
+            if (!db) throw new Error('No Firebase connection');
+            const batch = db.batch();
+            const publishRef = db.collection('artifacts').doc(appId).collection('published_levels').doc();
+            batch.set(publishRef, {
+                levelData: encodeHints(levelData),
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                sortOrder
+            });
+            const subRef = db.collection('artifacts').doc(appId).collection('submissions').doc(submissionId);
+            batch.delete(subRef);
+            await batch.commit();
+        }
+
+        async function rejectSubmission(submissionId) {
+            if (!db) throw new Error('No Firebase connection');
+            await db.collection('artifacts').doc(appId).collection('submissions').doc(submissionId).delete();
+        }
+
         return {
             initAuth,
             syncProgress,
@@ -240,7 +292,11 @@ export function installPersistence(APP) {
             persistSessionState,
             applySessionState,
             submitLevel,
-            loadPublishedLevels
+            loadPublishedLevels,
+            initAdminAuth,
+            loadSubmissions,
+            approveSubmission,
+            rejectSubmission
         };
     })();
 }

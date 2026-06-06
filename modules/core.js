@@ -4,8 +4,8 @@ export function installCore(APP) {
         const AXIS = { NONE: 0, H: 1, V: 2 };
         const { H, V, NONE } = AXIS;
         const DEV = false;
-        const MODES = { PLAY: 0, EDITOR: 1 };
-        const { PLAY, EDITOR } = MODES;
+        const MODES = { PLAY: 0, EDITOR: 1, REVIEW: 2 };
+        const { PLAY, EDITOR, REVIEW } = MODES;
 
         const LogicStatus = {
             IDLE: "IDLE",
@@ -73,6 +73,6 @@ export function installCore(APP) {
             catch (_) { return JSON.parse(JSON.stringify(value)); }
         };
 
-        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS, deepClone };
+        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, REVIEW, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS, deepClone };
     })();
 }
