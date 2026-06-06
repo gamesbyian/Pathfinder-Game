@@ -22,10 +22,13 @@
 
 <!-- Auth screen -->
 <div id="authScreen" class="min-h-screen flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-xl p-10 flex flex-col items-center gap-6 max-w-sm w-full">
-        <h1 class="text-2xl font-black uppercase tracking-tight">Level Review</h1>
-        <p class="text-slate-500 text-sm text-center">Sign in with the admin Google account to access submissions.</p>
-        <button id="signInBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Sign in with Google</button>
+    <div class="bg-white rounded-2xl shadow-xl p-10 flex flex-col gap-4 max-w-sm w-full">
+        <h1 class="text-2xl font-black uppercase tracking-tight text-center">Level Review</h1>
+        <input id="authEmail" type="email" placeholder="Email" autocomplete="username"
+            class="border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password"
+            class="border border-slate-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <button id="signInBtn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Sign in</button>
         <p id="authError" class="text-red-500 text-sm text-center hidden"></p>
     </div>
 </div>
@@ -152,14 +155,19 @@ function showAuthError(msg) {
 
 document.getElementById('signInBtn').onclick = async () => {
     if (!auth) return;
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    if (!email || !password) { showAuthError('Enter your email and password.'); return; }
     try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        provider.setCustomParameters({ hd: 'gmail.com' });
-        await auth.signInWithPopup(provider);
+        await auth.signInWithEmailAndPassword(email, password);
     } catch (e) {
-        showAuthError('Sign-in failed: ' + e.message);
+        showAuthError('Sign-in failed: ' + (e.code === 'auth/invalid-credential' ? 'Wrong email or password.' : e.message));
     }
 };
+
+document.getElementById('authPassword').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('signInBtn').click();
+});
 
 document.getElementById('signOutBtn').onclick = () => auth?.signOut();
 
