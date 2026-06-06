@@ -37,10 +37,10 @@ jobs:
 
           PATCH_BODY=$(jq -n \
             --arg r "$RULESET_NAME" \
-            '{"release":{"rulesetName":$r}}')
+            '{"release":{"rulesetName":$r},"updateMask":"rulesetName"}')
 
           PATCH_RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X PATCH "$API/releases/cloud.firestore?updateMask=rulesetName" \
+            -X PATCH "$API/releases/cloud.firestore" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
             -d "$PATCH_BODY")
