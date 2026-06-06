@@ -53,6 +53,18 @@ export function installEditor(APP) {
                 if (unpaired) reasons.push("Portal terminals incomplete");
 
                 // MustCross structural checks
+                // Pre-compute: cells orthogonally adjacent to any mustCross
+                const mustCrossAdjCells = new Set();
+                for (const mk of l.mustCrossKeys) {
+                    if (!inGrid(mk)) continue;
+                    const mp = APP.LevelUtils.UNPACK(mk);
+                    for (const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])
+                        mustCrossAdjCells.add(APP.LevelUtils.PACK(mp.x+dx, mp.y+dy));
+                }
+                // A flipping filter not adjacent to any mustCross can be crossed first,
+                // theoretically flipping the blocking ones before the path reaches them.
+                const hasFreeFlip = Array.from(l.flippingFilterMap.keys()).some(fk => !mustCrossAdjCells.has(fk));
+
                 for (const k of l.mustCrossKeys) {
                     if (!inGrid(k)) continue;
                     const p = APP.LevelUtils.UNPACK(k);
@@ -64,8 +76,10 @@ export function installEditor(APP) {
                     if ([left,right,up,down].some(nk => l.gooseSet.has(nk))) reasons.push(`Goose adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
                     if ([left,right].some(nk => l.filterMap.get(nk) === APP.Core.V)) reasons.push(`Vertical filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
                     if ([up,down].some(nk => l.filterMap.get(nk) === APP.Core.H)) reasons.push(`Horizontal filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
-                    if ([left,right].some(nk => l.flippingFilterMap.get(nk) === APP.Core.V)) reasons.push(`Flipping V-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
-                    if ([up,down].some(nk => l.flippingFilterMap.get(nk) === APP.Core.H)) reasons.push(`Flipping H-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
+                    if (!hasFreeFlip) {
+                        if ([left,right].some(nk => l.flippingFilterMap.get(nk) === APP.Core.V)) reasons.push(`Flipping V-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
+                        if ([up,down].some(nk => l.flippingFilterMap.get(nk) === APP.Core.H)) reasons.push(`Flipping H-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
+                    }
                     const inBoundsDiags = [[1,1],[1,-1],[-1,1],[-1,-1]]
                         .filter(([dx,dy]) => APP.LevelUtils.inBounds(p.x+dx, p.y+dy, w, h))
                         .map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
