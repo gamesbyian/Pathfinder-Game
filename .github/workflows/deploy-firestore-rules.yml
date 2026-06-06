@@ -35,31 +35,36 @@ jobs:
           RULESET_NAME=$(echo "$RULESET" | jq -r '.name')
           echo "Created ruleset: $RULESET_NAME"
 
-          echo "=== Current release ==="
-          curl -s "$API/releases/cloud.firestore" -H "Authorization: Bearer $TOKEN"
-          echo ""
-
-          PATCH_BODY=$(jq -n \
+          RELEASE_BODY=$(jq -n \
             --arg n "projects/$PROJECT/releases/cloud.firestore" \
             --arg r "$RULESET_NAME" \
-            '{"release":{"name":$n,"rulesetName":$r},"updateMask":"rulesetName"}')
+            '{"name":$n,"rulesetName":$r}')
 
-          echo "=== PATCH body ==="
-          echo "$PATCH_BODY"
-
+          # Try to update an existing release; create it if this is the first deploy
           PATCH_RESPONSE=$(curl -s -w "\n%{http_code}" \
             -X PATCH "$API/releases/cloud.firestore" \
             -H "Authorization: Bearer $TOKEN" \
             -H "Content-Type: application/json" \
-            -d "$PATCH_BODY")
+            -d "$(jq -n --arg r "$RULESET_NAME" \
+                   '{"release":{"rulesetName":$r},"updateMask":"rulesetName"}')")
 
           HTTP_CODE=$(echo "$PATCH_RESPONSE" | tail -1)
           RESP_BODY=$(echo "$PATCH_RESPONSE" | head -n -1)
 
-          echo "=== PATCH response (HTTP $HTTP_CODE) ==="
-          echo "$RESP_BODY"
+          if [ "$HTTP_CODE" -eq 404 ]; then
+            echo "No existing release found — creating for the first time."
+            CREATE_RESPONSE=$(curl -s -w "\n%{http_code}" \
+              -X POST "$API/releases" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$RELEASE_BODY")
+            HTTP_CODE=$(echo "$CREATE_RESPONSE" | tail -1)
+            RESP_BODY=$(echo "$CREATE_RESPONSE" | head -n -1)
+          fi
 
           if [ "$HTTP_CODE" -ge 400 ]; then
+            echo "Release deploy failed (HTTP $HTTP_CODE):"
+            echo "$RESP_BODY"
             exit 1
           fi
 
