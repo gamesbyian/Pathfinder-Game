@@ -14,46 +14,84 @@ export function installEditor(APP) {
                 if (!l) return { ok: false, reasons: ["Level missing"] };
                 const allowGateLess = !!opts.allowGateLess;
                 const { w, h } = l.grid;
-                const inGrid = (k) => {
-                    const p = APP.LevelUtils.UNPACK(k);
-                    return APP.LevelUtils.inBounds(p.x, p.y, w, h);
-                };
-                const addOutOfBounds = (label, key) => {
-                    const p = APP.LevelUtils.UNPACK(key);
-                    reasons.push(`Out of bounds item: ${label} (${p.x + 1},${p.y + 1})`);
+                const inGrid = (k) => { const p = APP.LevelUtils.UNPACK(k); return APP.LevelUtils.inBounds(p.x, p.y, w, h); };
+                const addOOB = (label, key) => { const p = APP.LevelUtils.UNPACK(key); reasons.push(`Out of bounds: ${label} (${p.x + 1},${p.y + 1})`); };
+                const gateSet = new Set(l.gateKeys);
+                // Count orthogonal sides reachable by the path (not blocked by edge/obstacle/filter)
+                const accessibleSides = (cx, cy, gatesBlock = false) => {
+                    let n = 0;
+                    for (const [dx, dy, horiz] of [[1,0,true],[-1,0,true],[0,1,false],[0,-1,false]]) {
+                        const nx = cx + dx, ny = cy + dy;
+                        if (!APP.LevelUtils.inBounds(nx, ny, w, h)) continue;
+                        const nk = APP.LevelUtils.PACK(nx, ny);
+                        if (l.blockSet.has(nk) || l.gooseSet.has(nk) || l.falseGoalKeys.has(nk)) continue;
+                        if (gatesBlock && gateSet.has(nk)) continue;
+                        const ba = horiz ? APP.Core.V : APP.Core.H;
+                        if (l.filterMap.get(nk) === ba || l.flippingFilterMap.get(nk) === ba) continue;
+                        n++;
+                    }
+                    return n;
                 };
 
                 if (!allowGateLess && (!Array.isArray(l.gateKeys) || l.gateKeys.length === 0)) reasons.push("No gates");
                 if (l.goalKey === -1 || l.goalKey === undefined) reasons.push("Goal missing");
                 if (APP.State.ENGINE.editor.pendingPortal) reasons.push("Portal terminals incomplete");
 
-                l.gateKeys.forEach(k => { if (!inGrid(k)) addOutOfBounds('gates', k); });
-                if (l.goalKey !== -1 && l.goalKey !== undefined && !inGrid(l.goalKey)) addOutOfBounds('goal', l.goalKey);
-                l.mustPassKeys.forEach(k => { if (!inGrid(k)) addOutOfBounds('mustPass', k); });
-                l.mustCrossKeys.forEach(k => { if (!inGrid(k)) addOutOfBounds('mustCross', k); });
-                l.gooseSet.forEach(k => { if (!inGrid(k)) addOutOfBounds('geese', k); });
-                l.blockSet.forEach(k => { if (!inGrid(k)) addOutOfBounds('blocks', k); });
+                l.gateKeys.forEach(k => { if (!inGrid(k)) addOOB('gate', k); });
+                if (l.goalKey !== -1 && l.goalKey !== undefined && !inGrid(l.goalKey)) addOOB('goal', l.goalKey);
+                l.mustPassKeys.forEach(k => { if (!inGrid(k)) addOOB('mustPass', k); });
+                l.mustCrossKeys.forEach(k => { if (!inGrid(k)) addOOB('mustCross', k); });
+                l.gooseSet.forEach(k => { if (!inGrid(k)) addOOB('goose', k); });
+                l.blockSet.forEach(k => { if (!inGrid(k)) addOOB('block', k); });
 
                 let unpaired = false;
                 l.portalMap.forEach((v, k) => {
                     if (!l.portalMap.has(v.dest)) unpaired = true;
-                    if (!inGrid(k)) addOutOfBounds('portals', k);
-                    if (v.dest !== -1 && !inGrid(v.dest)) addOutOfBounds('portals', v.dest);
+                    if (!inGrid(k)) addOOB('portal', k);
+                    if (v.dest !== -1 && !inGrid(v.dest)) addOOB('portal', v.dest);
                 });
                 if (unpaired) reasons.push("Portal terminals incomplete");
 
+                // MustCross structural checks
                 for (const k of l.mustCrossKeys) {
+                    if (!inGrid(k)) continue;
                     const p = APP.LevelUtils.UNPACK(k);
                     if (l.blockSet.has(k)) reasons.push(`MustCross overlaps block at (${p.x + 1},${p.y + 1})`);
-                    const neighbors = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
-                    const diags = [[1,1],[1,-1],[-1,1],[-1,-1]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
-                    if (neighbors.some(nk => l.blockSet.has(nk))) reasons.push(`Block touches MustCross at (${p.x + 1},${p.y + 1})`);
-                    if (neighbors.some(nk => l.gooseSet.has(nk))) reasons.push(`Goose touches MustCross at (${p.x + 1},${p.y + 1})`);
-                    const left = APP.LevelUtils.PACK(p.x-1,p.y), right = APP.LevelUtils.PACK(p.x+1,p.y), up = APP.LevelUtils.PACK(p.x,p.y-1), down = APP.LevelUtils.PACK(p.x,p.y+1);
-                    if ([left, right].some(nk => l.filterMap.get(nk) === APP.Core.V)) reasons.push(`Vertical Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
-                    if ([up, down].some(nk => l.filterMap.get(nk) === APP.Core.H)) reasons.push(`Horizontal Filter adj to MustCross at (${p.x + 1},${p.y + 1})`);
+                    if (p.x === 0 || p.x === w - 1 || p.y === 0 || p.y === h - 1) reasons.push(`MustCross on grid edge at (${p.x + 1},${p.y + 1})`);
+                    const left = APP.LevelUtils.PACK(p.x-1,p.y), right = APP.LevelUtils.PACK(p.x+1,p.y);
+                    const up = APP.LevelUtils.PACK(p.x,p.y-1), down = APP.LevelUtils.PACK(p.x,p.y+1);
+                    if ([left,right,up,down].some(nk => l.blockSet.has(nk))) reasons.push(`Block adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([left,right,up,down].some(nk => l.gooseSet.has(nk))) reasons.push(`Goose adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([left,right].some(nk => l.filterMap.get(nk) === APP.Core.V)) reasons.push(`Vertical filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([up,down].some(nk => l.filterMap.get(nk) === APP.Core.H)) reasons.push(`Horizontal filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([left,right].some(nk => l.flippingFilterMap.get(nk) === APP.Core.V)) reasons.push(`Flipping V-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
+                    if ([up,down].some(nk => l.flippingFilterMap.get(nk) === APP.Core.H)) reasons.push(`Flipping H-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
+                    const inBoundsDiags = [[1,1],[1,-1],[-1,1],[-1,-1]]
+                        .filter(([dx,dy]) => APP.LevelUtils.inBounds(p.x+dx, p.y+dy, w, h))
+                        .map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
+                    if (inBoundsDiags.some(dk => l.filterMap.has(dk) || l.flippingFilterMap.has(dk)))
+                        reasons.push(`Filter diagonally adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
+                    if (inBoundsDiags.some(dk => l.blockSet.has(dk) || l.gooseSet.has(dk) || l.falseGoalKeys.has(dk)))
+                        reasons.push(`Obstacle diagonally adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
                 }
 
+                // Gate accessibility: needs at least one open orthogonal side to start
+                for (const gk of l.gateKeys) {
+                    if (!inGrid(gk)) continue;
+                    const p = APP.LevelUtils.UNPACK(gk);
+                    if (accessibleSides(p.x, p.y, true) === 0) reasons.push(`Gate completely surrounded at (${p.x + 1},${p.y + 1})`);
+                }
+                // Goal accessibility: needs at least one open orthogonal side to enter
+                if (l.goalKey !== -1 && l.goalKey !== undefined && inGrid(l.goalKey)) {
+                    const p = APP.LevelUtils.UNPACK(l.goalKey);
+                    if (accessibleSides(p.x, p.y, true) === 0) reasons.push(`Goal completely surrounded at (${p.x + 1},${p.y + 1})`);
+                }
+                // MustPass accessibility: needs at least 2 open sides to enter and exit
+                for (const mk of l.mustPassKeys) {
+                    if (!inGrid(mk)) continue;
+                    const p = APP.LevelUtils.UNPACK(mk);
+                    if (accessibleSides(p.x, p.y) < 2) reasons.push(`MustPass blocked on 3+ sides at (${p.x + 1},${p.y + 1})`);
+                }
 
                 const barrier = (k) => l.blockSet.has(k);
                 const reachableFrom = (startKey) => {

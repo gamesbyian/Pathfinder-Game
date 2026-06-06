@@ -362,17 +362,35 @@ export function installInput(APP) {
                 APP.UI.showMessage('Not signed in. Please wait or refresh.', 'text-red-500 font-bold');
                 return;
             }
+
+            // Set up modal references early so validation errors can use it
+            const sm = {
+                el: document.getElementById('submitModal'),
+                heading: document.getElementById('submitModalHeading'),
+                detail: document.getElementById('submitModalDetail'),
+                spinner: document.getElementById('submitModalSpinner'),
+                dismiss: document.getElementById('submitModalDismissBtn'),
+            };
+            const showModalError = (heading, reasons) => {
+                sm.heading.textContent = heading;
+                sm.heading.style.color = '#f87171';
+                sm.detail.innerHTML = (Array.isArray(reasons) ? reasons : [reasons]).map(r => `• ${r}`).join('<br>');
+                sm.spinner.classList.add('hidden');
+                sm.dismiss.classList.remove('hidden');
+                sm.el.classList.remove('hidden');
+            };
+
             APP.Editor.applyMetricsFromUI();
             const l = APP.State.ENGINE.editor.workingLevel;
             const validation = APP.Editor.validateWorkingLevel();
             if (!validation?.ok) {
-                APP.UI.showMessage(validation?.reasons?.[0] || 'Fix errors first.', 'text-red-500 font-bold');
+                showModalError('Invalid Level', validation.reasons?.length ? validation.reasons : ['Fix errors first.']);
                 return;
             }
             const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0;
             const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0;
             if (!reqLen) {
-                APP.UI.showMessage('Set a length target before submitting.', 'text-red-500 font-bold');
+                showModalError('Missing Target', ['Set a path length target before submitting.']);
                 return;
             }
 
@@ -429,15 +447,10 @@ export function installInput(APP) {
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                     if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                         pushUniqueHint(result.solution);
-                    } else if (!_cancelled) {
-                        APP.UI.showMessage('No solution found; submitting without hints.', 'text-amber-300 font-bold');
-                        await new Promise(r => setTimeout(r, 1500));
                     }
                 } catch (err) {
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                     if (err?.message === 'SolverV2:cancelled') return;
-                    APP.UI.showMessage('Solver error; submitting without hints.', 'text-amber-300 font-bold');
-                    await new Promise(r => setTimeout(r, 1500));
                 } finally {
                     clearInterval(abortPoll);
                     APP.State.ENGINE.activeSolverController = null;
@@ -464,16 +477,13 @@ export function installInput(APP) {
                 hints
             };
 
-            const sm = {
-                el: document.getElementById('submitModal'),
-                heading: document.getElementById('submitModalHeading'),
-                detail: document.getElementById('submitModalDetail'),
-                spinner: document.getElementById('submitModalSpinner'),
-                dismiss: document.getElementById('submitModalDismissBtn'),
-            };
-            sm.heading.textContent = 'Submitting';
-            sm.heading.style.color = '';
-            sm.detail.textContent = 'Saving level to server…';
+            // Show verification status in modal before the Firestore write
+            const verified = normalizedHints.length > 0;
+            sm.heading.textContent = verified ? 'Verified ✓' : 'No Solution Found';
+            sm.heading.style.color = verified ? '#34d399' : '#fbbf24';
+            sm.detail.textContent = verified
+                ? `${normalizedHints.length} valid solution${normalizedHints.length > 1 ? 's' : ''} confirmed — saving…`
+                : 'Structure valid but no solution found — submitting for manual review…';
             sm.spinner.classList.remove('hidden');
             sm.dismiss.classList.add('hidden');
             sm.el.classList.remove('hidden');
@@ -485,7 +495,7 @@ export function installInput(APP) {
                 if (afterSuccess) {
                     await afterSuccess(sm);
                 } else {
-                    sm.detail.textContent = 'Level sent for review.';
+                    sm.detail.textContent = verified ? 'Level verified and sent for review.' : 'Submitted without confirmed solution.';
                     sm.spinner.classList.add('hidden');
                     sm.dismiss.classList.remove('hidden');
                     setTimeout(() => sm.el.classList.add('hidden'), 4000);
