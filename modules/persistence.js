@@ -177,9 +177,22 @@ export function installPersistence(APP) {
             APP.UI.updateLevelDisplay(APP.State.ENGINE.levelIdx, isComplete && isPlayMode);
         }
 
+        function waitForUser(timeoutMs = 6000) {
+            if (!auth) return Promise.resolve(null);
+            if (auth.currentUser) return Promise.resolve(auth.currentUser);
+            return new Promise((resolve) => {
+                const timer = setTimeout(() => { unsub(); resolve(null); }, timeoutMs);
+                const unsub = auth.onAuthStateChanged((user) => {
+                    clearTimeout(timer);
+                    unsub();
+                    resolve(user);
+                });
+            });
+        }
+
         async function submitLevel(levelData) {
             if (!db) throw new Error('No Firebase connection');
-            const user = auth?.currentUser;
+            const user = await waitForUser();
             if (!user) throw new Error('Not signed in');
             const col = db.collection('artifacts').doc(appId).collection('submissions');
             await col.add({
