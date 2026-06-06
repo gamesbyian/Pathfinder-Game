@@ -470,6 +470,8 @@ export function installEngine(APP) {
                 APP.UI.setInputValue('editReqLen', normalized.reqLen || 0);
                 APP.UI.setInputValue('editReqInt', normalized.reqInt || 0);
                 APP.UI.updateLevelDisplay(safeIdx, false, '??');
+                APP.UI.updateAppScale();
+                APP.UI.updateViewport();
                 APP.State.ENGINE.isDirty = true;
             }
 
