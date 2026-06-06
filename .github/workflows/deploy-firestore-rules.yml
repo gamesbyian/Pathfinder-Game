@@ -18,4 +18,29 @@ jobs:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
 
       - name: Deploy Firestore rules
-        run: npx --yes firebase-tools deploy --only firestore:rules --project pathfinder-game-23e29 --non-interactive
+        run: |
+          set -e
+          TOKEN=$(gcloud auth print-access-token)
+          PROJECT="pathfinder-game-23e29"
+          API="https://firebaserules.googleapis.com/v1/projects/$PROJECT"
+
+          PAYLOAD=$(jq -n --rawfile content firestore.rules \
+            '{"source":{"files":[{"name":"firestore.rules","content":$content}]}}')
+
+          RULESET=$(curl -sf -X POST "$API/rulesets" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          RULESET_NAME=$(echo "$RULESET" | jq -r '.name')
+          echo "Created ruleset: $RULESET_NAME"
+
+          curl -sf -X PATCH "$API/releases/cloud.firestore" \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n \
+                  --arg n "projects/$PROJECT/releases/cloud.firestore" \
+                  --arg r "$RULESET_NAME" \
+                  '{"release":{"name":$n,"rulesetName":$r}}')"
+
+          echo "Firestore rules deployed successfully."
