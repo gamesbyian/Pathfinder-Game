@@ -210,20 +210,96 @@ export function installPersistence(APP) {
             return { ...levelData, hints: levelData.hints.map(h => typeof h === 'string' ? JSON.parse(h) : h) };
         }
 
-        async function submitLevel(levelData) {
+        async function withTimeout(promise, timeoutMs, message) {
+            return Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error(message)), timeoutMs))
+            ]);
+        }
+
+        function duplicateMatchFromDoc(doc, levelData, fingerprint, source) {
+            const data = doc.data() || {};
+            if (data.levelFingerprint === fingerprint) return { source, id: doc.id, fingerprint };
+            const existingLevelData = decodeHints(data.levelData || {});
+            if (existingLevelData && APP.LevelUtils.isSameLevelStructure(existingLevelData, levelData)) {
+                return { source, id: doc.id, fingerprint };
+            }
+            return null;
+        }
+
+        async function findDuplicateLevel(levelData, options = {}) {
+            if (!db) throw new Error('No Firebase connection');
+            const { includePending = true } = options;
+            const fingerprint = await APP.LevelUtils.getLevelFingerprint(levelData);
+            const root = db.collection('artifacts').doc(appId);
+            const warnings = [];
+            const checkCollection = async (collectionName, source, canWarn = true) => {
+                const collection = root.collection(collectionName);
+                try {
+                    const indexedSnapshot = await withTimeout(
+                        collection.where('levelFingerprint', '==', fingerprint).limit(1).get(),
+                        15000,
+                        `Duplicate ${source} fingerprint query timed out`
+                    );
+                    for (const doc of indexedSnapshot.docs) {
+                        const match = duplicateMatchFromDoc(doc, levelData, fingerprint, source);
+                        if (match) return match;
+                    }
+
+                    const fullSnapshot = await withTimeout(
+                        collection.get(),
+                        15000,
+                        `Duplicate ${source} legacy scan timed out`
+                    );
+                    for (const doc of fullSnapshot.docs) {
+                        const match = duplicateMatchFromDoc(doc, levelData, fingerprint, source);
+                        if (match) return match;
+                    }
+                } catch (e) {
+                    console.warn(`[Persistence] duplicate ${source} check failed`, e);
+                    if (canWarn) warnings.push(source);
+                }
+                return null;
+            };
+
+            if (includePending) {
+                const pendingMatch = await checkCollection('submissions', 'pending');
+                if (pendingMatch) return { duplicate: pendingMatch, fingerprint, warnings, checkedPending: true };
+            }
+            const approvedMatch = await checkCollection('published_levels', 'approved');
+            if (approvedMatch) return { duplicate: approvedMatch, fingerprint, warnings, checkedPending: includePending };
+            return { duplicate: null, fingerprint, warnings, checkedPending: includePending };
+        }
+
+        async function submitLevel(levelData, options = {}) {
             if (!db) throw new Error('No Firebase connection');
             const user = await waitForUser();
             if (!user) throw new Error('Not signed in');
+            let levelFingerprint = options.levelFingerprint || await APP.LevelUtils.getLevelFingerprint(levelData);
+            if (!options.skipDuplicateCheck) {
+                const duplicateCheck = await findDuplicateLevel(levelData, { includePending: options.includePending !== false });
+                levelFingerprint = duplicateCheck.fingerprint || levelFingerprint;
+                if (duplicateCheck.duplicate) {
+                    const sourceLabel = duplicateCheck.duplicate.source === 'approved' ? 'approved levels' : 'pending submissions';
+                    const err = new Error(`Duplicate level found in ${sourceLabel}`);
+                    err.code = 'duplicate-level';
+                    err.duplicate = duplicateCheck.duplicate;
+                    throw err;
+                }
+            }
             console.log('[Submit] Writing to Firestore as uid:', user.uid);
             const col = db.collection('artifacts').doc(appId).collection('submissions');
-            await Promise.race([
+            await withTimeout(
                 col.add({
                     levelData: encodeHints(levelData),
+                    levelFingerprint,
+                    fingerprintVersion: 1,
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     submittedBy: user.uid
                 }),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore write timed out after 20s — check network or Firebase rules')), 20000))
-            ]);
+                20000,
+                'Firestore write timed out after 20s — check network or Firebase rules'
+            );
             console.log('[Submit] Firestore write acknowledged.');
         }
 
@@ -266,6 +342,7 @@ export function installPersistence(APP) {
                 return snapshot.docs.map(doc => ({
                     id: doc.id,
                     levelData: decodeHints(doc.data().levelData || {}),
+                    levelFingerprint: doc.data().levelFingerprint || null,
                     submittedAt: doc.data().submittedAt,
                     submittedBy: doc.data().submittedBy
                 }));
@@ -277,10 +354,13 @@ export function installPersistence(APP) {
 
         async function approveSubmission(submissionId, levelData, sortOrder) {
             if (!db) throw new Error('No Firebase connection');
+            const levelFingerprint = await APP.LevelUtils.getLevelFingerprint(levelData);
             const batch = db.batch();
             const publishRef = db.collection('artifacts').doc(appId).collection('published_levels').doc();
             batch.set(publishRef, {
                 levelData: encodeHints(levelData),
+                levelFingerprint,
+                fingerprintVersion: 1,
                 approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 sortOrder
             });
@@ -304,6 +384,7 @@ export function installPersistence(APP) {
             persistSessionState,
             applySessionState,
             submitLevel,
+            findDuplicateLevel,
             loadPublishedLevels,
             initAdminAuth,
             loadSubmissions,

@@ -13,11 +13,13 @@ service cloud.firestore {
     }
 
     // User-submitted levels: any authenticated user can create their own.
-    // Only the admin can read or delete.
+    // Authenticated users may read pending levels for duplicate detection;
+    // only the admin can delete/reject them.
     match /artifacts/{appId}/submissions/{submissionId} {
       allow create: if request.auth != null
                     && request.resource.data.submittedBy == request.auth.uid;
-      allow read, delete: if isAdmin();
+      allow read: if request.auth != null;
+      allow delete: if isAdmin();
       allow update: if false;
     }
 
