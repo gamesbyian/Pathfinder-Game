@@ -410,12 +410,9 @@ export function installEngine(APP) {
                     updatePencilState();
                 } else if (isReview) {
                     APP.State.ENGINE.review.savedPlayLevelIdx = APP.State.ENGINE.levelIdx;
-                    APP.State.ENGINE.editor.workingLevel = null;
                     APP.State.ENGINE.editor.isPencilMode = false;
-                    APP.State.ENGINE.editor.undoStack = [];
-                    APP.State.ENGINE.editor.isModified = false;
-                    APP.State.ENGINE.editor.validTrapSpots.clear();
                     APP.State.ENGINE.editor.emptyClickCount = 0;
+                    resetEmptyReviewState();
                     updatePencilState();
                 } else {
                     updatePlayModeLayout();
@@ -445,10 +442,30 @@ export function installEngine(APP) {
                 svg.innerHTML = APP.State.ENGINE.editor.isPencilMode ? activePencilIcon : inactivePencilIcon;
             }
 
+            function resetEmptyReviewState() {
+                APP.State.ENGINE.review.currentIdx = 0;
+                APP.State.ENGINE.editor.workingLevel = null;
+                APP.State.ENGINE.editor.undoStack = [];
+                APP.State.ENGINE.editor.isModified = false;
+                APP.State.ENGINE.editor.validTrapSpots.clear();
+                APP.Engine.PathNavigator.clear(APP.State.ENGINE);
+                APP.State.ENGINE.undoStack = [];
+                APP.State.ENGINE.revealedGeese.clear();
+                APP.State.ENGINE.gooseEncounteredThisLevel = false;
+                APP.State.ENGINE.detonatedFalseGoals.clear();
+                APP.UI.setInputValue('editReqLen', 0);
+                APP.UI.setInputValue('editReqInt', 0);
+                APP.UI.renderMetricsPanel({ currentLen: 0, reqLen: 0, currentInt: 0, reqInt: 0 });
+                APP.UI.updateLevelDisplay(0, false, '0/0');
+                APP.UI.updateAppScale();
+                APP.UI.updateViewport();
+                APP.State.ENGINE.isDirty = true;
+            }
+
             function loadReviewLevel(idx) {
                 const subs = APP.State.ENGINE.review.submissions;
                 if (!subs || !subs.length) {
-                    APP.UI.updateLevelDisplay(0, false, '0/0');
+                    resetEmptyReviewState();
                     return;
                 }
                 const safeIdx = Math.max(0, Math.min(idx, subs.length - 1));
