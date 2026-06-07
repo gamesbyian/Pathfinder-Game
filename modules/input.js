@@ -366,7 +366,7 @@ export function installInput(APP) {
             const smEl = document.getElementById('submitModal');
             const smDismiss = document.getElementById('submitModalDismissBtn');
             const resetModal = () => {
-                ['smStep-validate','smStep-solve','smStep-save'].forEach(id => {
+                ['smStep-validate','smStep-duplicate','smStep-solve','smStep-save'].forEach(id => {
                     const el = document.getElementById(id);
                     if (!el) return;
                     const icon = el.querySelector('.sm-icon');
@@ -433,7 +433,54 @@ export function installInput(APP) {
             }
             setStep('smStep-validate', 'ok', 'Structure valid');
 
-            // Step 2: Find solutions
+            const buildLevelData = (hints = []) => ({
+                grid: l.grid,
+                gates: APP.LevelUtils.expCoords(l.gateKeys),
+                goal: { x: APP.LevelUtils.UNPACK(l.goalKey).x + 1, y: APP.LevelUtils.UNPACK(l.goalKey).y + 1 },
+                falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys),
+                reqLen, reqInt,
+                blocks: APP.LevelUtils.expCoords(l.blockSet),
+                mustPass: APP.LevelUtils.expCoords(l.mustPassKeys),
+                mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys),
+                filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
+                flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
+                portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x + 1, y1: APP.LevelUtils.UNPACK(pv.k1).y + 1, x2: APP.LevelUtils.UNPACK(pv.k2).x + 1, y2: APP.LevelUtils.UNPACK(pv.k2).y + 1 })),
+                geese: APP.LevelUtils.expCoords(l.gooseSet),
+                hints
+            });
+
+            // Step 2: Check duplicates by structural fingerprint (hints are intentionally ignored).
+            setStep('smStep-duplicate', 'running');
+            let levelFingerprint = null;
+            const currentUser = APP.Persistence.getCurrentUser?.();
+            const canCheckPending = APP.State.ENGINE.mode === APP.Core.REVIEW || currentUser?.email === 'ianmakesjokes@gmail.com';
+            try {
+                const duplicateCheck = await APP.Persistence.findDuplicateLevel(buildLevelData([]), { includePending: canCheckPending });
+                levelFingerprint = duplicateCheck?.fingerprint || null;
+                if (duplicateCheck?.duplicate) {
+                    const sourceLabel = duplicateCheck.duplicate.source === 'approved'
+                        ? 'already approved/published'
+                        : 'already waiting for review';
+                    setStep('smStep-duplicate', 'error', `Duplicate level: this grid layout and win requirements are ${sourceLabel}. Saved hints are ignored for this check.`);
+                    smDismiss.classList.remove('hidden');
+                    return;
+                }
+                if (duplicateCheck?.warnings?.length) {
+                    const warningLabels = duplicateCheck.warnings.map(source => source === 'approved' ? 'approved levels' : 'pending queue');
+                    setStep('smStep-duplicate', 'warn', ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]);
+                } else {
+                    setStep('smStep-duplicate', 'ok', canCheckPending
+                        ? 'No duplicate found in pending or approved levels'
+                        : 'No duplicate found in approved levels');
+                }
+            } catch (err) {
+                console.error('[Submit] duplicate check failed:', err);
+                setStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
+                smDismiss.classList.remove('hidden');
+                return;
+            }
+
+            // Step 3: Find solutions
             setStep('smStep-solve', 'running');
             const validateHintPath = (candidatePath) => {
                 const lv = APP.LevelUtils.deepCloneLevel(l);
@@ -508,27 +555,13 @@ export function installInput(APP) {
                     ? `${normalizedHints.length} solution${normalizedHints.length > 1 ? 's' : ''} confirmed`
                     : 'No solution found — will submit for manual review');
 
-            // Step 3: Save to server
+            // Step 4: Save to server
             setStep('smStep-save', 'running');
             const hints = normalizedHints.slice(0, 5);
-            const levelData = {
-                grid: l.grid,
-                gates: APP.LevelUtils.expCoords(l.gateKeys),
-                goal: { x: APP.LevelUtils.UNPACK(l.goalKey).x + 1, y: APP.LevelUtils.UNPACK(l.goalKey).y + 1 },
-                falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys),
-                reqLen, reqInt,
-                blocks: APP.LevelUtils.expCoords(l.blockSet),
-                mustPass: APP.LevelUtils.expCoords(l.mustPassKeys),
-                mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys),
-                filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
-                flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
-                portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x + 1, y1: APP.LevelUtils.UNPACK(pv.k1).y + 1, x2: APP.LevelUtils.UNPACK(pv.k2).x + 1, y2: APP.LevelUtils.UNPACK(pv.k2).y + 1 })),
-                geese: APP.LevelUtils.expCoords(l.gooseSet),
-                hints
-            };
+            const levelData = buildLevelData(hints);
             try {
                 APP.UI.setButtonState(triggerBtnId, { enabled: false });
-                await APP.Persistence.submitLevel(levelData);
+                await APP.Persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true });
                 setStep('smStep-save', 'ok', 'Queued for review');
                 if (afterSuccess) {
                     await afterSuccess(sm);
