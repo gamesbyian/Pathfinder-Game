@@ -778,6 +778,7 @@ export function installInput(APP) {
                 const subs = await APP.Persistence.loadSubmissions();
                 APP.State.ENGINE.review.submissions = subs;
                 if (subs.length === 0) {
+                    APP.Engine.loadReviewLevel(0);
                     rlm.heading.textContent = 'No Submissions';
                     rlm.heading.style.color = '#94a3b8';
                     rlm.detail.textContent = 'No levels are waiting for review.';
@@ -808,9 +809,8 @@ export function installInput(APP) {
                 await APP.Persistence.approveSubmission(sub.id, levelData, Date.now());
                 APP.State.ENGINE.review.submissions.splice(idx, 1);
                 if (APP.State.ENGINE.review.submissions.length === 0) {
+                    APP.Engine.loadReviewLevel(0);
                     APP.UI.showMessage('No more submissions.', 'text-slate-400');
-                    APP.State.ENGINE.editor.workingLevel = null;
-                    APP.State.ENGINE.isDirty = true;
                 } else {
                     const newIdx = Math.min(idx, APP.State.ENGINE.review.submissions.length - 1);
                     APP.Engine.loadReviewLevel(newIdx);
@@ -831,9 +831,8 @@ export function installInput(APP) {
                 await APP.Persistence.rejectSubmission(sub.id);
                 APP.State.ENGINE.review.submissions.splice(idx, 1);
                 if (APP.State.ENGINE.review.submissions.length === 0) {
+                    APP.Engine.loadReviewLevel(0);
                     APP.UI.showMessage('No more submissions.', 'text-slate-400');
-                    APP.State.ENGINE.editor.workingLevel = null;
-                    APP.State.ENGINE.isDirty = true;
                 } else {
                     const newIdx = Math.min(idx, APP.State.ENGINE.review.submissions.length - 1);
                     APP.Engine.loadReviewLevel(newIdx);
