@@ -227,9 +227,8 @@ export function installPersistence(APP) {
             return null;
         }
 
-        async function findDuplicateLevel(levelData, options = {}) {
+        async function findDuplicateLevel(levelData) {
             if (!db) throw new Error('No Firebase connection');
-            const { includePending = true } = options;
             const fingerprint = await APP.LevelUtils.getLevelFingerprint(levelData);
             const root = db.collection('artifacts').doc(appId);
             const warnings = [];
@@ -262,13 +261,11 @@ export function installPersistence(APP) {
                 return null;
             };
 
-            if (includePending) {
-                const pendingMatch = await checkCollection('submissions', 'pending');
-                if (pendingMatch) return { duplicate: pendingMatch, fingerprint, warnings, checkedPending: true };
-            }
+            const pendingMatch = await checkCollection('submissions', 'pending');
+            if (pendingMatch) return { duplicate: pendingMatch, fingerprint, warnings };
             const approvedMatch = await checkCollection('published_levels', 'approved');
-            if (approvedMatch) return { duplicate: approvedMatch, fingerprint, warnings, checkedPending: includePending };
-            return { duplicate: null, fingerprint, warnings, checkedPending: includePending };
+            if (approvedMatch) return { duplicate: approvedMatch, fingerprint, warnings };
+            return { duplicate: null, fingerprint, warnings };
         }
 
         async function submitLevel(levelData, options = {}) {
@@ -277,7 +274,7 @@ export function installPersistence(APP) {
             if (!user) throw new Error('Not signed in');
             let levelFingerprint = options.levelFingerprint || await APP.LevelUtils.getLevelFingerprint(levelData);
             if (!options.skipDuplicateCheck) {
-                const duplicateCheck = await findDuplicateLevel(levelData, { includePending: options.includePending !== false });
+                const duplicateCheck = await findDuplicateLevel(levelData);
                 levelFingerprint = duplicateCheck.fingerprint || levelFingerprint;
                 if (duplicateCheck.duplicate) {
                     const sourceLabel = duplicateCheck.duplicate.source === 'approved' ? 'approved levels' : 'pending submissions';

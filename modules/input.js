@@ -453,7 +453,7 @@ export function installInput(APP) {
             setStep('smStep-duplicate', 'running');
             let levelFingerprint = null;
             try {
-                const duplicateCheck = await APP.Persistence.findDuplicateLevel(buildLevelData([]), { includePending: true });
+                const duplicateCheck = await APP.Persistence.findDuplicateLevel(buildLevelData([]));
                 levelFingerprint = duplicateCheck?.fingerprint || null;
                 if (duplicateCheck?.duplicate) {
                     const sourceLabel = duplicateCheck.duplicate.source === 'approved'
@@ -463,12 +463,11 @@ export function installInput(APP) {
                     smDismiss.classList.remove('hidden');
                     return;
                 }
-                if (duplicateCheck?.warnings?.length) {
-                    const warningLabels = duplicateCheck.warnings.map(source => source === 'approved' ? 'approved levels' : 'pending queue');
-                    setStep('smStep-duplicate', 'warn', ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]);
-                } else {
-                    setStep('smStep-duplicate', 'ok', 'No duplicate found in pending or approved levels');
-                }
+                const warningLabels = (duplicateCheck?.warnings || []).map(source => source === 'approved' ? 'approved levels' : 'pending queue');
+                const details = warningLabels.length
+                    ? ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]
+                    : 'No duplicate found in pending or approved levels';
+                setStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
             } catch (err) {
                 console.error('[Submit] duplicate check failed:', err);
                 setStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
