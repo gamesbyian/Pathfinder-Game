@@ -27,7 +27,8 @@
     "legacy:ablation:budget-sweep": "node LegacySolver/solver-ablation.mjs --experiment=budget-sweep --levels=all",
     "legacy:ablation:full": "node LegacySolver/solver-ablation.mjs --experiment=full --levels=all",
     "legacy:ablation:technique-budget": "node LegacySolver/solver-ablation.mjs --experiment=technique-budget --levels=all",
-    "legacy:ablation:analyze": "node LegacySolver/analyze-ablation.mjs"
+    "legacy:ablation:analyze": "node LegacySolver/analyze-ablation.mjs",
+    "test:editor-validation": "node scripts/editor-validation-test.mjs"
   },
   "devDependencies": {
     "playwright": "^1.54.2"

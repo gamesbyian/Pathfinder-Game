@@ -90,8 +90,6 @@ export function installEditor(APP) {
                         .map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
                     if (inBoundsDiags.some(dk => l.filterMap.has(dk) || l.flippingFilterMap.has(dk)))
                         reasons.push(`Filter diagonally adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
-                    if (inBoundsDiags.some(dk => l.blockSet.has(dk) || l.gooseSet.has(dk) || l.falseGoalKeys.has(dk)))
-                        reasons.push(`Obstacle diagonally adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
                 }
 
                 // Gate accessibility: needs at least one open orthogonal side to start
