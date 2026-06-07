@@ -800,7 +800,7 @@ export function installInput(APP) {
             const sub = subs[idx];
             try {
                 APP.UI.showMessage('Rejecting…', 'text-white font-black');
-                await APP.Persistence.rejectSubmission(sub.id);
+                await APP.Persistence.rejectSubmission(sub.id, sub.levelFingerprint);
                 APP.State.ENGINE.review.submissions.splice(idx, 1);
                 if (APP.State.ENGINE.review.submissions.length === 0) {
                     APP.UI.showMessage('No more submissions.', 'text-slate-400');

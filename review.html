@@ -181,6 +181,68 @@ auth?.onAuthStateChanged((user) => {
     loadSubmissions();
 });
 
+// ─── Level fingerprints ──────────────────────────────────────────────────────
+function normalizeNumber(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+}
+function sortObjectKeys(value) {
+    if (Array.isArray(value)) return value.map(sortObjectKeys);
+    if (!value || typeof value !== 'object') return value;
+    return Object.keys(value).sort().reduce((acc, key) => {
+        acc[key] = sortObjectKeys(value[key]);
+        return acc;
+    }, {});
+}
+function stableStringify(value) { return JSON.stringify(sortObjectKeys(value)); }
+function hashString(input) {
+    let hash = 0xcbf29ce484222325n;
+    const prime = 0x100000001b3n;
+    for (let i = 0; i < input.length; i++) {
+        hash ^= BigInt(input.charCodeAt(i));
+        hash = (hash * prime) & 0xffffffffffffffffn;
+    }
+    return hash.toString(16).padStart(16, '0');
+}
+function normalizeCoord(coord) { return { x: normalizeNumber(coord?.x), y: normalizeNumber(coord?.y) }; }
+function sortCoords(coords) {
+    return (Array.isArray(coords) ? coords : []).map(normalizeCoord).sort((a, b) => (a.y - b.y) || (a.x - b.x));
+}
+function sortAxisCoords(coords) {
+    return (Array.isArray(coords) ? coords : [])
+        .map(c => ({ ...normalizeCoord(c), axis: c?.axis === 2 ? 2 : 1 }))
+        .sort((a, b) => (a.y - b.y) || (a.x - b.x) || String(a.axis).localeCompare(String(b.axis)));
+}
+function normalizePortal(portal) {
+    const a = { x: normalizeNumber(portal?.x1), y: normalizeNumber(portal?.y1) };
+    const b = { x: normalizeNumber(portal?.x2), y: normalizeNumber(portal?.y2) };
+    const swap = (b.y < a.y) || (b.y === a.y && b.x < a.x);
+    return swap ? { x1: b.x, y1: b.y, x2: a.x, y2: a.y } : { x1: a.x, y1: a.y, x2: b.x, y2: b.y };
+}
+function sortPortals(portals) {
+    return (Array.isArray(portals) ? portals : [])
+        .map(normalizePortal)
+        .sort((a, b) => (a.y1 - b.y1) || (a.x1 - b.x1) || (a.y2 - b.y2) || (a.x2 - b.x2));
+}
+function getLevelIdentity(level) {
+    return {
+        grid: { w: normalizeNumber(level?.grid?.w), h: normalizeNumber(level?.grid?.h) },
+        gates: sortCoords(level?.gates),
+        goal: level?.goal ? normalizeCoord(level.goal) : null,
+        falseGoals: sortCoords(level?.falseGoals),
+        reqLen: normalizeNumber(level?.reqLen),
+        reqInt: normalizeNumber(level?.reqInt),
+        blocks: sortCoords(level?.blocks),
+        mustPass: sortCoords(level?.mustPass),
+        mustCross: sortCoords(level?.mustCross),
+        filters: sortAxisCoords(level?.filters),
+        flippingFilters: sortAxisCoords(level?.flippingFilters),
+        portals: sortPortals(level?.portals),
+        geese: sortCoords(level?.geese)
+    };
+}
+function getLevelFingerprint(level) { return `lv_${hashString(stableStringify(getLevelIdentity(level)))}`; }
+
 // ─── Submissions ──────────────────────────────────────────────────────────────
 let submissions = [];
 let selectedId = null;
@@ -192,7 +254,10 @@ function loadSubmissions() {
     const col = db.collection('artifacts').doc(appId).collection('submissions')
                    .orderBy('submittedAt', 'desc');
     unsubscribe = col.onSnapshot((snap) => {
-        submissions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        submissions = snap.docs.map(doc => {
+            const data = doc.data();
+            return { id: doc.id, ...data, levelFingerprint: data.levelFingerprint || getLevelFingerprint(data.levelData || {}) };
+        });
         document.getElementById('submissionCount').textContent = submissions.length;
         renderList();
         if (selectedId) {
@@ -333,19 +398,40 @@ document.getElementById('approveBtn').onclick = async () => {
     document.getElementById('approveBtn').disabled = true;
     document.getElementById('rejectBtn').disabled = true;
     try {
-        const batch = db.batch();
-        const publishRef = db.collection('artifacts').doc(appId).collection('published_levels').doc();
+        const baseRef = db.collection('artifacts').doc(appId);
+        const subRef = baseRef.collection('submissions').doc(selectedId);
+        const selected = submissions.find(s => s.id === selectedId);
+        const oldFingerprint = selected?.levelFingerprint || null;
         const decodedLevel = {
             ...currentLevel,
             hints: (currentLevel.hints || []).map(h => typeof h === 'string' ? JSON.parse(h) : h)
         };
+        const levelFingerprint = getLevelFingerprint(decodedLevel);
+        const fingerprintRef = baseRef.collection('level_fingerprints').doc(levelFingerprint);
+        const existingFingerprint = await fingerprintRef.get();
+        if (existingFingerprint.exists && existingFingerprint.data()?.levelId !== selectedId) {
+            const status = existingFingerprint.data()?.status;
+            throw new Error(status === 'approved' ? 'This level has already been approved.' : 'This level is already queued for review.');
+        }
+        const batch = db.batch();
+        const publishRef = baseRef.collection('published_levels').doc();
         batch.set(publishRef, {
             levelData: decodedLevel,
+            levelFingerprint,
             approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
             sortOrder
         });
-        const subRef = db.collection('artifacts').doc(appId).collection('submissions').doc(selectedId);
         batch.delete(subRef);
+        if (oldFingerprint && oldFingerprint !== levelFingerprint) {
+            batch.delete(baseRef.collection('level_fingerprints').doc(oldFingerprint));
+        }
+        batch.set(fingerprintRef, {
+            status: 'approved',
+            collection: 'published_levels',
+            levelId: publishRef.id,
+            approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
         await batch.commit();
         setActionStatus('Approved! Level added to published_levels.', 'text-emerald-600');
     } catch (e) {
@@ -363,7 +449,13 @@ document.getElementById('rejectBtn').onclick = async () => {
     document.getElementById('approveBtn').disabled = true;
     document.getElementById('rejectBtn').disabled = true;
     try {
-        await db.collection('artifacts').doc(appId).collection('submissions').doc(selectedId).delete();
+        const selected = submissions.find(s => s.id === selectedId);
+        const levelFingerprint = selected?.levelFingerprint || (selected?.levelData ? getLevelFingerprint(selected.levelData) : null);
+        const batch = db.batch();
+        const baseRef = db.collection('artifacts').doc(appId);
+        batch.delete(baseRef.collection('submissions').doc(selectedId));
+        if (levelFingerprint) batch.delete(baseRef.collection('level_fingerprints').doc(levelFingerprint));
+        await batch.commit();
         setActionStatus('Rejected and deleted.', 'text-slate-500');
     } catch (e) {
         setActionStatus('Reject failed: ' + e.message, 'text-red-500');

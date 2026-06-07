@@ -168,6 +168,90 @@ export function installLevelUtils(APP) {
 
             function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [], hasParityBreaker: false }; (raw.blocks || []).forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2 }); l.portalMap.set(k2, { dest: k1 }); l.portalVisuals.push({ k1, k2 }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; }); return l; }
 
+            function normalizeNumber(value) {
+                const n = Number(value);
+                return Number.isFinite(n) ? n : 0;
+            }
+
+            function sortObjectKeys(value) {
+                if (Array.isArray(value)) return value.map(sortObjectKeys);
+                if (!value || typeof value !== 'object') return value;
+                return Object.keys(value).sort().reduce((acc, key) => {
+                    acc[key] = sortObjectKeys(value[key]);
+                    return acc;
+                }, {});
+            }
+
+            function stableStringify(value) {
+                return JSON.stringify(sortObjectKeys(value));
+            }
+
+            function hashString(input) {
+                // FNV-1a 64-bit, encoded as a Firestore-safe hex document id.
+                let hash = 0xcbf29ce484222325n;
+                const prime = 0x100000001b3n;
+                for (let i = 0; i < input.length; i++) {
+                    hash ^= BigInt(input.charCodeAt(i));
+                    hash = (hash * prime) & 0xffffffffffffffffn;
+                }
+                return hash.toString(16).padStart(16, '0');
+            }
+
+            function normalizeCoord(coord) {
+                return { x: normalizeNumber(coord?.x), y: normalizeNumber(coord?.y) };
+            }
+
+            function sortCoords(coords) {
+                return (Array.isArray(coords) ? coords : [])
+                    .map(normalizeCoord)
+                    .sort((a, b) => (a.y - b.y) || (a.x - b.x));
+            }
+
+            function sortAxisCoords(coords) {
+                return (Array.isArray(coords) ? coords : [])
+                    .map(c => ({ ...normalizeCoord(c), axis: c?.axis === APP.Core.V ? APP.Core.V : APP.Core.H }))
+                    .sort((a, b) => (a.y - b.y) || (a.x - b.x) || String(a.axis).localeCompare(String(b.axis)));
+            }
+
+            function normalizePortal(portal) {
+                const a = { x: normalizeNumber(portal?.x1), y: normalizeNumber(portal?.y1) };
+                const b = { x: normalizeNumber(portal?.x2), y: normalizeNumber(portal?.y2) };
+                const swap = (b.y < a.y) || (b.y === a.y && b.x < a.x);
+                return swap
+                    ? { x1: b.x, y1: b.y, x2: a.x, y2: a.y }
+                    : { x1: a.x, y1: a.y, x2: b.x, y2: b.y };
+            }
+
+            function sortPortals(portals) {
+                return (Array.isArray(portals) ? portals : [])
+                    .map(normalizePortal)
+                    .sort((a, b) => (a.y1 - b.y1) || (a.x1 - b.x1) || (a.y2 - b.y2) || (a.x2 - b.x2));
+            }
+
+            function getLevelIdentity(levelData) {
+                const isSubmissionShape = levelData?.grid && (levelData.goal || Array.isArray(levelData.gates));
+                const level = isSubmissionShape ? levelData : APP.LevelUtils.denormalizeLevel(levelData);
+                return {
+                    grid: { w: normalizeNumber(level?.grid?.w), h: normalizeNumber(level?.grid?.h) },
+                    gates: sortCoords(level?.gates),
+                    goal: level?.goal ? normalizeCoord(level.goal) : null,
+                    falseGoals: sortCoords(level?.falseGoals),
+                    reqLen: normalizeNumber(level?.reqLen),
+                    reqInt: normalizeNumber(level?.reqInt),
+                    blocks: sortCoords(level?.blocks),
+                    mustPass: sortCoords(level?.mustPass),
+                    mustCross: sortCoords(level?.mustCross),
+                    filters: sortAxisCoords(level?.filters),
+                    flippingFilters: sortAxisCoords(level?.flippingFilters),
+                    portals: sortPortals(level?.portals),
+                    geese: sortCoords(level?.geese)
+                };
+            }
+
+            function getLevelFingerprint(levelData) {
+                return `lv_${hashString(stableStringify(getLevelIdentity(levelData)))}`;
+            }
+
             function denormalizeLevel(level) {
                 if (!level || !level.grid) return null;
                 const toCoord = (k) => { const p = APP.LevelUtils.UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; };
@@ -237,7 +321,8 @@ export function installLevelUtils(APP) {
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
             transformAxis, getGridCoord, canonicalCloneLevel, deepCloneLevel, normalizeLevel, denormalizeLevel,
-            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, processRawLevel, getRawLevels, resolvePortal, getPortalDisplayColor, isValidMove
+            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, processRawLevel, getRawLevels, resolvePortal, getPortalDisplayColor, isValidMove,
+            getLevelIdentity, getLevelFingerprint, stableStringify
         };
     })();
 }

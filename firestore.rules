@@ -21,6 +21,19 @@ service cloud.firestore {
       allow update: if false;
     }
 
+
+    // Hint-free level fingerprints reserve pending/approved layouts so users
+    // cannot submit the same grid and win requirements twice.
+    match /artifacts/{appId}/level_fingerprints/{fingerprintId} {
+      allow get: if request.auth != null;
+      allow create: if isAdmin() || (request.auth != null
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.collection == 'submissions'
+                    && request.resource.data.submittedBy == request.auth.uid);
+      allow update, delete: if isAdmin();
+      allow list: if false;
+    }
+
     // Admin-approved published levels: anyone can read, only admin can write.
     match /artifacts/{appId}/published_levels/{levelId} {
       allow read: if true;

@@ -210,18 +210,63 @@ export function installPersistence(APP) {
             return { ...levelData, hints: levelData.hints.map(h => typeof h === 'string' ? JSON.parse(h) : h) };
         }
 
+        function getDuplicateLevelErrorMessage(status) {
+            if (status === 'approved') return 'This level has already been approved.';
+            if (status === 'pending') return 'This level is already queued for review.';
+            return 'This level has already been submitted.';
+        }
+
+        async function findPublishedDuplicate(levelFingerprint) {
+            const published = db.collection('artifacts').doc(appId).collection('published_levels');
+            const indexedSnapshot = await published.where('levelFingerprint', '==', levelFingerprint).limit(1).get();
+            if (!indexedSnapshot.empty) return { status: 'approved' };
+
+            // Backfill safety for levels that were approved before fingerprints existed.
+            const snapshot = await published.get();
+            const duplicate = snapshot.docs.find(doc => {
+                const data = doc.data() || {};
+                if (data.levelFingerprint) return false;
+                return APP.LevelUtils.getLevelFingerprint(data.levelData || {}) === levelFingerprint;
+            });
+            return duplicate ? { status: 'approved' } : null;
+        }
+
         async function submitLevel(levelData) {
             if (!db) throw new Error('No Firebase connection');
             const user = await waitForUser();
             if (!user) throw new Error('Not signed in');
-            console.log('[Submit] Writing to Firestore as uid:', user.uid);
-            const col = db.collection('artifacts').doc(appId).collection('submissions');
+            const levelFingerprint = APP.LevelUtils.getLevelFingerprint(levelData);
+            const baseRef = db.collection('artifacts').doc(appId);
+            const col = baseRef.collection('submissions');
+            const fingerprintRef = baseRef.collection('level_fingerprints').doc(levelFingerprint);
+            console.log('[Submit] Writing to Firestore as uid:', user.uid, 'fingerprint:', levelFingerprint);
             await Promise.race([
-                col.add({
-                    levelData: encodeHints(levelData),
-                    submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    submittedBy: user.uid
-                }),
+                (async () => {
+                    const publishedDuplicate = await findPublishedDuplicate(levelFingerprint);
+                    if (publishedDuplicate) throw new Error(getDuplicateLevelErrorMessage(publishedDuplicate.status));
+
+                    await db.runTransaction(async (tx) => {
+                        const existingFingerprint = await tx.get(fingerprintRef);
+                        if (existingFingerprint.exists) {
+                            throw new Error(getDuplicateLevelErrorMessage(existingFingerprint.data()?.status));
+                        }
+                        const submissionRef = col.doc();
+                        tx.set(submissionRef, {
+                            levelData: encodeHints(levelData),
+                            levelFingerprint,
+                            submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            submittedBy: user.uid
+                        });
+                        tx.set(fingerprintRef, {
+                            status: 'pending',
+                            collection: 'submissions',
+                            levelId: submissionRef.id,
+                            submittedBy: user.uid,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    });
+                })(),
                 new Promise((_, reject) => setTimeout(() => reject(new Error('Firestore write timed out after 20s — check network or Firebase rules')), 20000))
             ]);
             console.log('[Submit] Firestore write acknowledged.');
@@ -266,6 +311,7 @@ export function installPersistence(APP) {
                 return snapshot.docs.map(doc => ({
                     id: doc.id,
                     levelData: decodeHints(doc.data().levelData || {}),
+                    levelFingerprint: doc.data().levelFingerprint || APP.LevelUtils.getLevelFingerprint(decodeHints(doc.data().levelData || {})),
                     submittedAt: doc.data().submittedAt,
                     submittedBy: doc.data().submittedBy
                 }));
@@ -277,21 +323,45 @@ export function installPersistence(APP) {
 
         async function approveSubmission(submissionId, levelData, sortOrder) {
             if (!db) throw new Error('No Firebase connection');
+            const levelFingerprint = APP.LevelUtils.getLevelFingerprint(levelData);
+            const baseRef = db.collection('artifacts').doc(appId);
+            const subRef = baseRef.collection('submissions').doc(submissionId);
+            const existingSub = await subRef.get();
+            const oldFingerprint = existingSub.data()?.levelFingerprint || null;
+            const fingerprintRef = baseRef.collection('level_fingerprints').doc(levelFingerprint);
+            const existingFingerprint = await fingerprintRef.get();
+            if (existingFingerprint.exists && existingFingerprint.data()?.levelId !== submissionId) {
+                throw new Error(getDuplicateLevelErrorMessage(existingFingerprint.data()?.status));
+            }
             const batch = db.batch();
-            const publishRef = db.collection('artifacts').doc(appId).collection('published_levels').doc();
+            const publishRef = baseRef.collection('published_levels').doc();
             batch.set(publishRef, {
                 levelData: encodeHints(levelData),
+                levelFingerprint,
                 approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 sortOrder
             });
-            const subRef = db.collection('artifacts').doc(appId).collection('submissions').doc(submissionId);
             batch.delete(subRef);
+            if (oldFingerprint && oldFingerprint !== levelFingerprint) {
+                batch.delete(baseRef.collection('level_fingerprints').doc(oldFingerprint));
+            }
+            batch.set(fingerprintRef, {
+                status: 'approved',
+                collection: 'published_levels',
+                levelId: publishRef.id,
+                approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
             await batch.commit();
         }
 
-        async function rejectSubmission(submissionId) {
+        async function rejectSubmission(submissionId, levelFingerprint = null) {
             if (!db) throw new Error('No Firebase connection');
-            await db.collection('artifacts').doc(appId).collection('submissions').doc(submissionId).delete();
+            const batch = db.batch();
+            const baseRef = db.collection('artifacts').doc(appId);
+            batch.delete(baseRef.collection('submissions').doc(submissionId));
+            if (levelFingerprint) batch.delete(baseRef.collection('level_fingerprints').doc(levelFingerprint));
+            await batch.commit();
         }
 
         return {
