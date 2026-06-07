@@ -452,10 +452,8 @@ export function installInput(APP) {
             // Step 2: Check duplicates by structural fingerprint (hints are intentionally ignored).
             setStep('smStep-duplicate', 'running');
             let levelFingerprint = null;
-            const currentUser = APP.Persistence.getCurrentUser?.();
-            const canCheckPending = APP.State.ENGINE.mode === APP.Core.REVIEW || currentUser?.email === 'ianmakesjokes@gmail.com';
             try {
-                const duplicateCheck = await APP.Persistence.findDuplicateLevel(buildLevelData([]), { includePending: canCheckPending });
+                const duplicateCheck = await APP.Persistence.findDuplicateLevel(buildLevelData([]));
                 levelFingerprint = duplicateCheck?.fingerprint || null;
                 if (duplicateCheck?.duplicate) {
                     const sourceLabel = duplicateCheck.duplicate.source === 'approved'
@@ -465,14 +463,11 @@ export function installInput(APP) {
                     smDismiss.classList.remove('hidden');
                     return;
                 }
-                if (duplicateCheck?.warnings?.length) {
-                    const warningLabels = duplicateCheck.warnings.map(source => source === 'approved' ? 'approved levels' : 'pending queue');
-                    setStep('smStep-duplicate', 'warn', ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]);
-                } else {
-                    setStep('smStep-duplicate', 'ok', canCheckPending
-                        ? 'No duplicate found in pending or approved levels'
-                        : 'No duplicate found in approved levels');
-                }
+                const warningLabels = (duplicateCheck?.warnings || []).map(source => source === 'approved' ? 'approved levels' : 'pending queue');
+                const details = warningLabels.length
+                    ? ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]
+                    : 'No duplicate found in pending or approved levels';
+                setStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
             } catch (err) {
                 console.error('[Submit] duplicate check failed:', err);
                 setStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
