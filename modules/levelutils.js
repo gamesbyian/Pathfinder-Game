@@ -211,6 +211,97 @@ export function installLevelUtils(APP) {
                 };
             }
 
+
+
+            function normalizeFingerprintCoord(coord) {
+                return {
+                    x: Number(coord?.x || 0),
+                    y: Number(coord?.y || 0)
+                };
+            }
+
+            function compareCoords(a, b) {
+                return (a.y - b.y) || (a.x - b.x);
+            }
+
+            function sortFingerprintCoords(coords) {
+                return (Array.isArray(coords) ? coords : [])
+                    .map(normalizeFingerprintCoord)
+                    .sort(compareCoords);
+            }
+
+            function sortFingerprintAxisCoords(coords) {
+                return (Array.isArray(coords) ? coords : [])
+                    .map(item => ({ ...normalizeFingerprintCoord(item), axis: String(item?.axis || '') }))
+                    .sort((a, b) => compareCoords(a, b) || a.axis.localeCompare(b.axis));
+            }
+
+            function sortFingerprintPortals(portals) {
+                return (Array.isArray(portals) ? portals : [])
+                    .map(portal => {
+                        const a = normalizeFingerprintCoord({ x: portal?.x1, y: portal?.y1 });
+                        const b = normalizeFingerprintCoord({ x: portal?.x2, y: portal?.y2 });
+                        const pair = compareCoords(a, b) <= 0 ? [a, b] : [b, a];
+                        return { x1: pair[0].x, y1: pair[0].y, x2: pair[1].x, y2: pair[1].y };
+                    })
+                    .sort((a, b) => (a.y1 - b.y1) || (a.x1 - b.x1) || (a.y2 - b.y2) || (a.x2 - b.x2));
+            }
+
+            function canonicalLevelFingerprintPayload(levelData) {
+                return {
+                    version: 1,
+                    grid: {
+                        w: Number(levelData?.grid?.w || 0),
+                        h: Number(levelData?.grid?.h || 0)
+                    },
+                    reqLen: Number(levelData?.reqLen || 0),
+                    reqInt: Number(levelData?.reqInt || 0),
+                    gates: sortFingerprintCoords(levelData?.gates),
+                    goal: levelData?.goal ? normalizeFingerprintCoord(levelData.goal) : null,
+                    falseGoals: sortFingerprintCoords(levelData?.falseGoals),
+                    blocks: sortFingerprintCoords(levelData?.blocks),
+                    mustPass: sortFingerprintCoords(levelData?.mustPass),
+                    mustCross: sortFingerprintCoords(levelData?.mustCross),
+                    filters: sortFingerprintAxisCoords(levelData?.filters),
+                    flippingFilters: sortFingerprintAxisCoords(levelData?.flippingFilters),
+                    portals: sortFingerprintPortals(levelData?.portals),
+                    geese: sortFingerprintCoords(levelData?.geese)
+                };
+            }
+
+            function getLevelFingerprintSource(levelData) {
+                return JSON.stringify(canonicalLevelFingerprintPayload(levelData));
+            }
+
+            function fallbackHashString(source) {
+                let h1 = 0xdeadbeef;
+                let h2 = 0x41c6ce57;
+                for (let i = 0; i < source.length; i++) {
+                    const ch = source.charCodeAt(i);
+                    h1 = Math.imul(h1 ^ ch, 2654435761);
+                    h2 = Math.imul(h2 ^ ch, 1597334677);
+                }
+                h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+                h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+                const high = (h2 >>> 0).toString(16).padStart(8, '0');
+                const low = (h1 >>> 0).toString(16).padStart(8, '0');
+                return `${high}${low}`;
+            }
+
+            async function getLevelFingerprint(levelData) {
+                const source = getLevelFingerprintSource(levelData);
+                if (globalThis.crypto?.subtle && globalThis.TextEncoder) {
+                    const data = new TextEncoder().encode(source);
+                    const digest = await globalThis.crypto.subtle.digest('SHA-256', data);
+                    return `v1:${Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+                }
+                return `v1:fallback:${fallbackHashString(source)}`;
+            }
+
+            function isSameLevelStructure(a, b) {
+                return getLevelFingerprintSource(a) === getLevelFingerprintSource(b);
+            }
+
             function shiftLevel(l, dx, dy) { if (dx === 0 && dy === 0) return; const shift = (k) => { if (k === -1) return -1; const p = APP.LevelUtils.UNPACK(k); return APP.LevelUtils.PACK(p.x + dx, p.y + dy); }; l.goalKey = shift(l.goalKey); l.gateKeys = l.gateKeys.map(shift); l.falseGoalKeys = new Set(Array.from(l.falseGoalKeys).map(shift)); l.blockSet = new Set(Array.from(l.blockSet).map(shift)); l.gooseSet = new Set(Array.from(l.gooseSet).map(shift)); l.mustPassKeys = l.mustPassKeys.map(shift); l.mustCrossKeys = l.mustCrossKeys.map(shift); const newFilterMap = new Map(); l.filterMap.forEach((v, k) => newFilterMap.set(shift(k), v)); l.filterMap = newFilterMap; const newFlipMap = new Map(); l.flippingFilterMap.forEach((v, k) => newFlipMap.set(shift(k), v)); l.flippingFilterMap = newFlipMap; const newPortalMap = new Map(); l.portalMap.forEach((v, k) => { newPortalMap.set(shift(k), { dest: v.dest === -1 ? -1 : shift(v.dest) }); }); l.portalMap = newPortalMap; l.portalVisuals = l.portalVisuals.map(pv => ({ k1: shift(pv.k1), k2: shift(pv.k2) })); if (APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = shift(APP.State.ENGINE.editor.pendingPortal); } APP.State.ENGINE.path = APP.State.ENGINE.path.map(shift); APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); l.hints = []; APP.State.ENGINE.hinter.pathList = []; }
 
             function changeGridSize(delta) { if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || !APP.State.ENGINE.editor.workingLevel) return; const l = APP.State.ENGINE.editor.workingLevel; const newSize = l.grid.w + delta; if (newSize < 6 || newSize > 15) { APP.UI.showMessage("Size limit reached", "text-amber-500 font-bold"); return; } const bounds = APP.LevelUtils.getLevelBounds(l); let shiftX = 0, shiftY = 0; if (bounds) { const width = bounds.maxX - bounds.minX + 1; const height = bounds.maxY - bounds.minY + 1; if (newSize < width || newSize < height) { APP.UI.showMessage("Cannot shrink: items blocking", "text-red-500 font-bold"); return; } if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX; if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY; } if (delta < 0 && l.mustCrossKeys.some(k => { const p = APP.LevelUtils.UNPACK(k); const nx = p.x + shiftX; const ny = p.y + shiftY; return nx === 0 || nx === newSize - 1 || ny === 0 || ny === newSize - 1; })) { APP.UI.showMessage("Cannot shrink: MustCross near edge", "text-red-500 font-bold"); return; } APP.Editor.saveEditorState(); if (shiftX !== 0 || shiftY !== 0) { APP.LevelUtils.shiftLevel(l, shiftX, shiftY); APP.State.ENGINE.editor.validTrapSpots.clear(); } l.grid.w = newSize; l.grid.h = newSize; const pathOutOfBounds = APP.State.ENGINE.path.some(k => { const p = APP.LevelUtils.UNPACK(k); return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize; }); if (pathOutOfBounds) APP.Engine.PathNavigator.clear(APP.State.ENGINE); APP.State.ENGINE.editor.isModified = true; APP.UI.updateViewport(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage(`Grid: ${newSize}x${newSize}`, "text-sky-600 font-bold"); }
@@ -237,7 +328,7 @@ export function installLevelUtils(APP) {
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
             transformAxis, getGridCoord, canonicalCloneLevel, deepCloneLevel, normalizeLevel, denormalizeLevel,
-            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, processRawLevel, getRawLevels, resolvePortal, getPortalDisplayColor, isValidMove
+            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, processRawLevel, getRawLevels, resolvePortal, getPortalDisplayColor, isValidMove, canonicalLevelFingerprintPayload, getLevelFingerprintSource, getLevelFingerprint, isSameLevelStructure
         };
     })();
 }
