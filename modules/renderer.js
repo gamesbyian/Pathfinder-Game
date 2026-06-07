@@ -358,11 +358,11 @@ export function installRenderer(APP) {
 
                 const mustPassOverlayPins = []; l.mustPassKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k); const isHit = APP.State.ENGINE.visitedCounts.get(k) > 0; const transformed = APP.LevelUtils.transformPoint(p.x, p.y, APP.State.ENGINE.variant, l.grid.w, l.grid.h); if (transformed.ty === 0) { mustPassOverlayPins.push({ x: p.x, y: p.y, isHit }); return; } drawAsset('required', p.x, p.y, { isSatisfied: isHit, themeColors: th.colors }); }); if (mustPassOverlayPins.length > 0) drawMustPassOverflowOverlay(mustPassOverlayPins, th, vp);
 
-                l.falseGoalKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (APP.State.ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (APP.State.ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (APP.State.ENGINE.mode === APP.Core.EDITOR) { drawAsset('bomb', p.x, p.y); } });
+                l.falseGoalKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); if (APP.State.ENGINE.armedFalseGoals.has(k)) { ctx.save(); ctx.strokeStyle = th.colors.goal; ctx.lineWidth = vp.cellW * 0.1; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.32, 0, Math.PI * 2); ctx.stroke(); ctx.fillStyle = th.colors.goal; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill(); ctx.restore(); } else if (APP.State.ENGINE.detonatedFalseGoals.has(k)) { drawScorchMark(ctx, sx, sy, vp.cellW); } else if (APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) { drawAsset('bomb', p.x, p.y); } });
 
 
 
-                l.gooseSet.forEach(k => { if (APP.State.ENGINE.revealedGeese.has(k) || APP.State.ENGINE.cheatActive || APP.State.ENGINE.mode === APP.Core.EDITOR) { const p = APP.LevelUtils.UNPACK(k); drawAsset('goose', p.x, p.y, { isCheatReveal: APP.State.ENGINE.cheatActive && !APP.State.ENGINE.revealedGeese.has(k) }); } });
+                l.gooseSet.forEach(k => { if (APP.State.ENGINE.revealedGeese.has(k) || APP.State.ENGINE.cheatActive || (APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW)) { const p = APP.LevelUtils.UNPACK(k); drawAsset('goose', p.x, p.y, { isCheatReveal: APP.State.ENGINE.cheatActive && !APP.State.ENGINE.revealedGeese.has(k) }); } });
 
 
 
