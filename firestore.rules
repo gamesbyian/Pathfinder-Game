@@ -7,39 +7,26 @@ service cloud.firestore {
              request.auth.token.email == 'ianmakesjokes@gmail.com';
     }
 
-    function validMetadata(data) {
-      return data.levelData is map &&
-             ('designerName' in data.levelData) &&
-             ('description' in data.levelData) &&
-             ('difficulty' in data.levelData) &&
-             data.levelData.designerName is string && data.levelData.designerName.size() <= 80 &&
-             data.levelData.description is string && data.levelData.description.size() <= 500 &&
-             (data.levelData.difficulty == null || (data.levelData.difficulty is number && data.levelData.difficulty >= 1 && data.levelData.difficulty <= 10));
-    }
-
-    function validLevelEnvelope(data) {
-      return data.levelFingerprint is string &&
-             data.fingerprintVersion == 1 &&
-             validMetadata(data);
-    }
-
+    // Existing player-progress and session collections (unchanged)
     match /artifacts/{appId}/users/{uid}/data/{doc} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
 
+    // User-submitted levels: any authenticated user can create their own.
+    // Authenticated users may read pending levels for duplicate detection;
+    // only the admin can delete/reject them.
     match /artifacts/{appId}/submissions/{submissionId} {
       allow create: if request.auth != null
-                    && request.resource.data.submittedBy == request.auth.uid
-                    && validLevelEnvelope(request.resource.data);
+                    && request.resource.data.submittedBy == request.auth.uid;
       allow read: if request.auth != null;
       allow delete: if isAdmin();
       allow update: if false;
     }
 
+    // Admin-approved published levels: anyone can read, only admin can write.
     match /artifacts/{appId}/published_levels/{levelId} {
       allow read: if true;
-      allow create, update: if isAdmin() && validLevelEnvelope(request.resource.data);
-      allow delete: if isAdmin();
+      allow write: if isAdmin();
     }
   }
 }

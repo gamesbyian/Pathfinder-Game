@@ -3,9 +3,6 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
-const persistenceModule = await readFile(new URL('../modules/persistence.js', import.meta.url), 'utf8');
-const loaderModule = await readFile(new URL('../modules/loader.js', import.meta.url), 'utf8');
-const bootModule = await readFile(new URL('../modules/boot.js', import.meta.url), 'utf8');
 
 function extractIifeAssignment(source, token) {
   const start = source.indexOf(token);
@@ -54,10 +51,10 @@ function extractWindowOnload(source) {
   return source.slice(start, semicolon + 1);
 }
 
-const persistenceSource = extractIifeAssignment(persistenceModule, 'APP.Persistence = (() => {');
-const loaderSource = extractIifeAssignment(loaderModule, 'APP.Loader = (() => {');
-const bootSource = extractIifeAssignment(bootModule, 'APP.Boot = (() => {');
-const onloadSource = extractWindowOnload(bootModule);
+const persistenceSource = extractIifeAssignment(html, 'APP.Persistence = (() => {');
+const loaderSource = extractIifeAssignment(html, 'APP.Loader = (() => {');
+const bootSource = extractIifeAssignment(html, 'APP.Boot = (() => {');
+const onloadSource = extractWindowOnload(html);
 
 // 1) syncProgress should not duplicate cloud listeners for the same signed-in user.
 {
@@ -90,7 +87,7 @@ const onloadSource = extractWindowOnload(bootModule);
 
     const usersCollection = { doc() { return { collection: () => dataCollection }; } };
     const artifactsCollection = { doc() { return { collection: () => usersCollection }; } };
-    return { settings() {}, collection() { return artifactsCollection; } };
+    return { collection() { return artifactsCollection; } };
   };
 
   const authObj = { currentUser: { uid: 'user-1' } };
@@ -168,11 +165,10 @@ const onloadSource = extractWindowOnload(bootModule);
       createElement() { return { src: '', onload: null, onerror: null }; },
       getElementById() { return null; }
     },
-    window: { addEventListener() {}, location: { search: '' } },
+    window: { addEventListener() {} },
     setTimeout,
     clearTimeout,
-    console,
-    URLSearchParams
+    console
   };
 
   vm.createContext(ctx);
@@ -191,17 +187,14 @@ const onloadSource = extractWindowOnload(bootModule);
 
   const ctx = {
     APP: {
-      UI: { initDom() {} },
-      Options: { init() {} },
+      UI: { initDom() {}, ThemeEditor: { init() {} } },
       Debug: { expose() {} },
       Themes: { ensureThemeLeaveColors() {}, applyTheme() {} },
-      Data: { appendLevels() {} },
       Persistence: {
         applySessionState: () => ({ levelIdx: 0, currentTheme: 'classic' }),
         syncProgress() { calls.syncProgress += 1; },
         hasConfig: true,
-        async initAuth() { throw new Error('auth rejected'); },
-        async loadPublishedLevels() { return []; }
+        async initAuth() { throw new Error('auth rejected'); }
       },
       State: { ENGINE: { runtime: { currentTheme: 'classic' } } },
       Loader: {
@@ -212,9 +205,7 @@ const onloadSource = extractWindowOnload(bootModule);
       },
       Engine: { loadLevel() {}, updatePlayModeLayout() {}, loop() {} }
     },
-    console,
-    URLSearchParams,
-    window: { location: { search: '' } }
+    console
   };
 
   vm.createContext(ctx);
@@ -245,9 +236,7 @@ const onloadSource = extractWindowOnload(bootModule);
       }
     },
     window: {},
-    console,
-    URLSearchParams,
-    window: { location: { search: '' } }
+    console
   };
 
   vm.createContext(ctx);

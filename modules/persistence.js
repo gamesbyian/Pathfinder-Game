@@ -316,35 +316,6 @@ export function installPersistence(APP) {
             }
         }
 
-        async function loadPublishedLevelDocs() {
-            if (!db) throw new Error('No Firebase connection');
-            const snapshot = await db.collection('artifacts').doc(appId)
-                .collection('published_levels')
-                .orderBy('sortOrder')
-                .get();
-            return snapshot.docs.map(doc => {
-                const data = doc.data() || {};
-                return {
-                    id: doc.id,
-                    levelData: decodeHints(data.levelData || {}),
-                    levelFingerprint: data.levelFingerprint || null,
-                    fingerprintVersion: data.fingerprintVersion || null,
-                    approvedAt: data.approvedAt || null,
-                    sortOrder: data.sortOrder ?? null
-                };
-            });
-        }
-
-        async function deletePublishedLevels(ids = []) {
-            if (!db) throw new Error('No Firebase connection');
-            const safeIds = Array.from(new Set((Array.isArray(ids) ? ids : []).filter(id => typeof id === 'string' && id)));
-            if (!safeIds.length) return;
-            const batch = db.batch();
-            const col = db.collection('artifacts').doc(appId).collection('published_levels');
-            safeIds.forEach(id => batch.delete(col.doc(id)));
-            await batch.commit();
-        }
-
         async function initAdminAuth() {
             if (!auth) throw new Error('No Firebase connection');
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -412,8 +383,6 @@ export function installPersistence(APP) {
             submitLevel,
             findDuplicateLevel,
             loadPublishedLevels,
-            loadPublishedLevelDocs,
-            deletePublishedLevels,
             initAdminAuth,
             loadSubmissions,
             approveSubmission,
