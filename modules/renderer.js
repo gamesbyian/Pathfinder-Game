@@ -248,20 +248,15 @@ export function installRenderer(APP) {
 
 
 
-                let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
+                let showParityWarnings = false, invalidGateKeys = new Set(), invalidPortalTerminalKeys = new Set();
 
-                if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.cheatActive) && l.goalKey !== -1) {
-
-                    reqLen = APP.State.ENGINE.mode === APP.Core.EDITOR ? (parseInt(APP.UI.getValue('editReqLen')) || 0) : l.reqLen;
-
-                    if (reqLen > 0 || APP.State.ENGINE.path.length > 0 || APP.State.ENGINE.cheatActive) {
-
-                        showParityWarnings = true; const gp = APP.LevelUtils.UNPACK(l.goalKey); targetParity = (gp.x + gp.y + reqLen) % 2;
-
-                        l.portalVisuals.forEach(pv => { const p1 = APP.LevelUtils.UNPACK(pv.k1), p2 = APP.LevelUtils.UNPACK(pv.k2); if ((p1.x + p1.y) % 2 === (p2.x + p2.y) % 2) hasFlippingPortal = true; });
-
+                if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW || APP.State.ENGINE.cheatActive) && l.goalKey !== -1) {
+                    if (APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) l.reqLen = parseInt(APP.UI.getValue('editReqLen')) || l.reqLen || 0;
+                    if ((l.reqLen || 0) > 0 || APP.State.ENGINE.path.length > 0 || APP.State.ENGINE.cheatActive) {
+                        invalidGateKeys = APP.LevelUtils.getParityInvalidGateKeys(l);
+                        invalidPortalTerminalKeys = APP.LevelUtils.getParityInvalidPortalTerminalKeys(l);
+                        showParityWarnings = invalidGateKeys.size > 0 || invalidPortalTerminalKeys.size > 0;
                     }
-
                 }
 
 
@@ -314,7 +309,7 @@ export function installRenderer(APP) {
 
 
 
-                l.portalVisuals.forEach(pv => { const color = APP.LevelUtils.getPortalDisplayColor(l, pv.k1, th.colors.portal); ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [APP.LevelUtils.UNPACK(pv.k1), APP.LevelUtils.UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawAsset('prohibited', p.x, p.y); } }); }); ctx.setLineDash([]);
+                l.portalVisuals.forEach(pv => { const color = APP.LevelUtils.getPortalDisplayColor(l, pv.k1, th.colors.portal); ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.1; ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); [APP.LevelUtils.UNPACK(pv.k1), APP.LevelUtils.UNPACK(pv.k2)].forEach(p => { const { sx, sy } = getScreenPos(p.x, p.y); ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.3, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = color + '25'; ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill(); ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]); if (showParityWarnings && invalidPortalTerminalKeys.has(APP.LevelUtils.PACK(p.x, p.y))) drawAsset('prohibited', p.x, p.y); }); }); ctx.setLineDash([]);
 
 
 
@@ -327,7 +322,7 @@ export function installRenderer(APP) {
 
 
 
-                l.gateKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); ctx.save(); ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4); const color = (APP.State.ENGINE.activeGateKey === k || !APP.State.ENGINE.activeGateKey) ? th.colors.gate : '#94a3b8'; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for(let i=0; i<2; i++) { const offset = (i - 0.5) * vp.cellW * 0.32; ctx.beginPath(); ctx.moveTo(offset - vp.cellW * 0.1, -vp.cellW * 0.2); ctx.lineTo(offset + vp.cellW * 0.1, 0); ctx.lineTo(offset - vp.cellW * 0.1, vp.cellW * 0.2); ctx.stroke(); } ctx.restore(); if (showParityWarnings && !hasFlippingPortal) { if ((p.x + p.y) % 2 !== targetParity) drawAsset('prohibited', p.x, p.y); } });
+                l.gateKeys.forEach(k => { const p = APP.LevelUtils.UNPACK(k), { sx, sy } = getScreenPos(p.x, p.y); ctx.save(); ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4); const color = (APP.State.ENGINE.activeGateKey === k || !APP.State.ENGINE.activeGateKey) ? th.colors.gate : '#94a3b8'; ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; for(let i=0; i<2; i++) { const offset = (i - 0.5) * vp.cellW * 0.32; ctx.beginPath(); ctx.moveTo(offset - vp.cellW * 0.1, -vp.cellW * 0.2); ctx.lineTo(offset + vp.cellW * 0.1, 0); ctx.lineTo(offset - vp.cellW * 0.1, vp.cellW * 0.2); ctx.stroke(); } ctx.restore(); if (showParityWarnings && invalidGateKeys.has(k)) drawAsset('prohibited', p.x, p.y); });
 
 
 

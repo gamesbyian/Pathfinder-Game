@@ -7,7 +7,12 @@ export function installBoot(APP) {
             started = true;
 
             APP.UI.initDom();
-            APP.UI.ThemeEditor.init();
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('mode') === 'review') {
+                const overlay = document.getElementById('reviewAuthOverlay');
+                if (overlay) overlay.classList.remove('hidden');
+            }
+            APP.Options.init();
             APP.Debug.expose();
             const persistedSession = APP.Persistence.applySessionState();
             APP.State.ENGINE.runtime.currentTheme = persistedSession.currentTheme;
@@ -15,7 +20,7 @@ export function installBoot(APP) {
             try {
                 APP.Persistence.syncProgress();
                 if (APP.Persistence.hasConfig) {
-                    APP.Persistence.initAuth().finally(() => APP.Persistence.syncProgress());
+                    APP.Persistence.initAuth().catch(err => console.warn('[Boot] Auth init failed', err)).finally(() => APP.Persistence.syncProgress());
                 }
 
                 const mode = await APP.Loader.init();
@@ -41,11 +46,6 @@ export function installBoot(APP) {
                 APP.Engine.loop();
                 APP.Loader.finish();
 
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('mode') === 'review') {
-                    const overlay = document.getElementById('reviewAuthOverlay');
-                    if (overlay) overlay.classList.remove('hidden');
-                }
             } catch (error) {
                 APP.Loader.fail('boot', error);
             }

@@ -253,6 +253,30 @@ export function installEngine(APP) {
                 return null;
             }
 
+
+            function canTapCreateLegalIntersectionToExistingPathKey(targetKey) {
+                const level = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
+                const path = APP.State.ENGINE.path;
+                if (!level || path.length < 2) return false;
+                const targetIdx = path.lastIndexOf(targetKey);
+                if (targetIdx < 0 || targetIdx >= path.length - 1) return false;
+                const head = APP.LevelUtils.UNPACK(path[path.length - 1]);
+                const target = APP.LevelUtils.UNPACK(targetKey);
+                const steps = buildStraightPathSteps(head, target);
+                if (!steps.length || steps[steps.length - 1] !== targetKey) return false;
+                let simState = cloneTapRouteState(APP.State.ENGINE);
+                for (const step of steps) {
+                    const countBefore = simState.visitedCounts.get(step) || 0;
+                    const sim = simulateTapRouteStep(simState, step, level);
+                    if (!sim || sim.result === 'goose' || sim.result === 'detonate') return false;
+                    simState = sim.state;
+                    if (step === targetKey) {
+                        return countBefore > 0 && step !== simState.activeGateKey && step !== level.goalKey;
+                    }
+                }
+                return false;
+            }
+
             function attemptMoveTo(target, opts = {}) {
                 if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) && !APP.State.ENGINE.editor.isPencilMode) return;
                 if (!APP.State.ENGINE.path.length) return;
@@ -382,6 +406,7 @@ export function installEngine(APP) {
                 document.getElementById('editorMetrics').classList.toggle('hidden', !isEdOrReview);
                 document.getElementById('gameButtonGrid').classList.toggle('hidden', isEdOrReview);
                 document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEdOrReview);
+                document.getElementById('levelDetailsPanel')?.classList.toggle('hidden', !isEdOrReview);
                 const shellToggle = document.getElementById('modeToggleShellBtn');
                 if (shellToggle) shellToggle.textContent = isReview ? 'Exit Review' : (isEd ? 'Play Game' : 'Editor');
                 const exportArea = document.getElementById('exportArea');
@@ -393,6 +418,7 @@ export function installEngine(APP) {
                 document.getElementById('reviewSubmitBtn').classList.toggle('hidden', !isEdOrReview);
                 document.getElementById('reviewApproveBtn').classList.toggle('hidden', !isReview);
                 document.getElementById('reviewRejectBtn').classList.toggle('hidden', !isReview);
+                document.getElementById('reviewPublishedBtn')?.classList.toggle('hidden', !isReview);
                 APP.UI.setButtonState('reviewSubmitBtn', { enabled: true });
                 document.getElementById('devCopyBtn').classList.toggle('hidden', isEdOrReview || !APP.State.ENGINE.isDevMode);
                 document.getElementById('devGenBtn').classList.toggle('hidden', isEdOrReview || !APP.State.ENGINE.isDevMode);
@@ -406,6 +432,7 @@ export function installEngine(APP) {
                     APP.State.ENGINE.editor.emptyClickCount = 0;
                     APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0);
                     APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0);
+                    APP.Editor.populateMetadataUI(APP.State.ENGINE.editor.workingLevel);
                     APP.State.ENGINE.editor.isModified = false;
                     updatePencilState();
                 } else if (isReview) {
@@ -455,6 +482,7 @@ export function installEngine(APP) {
                 APP.State.ENGINE.detonatedFalseGoals.clear();
                 APP.UI.setInputValue('editReqLen', 0);
                 APP.UI.setInputValue('editReqInt', 0);
+                APP.Editor.populateMetadataUI(null);
                 APP.UI.renderMetricsPanel({ currentLen: 0, reqLen: 0, currentInt: 0, reqInt: 0 });
                 APP.UI.updateLevelDisplay(0, false, '0/0');
                 APP.UI.updateAppScale();
@@ -486,6 +514,7 @@ export function installEngine(APP) {
                 APP.State.ENGINE.detonatedFalseGoals.clear();
                 APP.UI.setInputValue('editReqLen', normalized.reqLen || 0);
                 APP.UI.setInputValue('editReqInt', normalized.reqInt || 0);
+                APP.Editor.populateMetadataUI(normalized);
                 APP.UI.updateLevelDisplay(safeIdx, false, `${safeIdx + 1}/${subs.length}`);
                 APP.UI.updateAppScale();
                 APP.UI.updateViewport();
@@ -497,9 +526,15 @@ export function installEngine(APP) {
                 if (APP.State.ENGINE.activeSolverController) return;
 
                 const levels = APP.Data.getLevels();
-                if (!levels || !APP.Data.getLevel(idx)) return;
+                if (!Array.isArray(levels) || levels.length === 0) return;
+                const requestedIdx = Number.isInteger(idx) ? idx : 0;
+                const safeIdx = APP.Data.getLevel(requestedIdx)
+                    ? requestedIdx
+                    : Math.max(0, Math.min(requestedIdx, levels.length - 1));
+                if (!APP.Data.getLevel(safeIdx)) return;
 
-                APP.State.ENGINE.levelIdx = idx;
+                APP.State.ENGINE.levelIdx = safeIdx;
+                idx = safeIdx;
 
                 const isEditor = APP.State.ENGINE.mode === APP.Core.EDITOR;
                 if (isEditor) APP.State.ENGINE.variant = 0;
@@ -509,6 +544,7 @@ export function installEngine(APP) {
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
 
                 APP.State.ENGINE.level = APP.LevelUtils.normalizeLevel(idx);
+                if (APP.State.ENGINE.mode === APP.Core.PLAY && APP.Options?.applyPlayModeLevelFilters) APP.State.ENGINE.level = APP.Options.applyPlayModeLevelFilters(APP.State.ENGINE.level);
                 APP.LevelUtils.assertLevelShape(APP.State.ENGINE.level);
                 APP.Engine.PathNavigator.clear(APP.State.ENGINE);
                 APP.State.ENGINE.undoStack = [];
@@ -535,6 +571,7 @@ export function installEngine(APP) {
                     APP.State.ENGINE.editor.emptyClickCount = 0;
                     APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0);
                     APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0);
+                    APP.Editor.populateMetadataUI(APP.State.ENGINE.editor.workingLevel);
                     APP.State.ENGINE.editor.isModified = false;
                     updatePencilState();
                 }
@@ -640,13 +677,12 @@ export function installEngine(APP) {
             };
 
             const VALID_LOGIC_TRANSITIONS = {
-                [APP.Core.IDLE]: [APP.Core.DRAGGING, APP.Core.EDIT_DRAG, APP.Core.THEME_DRAG, APP.Core.RESOLVED],
+                [APP.Core.IDLE]: [APP.Core.DRAGGING, APP.Core.EDIT_DRAG, APP.Core.RESOLVED],
                 [APP.Core.DRAGGING]: [APP.Core.IDLE, APP.Core.PORTAL_PAUSE, APP.Core.RESOLVED, APP.Core.HAZARD_TRIGGERED],
                 [APP.Core.PORTAL_PAUSE]: [APP.Core.DRAGGING, APP.Core.IDLE, APP.Core.RESOLVED],
                 [APP.Core.RESOLVED]: [APP.Core.IDLE],
                 [APP.Core.HAZARD_TRIGGERED]: [APP.Core.IDLE],
-                [APP.Core.EDIT_DRAG]: [APP.Core.IDLE],
-                [APP.Core.THEME_DRAG]: [APP.Core.IDLE]
+                [APP.Core.EDIT_DRAG]: [APP.Core.IDLE]
             };
 
             function setLogicState(newState) {
@@ -702,6 +738,7 @@ export function installEngine(APP) {
                 refs.ENGINE.armedFalseGoals = new Set((refs.ENGINE.level?.falseGoalKeys) || []);
                 refs.ENGINE.detonatedFalseGoals = new Set();
             },
+            canTapCreateLegalIntersectionToExistingPathKey,
             handlePrimaryGridInput(k, opts) { return attemptMoveTo(k, opts); },
             attemptMoveTo(target, opts) { return attemptMoveTo(target, opts); },
             processStep(key) { return processStep(key); },
