@@ -7,11 +7,6 @@ export function installBoot(APP) {
             started = true;
 
             APP.UI.initDom();
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('mode') === 'review') {
-                const overlay = document.getElementById('reviewAuthOverlay');
-                if (overlay) overlay.classList.remove('hidden');
-            }
             APP.Options.init();
             APP.Debug.expose();
             const persistedSession = APP.Persistence.applySessionState();
