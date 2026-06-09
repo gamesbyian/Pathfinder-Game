@@ -526,9 +526,15 @@ export function installEngine(APP) {
                 if (APP.State.ENGINE.activeSolverController) return;
 
                 const levels = APP.Data.getLevels();
-                if (!levels || !APP.Data.getLevel(idx)) return;
+                if (!Array.isArray(levels) || levels.length === 0) return;
+                const requestedIdx = Number.isInteger(idx) ? idx : 0;
+                const safeIdx = APP.Data.getLevel(requestedIdx)
+                    ? requestedIdx
+                    : Math.max(0, Math.min(requestedIdx, levels.length - 1));
+                if (!APP.Data.getLevel(safeIdx)) return;
 
-                APP.State.ENGINE.levelIdx = idx;
+                APP.State.ENGINE.levelIdx = safeIdx;
+                idx = safeIdx;
 
                 const isEditor = APP.State.ENGINE.mode === APP.Core.EDITOR;
                 if (isEditor) APP.State.ENGINE.variant = 0;
