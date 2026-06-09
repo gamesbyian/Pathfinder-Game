@@ -20,9 +20,9 @@ export function installUI(APP) {
             [
                 'loadingOverlay','loadPercent','loadProgressBar','loadStatusLabel','loadErrorMessage',
                 'message','searchIndicator','searchLabel','solverDetailLabel','solverCloseBtn','solverTimer','solverProgressBar','solverProgressPct',
-                'guideModal','editorHelpModal','winModal','optionsModal','unsavedModal','publishedLevelsModal',
+                'guideModal','editorHelpModal','winModal','themeModal','unsavedModal',
                 'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
-                'optionsSlider','themeGrid','dragGhost','levelDetailsPanel','levelDesignerName','levelDescription','levelDifficulty',
+                'themeEditList','themeSelectView','themeEditView','dragGhost',
             ].forEach(id => { dom[id] = document.getElementById(id); });
         };
 
@@ -386,7 +386,7 @@ export function installUI(APP) {
 
 
         const closeAllModals = () => {
-            ['guideModal', 'editorHelpModal', 'winModal', 'optionsModal', 'unsavedModal', 'publishedLevelsModal'].forEach(id => closeModal(id));
+            ['guideModal', 'editorHelpModal', 'winModal', 'themeModal', 'unsavedModal'].forEach(id => closeModal(id));
         };
 
         const reportError = (kind, payload) => {

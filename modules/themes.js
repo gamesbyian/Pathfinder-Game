@@ -597,9 +597,9 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         const reviewHintEl = APP.UI.getEl('reviewHintBtn');
         if (reviewHintEl) reviewHintEl.style.backgroundColor = t.btns.hint;
 
-        APP.UI.getEl('openOptionsModalBtn').style.backgroundColor = t.shell.btnBg;
-        APP.UI.getEl('openOptionsModalBtn').style.color = t.shell.btnText;
-        APP.UI.getEl('openOptionsModalBtn').style.borderColor = t.shell.btnBorder;
+        APP.UI.getEl('openThemeModalBtn').style.backgroundColor = t.shell.btnBg;
+        APP.UI.getEl('openThemeModalBtn').style.color = t.shell.btnText;
+        APP.UI.getEl('openThemeModalBtn').style.borderColor = t.shell.btnBorder;
         APP.UI.getEl('modeToggleShellBtn').style.backgroundColor = t.shell.btnBg;
         APP.UI.getEl('modeToggleShellBtn').style.color = t.shell.btnText;
         APP.UI.getEl('modeToggleShellBtn').style.borderColor = t.shell.btnBorder;
@@ -615,6 +615,10 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('editMegaSolver').style.backgroundColor = t.btns.solve;
         APP.UI.getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs;
 
+        const muteBtn = APP.UI.getEl('muteBtn');
+        muteBtn.style.backgroundColor = t.shell.muteBg;
+        muteBtn.style.color = t.shell.muteText;
+        muteBtn.style.borderColor = t.shell.muteBorder;
         APP.UI.getEl('muteIcon').style.color = t.shell.muteText;
         APP.UI.getEl('muteSlash').style.color = t.shell.muteText;
 
@@ -670,9 +674,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const t = themes[key] || themes.classic;
             const btn = document.createElement('div');
             btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none";
-            if (key === currentThemeKey) btn.classList.add('ring-4', 'ring-[var(--theme-modal-accent)]', 'rounded-xl');
             btn.style.background = 'transparent'; btn.style.border = '0'; btn.style.boxShadow = 'none'; btn.style.borderRadius = '0';
-            btn.onclick = () => { applyTheme(key); populateThemes(); };
+            btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); };
             const circle = document.createElement('div');
             circle.className = "w-12 h-12 rounded-full border-4 shadow-md";
             if (key === 'chaos') {
@@ -690,11 +693,89 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         });
     }
 
+    function replaceThemeColor(themeKey, oldColor, newColor, category) {
+        if (!themeUndoStacks[themeKey]) themeUndoStacks[themeKey] = [];
+        themeUndoStacks[themeKey].push(APP.Core.deepClone(APP.Themes.THEMES[themeKey]));
+
+        const t = APP.Themes.THEMES[themeKey];
+        const LINE_KEY_GROUPS = {
+            modal: ['border'],
+            palette: ['border', 'itemBorder'],
+            win: ['border'],
+            alert: ['stroke'],
+            ctrlArea: ['border'],
+            layout: ['border', 'divider'],
+            themeEditor: ['swatchBorder']
+        };
+        const replaceInKeys = (obj, keys) => {
+            if (!obj) return;
+            keys.forEach(key => {
+                if (obj[key] === oldColor) obj[key] = newColor;
+            });
+        };
+
+        if (category === "Buttons") {
+            replaceInKeys(t.btns, Object.keys(t.btns || {}));
+        }
+        else if (category === "Grid Items") {
+            replaceInKeys(t.colors, Object.keys(t.colors || {}));
+            if (t.path === oldColor) t.path = newColor;
+            if (t.grid === oldColor) t.grid = newColor;
+        }
+        else if (category === "Misc") {
+            ['bodyBg', 'canvasBg', 'headerLeft', 'headerRight', 'controls', 'ghostBg', 'burst', 'check'].forEach(key => {
+                if (t[key] === oldColor) t[key] = newColor;
+            });
+            replaceInKeys(t.modal, ['bg', 'panelBg', 'closeHover']);
+            replaceInKeys(t.output, ['bg']);
+            replaceInKeys(t.palette, ['bg', 'itemBg', 'toolBg']);
+            replaceInKeys(t.win, ['bg']);
+            replaceInKeys(t.alert, ['bg']);
+            replaceInKeys(t.ctrlArea, ['bg']);
+            replaceInKeys(t.mega, ['outputBg', 'primaryBg', 'secondaryBg', 'geminiBg', 'copyBg']); replaceInKeys(t.loading, ['overlayBg','panelBg']); replaceInKeys(t.search, ['overlayBg']); replaceInKeys(t.jumpscare, ['gooseBg','bombBg']); replaceInKeys(t.shell, ['btnBg','btnBgHover','muteBg','muteBgHover']); replaceInKeys(t.header, ['navBg','navBgHover']); replaceInKeys(t.themeEditor, ['panelBg']); replaceInKeys(t.editor, ['inputBg','paletteShadow']);
+        } else if (category === "Lines") {
+            replaceInKeys(t.modal, LINE_KEY_GROUPS.modal);
+            replaceInKeys(t.palette, LINE_KEY_GROUPS.palette);
+            replaceInKeys(t.win, LINE_KEY_GROUPS.win);
+            replaceInKeys(t.alert, LINE_KEY_GROUPS.alert);
+            replaceInKeys(t.ctrlArea, LINE_KEY_GROUPS.ctrlArea); replaceInKeys(t.layout, LINE_KEY_GROUPS.layout); replaceInKeys(t.themeEditor, LINE_KEY_GROUPS.themeEditor);
+            replaceInKeys(t.mega, ['outputBorder', 'primaryBorder', 'secondaryBorder', 'geminiBorder', 'copyBorder']); replaceInKeys(t.loading, ['panelBorder','track']); replaceInKeys(t.search, ['megaStatusBorder']); replaceInKeys(t.shell, ['btnBorder','muteBorder']); replaceInKeys(t.header, ['divider']);
+            if (t.ghostBorder === oldColor) t.ghostBorder = newColor;
+            replaceInKeys(t.leave, ['border']);
+        } else if (category === "Text") {
+            ['metricText', 'headerLeftText', 'headerLeftLabel'].forEach(key => {
+                if (t[key] === oldColor) t[key] = newColor;
+            });
+            replaceInKeys(t.modal, ['text', 'textMuted', 'accent']);
+            replaceInKeys(t.output, ['text']);
+            replaceInKeys(t.win, ['text', 'accent']);
+            replaceInKeys(t.text, Object.keys(t.text || {}));
+            replaceInKeys(t.leave, ['text']);
+            replaceInKeys(t.loading, ['title','status','percent','error']);
+            replaceInKeys(t.search, ['megaStatusText','label','timer','close','closeHover']);
+            replaceInKeys(t.jumpscare, ['gooseText','bombTopText','bombBottomText']);
+            replaceInKeys(t.shell, ['btnText','muteText']);
+            replaceInKeys(t.header, ['navText']);
+                } else {
+            const replaceDeep = (obj) => {
+                if (!obj || typeof obj !== 'object') return;
+                for (let k in obj) {
+                    if (typeof obj[k] === 'object' && obj[k] !== null) replaceDeep(obj[k]);
+                    else if (obj[k] === oldColor) obj[k] = newColor;
+                }
+            };
+            replaceDeep(t);
+        }
+
+        APP.UI.ThemeEditor.renderAll();
+        APP.Themes.populateThemes();
+    }
+
         const getThemeAiColorsStore = () => themeAiColors;
         const getThemeUndoStacksStore = () => themeUndoStacks;
         const getOriginalThemesStore = () => originalThemes;
 
-        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, getTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore, deriveTokens, isSeedTheme, randomSeeds };
+        const api = { rc, isValidHexColor, parseGeminiSuggestionsText, fetchGeminiThemeColors, getCurrentTheme, getTheme, toRgb, darkenHex, getLeaveThemeColors, normalizeTheme, ensureThemeLeaveColors, applyTheme, populateThemes, replaceThemeColor, getThemeAiColorsStore, getThemeUndoStacksStore, getOriginalThemesStore, deriveTokens, isSeedTheme, randomSeeds };
         Object.defineProperty(api, 'THEMES', { get: () => getThemeRegistry() });
         return api;
     })();

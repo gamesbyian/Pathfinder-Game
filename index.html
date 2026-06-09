@@ -152,15 +152,6 @@
     </div>
 </div>
 
-<div id="publishedLevelsModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-5">
-    <div class="w-full max-w-md max-h-[85vh] bg-slate-800 p-5 rounded-2xl border border-slate-600 shadow-2xl flex flex-col text-white">
-        <div class="flex items-center justify-between gap-3 mb-3"><h2 class="text-lg font-black uppercase tracking-widest">Published Levels</h2><button id="publishedLevelsCloseBtn" class="text-slate-400 hover:text-white p-1 rounded-lg" aria-label="Close published levels"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><use href="#def-close"/></svg></button></div>
-        <p id="publishedLevelsStatus" class="text-sm text-slate-400 mb-3">Loading…</p>
-        <div id="publishedLevelsList" class="flex-1 min-h-[10rem] overflow-y-auto space-y-2 pr-1"></div>
-        <div class="pt-4 mt-4 border-t border-slate-600 flex gap-2"><button id="publishedLevelsDeleteBtn" disabled class="flex-1 h-10 bg-red-600 hover:bg-red-500 text-white rounded-xl font-black text-sm uppercase tracking-wide transition disabled:opacity-40">Delete Selected</button><button id="publishedLevelsRefreshBtn" class="h-10 px-4 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-black text-sm uppercase tracking-wide transition">Refresh</button></div>
-    </div>
-</div>
-
 <div id="submitModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
     <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl">
         <p class="text-base font-black uppercase tracking-widest text-white mb-5 text-center">Submitting Level</p>
@@ -268,7 +259,6 @@
                     <div class="absolute top-[15%] z-50 transform rotate-[-25deg] -translate-x-4"><p class="hand-drawn text-[var(--theme-jumpscare-goose-text)] text-4xl mb-2">YOU RAN INTO</p></div>
                     <div id="scaryGoose" class="w-[75%] aspect-square shake z-40 drop-shadow-2xl"><svg viewBox="0 0 100 100" class="w-full h-full"><use href="#def-goose"/></svg></div>
                     <div class="absolute bottom-[15%] z-50 transform -rotate-[-25deg] translate-x-4"><p class="hand-drawn text-[var(--theme-jumpscare-goose-text)] text-5xl font-bold italic">A GOOSE</p></div>
-                        <p class="absolute bottom-4 left-0 right-0 text-center text-[0.65rem] font-black uppercase tracking-[0.25em] text-[var(--theme-jumpscare-goose-text)] opacity-85 z-50">Press UNDO to continue</p>
                 </div>
             </div>
             <div id="bombJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-[var(--theme-jumpscare-bomb-bg)] backdrop-blur-md overflow-hidden pointer-events-none">
@@ -314,27 +304,29 @@
                     <div class="pb-4 border-t border-[var(--theme-modal-border)] pt-3"><p id="devToggleBtn" class="text-center text-[0.8rem] uppercase font-black text-[var(--theme-modal-muted)] tracking-wider cursor-pointer select-none hover:text-[var(--theme-modal-accent)] transition">PATHFINDER GAME BY IAN WALLACE. &copy;2025</p></div>
                 </div>
             </div>
-            <div id="optionsModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
-                <div id="optionsModalPanel" class="screen-modal-panel w-full h-full min-h-0 flex flex-col modal-content transition-all duration-300 overflow-hidden">
-                    <div id="optionsSlider" class="flex w-[200%] h-full min-h-0 transition-transform duration-300 ease-out translate-x-0">
-                        <div id="optionsMainView" class="w-1/2 h-full min-h-0 flex flex-col px-1">
-                            <div class="flex justify-between items-center mb-4 shrink-0 px-2">
-                                <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Options</h2>
-                                <button id="closeOptionsModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-1 rounded-full" aria-label="Close options"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
-                            </div>
-                            <div class="flex-1 overflow-y-auto px-2 pb-4 space-y-5 min-h-0">
-                                <section class="space-y-2"><h3 class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[var(--theme-modal-muted)]">Sound</h3><label class="flex items-center justify-between gap-4 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-theme-editor-panel-bg)]"><span class="text-sm font-black text-[var(--theme-modal-text)]">Mute Sound</span><input id="optMuteToggle" type="checkbox" class="w-5 h-5 accent-sky-500"></label></section>
-                                <section class="space-y-2"><h3 class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[var(--theme-modal-muted)]">Challenges</h3><label class="flex items-center justify-between gap-4 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-theme-editor-panel-bg)]"><span class="text-sm font-black text-[var(--theme-modal-text)]">Remove Geese</span><input id="optRemoveGeese" type="checkbox" class="w-5 h-5 accent-sky-500"></label><label class="flex items-center justify-between gap-4 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-theme-editor-panel-bg)]"><span class="text-sm font-black text-[var(--theme-modal-text)]">Remove False Goals</span><input id="optRemoveFalseGoals" type="checkbox" class="w-5 h-5 accent-sky-500"></label><label class="flex items-center justify-between gap-4 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-theme-editor-panel-bg)]"><span class="text-sm font-black text-[var(--theme-modal-text)]">Remove Dead Gates</span><input id="optRemoveDeadGates" type="checkbox" class="w-5 h-5 accent-sky-500"></label></section>
-                                <section class="space-y-2"><h3 class="text-[0.72rem] font-black uppercase tracking-[0.2em] text-[var(--theme-modal-muted)]">Themes</h3><button id="openThemeSubpageBtn" class="w-full flex items-center justify-between gap-4 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-theme-editor-panel-bg)] text-[var(--theme-modal-text)] font-black text-sm hover:brightness-95 transition"><span>Select Theme</span><span class="text-lg leading-none">›</span></button></section>
-                            </div>
+            <div id="themeModal" class="screen-modal screen-modal-top hidden flex flex-col h-full min-h-0 modal-content">
+                <div id="themeModalPanel" class="screen-modal-panel w-full h-full min-h-0 flex flex-col modal-content transition-all duration-300 overflow-hidden">
+                    <div id="themeSelectView" class="flex flex-col w-full h-full min-h-0">
+                        <div class="flex justify-between items-center mb-4 shrink-0 px-2">
+                            <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
+                            <button id="closeThemeModalBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-1 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
                         </div>
-                        <div id="optionsThemeView" class="w-1/2 h-full min-h-0 flex flex-col px-1">
-                            <div class="flex justify-between items-center mb-4 shrink-0 px-2">
-                                <button id="backToOptionsBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-1 rounded-full" aria-label="Back to options"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></button>
-                                <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Select Theme</h2>
-                                <button id="closeOptionsThemeBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-1 rounded-full" aria-label="Close options"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><use href="#def-close"/></svg></button>
-                            </div>
-                            <div id="themeGrid" class="flex-grow overflow-y-auto grid grid-cols-3 gap-4 px-2 pb-4 content-start min-h-0"></div>
+                        <div id="themeGrid" class="flex-grow overflow-y-auto grid grid-cols-3 gap-4 px-2 pb-4 content-start min-h-0"></div>
+                        <div id="themeSelectFooter" class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-center gap-2 shrink-0">
+                            <button id="openThemeEditorBtn" class="hidden text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-[var(--theme-theme-editor-panel-bg)] border border-[var(--theme-theme-editor-swatch-border)] px-4 py-2 rounded-lg hover:brightness-95">Modify Themes</button>
+                            <button id="dismissThemeModalBtn" class="text-[0.75rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] transition bg-[var(--theme-theme-editor-panel-bg)] border border-[var(--theme-theme-editor-swatch-border)] px-4 py-2 rounded-lg hover:brightness-95">Dismiss</button>
+                        </div>
+                    </div>
+                    <div id="themeEditView" class="hidden flex-col w-full h-full min-h-0">
+                        <div class="flex justify-between items-center mb-4 shrink-0 px-2">
+                            <h2 class="text-lg font-black text-[var(--theme-modal-accent)] uppercase tracking-widest">Modify Themes</h2>
+                            <button id="backToThemeSelectBtn" class="text-[var(--theme-modal-muted)] hover:text-[var(--theme-modal-accent)] hover:bg-[var(--theme-modal-close-hover)] p-1 rounded-full">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                            </button>
+                        </div>
+                        <div id="themeEditList" class="flex-grow overflow-y-auto flex flex-col gap-6 px-1 sm:px-2 pb-4 min-h-0"></div>
+                        <div class="pt-4 border-t border-[var(--theme-modal-border)] flex justify-end shrink-0">
+                            <button id="doneThemeEditBtn" class="bg-[var(--theme-modal-accent)] text-[var(--theme-modal-panel)] px-6 py-2 rounded-lg font-black tracking-widest shadow-md hover:brightness-110 transition text-xs uppercase">Done</button>
                         </div>
                     </div>
                 </div>
@@ -454,15 +446,6 @@
                 <button id="reviewRejectBtn" class="hidden flex-1 h-10 bg-red-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Reject</button>
                 <button id="reviewApproveBtn" class="hidden flex-1 h-10 bg-emerald-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Approve</button>
             </div>
-            <div id="levelDetailsPanel" class="hidden mt-3 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-theme-editor-panel-bg)] text-[var(--theme-modal-text)] space-y-2">
-                <p class="text-[0.62rem] font-black uppercase tracking-[0.22em] text-[var(--theme-modal-muted)]">Level Details</p>
-                <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
-                    <label class="flex flex-col gap-1 text-[0.58rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)]">Designer<input id="levelDesignerName" type="text" maxlength="80" class="metadata-input rounded-lg px-3 py-2 text-sm font-bold normal-case tracking-normal bg-[var(--theme-editor-input-bg)] text-[var(--theme-editor-input-text)] border border-[var(--theme-editor-input-border)]" placeholder="Designer name"></label>
-                    <label class="flex flex-col gap-1 text-[0.58rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)]">Difficulty<input id="levelDifficulty" type="number" min="1" max="10" step="1" inputmode="numeric" class="metadata-input rounded-lg px-3 py-2 text-sm font-black normal-case tracking-normal bg-[var(--theme-editor-input-bg)] text-[var(--theme-editor-input-text)] border border-[var(--theme-editor-input-border)] w-full sm:w-24" placeholder="1-10"></label>
-                </div>
-                <label class="flex flex-col gap-1 text-[0.58rem] font-black uppercase tracking-widest text-[var(--theme-modal-muted)]">Description<textarea id="levelDescription" maxlength="500" rows="2" class="metadata-input rounded-lg px-3 py-2 text-sm font-semibold normal-case tracking-normal bg-[var(--theme-editor-input-bg)] text-[var(--theme-editor-input-text)] border border-[var(--theme-editor-input-border)] resize-none" placeholder="Brief description"></textarea></label>
-            </div>
-            <button id="reviewPublishedBtn" class="hidden mt-2 w-full h-9 bg-slate-700 font-black rounded-lg text-[0.62rem] uppercase tracking-wider">View Published Levels</button>
             <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
                 <p id="message" class="font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
             </div>
@@ -483,8 +466,11 @@
     </div>
 
     <div class="flex w-full items-center justify-end gap-1.5 shrink-0 pt-2">
-        <button id="openOptionsModalBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Options</button>
+        <button id="openThemeModalBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[4.75rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Themes</button>
         <button id="modeToggleShellBtn" class="px-3 backdrop-blur-md rounded-lg h-10 border shadow-md font-black uppercase tracking-wider transition text-[0.65rem] flex items-center justify-center min-w-[5.25rem] bg-[var(--theme-shell-btn-bg)] text-[var(--theme-shell-btn-text)] border-[var(--theme-shell-btn-border)] hover:bg-[var(--theme-shell-btn-bg-hover)]">Editor</button>
+        <button id="muteBtn" class="backdrop-blur-md w-10 h-10 rounded-lg flex items-center justify-center transition shrink-0 shadow-md border bg-[var(--theme-shell-mute-bg)] text-[var(--theme-shell-mute-text)] border-[var(--theme-shell-mute-border)] hover:bg-[var(--theme-shell-mute-bg-hover)]">
+            <svg id="muteIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v1a7 7 0 0 1-14 0v-1"></path><line x1="12" y1="19" x2="12" y2="22"></line><line id="muteSlash" x1="2" y1="2" x2="22" y2="22"></line></svg>
+        </button>
     </div>
     </div>
 </div>
@@ -511,13 +497,14 @@
     import { installThemes } from './modules/themes.js';
     import { installInput } from './modules/input.js';
     import { installBoot } from './modules/boot.js';
-    import { installOptions } from './modules/options.js';
+    import { installThemeEditor } from './modules/theme-editor.js';
 
     const APP = {};
 
     installCore(APP);
     installDebug(APP);
     installUI(APP);
+    installThemeEditor(APP);
     installData(APP);
     installLoader(APP);
     installSolver(APP);
@@ -528,7 +515,6 @@
     installEditor(APP);
     installPersistence(APP);
     installLevelUtils(APP);
-    installOptions(APP);
     installThemes(APP);
     installInput(APP);
     installBoot(APP);

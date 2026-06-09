@@ -200,8 +200,7 @@ export function installEditor(APP) {
                     flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
                     portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x + 1, y1: APP.LevelUtils.UNPACK(pv.k1).y + 1, x2: APP.LevelUtils.UNPACK(pv.k2).x + 1, y2: APP.LevelUtils.UNPACK(pv.k2).y + 1 })),
                     geese: APP.LevelUtils.expCoords(l.gooseSet),
-                    hints: exportedHints,
-                    ...APP.LevelUtils.sanitizeLevelMetadata(l)
+                    hints: exportedHints
                 };
 
                 const json = JSON.stringify(out).replace(/\"([^\"]+)\":/g, '$1:').replace(/\s/g, '').slice(1, -1);
@@ -228,23 +227,6 @@ export function installEditor(APP) {
                 const clampMetric = (n) => Number.isFinite(n) ? Math.max(0, Math.min(999, Math.floor(n))) : 0;
                 refs.ENGINE.editor.workingLevel.reqLen = clampMetric(parseInt(refs.UI.getValue('editReqLen'), 10));
                 refs.ENGINE.editor.workingLevel.reqInt = clampMetric(parseInt(refs.UI.getValue('editReqInt'), 10));
-            },
-            applyMetadataFromUI() {
-                const l = refs.ENGINE?.editor?.workingLevel;
-                if (!l) return;
-                const difficultyRaw = refs.UI.getValue('levelDifficulty', '').trim();
-                const raw = {
-                    designerName: refs.UI.getValue('levelDesignerName', ''),
-                    description: refs.UI.getValue('levelDescription', ''),
-                    difficulty: difficultyRaw === '' ? null : difficultyRaw
-                };
-                Object.assign(l, APP.LevelUtils.sanitizeLevelMetadata(raw));
-            },
-            populateMetadataUI(level) {
-                const meta = APP.LevelUtils.sanitizeLevelMetadata(level || {});
-                refs.UI.setInputValue('levelDesignerName', meta.designerName);
-                refs.UI.setInputValue('levelDescription', meta.description);
-                refs.UI.setInputValue('levelDifficulty', meta.difficulty === null ? '' : meta.difficulty);
             },
             setObjectAt(k, obj) {
                 refs.ENGINE.editor.draggedObject = obj;
