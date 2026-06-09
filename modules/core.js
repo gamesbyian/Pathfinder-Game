@@ -13,10 +13,9 @@ export function installCore(APP) {
             PORTAL_PAUSE: "PORTAL_PAUSE",
             RESOLVED: "RESOLVED",
             HAZARD_TRIGGERED: "HAZARD_TRIGGERED",
-            EDIT_DRAG: "EDIT_DRAG",
-            THEME_DRAG: "THEME_DRAG"
+            EDIT_DRAG: "EDIT_DRAG"
         };
-        const { IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG } = LogicStatus;
+        const { IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG } = LogicStatus;
 
         const OverlayStatus = {
             NONE: "NONE",
@@ -73,6 +72,6 @@ export function installCore(APP) {
             catch (_) { return JSON.parse(JSON.stringify(value)); }
         };
 
-        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, REVIEW, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, THEME_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS, deepClone };
+        return { $, AXIS, H, V, NONE, DEV, MODES, PLAY, EDITOR, REVIEW, LogicStatus, IDLE, DRAGGING, PORTAL_PAUSE, RESOLVED, HAZARD_TRIGGERED, EDIT_DRAG, OverlayStatus, OVERLAY_NONE, HINT_ANIMATING, FALSE_GOAL_ANIMATING, GOOSE_OVERLAY, SOLVER_RUNNING, SOUND_BUS, deepClone };
     })();
 }

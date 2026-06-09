@@ -7,7 +7,7 @@ export function installBoot(APP) {
             started = true;
 
             APP.UI.initDom();
-            APP.UI.ThemeEditor.init();
+            APP.Options.init();
             APP.Debug.expose();
             const persistedSession = APP.Persistence.applySessionState();
             APP.State.ENGINE.runtime.currentTheme = persistedSession.currentTheme;
@@ -15,7 +15,7 @@ export function installBoot(APP) {
             try {
                 APP.Persistence.syncProgress();
                 if (APP.Persistence.hasConfig) {
-                    APP.Persistence.initAuth().finally(() => APP.Persistence.syncProgress());
+                    APP.Persistence.initAuth().catch(err => console.warn('[Boot] Auth init failed', err)).finally(() => APP.Persistence.syncProgress());
                 }
 
                 const mode = await APP.Loader.init();
