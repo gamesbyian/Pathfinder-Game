@@ -583,6 +583,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             item.style.borderColor = t.palette.itemBorder;
         });
 
+        const metadataPanel = APP.UI.getEl('levelMetadataPanel');
+        if (metadataPanel) {
+            metadataPanel.style.backgroundColor = t.palette.bg;
+            metadataPanel.style.borderColor = t.palette.border;
+            metadataPanel.style.color = t.text.modal;
+            metadataPanel.querySelectorAll('.metadata-label').forEach(label => { label.style.color = t.text.metric; });
+            metadataPanel.querySelectorAll('.metadata-input').forEach(input => {
+                input.style.backgroundColor = t.editor.inputBg;
+                input.style.color = t.editor.inputText;
+                input.style.borderColor = t.editor.inputBorder;
+            });
+        }
+
         APP.UI.getEl('editCopyMetrics').style.backgroundColor = t.headerLeft;
         APP.UI.getEl('editCopyMetrics').style.borderColor = t.palette.itemBorder;
         const pc = APP.UI.getEl('playControls');
@@ -604,7 +617,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('modeToggleShellBtn').style.color = t.shell.btnText;
         APP.UI.getEl('modeToggleShellBtn').style.borderColor = t.shell.btnBorder;
 
-        ['resetBtn','undoBtn','whoaBtn','guideBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editCopyMetrics','hintBtn','reviewHintBtn'].forEach(id => {
+        ['resetBtn','undoBtn','whoaBtn','guideBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editCopyMetrics','hintBtn','reviewHintBtn','reviewPublishedLevelsBtn'].forEach(id => {
             const el = APP.UI.getEl(id);
             if (el) el.style.color = t.text.actionBtn;
         });
@@ -614,6 +627,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('editHelpBtn').style.backgroundColor = t.btns.guide;
         APP.UI.getEl('editMegaSolver').style.backgroundColor = t.btns.solve;
         APP.UI.getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs;
+        const publishedBtn = APP.UI.getEl('reviewPublishedLevelsBtn');
+        if (publishedBtn) { publishedBtn.style.backgroundColor = t.btns.copy; publishedBtn.style.color = t.text.utilityBtn; publishedBtn.style.borderColor = t.palette.itemBorder; }
 
         const muteBtn = APP.UI.getEl('muteBtn');
         muteBtn.style.backgroundColor = t.shell.muteBg;
