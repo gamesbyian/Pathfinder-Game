@@ -316,6 +316,30 @@ export function installPersistence(APP) {
             }
         }
 
+        async function listPublishedLevelDocs() {
+            if (!db) return [];
+            const snapshot = await db.collection('artifacts').doc(appId)
+                .collection('published_levels')
+                .orderBy('sortOrder')
+                .get();
+            return snapshot.docs.map((doc, idx) => ({
+                id: doc.id,
+                number: (doc.data().sortOrder ?? idx) + 1,
+                sortOrder: doc.data().sortOrder ?? idx,
+                levelData: decodeHints(doc.data().levelData || {})
+            }));
+        }
+
+        async function deletePublishedLevels(ids = []) {
+            if (!db) throw new Error('No Firebase connection');
+            const uniqueIds = Array.from(new Set(ids)).filter(Boolean);
+            if (!uniqueIds.length) return;
+            const batch = db.batch();
+            uniqueIds.forEach(id => batch.delete(db.collection('artifacts').doc(appId).collection('published_levels').doc(id)));
+            await batch.commit();
+        }
+
+
         async function initAdminAuth() {
             if (!auth) throw new Error('No Firebase connection');
             const provider = new firebase.auth.GoogleAuthProvider();
@@ -383,6 +407,8 @@ export function installPersistence(APP) {
             submitLevel,
             findDuplicateLevel,
             loadPublishedLevels,
+            listPublishedLevelDocs,
+            deletePublishedLevels,
             initAdminAuth,
             loadSubmissions,
             approveSubmission,

@@ -250,15 +250,15 @@ export function installRenderer(APP) {
 
                 let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
 
-                if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.cheatActive) && l.goalKey !== -1) {
+                if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW || APP.State.ENGINE.cheatActive) && l.goalKey !== -1) {
 
-                    reqLen = APP.State.ENGINE.mode === APP.Core.EDITOR ? (parseInt(APP.UI.getValue('editReqLen')) || 0) : l.reqLen;
+                    reqLen = (APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) ? (parseInt(APP.UI.getValue('editReqLen')) || l.reqLen || 0) : l.reqLen;
 
                     if (reqLen > 0 || APP.State.ENGINE.path.length > 0 || APP.State.ENGINE.cheatActive) {
 
                         showParityWarnings = true; const gp = APP.LevelUtils.UNPACK(l.goalKey); targetParity = (gp.x + gp.y + reqLen) % 2;
 
-                        l.portalVisuals.forEach(pv => { const p1 = APP.LevelUtils.UNPACK(pv.k1), p2 = APP.LevelUtils.UNPACK(pv.k2); if ((p1.x + p1.y) % 2 === (p2.x + p2.y) % 2) hasFlippingPortal = true; });
+                        hasFlippingPortal = APP.LevelUtils.hasParitySwitchingPortal(l);
 
                     }
 

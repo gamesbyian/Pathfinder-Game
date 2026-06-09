@@ -583,6 +583,19 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             item.style.borderColor = t.palette.itemBorder;
         });
 
+        const metadataPanel = APP.UI.getEl('levelMetadataPanel');
+        if (metadataPanel) {
+            metadataPanel.style.backgroundColor = t.palette.bg;
+            metadataPanel.style.borderColor = t.palette.border;
+            metadataPanel.style.color = t.text.modal;
+            metadataPanel.querySelectorAll('.metadata-label').forEach(label => { label.style.color = t.text.metric; });
+            metadataPanel.querySelectorAll('.metadata-input').forEach(input => {
+                input.style.backgroundColor = t.editor.inputBg;
+                input.style.color = t.editor.inputText;
+                input.style.borderColor = t.editor.inputBorder;
+            });
+        }
+
         APP.UI.getEl('editCopyMetrics').style.backgroundColor = t.headerLeft;
         APP.UI.getEl('editCopyMetrics').style.borderColor = t.palette.itemBorder;
         const pc = APP.UI.getEl('playControls');
@@ -604,7 +617,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('modeToggleShellBtn').style.color = t.shell.btnText;
         APP.UI.getEl('modeToggleShellBtn').style.borderColor = t.shell.btnBorder;
 
-        ['resetBtn','undoBtn','whoaBtn','guideBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editCopyMetrics','hintBtn','reviewHintBtn'].forEach(id => {
+        ['resetBtn','undoBtn','whoaBtn','guideBtn','editResetGrid','editNewLevel','editMegaSolver','editTrapSpotsBtn','editHelpBtn','editCopyMetrics','hintBtn','reviewHintBtn','reviewPublishedLevelsBtn'].forEach(id => {
             const el = APP.UI.getEl(id);
             if (el) el.style.color = t.text.actionBtn;
         });
@@ -614,6 +627,8 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
         APP.UI.getEl('editHelpBtn').style.backgroundColor = t.btns.guide;
         APP.UI.getEl('editMegaSolver').style.backgroundColor = t.btns.solve;
         APP.UI.getEl('editTrapSpotsBtn').style.backgroundColor = t.btns.editBombs;
+        const publishedBtn = APP.UI.getEl('reviewPublishedLevelsBtn');
+        if (publishedBtn) { publishedBtn.style.backgroundColor = t.btns.copy; publishedBtn.style.color = t.text.utilityBtn; publishedBtn.style.borderColor = t.palette.itemBorder; }
 
         const muteBtn = APP.UI.getEl('muteBtn');
         muteBtn.style.backgroundColor = t.shell.muteBg;
@@ -675,7 +690,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const btn = document.createElement('div');
             btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none";
             btn.style.background = 'transparent'; btn.style.border = '0'; btn.style.boxShadow = 'none'; btn.style.borderRadius = '0';
-            btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); };
+            btn.onclick = () => { applyTheme(key); const label = document.getElementById('currentThemeOptionLabel'); if (label) label.textContent = key; document.getElementById('optionsPanelTrack')?.classList.remove('show-theme-page'); };
             const circle = document.createElement('div');
             circle.className = "w-12 h-12 rounded-full border-4 shadow-md";
             if (key === 'chaos') {

@@ -362,6 +362,8 @@ export function installEngine(APP) {
                 APP.UI.setClassState('exportArea', 'hidden', !APP.State.ENGINE.isDevMode);
                 APP.UI.setClassState('devCopyBtn', 'hidden', !APP.State.ENGINE.isDevMode);
                 APP.UI.setClassState('devGenBtn', 'hidden', !APP.State.ENGINE.isDevMode);
+                APP.UI.setClassState('levelMetadataPanel', 'hidden', true);
+                APP.UI.setClassState('reviewPublishedLevelsBtn', 'hidden', true);
             }
 
             function switchMode(newMode) {
@@ -369,6 +371,7 @@ export function installEngine(APP) {
                 const isReview = newMode === APP.Core.REVIEW;
                 const isEdOrReview = isEd || isReview;
                 APP.State.ENGINE.mode = newMode;
+                if (newMode !== APP.Core.PLAY) APP.UI.closeModal('playOptionsBlockedModal');
                 APP.UI.setSolutionOutput('');
                 APP.Engine.setLogicState(APP.Core.IDLE);
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
@@ -378,6 +381,8 @@ export function installEngine(APP) {
                 APP.State.ENGINE.gooseEncounteredThisLevel = false;
                 APP.State.ENGINE.detonatedFalseGoals.clear();
                 document.getElementById('editorPalette').classList.toggle('hidden', !isEdOrReview);
+                document.getElementById('levelMetadataPanel').classList.toggle('hidden', !isEdOrReview);
+                document.getElementById('reviewPublishedLevelsBtn').classList.toggle('hidden', !isReview);
                 document.getElementById('playMetrics').classList.toggle('hidden', isEdOrReview);
                 document.getElementById('editorMetrics').classList.toggle('hidden', !isEdOrReview);
                 document.getElementById('gameButtonGrid').classList.toggle('hidden', isEdOrReview);
@@ -406,6 +411,7 @@ export function installEngine(APP) {
                     APP.State.ENGINE.editor.emptyClickCount = 0;
                     APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0);
                     APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0);
+                    APP.Editor.syncMetadataFieldsFromLevel(APP.State.ENGINE.editor.workingLevel);
                     APP.State.ENGINE.editor.isModified = false;
                     updatePencilState();
                 } else if (isReview) {
@@ -486,10 +492,34 @@ export function installEngine(APP) {
                 APP.State.ENGINE.detonatedFalseGoals.clear();
                 APP.UI.setInputValue('editReqLen', normalized.reqLen || 0);
                 APP.UI.setInputValue('editReqInt', normalized.reqInt || 0);
+                APP.Editor.syncMetadataFieldsFromLevel(normalized);
                 APP.UI.updateLevelDisplay(safeIdx, false, `${safeIdx + 1}/${subs.length}`);
                 APP.UI.updateAppScale();
                 APP.UI.updateViewport();
                 APP.State.ENGINE.isDirty = true;
+            }
+
+
+            function applyPlayChallengeOptions(level) {
+                if (!level || APP.State.ENGINE.mode !== APP.Core.PLAY) return { playable: true };
+                const opts = APP.State.ENGINE.options || {};
+                if (opts.geese === false) level.gooseSet = new Set();
+                if (opts.falseGoals === false) level.falseGoalKeys = new Set();
+                if (opts.deadGates === false) {
+                    const dead = APP.LevelUtils.getParityInvalidKeys(level);
+                    if (dead.gates.size > 0) {
+                        const kept = level.gateKeys.filter(k => !dead.gates.has(k));
+                        if (kept.length === 0) return { playable: false, reason: 'dead-gates' };
+                        level.gateKeys = kept;
+                    }
+                }
+                return { playable: true };
+            }
+
+            function showOptionsBlockedModalIfNeeded(result) {
+                const modal = document.getElementById('playOptionsBlockedModal');
+                if (!modal) return;
+                modal.classList.toggle('hidden', result?.playable !== false);
             }
 
             function loadLevel(idx, keepVariant = false) {
@@ -509,7 +539,9 @@ export function installEngine(APP) {
                 APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
 
                 APP.State.ENGINE.level = APP.LevelUtils.normalizeLevel(idx);
-                APP.LevelUtils.assertLevelShape(APP.State.ENGINE.level);
+                const optionsResult = applyPlayChallengeOptions(APP.State.ENGINE.level);
+                showOptionsBlockedModalIfNeeded(optionsResult);
+                if (optionsResult.playable !== false) APP.LevelUtils.assertLevelShape(APP.State.ENGINE.level);
                 APP.Engine.PathNavigator.clear(APP.State.ENGINE);
                 APP.State.ENGINE.undoStack = [];
                 APP.State.ENGINE.revealedGeese.clear();
@@ -535,6 +567,7 @@ export function installEngine(APP) {
                     APP.State.ENGINE.editor.emptyClickCount = 0;
                     APP.UI.setInputValue('editReqLen', APP.State.ENGINE.editor.workingLevel.reqLen || 0);
                     APP.UI.setInputValue('editReqInt', APP.State.ENGINE.editor.workingLevel.reqInt || 0);
+                    APP.Editor.syncMetadataFieldsFromLevel(APP.State.ENGINE.editor.workingLevel);
                     APP.State.ENGINE.editor.isModified = false;
                     updatePencilState();
                 }
@@ -707,6 +740,7 @@ export function installEngine(APP) {
             processStep(key) { return processStep(key); },
             checkWinCondition() { return checkWinCondition(); },
             areWinMetricsSatisfied(state, level) { return areWinMetricsSatisfied(state, level); },
+            wouldCreateBlockedTIntersection(state, key, level) { return wouldCreateBlockedTIntersection(state, key, level); },
             checkFalseGoalCondition() { return checkFalseGoalCondition(); },
             triggerJumpScare() { return triggerJumpScare(); },
             triggerBombDetonation(key) { return triggerBombDetonation(key); },
