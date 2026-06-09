@@ -25,6 +25,7 @@ export function installState(APP) {
         isDirty: true,
         gooseEncounteredThisLevel: false,
         muted: true,
+        options: { geese: true, falseGoals: true, deadGates: true },
         rainbowActive: true,
         titleClickCount: 0,
         titleClickTimer: null,
