@@ -9,6 +9,9 @@ export function installLevelUtils(APP) {
             const getPortalPairIndex = (level, key) => { if (!level?.portalVisuals?.length) return -1; return level.portalVisuals.findIndex(pv => pv.k1 === key || pv.k2 === key); };
             const getPortalDisplayColor = (level, key, fallback = '#d946ef') => { const idx = getPortalPairIndex(level, key); if (idx < 0) return fallback; return PORTAL_PAIR_PALETTE[idx % PORTAL_PAIR_PALETTE.length]; };
             const expCoords = (items) => (Array.isArray(items) ? items : Array.from(items)).map(k => { const p = UNPACK(k); return {x: p.x + 1, y: p.y + 1}; });
+            const normalizeMetadata = (raw = {}) => ({ designerName: typeof raw.designerName === 'string' ? raw.designerName : '', description: typeof raw.description === 'string' ? raw.description : '', difficulty: raw.difficulty === null || raw.difficulty === undefined || raw.difficulty === '' ? null : Math.max(1, Math.min(10, Number(raw.difficulty) || 0)) || null });
+            const hasParitySwitchingPortal = (level) => Array.isArray(level?.portalVisuals) && level.portalVisuals.some(pv => { const p1 = UNPACK(pv.k1), p2 = UNPACK(pv.k2); return ((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2); });
+            const getParityInvalidKeys = (level, reqLenOverride = null) => { const out = { gates: new Set(), portals: new Set(), hasParitySwitch: hasParitySwitchingPortal(level), targetParity: null }; if (!level || level.goalKey === -1 || level.goalKey === undefined) return out; const reqLen = reqLenOverride === null || reqLenOverride === undefined ? Number(level.reqLen || 0) : Number(reqLenOverride || 0); if (!reqLen || out.hasParitySwitch) return out; const gp = UNPACK(level.goalKey); out.targetParity = (gp.x + gp.y + reqLen) % 2; (level.gateKeys || []).forEach(k => { const p = UNPACK(k); if ((p.x + p.y) % 2 !== out.targetParity) out.gates.add(k); }); (level.portalVisuals || []).forEach(pv => [pv.k1, pv.k2].forEach(k => { const p = UNPACK(k); if ((p.x + p.y) % 2 !== out.targetParity) out.portals.add(k); })); return out; };
             const isValidMove = (targetKey, state, level, options = {}) => {
                 const {
                     isStrict = false,
@@ -137,6 +140,7 @@ export function installLevelUtils(APP) {
                     grid: { w: Number(src?.grid?.w) || 0, h: Number(src?.grid?.h) || 0 },
                     reqLen: Number(src?.reqLen) || 0,
                     reqInt: Number(src?.reqInt) || 0,
+                    ...normalizeMetadata(src),
                     goalKey: _goalKey,
                     goal: src?.goal ? { x: src.goal.x, y: src.goal.y } : (() => { const p = _unpack(_goalKey >= 0 ? _goalKey : 0); return { x: p.x + 1, y: p.y + 1 }; })(),
                     gateKeys: _gateKeys,
@@ -166,7 +170,7 @@ export function installLevelUtils(APP) {
                 return l;
             }
 
-            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [], hasParityBreaker: false }; (raw.blocks || []).forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2 }); l.portalMap.set(k2, { dest: k1 }); l.portalVisuals.push({ k1, k2 }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; }); return l; }
+            function normalizeLevel(idx) { const levels = APP.LevelUtils.getRawLevels(); if (idx < 0 || idx >= levels.length) return null; const raw = levels[idx]; if (!raw) return null; const adj = (v) => v - 1; const l = { id: idx, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, ...normalizeMetadata(raw), goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: raw.gates.map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: raw.mustPass?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], mustCrossKeys: raw.mustCross?.map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))) || [], hints: raw.hints || [], hasParityBreaker: false }; (raw.blocks || []).forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y)))); raw.geese?.forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y)))); raw.filters?.forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.flippingFilters?.forEach(f => l.flippingFilterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis)); raw.falseGoals?.forEach(g => l.falseGoalKeys.add(APP.LevelUtils.PACK(adj(g.x), adj(g.y)))); raw.portals?.forEach(p => { const k1 = APP.LevelUtils.PACK(adj(p.x1), adj(p.y1)), k2 = APP.LevelUtils.PACK(adj(p.x2), adj(p.y2)); l.portalMap.set(k1, { dest: k2 }); l.portalMap.set(k2, { dest: k1 }); l.portalVisuals.push({ k1, k2 }); const p1 = APP.LevelUtils.UNPACK(k1), p2 = APP.LevelUtils.UNPACK(k2); if (((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2)) l.hasParityBreaker = true; }); return l; }
 
             function denormalizeLevel(level) {
                 if (!level || !level.grid) return null;
@@ -198,6 +202,9 @@ export function installLevelUtils(APP) {
                     goal: typeof level.goalKey === 'number' && level.goalKey >= 0 ? toCoord(level.goalKey) : null,
                     reqLen: level.reqLen || 0,
                     reqInt: level.reqInt || 0,
+                    designerName: level.designerName || '',
+                    description: level.description || '',
+                    difficulty: level.difficulty ?? null,
                     blocks,
                     geese,
                     falseGoals,
@@ -315,7 +322,7 @@ export function installLevelUtils(APP) {
             function processRawLevel(raw, id = null) {
                 if (!raw || !raw.goal || !raw.gates) return null;
                 const adj = (v) => v - 1;
-                const l = { id, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: (raw.gates || []).map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: (raw.mustPass || []).map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))), mustCrossKeys: (raw.mustCross || []).map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))), hints: raw.hints || [], hasParityBreaker: false };
+                const l = { id, grid: { ...raw.grid }, reqLen: raw.reqLen, reqInt: raw.reqInt, ...normalizeMetadata(raw), goalKey: APP.LevelUtils.PACK(adj(raw.goal.x), adj(raw.goal.y)), gateKeys: (raw.gates || []).map(g => APP.LevelUtils.PACK(adj(g.x), adj(g.y))), blockSet: new Set(), gooseSet: new Set(), falseGoalKeys: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: (raw.mustPass || []).map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))), mustCrossKeys: (raw.mustCross || []).map(m => APP.LevelUtils.PACK(adj(m.x), adj(m.y))), hints: raw.hints || [], hasParityBreaker: false };
                 (raw.blocks || []).forEach(w => l.blockSet.add(APP.LevelUtils.PACK(adj(w.x), adj(w.y))));
                 (raw.geese || []).forEach(m => l.gooseSet.add(APP.LevelUtils.PACK(adj(m.x), adj(m.y))));
                 (raw.filters || []).forEach(f => l.filterMap.set(APP.LevelUtils.PACK(adj(f.x), adj(f.y)), f.axis));
@@ -328,7 +335,7 @@ export function installLevelUtils(APP) {
         return {
             PACK, UNPACK, inBounds, expCoords, transformPoint, inverseTransformPoint,
             transformAxis, getGridCoord, canonicalCloneLevel, deepCloneLevel, normalizeLevel, denormalizeLevel,
-            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, processRawLevel, getRawLevels, resolvePortal, getPortalDisplayColor, isValidMove, canonicalLevelFingerprintPayload, getLevelFingerprintSource, getLevelFingerprint, isSameLevelStructure
+            shiftLevel, changeGridSize, transformLevel, getLevelBounds, assertLevelShape, processRawLevel, getRawLevels, resolvePortal, getPortalDisplayColor, isValidMove, normalizeMetadata, hasParitySwitchingPortal, getParityInvalidKeys, canonicalLevelFingerprintPayload, getLevelFingerprintSource, getLevelFingerprint, isSameLevelStructure
         };
     })();
 }

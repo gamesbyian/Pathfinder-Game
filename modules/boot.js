@@ -15,7 +15,7 @@ export function installBoot(APP) {
             try {
                 APP.Persistence.syncProgress();
                 if (APP.Persistence.hasConfig) {
-                    APP.Persistence.initAuth().finally(() => APP.Persistence.syncProgress());
+                    APP.Persistence.initAuth().catch((e) => console.warn('[Boot] Auth init failed', e)).finally(() => APP.Persistence.syncProgress());
                 }
 
                 const mode = await APP.Loader.init();

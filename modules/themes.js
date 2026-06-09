@@ -675,7 +675,7 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             const btn = document.createElement('div');
             btn.className = "flex flex-col items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 p-1 bg-transparent border-0 shadow-none rounded-none";
             btn.style.background = 'transparent'; btn.style.border = '0'; btn.style.boxShadow = 'none'; btn.style.borderRadius = '0';
-            btn.onclick = () => { applyTheme(key); APP.UI.closeModal('themeModal'); };
+            btn.onclick = () => { applyTheme(key); const label = document.getElementById('currentThemeOptionLabel'); if (label) label.textContent = key; document.getElementById('optionsPanelTrack')?.classList.remove('show-theme-page'); };
             const circle = document.createElement('div');
             circle.className = "w-12 h-12 rounded-full border-4 shadow-md";
             if (key === 'chaos') {

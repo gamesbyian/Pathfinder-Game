@@ -3,6 +3,30 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const moduleSources = {
+  persistence: await readFile(new URL('../modules/persistence.js', import.meta.url), 'utf8'),
+  loader: await readFile(new URL('../modules/loader.js', import.meta.url), 'utf8'),
+  boot: await readFile(new URL('../modules/boot.js', import.meta.url), 'utf8')
+};
+const stripModuleWrapper = (source, installName) => {
+  const token = `export function ${installName}(APP) {`;
+  const start = source.indexOf(token);
+  if (start < 0) return source;
+  const open = source.indexOf('{', start);
+  let depth = 0;
+  for (let i = open; i < source.length; i += 1) {
+    if (source[i] === '{') depth += 1;
+    else if (source[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(open + 1, i);
+    }
+  }
+  return source;
+};
+const persistenceHarness = stripModuleWrapper(moduleSources.persistence, 'installPersistence');
+const loaderHarness = stripModuleWrapper(moduleSources.loader, 'installLoader');
+const bootHarness = stripModuleWrapper(moduleSources.boot, 'installBoot').replace(/\n\s*window\.onload = \(\) => \{[\s\S]*$/, '');
+
 
 function extractIifeAssignment(source, token) {
   const start = source.indexOf(token);
@@ -51,10 +75,10 @@ function extractWindowOnload(source) {
   return source.slice(start, semicolon + 1);
 }
 
-const persistenceSource = extractIifeAssignment(html, 'APP.Persistence = (() => {');
-const loaderSource = extractIifeAssignment(html, 'APP.Loader = (() => {');
-const bootSource = extractIifeAssignment(html, 'APP.Boot = (() => {');
-const onloadSource = extractWindowOnload(html);
+const persistenceSource = html.includes('APP.Persistence = (() => {') ? extractIifeAssignment(html, 'APP.Persistence = (() => {') : persistenceHarness;
+const loaderSource = html.includes('APP.Loader = (() => {') ? extractIifeAssignment(html, 'APP.Loader = (() => {') : loaderHarness;
+const bootSource = html.includes('APP.Boot = (() => {') ? extractIifeAssignment(html, 'APP.Boot = (() => {') : bootHarness;
+const onloadSource = html.includes('window.onload = () => {') ? extractWindowOnload(html) : moduleSources.boot.match(/window\.onload = \(\) => \{[\s\S]*?\n\s*\};/)?.[0];
 
 // 1) syncProgress should not duplicate cloud listeners for the same signed-in user.
 {
@@ -105,7 +129,7 @@ const onloadSource = extractWindowOnload(html);
     firebase: {
       initializeApp() {},
       auth: () => authObj,
-      firestore: () => makeFirestore()
+      firestore: () => { const db = makeFirestore(); db.settings = () => {}; return db; }
     },
     localStorage: {
       getItem: (key) => storage.get(key) ?? null,
@@ -194,18 +218,24 @@ const onloadSource = extractWindowOnload(html);
         applySessionState: () => ({ levelIdx: 0, currentTheme: 'classic' }),
         syncProgress() { calls.syncProgress += 1; },
         hasConfig: true,
+        async loadPublishedLevels() { return []; },
         async initAuth() { throw new Error('auth rejected'); }
       },
       State: { ENGINE: { runtime: { currentTheme: 'classic' } } },
+      Data: { appendLevels() {} },
       Loader: {
         async init() { return 'ready'; },
         getStatus() { return { phase: 'loading' }; },
         finish() { calls.loaderFinish += 1; },
         fail() { calls.loaderFail += 1; }
       },
-      Engine: { loadLevel() {}, updatePlayModeLayout() {}, loop() {} }
+      Engine: { loadLevel() {}, updatePlayModeLayout() {}, loop() {} },
+      Core: { PLAY: 0 }
     },
-    console
+    console,
+    URLSearchParams,
+    window: { location: { search: '' } },
+    document: { getElementById() { return null; } }
   };
 
   vm.createContext(ctx);

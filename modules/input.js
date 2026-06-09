@@ -39,20 +39,22 @@ export function installInput(APP) {
                     if (shouldReverse) { APP.State.ENGINE.path.reverse(); const newJumps = new Set(); APP.State.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(APP.State.ENGINE.path.length - 1 - jIdx)); APP.State.ENGINE.isPortalJump = newJumps; APP.Engine.rebuildDerivedPathState(APP.State.ENGINE); }
                 }
                 const lastIdx = APP.State.ENGINE.path.lastIndexOf(k);
-                const headKey = APP.State.ENGINE.path[APP.State.ENGINE.path.length - 1];
-                const headPos = APP.LevelUtils.UNPACK(headKey);
-                const isOrthWithHead = p.x === headPos.x || p.y === headPos.y;
-                const pathSegment = lastIdx === -1 ? [] : APP.State.ENGINE.path.slice(lastIdx, APP.State.ENGINE.path.length);
-                const isContiguousOrthBacktrack = isOrthWithHead && pathSegment.length > 1 && pathSegment.every(segmentKey => {
-                    const segmentPos = APP.LevelUtils.UNPACK(segmentKey);
-                    return segmentPos.x === headPos.x || segmentPos.y === headPos.y;
-                });
-                const shouldTapBacktrack = lastIdx !== -1
-                    && lastIdx < APP.State.ENGINE.path.length - 1
-                    && isContiguousOrthBacktrack
-                    && !activeLevel.mustCrossKeys.includes(k)
-                    && !APP.State.ENGINE.path.slice(lastIdx + 1).some(segK => activeLevel.mustCrossKeys.includes(segK));
-                if (shouldTapBacktrack) { APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, lastIdx); APP.Engine.setLogicState(APP.Core.DRAGGING); return; }
+                if (lastIdx !== -1 && lastIdx < APP.State.ENGINE.path.length - 1) {
+                    const legalIntersectionMove = APP.LevelUtils.isValidMove(k, APP.State.ENGINE, activeLevel, {
+                        isStrict: true,
+                        mode: APP.State.ENGINE.mode,
+                        allowJump: true,
+                        checkWinMetrics: false,
+                        checkHazards: false,
+                        checkFalseGoals: true,
+                        armedFalseGoals: APP.State.ENGINE.armedFalseGoals
+                    }) && !APP.Engine.wouldCreateBlockedTIntersection?.(APP.State.ENGINE, k, activeLevel);
+                    if (!legalIntersectionMove) {
+                        APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, lastIdx);
+                        APP.Engine.setLogicState(APP.Core.DRAGGING);
+                        return;
+                    }
+                }
                 APP.Engine.setLogicState(APP.Core.DRAGGING); APP.Engine.handlePrimaryGridInput(p, { inputType: 'tap' });
             } else {
                 if (!activeLevel) return;
@@ -127,12 +129,12 @@ export function installInput(APP) {
         const GAMEPAD_REPEAT_INITIAL = 220;
         const GAMEPAD_REPEAT_RATE = 100;
 
-        function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal'); }
+        function isModalActive() { return APP.UI.isModalOpen('guideModal') || APP.UI.isModalOpen('editorHelpModal') || APP.UI.isModalOpen('winModal') || APP.UI.isModalOpen('themeModal') || APP.UI.isModalOpen('unsavedModal') || APP.UI.isModalOpen('publishedLevelsModal'); }
 
         function getFocusableGroups() {
             const groups = [
                 { name: 'GRID', elements: [document.getElementById('gameCanvas')] },
-                { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn, #muteBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
+                { name: 'CONTROLS', elements: Array.from(document.querySelectorAll('#playControls button, #playControls [role="button"], #openThemeModalBtn')).filter(el => !el.classList.contains('hidden') && el.offsetParent !== null) },
                 { name: 'LEVEL', elements: [document.getElementById('prevLevelBtn'), document.getElementById('nextLevelBtn')].filter(Boolean) }
             ];
             if (APP.State.ENGINE.mode === APP.Core.EDITOR) groups.push({ name: 'METRICS', elements: [document.getElementById('editReqLen'), document.getElementById('editReqInt')].filter(Boolean) });
@@ -439,6 +441,9 @@ export function installInput(APP) {
                 goal: { x: APP.LevelUtils.UNPACK(l.goalKey).x + 1, y: APP.LevelUtils.UNPACK(l.goalKey).y + 1 },
                 falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys),
                 reqLen, reqInt,
+                designerName: l.designerName || '',
+                description: l.description || '',
+                difficulty: l.difficulty ?? null,
                 blocks: APP.LevelUtils.expCoords(l.blockSet),
                 mustPass: APP.LevelUtils.expCoords(l.mustPassKeys),
                 mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys),
@@ -696,38 +701,47 @@ export function installInput(APP) {
         document.getElementById('closeGuideX').onclick = () => APP.UI.closeModal('guideModal');
 
         const tModal = document.getElementById('themeModal');
+        const syncOptionToggles = () => {
+            const opts = APP.State.ENGINE.options || {};
+            const set = (id, checked) => { const el = document.getElementById(id); if (el) el.checked = !!checked; };
+            set('optionMuteToggle', APP.State.ENGINE.muted);
+            set('optionGeeseToggle', opts.geese !== false);
+            set('optionFalseGoalsToggle', opts.falseGoals !== false);
+            set('optionDeadGatesToggle', opts.deadGates !== false);
+            const label = document.getElementById('currentThemeOptionLabel');
+            if (label) label.textContent = APP.Themes.getCurrentTheme ? APP.Themes.getCurrentTheme() : (APP.State.ENGINE.runtime.currentTheme || 'classic');
+        };
+        const showOptionsPage = () => document.getElementById('optionsPanelTrack')?.classList.remove('show-theme-page');
+        const showThemePage = () => {
+            APP.Themes.populateThemes();
+            document.getElementById('optionsPanelTrack')?.classList.add('show-theme-page');
+        };
         document.getElementById('openThemeModalBtn').onclick = () => {
-            if (APP.UI.isModalOpen('themeModal')) {
-                APP.UI.closeModal('themeModal');
-                closeEditor();
-                return;
-            }
+            if (APP.UI.isModalOpen('themeModal')) { APP.UI.closeModal('themeModal'); return; }
             APP.UI.closeAllModals();
             APP.UI.updateLayoutMode();
-            APP.Themes.populateThemes();
-            refreshThemeFooter();
+            syncOptionToggles();
+            showOptionsPage();
             APP.UI.openModal('themeModal');
         };
-        document.getElementById('closeThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
-        document.getElementById('dismissThemeModalBtn').onclick = () => { APP.UI.closeModal('themeModal'); closeEditor(); };
-        document.getElementById('openThemeEditorBtn').onclick = () => { APP.UI.ThemeEditor.openEditorView(); };
-        const closeEditor = () => { APP.UI.ThemeEditor.closeEditorView(); refreshThemeFooter(); };
-        const refreshThemeFooter = () => {
-            const editBtn = document.getElementById('openThemeEditorBtn');
-            const footer = document.getElementById('themeSelectFooter');
-            const dismissBtn = document.getElementById('dismissThemeModalBtn');
-            const canModify = APP.State.ENGINE.isDevMode || APP.State.ENGINE.mode === APP.Core.EDITOR;
-            if (editBtn) editBtn.classList.toggle('hidden', !canModify);
-            if (footer) footer.classList.toggle('justify-center', !canModify);
-            if (footer) footer.classList.toggle('justify-between', canModify);
-            if (dismissBtn) dismissBtn.classList.remove('hidden');
-        };
-        document.getElementById('backToThemeSelectBtn').onclick = closeEditor;
-        document.getElementById('doneThemeEditBtn').onclick = closeEditor;
+        document.getElementById('closeThemeModalBtn').onclick = () => APP.UI.closeModal('themeModal');
+        document.getElementById('openThemePageBtn').onclick = showThemePage;
+        document.getElementById('backToOptionsBtn').onclick = () => { syncOptionToggles(); showOptionsPage(); };
+        const reloadForOptions = () => { if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Engine.loadLevel(APP.State.ENGINE.levelIdx, { keepVariant: true }); };
+        const bindOptionToggle = (id, fn) => { const el = document.getElementById(id); if (el) el.onchange = () => { fn(el.checked); reloadForOptions(); }; };
+        bindOptionToggle('optionMuteToggle', checked => { APP.State.ENGINE.muted = checked; APP.UI.setInlineStyle('muteSlash', 'display', APP.State.ENGINE.muted ? 'block' : 'none'); });
+        bindOptionToggle('optionGeeseToggle', checked => { APP.State.ENGINE.options.geese = checked; });
+        bindOptionToggle('optionFalseGoalsToggle', checked => { APP.State.ENGINE.options.falseGoals = checked; });
+        bindOptionToggle('optionDeadGatesToggle', checked => { APP.State.ENGINE.options.deadGates = checked; });
+        document.getElementById('optionsBlockedNextBtn').onclick = () => { APP.UI.closeModal('playOptionsBlockedModal'); const total = APP.Data.getLevels().length; if (total) APP.Engine.loadLevel((APP.State.ENGINE.levelIdx + 1) % total); };
         document.getElementById('devToggleBtn').onclick = () => { APP.State.ENGINE.isDevMode = !APP.State.ENGINE.isDevMode; APP.Engine.updatePlayModeLayout(); APP.UI.showMessage(APP.State.ENGINE.isDevMode ? "Dev Enabled" : "Player Enabled", "text-white font-black"); };
         APP.UI.bindAll('.editor-input', 'input', () => {
             APP.Editor.markEditorInputsDirty();
             APP.Editor.applyMetricsFromUI();
+        });
+        APP.UI.bindAll('#levelMetadataPanel input', 'input', () => {
+            APP.Editor.markEditorInputsDirty();
+            APP.Editor.applyMetadataFromUI();
         });
         document.getElementById('modeToggleShellBtn').onclick = () => {
             if (APP.State.ENGINE.mode === APP.Core.REVIEW) {
@@ -840,6 +854,51 @@ export function installInput(APP) {
                 }
             } catch (err) {
                 APP.UI.showMessage('Reject failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
+            }
+        };
+
+
+        const refreshPublishedLevelsModal = async () => {
+            const status = document.getElementById('publishedLevelsStatus');
+            const list = document.getElementById('publishedLevelsList');
+            if (!status || !list) return;
+            status.textContent = 'Loading…';
+            status.classList.remove('hidden');
+            list.innerHTML = '';
+            try {
+                const docs = await APP.Persistence.listPublishedLevelDocs();
+                if (!docs.length) {
+                    status.textContent = 'No published levels remain.';
+                    return;
+                }
+                status.classList.add('hidden');
+                docs.forEach(doc => {
+                    const row = document.createElement('label');
+                    row.className = 'flex items-center justify-between gap-3 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)]';
+                    row.innerHTML = `<span class="font-black uppercase tracking-widest text-sm">Level ${doc.number}</span><input type="checkbox" class="published-level-checkbox w-5 h-5 accent-red-600" data-id="${doc.id}">`;
+                    list.appendChild(row);
+                });
+            } catch (err) {
+                status.textContent = 'Failed to load published levels: ' + (err?.message || 'Error');
+            }
+        };
+        document.getElementById('reviewPublishedLevelsBtn').onclick = async () => {
+            APP.UI.closeAllModals();
+            APP.UI.openModal('publishedLevelsModal');
+            await refreshPublishedLevelsModal();
+        };
+        document.getElementById('closePublishedLevelsBtn').onclick = () => APP.UI.closeModal('publishedLevelsModal');
+        document.getElementById('refreshPublishedLevelsBtn').onclick = refreshPublishedLevelsModal;
+        document.getElementById('deletePublishedLevelsBtn').onclick = async () => {
+            const ids = Array.from(document.querySelectorAll('.published-level-checkbox:checked')).map(el => el.dataset.id).filter(Boolean);
+            if (!ids.length) { APP.UI.showMessage('Select levels first.', 'text-white font-black'); return; }
+            if (!window.confirm(`Delete ${ids.length} published level${ids.length === 1 ? '' : 's'}?`)) return;
+            try {
+                await APP.Persistence.deletePublishedLevels(ids);
+                await refreshPublishedLevelsModal();
+                APP.UI.showMessage('Deleted.', 'text-white font-black');
+            } catch (err) {
+                APP.UI.showMessage('Delete failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
             }
         };
 

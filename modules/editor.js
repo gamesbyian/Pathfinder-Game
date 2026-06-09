@@ -185,6 +185,7 @@ export function installEditor(APP) {
                 if (APP.State.ENGINE.path.length > 1) pushUniqueHint(APP.State.ENGINE.path);
 
                 const exportedHints = normalizedHints.slice(0, 5);
+                applyMetadataFromUI(l);
 
                 const out = {
                     grid: l.grid,
@@ -193,6 +194,9 @@ export function installEditor(APP) {
                     falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys),
                     reqLen,
                     reqInt,
+                    designerName: l.designerName || '',
+                    description: l.description || '',
+                    difficulty: l.difficulty ?? null,
                     blocks: APP.LevelUtils.expCoords(l.blockSet),
                     mustPass: APP.LevelUtils.expCoords(l.mustPassKeys),
                     mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys),
@@ -214,6 +218,20 @@ export function installEditor(APP) {
                 }
             }
 
+            function applyMetadataFromUI(level = refs.ENGINE?.editor?.workingLevel) {
+                if (!level) return;
+                level.designerName = (refs.UI.getValue('levelDesignerInput', '') || '').trim();
+                level.description = (refs.UI.getValue('levelDescriptionInput', '') || '').trim();
+                const rawDifficulty = refs.UI.getValue('levelDifficultyInput', '');
+                const n = parseInt(rawDifficulty, 10);
+                level.difficulty = Number.isFinite(n) ? Math.max(1, Math.min(10, n)) : null;
+            }
+
+            function syncMetadataFieldsFromLevel(level = refs.ENGINE?.editor?.workingLevel) {
+                refs.UI.setInputValue('levelDesignerInput', level?.designerName || '');
+                refs.UI.setInputValue('levelDescriptionInput', level?.description || '');
+                refs.UI.setInputValue('levelDifficultyInput', level?.difficulty ?? '');
+            }
 
 
         return {
@@ -227,6 +245,7 @@ export function installEditor(APP) {
                 const clampMetric = (n) => Number.isFinite(n) ? Math.max(0, Math.min(999, Math.floor(n))) : 0;
                 refs.ENGINE.editor.workingLevel.reqLen = clampMetric(parseInt(refs.UI.getValue('editReqLen'), 10));
                 refs.ENGINE.editor.workingLevel.reqInt = clampMetric(parseInt(refs.UI.getValue('editReqInt'), 10));
+                applyMetadataFromUI(refs.ENGINE.editor.workingLevel);
             },
             setObjectAt(k, obj) {
                 refs.ENGINE.editor.draggedObject = obj;
@@ -250,7 +269,7 @@ export function installEditor(APP) {
                 refs.ENGINE.isDirty = true;
             },
             createNewLevel() {
-                refs.ENGINE.editor.workingLevel = { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [] };
+                refs.ENGINE.editor.workingLevel = { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [], designerName: '', description: '', difficulty: null };
                 APP.Engine.PathNavigator.clear(refs.ENGINE);
                 refs.UI.setSolutionOutput('');
                 refs.ENGINE.hinter.pathList = [];
@@ -259,6 +278,7 @@ export function installEditor(APP) {
                 refs.UI.setModalContent('levelTitle', '??', 'text');
                 refs.UI.setInputValue('editReqLen', 0);
                 refs.UI.setInputValue('editReqInt', 0);
+                syncMetadataFieldsFromLevel(refs.ENGINE.editor.workingLevel);
                 refs.ENGINE.editor.isPencilMode = false;
                 APP.Engine.updatePencilState(); // Cross-module call: state updater is owned by APP.Engine.
                 refs.ENGINE.editor.isModified = true;
@@ -318,7 +338,9 @@ export function installEditor(APP) {
             getRealLength(state = APP.State.ENGINE) { return APP.Engine.getRealLength(state); },
             rebuildDerivedPathState(state = APP.State.ENGINE) { return APP.Engine.rebuildDerivedPathState(state); },
             assertStateConsistency(state = APP.State.ENGINE) { return APP.Engine.assertStateConsistency(state); },
-            updatePencilState() { return APP.Engine.updatePencilState(); }
+            updatePencilState() { return APP.Engine.updatePencilState(); },
+            applyMetadataFromUI,
+            syncMetadataFieldsFromLevel
         };
     })();
 
