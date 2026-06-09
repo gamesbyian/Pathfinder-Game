@@ -461,7 +461,7 @@
             </div>
         </div>
     </div>
-    <div id="levelMetadataPanel" class="hidden w-full panel panel-pad shadow-xl shrink-0 transition-all">
+    <div id="levelMetadataPanel" class="hidden w-full panel panel-pad bg-white shadow-xl border-slate-200 shrink-0 transition-all">
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_5rem] gap-2">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <label class="flex flex-col gap-1"><span class="metadata-label">Designer</span><input id="levelDesignerInput" class="metadata-input" maxlength="80" placeholder="Designer name"></label>
@@ -493,7 +493,7 @@
                 <button id="reviewRejectBtn" class="hidden flex-1 h-10 bg-red-600 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Reject</button>
                 <button id="reviewApproveBtn" class="hidden flex-1 h-10 bg-emerald-500 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">Approve</button>
             </div>
-            <button id="reviewPublishedLevelsBtn" class="hidden mt-2 w-full h-10 font-black rounded-lg text-[0.65rem] uppercase tracking-wider border shadow-md transition hover:brightness-110">View Published Levels</button>
+            <button id="reviewPublishedLevelsBtn" class="hidden mt-2 w-full h-10 bg-slate-700 font-black rounded-lg text-[0.65rem] uppercase tracking-wider">View Published Levels</button>
             <div id="alertOverlay" role="status" aria-live="polite" aria-atomic="true" class="absolute inset-0 z-[60] bg-[var(--theme-alert-bg)] border-2 border-[var(--theme-alert-stroke)] rounded-lg flex items-center justify-center text-center px-4 shadow-2xl opacity-0 pointer-events-none">
                 <p id="message" class="font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg"></p>
             </div>
