@@ -606,16 +606,12 @@
 
     const debug = createDebug({ core });
 
-    // levelUtils needs engine and editor via getters (circular).
     let _engine, _editor;
     const levelUtils = createLevelUtils({
         core,
         data,
         getState:    () => state.ENGINE,
         getRenderer: () => _renderer,
-        getEngine:   () => _engine,
-        getEditor:   () => _editor,
-        getUI:       () => ui,
     });
 
     _editor = createEditor({ core, state, ui, levelUtils, solverV2 });

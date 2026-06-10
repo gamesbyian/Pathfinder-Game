@@ -15,7 +15,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     const perspectiveAction = () => {
         ui.closeAllModals();
-        if (state.ENGINE.activeSolverController) return;
+        if (state.ENGINE.solver.controller) return;
         state.ENGINE.variant = (state.ENGINE.variant + 1) % 8;
         ui.updateViewport();
         engine.rebuildDerivedPathState(state.ENGINE);
@@ -27,7 +27,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     document.getElementById('resetBtn').onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.activeSolverController) return;
+        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         if (state.ENGINE.cheatActive) {
             if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
             state.ENGINE.cheatTimer = setTimeout(() => { state.ENGINE.cheatActive = false; }, 3000);
@@ -50,7 +50,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     document.getElementById('undoBtn').onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.undoStack.length) engine.applySnapshot(state.ENGINE.undoStack.pop());
+        if (state.ENGINE.nav.undoStack.length) engine.applySnapshot(state.ENGINE.nav.undoStack.pop());
     };
 
     // --- Dev: copy current hints ---

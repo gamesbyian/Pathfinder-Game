@@ -29,14 +29,14 @@ export function createGamepadController({ core, state, ui, engine, levelUtils },
             ? state.ENGINE.level
             : state.ENGINE.editor.workingLevel;
         if (!l) return;
-        if (!state.ENGINE.path.length) {
+        if (!state.ENGINE.nav.path.length) {
             const firstGate = l.gateKeys && l.gateKeys.length ? levelUtils.UNPACK(l.gateKeys[0]) : null;
             if (!firstGate) return;
-            state.ENGINE.activeGateKey = l.gateKeys[0];
+            state.ENGINE.nav.activeGateKey = l.gateKeys[0];
             engine.PathNavigator.pushStep(state.ENGINE, l.gateKeys[0], false);
             engine.setLogicState(core.DRAGGING);
         }
-        const head = levelUtils.UNPACK(state.ENGINE.path[state.ENGINE.path.length - 1]);
+        const head = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
         engine.attemptMoveTo({ x: head.x + dx, y: head.y + dy });
     }
 

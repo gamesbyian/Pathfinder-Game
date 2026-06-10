@@ -4,13 +4,96 @@
 
 export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }, { tryNavigate }) {
 
+    // --- Grid transform orchestration ---
+    // Pure level coord mapping is in levelUtils.applyCoordMapToLevel /
+    // levelUtils.shiftLevelCoords. The functions below handle the surrounding
+    // engine state mutations (path remapping, rebuild, viewport update).
+
+    function applyCoordTransform(l, coordMap, newW, newH, axisMap) {
+        editor.saveEditorState();
+        const mapKey = (k) => {
+            if (k === -1) return -1;
+            const { x, y } = levelUtils.UNPACK(k);
+            const tp = coordMap(x, y);
+            return levelUtils.PACK(tp.x, tp.y);
+        };
+        levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap);
+        const eng = state.ENGINE;
+        if (eng.editor.pendingPortal) eng.editor.pendingPortal = mapKey(eng.editor.pendingPortal);
+        eng.nav.path = eng.nav.path.map(mapKey);
+        if (eng.nav.activeGateKey) eng.nav.activeGateKey = mapKey(eng.nav.activeGateKey);
+        engine.rebuildDerivedPathState();
+        eng.hinter.pathList = [];
+        eng.editor.validTrapSpots.clear();
+        eng.editor.isModified = true;
+        ui.updateViewport();
+    }
+
+    function changeGridSize(delta) {
+        const eng = state.ENGINE;
+        if (eng.overlayState !== core.OVERLAY_NONE || !eng.editor.workingLevel) return;
+        const l = eng.editor.workingLevel;
+        const newSize = l.grid.w + delta;
+        if (newSize < 6 || newSize > 15) {
+            ui.showMessage('Size limit reached', 'text-amber-500 font-bold');
+            return;
+        }
+        const bounds = levelUtils.getLevelBounds(l);
+        let shiftX = 0, shiftY = 0;
+        if (bounds) {
+            const width  = bounds.maxX - bounds.minX + 1;
+            const height = bounds.maxY - bounds.minY + 1;
+            if (newSize < width || newSize < height) {
+                ui.showMessage('Cannot shrink: items blocking', 'text-red-500 font-bold');
+                return;
+            }
+            if (bounds.maxX >= newSize) shiftX = newSize - 1 - bounds.maxX;
+            if (bounds.maxY >= newSize) shiftY = newSize - 1 - bounds.maxY;
+        }
+        if (delta < 0 && l.mustCrossKeys.some(k => {
+            const p = levelUtils.UNPACK(k);
+            const nx = p.x + shiftX;
+            const ny = p.y + shiftY;
+            return nx === 0 || nx === newSize - 1 || ny === 0 || ny === newSize - 1;
+        })) {
+            ui.showMessage('Cannot shrink: MustCross near edge', 'text-red-500 font-bold');
+            return;
+        }
+        editor.saveEditorState();
+        if (shiftX !== 0 || shiftY !== 0) {
+            levelUtils.shiftLevelCoords(l, shiftX, shiftY);
+            if (eng.editor.pendingPortal) {
+                const p = levelUtils.UNPACK(eng.editor.pendingPortal);
+                eng.editor.pendingPortal = levelUtils.PACK(p.x + shiftX, p.y + shiftY);
+            }
+            eng.nav.path = eng.nav.path.map(k => {
+                const p = levelUtils.UNPACK(k);
+                return levelUtils.PACK(p.x + shiftX, p.y + shiftY);
+            });
+            engine.rebuildDerivedPathState();
+            eng.hinter.pathList = [];
+            eng.editor.validTrapSpots.clear();
+        }
+        l.grid.w = newSize;
+        l.grid.h = newSize;
+        const pathOutOfBounds = eng.nav.path.some(k => {
+            const p = levelUtils.UNPACK(k);
+            return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize;
+        });
+        if (pathOutOfBounds) engine.PathNavigator.clear(eng);
+        eng.editor.isModified = true;
+        ui.updateViewport();
+        eng.isDirty = true;
+        ui.showMessage(`Grid: ${newSize}x${newSize}`, 'text-sky-600 font-bold');
+    }
+
     // --- Grid transform buttons ---
 
     document.getElementById('gridRotateBtn').onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
         const l = state.ENGINE.editor.workingLevel;
-        levelUtils.transformLevel(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, a => a === core.H ? core.V : core.H);
+        applyCoordTransform(l, (x, y) => ({ x: l.grid.h - 1 - y, y: x }), l.grid.h, l.grid.w, a => a === core.H ? core.V : core.H);
         ui.showMessage('Rotated', 'text-white font-black');
     };
 
@@ -21,15 +104,15 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         state.ENGINE.editor.mirrorHorizontal = !state.ENGINE.editor.mirrorHorizontal;
         ui.setInlineStyle('mirrorIconSvg', 'transform', state.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)');
         if (state.ENGINE.editor.mirrorHorizontal) {
-            levelUtils.transformLevel(l, (x, y) => ({ x: l.grid.w - 1 - x, y }), l.grid.w, l.grid.h, a => a);
+            applyCoordTransform(l, (x, y) => ({ x: l.grid.w - 1 - x, y }), l.grid.w, l.grid.h, a => a);
         } else {
-            levelUtils.transformLevel(l, (x, y) => ({ x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, a => a);
+            applyCoordTransform(l, (x, y) => ({ x, y: l.grid.h - 1 - y }), l.grid.w, l.grid.h, a => a);
         }
         ui.showMessage('Mirrored', 'text-white font-black');
     };
 
-    document.getElementById('gridSizeMinusBtn').onclick = () => { ui.closeAllModals(); levelUtils.changeGridSize(-1); };
-    document.getElementById('gridSizePlusBtn').onclick  = () => { ui.closeAllModals(); levelUtils.changeGridSize(1); };
+    document.getElementById('gridSizeMinusBtn').onclick = () => { ui.closeAllModals(); changeGridSize(-1); };
+    document.getElementById('gridSizePlusBtn').onclick  = () => { ui.closeAllModals(); changeGridSize(1); };
 
     // --- Pencil ---
 
@@ -53,8 +136,8 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         if (eraserTimer) {
             clearTimeout(eraserTimer);
             if (!eraserFired) {
-                if (state.ENGINE.path.length > 1) {
-                    engine.PathNavigator.truncateTo(state.ENGINE, state.ENGINE.path.length - 2);
+                if (state.ENGINE.nav.path.length > 1) {
+                    engine.PathNavigator.truncateTo(state.ENGINE, state.ENGINE.nav.path.length - 2);
                 } else {
                     engine.PathNavigator.clear(state.ENGINE);
                 }
@@ -89,9 +172,9 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
 
     document.getElementById('editCopyMetrics').onclick = () => {
         ui.closeAllModals();
-        if (!state.ENGINE.path.length) return;
+        if (!state.ENGINE.nav.path.length) return;
         ui.setInputValue('editReqLen', engine.getRealLength());
-        ui.setInputValue('editReqInt', state.ENGINE.intersections);
+        ui.setInputValue('editReqInt', state.ENGINE.nav.intersections);
         editor.applyMetricsFromUI();
         ui.showMessage('Metrics Set', 'text-white font-black');
     };
@@ -139,7 +222,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         const isHelpOpen = ui.isModalOpen('editorHelpModal');
         if (isHelpOpen) ui.closeModal('editorHelpModal');
         ui.closeAllModals();
-        if (engine.isRunning() || state.ENGINE.activeSolverController) {
+        if (engine.isRunning() || state.ENGINE.solver.controller) {
             ui.showSolverAlreadyRunning();
             return;
         }
@@ -152,7 +235,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             return;
         }
         const yieldFn = async () => { await new Promise(r => setTimeout(r, 0)); };
-        state.ENGINE.activeSolverController = { cancel: () => {}, abort: () => {} };
+        state.ENGINE.solver.controller = { cancel: () => {}, abort: () => {} };
         try {
             engine.setOverlayState(core.SOLVER_RUNNING);
             ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
@@ -220,7 +303,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
             engine.setOverlayState(core.OVERLAY_NONE);
         } finally {
-            state.ENGINE.activeSolverController = null;
+            state.ENGINE.solver.controller = null;
             ui.setSolverControlsEnabled(true);
         }
     };

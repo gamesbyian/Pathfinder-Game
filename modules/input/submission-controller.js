@@ -7,7 +7,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
     const submitWorkingLevel = async (triggerBtnId, afterSuccess) => {
         ui.closeAllModals();
-        if (state.ENGINE.activeSolverController) {
+        if (state.ENGINE.solver.controller) {
             ui.showMessage('Solver is running, please wait.', 'text-yellow-400 font-bold');
             return;
         }
@@ -152,14 +152,14 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         };
         (Array.isArray(l.hints) ? l.hints : []).forEach(pushUniqueHint);
         (Array.isArray(state.ENGINE.foundHintsSinceLoad) ? state.ENGINE.foundHintsSinceLoad : []).forEach(pushUniqueHint);
-        if (state.ENGINE.path.length > 1) pushUniqueHint(state.ENGINE.path);
+        if (state.ENGINE.nav.path.length > 1) pushUniqueHint(state.ENGINE.nav.path);
 
         if (normalizedHints.length === 0) {
             let _cancelled = false;
             const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
             const yieldFn    = async () => { await new Promise(r => setTimeout(r, 0)); if (_cancelled) throw new Error('SolverV2:cancelled'); };
-            state.ENGINE.activeSolverController = { cancel: cancelSolve, abort: cancelSolve };
-            const abortPoll = setInterval(() => { if (state.ENGINE.solverAbortRequested) cancelSolve(); }, 100);
+            state.ENGINE.solver.controller = { cancel: cancelSolve, abort: cancelSolve };
+            const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
             try {
                 engine.setOverlayState(core.SOLVER_RUNNING);
                 ui.setSolverControlsEnabled(false);
@@ -196,8 +196,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 }
             } finally {
                 clearInterval(abortPoll);
-                state.ENGINE.activeSolverController = null;
-                state.ENGINE.solverAbortRequested   = false;
+                state.ENGINE.solver.controller = null;
+                state.ENGINE.solver.abortRequested   = false;
                 ui.setSolverControlsEnabled(true);
             }
         }
@@ -267,8 +267,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
     document.getElementById('devCopyBtn').onclick = async () => {
         ui.closeAllModals();
-        if (!state.ENGINE.path.length) return;
-        const pathStr = JSON.stringify(state.ENGINE.path).replace(/\s/g, '');
+        if (!state.ENGINE.nav.path.length) return;
+        const pathStr = JSON.stringify(state.ENGINE.nav.path).replace(/\s/g, '');
         ui.setSolutionOutput(pathStr);
         await ui.copyText(pathStr, { fallbackElId: 'solutionOutput' });
         ui.showMessage('Path Copied', 'text-white font-black');
@@ -292,7 +292,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     // Play mode hint: plays saved hints only; solver is not triggered here.
     document.getElementById('hintBtn').onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.activeSolverController) return;
+        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         showSavedHint();
     };
 
@@ -300,7 +300,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
 
     document.getElementById('reviewHintBtn').onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.activeSolverController) return;
+        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         const wl = state.ENGINE.editor.workingLevel;
         if (!wl?.hints?.length) { ui.showMessage('No saved hint.', 'text-white font-black'); return; }
         state.ENGINE.hinter.pathList = wl.hints;

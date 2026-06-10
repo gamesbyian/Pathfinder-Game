@@ -31,7 +31,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
 
     document.getElementById('editMegaSolver').onclick = async () => {
         ui.closeAllModals();
-        if (state.ENGINE.activeSolverController) return;
+        if (state.ENGINE.solver.controller) return;
         let _cancelled = false;
         const cancelSolve = () => {
             if (_cancelled) return;
@@ -43,9 +43,9 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             await new Promise(r => setTimeout(r, 0));
             if (_cancelled) throw new Error('SolverV2:cancelled');
         };
-        state.ENGINE.activeSolverController   = { cancel: cancelSolve, abort: cancelSolve };
-        state.ENGINE.solverAbortRequested     = false;
-        const abortPoll = setInterval(() => { if (state.ENGINE.solverAbortRequested) cancelSolve(); }, 100);
+        state.ENGINE.solver.controller   = { cancel: cancelSolve, abort: cancelSolve };
+        state.ENGINE.solver.abortRequested     = false;
+        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         try {
             engine.setOverlayState(core.SOLVER_RUNNING);
             ui.setSolverControlsEnabled(false);
@@ -87,8 +87,8 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.setOverlayState(core.OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
-            state.ENGINE.activeSolverController = null;
-            state.ENGINE.solverAbortRequested   = false;
+            state.ENGINE.solver.controller = null;
+            state.ENGINE.solver.abortRequested   = false;
             ui.setSolverControlsEnabled(true);
         }
     };
