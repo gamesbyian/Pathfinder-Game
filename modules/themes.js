@@ -782,7 +782,6 @@ Suggest 6 complementary hex colors in #RRGGBB format.`;
             replaceDeep(t);
         }
 
-        APP.UI.ThemeEditor.renderAll();
         APP.Themes.populateThemes();
     }
 

@@ -66,40 +66,11 @@ export function installInput(APP) {
         };
 
         const handleUp = (e) => {
-            if (APP.State.ENGINE.logicState === APP.Core.THEME_DRAG) {
-                // Resolve from deepest hit node up to the swatch so child elements still count as valid drops.
-                const dropTarget = document.elementFromPoint(e.clientX, e.clientY)?.closest('.theme-swatch');
-                const dragState = APP.UI.ThemeEditor.getDragState();
-                if (dropTarget && dragState.isDragging) {
-                    APP.UI.ThemeEditor.applySwatchReplace({
-                        sourceColor: dragState.color,
-                        sourceTheme: dragState.theme,
-                        sourceCategory: dragState.category,
-                        targetSwatch: dropTarget
-                    });
-                }
-                APP.Engine.setLogicState(APP.Core.IDLE); APP.UI.ThemeEditor.clearDragState(); APP.UI.ThemeEditor.setDragGhost({ visible: false });
-                if (!APP.UI.ThemeEditor.hasTapSelection()) APP.UI.ThemeEditor.setSwatchSelected(null);
-            }
             if (APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG && (APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW)) { const canvas = APP.Renderer.getCanvas(); const crect = canvas.getBoundingClientRect(); if (e.clientX >= crect.left && e.clientX <= crect.right && e.clientY >= crect.top && e.clientY <= crect.bottom) { APP.Editor.placeEditorObject(APP.LevelUtils.PACK(APP.LevelUtils.getGridCoord(e).x, APP.LevelUtils.getGridCoord(e).y)); } else { if (APP.State.ENGINE.editor.draggedFromGrid) { APP.State.ENGINE.editor.draggedObject = null; APP.Editor.saveEditorState(); APP.UI.showMessage("Deleted", "text-white font-black"); } } APP.State.ENGINE.editor.draggedObject = null; APP.Engine.setLogicState(APP.Core.IDLE); } if (APP.State.ENGINE.logicState === APP.Core.DRAGGING) APP.Engine.setLogicState(APP.Core.IDLE);
         };
 
         APP.Renderer.getCanvas().addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; if (APP.State.ENGINE.runtime.activePointerId !== null) return; e.preventDefault(); APP.State.ENGINE.runtime.activePointerId = e.pointerId; APP.Renderer.getCanvas().setPointerCapture(APP.State.ENGINE.runtime.activePointerId); handleDown(e); });
         window.addEventListener('pointermove', e => {
-            const themeDragState = APP.UI.ThemeEditor.getDragState();
-            if (themeDragState.pointerId !== null && e.pointerId === themeDragState.pointerId && !themeDragState.isDragging) {
-                const dx = Math.abs((themeDragState.startX ?? e.clientX) - e.clientX);
-                const dy = Math.abs((themeDragState.startY ?? e.clientY) - e.clientY);
-                if (dx > 6 || dy > 6) APP.UI.ThemeEditor.markPointerDrag();
-            }
-            if (APP.State.ENGINE.logicState === APP.Core.THEME_DRAG) {
-                const dragState = APP.UI.ThemeEditor.getDragState();
-                if (e.pointerId === dragState.pointerId || dragState.pointerId === null) {
-                    APP.UI.ThemeEditor.setDragGhost({ visible: true, color: dragState.color, x: e.clientX, y: e.clientY });
-                    e.preventDefault();
-                    return;
-                }
-            }
             if ((APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW) && (APP.State.ENGINE.editor.draggedObject || (APP.State.ENGINE.editor.selectedTool && APP.State.ENGINE.logicState === APP.Core.EDIT_DRAG))) {
                 const type = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool;
                 const isOverPalette = APP.UI.EditorDragGhost.isPointerOverPalette(e.clientX, e.clientY);

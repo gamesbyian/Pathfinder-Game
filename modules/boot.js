@@ -7,7 +7,6 @@ export function installBoot(APP) {
             started = true;
 
             APP.UI.initDom();
-            APP.UI.ThemeEditor.init();
             APP.Debug.expose();
             const persistedSession = APP.Persistence.applySessionState();
             APP.State.ENGINE.runtime.currentTheme = persistedSession.currentTheme;

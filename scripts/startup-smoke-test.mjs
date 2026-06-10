@@ -211,7 +211,7 @@ const onloadSource = html.includes('window.onload = () => {') ? extractWindowOnl
 
   const ctx = {
     APP: {
-      UI: { initDom() {}, ThemeEditor: { init() {} } },
+      UI: { initDom() {} },
       Debug: { expose() {} },
       Themes: { ensureThemeLeaveColors() {}, applyTheme() {} },
       Persistence: {

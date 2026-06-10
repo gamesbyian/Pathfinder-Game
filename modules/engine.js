@@ -673,13 +673,12 @@ export function installEngine(APP) {
             };
 
             const VALID_LOGIC_TRANSITIONS = {
-                [APP.Core.IDLE]: [APP.Core.DRAGGING, APP.Core.EDIT_DRAG, APP.Core.THEME_DRAG, APP.Core.RESOLVED],
+                [APP.Core.IDLE]: [APP.Core.DRAGGING, APP.Core.EDIT_DRAG, APP.Core.RESOLVED],
                 [APP.Core.DRAGGING]: [APP.Core.IDLE, APP.Core.PORTAL_PAUSE, APP.Core.RESOLVED, APP.Core.HAZARD_TRIGGERED],
                 [APP.Core.PORTAL_PAUSE]: [APP.Core.DRAGGING, APP.Core.IDLE, APP.Core.RESOLVED],
                 [APP.Core.RESOLVED]: [APP.Core.IDLE],
                 [APP.Core.HAZARD_TRIGGERED]: [APP.Core.IDLE],
-                [APP.Core.EDIT_DRAG]: [APP.Core.IDLE],
-                [APP.Core.THEME_DRAG]: [APP.Core.IDLE]
+                [APP.Core.EDIT_DRAG]: [APP.Core.IDLE]
             };
 
             function setLogicState(newState) {
