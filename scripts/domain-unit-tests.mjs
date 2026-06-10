@@ -13,6 +13,7 @@ import { installEngine } from '../modules/engine.js';
 import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../modules/runtime/state-machine.js';
 import { cloneTapRouteState, rebuildDerivedState, simulateTapRouteStep, wouldCreateBlockedTIntersection } from '../modules/runtime/path-state.js';
 import { checkWinConditionImpl as checkWinConditionImplDirect } from '../modules/runtime/game-rules.js';
+import { validateLevelDetailed as validateLevelDetailedImpl } from '../modules/domain/level-validation.js';
 
 // ---------------------------------------------------------------------------
 // Minimal APP bootstrap
@@ -760,6 +761,137 @@ test('checkWinConditionImpl: returns true when path ends at goal and metrics mat
     const path    = [PACK(0,0), PACK(1,0), goalKey];
     const vc      = new Map([[PACK(0,0),1],[PACK(1,0),1],[goalKey,1]]);
     assert.ok(checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), vc, 0));
+});
+
+// ---------------------------------------------------------------------------
+// GROUP 10 — Level validation (level-validation.js)
+// ---------------------------------------------------------------------------
+console.log('\nGROUP 10: Level validation (validateLevelDetailed)');
+
+// Minimal valid level fixture (no mustPass/mustCross/portals/filters).
+function makeValidEditorLevel(opts = {}) {
+    const w = opts.w ?? 8;
+    const h = opts.h ?? 8;
+    return {
+        grid:              { w, h },
+        goalKey:           opts.goalKey  ?? PACK(w - 1, h - 1),
+        gateKeys:          opts.gateKeys ?? [PACK(0, 0)],
+        blockSet:          new Set(opts.blocks        ?? []),
+        gooseSet:          new Set(opts.geese         ?? []),
+        falseGoalKeys:     new Set(opts.falseGoals    ?? []),
+        portalMap:         new Map(opts.portals       ?? []),
+        portalVisuals:     opts.portalVisuals         ?? [],
+        filterMap:         new Map(opts.filters       ?? []),
+        flippingFilterMap: new Map(opts.flipping      ?? []),
+        mustPassKeys:      opts.mustPass              ?? [],
+        mustCrossKeys:     opts.mustCross             ?? [],
+        reqLen: 0, reqInt: 0, hints: []
+    };
+}
+
+test('valid minimal level returns {ok:true, reasons:[]}', () => {
+    const l = makeValidEditorLevel();
+    const result = validateLevelDetailedImpl(l);
+    assert.ok(result.ok, `expected ok but got: ${JSON.stringify(result.reasons)}`);
+    assert.deepEqual(result.reasons, []);
+});
+
+test('goal missing: {ok:false} with "Goal missing" reason', () => {
+    const l = makeValidEditorLevel({ goalKey: -1 });
+    const result = validateLevelDetailedImpl(l);
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.includes('Goal missing'), `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('no gates: {ok:false} with "No gates" reason', () => {
+    const l = makeValidEditorLevel({ gateKeys: [] });
+    const result = validateLevelDetailedImpl(l);
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.includes('No gates'), `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('allowGateLess option suppresses "No gates" error', () => {
+    const l = makeValidEditorLevel({ gateKeys: [] });
+    // Without a gate, the connectivity check is skipped too, so this should pass.
+    const result = validateLevelDetailedImpl(l, { allowGateLess: true });
+    assert.ok(result.ok, `expected ok but got: ${JSON.stringify(result.reasons)}`);
+});
+
+test('pendingPortal param triggers "Portal terminals incomplete" reason', () => {
+    const l = makeValidEditorLevel();
+    const result = validateLevelDetailedImpl(l, {}, PACK(3, 3));  // pendingPortal set
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.some(r => r.includes('Portal terminals incomplete')),
+              `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('OOB gate produces "Out of bounds: gate" reason', () => {
+    const l = makeValidEditorLevel({ gateKeys: [PACK(9, 9)] });  // outside 8×8
+    const result = validateLevelDetailedImpl(l);
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.some(r => r.includes('Out of bounds: gate')),
+              `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('gate completely surrounded by blocks: produces reason', () => {
+    const gk = PACK(3, 3);
+    const surrounding = [PACK(2,3), PACK(4,3), PACK(3,2), PACK(3,4)];
+    const l = makeValidEditorLevel({ gateKeys: [gk], blocks: surrounding });
+    const result = validateLevelDetailedImpl(l);
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.some(r => r.includes('Gate completely surrounded')),
+              `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('goal completely surrounded by blocks: produces reason', () => {
+    // Put goal in centre of a 3×3 cage
+    const goal = PACK(4, 4);
+    const surrounding = [PACK(3,4), PACK(5,4), PACK(4,3), PACK(4,5)];
+    const l = makeValidEditorLevel({ goalKey: goal, blocks: surrounding });
+    const result = validateLevelDetailedImpl(l);
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.some(r => r.includes('Goal completely surrounded')),
+              `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('MustCross on grid edge produces reason', () => {
+    const l = makeValidEditorLevel({ mustCross: [PACK(0, 3)] });  // x=0 is an edge
+    const result = validateLevelDetailedImpl(l);
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.some(r => r.includes('MustCross on grid edge')),
+              `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('MustCross with adjacent block produces reason', () => {
+    const mc = PACK(3, 3);
+    const l = makeValidEditorLevel({ mustCross: [mc], blocks: [PACK(4, 3)] });
+    const result = validateLevelDetailedImpl(l);
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.some(r => r.includes('Block adjacent to MustCross')),
+              `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('grid partitioned by a full vertical barrier produces "Grid partitioned" reason', () => {
+    // Full vertical wall at x=3 blocks the path from gate (0,0) to goal (7,7).
+    const wallX = 3;
+    const blocks = Array.from({ length: 8 }, (_, y) => PACK(wallX, y));
+    const l = makeValidEditorLevel({ blocks });
+    const result = validateLevelDetailedImpl(l);
+    assert.equal(result.ok, false);
+    assert.ok(result.reasons.some(r => r.includes('Grid partitioned')),
+              `reasons: ${JSON.stringify(result.reasons)}`);
+});
+
+test('portal connectivity: portal bridging a barrier allows validation to pass', () => {
+    // Same full vertical wall at x=3, but a portal connects the two halves.
+    const wallX = 3;
+    const blocks = Array.from({ length: 8 }, (_, y) => PACK(wallX, y));
+    // Portal: (2,4) ↔ (5,4) — bridges across the barrier
+    const k1 = PACK(2, 4), k2 = PACK(5, 4);
+    const portals = [[k1, { dest: k2 }], [k2, { dest: k1 }]];
+    const l = makeValidEditorLevel({ blocks, portals, portalVisuals: [{ k1, k2 }] });
+    const result = validateLevelDetailedImpl(l);
+    assert.ok(result.ok, `expected ok (portal bridges barrier) but got: ${JSON.stringify(result.reasons)}`);
 });
 
 // ---------------------------------------------------------------------------

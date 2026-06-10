@@ -1,3 +1,5 @@
+import { validateLevelDetailed as validateLevelDetailedImpl } from './domain/level-validation.js';
+
 export function installEditor(APP) {
     APP.Editor = (() => {
         let refs = { ENGINE: null, UI: null };
@@ -9,136 +11,9 @@ export function installEditor(APP) {
             function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { APP.UI.showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return APP.UI.showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, APP.Core.H); break; case 'filterV': l.filterMap.set(k, APP.Core.V); break; case 'flipH': l.flippingFilterMap.set(k, APP.Core.H); break; case 'flipV': l.flippingFilterMap.set(k, APP.Core.V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1 }); APP.UI.showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; l.portalMap.set(k1, { dest: k }); l.portalMap.set(k, { dest: k1 }); l.portalVisuals.push({ k1, k2: k }); APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
 
 
+            // Wrapper: passes editor's pendingPortal context; pure logic is in domain/level-validation.js.
             function validateLevelDetailed(l, opts = {}) {
-                const reasons = [];
-                if (!l) return { ok: false, reasons: ["Level missing"] };
-                const allowGateLess = !!opts.allowGateLess;
-                const { w, h } = l.grid;
-                const inGrid = (k) => { const p = APP.LevelUtils.UNPACK(k); return APP.LevelUtils.inBounds(p.x, p.y, w, h); };
-                const addOOB = (label, key) => { const p = APP.LevelUtils.UNPACK(key); reasons.push(`Out of bounds: ${label} (${p.x + 1},${p.y + 1})`); };
-                const gateSet = new Set(l.gateKeys);
-                // Count orthogonal sides reachable by the path (not blocked by edge/obstacle/filter)
-                const accessibleSides = (cx, cy, gatesBlock = false) => {
-                    // A flipping filter not adjacent to this cell can be crossed first,
-                    // flipping all others — so it exempts adjacent blocking flipping filters.
-                    const adjKeys = new Set([[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dy]) => APP.LevelUtils.PACK(cx+dx, cy+dy)));
-                    const hasFreeFlip = Array.from(l.flippingFilterMap.keys()).some(fk => !adjKeys.has(fk));
-                    let n = 0;
-                    for (const [dx, dy, horiz] of [[1,0,true],[-1,0,true],[0,1,false],[0,-1,false]]) {
-                        const nx = cx + dx, ny = cy + dy;
-                        if (!APP.LevelUtils.inBounds(nx, ny, w, h)) continue;
-                        const nk = APP.LevelUtils.PACK(nx, ny);
-                        if (l.blockSet.has(nk) || l.gooseSet.has(nk) || l.falseGoalKeys.has(nk)) continue;
-                        if (gatesBlock && gateSet.has(nk)) continue;
-                        const ba = horiz ? APP.Core.V : APP.Core.H;
-                        if (l.filterMap.get(nk) === ba) continue;
-                        if (!hasFreeFlip && l.flippingFilterMap.get(nk) === ba) continue;
-                        n++;
-                    }
-                    return n;
-                };
-
-                if (!allowGateLess && (!Array.isArray(l.gateKeys) || l.gateKeys.length === 0)) reasons.push("No gates");
-                if (l.goalKey === -1 || l.goalKey === undefined) reasons.push("Goal missing");
-                if (APP.State.ENGINE.editor.pendingPortal) reasons.push("Portal terminals incomplete");
-
-                l.gateKeys.forEach(k => { if (!inGrid(k)) addOOB('gate', k); });
-                if (l.goalKey !== -1 && l.goalKey !== undefined && !inGrid(l.goalKey)) addOOB('goal', l.goalKey);
-                l.mustPassKeys.forEach(k => { if (!inGrid(k)) addOOB('mustPass', k); });
-                l.mustCrossKeys.forEach(k => { if (!inGrid(k)) addOOB('mustCross', k); });
-                l.gooseSet.forEach(k => { if (!inGrid(k)) addOOB('goose', k); });
-                l.blockSet.forEach(k => { if (!inGrid(k)) addOOB('block', k); });
-
-                let unpaired = false;
-                l.portalMap.forEach((v, k) => {
-                    if (!l.portalMap.has(v.dest)) unpaired = true;
-                    if (!inGrid(k)) addOOB('portal', k);
-                    if (v.dest !== -1 && !inGrid(v.dest)) addOOB('portal', v.dest);
-                });
-                if (unpaired) reasons.push("Portal terminals incomplete");
-
-                // MustCross structural checks
-                // Pre-compute: cells orthogonally adjacent to any mustCross
-                const mustCrossAdjCells = new Set();
-                for (const mk of l.mustCrossKeys) {
-                    if (!inGrid(mk)) continue;
-                    const mp = APP.LevelUtils.UNPACK(mk);
-                    for (const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]])
-                        mustCrossAdjCells.add(APP.LevelUtils.PACK(mp.x+dx, mp.y+dy));
-                }
-                // A flipping filter not adjacent to any mustCross can be crossed first,
-                // theoretically flipping the blocking ones before the path reaches them.
-                const hasFreeFlip = Array.from(l.flippingFilterMap.keys()).some(fk => !mustCrossAdjCells.has(fk));
-
-                for (const k of l.mustCrossKeys) {
-                    if (!inGrid(k)) continue;
-                    const p = APP.LevelUtils.UNPACK(k);
-                    if (l.blockSet.has(k)) reasons.push(`MustCross overlaps block at (${p.x + 1},${p.y + 1})`);
-                    if (p.x === 0 || p.x === w - 1 || p.y === 0 || p.y === h - 1) reasons.push(`MustCross on grid edge at (${p.x + 1},${p.y + 1})`);
-                    const left = APP.LevelUtils.PACK(p.x-1,p.y), right = APP.LevelUtils.PACK(p.x+1,p.y);
-                    const up = APP.LevelUtils.PACK(p.x,p.y-1), down = APP.LevelUtils.PACK(p.x,p.y+1);
-                    if ([left,right,up,down].some(nk => l.blockSet.has(nk))) reasons.push(`Block adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
-                    if ([left,right,up,down].some(nk => l.gooseSet.has(nk))) reasons.push(`Goose adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
-                    if ([left,right].some(nk => l.filterMap.get(nk) === APP.Core.V)) reasons.push(`Vertical filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
-                    if ([up,down].some(nk => l.filterMap.get(nk) === APP.Core.H)) reasons.push(`Horizontal filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
-                    if (!hasFreeFlip) {
-                        if ([left,right].some(nk => l.flippingFilterMap.get(nk) === APP.Core.V)) reasons.push(`Flipping V-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
-                        if ([up,down].some(nk => l.flippingFilterMap.get(nk) === APP.Core.H)) reasons.push(`Flipping H-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
-                    }
-                    const inBoundsDiags = [[1,1],[1,-1],[-1,1],[-1,-1]]
-                        .filter(([dx,dy]) => APP.LevelUtils.inBounds(p.x+dx, p.y+dy, w, h))
-                        .map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
-                    if (inBoundsDiags.some(dk => l.filterMap.has(dk) || l.flippingFilterMap.has(dk)))
-                        reasons.push(`Filter diagonally adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
-                }
-
-                // Gate accessibility: needs at least one open orthogonal side to start
-                for (const gk of l.gateKeys) {
-                    if (!inGrid(gk)) continue;
-                    const p = APP.LevelUtils.UNPACK(gk);
-                    if (accessibleSides(p.x, p.y, true) === 0) reasons.push(`Gate completely surrounded at (${p.x + 1},${p.y + 1})`);
-                }
-                // Goal accessibility: needs at least one open orthogonal side to enter
-                if (l.goalKey !== -1 && l.goalKey !== undefined && inGrid(l.goalKey)) {
-                    const p = APP.LevelUtils.UNPACK(l.goalKey);
-                    if (accessibleSides(p.x, p.y, true) === 0) reasons.push(`Goal completely surrounded at (${p.x + 1},${p.y + 1})`);
-                }
-                // MustPass accessibility: needs at least 2 open sides to enter and exit
-                for (const mk of l.mustPassKeys) {
-                    if (!inGrid(mk)) continue;
-                    const p = APP.LevelUtils.UNPACK(mk);
-                    if (accessibleSides(p.x, p.y) < 2) reasons.push(`MustPass blocked on 3+ sides at (${p.x + 1},${p.y + 1})`);
-                }
-
-                const barrier = (k) => l.blockSet.has(k);
-                const reachableFrom = (startKey) => {
-                    if (startKey === -1 || startKey === undefined || barrier(startKey)) return new Set();
-                    const q = [startKey];
-                    const visited = new Set([startKey]);
-                    let head = 0;
-                    while (head < q.length) {
-                        const k = q[head++];
-                        const p = APP.LevelUtils.UNPACK(k);
-                        const nks = [[0,1],[0,-1],[1,0],[-1,0]].map(([dx,dy]) => APP.LevelUtils.PACK(p.x+dx, p.y+dy));
-                        const portal = APP.LevelUtils.resolvePortal(l, k);
-                        if (portal && portal.dest !== -1) nks.push(portal.dest);
-                        for (const nk of nks) {
-                            const np = APP.LevelUtils.UNPACK(nk);
-                            if (APP.LevelUtils.inBounds(np.x, np.y, w, h) && !visited.has(nk) && !barrier(nk)) {
-                                visited.add(nk);
-                                q.push(nk);
-                            }
-                        }
-                    }
-                    return visited;
-                };
-                if (l.goalKey !== -1 && l.goalKey !== undefined && !barrier(l.goalKey) && Array.isArray(l.gateKeys) && l.gateKeys.length > 0) {
-                    const goalReach = reachableFrom(l.goalKey);
-                    const hasConnectedGate = l.gateKeys.some(gk => goalReach.has(gk));
-                    if (!hasConnectedGate) reasons.push("Grid partitioned by barriers");
-                }
-
-                return { ok: reasons.length === 0, reasons: Array.from(new Set(reasons)) };
+                return validateLevelDetailedImpl(l, opts, APP.State.ENGINE.editor.pendingPortal);
             }
 
 
