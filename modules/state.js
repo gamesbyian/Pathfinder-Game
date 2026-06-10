@@ -1,3 +1,5 @@
+import { createEditorState } from './editor/editor-model.js';
+
 export function installState(APP) {
     APP.State = (() => {
         const ENGINE = {
@@ -44,7 +46,7 @@ export function installState(APP) {
         themeTapCategory: null,
         progressSet: new Set(),
         foundHintsSinceLoad: [],
-        editor: { workingLevel: null, draggedObject: null, draggedFromGrid: false, selectedTool: null, isPencilMode: false, pendingPortal: null, undoStack: [], validTrapSpots: new Set(), isModified: false, emptyClickCount: 0, mirrorHorizontal: true },
+        editor: createEditorState(),
         review: { submissions: [], currentIdx: 0, savedPlayLevelIdx: 0 },
         ui: { focusGroup: 'GRID', focusIndex: 0, bLastPressTime: 0, bSingleTimer: null, gamepadFocusEnabled: false },
         runtime: { currentTheme: 'classic', pendingAction: null, activePointerId: null, tapStartCoord: null, tapMoved: false },

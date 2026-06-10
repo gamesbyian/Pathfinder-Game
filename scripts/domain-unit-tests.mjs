@@ -15,6 +15,8 @@ import { cloneTapRouteState, rebuildDerivedState, simulateTapRouteStep, wouldCre
 import { checkWinConditionImpl as checkWinConditionImplDirect } from '../modules/runtime/game-rules.js';
 import { validateLevelDetailed as validateLevelDetailedImpl } from '../modules/domain/level-validation.js';
 import { getOccupant, removeOccupant, placeOccupant }        from '../modules/editor/editor-occupancy.js';
+import { MoveContext }                                        from '../modules/domain/move-context.js';
+import { createEditorState, DEFAULT_TOOL, TOOL_TYPES }       from '../modules/editor/editor-model.js';
 
 // ---------------------------------------------------------------------------
 // Minimal APP bootstrap
@@ -1125,6 +1127,101 @@ test('placeOccupant: places flipV (axis stored as 2 in flippingFilterMap)', () =
     const result = placeOccupant(level, k, 'flipV', null);
     assert.ok(result.ok);
     assert.equal(level.flippingFilterMap.get(k), 2);
+});
+
+// ---------------------------------------------------------------------------
+// GROUP 12 — MoveContext presets and createEditorState
+// ---------------------------------------------------------------------------
+console.log('\nGROUP 12: MoveContext presets and createEditorState');
+
+// --- MoveContext: PLAY vs TAP_ROUTE hazard check ---
+
+test('MoveContext.PLAY: moving to a goose cell is blocked (checkHazards=true)', () => {
+    const gooKey = PACK(1, 0);
+    const level  = makeLevel({ geese: [gooKey] });
+    const state  = makeState({ path: [PACK(0, 0)], mode: APP.Core.PLAY });
+    assert.equal(isValidMove(gooKey, state, level, MoveContext.PLAY), false,
+        'PLAY context should block goose cell');
+});
+
+test('MoveContext.TAP_ROUTE: moving to a goose cell is allowed (checkHazards=false)', () => {
+    const gooKey = PACK(1, 0);
+    const level  = makeLevel({ geese: [gooKey] });
+    const state  = makeState({ path: [PACK(0, 0)], mode: APP.Core.PLAY });
+    assert.equal(isValidMove(gooKey, state, level, MoveContext.TAP_ROUTE), true,
+        'TAP_ROUTE context should permit goose cell');
+});
+
+// --- MoveContext: false-goal lock ---
+
+test('MoveContext.TAP_ROUTE: continuation from armed false-goal cell is blocked (checkFalseGoals=true)', () => {
+    const lastKey = PACK(1, 0);
+    const nextKey = PACK(1, 1);
+    const level   = makeLevel();
+    const state   = makeState({ path: [PACK(0, 0), lastKey], armedFalseGoals: [lastKey] });
+    assert.equal(isValidMove(nextKey, state, level, MoveContext.TAP_ROUTE), false,
+        'TAP_ROUTE should block move away from armed false-goal cell');
+});
+
+test('MoveContext.SOLVER: continuation from armed false-goal cell is allowed (checkFalseGoals=false)', () => {
+    const lastKey = PACK(1, 0);
+    const nextKey = PACK(1, 1);
+    const level   = makeLevel();
+    const state   = makeState({ path: [PACK(0, 0), lastKey], armedFalseGoals: [lastKey] });
+    assert.equal(isValidMove(nextKey, state, level, MoveContext.SOLVER), true,
+        'SOLVER context should allow move away from armed false-goal cell');
+});
+
+test('MoveContext.SOLVER: moving to a goose cell is allowed (checkHazards=false)', () => {
+    const gooKey = PACK(1, 0);
+    const level  = makeLevel({ geese: [gooKey] });
+    const state  = makeState({ path: [PACK(0, 0)], mode: APP.Core.PLAY });
+    assert.equal(isValidMove(gooKey, state, level, MoveContext.SOLVER), true,
+        'SOLVER context should permit goose cell');
+});
+
+// --- MoveContext: immutability ---
+
+test('MoveContext and all its context objects are frozen', () => {
+    assert.ok(Object.isFrozen(MoveContext),              'MoveContext itself is frozen');
+    assert.ok(Object.isFrozen(MoveContext.PLAY),         'MoveContext.PLAY is frozen');
+    assert.ok(Object.isFrozen(MoveContext.TAP_ROUTE),    'MoveContext.TAP_ROUTE is frozen');
+    assert.ok(Object.isFrozen(MoveContext.EDITOR_PENCIL),'MoveContext.EDITOR_PENCIL is frozen');
+    assert.ok(Object.isFrozen(MoveContext.SOLVER),       'MoveContext.SOLVER is frozen');
+});
+
+// --- createEditorState ---
+
+test('createEditorState: returns object with correct initial field values', () => {
+    const s = createEditorState();
+    assert.equal(s.selectedTool,     null,  'selectedTool starts null');
+    assert.equal(s.pendingPortal,    null,  'pendingPortal starts null');
+    assert.equal(s.workingLevel,     null,  'workingLevel starts null');
+    assert.equal(s.isPencilMode,     false, 'isPencilMode starts false');
+    assert.equal(s.isModified,       false, 'isModified starts false');
+    assert.equal(s.mirrorHorizontal, true,  'mirrorHorizontal starts true');
+    assert.ok(Array.isArray(s.undoStack),         'undoStack is an array');
+    assert.ok(s.validTrapSpots instanceof Set,    'validTrapSpots is a Set');
+});
+
+test('createEditorState: each call returns independent collections', () => {
+    const a = createEditorState();
+    const b = createEditorState();
+    assert.notStrictEqual(a.undoStack,      b.undoStack,      'undoStack is not shared');
+    assert.notStrictEqual(a.validTrapSpots, b.validTrapSpots, 'validTrapSpots is not shared');
+});
+
+test('TOOL_TYPES includes eraser and all expected tool names', () => {
+    assert.ok(TOOL_TYPES.includes('eraser'),     'eraser present');
+    assert.ok(TOOL_TYPES.includes('gate'),       'gate present');
+    assert.ok(TOOL_TYPES.includes('portal'),     'portal present');
+    assert.ok(TOOL_TYPES.includes('must_cross'), 'must_cross present');
+    assert.ok(Object.isFrozen(TOOL_TYPES),       'TOOL_TYPES is frozen');
+});
+
+test('DEFAULT_TOOL is a member of TOOL_TYPES', () => {
+    assert.ok(TOOL_TYPES.includes(DEFAULT_TOOL),
+        `DEFAULT_TOOL "${DEFAULT_TOOL}" must be in TOOL_TYPES`);
 });
 
 // ---------------------------------------------------------------------------

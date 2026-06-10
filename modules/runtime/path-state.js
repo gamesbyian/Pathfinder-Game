@@ -5,6 +5,7 @@
 
 import { PACK, UNPACK, inBounds } from '../domain/cell-key.js';
 import { isValidMove }            from '../domain/move-rules.js';
+import { MoveContext }            from '../domain/move-context.js';
 import { resolvePortal }          from '../domain/portal-utils.js';
 import { areWinMetricsSatisfied } from './game-rules.js';
 
@@ -121,17 +122,7 @@ export function simulateTapRouteStep(baseState, key, level, options = {}) {
         rebuildDerivedState(nextState, level);
         return { state: nextState, result: 'valid' };
     }
-    if (!isValidMove(key, nextState, level, {
-        isStrict:        true,
-        mode:            nextState.mode,
-        allowJump:       true,
-        checkWinMetrics: false,
-        checkHazards:    false,
-        checkFalseGoals: true,
-        armedFalseGoals: nextState.armedFalseGoals,
-        flipCount:       nextState.flipCount,
-        crossedSet:      nextState.crossedFlippingFilters
-    })) return null;
+    if (!isValidMove(key, nextState, level, MoveContext.TAP_ROUTE)) return null;
     if (!options.skipTIntersectionCheck && wouldCreateBlockedTIntersection(nextState, key, level)) return null;
     if (nextState.mode !== MODE_EDITOR && nextState.mode !== MODE_REVIEW && level.gooseSet.has(key))
         return { state: nextState, result: 'goose' };
