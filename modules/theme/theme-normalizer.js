@@ -186,7 +186,6 @@ export function normalizeTheme(theme, key = 'theme') {
     t.text.megaOutput = t.text.megaOutput || t.output.text;
     t.text.megaPrimary = t.text.megaPrimary || '#ffffff';
     t.text.megaSecondary = t.text.megaSecondary || '#ffffff';
-    t.text.megaGemini = t.text.megaGemini || '#ffffff';
     t.text.megaCopy = t.text.megaCopy || t.modal.text;
     t.text.body = t.text.body || t.modal.text;
     t.text.themeName = pickThemeNameColor(
@@ -276,8 +275,6 @@ export function normalizeTheme(theme, key = 'theme') {
     t.mega.primaryBorder = t.mega.primaryBorder || t.modal.border;
     t.mega.secondaryBg = t.mega.secondaryBg || darkenHex(t.mega.primaryBg, 0.88);
     t.mega.secondaryBorder = t.mega.secondaryBorder || t.modal.border;
-    t.mega.geminiBg = t.mega.geminiBg || t.btns.guide || t.headerRight;
-    t.mega.geminiBorder = t.mega.geminiBorder || t.modal.border;
     t.mega.copyBg = t.mega.copyBg || t.btns.copy || t.modal.panelBg;
     t.mega.copyBorder = t.mega.copyBorder || t.modal.border;
     t.search.megaStatusBorder = t.search.megaStatusBorder || t.mega.outputBorder;
@@ -314,7 +311,7 @@ export function buildChaosTheme() {
         win: { bg: rc(), border: rc(), text: rc(), accent: rc() },
         alert: { bg: rc(), stroke: rc() },
         ctrlArea: { bg: rc(), border: rc() },
-        text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc(), body: rc(), actionBtn: rc(), utilityBtn: rc(), utilityBtnGen: rc(), error: rc(), handDrawnShadow: rc() },
+        text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaCopy: rc(), body: rc(), actionBtn: rc(), utilityBtn: rc(), utilityBtnGen: rc(), error: rc(), handDrawnShadow: rc() },
         loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc() },
         search: { overlayBg: rc(), megaStatusText: rc(), megaStatusBorder: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() },
         jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() },
@@ -322,7 +319,7 @@ export function buildChaosTheme() {
         header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() },
         editor: { inputBg: rc(), inputText: rc(), inputBorder: rc(), inputFocus: rc(), toolIcon: rc(), paletteShadow: `0 0 0 2px ${rc()}66` },
         layout: { border: rc(), divider: rc() },
-        mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() },
+        mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), copyBg: rc(), copyBorder: rc() },
         burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() },
     }, 'chaos');
 }

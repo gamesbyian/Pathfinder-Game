@@ -42,9 +42,6 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-mega-secondary-bg',      t.mega.secondaryBg);
     root.style.setProperty('--theme-mega-secondary-text',    t.text.megaSecondary);
     root.style.setProperty('--theme-mega-secondary-border',  t.mega.secondaryBorder);
-    root.style.setProperty('--theme-mega-gemini-bg',         t.mega.geminiBg);
-    root.style.setProperty('--theme-mega-gemini-text',       t.text.megaGemini);
-    root.style.setProperty('--theme-mega-gemini-border',     t.mega.geminiBorder);
     root.style.setProperty('--theme-mega-copy-bg',           t.mega.copyBg);
     root.style.setProperty('--theme-mega-copy-text',         t.text.megaCopy);
     root.style.setProperty('--theme-mega-copy-border',       t.mega.copyBorder);
