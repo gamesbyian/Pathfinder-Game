@@ -672,6 +672,39 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         state.ENGINE.solver.controller.abort();
     }
 
+    function startSolverRun(controller) {
+        state.ENGINE.solver.controller     = controller;
+        state.ENGINE.solver.abortRequested = false;
+    }
+
+    function endSolverRun() {
+        state.ENGINE.solver.controller     = null;
+        state.ENGINE.solver.abortRequested = false;
+    }
+
+    function setHintPaths(pathList, source, currentIdx = 0) {
+        state.ENGINE.hinter.pathList       = pathList;
+        state.ENGINE.hinter.currentPathIdx = currentIdx;
+        state.ENGINE.hinter.source         = source;
+    }
+
+    function setVariant(v) {
+        state.ENGINE.variant = v;
+        ui.updateViewport();
+        rebuildDerivedPathState(state.ENGINE);
+        state.ENGINE.isDirty = true;
+    }
+
+    function reversePathDirection() {
+        const nav = state.ENGINE.nav;
+        nav.path.reverse();
+        const newJumps = new Set();
+        nav.isPortalJump.forEach(jIdx => newJumps.add(nav.path.length - 1 - jIdx));
+        nav.isPortalJump = newJumps;
+        rebuildDerivedPathState(state.ENGINE);
+        state.ENGINE.isDirty = true;
+    }
+
     function isRunning() { return !!state.ENGINE.solver.controller; }
 
     function resetRunState({ keepLevel = true } = {}) {
@@ -722,6 +755,11 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         startHintAnimation,
         stopHintAnimation,
         cancelSolver,
+        startSolverRun,
+        endSolverRun,
+        setHintPaths,
+        setVariant,
+        reversePathDirection,
         isRunning,
         findTapRoute,
     };

@@ -43,8 +43,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             await new Promise(r => setTimeout(r, 0));
             if (_cancelled) throw new Error('SolverV2:cancelled');
         };
-        state.ENGINE.solver.controller   = { cancel: cancelSolve, abort: cancelSolve };
-        state.ENGINE.solver.abortRequested     = false;
+        engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
         const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
         try {
             engine.setOverlayState(core.SOLVER_RUNNING);
@@ -71,9 +70,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             }
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 ui.setSolverProgress(100);
-                state.ENGINE.hinter.pathList       = [result.solution];
-                state.ENGINE.hinter.currentPathIdx = 0;
-                state.ENGINE.hinter.source         = 'solver';
+                engine.setHintPaths([result.solution], 'solver', 0);
                 engine.startHintAnimation();
             } else {
                 engine.setOverlayState(core.OVERLAY_NONE);
@@ -87,8 +84,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.setOverlayState(core.OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
-            state.ENGINE.solver.controller = null;
-            state.ENGINE.solver.abortRequested   = false;
+            engine.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }
     };
