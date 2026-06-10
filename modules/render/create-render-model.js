@@ -1,5 +1,5 @@
 // Snapshot of all APP state needed for one render frame.
-// Returns a plain object — no APP references escape into the canvas layer.
+// Every mutable collection is copied so the canvas layer sees a stable value.
 
 import { UNPACK }                   from '../domain/cell-key.js';
 import { transformPoint }           from '../domain/geometry.js';
@@ -37,7 +37,7 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     let hintPath = [];
     let hintDisplayPath = [];
     if (hintActive && level) {
-        hintPath        = eng.hinter.pathList[eng.hinter.currentPathIdx] || [];
+        hintPath        = [...(eng.hinter.pathList[eng.hinter.currentPathIdx] || [])];
         hintDisplayPath = hintPath.slice(0, Math.floor(eng.hinter.index));
         for (const key of hintDisplayPath) {
             if (level.flippingFilterMap.has(key) && !hintCrossedFlippingFilters.has(key)) {
@@ -65,7 +65,7 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
 
     return {
         // display geometry
-        viewport: eng.viewport,
+        viewport: { ...eng.viewport },
         // mode flags
         isPlayMode, isEditorMode, isReviewMode,
         // level and transform
@@ -74,20 +74,20 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         // theme
         theme,
         // path state
-        path:                   nav.path,
-        isPortalJump:           nav.isPortalJump,
-        visitedCounts:          nav.visitedCounts,
+        path:                   [...nav.path],
+        isPortalJump:           new Set(nav.isPortalJump),
+        visitedCounts:          new Map(nav.visitedCounts),
         intersections:          nav.intersections,
-        crossedFlippingFilters: nav.crossedFlippingFilters,
+        crossedFlippingFilters: new Map(nav.crossedFlippingFilters),
         flipCount:              nav.flipCount,
         visualFlipCount:        nav.visualFlipCount,
         activeGateKey:          nav.activeGateKey,
-        armedFalseGoals:        hazards.armedFalseGoals,
-        detonatedFalseGoals:    hazards.detonatedFalseGoals,
-        revealedGeese:          hazards.revealedGeese,
+        armedFalseGoals:        new Set(hazards.armedFalseGoals),
+        detonatedFalseGoals:    new Set(hazards.detonatedFalseGoals),
+        revealedGeese:          new Set(hazards.revealedGeese),
         cheatActive:            eng.cheatActive,
         // ripples (already filtered by facade before this call)
-        ripples: eng.ripples,
+        ripples: [...eng.ripples],
         // path stroke style resolved here so canvas layer needs no state read
         strokeStyle: eng.rainbowActive ? 'rainbow' : (theme ? theme.path : '#ffffff'),
         // parity
@@ -103,7 +103,7 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         mustPassOnCanvas,
         mustPassInOverlay,
         // editor
-        editorValidTrapSpots: eng.editor.validTrapSpots,
+        editorValidTrapSpots: new Set(eng.editor.validTrapSpots),
         editorPendingPortal:  eng.editor.pendingPortal,
         // HUD metrics (consumed by facade after canvas render, not by canvas layer)
         currentLen: getRealLength(nav),

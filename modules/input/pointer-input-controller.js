@@ -70,11 +70,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                     if (distTail < distHead) shouldReverse = true;
                 }
                 if (shouldReverse) {
-                    state.ENGINE.nav.path.reverse();
-                    const newJumps = new Set();
-                    state.ENGINE.nav.isPortalJump.forEach(jIdx => newJumps.add(state.ENGINE.nav.path.length - 1 - jIdx));
-                    state.ENGINE.nav.isPortalJump = newJumps;
-                    engine.rebuildDerivedPathState(state.ENGINE);
+                    engine.reversePathDirection();
                 }
             }
             // Tapping an earlier visited cell: truncate or allow legal intersection

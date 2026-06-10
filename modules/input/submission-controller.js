@@ -158,7 +158,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             let _cancelled = false;
             const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
             const yieldFn    = async () => { await new Promise(r => setTimeout(r, 0)); if (_cancelled) throw new Error('SolverV2:cancelled'); };
-            state.ENGINE.solver.controller = { cancel: cancelSolve, abort: cancelSolve };
+            engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
             const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
             try {
                 engine.setOverlayState(core.SOLVER_RUNNING);
@@ -196,8 +196,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 }
             } finally {
                 clearInterval(abortPoll);
-                state.ENGINE.solver.controller = null;
-                state.ENGINE.solver.abortRequested   = false;
+                engine.endSolverRun();
                 ui.setSolverControlsEnabled(true);
             }
         }
@@ -277,12 +276,12 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     // --- Hint button (play mode) ---
 
     const showSavedHint = () => {
-        if (state.ENGINE.level?.hints?.length > 0) {
-            state.ENGINE.hinter.pathList = state.ENGINE.level.hints;
-            state.ENGINE.hinter.currentPathIdx = state.ENGINE.hinter.source === 'saved'
-                ? (state.ENGINE.hinter.currentPathIdx + 1) % state.ENGINE.hinter.pathList.length
+        const hints = state.ENGINE.level?.hints;
+        if (hints?.length > 0) {
+            const nextIdx = state.ENGINE.hinter.source === 'saved'
+                ? (state.ENGINE.hinter.currentPathIdx + 1) % hints.length
                 : 0;
-            state.ENGINE.hinter.source = 'saved';
+            engine.setHintPaths(hints, 'saved', nextIdx);
             engine.startHintAnimation();
         } else {
             ui.showMessage('No saved hint.', 'text-white font-black');
@@ -303,11 +302,10 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         const wl = state.ENGINE.editor.workingLevel;
         if (!wl?.hints?.length) { ui.showMessage('No saved hint.', 'text-white font-black'); return; }
-        state.ENGINE.hinter.pathList = wl.hints;
-        state.ENGINE.hinter.currentPathIdx = state.ENGINE.hinter.source === 'saved'
+        const nextIdx = state.ENGINE.hinter.source === 'saved'
             ? (state.ENGINE.hinter.currentPathIdx + 1) % wl.hints.length
             : 0;
-        state.ENGINE.hinter.source = 'saved';
+        engine.setHintPaths(wl.hints, 'saved', nextIdx);
         engine.startHintAnimation();
     };
 }

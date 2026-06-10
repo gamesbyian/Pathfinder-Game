@@ -16,9 +16,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     const perspectiveAction = () => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
-        state.ENGINE.variant = (state.ENGINE.variant + 1) % 8;
-        ui.updateViewport();
-        engine.rebuildDerivedPathState(state.ENGINE);
+        engine.setVariant((state.ENGINE.variant + 1) % 8);
         core.SOUND_BUS.play('D5', '32n');
     };
     document.getElementById('whoaBtn').onclick = perspectiveAction;
