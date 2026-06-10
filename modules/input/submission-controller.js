@@ -16,60 +16,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             return;
         }
 
-        const smEl      = document.getElementById('submitModal');
-        const smDismiss = document.getElementById('submitModalDismissBtn');
-
-        const resetModal = () => {
-            ['smStep-validate', 'smStep-duplicate', 'smStep-solve', 'smStep-save'].forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                const icon  = el.querySelector('.sm-icon');
-                icon.innerHTML = '○';
-                icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm';
-                el.querySelector('.sm-label').className = 'sm-label text-sm text-slate-400';
-                const det = el.querySelector('.sm-detail');
-                det.innerHTML = '';
-                det.classList.add('hidden');
-            });
-            smDismiss.classList.add('hidden');
-        };
-
-        const setStep = (stepId, status, detail = null) => {
-            const el = document.getElementById(stepId);
-            if (!el) return;
-            const icon     = el.querySelector('.sm-icon');
-            const label    = el.querySelector('.sm-label');
-            const detailEl = el.querySelector('.sm-detail');
-            if (status === 'running') {
-                icon.innerHTML = '<div class="w-3 h-3 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>';
-                icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center';
-                label.className = 'sm-label text-sm text-white font-semibold';
-            } else if (status === 'ok') {
-                icon.innerHTML = '✓';
-                icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-emerald-400 font-bold';
-                label.className = 'sm-label text-sm text-white';
-            } else if (status === 'warn') {
-                icon.innerHTML = '⚠';
-                icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-amber-400';
-                label.className = 'sm-label text-sm text-amber-300';
-            } else if (status === 'error') {
-                icon.innerHTML = '✗';
-                icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-red-400 font-bold';
-                label.className = 'sm-label text-sm text-red-300';
-            }
-            if (detail !== null) {
-                detailEl.innerHTML = (Array.isArray(detail) ? detail : [detail])
-                    .map(r => `<p class="text-xs text-slate-400 leading-snug">• ${r}</p>`).join('');
-                detailEl.classList.remove('hidden');
-            }
-        };
-        const sm = { el: smEl, dismiss: smDismiss, setStep };
-
-        resetModal();
-        smEl.classList.remove('hidden');
+        ui.resetSubmitModal();
+        ui.showSubmitModal();
 
         // Step 1: Validate structure
-        setStep('smStep-validate', 'running');
+        ui.setSubmitStep('smStep-validate', 'running');
         await new Promise(r => setTimeout(r, 0));
         editor.applyMetricsFromUI();
         const l          = state.ENGINE.editor.workingLevel;
@@ -77,16 +28,16 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         const reqLen     = parseInt(ui.getValue('editReqLen')) || 0;
         const reqInt     = parseInt(ui.getValue('editReqInt')) || 0;
         if (!validation?.ok) {
-            setStep('smStep-validate', 'error', validation.reasons?.length ? validation.reasons : ['Fix errors first.']);
-            smDismiss.classList.remove('hidden');
+            ui.setSubmitStep('smStep-validate', 'error', validation.reasons?.length ? validation.reasons : ['Fix errors first.']);
+            ui.showSubmitDismiss();
             return;
         }
         if (!reqLen) {
-            setStep('smStep-validate', 'error', ['Set a path length target before submitting.']);
-            smDismiss.classList.remove('hidden');
+            ui.setSubmitStep('smStep-validate', 'error', ['Set a path length target before submitting.']);
+            ui.showSubmitDismiss();
             return;
         }
-        setStep('smStep-validate', 'ok', 'Structure valid');
+        ui.setSubmitStep('smStep-validate', 'ok', 'Structure valid');
 
         const buildLevelData = (hints = []) => ({
             grid:            l.grid,
@@ -108,7 +59,7 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         });
 
         // Step 2: Check duplicates
-        setStep('smStep-duplicate', 'running');
+        ui.setSubmitStep('smStep-duplicate', 'running');
         let levelFingerprint = null;
         try {
             const duplicateCheck = await persistence.findDuplicateLevel(buildLevelData([]));
@@ -117,24 +68,24 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 const sourceLabel = duplicateCheck.duplicate.source === 'approved'
                     ? 'already approved/published'
                     : 'already waiting for review';
-                setStep('smStep-duplicate', 'error', `Duplicate level: this grid layout and win requirements are ${sourceLabel}. Saved hints are ignored for this check.`);
-                smDismiss.classList.remove('hidden');
+                ui.setSubmitStep('smStep-duplicate', 'error', `Duplicate level: this grid layout and win requirements are ${sourceLabel}. Saved hints are ignored for this check.`);
+                ui.showSubmitDismiss();
                 return;
             }
             const warningLabels = (duplicateCheck?.warnings || []).map(source => source === 'approved' ? 'approved levels' : 'pending queue');
             const details = warningLabels.length
                 ? ['No duplicate found in the collections that could be checked.', `Could not check: ${warningLabels.join(', ')}.`]
                 : 'No duplicate found in pending or approved levels';
-            setStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
+            ui.setSubmitStep('smStep-duplicate', warningLabels.length ? 'warn' : 'ok', details);
         } catch (err) {
             console.error('[Submit] duplicate check failed:', err);
-            setStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
-            smDismiss.classList.remove('hidden');
+            ui.setSubmitStep('smStep-duplicate', 'error', err?.message || 'Could not check for duplicates.');
+            ui.showSubmitDismiss();
             return;
         }
 
         // Step 3: Collect / auto-solve for hints
-        setStep('smStep-solve', 'running');
+        ui.setSubmitStep('smStep-solve', 'running');
         const validateHintPath = (candidatePath) => {
             const lv = levelUtils.deepCloneLevel(l);
             lv.reqLen = reqLen; lv.reqInt = reqInt;
@@ -190,8 +141,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             } catch (err) {
                 engine.setOverlayState(core.OVERLAY_NONE);
                 if (err?.message === 'SolverV2:cancelled') {
-                    setStep('smStep-solve', 'warn', 'Solver cancelled');
-                    smDismiss.classList.remove('hidden');
+                    ui.setSubmitStep('smStep-solve', 'warn', 'Solver cancelled');
+                    ui.showSubmitDismiss();
                     return;
                 }
             } finally {
@@ -202,32 +153,32 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         }
 
         const verified = normalizedHints.length > 0;
-        setStep('smStep-solve', verified ? 'ok' : 'warn',
+        ui.setSubmitStep('smStep-solve', verified ? 'ok' : 'warn',
             verified
                 ? `${normalizedHints.length} solution${normalizedHints.length > 1 ? 's' : ''} confirmed`
                 : 'No solution found — will submit for manual review');
 
         // Step 4: Save to server
-        setStep('smStep-save', 'running');
+        ui.setSubmitStep('smStep-save', 'running');
         const hints     = normalizedHints.slice(0, 5);
         const levelData = buildLevelData(hints);
         try {
             ui.setButtonState(triggerBtnId, { enabled: false });
             await persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true });
-            setStep('smStep-save', 'ok', 'Queued for review');
+            ui.setSubmitStep('smStep-save', 'ok', 'Queued for review');
             if (afterSuccess) {
-                await afterSuccess(sm);
+                await afterSuccess();
             } else {
-                smDismiss.classList.remove('hidden');
-                setTimeout(() => smEl.classList.add('hidden'), 4000);
+                ui.showSubmitDismiss();
+                setTimeout(() => ui.hideSubmitModal(), 4000);
             }
         } catch (err) {
             console.error('[Submit] failed:', err);
             const errMsg = err?.message === 'Not signed in'
                 ? 'Not signed in — refresh the page.'
                 : (err?.message || 'Unknown error');
-            setStep('smStep-save', 'error', errMsg);
-            smDismiss.classList.remove('hidden');
+            ui.setSubmitStep('smStep-save', 'error', errMsg);
+            ui.showSubmitDismiss();
         } finally {
             ui.setButtonState(triggerBtnId, { enabled: true });
         }
@@ -236,11 +187,11 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
     // --- Submit button ---
 
     document.getElementById('reviewSubmitBtn').onclick = () => {
-        const afterReviewSubmit = async (sm) => {
-            sm.setStep('smStep-save', 'running', 'Refreshing review queue…');
+        const afterReviewSubmit = async () => {
+            ui.setSubmitStep('smStep-save', 'running', 'Refreshing review queue…');
             try {
                 const subs = await persistence.loadSubmissions();
-                state.ENGINE.review.submissions = subs;
+                engine.setReviewSubmissions(subs);
                 const safeIdx = Math.min(state.ENGINE.review.currentIdx, Math.max(0, subs.length - 1));
                 if (subs.length > 0) {
                     engine.loadReviewLevel(safeIdx);
@@ -252,15 +203,15 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
             } catch (e) {
                 console.warn('[ReviewSubmit] Queue refresh failed:', e);
             }
-            sm.setStep('smStep-save', 'ok', 'Queued for review');
-            sm.dismiss.classList.remove('hidden');
-            setTimeout(() => sm.el.classList.add('hidden'), 4000);
+            ui.setSubmitStep('smStep-save', 'ok', 'Queued for review');
+            ui.showSubmitDismiss();
+            setTimeout(() => ui.hideSubmitModal(), 4000);
         };
         const afterSuccess = state.ENGINE.mode === core.REVIEW ? afterReviewSubmit : null;
         submitWorkingLevel('reviewSubmitBtn', afterSuccess);
     };
 
-    document.getElementById('submitModalDismissBtn').onclick = () => document.getElementById('submitModal').classList.add('hidden');
+    document.getElementById('submitModalDismissBtn').onclick = () => ui.hideSubmitModal();
 
     // --- Dev: copy current path ---
 

@@ -7,7 +7,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     document.getElementById('muteBtn').onclick = () => {
         ui.closeAllModals();
-        state.ENGINE.muted = !state.ENGINE.muted;
+        engine.toggleMute();
         ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none');
     };
 
@@ -26,22 +26,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     document.getElementById('resetBtn').onclick = () => {
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
-        if (state.ENGINE.cheatActive) {
-            if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-            state.ENGINE.cheatTimer = setTimeout(() => { state.ENGINE.cheatActive = false; }, 3000);
-        } else {
-            state.ENGINE.resetStreak++;
-            if (state.ENGINE.resetStreak >= 5) {
-                state.ENGINE.cheatActive = true;
-                core.SOUND_BUS.play('F5', '8n');
-                if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-                state.ENGINE.cheatTimer = setTimeout(() => {
-                    state.ENGINE.cheatActive = false;
-                    state.ENGINE.resetStreak = 0;
-                }, 3000);
-            }
-        }
-        engine.loadLevel(state.ENGINE.levelIdx, { keepVariant: true });
+        engine.handleResetAction();
     };
 
     // --- Undo (play mode) ---
@@ -105,7 +90,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         const el = document.getElementById(id);
         if (el) el.onchange = () => { fn(el.checked); reloadForOptions(); };
     };
-    bindOptionToggle('optionMuteToggle',       checked => { state.ENGINE.muted = checked; ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none'); });
+    bindOptionToggle('optionMuteToggle',       checked => { engine.setMuted(checked); ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none'); });
     bindOptionToggle('optionGeeseToggle',      checked => { state.ENGINE.options.geese      = checked; });
     bindOptionToggle('optionFalseGoalsToggle', checked => { state.ENGINE.options.falseGoals = checked; });
     bindOptionToggle('optionDeadGatesToggle',  checked => { state.ENGINE.options.deadGates  = checked; });

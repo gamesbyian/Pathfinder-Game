@@ -171,7 +171,6 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         if (state.ENGINE.mode === core.REVIEW) {
             tryNavigate(() => {
                 ui.closeAllModals();
-                state.ENGINE.levelIdx = state.ENGINE.review.savedPlayLevelIdx;
                 engine.switchMode(core.PLAY);
             });
         } else if (state.ENGINE.mode === core.EDITOR) {

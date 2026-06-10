@@ -89,7 +89,7 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         // ripples (already filtered by facade before this call)
         ripples: [...eng.ripples],
         // path stroke style resolved here so canvas layer needs no state read
-        strokeStyle: eng.rainbowActive ? 'rainbow' : (theme ? theme.path : '#ffffff'),
+        strokeStyle: themes.getCurrentTheme() === 'classic' ? 'rainbow' : (theme ? theme.path : '#ffffff'),
         // parity
         reqLen, showParityWarnings, targetParity, hasFlippingPortal,
         // hint

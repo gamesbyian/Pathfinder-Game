@@ -20,10 +20,8 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap);
         const eng = state.ENGINE;
         if (eng.editor.pendingPortal) eng.editor.pendingPortal = mapKey(eng.editor.pendingPortal);
-        eng.nav.path = eng.nav.path.map(mapKey);
-        if (eng.nav.activeGateKey) eng.nav.activeGateKey = mapKey(eng.nav.activeGateKey);
-        engine.rebuildDerivedPathState();
-        eng.hinter.pathList = [];
+        engine.remapNavKeys(mapKey);
+        engine.clearHintPaths();
         eng.editor.validTrapSpots.clear();
         eng.editor.isModified = true;
         ui.updateViewport();
@@ -64,10 +62,8 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             levelUtils.shiftLevelCoords(l, shiftX, shiftY);
             const shiftKey = k => { const p = levelUtils.UNPACK(k); return levelUtils.PACK(p.x + shiftX, p.y + shiftY); };
             if (eng.editor.pendingPortal) eng.editor.pendingPortal = shiftKey(eng.editor.pendingPortal);
-            eng.nav.path = eng.nav.path.map(shiftKey);
-            if (eng.nav.activeGateKey != null) eng.nav.activeGateKey = shiftKey(eng.nav.activeGateKey);
-            engine.rebuildDerivedPathState();
-            eng.hinter.pathList = [];
+            engine.remapNavKeys(shiftKey);
+            engine.clearHintPaths();
             eng.editor.validTrapSpots.clear();
         }
         l.grid.w = newSize;
@@ -231,7 +227,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             return;
         }
         const yieldFn = async () => { await new Promise(r => setTimeout(r, 0)); };
-        state.ENGINE.solver.controller = { cancel: () => {}, abort: () => {} };
+        engine.startSolverRun({ cancel: () => {}, abort: () => {} });
         try {
             engine.setOverlayState(core.SOLVER_RUNNING);
             ui.setModalContent('searchLabel', 'Searching for Trap Spots...', 'text');
@@ -299,7 +295,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.showMessage(`Search failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
             engine.setOverlayState(core.OVERLAY_NONE);
         } finally {
-            state.ENGINE.solver.controller = null;
+            engine.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }
     };
