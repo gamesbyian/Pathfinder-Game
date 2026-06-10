@@ -84,7 +84,6 @@ export function normalizeTheme(theme, key = 'theme') {
     t.header = t.header || {};
     t.editor = t.editor || {};
     t.layout = t.layout || {};
-    t.themeEditor = t.themeEditor || {};
 
     t.bodyBg = t.bodyBg || '#e0f2fe';
     t.canvasBg = t.canvasBg || '#ffffff';
@@ -225,7 +224,6 @@ export function normalizeTheme(theme, key = 'theme') {
 
     t.search.overlayBg = t.search.overlayBg || t.modal.bg;
     t.search.megaStatusText = t.search.megaStatusText || t.text.megaOutput;
-    t.search.megaStatusBorder = t.search.megaStatusBorder || t.mega.outputBorder;
     t.search.label = t.search.label || t.text.output;
     t.search.dot = t.search.dot || t.path || t.headerRight;
     t.search.timer = t.search.timer || t.text.modal;
@@ -271,9 +269,6 @@ export function normalizeTheme(theme, key = 'theme') {
     t.layout.border = t.layout.border || t.modal.border;
     t.layout.divider = t.layout.divider || t.modal.border;
 
-    t.themeEditor.panelBg = t.themeEditor.panelBg || 'rgba(0,0,0,0.05)';
-    t.themeEditor.swatchBorder = t.themeEditor.swatchBorder || t.modal.border;
-
     t.modal.closeHover = t.modal.closeHover || 'rgba(0,0,0,0.05)';
     t.colors.portalPending = t.colors.portalPending || '#999999';
     t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
@@ -289,6 +284,7 @@ export function normalizeTheme(theme, key = 'theme') {
     t.mega.geminiBorder = t.mega.geminiBorder || t.modal.border;
     t.mega.copyBg = t.mega.copyBg || t.btns.copy || t.modal.panelBg;
     t.mega.copyBorder = t.mega.copyBorder || t.modal.border;
+    t.search.megaStatusBorder = t.search.megaStatusBorder || t.mega.outputBorder;
 
     if (['candy_apple', 'hello_kitty', 'roygbiv', 'vegas', 'sherbet'].includes(key)) {
         const vibrantModeToggle = {
@@ -330,7 +326,6 @@ export function buildChaosTheme() {
         header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() },
         editor: { inputBg: rc(), inputText: rc(), inputBorder: rc(), inputFocus: rc(), toolIcon: rc(), paletteShadow: `0 0 0 2px ${rc()}66` },
         layout: { border: rc(), divider: rc() },
-        themeEditor: { panelBg: rc(), swatchBorder: rc() },
         mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), geminiBg: rc(), geminiBorder: rc(), copyBg: rc(), copyBorder: rc() },
         burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() },
     }, 'chaos');

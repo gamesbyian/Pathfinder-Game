@@ -94,8 +94,6 @@ export function applyCssVariables(root, t, leave) {
     root.style.setProperty('--theme-editor-input-text',  t.editor.inputText);
     root.style.setProperty('--theme-editor-input-border',t.editor.inputBorder);
     root.style.setProperty('--theme-editor-input-focus', t.editor.inputFocus);
-    root.style.setProperty('--theme-theme-editor-panel-bg',     t.themeEditor.panelBg);
-    root.style.setProperty('--theme-theme-editor-swatch-border',t.themeEditor.swatchBorder);
     root.style.setProperty('--theme-editor-tool-icon',          t.editor.toolIcon);
     root.style.setProperty('--theme-editor-palette-shadow',     t.editor.paletteShadow);
     root.style.setProperty('--theme-hand-drawn-shadow',         t.text.handDrawnShadow);
