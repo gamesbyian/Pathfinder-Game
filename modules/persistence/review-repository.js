@@ -3,7 +3,7 @@
 
 import { encodeHints, decodeHints } from './level-submission-repository.js';
 
-export function createReviewRepository(client, APP) {
+export function createReviewRepository(client, { getLevelFingerprint }) {
     const { appId } = client;
     const root = () => client.db.collection('artifacts').doc(appId);
 
@@ -42,7 +42,7 @@ export function createReviewRepository(client, APP) {
 
     async function approveSubmission(submissionId, levelData, sortOrder) {
         if (!client.db) throw new Error('No Firebase connection');
-        const levelFingerprint = await APP.LevelUtils.getLevelFingerprint(levelData);
+        const levelFingerprint = await getLevelFingerprint(levelData);
         const batch      = client.db.batch();
         const publishRef = root().collection('published_levels').doc();
         batch.set(publishRef, {

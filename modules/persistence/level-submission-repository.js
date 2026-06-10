@@ -11,7 +11,7 @@ export function decodeHints(levelData) {
     return { ...levelData, hints: levelData.hints.map(h => typeof h === 'string' ? JSON.parse(h) : h) };
 }
 
-export function createLevelSubmissionRepository(client, APP) {
+export function createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint }) {
     const { appId } = client;
     const root = () => client.db.collection('artifacts').doc(appId);
 
@@ -19,7 +19,7 @@ export function createLevelSubmissionRepository(client, APP) {
         const data = doc.data() || {};
         if (data.levelFingerprint === fingerprint) return { source, id: doc.id, fingerprint };
         const existingLevelData = decodeHints(data.levelData || {});
-        if (existingLevelData && APP.LevelUtils.isSameLevelStructure(existingLevelData, levelData)) {
+        if (existingLevelData && isSameLevelStructure(existingLevelData, levelData)) {
             return { source, id: doc.id, fingerprint };
         }
         return null;
@@ -27,7 +27,7 @@ export function createLevelSubmissionRepository(client, APP) {
 
     async function findDuplicateLevel(levelData) {
         if (!client.db) throw new Error('No Firebase connection');
-        const fingerprint = await APP.LevelUtils.getLevelFingerprint(levelData);
+        const fingerprint = await getLevelFingerprint(levelData);
         const warnings = [];
 
         const checkCollection = async (collectionName, source) => {
@@ -70,7 +70,7 @@ export function createLevelSubmissionRepository(client, APP) {
         const user = await client.waitForUser();
         if (!user) throw new Error('Not signed in');
 
-        let levelFingerprint = options.levelFingerprint || await APP.LevelUtils.getLevelFingerprint(levelData);
+        let levelFingerprint = options.levelFingerprint || await getLevelFingerprint(levelData);
         if (!options.skipDuplicateCheck) {
             const duplicateCheck = await findDuplicateLevel(levelData);
             levelFingerprint = duplicateCheck.fingerprint || levelFingerprint;

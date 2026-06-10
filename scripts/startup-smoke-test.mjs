@@ -92,10 +92,6 @@ const bootHarness        = stripEsm(bootSrc);
       getItem:  (key)        => storage.get(key) ?? null,
       setItem:  (key, value) => { storage.set(key, String(value)); }
     },
-    // ui stub expected by local-session-store
-    APP: {
-      UI: { updateLevelDisplay() {} }
-    }
   };
 
   vm.createContext(ctx);

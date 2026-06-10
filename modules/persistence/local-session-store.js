@@ -1,21 +1,21 @@
 // localStorage session state: current level index and theme.
 // Also handles merging of incoming cloud session snapshots with local state.
 
-export function createLocalSessionStore(client, APP) {
+export function createLocalSessionStore(client, { getRawLevels, getTheme, getState }) {
     const { appId } = client;
 
     function sanitizeSessionPayload(raw, fallback = {}) {
-        const levelCount = APP.LevelUtils.getRawLevels()?.length || 0;
+        const levelCount = getRawLevels()?.length || 0;
         const maxIdx = Math.max(0, levelCount - 1);
-        const fallbackTheme = (typeof fallback?.currentTheme === 'string' && APP.Themes.getTheme(fallback.currentTheme))
+        const fallbackTheme = (typeof fallback?.currentTheme === 'string' && getTheme(fallback.currentTheme))
             ? fallback.currentTheme
-            : (APP.State.ENGINE.runtime.currentTheme || 'classic');
+            : (getState().runtime.currentTheme || 'classic');
         const fallbackLevel = Number.isInteger(fallback?.levelIdx) ? Math.max(0, fallback.levelIdx) : 0;
 
         const safeLevel = Number.isInteger(raw?.levelIdx)
             ? (levelCount > 0 ? Math.max(0, Math.min(raw.levelIdx, maxIdx)) : Math.max(0, raw.levelIdx))
             : fallbackLevel;
-        const safeTheme = (typeof raw?.currentTheme === 'string' && APP.Themes.getTheme(raw.currentTheme))
+        const safeTheme = (typeof raw?.currentTheme === 'string' && getTheme(raw.currentTheme))
             ? raw.currentTheme
             : fallbackTheme;
         const updatedAt = Number.isFinite(raw?.updatedAt) ? Math.max(0, Math.floor(raw.updatedAt)) : 0;
@@ -41,8 +41,8 @@ export function createLocalSessionStore(client, APP) {
     function persistSessionState() {
         try {
             const payload = {
-                levelIdx:     APP.State.ENGINE.levelIdx,
-                currentTheme: APP.State.ENGINE.runtime.currentTheme || 'classic',
+                levelIdx:     getState().levelIdx,
+                currentTheme: getState().runtime.currentTheme || 'classic',
                 updatedAt:    Date.now(),
             };
             localStorage.setItem(`pathfinder_session_${appId}`, JSON.stringify(payload));

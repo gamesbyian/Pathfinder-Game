@@ -5,7 +5,7 @@ import { createThemeRegistry, ensureThemeLeaveColors as _ensureThemeLeaveColors 
 import { applyCssVariables }                                            from './theme/css-variable-applier.js';
 import { populateThemePicker }                                          from './theme/theme-picker-renderer.js';
 
-export function createThemes({ state, data, getPersistence, ui }) {
+export function createThemes({ state, data, getPersistence, getUI }) {
     const THEMES = {};  // local fallback when data is not yet loaded
 
     const { getThemeRegistry, getCurrentTheme, getTheme } = createThemeRegistry(
@@ -26,7 +26,7 @@ export function createThemes({ state, data, getPersistence, ui }) {
 
     function populateThemes() {
         const themes = getThemeRegistry();
-        populateThemePicker({ clearElement: ui.clearElement }, themes, getCurrentTheme() || 'classic', applyTheme);
+        populateThemePicker({ clearElement: getUI().clearElement }, themes, getCurrentTheme() || 'classic', applyTheme);
     }
 
     const api = {
