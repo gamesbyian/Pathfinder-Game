@@ -1,9 +1,9 @@
 // Renders the theme selection grid inside the options panel.
 // Owns only DOM construction — no state, no CSS variable writes.
 
-export function populateThemePicker(APP, themes, currentThemeKey, applyThemeFn) {
+export function populateThemePicker({ clearElement }, themes, currentThemeKey, applyThemeFn) {
     const grid = document.getElementById('themeGrid');
-    APP.UI.clearElement('themeGrid');
+    clearElement('themeGrid');
 
     const currentTheme = themes[currentThemeKey] || themes.classic || {};
     const uniformThemeNameColor = (currentTheme.text && (currentTheme.text.themeName || currentTheme.text.modal)) || '#000000';

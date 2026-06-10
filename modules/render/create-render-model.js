@@ -6,16 +6,13 @@ import { transformPoint }           from '../domain/geometry.js';
 import { hasParitySwitchingPortal } from '../domain/portal-utils.js';
 import { getRealLength }            from '../runtime/game-rules.js';
 
-export function createRenderModel(APP, reqLenPreview = null) {
-    const eng  = APP.State.ENGINE;
-    const core = APP.Core;
-
+export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     const isPlayMode   = eng.mode === core.PLAY;
     const isEditorMode = eng.mode === core.EDITOR;
     const isReviewMode = eng.mode === core.REVIEW;
 
     const level = isPlayMode ? eng.level : eng.editor.workingLevel;
-    const theme = APP.Themes.THEMES[APP.Themes.getCurrentTheme()];
+    const theme = themes.THEMES[themes.getCurrentTheme()];
 
     // --- Parity warnings ---
     let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;

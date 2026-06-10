@@ -7,7 +7,7 @@ export const getViewportDimensions = () => {
 };
 
 export const measureGridModalRect = () => {
-    const appLayout      = document.getElementById('appLayout');
+    const appLayout       = document.getElementById('appLayout');
     const canvasContainer = document.getElementById('canvasContainer');
     const source          = canvasContainer || appLayout;
     if (!source) return;
@@ -27,7 +27,7 @@ export const syncEditorPalettePlacement = () => {
         gamePane.parentElement.insertBefore(pal, controlsPane);
 };
 
-export const createLayoutUI = (APP) => {
+export const createLayoutUI = ({ core, getState, getRenderer }) => {
     const updateLayoutMode = () => {
         syncEditorPalettePlacement();
         measureGridModalRect();
@@ -35,35 +35,37 @@ export const createLayoutUI = (APP) => {
     };
 
     const updateViewport = () => {
-        const canvas = APP.Renderer.getCanvas();
+        const canvas = getRenderer().getCanvas();
         const rect   = canvas.getBoundingClientRect();
         if (rect.width === 0) return;
-        const l = APP.State.ENGINE.mode === APP.Core.PLAY
-            ? APP.State.ENGINE.level
-            : APP.State.ENGINE.editor.workingLevel;
+        const eng = getState();
+        const l = eng.mode === core.PLAY
+            ? eng.level
+            : eng.editor.workingLevel;
         if (!l) return;
         const swaps = [1, 3, 6, 7];
-        APP.State.ENGINE.viewport.swapped = swaps.includes(APP.State.ENGINE.variant);
-        const gridW = APP.State.ENGINE.viewport.swapped ? l.grid.h : l.grid.w;
-        const gridH = APP.State.ENGINE.viewport.swapped ? l.grid.w : l.grid.h;
-        APP.State.ENGINE.viewport.cellW = canvas.width  / gridW;
-        APP.State.ENGINE.viewport.cellH = canvas.height / gridH;
-        APP.State.ENGINE.isDirty = true;
+        eng.viewport.swapped = swaps.includes(eng.variant);
+        const gridW = eng.viewport.swapped ? l.grid.h : l.grid.w;
+        const gridH = eng.viewport.swapped ? l.grid.w : l.grid.h;
+        eng.viewport.cellW = canvas.width  / gridW;
+        eng.viewport.cellH = canvas.height / gridH;
+        eng.isDirty = true;
     };
 
     const updateAppScale = () => {
         const VIEWPORT_EPSILON = 2;
         const viewport      = getViewportDimensions();
-        const widthChanged  = Math.abs(viewport.width  - APP.State.ENGINE.viewport.lastWidth)  > VIEWPORT_EPSILON;
-        const heightChanged = Math.abs(viewport.height - APP.State.ENGINE.viewport.lastHeight) > VIEWPORT_EPSILON;
+        const eng           = getState();
+        const widthChanged  = Math.abs(viewport.width  - eng.viewport.lastWidth)  > VIEWPORT_EPSILON;
+        const heightChanged = Math.abs(viewport.height - eng.viewport.lastHeight) > VIEWPORT_EPSILON;
         updateLayoutMode();
         if (!widthChanged && !heightChanged) return;
-        APP.State.ENGINE.viewport.lastWidth  = viewport.width;
-        APP.State.ENGINE.viewport.lastHeight = viewport.height;
+        eng.viewport.lastWidth  = viewport.width;
+        eng.viewport.lastHeight = viewport.height;
         const scale = Math.min(viewport.height * 0.02, viewport.width * 0.035);
         setRootCssVar('--app-scale', `${scale}px`);
         updateViewport();
-        APP.State.ENGINE.isDirty = true;
+        eng.isDirty = true;
     };
 
     return { updateLayoutMode, updateViewport, updateAppScale };

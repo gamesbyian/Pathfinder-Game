@@ -1,7 +1,7 @@
 // Review controller: admin sign-in, approve/reject, published-levels management,
 // and the review-load modal dismiss.
 
-export function installReviewController(APP) {
+export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence }) {
 
     // --- Admin sign-in ---
 
@@ -11,7 +11,7 @@ export function installReviewController(APP) {
         btn.disabled = true;
         if (statusEl) statusEl.textContent = 'Signing in…';
         try {
-            await APP.Persistence.initAdminAuth();
+            await persistence.initAdminAuth();
         } catch (err) {
             if (statusEl) statusEl.textContent = err?.message || 'Sign-in failed.';
             btn.disabled = false;
@@ -19,9 +19,9 @@ export function installReviewController(APP) {
         }
         const overlay = document.getElementById('reviewAuthOverlay');
         if (overlay) overlay.classList.add('hidden');
-        APP.State.ENGINE.review.submissions = [];
-        APP.State.ENGINE.review.currentIdx  = 0;
-        APP.Engine.switchMode(APP.Core.REVIEW);
+        state.ENGINE.review.submissions = [];
+        state.ENGINE.review.currentIdx  = 0;
+        engine.switchMode(core.REVIEW);
 
         const rlm = {
             el:      document.getElementById('reviewLoadModal'),
@@ -37,10 +37,10 @@ export function installReviewController(APP) {
         rlm.dismiss.classList.add('hidden');
         rlm.el.classList.remove('hidden');
         try {
-            const subs = await APP.Persistence.loadSubmissions();
-            APP.State.ENGINE.review.submissions = subs;
+            const subs = await persistence.loadSubmissions();
+            state.ENGINE.review.submissions = subs;
             if (subs.length === 0) {
-                APP.Engine.loadReviewLevel(0);
+                engine.loadReviewLevel(0);
                 rlm.heading.textContent = 'No Submissions';
                 rlm.heading.style.color = '#94a3b8';
                 rlm.detail.textContent  = 'No levels are waiting for review.';
@@ -48,7 +48,7 @@ export function installReviewController(APP) {
                 rlm.dismiss.classList.remove('hidden');
             } else {
                 rlm.el.classList.add('hidden');
-                APP.Engine.loadReviewLevel(0);
+                engine.loadReviewLevel(0);
             }
         } catch (err) {
             rlm.heading.textContent = 'Load Failed';
@@ -65,46 +65,46 @@ export function installReviewController(APP) {
     // --- Approve / Reject ---
 
     document.getElementById('reviewApproveBtn').onclick = async () => {
-        const subs = APP.State.ENGINE.review.submissions;
-        const idx  = APP.State.ENGINE.review.currentIdx;
-        if (!subs.length || !APP.State.ENGINE.editor.workingLevel) return;
+        const subs = state.ENGINE.review.submissions;
+        const idx  = state.ENGINE.review.currentIdx;
+        if (!subs.length || !state.ENGINE.editor.workingLevel) return;
         const sub       = subs[idx];
-        const levelData = APP.LevelUtils.denormalizeLevel(APP.State.ENGINE.editor.workingLevel);
-        APP.Editor.applyMetricsFromUI();
+        const levelData = levelUtils.denormalizeLevel(state.ENGINE.editor.workingLevel);
+        editor.applyMetricsFromUI();
         try {
-            APP.UI.showMessage('Approving…', 'text-white font-black');
-            await APP.Persistence.approveSubmission(sub.id, levelData, Date.now());
-            APP.State.ENGINE.review.submissions.splice(idx, 1);
-            if (!APP.State.ENGINE.review.submissions.length) {
-                APP.Engine.loadReviewLevel(0);
-                APP.UI.showMessage('No more submissions.', 'text-slate-400');
+            ui.showMessage('Approving…', 'text-white font-black');
+            await persistence.approveSubmission(sub.id, levelData, Date.now());
+            state.ENGINE.review.submissions.splice(idx, 1);
+            if (!state.ENGINE.review.submissions.length) {
+                engine.loadReviewLevel(0);
+                ui.showMessage('No more submissions.', 'text-slate-400');
             } else {
-                APP.Engine.loadReviewLevel(Math.min(idx, APP.State.ENGINE.review.submissions.length - 1));
-                APP.UI.showMessage('Approved!', 'text-emerald-400 font-black');
+                engine.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
+                ui.showMessage('Approved!', 'text-emerald-400 font-black');
             }
         } catch (err) {
-            APP.UI.showMessage('Approve failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
+            ui.showMessage('Approve failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
         }
     };
 
     document.getElementById('reviewRejectBtn').onclick = async () => {
-        const subs = APP.State.ENGINE.review.submissions;
-        const idx  = APP.State.ENGINE.review.currentIdx;
+        const subs = state.ENGINE.review.submissions;
+        const idx  = state.ENGINE.review.currentIdx;
         if (!subs.length) return;
         const sub = subs[idx];
         try {
-            APP.UI.showMessage('Rejecting…', 'text-white font-black');
-            await APP.Persistence.rejectSubmission(sub.id);
-            APP.State.ENGINE.review.submissions.splice(idx, 1);
-            if (!APP.State.ENGINE.review.submissions.length) {
-                APP.Engine.loadReviewLevel(0);
-                APP.UI.showMessage('No more submissions.', 'text-slate-400');
+            ui.showMessage('Rejecting…', 'text-white font-black');
+            await persistence.rejectSubmission(sub.id);
+            state.ENGINE.review.submissions.splice(idx, 1);
+            if (!state.ENGINE.review.submissions.length) {
+                engine.loadReviewLevel(0);
+                ui.showMessage('No more submissions.', 'text-slate-400');
             } else {
-                APP.Engine.loadReviewLevel(Math.min(idx, APP.State.ENGINE.review.submissions.length - 1));
-                APP.UI.showMessage('Rejected.', 'text-slate-400');
+                engine.loadReviewLevel(Math.min(idx, state.ENGINE.review.submissions.length - 1));
+                ui.showMessage('Rejected.', 'text-slate-400');
             }
         } catch (err) {
-            APP.UI.showMessage('Reject failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
+            ui.showMessage('Reject failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
         }
     };
 
@@ -118,7 +118,7 @@ export function installReviewController(APP) {
         status.classList.remove('hidden');
         list.innerHTML = '';
         try {
-            const docs = await APP.Persistence.listPublishedLevelDocs();
+            const docs = await persistence.listPublishedLevelDocs();
             if (!docs.length) { status.textContent = 'No published levels remain.'; return; }
             status.classList.add('hidden');
             docs.forEach(doc => {
@@ -133,24 +133,24 @@ export function installReviewController(APP) {
     };
 
     document.getElementById('reviewPublishedLevelsBtn').onclick = async () => {
-        APP.UI.closeAllModals();
-        APP.UI.openModal('publishedLevelsModal');
+        ui.closeAllModals();
+        ui.openModal('publishedLevelsModal');
         await refreshPublishedLevelsModal();
     };
-    document.getElementById('closePublishedLevelsBtn').onclick   = () => APP.UI.closeModal('publishedLevelsModal');
+    document.getElementById('closePublishedLevelsBtn').onclick   = () => ui.closeModal('publishedLevelsModal');
     document.getElementById('refreshPublishedLevelsBtn').onclick = refreshPublishedLevelsModal;
     document.getElementById('deletePublishedLevelsBtn').onclick  = async () => {
         const ids = Array.from(document.querySelectorAll('.published-level-checkbox:checked'))
             .map(el => el.dataset.id)
             .filter(Boolean);
-        if (!ids.length) { APP.UI.showMessage('Select levels first.', 'text-white font-black'); return; }
+        if (!ids.length) { ui.showMessage('Select levels first.', 'text-white font-black'); return; }
         if (!window.confirm(`Delete ${ids.length} published level${ids.length === 1 ? '' : 's'}?`)) return;
         try {
-            await APP.Persistence.deletePublishedLevels(ids);
+            await persistence.deletePublishedLevels(ids);
             await refreshPublishedLevelsModal();
-            APP.UI.showMessage('Deleted.', 'text-white font-black');
+            ui.showMessage('Deleted.', 'text-white font-black');
         } catch (err) {
-            APP.UI.showMessage('Delete failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
+            ui.showMessage('Delete failed: ' + (err?.message || 'Error'), 'text-red-500 font-bold');
         }
     };
 }

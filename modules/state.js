@@ -1,11 +1,10 @@
 import { createEditorState } from './editor/editor-model.js';
 
-export function installState(APP) {
-    APP.State = (() => {
-        const ENGINE = {
-        mode: APP.Core.PLAY,
-        logicState: APP.Core.IDLE,
-        overlayState: APP.Core.OVERLAY_NONE,
+export function createState({ core }) {
+    const ENGINE = {
+        mode: core.PLAY,
+        logicState: core.IDLE,
+        overlayState: core.OVERLAY_NONE,
         isDevMode: false,
         cheatActive: false,
         levelIdx: 0,
@@ -54,6 +53,5 @@ export function installState(APP) {
         gamepad: { lastButtons: [], lastAxes: [0, 0], nextMoveAt: 0, hasPad: false, rafActive: false, rafId: null },
         flags: { useRefereeSolver: true, refereeDebug: false, warnNonCanonicalLevelFields: false }
     };
-        return { ENGINE };
-    })();
+    return { ENGINE };
 }

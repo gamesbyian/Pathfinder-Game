@@ -7,9 +7,10 @@
  * Run: node scripts/domain-unit-tests.mjs
  */
 import assert from 'node:assert/strict';
-import { installCore } from '../modules/core.js';
-import { installLevelUtils } from '../modules/levelutils.js';
-import { installEngine } from '../modules/engine.js';
+import { createCore } from '../modules/core.js';
+import { createState } from '../modules/state.js';
+import { createLevelUtils } from '../modules/levelutils.js';
+import { createEngine } from '../modules/engine.js';
 import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../modules/runtime/state-machine.js';
 import { cloneTapRouteState, rebuildDerivedState, simulateTapRouteStep, wouldCreateBlockedTIntersection } from '../modules/runtime/path-state.js';
 import { checkWinConditionImpl as checkWinConditionImplDirect } from '../modules/runtime/game-rules.js';
@@ -23,80 +24,64 @@ import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
 import { encodeHints, decodeHints }                          from '../modules/persistence/level-submission-repository.js';
 
 // ---------------------------------------------------------------------------
-// Minimal APP bootstrap
+// Minimal bootstrap using Phase 9 factory functions
 // ---------------------------------------------------------------------------
-// Provides only what installCore/installLevelUtils/installEngine need at
-// install time. DOM, Firebase, Canvas, and audio-unlock paths are all
-// guarded internally and never called during the pure function tests below.
+// Provides only what createEngine/createLevelUtils need at construction time.
+// DOM, Firebase, Canvas, and audio-unlock paths are all guarded internally
+// and never called during the pure function tests below.
 
 function buildTestApp() {
-    const APP = {};
-
-    installCore(APP);   // PACK/UNPACK, H/V/NONE, PLAY/EDITOR/REVIEW, IDLE, etc.
-
-    APP.State = {
-        ENGINE: {
-            mode: APP.Core.PLAY,
-            logicState: APP.Core.IDLE,
-            overlayState: APP.Core.OVERLAY_NONE,
-            isDevMode: false,
-            level: null,
-            path: [],
-            isPortalJump: new Set(),
-            visitedCounts: new Map(),
-            cellUsage: new Map(),
-            intersections: 0,
-            flipCount: 0,
-            crossedFlippingFilters: new Map(),
-            detonatedFalseGoals: new Set(),
-            armedFalseGoals: new Set(),
-            activeGateKey: null,
-            hinter: { pathList: [] },
-            undoStack: [],
-            revealedGeese: new Set(),
-            ripples: [],
-            isDirty: false,
-            solverAbortRequested: false,
-            editor: {
-                workingLevel: null,
-                isModified: false,
-                pendingPortal: null,
-                validTrapSpots: new Set(),
-                draggedObject: null,
-                draggedFromGrid: false,
-                selectedTool: null,
-                isPencilMode: false,
-                undoStack: []
-            }
-        }
-    };
+    const core  = createCore();
+    const state = createState({ core });
 
     // Data stub — normalizeLevel(idx) reads from here; processRawLevel does not.
-    APP.Data = { getLevels: () => _rawLevels };
+    const data = { getLevels: () => _rawLevels };
 
-    // Renderer/Editor/UI stubs — used only by impure functions we don't test here.
-    APP.Renderer = { getCanvas: () => null, render: () => {} };
-    APP.Editor   = { saveEditorState: () => {} };
-    APP.UI = {
+    // Stubs for deps that are only used in impure paths not exercised here.
+    const rendererStub    = { getCanvas: () => null, render: () => {} };
+    const editorStub      = { saveEditorState: () => {} };
+    const uiStub = {
         EditorDragGhost: { update() {} },
         setSolverAbortRequested() {},
         applyOverlayState() {}
     };
-    APP.Persistence = {};
+    const persistenceStub = {};
+    const themesStub      = {};
 
-    installLevelUtils(APP);
-    installEngine(APP);
+    let _engine;
 
-    return APP;
+    const levelUtils = createLevelUtils({
+        core,
+        data,
+        getState:    () => state.ENGINE,
+        getRenderer: () => rendererStub,
+        getEngine:   () => _engine,
+        getEditor:   () => editorStub,
+        getUI:       () => uiStub,
+    });
+
+    _engine = createEngine({
+        core,
+        state,
+        ui:          uiStub,
+        renderer:    rendererStub,
+        levelUtils,
+        themes:      themesStub,
+        data,
+        persistence: persistenceStub,
+        editor:      editorStub,
+    });
+
+    return { core, state, levelUtils, engine: _engine };
 }
 
 // Data store for normalizeLevel tests — populated per-test.
 let _rawLevels = [];
 
-const APP = buildTestApp();
+const { core, levelUtils, engine } = buildTestApp();
 const { PACK, UNPACK, inBounds, processRawLevel, denormalizeLevel, normalizeLevel,
-        isValidMove, getLevelFingerprintSource, isSameLevelStructure } = APP.LevelUtils;
-const { areWinMetricsSatisfied, getRealLength } = APP.Engine;
+        isValidMove, getLevelFingerprintSource, isSameLevelStructure } = levelUtils;
+const { areWinMetricsSatisfied, getRealLength } = engine;
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -157,10 +142,10 @@ function makeState(opts = {}) {
             if (i > 0 && !isPortalJump.has(i)) {
                 const prev = path[i - 1];
                 const p1 = UNPACK(prev), p2 = UNPACK(k);
-                const axis = p2.y === p1.y ? APP.Core.H : APP.Core.V;
+                const axis = p2.y === p1.y ? core.H : core.V;
                 const upd = (key) => {
                     const u = cellUsage.get(key) ?? { h: false, v: false };
-                    if (axis === APP.Core.H) u.h = true; else u.v = true;
+                    if (axis === core.H) u.h = true; else u.v = true;
                     cellUsage.set(key, u);
                 };
                 upd(prev); upd(k);
@@ -169,7 +154,7 @@ function makeState(opts = {}) {
     }
 
     return {
-        mode:                  opts.mode        ?? APP.Core.PLAY,
+        mode:                  opts.mode        ?? core.PLAY,
         path,
         visitedCounts,
         cellUsage,
@@ -302,7 +287,7 @@ test('gate re-entry blocked in PLAY mode', () => {
     const level = makeLevel({ gateKeys: [gateKey] });
     // Path started at gate and moved on.
     const state = makeState({ path: [gateKey, PACK(3, 0), PACK(4, 0)] });
-    assert.equal(isValidMove(gateKey, state, level, { mode: APP.Core.PLAY }), false);
+    assert.equal(isValidMove(gateKey, state, level, { mode: core.PLAY }), false);
 });
 
 test('gate re-entry permitted in EDITOR mode (only last gate blocked)', () => {
@@ -312,19 +297,19 @@ test('gate re-entry permitted in EDITOR mode (only last gate blocked)', () => {
     const level = makeLevel({ gateKeys: [gateKey] });
     const state = makeState({ path: [PACK(0, 0), PACK(1, 0)] });
     // Entering the gate for the first time is fine in editor mode.
-    assert.ok(isValidMove(gateKey, state, level, { mode: APP.Core.EDITOR }));
+    assert.ok(isValidMove(gateKey, state, level, { mode: core.EDITOR }));
 });
 
 test('filter axis: entering a horizontal-filter cell vertically is blocked', () => {
-    // filterMap: PACK(3,3) → APP.Core.H means only H-axis moves permitted through here.
+    // filterMap: PACK(3,3) → core.H means only H-axis moves permitted through here.
     // Approaching from (3,2)→(3,3) is V-axis → blocked.
-    const level = makeLevel({ filters: [[PACK(3, 3), APP.Core.H]] });
+    const level = makeLevel({ filters: [[PACK(3, 3), core.H]] });
     const state = makeState({ path: [PACK(3, 2)] });   // approaching from above (V axis)
     assert.equal(isValidMove(PACK(3, 3), state, level), false);
 });
 
 test('filter axis: entering a horizontal-filter cell horizontally is valid', () => {
-    const level = makeLevel({ filters: [[PACK(3, 3), APP.Core.H]] });
+    const level = makeLevel({ filters: [[PACK(3, 3), core.H]] });
     const state = makeState({ path: [PACK(2, 3)] });   // approaching from left (H axis)
     assert.ok(isValidMove(PACK(3, 3), state, level));
 });
@@ -1130,7 +1115,7 @@ console.log('\nGROUP 12: MoveContext presets and createEditorState');
 test('MoveContext.PLAY: moving to a goose cell is blocked (checkHazards=true)', () => {
     const gooKey = PACK(1, 0);
     const level  = makeLevel({ geese: [gooKey] });
-    const state  = makeState({ path: [PACK(0, 0)], mode: APP.Core.PLAY });
+    const state  = makeState({ path: [PACK(0, 0)], mode: core.PLAY });
     assert.equal(isValidMove(gooKey, state, level, MoveContext.PLAY), false,
         'PLAY context should block goose cell');
 });
@@ -1138,7 +1123,7 @@ test('MoveContext.PLAY: moving to a goose cell is blocked (checkHazards=true)', 
 test('MoveContext.TAP_ROUTE: moving to a goose cell is allowed (checkHazards=false)', () => {
     const gooKey = PACK(1, 0);
     const level  = makeLevel({ geese: [gooKey] });
-    const state  = makeState({ path: [PACK(0, 0)], mode: APP.Core.PLAY });
+    const state  = makeState({ path: [PACK(0, 0)], mode: core.PLAY });
     assert.equal(isValidMove(gooKey, state, level, MoveContext.TAP_ROUTE), true,
         'TAP_ROUTE context should permit goose cell');
 });
@@ -1166,7 +1151,7 @@ test('MoveContext.SOLVER: continuation from armed false-goal cell is allowed (ch
 test('MoveContext.SOLVER: moving to a goose cell is allowed (checkHazards=false)', () => {
     const gooKey = PACK(1, 0);
     const level  = makeLevel({ geese: [gooKey] });
-    const state  = makeState({ path: [PACK(0, 0)], mode: APP.Core.PLAY });
+    const state  = makeState({ path: [PACK(0, 0)], mode: core.PLAY });
     assert.equal(isValidMove(gooKey, state, level, MoveContext.SOLVER), true,
         'SOLVER context should permit goose cell');
 });

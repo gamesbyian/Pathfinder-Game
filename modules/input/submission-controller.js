@@ -1,18 +1,18 @@
 // Submission controller: shared submit-with-solve flow, hint button (play mode),
 // review-mode hint button, dev copy-path button.
 
-export function installSubmissionController(APP) {
+export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }) {
 
     // --- Shared multi-step submission flow ---
 
     const submitWorkingLevel = async (triggerBtnId, afterSuccess) => {
-        APP.UI.closeAllModals();
-        if (APP.State.ENGINE.activeSolverController) {
-            APP.UI.showMessage('Solver is running, please wait.', 'text-yellow-400 font-bold');
+        ui.closeAllModals();
+        if (state.ENGINE.activeSolverController) {
+            ui.showMessage('Solver is running, please wait.', 'text-yellow-400 font-bold');
             return;
         }
-        if (!APP.Persistence.getCurrentUser()) {
-            APP.UI.showMessage('Not signed in. Please wait or refresh.', 'text-red-500 font-bold');
+        if (!persistence.getCurrentUser()) {
+            ui.showMessage('Not signed in. Please wait or refresh.', 'text-red-500 font-bold');
             return;
         }
 
@@ -71,11 +71,11 @@ export function installSubmissionController(APP) {
         // Step 1: Validate structure
         setStep('smStep-validate', 'running');
         await new Promise(r => setTimeout(r, 0));
-        APP.Editor.applyMetricsFromUI();
-        const l          = APP.State.ENGINE.editor.workingLevel;
-        const validation = APP.Editor.validateWorkingLevel();
-        const reqLen     = parseInt(APP.UI.getValue('editReqLen')) || 0;
-        const reqInt     = parseInt(APP.UI.getValue('editReqInt')) || 0;
+        editor.applyMetricsFromUI();
+        const l          = state.ENGINE.editor.workingLevel;
+        const validation = editor.validateWorkingLevel();
+        const reqLen     = parseInt(ui.getValue('editReqLen')) || 0;
+        const reqInt     = parseInt(ui.getValue('editReqInt')) || 0;
         if (!validation?.ok) {
             setStep('smStep-validate', 'error', validation.reasons?.length ? validation.reasons : ['Fix errors first.']);
             smDismiss.classList.remove('hidden');
@@ -90,20 +90,20 @@ export function installSubmissionController(APP) {
 
         const buildLevelData = (hints = []) => ({
             grid:            l.grid,
-            gates:           APP.LevelUtils.expCoords(l.gateKeys),
-            goal:            { x: APP.LevelUtils.UNPACK(l.goalKey).x + 1, y: APP.LevelUtils.UNPACK(l.goalKey).y + 1 },
-            falseGoals:      APP.LevelUtils.expCoords(l.falseGoalKeys),
+            gates:           levelUtils.expCoords(l.gateKeys),
+            goal:            { x: levelUtils.UNPACK(l.goalKey).x + 1, y: levelUtils.UNPACK(l.goalKey).y + 1 },
+            falseGoals:      levelUtils.expCoords(l.falseGoalKeys),
             reqLen, reqInt,
             designerName:    l.designerName  || '',
             description:     l.description   || '',
             difficulty:      l.difficulty    ?? null,
-            blocks:          APP.LevelUtils.expCoords(l.blockSet),
-            mustPass:        APP.LevelUtils.expCoords(l.mustPassKeys),
-            mustCross:       APP.LevelUtils.expCoords(l.mustCrossKeys),
-            filters:         Array.from(l.filterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
-            flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
-            portals:         l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x + 1, y1: APP.LevelUtils.UNPACK(pv.k1).y + 1, x2: APP.LevelUtils.UNPACK(pv.k2).x + 1, y2: APP.LevelUtils.UNPACK(pv.k2).y + 1 })),
-            geese:           APP.LevelUtils.expCoords(l.gooseSet),
+            blocks:          levelUtils.expCoords(l.blockSet),
+            mustPass:        levelUtils.expCoords(l.mustPassKeys),
+            mustCross:       levelUtils.expCoords(l.mustCrossKeys),
+            filters:         Array.from(l.filterMap.entries()).map(([k, axis]) => ({ x: levelUtils.UNPACK(k).x + 1, y: levelUtils.UNPACK(k).y + 1, axis })),
+            flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: levelUtils.UNPACK(k).x + 1, y: levelUtils.UNPACK(k).y + 1, axis })),
+            portals:         l.portalVisuals.map(pv => ({ x1: levelUtils.UNPACK(pv.k1).x + 1, y1: levelUtils.UNPACK(pv.k1).y + 1, x2: levelUtils.UNPACK(pv.k2).x + 1, y2: levelUtils.UNPACK(pv.k2).y + 1 })),
+            geese:           levelUtils.expCoords(l.gooseSet),
             hints,
         });
 
@@ -111,7 +111,7 @@ export function installSubmissionController(APP) {
         setStep('smStep-duplicate', 'running');
         let levelFingerprint = null;
         try {
-            const duplicateCheck = await APP.Persistence.findDuplicateLevel(buildLevelData([]));
+            const duplicateCheck = await persistence.findDuplicateLevel(buildLevelData([]));
             levelFingerprint = duplicateCheck?.fingerprint || null;
             if (duplicateCheck?.duplicate) {
                 const sourceLabel = duplicateCheck.duplicate.source === 'approved'
@@ -136,9 +136,9 @@ export function installSubmissionController(APP) {
         // Step 3: Collect / auto-solve for hints
         setStep('smStep-solve', 'running');
         const validateHintPath = (candidatePath) => {
-            const lv = APP.LevelUtils.deepCloneLevel(l);
+            const lv = levelUtils.deepCloneLevel(l);
             lv.reqLen = reqLen; lv.reqInt = reqInt;
-            return APP.Solver.validateCandidatePath(lv, candidatePath);
+            return solverV2.validateCandidatePath(lv, candidatePath);
         };
         const normalizedHints = [];
         const seen = new Set();
@@ -151,44 +151,44 @@ export function installSubmissionController(APP) {
             normalizedHints.push(res.path);
         };
         (Array.isArray(l.hints) ? l.hints : []).forEach(pushUniqueHint);
-        (Array.isArray(APP.State.ENGINE.foundHintsSinceLoad) ? APP.State.ENGINE.foundHintsSinceLoad : []).forEach(pushUniqueHint);
-        if (APP.State.ENGINE.path.length > 1) pushUniqueHint(APP.State.ENGINE.path);
+        (Array.isArray(state.ENGINE.foundHintsSinceLoad) ? state.ENGINE.foundHintsSinceLoad : []).forEach(pushUniqueHint);
+        if (state.ENGINE.path.length > 1) pushUniqueHint(state.ENGINE.path);
 
         if (normalizedHints.length === 0) {
             let _cancelled = false;
-            const cancelSolve = () => { _cancelled = true; APP.UI.setModalContent('searchLabel', 'Stopping…', 'text'); };
+            const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
             const yieldFn    = async () => { await new Promise(r => setTimeout(r, 0)); if (_cancelled) throw new Error('SolverV2:cancelled'); };
-            APP.State.ENGINE.activeSolverController = { cancel: cancelSolve, abort: cancelSolve };
-            const abortPoll = setInterval(() => { if (APP.State.ENGINE.solverAbortRequested) cancelSolve(); }, 100);
+            state.ENGINE.activeSolverController = { cancel: cancelSolve, abort: cancelSolve };
+            const abortPoll = setInterval(() => { if (state.ENGINE.solverAbortRequested) cancelSolve(); }, 100);
             try {
-                APP.Engine.setOverlayState(APP.Core.SOLVER_RUNNING);
-                APP.UI.setSolverControlsEnabled(false);
-                APP.UI.setModalContent('searchLabel', 'Solving level for submission…', 'text');
-                APP.UI.setSolverDetailText('Searching…');
-                APP.UI.setSolverTimerText('0.0s');
-                APP.UI.setSolverProgress(0);
+                engine.setOverlayState(core.SOLVER_RUNNING);
+                ui.setSolverControlsEnabled(false);
+                ui.setModalContent('searchLabel', 'Solving level for submission…', 'text');
+                ui.setSolverDetailText('Searching…');
+                ui.setSolverTimerText('0.0s');
+                ui.setSolverProgress(0);
                 await new Promise(r => setTimeout(r, 0));
-                const solveLevel = APP.LevelUtils.deepCloneLevel(l);
+                const solveLevel = levelUtils.deepCloneLevel(l);
                 solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
                 const budgetMs = 30000;
                 const t0 = Date.now();
                 const timerInterval = setInterval(() => {
                     const elapsed = (Date.now() - t0) / 1000;
-                    APP.UI.setSolverTimerText(`${elapsed.toFixed(1)}s`);
-                    APP.UI.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
+                    ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
+                    ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
                 }, 100);
                 let result;
                 try {
-                    result = await APP.SolverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
+                    result = await solverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
                 } finally {
                     clearInterval(timerInterval);
                 }
-                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                engine.setOverlayState(core.OVERLAY_NONE);
                 if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                     pushUniqueHint(result.solution);
                 }
             } catch (err) {
-                APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
+                engine.setOverlayState(core.OVERLAY_NONE);
                 if (err?.message === 'SolverV2:cancelled') {
                     setStep('smStep-solve', 'warn', 'Solver cancelled');
                     smDismiss.classList.remove('hidden');
@@ -196,9 +196,9 @@ export function installSubmissionController(APP) {
                 }
             } finally {
                 clearInterval(abortPoll);
-                APP.State.ENGINE.activeSolverController   = null;
-                APP.State.ENGINE.solverAbortRequested     = false;
-                APP.UI.setSolverControlsEnabled(true);
+                state.ENGINE.activeSolverController = null;
+                state.ENGINE.solverAbortRequested   = false;
+                ui.setSolverControlsEnabled(true);
             }
         }
 
@@ -213,8 +213,8 @@ export function installSubmissionController(APP) {
         const hints     = normalizedHints.slice(0, 5);
         const levelData = buildLevelData(hints);
         try {
-            APP.UI.setButtonState(triggerBtnId, { enabled: false });
-            await APP.Persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true });
+            ui.setButtonState(triggerBtnId, { enabled: false });
+            await persistence.submitLevel(levelData, { levelFingerprint, skipDuplicateCheck: true });
             setStep('smStep-save', 'ok', 'Queued for review');
             if (afterSuccess) {
                 await afterSuccess(sm);
@@ -230,7 +230,7 @@ export function installSubmissionController(APP) {
             setStep('smStep-save', 'error', errMsg);
             smDismiss.classList.remove('hidden');
         } finally {
-            APP.UI.setButtonState(triggerBtnId, { enabled: true });
+            ui.setButtonState(triggerBtnId, { enabled: true });
         }
     };
 
@@ -240,15 +240,15 @@ export function installSubmissionController(APP) {
         const afterReviewSubmit = async (sm) => {
             sm.setStep('smStep-save', 'running', 'Refreshing review queue…');
             try {
-                const subs = await APP.Persistence.loadSubmissions();
-                APP.State.ENGINE.review.submissions = subs;
-                const safeIdx = Math.min(APP.State.ENGINE.review.currentIdx, Math.max(0, subs.length - 1));
+                const subs = await persistence.loadSubmissions();
+                state.ENGINE.review.submissions = subs;
+                const safeIdx = Math.min(state.ENGINE.review.currentIdx, Math.max(0, subs.length - 1));
                 if (subs.length > 0) {
-                    APP.Engine.loadReviewLevel(safeIdx);
+                    engine.loadReviewLevel(safeIdx);
                 } else {
-                    APP.State.ENGINE.editor.workingLevel = null;
-                    APP.State.ENGINE.isDirty = true;
-                    APP.UI.updateLevelDisplay(0, false, '0/0');
+                    state.ENGINE.editor.workingLevel = null;
+                    state.ENGINE.isDirty = true;
+                    ui.updateLevelDisplay(0, false, '0/0');
                 }
             } catch (e) {
                 console.warn('[ReviewSubmit] Queue refresh failed:', e);
@@ -257,7 +257,7 @@ export function installSubmissionController(APP) {
             sm.dismiss.classList.remove('hidden');
             setTimeout(() => sm.el.classList.add('hidden'), 4000);
         };
-        const afterSuccess = APP.State.ENGINE.mode === APP.Core.REVIEW ? afterReviewSubmit : null;
+        const afterSuccess = state.ENGINE.mode === core.REVIEW ? afterReviewSubmit : null;
         submitWorkingLevel('reviewSubmitBtn', afterSuccess);
     };
 
@@ -266,48 +266,48 @@ export function installSubmissionController(APP) {
     // --- Dev: copy current path ---
 
     document.getElementById('devCopyBtn').onclick = async () => {
-        APP.UI.closeAllModals();
-        if (!APP.State.ENGINE.path.length) return;
-        const pathStr = JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, '');
-        APP.UI.setSolutionOutput(pathStr);
-        await APP.UI.copyText(pathStr, { fallbackElId: 'solutionOutput' });
-        APP.UI.showMessage('Path Copied', 'text-white font-black');
+        ui.closeAllModals();
+        if (!state.ENGINE.path.length) return;
+        const pathStr = JSON.stringify(state.ENGINE.path).replace(/\s/g, '');
+        ui.setSolutionOutput(pathStr);
+        await ui.copyText(pathStr, { fallbackElId: 'solutionOutput' });
+        ui.showMessage('Path Copied', 'text-white font-black');
     };
 
     // --- Hint button (play mode) ---
 
     const showSavedHint = () => {
-        if (APP.State.ENGINE.level?.hints?.length > 0) {
-            APP.State.ENGINE.hinter.pathList = APP.State.ENGINE.level.hints;
-            APP.State.ENGINE.hinter.currentPathIdx = APP.State.ENGINE.hinter.source === 'saved'
-                ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % APP.State.ENGINE.hinter.pathList.length
+        if (state.ENGINE.level?.hints?.length > 0) {
+            state.ENGINE.hinter.pathList = state.ENGINE.level.hints;
+            state.ENGINE.hinter.currentPathIdx = state.ENGINE.hinter.source === 'saved'
+                ? (state.ENGINE.hinter.currentPathIdx + 1) % state.ENGINE.hinter.pathList.length
                 : 0;
-            APP.State.ENGINE.hinter.source = 'saved';
-            APP.Solver.startHintAnimation();
+            state.ENGINE.hinter.source = 'saved';
+            engine.startHintAnimation();
         } else {
-            APP.UI.showMessage('No saved hint.', 'text-white font-black');
+            ui.showMessage('No saved hint.', 'text-white font-black');
         }
     };
 
     // Play mode hint: plays saved hints only; solver is not triggered here.
     document.getElementById('hintBtn').onclick = () => {
-        APP.UI.closeAllModals();
-        if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
+        ui.closeAllModals();
+        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.activeSolverController) return;
         showSavedHint();
     };
 
     // --- Review-mode hint (plays saved hints on the working level) ---
 
     document.getElementById('reviewHintBtn').onclick = () => {
-        APP.UI.closeAllModals();
-        if (APP.State.ENGINE.overlayState !== APP.Core.OVERLAY_NONE || APP.State.ENGINE.activeSolverController) return;
-        const wl = APP.State.ENGINE.editor.workingLevel;
-        if (!wl?.hints?.length) { APP.UI.showMessage('No saved hint.', 'text-white font-black'); return; }
-        APP.State.ENGINE.hinter.pathList = wl.hints;
-        APP.State.ENGINE.hinter.currentPathIdx = APP.State.ENGINE.hinter.source === 'saved'
-            ? (APP.State.ENGINE.hinter.currentPathIdx + 1) % wl.hints.length
+        ui.closeAllModals();
+        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.activeSolverController) return;
+        const wl = state.ENGINE.editor.workingLevel;
+        if (!wl?.hints?.length) { ui.showMessage('No saved hint.', 'text-white font-black'); return; }
+        state.ENGINE.hinter.pathList = wl.hints;
+        state.ENGINE.hinter.currentPathIdx = state.ENGINE.hinter.source === 'saved'
+            ? (state.ENGINE.hinter.currentPathIdx + 1) % wl.hints.length
             : 0;
-        APP.State.ENGINE.hinter.source = 'saved';
-        APP.Solver.startHintAnimation();
+        state.ENGINE.hinter.source = 'saved';
+        engine.startHintAnimation();
     };
 }

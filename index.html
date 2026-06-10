@@ -552,46 +552,147 @@
 </div>
 
 <script type="module">
-    import {
-        installSolver,
-        compactDefined,
-        deriveHeuristicFeatureFlagsSafely,
-        toHeuristicFeatureSignature
-    } from './LegacySolver/LegacySolver.js';
-    import { installSolverV2 } from './SolverV2.js';
-    import { installCore } from './modules/core.js';
-    import { installDebug } from './modules/debug.js';
-    import { installUI } from './modules/ui.js';
-    import { installData } from './modules/data.js';
-    import { installLoader } from './modules/loader.js';
-    import { installState } from './modules/state.js';
-    import { installRenderer } from './modules/renderer.js';
-    import { installEngine } from './modules/engine.js';
-    import { installEditor } from './modules/editor.js';
-    import { installPersistence } from './modules/persistence.js';
-    import { installLevelUtils } from './modules/levelutils.js';
-    import { installThemes } from './modules/themes.js';
-    import { installInput } from './modules/input.js';
-    import { installBoot } from './modules/boot.js';
+    import { createSolverV2 }    from './SolverV2.js';
+    import { createCore }        from './modules/core.js';
+    import { createDebug }       from './modules/debug.js';
+    import { createUI }          from './modules/ui.js';
+    import { createData }        from './modules/data.js';
+    import { createLoader }      from './modules/loader.js';
+    import { createState }       from './modules/state.js';
+    import { createRenderer }    from './modules/renderer.js';
+    import { createEngine }      from './modules/engine.js';
+    import { createEditor }      from './modules/editor.js';
+    import { createPersistence } from './modules/persistence.js';
+    import { createLevelUtils }  from './modules/levelutils.js';
+    import { createThemes }      from './modules/themes.js';
+    import { createInput }       from './modules/input.js';
+    import { createBoot, createOnloadHandler } from './modules/boot.js';
 
-    const APP = {};
+    // ── Bootstrap ────────────────────────────────────────────────────────────
 
-    installCore(APP);
-    installDebug(APP);
-    installUI(APP);
-    installData(APP);
-    installLoader(APP);
-    installSolver(APP);
-    installSolverV2(APP);
-    installState(APP);
-    installRenderer(APP);
-    installEngine(APP);
-    installEditor(APP);
-    installPersistence(APP);
-    installLevelUtils(APP);
-    installThemes(APP);
-    installInput(APP);
-    installBoot(APP);
+    const core     = createCore();
+    const state    = createState({ core });
+
+    // Wire muted provider so SOUND_BUS reads the live state flag.
+    core.SOUND_BUS.setMutedProvider(() => state.ENGINE.muted);
+
+    const solverV2 = createSolverV2();
+
+    // data and themes mutually lazy — themes reads data via getter, data reads
+    // themes registry for genre metadata via getter.
+    let _themes;
+    const data = createData({
+        deepClone:  core.deepClone,
+        getThemes:  () => _themes?.THEMES,
+    });
+
+    let _persistence;
+    _themes = createThemes({
+        state,
+        data,
+        getPersistence: () => _persistence,
+        ui: null, // wired below after ui is created
+    });
+
+    // UI needs renderer (via getter) and state.
+    let _renderer;
+    const ui = createUI({
+        core,
+        getState:    () => state.ENGINE,
+        getRenderer: () => _renderer,
+    });
+
+    // Re-wire themes with the real ui now that it's available.
+    _themes = createThemes({
+        state,
+        data,
+        getPersistence: () => _persistence,
+        ui,
+    });
+
+    _renderer = createRenderer({ core, state, ui });
+
+    const debug = createDebug({ core });
+
+    // levelUtils needs engine and editor via getters (circular).
+    let _engine, _editor;
+    const levelUtils = createLevelUtils({
+        core,
+        data,
+        getState:    () => state.ENGINE,
+        getRenderer: () => _renderer,
+        getEngine:   () => _engine,
+        getEditor:   () => _editor,
+        getUI:       () => ui,
+    });
+
+    _editor = createEditor({ core, state, ui, levelUtils, solverV2 });
+
+    _persistence = createPersistence({
+        getState:          () => state.ENGINE,
+        getTheme:          (id) => _themes.getTheme(id),
+        getRawLevels:      () => data.getLevels(),
+        onProgressChanged: () => { state.ENGINE.isDirty = true; },
+    });
+
+    _engine = createEngine({
+        core, state, ui,
+        renderer:    _renderer,
+        levelUtils,
+        themes:      _themes,
+        data,
+        persistence: _persistence,
+        editor:      _editor,
+    });
+
+    // Break circular dep: give editor access to engine after both are constructed.
+    _editor.init({ engine: _engine });
+
+    const input = createInput({
+        core, state, ui,
+        engine:      _engine,
+        levelUtils,
+        editor:      _editor,
+        renderer:    _renderer,
+        themes:      _themes,
+        data,
+        solverV2,
+        persistence: _persistence,
+    });
+
+    const loader = createLoader({ ui, data, themes: _themes, core });
+
+    const boot = createBoot({
+        ui, debug,
+        persistence: _persistence,
+        loader,
+        themes:      _themes,
+        engine:      _engine,
+        data,
+        core,
+        state,
+    });
+
+    window.onload = createOnloadHandler({ input, boot, ui, loader });
+
+    // ── Thin APP compatibility facade (used by browser console / dev tooling) ─
+    window.APP = {
+        Core:        core,
+        State:       { get ENGINE() { return state.ENGINE; } },
+        Engine:      _engine,
+        Editor:      _editor,
+        LevelUtils:  levelUtils,
+        Themes:      _themes,
+        SolverV2:    solverV2,
+        UI:          ui,
+        Renderer:    _renderer,
+        Persistence: _persistence,
+        Data:        data,
+        Loader:      loader,
+        Input:       input,
+        Boot:        boot,
+        Debug:       debug,
+    };
 </script>
 </body>
 </html>

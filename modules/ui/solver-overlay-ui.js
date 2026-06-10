@@ -8,7 +8,7 @@ export const setSearchIndicatorVisible = (visible) => {
 };
 
 export const setSolverControlsEnabled = (enabled) => {
-    setButtonState('editMegaSolver',  { enabled });
+    setButtonState('editMegaSolver',   { enabled });
     setButtonState('editTrapSpotsBtn', { enabled });
     const hintEl = resolveEl('hintBtn');
     if (!hintEl) return;
@@ -26,9 +26,9 @@ export const setSolverProgress   = (pct = 0) => {
 
 export const setSolverAbortRequested = (requested) => { solverAbortRequested = !!requested; };
 
-export const createSolverOverlayUI = (APP) => {
+export const createSolverOverlayUI = ({ core }) => {
     const applyOverlayState = (state) => {
-        if (state === APP.Core.SOLVER_RUNNING) {
+        if (state === core.SOLVER_RUNNING) {
             setSearchIndicatorVisible(true);
             setButtonState('solverCloseBtn', { enabled: true });
             if (!solverAbortRequested) setTextContent('searchLabel', 'Finding Solutions...');

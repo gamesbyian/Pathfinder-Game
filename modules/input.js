@@ -1,29 +1,29 @@
-import { installNavigationController }    from './input/navigation-controller.js';
-import { installGamepadController }        from './input/gamepad-controller.js';
-import { installPointerInputController }   from './input/pointer-input-controller.js';
-import { installOptionsController }        from './input/options-controller.js';
-import { installEditorToolbarController }  from './input/editor-toolbar-controller.js';
-import { installSubmissionController }     from './input/submission-controller.js';
-import { installReviewController }         from './input/review-controller.js';
-import { installSolverController }         from './input/solver-controller.js';
+import { createNavigationController }    from './input/navigation-controller.js';
+import { createGamepadController }        from './input/gamepad-controller.js';
+import { createPointerInputController }   from './input/pointer-input-controller.js';
+import { createOptionsController }        from './input/options-controller.js';
+import { createEditorToolbarController }  from './input/editor-toolbar-controller.js';
+import { createSubmissionController }     from './input/submission-controller.js';
+import { createReviewController }         from './input/review-controller.js';
+import { createSolverController }         from './input/solver-controller.js';
 
-export function installInput(APP) {
-    APP.Input = (() => {
-        let initialized = false;
-        const init = () => {
-            if (initialized) return;
-            initialized = true;
-            APP.State.ENGINE.ui.gamepadGridPrimaryAction = () => {};
+export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, solverV2, persistence }) {
+    let initialized = false;
 
-            const navController = installNavigationController(APP);
-            installGamepadController(APP, navController);
-            installPointerInputController(APP);
-            installOptionsController(APP, { tryNavigate: navController.tryNavigate });
-            installEditorToolbarController(APP, { tryNavigate: navController.tryNavigate });
-            installSubmissionController(APP);
-            installReviewController(APP);
-            installSolverController(APP);
-        };
-        return { init };
-    })();
+    const init = () => {
+        if (initialized) return;
+        initialized = true;
+        state.ENGINE.ui.gamepadGridPrimaryAction = () => {};
+
+        const navController = createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer });
+        createGamepadController({ core, state, ui, engine, levelUtils }, navController);
+        createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer });
+        createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils }, { tryNavigate: navController.tryNavigate });
+        createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }, { tryNavigate: navController.tryNavigate });
+        createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
+        createReviewController({ core, state, ui, engine, levelUtils, editor, persistence });
+        createSolverController({ core, state, ui, engine, levelUtils, solverV2 });
+    };
+
+    return { init };
 }

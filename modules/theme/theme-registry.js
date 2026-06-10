@@ -1,14 +1,13 @@
-// Theme registry access and validation.
-
 import { normalizeTheme, collectThemePaths, REQUIRED_THEME_PATHS } from './theme-normalizer.js';
 
-export function createThemeRegistry(APP, localThemes) {
+export function createThemeRegistry({ getData, getState }, localThemes) {
     function getThemeRegistry() {
-        if (APP.Data && APP.Data.isLoaded()) return APP.Data.getThemes();
+        const data = getData?.();
+        if (data && data.isLoaded()) return data.getThemes();
         if (window.THEMES && typeof window.THEMES === 'object') return window.THEMES;
         return localThemes;
     }
-    const getCurrentTheme = () => APP.State.ENGINE.runtime.currentTheme;
+    const getCurrentTheme = () => getState().runtime.currentTheme;
     const getTheme = (id) => getThemeRegistry()[id];
     return { getThemeRegistry, getCurrentTheme, getTheme };
 }
