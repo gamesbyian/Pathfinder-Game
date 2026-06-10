@@ -14,6 +14,7 @@ import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../modules/runt
 import { cloneTapRouteState, rebuildDerivedState, simulateTapRouteStep, wouldCreateBlockedTIntersection } from '../modules/runtime/path-state.js';
 import { checkWinConditionImpl as checkWinConditionImplDirect } from '../modules/runtime/game-rules.js';
 import { validateLevelDetailed as validateLevelDetailedImpl } from '../modules/domain/level-validation.js';
+import { getOccupant, removeOccupant, placeOccupant }        from '../modules/editor/editor-occupancy.js';
 
 // ---------------------------------------------------------------------------
 // Minimal APP bootstrap
@@ -892,6 +893,238 @@ test('portal connectivity: portal bridging a barrier allows validation to pass',
     const l = makeValidEditorLevel({ blocks, portals, portalVisuals: [{ k1, k2 }] });
     const result = validateLevelDetailedImpl(l);
     assert.ok(result.ok, `expected ok (portal bridges barrier) but got: ${JSON.stringify(result.reasons)}`);
+});
+
+// ---------------------------------------------------------------------------
+// GROUP 11 — Editor occupancy (editor-occupancy.js)
+// ---------------------------------------------------------------------------
+console.log('\nGROUP 11: Editor occupancy (getOccupant / removeOccupant / placeOccupant)');
+
+function makeOccupancyLevel(opts = {}) {
+    return {
+        grid:              { w: 8, h: 8 },
+        gateKeys:          opts.gateKeys          ?? [],
+        goalKey:           opts.goalKey           ?? -1,
+        falseGoalKeys:     new Set(opts.falseGoals ?? []),
+        blockSet:          new Set(opts.blocks     ?? []),
+        gooseSet:          new Set(opts.geese      ?? []),
+        mustPassKeys:      opts.mustPass           ?? [],
+        mustCrossKeys:     opts.mustCross          ?? [],
+        filterMap:         new Map(opts.filters    ?? []),
+        flippingFilterMap: new Map(opts.flipping   ?? []),
+        portalMap:         new Map(opts.portals    ?? []),
+        portalVisuals:     opts.portalVisuals      ?? [],
+        hints: [], reqLen: 0, reqInt: 0,
+    };
+}
+
+// --- getOccupant ---
+
+test('getOccupant: returns null for empty cell', () => {
+    const level = makeOccupancyLevel();
+    assert.equal(getOccupant(level, PACK(3, 3)), null);
+});
+
+test('getOccupant: identifies gate', () => {
+    const k = PACK(1, 1);
+    const level = makeOccupancyLevel({ gateKeys: [k] });
+    assert.deepEqual(getOccupant(level, k), { type: 'gate' });
+});
+
+test('getOccupant: identifies goal', () => {
+    const k = PACK(5, 5);
+    const level = makeOccupancyLevel({ goalKey: k });
+    assert.deepEqual(getOccupant(level, k), { type: 'goal' });
+});
+
+test('getOccupant: identifies block', () => {
+    const k = PACK(2, 2);
+    const level = makeOccupancyLevel({ blocks: [k] });
+    assert.deepEqual(getOccupant(level, k), { type: 'block' });
+});
+
+test('getOccupant: identifies filterH (axis=1)', () => {
+    const k = PACK(2, 2);
+    const level = makeOccupancyLevel({ filters: [[k, 1]] });
+    const occ = getOccupant(level, k);
+    assert.equal(occ.type, 'filterH');
+    assert.equal(occ.axis, 1);
+});
+
+test('getOccupant: identifies filterV (axis=2)', () => {
+    const k = PACK(2, 2);
+    const level = makeOccupancyLevel({ filters: [[k, 2]] });
+    const occ = getOccupant(level, k);
+    assert.equal(occ.type, 'filterV');
+    assert.equal(occ.axis, 2);
+});
+
+test('getOccupant: identifies portal', () => {
+    const k = PACK(3, 3);
+    const level = makeOccupancyLevel({ portals: [[k, { dest: -1 }]] });
+    assert.deepEqual(getOccupant(level, k), { type: 'portal' });
+});
+
+// --- removeOccupant ---
+
+test('removeOccupant: returns null for empty cell (no mutation)', () => {
+    const k = PACK(2, 2);
+    const level = makeOccupancyLevel();
+    const result = removeOccupant(level, k, null);
+    assert.equal(result, null);
+});
+
+test('removeOccupant: removes gate and returns {type:"gate", pendingPortal:null}', () => {
+    const k = PACK(1, 1);
+    const level = makeOccupancyLevel({ gateKeys: [k] });
+    const result = removeOccupant(level, k, null);
+    assert.ok(result);
+    assert.equal(result.type, 'gate');
+    assert.equal(result.pendingPortal, null);
+    assert.ok(!level.gateKeys.includes(k));
+});
+
+test('removeOccupant: removes goal and sets goalKey to -1', () => {
+    const k = PACK(5, 5);
+    const level = makeOccupancyLevel({ goalKey: k });
+    const result = removeOccupant(level, k, null);
+    assert.ok(result);
+    assert.equal(result.type, 'goal');
+    assert.equal(level.goalKey, -1);
+});
+
+test('removeOccupant: removes block from blockSet', () => {
+    const k = PACK(3, 3);
+    const level = makeOccupancyLevel({ blocks: [k] });
+    const result = removeOccupant(level, k, null);
+    assert.ok(result);
+    assert.equal(result.type, 'block');
+    assert.ok(!level.blockSet.has(k));
+});
+
+test('removeOccupant: removing pendingPortal cancels it (message: "Portal Cancelled")', () => {
+    const k = PACK(3, 3);
+    const level = makeOccupancyLevel({ portals: [[k, { dest: -1 }]] });
+    const result = removeOccupant(level, k, k);  // k is the pendingPortal
+    assert.ok(result);
+    assert.equal(result.type, 'portal');
+    assert.equal(result.pendingPortal, null);
+    assert.ok(result.message.includes('Portal Cancelled'));
+    assert.ok(!level.portalMap.has(k));
+});
+
+test('removeOccupant: removing one half of a paired portal unpaints the other and sets pendingPortal', () => {
+    const k1 = PACK(2, 2), k2 = PACK(5, 5);
+    const level = makeOccupancyLevel({
+        portals: [[k1, { dest: k2 }], [k2, { dest: k1 }]],
+        portalVisuals: [{ k1, k2 }],
+    });
+    const result = removeOccupant(level, k1, null);
+    assert.ok(result);
+    assert.equal(result.type, 'portal');
+    assert.equal(result.pendingPortal, k2);
+    assert.ok(result.message.includes('unpaired'));
+    assert.ok(!level.portalMap.has(k1));
+    assert.equal(level.portalMap.get(k2).dest, -1);
+    assert.equal(level.portalVisuals.length, 0);
+});
+
+// --- placeOccupant ---
+
+test('placeOccupant: places gate on empty cell', () => {
+    const k = PACK(1, 1);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'gate', null);
+    assert.ok(result.ok);
+    assert.equal(result.type, 'gate');
+    assert.ok(level.gateKeys.includes(k));
+});
+
+test('placeOccupant: places block on empty cell', () => {
+    const k = PACK(2, 2);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'block', null);
+    assert.ok(result.ok);
+    assert.ok(level.blockSet.has(k));
+});
+
+test('placeOccupant: rejects occupied cell', () => {
+    const k = PACK(1, 1);
+    const level = makeOccupancyLevel({ gateKeys: [k] });
+    const result = placeOccupant(level, k, 'block', null);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'occupied');
+});
+
+test('placeOccupant: eraser on occupied cell removes it', () => {
+    const k = PACK(2, 2);
+    const level = makeOccupancyLevel({ blocks: [k] });
+    const result = placeOccupant(level, k, 'eraser', null);
+    assert.ok(result.ok);
+    assert.equal(result.type, 'block');
+    assert.ok(!level.blockSet.has(k));
+});
+
+test('placeOccupant: eraser on empty cell returns ok:false reason:empty_cell', () => {
+    const k = PACK(3, 3);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'eraser', null);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'empty_cell');
+});
+
+test('placeOccupant: pending portal guard rejects non-portal/eraser tool', () => {
+    const k = PACK(3, 3);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'block', PACK(1, 1));  // pendingPortal set
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'pending_portal_guard');
+});
+
+test('placeOccupant: first portal placement sets pendingPortal', () => {
+    const k = PACK(3, 3);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'portal', null);
+    assert.ok(result.ok);
+    assert.equal(result.pendingPortal, k);
+    assert.ok(level.portalMap.has(k));
+    assert.equal(level.portalMap.get(k).dest, -1);
+});
+
+test('placeOccupant: second portal placement pairs the portals', () => {
+    const k1 = PACK(1, 1), k2 = PACK(5, 5);
+    const level = makeOccupancyLevel({ portals: [[k1, { dest: -1 }]] });
+    const result = placeOccupant(level, k2, 'portal', k1);  // k1 is pendingPortal
+    assert.ok(result.ok);
+    assert.equal(result.pendingPortal, null);
+    assert.equal(level.portalMap.get(k1).dest, k2);
+    assert.equal(level.portalMap.get(k2).dest, k1);
+    assert.equal(level.portalVisuals.length, 1);
+    assert.ok(result.message.includes('paired'));
+});
+
+test('placeOccupant: same-key portal returns ok:false reason:same_portal_key', () => {
+    const k = PACK(3, 3);
+    const level = makeOccupancyLevel({ portals: [[k, { dest: -1 }]] });
+    const result = placeOccupant(level, k, 'portal', k);
+    assert.equal(result.ok, false);
+    assert.equal(result.reason, 'same_portal_key');
+});
+
+test('placeOccupant: places filterH (axis stored as 1)', () => {
+    const k = PACK(4, 4);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'filterH', null);
+    assert.ok(result.ok);
+    assert.equal(level.filterMap.get(k), 1);
+});
+
+test('placeOccupant: places flipV (axis stored as 2 in flippingFilterMap)', () => {
+    const k = PACK(4, 4);
+    const level = makeOccupancyLevel();
+    const result = placeOccupant(level, k, 'flipV', null);
+    assert.ok(result.ok);
+    assert.equal(level.flippingFilterMap.get(k), 2);
 });
 
 // ---------------------------------------------------------------------------

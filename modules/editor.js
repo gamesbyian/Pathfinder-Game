@@ -1,4 +1,7 @@
 import { validateLevelDetailed as validateLevelDetailedImpl } from './domain/level-validation.js';
+import { getOccupant, removeOccupant, placeOccupant }        from './editor/editor-occupancy.js';
+import { saveEditorSnapshot, restoreEditorSnapshot }         from './editor/editor-history.js';
+import { serializeLevel }                                     from './editor/editor-export.js';
 
 export function installEditor(APP) {
     APP.Editor = (() => {
@@ -6,108 +9,145 @@ export function installEditor(APP) {
         const bind = ({ ENGINE: engineRef, UI: uiRef }) => { refs = { ENGINE: engineRef, UI: uiRef }; };
         const init = bind;
 
-            function pickUpObject(k) { if(APP.State.ENGINE.editor.isPencilMode) return null; saveEditorState(); APP.State.ENGINE.editor.draggedFromGrid = true; APP.State.ENGINE.editor.validTrapSpots.clear(); const l = APP.State.ENGINE.editor.workingLevel; l.hints = []; if (l.gateKeys.includes(k)) { l.gateKeys = l.gateKeys.filter(gk => gk !== k); APP.State.ENGINE.isDirty = true; return {type:'gate'}; } if (l.goalKey === k) { l.goalKey = -1; APP.State.ENGINE.isDirty = true; return {type:'goal'}; } if (l.falseGoalKeys.has(k)) { l.falseGoalKeys.delete(k); APP.State.ENGINE.isDirty = true; return {type:'falseGoal'}; } if (l.blockSet.has(k)) { l.blockSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'block'}; } if (l.gooseSet.has(k)) { l.gooseSet.delete(k); APP.State.ENGINE.isDirty = true; return {type:'goose'}; } if (l.mustPassKeys.includes(k)) { l.mustPassKeys = l.mustPassKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustPass'}; } if (l.mustCrossKeys.includes(k)) { l.mustCrossKeys = l.mustCrossKeys.filter(mk => mk !== k); APP.State.ENGINE.isDirty = true; return {type:'mustCross'}; } if (l.filterMap.has(k)) { const a = l.filterMap.get(k); l.filterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === APP.Core.H ? 'filterH' : 'filterV'}; } if (l.flippingFilterMap.has(k)) { const a = l.flippingFilterMap.get(k); l.flippingFilterMap.delete(k); APP.State.ENGINE.isDirty = true; return {type: a === APP.Core.H ? 'flipH' : 'flipV'}; } if (l.portalMap.has(k)) { const port = l.portalMap.get(k); l.portalMap.delete(k); if (APP.State.ENGINE.editor.pendingPortal === k) { APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal Cancelled", "text-slate-500"); } else { l.portalVisuals = l.portalVisuals.filter(pv => pv.k1 !== k && pv.k2 !== k); const otherK = port.dest; if (otherK !== -1 && l.portalMap.has(otherK)) { l.portalMap.get(otherK).dest = -1; APP.State.ENGINE.editor.pendingPortal = otherK; APP.UI.showMessage("Portal unpaired! Place next terminal.", "text-fuchsia-600 font-bold"); } } APP.State.ENGINE.isDirty = true; return {type: 'portal'}; } APP.State.ENGINE.editor.undoStack.pop(); APP.State.ENGINE.editor.draggedFromGrid = false; return null; }
+        function pickUpObject(k) {
+            if (APP.State.ENGINE.editor.isPencilMode) return null;
+            saveEditorState();
+            APP.State.ENGINE.editor.draggedFromGrid = true;
+            APP.State.ENGINE.editor.validTrapSpots.clear();
+            const l = APP.State.ENGINE.editor.workingLevel;
+            l.hints = [];
+            const result = removeOccupant(l, k, APP.State.ENGINE.editor.pendingPortal);
+            if (!result) {
+                APP.State.ENGINE.editor.undoStack.pop();
+                APP.State.ENGINE.editor.draggedFromGrid = false;
+                return null;
+            }
+            APP.State.ENGINE.editor.pendingPortal = result.pendingPortal;
+            APP.State.ENGINE.isDirty = true;
+            if (result.message) APP.UI.showMessage(result.message, result.messageCls);
+            return { type: result.type };
+        }
 
-            function placeEditorObject(k) { const l = APP.State.ENGINE.editor.workingLevel; const toolType = APP.State.ENGINE.editor.draggedObject ? APP.State.ENGINE.editor.draggedObject.type : APP.State.ENGINE.editor.selectedTool; if (!toolType) return; if (APP.State.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') { APP.UI.showMessage("Finish portal pair first!", "text-red-600 font-bold"); return; } if (l.gateKeys.includes(k) || l.goalKey === k || l.falseGoalKeys.has(k) || l.blockSet.has(k) || l.gooseSet.has(k) || l.filterMap.has(k) || l.flippingFilterMap.has(k) || l.portalMap.has(k) || l.mustPassKeys.includes(k) || l.mustCrossKeys.includes(k)) { if (toolType === 'eraser') { pickUpObject(k); return; } return APP.UI.showMessage("Occupied", "text-red-500"); } if (toolType === 'eraser') return; saveEditorState(); APP.State.ENGINE.editor.validTrapSpots.clear(); l.hints = []; switch(toolType) { case 'gate': l.gateKeys.push(k); break; case 'goal': l.goalKey = k; break; case 'falseGoal': l.falseGoalKeys.add(k); break; case 'block': l.blockSet.add(k); break; case 'mustPass': l.mustPassKeys.push(k); break; case 'mustCross': l.mustCrossKeys.push(k); break; case 'goose': l.gooseSet.add(k); break; case 'filterH': l.filterMap.set(k, APP.Core.H); break; case 'filterV': l.filterMap.set(k, APP.Core.V); break; case 'flipH': l.flippingFilterMap.set(k, APP.Core.H); break; case 'flipV': l.flippingFilterMap.set(k, APP.Core.V); break; case 'portal': if (!APP.State.ENGINE.editor.pendingPortal) { APP.State.ENGINE.editor.pendingPortal = k; l.portalMap.set(k, { dest: -1 }); APP.UI.showMessage("Place second terminal.", "text-fuchsia-600 font-bold"); } else { const k1 = APP.State.ENGINE.editor.pendingPortal; if (k === k1) return; l.portalMap.set(k1, { dest: k }); l.portalMap.set(k, { dest: k1 }); l.portalVisuals.push({ k1, k2: k }); APP.State.ENGINE.editor.pendingPortal = null; APP.UI.showMessage("Portal paired.", "text-fuchsia-600 font-bold"); } break; } APP.State.ENGINE.editor.draggedObject = null; APP.State.ENGINE.isDirty = true; }
+        function placeEditorObject(k) {
+            const l = APP.State.ENGINE.editor.workingLevel;
+            const toolType = APP.State.ENGINE.editor.draggedObject
+                ? APP.State.ENGINE.editor.draggedObject.type
+                : APP.State.ENGINE.editor.selectedTool;
+            if (!toolType) return;
+            const pendingPortal = APP.State.ENGINE.editor.pendingPortal;
 
-
-            // Wrapper: passes editor's pendingPortal context; pure logic is in domain/level-validation.js.
-            function validateLevelDetailed(l, opts = {}) {
-                return validateLevelDetailedImpl(l, opts, APP.State.ENGINE.editor.pendingPortal);
+            if (pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
+                APP.UI.showMessage('Finish portal pair first!', 'text-red-600 font-bold');
+                return;
             }
 
-
-            function validateLevel(l) {
-                const res = validateLevelDetailed(l);
-                if (!res.ok) APP.UI.showMessage(res.reasons[0], "text-red-500 font-bold");
-                return res.ok;
+            const isOccupied = !!getOccupant(l, k);
+            if (isOccupied) {
+                if (toolType === 'eraser') { pickUpObject(k); return; }
+                APP.UI.showMessage('Occupied', 'text-red-500');
+                return;
             }
+            if (toolType === 'eraser') return;
+            if (toolType === 'portal' && pendingPortal === k) return;
 
-            function saveEditorState() { APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.undoStack.push(APP.LevelUtils.deepCloneLevel(APP.State.ENGINE.editor.workingLevel)); if (APP.State.ENGINE.editor.undoStack.length > 50) APP.State.ENGINE.editor.undoStack.shift(); APP.State.ENGINE.hinter.pathList = []; }
+            saveEditorState();
+            APP.State.ENGINE.editor.validTrapSpots.clear();
+            l.hints = [];
 
-            function restoreEditorState() { if (APP.State.ENGINE.editor.undoStack.length === 0) return; APP.State.ENGINE.editor.isModified = true; APP.State.ENGINE.editor.workingLevel = APP.State.ENGINE.editor.undoStack.pop(); let newPending = null; APP.State.ENGINE.editor.workingLevel.portalMap.forEach((v, k) => { if (v.dest === -1) newPending = k; }); APP.State.ENGINE.editor.pendingPortal = newPending; APP.State.ENGINE.hinter.pathList = []; APP.State.ENGINE.editor.validTrapSpots.clear(); APP.State.ENGINE.isDirty = true; APP.UI.showMessage("Undo Grid Action", "text-slate-500"); }
-
-
-            async function generateLevelString() {
-                const l = APP.State.ENGINE.editor.workingLevel;
-                const isValid = validateLevel(l);
-                const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0;
-                const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0;
-                const validateHintPath = (candidatePath) => {
-                    const levelForValidation = APP.LevelUtils.deepCloneLevel(l);
-                    levelForValidation.reqLen = reqLen;
-                    levelForValidation.reqInt = reqInt;
-                    return APP.Solver.validateCandidatePath(levelForValidation, candidatePath);
-                };
-                const normalizedHints = [];
-                const seen = new Set();
-                const pushUniqueHint = (candidatePath) => {
-                    const validation = validateHintPath(candidatePath);
-                    if (!validation?.ok) return;
-                    const path = validation.path;
-                    const key = JSON.stringify(path);
-                    if (seen.has(key)) return;
-                    seen.add(key);
-                    normalizedHints.push(path);
-                };
-
-                const savedHints = Array.isArray(l.hints) ? l.hints : [];
-                savedHints.forEach(pushUniqueHint);
-
-                const liveHints = Array.isArray(APP.State.ENGINE.foundHintsSinceLoad) ? APP.State.ENGINE.foundHintsSinceLoad : [];
-                liveHints.forEach(pushUniqueHint);
-
-                if (APP.State.ENGINE.path.length > 1) pushUniqueHint(APP.State.ENGINE.path);
-
-                const exportedHints = normalizedHints.slice(0, 5);
-                applyMetadataFromUI(l);
-
-                const out = {
-                    grid: l.grid,
-                    gates: APP.LevelUtils.expCoords(l.gateKeys),
-                    goal: { x: APP.LevelUtils.UNPACK(l.goalKey).x + 1, y: APP.LevelUtils.UNPACK(l.goalKey).y + 1 },
-                    falseGoals: APP.LevelUtils.expCoords(l.falseGoalKeys),
-                    reqLen,
-                    reqInt,
-                    designerName: l.designerName || '',
-                    description: l.description || '',
-                    difficulty: l.difficulty ?? null,
-                    blocks: APP.LevelUtils.expCoords(l.blockSet),
-                    mustPass: APP.LevelUtils.expCoords(l.mustPassKeys),
-                    mustCross: APP.LevelUtils.expCoords(l.mustCrossKeys),
-                    filters: Array.from(l.filterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
-                    flippingFilters: Array.from(l.flippingFilterMap.entries()).map(([k, axis]) => ({ x: APP.LevelUtils.UNPACK(k).x + 1, y: APP.LevelUtils.UNPACK(k).y + 1, axis })),
-                    portals: l.portalVisuals.map(pv => ({ x1: APP.LevelUtils.UNPACK(pv.k1).x + 1, y1: APP.LevelUtils.UNPACK(pv.k1).y + 1, x2: APP.LevelUtils.UNPACK(pv.k2).x + 1, y2: APP.LevelUtils.UNPACK(pv.k2).y + 1 })),
-                    geese: APP.LevelUtils.expCoords(l.gooseSet),
-                    hints: exportedHints
-                };
-
-                const json = JSON.stringify(out).replace(/\"([^\"]+)\":/g, '$1:').replace(/\s/g, '').slice(1, -1);
-                APP.UI.setSolutionOutput(json);
-                await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' });
-                APP.State.ENGINE.editor.isModified = false;
-                if (isValid) {
-                    APP.UI.showMessage("Data Generated & Copied!", "text-white font-black");
-                } else {
-                    setTimeout(() => APP.UI.showMessage("Data Copied (Check Errors!)", "text-white font-black"), 1500);
-                }
+            const result = placeOccupant(l, k, toolType, pendingPortal);
+            if (result.ok) {
+                APP.State.ENGINE.editor.pendingPortal = result.pendingPortal;
+                APP.State.ENGINE.editor.draggedObject = null;
+                APP.State.ENGINE.isDirty = true;
+                if (result.message) APP.UI.showMessage(result.message, result.messageCls);
             }
+        }
 
-            function applyMetadataFromUI(level = refs.ENGINE?.editor?.workingLevel) {
-                if (!level) return;
-                level.designerName = (refs.UI.getValue('levelDesignerInput', '') || '').trim();
-                level.description = (refs.UI.getValue('levelDescriptionInput', '') || '').trim();
-                const rawDifficulty = refs.UI.getValue('levelDifficultyInput', '');
-                const n = parseInt(rawDifficulty, 10);
-                level.difficulty = Number.isFinite(n) ? Math.max(1, Math.min(10, n)) : null;
+        // Wrapper: passes editor's pendingPortal context; pure logic is in domain/level-validation.js.
+        function validateLevelDetailed(l, opts = {}) {
+            return validateLevelDetailedImpl(l, opts, APP.State.ENGINE.editor.pendingPortal);
+        }
+
+        function validateLevel(l) {
+            const res = validateLevelDetailed(l);
+            if (!res.ok) APP.UI.showMessage(res.reasons[0], 'text-red-500 font-bold');
+            return res.ok;
+        }
+
+        function saveEditorState() {
+            saveEditorSnapshot(
+                APP.State.ENGINE.editor,
+                APP.State.ENGINE.hinter,
+                APP.LevelUtils.deepCloneLevel
+            );
+        }
+
+        function restoreEditorState() {
+            const result = restoreEditorSnapshot(APP.State.ENGINE.editor, APP.State.ENGINE.hinter);
+            if (!result) return;
+            APP.State.ENGINE.isDirty = true;
+            APP.UI.showMessage('Undo Grid Action', 'text-slate-500');
+        }
+
+        async function generateLevelString() {
+            const l = APP.State.ENGINE.editor.workingLevel;
+            const isValid = validateLevel(l);
+            const reqLen = parseInt(APP.UI.getValue('editReqLen')) || 0;
+            const reqInt = parseInt(APP.UI.getValue('editReqInt')) || 0;
+            const validateHintPath = (candidatePath) => {
+                const levelForValidation = APP.LevelUtils.deepCloneLevel(l);
+                levelForValidation.reqLen = reqLen;
+                levelForValidation.reqInt = reqInt;
+                return APP.Solver.validateCandidatePath(levelForValidation, candidatePath);
+            };
+            const normalizedHints = [];
+            const seen = new Set();
+            const pushUniqueHint = (candidatePath) => {
+                const validation = validateHintPath(candidatePath);
+                if (!validation?.ok) return;
+                const path = validation.path;
+                const key = JSON.stringify(path);
+                if (seen.has(key)) return;
+                seen.add(key);
+                normalizedHints.push(path);
+            };
+
+            const savedHints = Array.isArray(l.hints) ? l.hints : [];
+            savedHints.forEach(pushUniqueHint);
+
+            const liveHints = Array.isArray(APP.State.ENGINE.foundHintsSinceLoad) ? APP.State.ENGINE.foundHintsSinceLoad : [];
+            liveHints.forEach(pushUniqueHint);
+
+            if (APP.State.ENGINE.path.length > 1) pushUniqueHint(APP.State.ENGINE.path);
+
+            const exportedHints = normalizedHints.slice(0, 5);
+            applyMetadataFromUI(l);
+
+            const json = serializeLevel(l, reqLen, reqInt, exportedHints);
+            APP.UI.setSolutionOutput(json);
+            await APP.UI.copyText(json, { fallbackElId: 'solutionOutput' });
+            APP.State.ENGINE.editor.isModified = false;
+            if (isValid) {
+                APP.UI.showMessage('Data Generated & Copied!', 'text-white font-black');
+            } else {
+                setTimeout(() => APP.UI.showMessage('Data Copied (Check Errors!)', 'text-white font-black'), 1500);
             }
+        }
 
-            function syncMetadataFieldsFromLevel(level = refs.ENGINE?.editor?.workingLevel) {
-                refs.UI.setInputValue('levelDesignerInput', level?.designerName || '');
-                refs.UI.setInputValue('levelDescriptionInput', level?.description || '');
-                refs.UI.setInputValue('levelDifficultyInput', level?.difficulty ?? '');
-            }
+        function applyMetadataFromUI(level = refs.ENGINE?.editor?.workingLevel) {
+            if (!level) return;
+            level.designerName = (refs.UI.getValue('levelDesignerInput', '') || '').trim();
+            level.description = (refs.UI.getValue('levelDescriptionInput', '') || '').trim();
+            const rawDifficulty = refs.UI.getValue('levelDifficultyInput', '');
+            const n = parseInt(rawDifficulty, 10);
+            level.difficulty = Number.isFinite(n) ? Math.max(1, Math.min(10, n)) : null;
+        }
 
+        function syncMetadataFieldsFromLevel(level = refs.ENGINE?.editor?.workingLevel) {
+            refs.UI.setInputValue('levelDesignerInput', level?.designerName || '');
+            refs.UI.setInputValue('levelDescriptionInput', level?.description || '');
+            refs.UI.setInputValue('levelDifficultyInput', level?.difficulty ?? '');
+        }
 
         return {
             init,
