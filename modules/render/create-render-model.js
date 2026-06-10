@@ -6,7 +6,7 @@ import { transformPoint }           from '../domain/geometry.js';
 import { hasParitySwitchingPortal } from '../domain/portal-utils.js';
 import { getRealLength }            from '../runtime/game-rules.js';
 
-export function createRenderModel(APP) {
+export function createRenderModel(APP, reqLenPreview = null) {
     const eng  = APP.State.ENGINE;
     const core = APP.Core;
 
@@ -21,7 +21,7 @@ export function createRenderModel(APP) {
     let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
     if ((isEditorMode || isReviewMode || eng.cheatActive) && level && level.goalKey !== -1) {
         reqLen = (isEditorMode || isReviewMode)
-            ? (parseInt(APP.UI.getValue('editReqLen')) || level.reqLen || 0)
+            ? (reqLenPreview || level.reqLen || 0)
             : level.reqLen;
         if (reqLen > 0 || eng.path.length > 0 || eng.cheatActive) {
             showParityWarnings = true;

@@ -23,9 +23,10 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     if (mustPassOverlay) mustPassOverlay.innerHTML = '';
     if (!vp.cellW || !level) {
         if (th) { ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); }
-        return;
+        return { needsRedraw: false };
     }
 
+    let needsRedraw = false;
     const screenPosFn = makeScreenPosFn(model);
     const drawAsset   = makeAssetDrawer(ctx, screenPosFn, vp);
 
@@ -75,7 +76,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         const targetFlips = model.hintActive
             ? (crossed ? model.hintCrossedFlippingFilters.get(k) : model.hintDisplayFlipCount)
             : (crossed ? model.crossedFlippingFilters.get(k)     : model.flipCount);
-        const currentVisualFlips = (!model.hintActive && !crossed && model.visualFlipCount !== undefined)
+        const currentVisualFlips = (!model.hintActive && !crossed)
             ? model.visualFlipCount
             : targetFlips;
         drawAsset('flippingFilter', p.x, p.y, {
@@ -203,7 +204,9 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     if (model.mustPassInOverlay.length > 0) {
         const gridW = vp.swapped ? level.grid.h : level.grid.w;
         const gridH = vp.swapped ? level.grid.w : level.grid.h;
-        drawMustPassOverflowOverlay(mustPassOverlay, model.mustPassInOverlay, th.colors, vp, cvs, screenPosFn, gridW, gridH);
+        if (drawMustPassOverflowOverlay(mustPassOverlay, model.mustPassInOverlay, th.colors, vp, cvs, screenPosFn, gridW, gridH)) {
+            needsRedraw = true;
+        }
     }
 
     // --- False goals ---
@@ -230,4 +233,6 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
             drawAsset('goose', p.x, p.y, { isCheatReveal: model.cheatActive && !model.revealedGeese.has(k) });
         }
     });
+
+    return { needsRedraw };
 }

@@ -508,6 +508,8 @@ export function installEngine(APP) {
                     APP.State.ENGINE.visualFlipCount = Math.max(APP.State.ENGINE.flipCount, APP.State.ENGINE.visualFlipCount - 0.15);
                     APP.State.ENGINE.isDirty = true;
                 }
+                const _now = Date.now();
+                APP.State.ENGINE.ripples = APP.State.ENGINE.ripples.filter(r => _now - r.startTime < 600);
                 const hasContinuousAnimation = APP.State.ENGINE.ripples.length > 0 || APP.State.ENGINE.overlayState === APP.Core.HINT_ANIMATING;
                 if (hasContinuousAnimation) APP.State.ENGINE.isDirty = true;
                 const shouldRender = APP.State.ENGINE.isDirty || hasContinuousAnimation;

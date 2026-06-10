@@ -19,12 +19,15 @@ export function installRenderer(APP) {
         }
 
         function render() {
-            // Expire ripples before snapshotting state into the model
-            const now = Date.now();
-            APP.State.ENGINE.ripples = APP.State.ENGINE.ripples.filter(r => now - r.startTime < 600);
-
-            const model = createRenderModel(APP);
-            canvasRenderer.render(model);
+            // Ripple expiry is handled by the game loop before render() is called.
+            // Read the live reqLen UI value here (facade boundary) so create-render-model stays DOM-free.
+            const eng = APP.State.ENGINE;
+            const reqLenPreview = (eng.mode === APP.Core.EDITOR || eng.mode === APP.Core.REVIEW)
+                ? parseInt(APP.UI.getValue('editReqLen'))
+                : null;
+            const model = createRenderModel(APP, reqLenPreview);
+            const { needsRedraw } = canvasRenderer.render(model);
+            if (needsRedraw) APP.State.ENGINE.isDirty = true;
 
             // HUD DOM updates — outside the canvas renderer so the render layer stays pure
             if (model.isPlayMode && model.level) {

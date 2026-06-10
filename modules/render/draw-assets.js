@@ -138,14 +138,18 @@ export function drawScorchMark(ctx, cx, cy, s) {
     ctx.restore();
 }
 
+// Returns true when layout dimensions are not yet ready, signalling the caller
+// to schedule a re-render (equivalent to the original isDirty = true guard).
 export function drawMustPassOverflowOverlay(overlay, pins, themeColors, viewport, cvs, screenPosFn, gridW, gridH) {
-    if (!overlay) return;
+    if (!overlay) return false;
     overlay.innerHTML = '';
-    if (!pins || !pins.length) return;
+    if (!pins || !pins.length) return false;
 
     const canvasRect = cvs.getBoundingClientRect();
     const paneRect   = overlay.getBoundingClientRect();
-    if (!canvasRect.width || !canvasRect.height || !paneRect.width || !paneRect.height || !cvs.width || !cvs.height) return;
+    if (!canvasRect.width || !canvasRect.height || !paneRect.width || !paneRect.height || !cvs.width || !cvs.height) {
+        return true; // layout not ready — caller should re-render next frame
+    }
 
     const scaleX = canvasRect.width  / cvs.width;
     const scaleY = canvasRect.height / cvs.height;
@@ -177,4 +181,5 @@ export function drawMustPassOverflowOverlay(overlay, pins, themeColors, viewport
 
         overlay.appendChild(pinCanvas);
     });
+    return false;
 }

@@ -7,6 +7,7 @@ export function installState(APP) {
         logicState: APP.Core.IDLE,
         overlayState: APP.Core.OVERLAY_NONE,
         isDevMode: false,
+        cheatActive: false,
         levelIdx: 0,
         variant: 0,
         level: null,
