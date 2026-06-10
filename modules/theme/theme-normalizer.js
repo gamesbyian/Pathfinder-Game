@@ -102,7 +102,8 @@ export function normalizeTheme(theme, key = 'theme') {
         undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight,
         hint: t.headerRight, mega: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight,
         copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, orient: t.headerRight,
-        solve: t.headerRight, editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight,
+        solve: t.headerRight, submit: t.btns.solve || t.headerRight, approve: t.btns.editNew || t.headerRight, reject: t.btns.editClear || t.headerLeft,
+        editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight,
     };
     Object.keys(btnFallbacks).forEach(btnKey => { t.btns[btnKey] = t.btns[btnKey] || btnFallbacks[btnKey]; });
 
@@ -302,7 +303,7 @@ export function buildChaosTheme() {
     return normalizeTheme({
         bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(),
         controls: rc(), metricText: rc(),
-        btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() },
+        btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), submit: rc(), approve: rc(), reject: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() },
         modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc(), closeHover: rc() },
         output: { bg: rc(), text: rc() },
         colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc() },
