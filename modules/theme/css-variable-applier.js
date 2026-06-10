@@ -125,6 +125,9 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-btn-edit-clear',       t.btns.editClear);
     root.style.setProperty('--theme-btn-edit-new',         t.btns.editNew);
     root.style.setProperty('--theme-btn-solve',            t.btns.solve);
+    root.style.setProperty('--theme-btn-submit',           t.btns.submit);
+    root.style.setProperty('--theme-btn-approve',          t.btns.approve);
+    root.style.setProperty('--theme-btn-reject',           t.btns.reject);
     root.style.setProperty('--theme-btn-edit-bombs',       t.btns.editBombs);
     root.style.setProperty('--theme-btn-mute-icon',        t.btns.muteIcon);
     root.style.setProperty('--theme-utility-btn-text',     t.text.utilityBtn);

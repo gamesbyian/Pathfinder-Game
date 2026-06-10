@@ -1382,6 +1382,9 @@ test('REQUIRED_THEME_PATHS is a non-empty Set', () => {
 test('REQUIRED_THEME_PATHS includes key deeply nested paths', () => {
     assert.ok(REQUIRED_THEME_PATHS.has('colors.goal'));
     assert.ok(REQUIRED_THEME_PATHS.has('btns.hint'));
+    assert.ok(REQUIRED_THEME_PATHS.has('btns.submit'));
+    assert.ok(REQUIRED_THEME_PATHS.has('btns.approve'));
+    assert.ok(REQUIRED_THEME_PATHS.has('btns.reject'));
     assert.ok(REQUIRED_THEME_PATHS.has('modal.bg'));
     assert.ok(REQUIRED_THEME_PATHS.has('leave.bg'));
     assert.ok(REQUIRED_THEME_PATHS.has('text.body'));
