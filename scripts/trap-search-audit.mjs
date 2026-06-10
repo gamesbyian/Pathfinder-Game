@@ -23,21 +23,9 @@ if (typeof globalThis.document === 'undefined')
 if (typeof globalThis.performance === 'undefined')
     globalThis.performance = { now: () => Date.now() };
 
-const { installSolverV2 } = await import('../SolverV2.js');
+const { createSolverV2 } = await import('../SolverV2.js');
 
-const APP = {
-    LevelUtils: {
-        PACK: (x, y) => ((y << 16) | x) >>> 0,
-        UNPACK: k => ({ x: k & 0xFFFF, y: (k >>> 16) & 0xFFFF }),
-        inBounds: (x, y, w, h) => x >= 0 && y >= 0 && x < w && y < h,
-        resolvePortal: (level, key) => level?.portalMap?.get(key) ?? null,
-        deepCloneLevel: l => l,
-        canonicalCloneLevel: l => l,
-    },
-    Solver: null,
-};
-
-installSolverV2(APP);
+const SolverV2 = createSolverV2();
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 
@@ -102,14 +90,14 @@ for (let i = 0; i < rawLevels.length; i++) {
     if (filterLevels && !filterLevels.has(levelNumber)) continue;
 
     const raw = rawLevels[i];
-    const level = APP.SolverV2._normalizeRawLevel(raw, levelNumber);
-    const budgetMs = APP.SolverV2.getTrapSpotBudgetMs(level);
+    const level = SolverV2._normalizeRawLevel(raw, levelNumber);
+    const budgetMs = SolverV2.getTrapSpotBudgetMs(level);
     runCount++;
 
     process.stdout.write(`  L${String(levelNumber).padStart(3)}: budget=${fmt(budgetMs).padEnd(8)} `);
 
     const t0 = Date.now();
-    const res = await APP.SolverV2.findTrapSpots(level, { timeLimit: budgetMs });
+    const res = await SolverV2.findTrapSpots(level, { timeLimit: budgetMs });
     const elapsed = Date.now() - t0;
 
     if (res.timedOut) {
@@ -137,12 +125,12 @@ const stillTimedOut = [];
 
 for (const { levelNumber, budgetMs, spots: spotsAfterTimeout, gatesProcessed } of timedOutLevels) {
     const raw = rawLevels[levelNumber - 1];
-    const level = APP.SolverV2._normalizeRawLevel(raw, levelNumber);
+    const level = SolverV2._normalizeRawLevel(raw, levelNumber);
 
     process.stdout.write(`  L${String(levelNumber).padStart(3)}: `);
 
     const t0 = Date.now();
-    const res = await APP.SolverV2.findTrapSpots(level, { timeLimit: extendedBudgetMs });
+    const res = await SolverV2.findTrapSpots(level, { timeLimit: extendedBudgetMs });
     const elapsed = Date.now() - t0;
 
     if (res.timedOut) {
@@ -165,7 +153,7 @@ if (timedOutLevels.length > 0) {
     console.log('\nTimed-out levels:');
     for (const { levelNumber, budgetMs } of timedOutLevels) {
         const raw = rawLevels[levelNumber - 1];
-        const level = APP.SolverV2._normalizeRawLevel(raw, levelNumber);
+        const level = SolverV2._normalizeRawLevel(raw, levelNumber);
         console.log(`  L${levelNumber}: default budget ${fmt(budgetMs)}   [${levelSummary(raw)}]`);
     }
 }

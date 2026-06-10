@@ -1,22 +1,8 @@
 import assert from 'node:assert/strict';
-import { installLevelUtils } from '../modules/levelutils.js';
-import { installEditor } from '../modules/editor.js';
+import { PACK } from '../modules/domain/cell-key.js';
+import { validateLevelDetailed } from '../modules/domain/level-validation.js';
 
-const APP = {
-  Core: { H: 1, V: 2 },
-  Data: { getLevels: () => [] },
-  State: {
-    ENGINE: {
-      editor: { pendingPortal: null },
-    },
-  },
-  UI: { showMessage() {} },
-};
-
-installLevelUtils(APP);
-installEditor(APP);
-
-const P = APP.LevelUtils.PACK;
+const P = PACK;
 
 function makeBaseLevel() {
   return {
@@ -41,7 +27,7 @@ for (const [label, applyObstacle] of [
 ]) {
   const level = makeBaseLevel();
   applyObstacle(level);
-  const result = APP.Editor.validateLevelDetailed(level);
+  const result = validateLevelDetailed(level);
   assert.equal(
     result.ok,
     true,
@@ -52,7 +38,7 @@ for (const [label, applyObstacle] of [
 {
   const level = makeBaseLevel();
   level.blockSet.add(P(3, 2));
-  const result = APP.Editor.validateLevelDetailed(level);
+  const result = validateLevelDetailed(level);
   assert.equal(result.ok, false, 'orthogonal block adjacent to MustCross should still be invalid');
   assert.ok(result.reasons.includes('Block adjacent to MustCross at (3,3)'));
 }
