@@ -2,7 +2,7 @@
 // UI notification is decoupled: callers supply an onProgressChanged callback
 // rather than this module reaching into APP.UI directly.
 
-export function createProgressStore(client, localSessionStore, APP, onProgressChanged) {
+export function createProgressStore(client, localSessionStore, { getState }, onProgressChanged) {
     const { appId } = client;
     let activeSyncUid    = null;
     let cloudSyncUnsubs  = [];
@@ -26,11 +26,11 @@ export function createProgressStore(client, localSessionStore, APP, onProgressCh
             try {
                 const parsed = JSON.parse(localData);
                 if (!Array.isArray(parsed)) throw new Error('progress payload is not an array');
-                APP.State.ENGINE.progressSet = new Set(parsed.filter(n => Number.isInteger(n) && n >= 0));
+                getState().progressSet = new Set(parsed.filter(n => Number.isInteger(n) && n >= 0));
                 onProgressChanged();
             } catch (e) {
                 console.warn('[Persistence] Could not parse local progress; starting fresh.', e);
-                APP.State.ENGINE.progressSet = new Set();
+                getState().progressSet = new Set();
                 onProgressChanged();
             }
         }
@@ -54,9 +54,9 @@ export function createProgressStore(client, localSessionStore, APP, onProgressCh
             if (generation !== syncGeneration) return;
             if (!doc.exists) return;
             const cloudSet = new Set(doc.data().completedLevels || []);
-            APP.State.ENGINE.progressSet = new Set([...APP.State.ENGINE.progressSet, ...cloudSet]);
+            getState().progressSet = new Set([...getState().progressSet, ...cloudSet]);
             onProgressChanged();
-            localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
+            localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(getState().progressSet)));
         }, (err) => { console.warn('[Persistence] progress snapshot error', err); });
 
         const sessionUnsub = userDataCollection.doc('sessionState').onSnapshot((doc) => {
@@ -69,9 +69,9 @@ export function createProgressStore(client, localSessionStore, APP, onProgressCh
     }
 
     async function markLevelComplete(idx) {
-        APP.State.ENGINE.progressSet.add(idx);
+        getState().progressSet.add(idx);
         onProgressChanged();
-        localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(APP.State.ENGINE.progressSet)));
+        localStorage.setItem(`pathfinder_progress_${appId}`, JSON.stringify(Array.from(getState().progressSet)));
 
         const user = client.auth?.currentUser;
         if (user && client.db) {
@@ -79,7 +79,7 @@ export function createProgressStore(client, localSessionStore, APP, onProgressCh
                 .collection('artifacts').doc(appId)
                 .collection('users').doc(user.uid)
                 .collection('data').doc('levelProgress');
-            await progressDoc.set({ completedLevels: Array.from(APP.State.ENGINE.progressSet) }, { merge: true });
+            await progressDoc.set({ completedLevels: Array.from(getState().progressSet) }, { merge: true });
         }
     }
 

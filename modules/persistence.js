@@ -9,18 +9,11 @@ export function createPersistence({ getState, getTheme, getRawLevels, onProgress
     const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
     const appId             = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
 
-    // Thin APP-compatible shim so persistence sub-modules need no signature changes.
-    const APP = {
-        State:     { get ENGINE() { return getState(); } },
-        Themes:    { getTheme: (id) => getTheme(id) },
-        LevelUtils: { getRawLevels, isSameLevelStructure, getLevelFingerprint },
-    };
-
     const client         = createFirebaseClient(firebaseConfigRaw, appId);
-    const localSession   = createLocalSessionStore(client, APP);
-    const progressStore  = createProgressStore(client, localSession, APP, onProgressChanged);
-    const submissionRepo = createLevelSubmissionRepository(client, APP);
-    const reviewRepo     = createReviewRepository(client, APP);
+    const localSession   = createLocalSessionStore(client, { getRawLevels, getTheme, getState });
+    const progressStore  = createProgressStore(client, localSession, { getState }, onProgressChanged);
+    const submissionRepo = createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint });
+    const reviewRepo     = createReviewRepository(client, { getLevelFingerprint });
 
     return {
         initAuth:              client.initAuth,

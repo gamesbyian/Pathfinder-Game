@@ -108,7 +108,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     document.getElementById('prevLevelBtn').onclick = () => tryNavigate(() => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.activeSolverController) return;
+        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         if (state.ENGINE.mode === core.REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;
@@ -122,7 +122,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
 
     document.getElementById('nextLevelBtn').onclick = () => tryNavigate(() => {
         ui.closeAllModals();
-        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.activeSolverController) return;
+        if (state.ENGINE.overlayState !== core.OVERLAY_NONE || state.ENGINE.solver.controller) return;
         if (state.ENGINE.mode === core.REVIEW) {
             const subs = state.ENGINE.review.submissions;
             if (!subs.length) return;

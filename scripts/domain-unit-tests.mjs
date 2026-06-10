@@ -39,7 +39,7 @@ function buildTestApp() {
 
     // Stubs for deps that are only used in impure paths not exercised here.
     const rendererStub    = { getCanvas: () => null, render: () => {} };
-    const editorStub      = { saveEditorState: () => {} };
+    const editorStub      = { saveEditorState: () => {}, syncMetadataFieldsFromLevel: () => {} };
     const uiStub = {
         EditorDragGhost: { update() {} },
         setSolverAbortRequested() {},
@@ -55,9 +55,6 @@ function buildTestApp() {
         data,
         getState:    () => state.ENGINE,
         getRenderer: () => rendererStub,
-        getEngine:   () => _engine,
-        getEditor:   () => editorStub,
-        getUI:       () => uiStub,
     });
 
     _engine = createEngine({

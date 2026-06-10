@@ -117,7 +117,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
         const liveHints = Array.isArray(state.ENGINE.foundHintsSinceLoad) ? state.ENGINE.foundHintsSinceLoad : [];
         liveHints.forEach(pushUniqueHint);
 
-        if (state.ENGINE.path.length > 1) pushUniqueHint(state.ENGINE.path);
+        if (state.ENGINE.nav.path.length > 1) pushUniqueHint(state.ENGINE.nav.path);
 
         const exportedHints = normalizedHints.slice(0, 5);
         applyMetadataFromUI(l);

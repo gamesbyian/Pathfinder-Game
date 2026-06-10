@@ -30,6 +30,11 @@ export function createUI({ core, getState, getRenderer }) {
     const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState, getRenderer });
     const { applyOverlayState }                               = createSolverOverlayUI({ core });
 
+    const setEditorMetrics = (currentLen, intersections) => {
+        const lMet = resolveEl('editCopyMetrics');
+        if (lMet) lMet.innerText = `Set (${currentLen}/${intersections})`;
+    };
+
     const renderMetricsPanel = ({ currentLen = 0, reqLen = 0, currentInt = 0, reqInt = 0 } = {}) => {
         const lenEl = resolveEl('lengthInfo');
         if (lenEl) lenEl.innerText = `${currentLen}/${reqLen}`;
@@ -85,6 +90,7 @@ export function createUI({ core, getState, getRenderer }) {
         setFieldValue,
         appendFieldLine,
         setSolutionOutput,
+        setEditorMetrics,
         renderMetricsPanel,
         renderWinExportPanel,
         updateLevelDisplay,

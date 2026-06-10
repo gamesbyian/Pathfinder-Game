@@ -586,14 +586,6 @@
         getThemes:  () => _themes?.THEMES,
     });
 
-    let _persistence;
-    _themes = createThemes({
-        state,
-        data,
-        getPersistence: () => _persistence,
-        ui: null, // wired below after ui is created
-    });
-
     // UI needs renderer (via getter) and state.
     let _renderer;
     const ui = createUI({
@@ -602,28 +594,24 @@
         getRenderer: () => _renderer,
     });
 
-    // Re-wire themes with the real ui now that it's available.
+    let _persistence;
     _themes = createThemes({
         state,
         data,
         getPersistence: () => _persistence,
-        ui,
+        getUI:          () => ui,
     });
 
     _renderer = createRenderer({ core, state, ui });
 
     const debug = createDebug({ core });
 
-    // levelUtils needs engine and editor via getters (circular).
     let _engine, _editor;
     const levelUtils = createLevelUtils({
         core,
         data,
         getState:    () => state.ENGINE,
         getRenderer: () => _renderer,
-        getEngine:   () => _engine,
-        getEditor:   () => _editor,
-        getUI:       () => ui,
     });
 
     _editor = createEditor({ core, state, ui, levelUtils, solverV2 });

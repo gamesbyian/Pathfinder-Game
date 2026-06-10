@@ -14,18 +14,22 @@ const AXIS_V      = 2;
 const MODE_EDITOR = 1;
 const MODE_REVIEW = 2;
 
-export function cloneTapRouteState(state) {
+// Accepts either the full engineState (with .nav/.hazards sub-objects) or a flat
+// clone produced by a previous call (which has all fields at the top level).
+export function cloneTapRouteState(source) {
+    const nav = source.nav ?? source;
     return {
-        mode:                  state.mode,
-        path:                  [...state.path],
-        isPortalJump:          new Set(state.isPortalJump),
-        visitedCounts:         new Map(state.visitedCounts),
-        cellUsage:             new Map(Array.from(state.cellUsage.entries(), ([k, u]) => [k, { h: !!u.h, v: !!u.v }])),
-        intersections:         state.intersections,
-        flipCount:             state.flipCount,
-        crossedFlippingFilters: new Map(state.crossedFlippingFilters),
-        activeGateKey:         state.activeGateKey,
-        armedFalseGoals:       new Set(state.armedFalseGoals || [])
+        mode:                  source.mode,
+        path:                  [...nav.path],
+        isPortalJump:          new Set(nav.isPortalJump),
+        visitedCounts:         new Map(nav.visitedCounts),
+        cellUsage:             new Map(Array.from(nav.cellUsage.entries(), ([k, u]) => [k, { h: !!u.h, v: !!u.v }])),
+        intersections:         nav.intersections,
+        flipCount:             nav.flipCount,
+        crossedFlippingFilters: new Map(nav.crossedFlippingFilters),
+        activeGateKey:         nav.activeGateKey,
+        armedFalseGoals:       new Set(source.hazards?.armedFalseGoals   ?? source.armedFalseGoals   ?? []),
+        revealedGeese:         new Set(source.hazards?.revealedGeese      ?? source.revealedGeese     ?? [])
     };
 }
 

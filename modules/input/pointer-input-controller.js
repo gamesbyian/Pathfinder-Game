@@ -7,7 +7,7 @@ import { MoveContext } from '../domain/move-context.js';
 export function createPointerInputController({ core, state, ui, engine, levelUtils, editor, renderer }) {
 
     const handleDown = (e) => {
-        if (state.ENGINE.activeSolverController
+        if (state.ENGINE.solver.controller
             || state.ENGINE.logicState === core.RESOLVED
             || [core.HINT_ANIMATING, core.FALSE_GOAL_ANIMATING, core.GOOSE_OVERLAY, core.SOLVER_RUNNING].includes(state.ENGINE.overlayState)) return;
 
@@ -44,13 +44,13 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
         }
 
         // --- Path extension ---
-        if (state.ENGINE.path.length > 0) {
+        if (state.ENGINE.nav.path.length > 0) {
             // Switch gate while path has exactly one node
-            if (state.ENGINE.path.length === 1
+            if (state.ENGINE.nav.path.length === 1
                     && activeLevel.gateKeys.includes(k)
-                    && k !== state.ENGINE.activeGateKey) {
+                    && k !== state.ENGINE.nav.activeGateKey) {
                 engine.PathNavigator.clear(state.ENGINE);
-                state.ENGINE.activeGateKey = k;
+                state.ENGINE.nav.activeGateKey = k;
                 engine.PathNavigator.pushStep(state.ENGINE, k, false);
                 engine.setLogicState(core.DRAGGING);
                 return;
@@ -58,28 +58,28 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
             // Pencil mode: allow reversing the path direction from the tail end
             if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
                     && state.ENGINE.editor.isPencilMode) {
-                const idx = state.ENGINE.path.indexOf(k);
+                const idx = state.ENGINE.nav.path.indexOf(k);
                 let shouldReverse = false;
                 if (idx !== -1) {
-                    if (idx < state.ENGINE.path.length / 2) shouldReverse = true;
+                    if (idx < state.ENGINE.nav.path.length / 2) shouldReverse = true;
                 } else {
-                    const headP = levelUtils.UNPACK(state.ENGINE.path[state.ENGINE.path.length - 1]);
-                    const tailP = levelUtils.UNPACK(state.ENGINE.path[0]);
+                    const headP = levelUtils.UNPACK(state.ENGINE.nav.path[state.ENGINE.nav.path.length - 1]);
+                    const tailP = levelUtils.UNPACK(state.ENGINE.nav.path[0]);
                     const distHead = Math.abs(p.x - headP.x) + Math.abs(p.y - headP.y);
                     const distTail = Math.abs(p.x - tailP.x) + Math.abs(p.y - tailP.y);
                     if (distTail < distHead) shouldReverse = true;
                 }
                 if (shouldReverse) {
-                    state.ENGINE.path.reverse();
+                    state.ENGINE.nav.path.reverse();
                     const newJumps = new Set();
-                    state.ENGINE.isPortalJump.forEach(jIdx => newJumps.add(state.ENGINE.path.length - 1 - jIdx));
-                    state.ENGINE.isPortalJump = newJumps;
+                    state.ENGINE.nav.isPortalJump.forEach(jIdx => newJumps.add(state.ENGINE.nav.path.length - 1 - jIdx));
+                    state.ENGINE.nav.isPortalJump = newJumps;
                     engine.rebuildDerivedPathState(state.ENGINE);
                 }
             }
             // Tapping an earlier visited cell: truncate or allow legal intersection
-            const lastIdx = state.ENGINE.path.lastIndexOf(k);
-            if (lastIdx !== -1 && lastIdx < state.ENGINE.path.length - 1) {
+            const lastIdx = state.ENGINE.nav.path.lastIndexOf(k);
+            if (lastIdx !== -1 && lastIdx < state.ENGINE.nav.path.length - 1) {
                 const legalIntersectionMove = levelUtils.isValidMove(k, state.ENGINE, activeLevel, MoveContext.TAP_ROUTE)
                     && !engine.wouldCreateBlockedTIntersection?.(state.ENGINE, k, activeLevel);
                 if (!legalIntersectionMove) {
@@ -96,7 +96,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
             if (!activeLevel) return;
             if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
                     && state.ENGINE.editor.isPencilMode) {
-                state.ENGINE.activeGateKey = null;
+                state.ENGINE.nav.activeGateKey = null;
                 engine.PathNavigator.pushStep(state.ENGINE, k, false);
                 engine.setLogicState(core.DRAGGING);
                 engine.handlePrimaryGridInput(p, { inputType: 'tap' });
@@ -117,7 +117,7 @@ export function createPointerInputController({ core, state, ui, engine, levelUti
                     }
                 }
                 if (bestGate !== null) {
-                    state.ENGINE.activeGateKey = bestGate;
+                    state.ENGINE.nav.activeGateKey = bestGate;
                     engine.PathNavigator.pushStep(state.ENGINE, bestGate, false);
                     engine.setLogicState(core.DRAGGING);
                     if (bestGate !== k) engine.handlePrimaryGridInput(p, { inputType: 'tap' });

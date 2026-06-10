@@ -29,8 +29,7 @@ export function createRenderer({ core, state, ui }) {
                 reqInt:     model.level.reqInt,
             });
         } else if (model.isEditorMode) {
-            const lMet = document.getElementById('editCopyMetrics');
-            if (lMet) lMet.innerText = `Set (${model.currentLen}/${model.intersections})`;
+            ui.setEditorMetrics(model.currentLen, model.intersections);
         }
     }
 

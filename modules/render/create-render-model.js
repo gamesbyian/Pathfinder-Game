@@ -14,13 +14,15 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     const level = isPlayMode ? eng.level : eng.editor.workingLevel;
     const theme = themes.THEMES[themes.getCurrentTheme()];
 
+    const { nav, hazards } = eng;
+
     // --- Parity warnings ---
     let reqLen = 0, showParityWarnings = false, targetParity = 0, hasFlippingPortal = false;
     if ((isEditorMode || isReviewMode || eng.cheatActive) && level && level.goalKey !== -1) {
         reqLen = (isEditorMode || isReviewMode)
             ? (reqLenPreview || level.reqLen || 0)
             : level.reqLen;
-        if (reqLen > 0 || eng.path.length > 0 || eng.cheatActive) {
+        if (reqLen > 0 || nav.path.length > 0 || eng.cheatActive) {
             showParityWarnings = true;
             const gp = UNPACK(level.goalKey);
             targetParity    = (gp.x + gp.y + reqLen) % 2;
@@ -51,7 +53,7 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
     if (level) {
         level.mustPassKeys.forEach(k => {
             const p    = UNPACK(k);
-            const isHit = (eng.visitedCounts.get(k) || 0) > 0;
+            const isHit = (nav.visitedCounts.get(k) || 0) > 0;
             const { ty } = transformPoint(p.x, p.y, eng.variant, level.grid.w, level.grid.h);
             if (ty === 0) {
                 mustPassInOverlay.push({ x: p.x, y: p.y, isHit });
@@ -72,17 +74,17 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         // theme
         theme,
         // path state
-        path:                   eng.path,
-        isPortalJump:           eng.isPortalJump,
-        visitedCounts:          eng.visitedCounts,
-        intersections:          eng.intersections,
-        crossedFlippingFilters: eng.crossedFlippingFilters,
-        flipCount:              eng.flipCount,
-        visualFlipCount:        eng.visualFlipCount,
-        activeGateKey:          eng.activeGateKey,
-        armedFalseGoals:        eng.armedFalseGoals,
-        detonatedFalseGoals:    eng.detonatedFalseGoals,
-        revealedGeese:          eng.revealedGeese,
+        path:                   nav.path,
+        isPortalJump:           nav.isPortalJump,
+        visitedCounts:          nav.visitedCounts,
+        intersections:          nav.intersections,
+        crossedFlippingFilters: nav.crossedFlippingFilters,
+        flipCount:              nav.flipCount,
+        visualFlipCount:        nav.visualFlipCount,
+        activeGateKey:          nav.activeGateKey,
+        armedFalseGoals:        hazards.armedFalseGoals,
+        detonatedFalseGoals:    hazards.detonatedFalseGoals,
+        revealedGeese:          hazards.revealedGeese,
         cheatActive:            eng.cheatActive,
         // ripples (already filtered by facade before this call)
         ripples: eng.ripples,
@@ -104,6 +106,6 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         editorValidTrapSpots: eng.editor.validTrapSpots,
         editorPendingPortal:  eng.editor.pendingPortal,
         // HUD metrics (consumed by facade after canvas render, not by canvas layer)
-        currentLen: getRealLength(eng),
+        currentLen: getRealLength(nav),
     };
 }

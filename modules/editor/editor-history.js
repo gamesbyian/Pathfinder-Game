@@ -7,7 +7,7 @@ const MAX_UNDO_STACK = 50;
 /**
  * Saves a snapshot of the current working level onto the undo stack.
  * Mutates `editorState` and `hinterState` in place.
- * `deepCloneFn` must be compatible with APP.LevelUtils.deepCloneLevel.
+ * `deepCloneFn` must accept a level object and return a deep copy.
  */
 export function saveEditorSnapshot(editorState, hinterState, deepCloneFn) {
     editorState.isModified = true;

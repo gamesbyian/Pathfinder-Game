@@ -16,9 +16,9 @@ export function isValidMove(targetKey, state, level, options = {}) {
         allowJump      = true,
         forbidPortals  = false,
         mode           = state?.mode,
-        armedFalseGoals = state?.armedFalseGoals,
-        flipCount      = state?.flipCount || 0,
-        crossedSet     = state?.crossedSet || state?.crossedFlippingFilters || new Map(),
+        armedFalseGoals = state?.hazards?.armedFalseGoals ?? state?.armedFalseGoals,
+        flipCount      = state?.nav?.flipCount ?? state?.flipCount ?? 0,
+        crossedSet     = state?.nav?.crossedFlippingFilters ?? state?.crossedSet ?? state?.crossedFlippingFilters ?? new Map(),
         checkHazards   = isStrict,
         checkFalseGoals = isStrict,
         checkWinMetrics = isStrict,
@@ -34,10 +34,12 @@ export function isValidMove(targetKey, state, level, options = {}) {
     };
 
     if (!level) return false;
-    const path   = state?.path  || [];
-    const counts = state?.visitedCounts || state?.counts || new Map();
-    const usage  = state?.cellUsage     || state?.usage  || new Map();
-    const jumpSet = state?.isPortalJump || state?.jumpSet || new Set();
+    // Support both nested engineState (with .nav sub-object) and flat state objects.
+    const nav    = state?.nav;
+    const path   = nav?.path    ?? state?.path  ?? [];
+    const counts = nav?.visitedCounts ?? state?.visitedCounts ?? state?.counts ?? new Map();
+    const usage  = nav?.cellUsage     ?? state?.cellUsage     ?? state?.usage  ?? new Map();
+    const jumpSet = nav?.isPortalJump ?? state?.isPortalJump  ?? state?.jumpSet ?? new Set();
 
     const { x, y } = UNPACK(targetKey);
     const { w, h } = level.grid;
