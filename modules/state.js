@@ -31,7 +31,6 @@ export function createState({ core }) {
             revealedGeese: new Set(),
             armedFalseGoals: new Set(),
             detonatedFalseGoals: new Set(),
-            gooseEncounteredThisLevel: false,
         },
 
         // Solver lifecycle

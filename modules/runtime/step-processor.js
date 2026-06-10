@@ -50,24 +50,28 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
     }
 
     // --- T-intersection block ---
-    if (wouldCreateBlockedTIntersection(nav, targetKey, level)) {
+    // Merge revealedGeese into the nav-shaped object so wouldCreateBlockedTIntersection
+    // (path-state.js:115) can reach it — it moved to hazards in the state-slices refactor.
+    const navForTIntersection = hazards.revealedGeese.size > 0
+        ? { ...nav, revealedGeese: hazards.revealedGeese }
+        : nav;
+    if (wouldCreateBlockedTIntersection(navForTIntersection, targetKey, level)) {
         return { outcome: null, events: [], mutations: { ripples: [] } };
     }
 
     // --- Goose hazard (play mode only) ---
     if (isPlayMode && level.gooseSet.has(targetKey)) {
+        const alreadyRevealed = hazards.revealedGeese.has(targetKey);
+        if (alreadyRevealed) return { outcome: null, events: [], mutations: { ripples: [] } };
         nav.undoStack.push(createNavSnapshot());
         if (nav.undoStack.length > 200) nav.undoStack.shift();
         const justCreatedIntersection = nav.path.length > 1 && (nav.visitedCounts.get(targetKey) || 0) > 0;
         if (justCreatedIntersection) truncateNavTo(nav, nav.path.length - 2);
-        const alreadyRevealed = hazards.revealedGeese.has(targetKey);
         hazards.revealedGeese.add(targetKey);
-        if (!alreadyRevealed) {
-            events.push({ type: 'goose_jumpscare' });
-            events.push({ type: 'logic_state', value: HAZARD_TRIGGERED });
-            events.push({ type: 'sound', note: 'C2', duration: '8n' });
-        }
-        return { outcome: alreadyRevealed ? null : 'goose', events, mutations: { ripples } };
+        events.push({ type: 'goose_jumpscare' });
+        events.push({ type: 'logic_state', value: HAZARD_TRIGGERED });
+        events.push({ type: 'sound', note: 'C2', duration: '8n' });
+        return { outcome: 'goose', events, mutations: { ripples } };
     }
 
     // --- Normal step ---

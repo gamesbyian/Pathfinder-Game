@@ -28,7 +28,8 @@ export function cloneTapRouteState(source) {
         flipCount:             nav.flipCount,
         crossedFlippingFilters: new Map(nav.crossedFlippingFilters),
         activeGateKey:         nav.activeGateKey,
-        armedFalseGoals:       new Set(source.hazards?.armedFalseGoals ?? nav.armedFalseGoals ?? [])
+        armedFalseGoals:       new Set(source.hazards?.armedFalseGoals   ?? source.armedFalseGoals   ?? []),
+        revealedGeese:         new Set(source.hazards?.revealedGeese      ?? source.revealedGeese     ?? [])
     };
 }
 

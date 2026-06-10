@@ -62,14 +62,10 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         editor.saveEditorState();
         if (shiftX !== 0 || shiftY !== 0) {
             levelUtils.shiftLevelCoords(l, shiftX, shiftY);
-            if (eng.editor.pendingPortal) {
-                const p = levelUtils.UNPACK(eng.editor.pendingPortal);
-                eng.editor.pendingPortal = levelUtils.PACK(p.x + shiftX, p.y + shiftY);
-            }
-            eng.nav.path = eng.nav.path.map(k => {
-                const p = levelUtils.UNPACK(k);
-                return levelUtils.PACK(p.x + shiftX, p.y + shiftY);
-            });
+            const shiftKey = k => { const p = levelUtils.UNPACK(k); return levelUtils.PACK(p.x + shiftX, p.y + shiftY); };
+            if (eng.editor.pendingPortal) eng.editor.pendingPortal = shiftKey(eng.editor.pendingPortal);
+            eng.nav.path = eng.nav.path.map(shiftKey);
+            if (eng.nav.activeGateKey != null) eng.nav.activeGateKey = shiftKey(eng.nav.activeGateKey);
             engine.rebuildDerivedPathState();
             eng.hinter.pathList = [];
             eng.editor.validTrapSpots.clear();

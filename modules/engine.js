@@ -63,8 +63,31 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         core.SOUND_BUS.play("C5", "8n");
     }
 
+    // Stable helpers for computeStep — allocated once at factory time, not per call.
+    // Only portalThemeColor is refreshed per step (theme may change between levels).
+    const stepHelpers = {
+        isValidMove:                    (k, s, l, ctx) => levelUtils.isValidMove(k, s, l, ctx),
+        wouldCreateBlockedTIntersection: wouldCreateBlockedTIntersectionImpl,
+        resolvePortal:                  (l, k) => levelUtils.resolvePortal(l, k),
+        areWinMetricsSatisfied:         areWinMetricsSatisfiedImpl,
+        getPortalDisplayColor:          (l, k, c) => levelUtils.getPortalDisplayColor(l, k, c),
+        UNPACK:                         levelUtils.UNPACK,
+        pushStepOnNav,
+        truncateNavTo,
+        createNavSnapshot:              createSnapshot,
+        checkWinCondition:              (nav, level, mode, logicState) =>
+            checkWinConditionImplFn(nav.path, level, mode, logicState, nav.isPortalJump, nav.visitedCounts, nav.intersections),
+        MoveContext,
+        HAZARD_TRIGGERED:               core.HAZARD_TRIGGERED,
+        PORTAL_PAUSE:                   core.PORTAL_PAUSE,
+        EDITOR:                         core.EDITOR,
+        REVIEW:                         core.REVIEW,
+        portalThemeColor:               '#d946ef',
+    };
+
     function processStep(key) {
         const activeLevel = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
+        stepHelpers.portalThemeColor = themes.THEMES[themes.getCurrentTheme()]?.colors?.portal || '#d946ef';
         const { outcome, events, mutations } = computeStep(
             state.ENGINE.nav,
             state.ENGINE.hazards,
@@ -72,32 +95,15 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             state.ENGINE.logicState,
             activeLevel,
             key,
-            {
-                isValidMove:                    (k, s, l, ctx) => levelUtils.isValidMove(k, s, l, ctx),
-                wouldCreateBlockedTIntersection: wouldCreateBlockedTIntersectionImpl,
-                resolvePortal:                  (l, k) => levelUtils.resolvePortal(l, k),
-                areWinMetricsSatisfied:         areWinMetricsSatisfiedImpl,
-                getPortalDisplayColor:          (l, k, c) => levelUtils.getPortalDisplayColor(l, k, c),
-                UNPACK:                         levelUtils.UNPACK,
-                pushStepOnNav,
-                truncateNavTo,
-                createNavSnapshot:              () => createSnapshot(),
-                checkWinCondition:              (nav, level, mode, logicState) =>
-                    checkWinConditionImplFn(nav.path, level, mode, logicState, nav.isPortalJump, nav.visitedCounts, nav.intersections),
-                MoveContext,
-                HAZARD_TRIGGERED:               core.HAZARD_TRIGGERED,
-                PORTAL_PAUSE:                   core.PORTAL_PAUSE,
-                EDITOR:                         core.EDITOR,
-                REVIEW:                         core.REVIEW,
-                portalThemeColor:               themes.THEMES[themes.getCurrentTheme()]?.colors?.portal || '#d946ef',
-            }
+            stepHelpers
         );
         if (outcome !== null) {
             state.ENGINE.isDirty = true;
             if (state.ENGINE.mode === core.EDITOR) state.ENGINE.editor.isModified = true;
         }
+        const now = Date.now();
         for (const { x, y, color } of mutations.ripples) {
-            state.ENGINE.ripples.push({ x, y, startTime: Date.now(), color });
+            state.ENGINE.ripples.push({ x, y, startTime: now, color });
         }
         for (const event of events) dispatchStepEvent(event);
         return outcome === 'backtrack' ? 'valid' : outcome;
@@ -173,12 +179,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
                 state.ENGINE.nav.isPortalJump, state.ENGINE.nav.visitedCounts, state.ENGINE.nav.intersections)) {
             handleWin();
         }
-    }
-
-    function checkFalseGoalCondition() {
-        const l = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
-        if (!l) return false;
-        return areWinMetricsSatisfied(state.ENGINE, l);
     }
 
     function triggerJumpScare() {
@@ -261,7 +261,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         PathNavigator.clear(state.ENGINE);
         state.ENGINE.nav.undoStack = [];
         state.ENGINE.hazards.revealedGeese.clear();
-        state.ENGINE.hazards.gooseEncounteredThisLevel = false;
+
         state.ENGINE.hazards.detonatedFalseGoals.clear();
         document.getElementById('editorPalette').classList.toggle('hidden', !isEdOrReview);
         document.getElementById('levelMetadataPanel').classList.toggle('hidden', !isEdOrReview);
@@ -340,7 +340,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         PathNavigator.clear(state.ENGINE);
         state.ENGINE.nav.undoStack = [];
         state.ENGINE.hazards.revealedGeese.clear();
-        state.ENGINE.hazards.gooseEncounteredThisLevel = false;
+
         state.ENGINE.hazards.detonatedFalseGoals.clear();
         ui.setInputValue('editReqLen', 0);
         ui.setInputValue('editReqInt', 0);
@@ -371,7 +371,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         PathNavigator.clear(state.ENGINE);
         state.ENGINE.nav.undoStack = [];
         state.ENGINE.hazards.revealedGeese.clear();
-        state.ENGINE.hazards.gooseEncounteredThisLevel = false;
+
         state.ENGINE.hazards.detonatedFalseGoals.clear();
         ui.setInputValue('editReqLen', normalized.reqLen || 0);
         ui.setInputValue('editReqInt', normalized.reqInt || 0);
@@ -428,7 +428,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         state.ENGINE.nav.undoStack = [];
         state.ENGINE.hazards.revealedGeese.clear();
         state.ENGINE.ripples = [];
-        state.ENGINE.hazards.gooseEncounteredThisLevel = false;
+
         state.ENGINE.hazards.armedFalseGoals       = new Set(state.ENGINE.level.falseGoalKeys || []);
         state.ENGINE.hazards.detonatedFalseGoals   = new Set();
         state.ENGINE.foundHintsSinceLoad   = [];
@@ -679,7 +679,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         state.ENGINE.nav.undoStack = [];
         state.ENGINE.hazards.revealedGeese.clear();
         state.ENGINE.ripples = [];
-        state.ENGINE.hazards.gooseEncounteredThisLevel = false;
+
         if (!keepLevel) state.ENGINE.level = null;
         state.ENGINE.hazards.armedFalseGoals    = new Set((state.ENGINE.level?.falseGoalKeys) || []);
         state.ENGINE.hazards.detonatedFalseGoals = new Set();
@@ -700,7 +700,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         checkWinCondition()                          { return checkWinCondition(); },
         areWinMetricsSatisfied(engineState, level)   { return areWinMetricsSatisfied(engineState, level); },
         wouldCreateBlockedTIntersection(engineState, key, level) { return wouldCreateBlockedTIntersectionImpl(engineState?.nav ?? engineState, key, level); },
-        checkFalseGoalCondition()                    { return checkFalseGoalCondition(); },
         triggerJumpScare()                           { return triggerJumpScare(); },
         triggerBombDetonation(key)                   { return triggerBombDetonation(key); },
         createSnapshot()                             { return createSnapshot(); },
