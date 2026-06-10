@@ -16,8 +16,7 @@ export function installThemes(APP) {
             if (name === 'chaos') { themes.chaos = buildChaosTheme(); }
             APP.State.ENGINE.runtime.currentTheme = name;
             const t = themes[name];
-            const leave = getLeaveThemeColors(t, name === 'classic');
-            applyCssVariables(document.documentElement, t, leave);
+            applyCssVariables(document.documentElement, t);
             APP.Persistence.persistSessionState();
             APP.State.ENGINE.rainbowActive = (name === 'classic');
             APP.State.ENGINE.isDirty = true;

@@ -198,7 +198,6 @@ export function normalizeTheme(theme, key = 'theme') {
         ],
         pickContrastText(t.modal.panelBg || t.canvasBg || '#ffffff', '#ffffff', '#000000')
     );
-    t.text.shellBtn = t.text.shellBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#475569');
     t.text.actionBtn = t.text.actionBtn || ((t.bodyBg === '#020617' || t.bodyBg === '#000000') ? '#f8fafc' : '#ffffff');
     t.text.utilityBtn = keepOrImproveContrast(t.btns.copy || '#334155', t.btns.muteIcon);
     t.text.utilityBtnGen = keepOrImproveContrast(t.btns.gen || '#334155', t.btns.muteIcon);
@@ -238,18 +237,15 @@ export function normalizeTheme(theme, key = 'theme') {
 
     if (key !== 'chaos') {
         const shellBase = t.btns.modeToggle || t.btns.orient || t.headerRight || t.modal.accent || '#334155';
-        t.shell.btnBg = shellBase;
-        t.shell.btnBgHover = darkenHex(t.shell.btnBg, 0.9);
-        t.shell.muteBg = t.btns.mute || t.btns.orient || shellBase;
-        t.shell.muteBgHover = darkenHex(t.shell.muteBg, 0.9);
+        t.shell.btnBg      = t.shell.btnBg      || shellBase;
+        t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.9);
+        t.shell.muteBg     = t.shell.muteBg     || t.btns.mute || t.btns.orient || shellBase;
+        t.shell.muteBgHover = t.shell.muteBgHover || darkenHex(t.shell.muteBg, 0.9);
     }
-    t.shell.btnBg = t.shell.btnBg || t.btns.orient || t.btns.modeToggle || t.btns.mute;
-    t.shell.btnBgHover = t.shell.btnBgHover || darkenHex(t.shell.btnBg, 0.92);
-    t.shell.btnText = keepOrImproveContrast(t.shell.btnBg, t.shell.btnText);
-    t.shell.btnBorder = t.shell.btnBorder || t.modal.border;
-    t.shell.muteBg = t.shell.muteBg || t.btns.orient || t.btns.modeToggle || t.btns.mute;
+    t.shell.btnBgHover  = t.shell.btnBgHover  || darkenHex(t.shell.btnBg,  0.92);
+    t.shell.btnText     = keepOrImproveContrast(t.shell.btnBg, t.shell.btnText);
+    t.shell.btnBorder   = t.shell.btnBorder   || t.modal.border;
     t.shell.muteBgHover = t.shell.muteBgHover || darkenHex(t.shell.muteBg, 0.92);
-    t.text.shellBtn = pickContrastText(t.btns.orient || t.btns.modeToggle || t.headerRight || '#1e293b');
     t.alert.text = pickContrastText(t.alert.bg, '#ffffff', '#0f172a');
     t.shell.muteText = keepOrImproveContrast(t.shell.muteBg, t.shell.muteText || t.btns.muteIcon);
     t.shell.muteBorder = t.shell.muteBorder || t.modal.border;
@@ -318,7 +314,7 @@ export function buildChaosTheme() {
         win: { bg: rc(), border: rc(), text: rc(), accent: rc() },
         alert: { bg: rc(), stroke: rc() },
         ctrlArea: { bg: rc(), border: rc() },
-        text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc(), body: rc(), shellBtn: rc(), actionBtn: rc(), utilityBtn: rc(), utilityBtnGen: rc(), error: rc(), handDrawnShadow: rc() },
+        text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaGemini: rc(), megaCopy: rc(), body: rc(), actionBtn: rc(), utilityBtn: rc(), utilityBtnGen: rc(), error: rc(), handDrawnShadow: rc() },
         loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc() },
         search: { overlayBg: rc(), megaStatusText: rc(), megaStatusBorder: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() },
         jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() },
