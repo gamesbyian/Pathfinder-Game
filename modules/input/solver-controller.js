@@ -56,17 +56,21 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             const budgetMs = 30000;
             const t0       = Date.now();
             const overlayMinTimer = new Promise(r => setTimeout(r, 400));
-            const timerInterval   = setInterval(() => {
+            let rafActive = true;
+            const tick = () => {
+                if (!rafActive) return;
                 const elapsed = (Date.now() - t0) / 1000;
                 ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
                 ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
-            }, 100);
+                requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
             let result;
             try {
                 result = await solverV2.solve(level, { timeBudgetMs: budgetMs, yieldFn });
                 await overlayMinTimer;
             } finally {
-                clearInterval(timerInterval);
+                rafActive = false;
             }
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 ui.setSolverProgress(100);
