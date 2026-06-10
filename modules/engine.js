@@ -1,45 +1,22 @@
+import { getRealLength as getRealLengthImpl,
+         areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
+         checkWinConditionImpl as checkWinConditionImplFn } from './runtime/game-rules.js';
+import { VALID_LOGIC_TRANSITIONS } from './runtime/state-machine.js';
+import { cloneTapRouteState, rebuildDerivedState,
+         simulateTapRouteStep,
+         wouldCreateBlockedTIntersection as wouldCreateBlockedTIntersectionImpl } from './runtime/path-state.js';
+
 export function installEngine(APP) {
     APP.Engine = (() => {
         let refs = { ENGINE: null };
         const bind = ({ ENGINE: engineRef }) => { refs = { ENGINE: engineRef }; };
         const init = bind;
 
-            function areWinMetricsSatisfied(state = APP.State.ENGINE, level = (state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel)) {
-                if (!level || !state.path.length) return false;
-                const curLen = APP.Engine.getRealLength(state);
-                if (curLen !== level.reqLen || state.intersections !== level.reqInt) return false;
-                const allMustPass = level.mustPassKeys.every(k => state.visitedCounts.get(k) > 0);
-                const allMustCross = level.mustCrossKeys.every(k => (state.visitedCounts.get(k) || 0) >= 2);
-                return allMustPass && allMustCross;
-            }
-
-            function wouldCreateBlockedTIntersection(state, key, level) {
-                if (!state || !level || state.path.length === 0) return false;
-                const lastK = state.path[state.path.length - 1];
-                const from = APP.LevelUtils.UNPACK(lastK);
-                const to = APP.LevelUtils.UNPACK(key);
-                const axis = (to.y === from.y) ? APP.Core.H : APP.Core.V;
-                const usageAtTarget = state.cellUsage.get(key) || { h: false, v: false };
-                const revisitCount = state.visitedCounts.get(key) || 0;
-                const perpendicularUsed = axis === APP.Core.H ? usageAtTarget.v : usageAtTarget.h;
-                const currentAxisUsed = axis === APP.Core.H ? usageAtTarget.h : usageAtTarget.v;
-                if (revisitCount <= 0 || !perpendicularUsed || currentAxisUsed) return false;
-
-                const dirX = Math.sign(to.x - from.x);
-                const dirY = Math.sign(to.y - from.y);
-                const forwardX = to.x + dirX;
-                const forwardY = to.y + dirY;
-                if (!APP.LevelUtils.inBounds(forwardX, forwardY, level.grid.w, level.grid.h)) return true;
-
-                const forwardKey = APP.LevelUtils.PACK(forwardX, forwardY);
-                const simulatedAfterEnter = simulateTapRouteStep(state, key, level, { skipTIntersectionCheck: true });
-                if (!simulatedAfterEnter) return false;
-                const simulatedForward = simulateTapRouteStep(simulatedAfterEnter.state, forwardKey, level, { skipTIntersectionCheck: true });
-                if (!simulatedForward) return true;
-                if (simulatedForward.result === "goose") {
-                    return state.revealedGeese?.has(forwardKey) || false;
-                }
-                return false;
+            // Wrapper: resolves APP-dependent defaults; pure logic is in runtime/game-rules.js.
+            function areWinMetricsSatisfied(state = APP.State.ENGINE, level) {
+                const lvl = level !== undefined ? level
+                    : (state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel);
+                return areWinMetricsSatisfiedImpl(state, lvl);
             }
 
             function processStep(key) {
@@ -62,7 +39,7 @@ export function installEngine(APP) {
                     return null;
                 }
 
-                if (wouldCreateBlockedTIntersection(APP.State.ENGINE, key, activeLevel)) return null;
+                if (wouldCreateBlockedTIntersectionImpl(APP.State.ENGINE, key, activeLevel)) return null;
 
                 APP.State.ENGINE.isDirty = true;
                 if (APP.State.ENGINE.mode === APP.Core.EDITOR) APP.State.ENGINE.editor.isModified = true;
@@ -124,100 +101,7 @@ export function installEngine(APP) {
                 return pathSteps;
             };
 
-            const cloneTapRouteState = (state) => ({
-                mode: state.mode,
-                path: [...state.path],
-                isPortalJump: new Set(state.isPortalJump),
-                visitedCounts: new Map(state.visitedCounts),
-                cellUsage: new Map(Array.from(state.cellUsage.entries(), ([k, u]) => [k, { h: !!u.h, v: !!u.v }])),
-                intersections: state.intersections,
-                flipCount: state.flipCount,
-                crossedFlippingFilters: new Map(state.crossedFlippingFilters),
-                activeGateKey: state.activeGateKey,
-                armedFalseGoals: new Set(state.armedFalseGoals || [])
-            });
-
-            const rebuildTapRouteDerivedState = (state, level) => {
-                state.visitedCounts = new Map();
-                state.cellUsage = new Map();
-                state.intersections = 0;
-                state.flipCount = 0;
-                state.crossedFlippingFilters = new Map();
-                for (let i = 0; i < state.path.length; i++) {
-                    const k = state.path[i];
-                    const c = state.visitedCounts.get(k) || 0;
-                    if (c > 0 && k !== state.activeGateKey && (level && k !== level.goalKey)) state.intersections++;
-                    state.visitedCounts.set(k, c + 1);
-                    if (i > 0 && !state.isPortalJump.has(i)) {
-                        const prevK = state.path[i - 1];
-                        const p1 = APP.LevelUtils.UNPACK(prevK), p2 = APP.LevelUtils.UNPACK(k);
-                        const axis = (p2.y === p1.y) ? APP.Core.H : APP.Core.V;
-                        const mark = (key, ax) => {
-                            const u = state.cellUsage.get(key) || { h: false, v: false };
-                            if (ax === APP.Core.H) u.h = true; else u.v = true;
-                            state.cellUsage.set(key, u);
-                        };
-                        mark(prevK, axis);
-                        mark(k, axis);
-                    }
-                    if (level && level.flippingFilterMap.has(k) && !state.crossedFlippingFilters.has(k)) {
-                        state.crossedFlippingFilters.set(k, state.flipCount);
-                        state.flipCount++;
-                    }
-                }
-            };
-
-            const pushTapRouteStep = (state, key, isJump, level) => {
-                const lastK = state.path[state.path.length - 1];
-                if (lastK !== undefined && !isJump) {
-                    const p1 = APP.LevelUtils.UNPACK(lastK), p2 = APP.LevelUtils.UNPACK(key);
-                    const axis = (p2.y === p1.y) ? APP.Core.H : APP.Core.V;
-                    const mark = (k, ax) => { const u = state.cellUsage.get(k) || { h: false, v: false }; if (ax === APP.Core.H) u.h = true; else u.v = true; state.cellUsage.set(k, u); };
-                    mark(lastK, axis); mark(key, axis);
-                }
-                const count = state.visitedCounts.get(key) || 0;
-                if (count > 0 && key !== state.activeGateKey && (level && key !== level.goalKey)) state.intersections++;
-                state.visitedCounts.set(key, count + 1);
-                state.path.push(key);
-                if (isJump) state.isPortalJump.add(state.path.length - 1);
-                if (level && level.flippingFilterMap.has(key) && !state.crossedFlippingFilters.has(key)) {
-                    state.crossedFlippingFilters.set(key, state.flipCount);
-                    state.flipCount++;
-                }
-            };
-
-            function simulateTapRouteStep(baseState, key, level, options = {}) {
-                const nextState = cloneTapRouteState(baseState);
-                if (nextState.path.length > 1 && key === nextState.path[nextState.path.length - 2]) {
-                    nextState.path.pop();
-                    const prevLen = nextState.path.length;
-                    nextState.isPortalJump = new Set(Array.from(nextState.isPortalJump).filter(i => i < prevLen));
-                    rebuildTapRouteDerivedState(nextState, level);
-                    return { state: nextState, result: "valid" };
-                }
-                if (!APP.LevelUtils.isValidMove(key, nextState, level, {
-                    isStrict: true,
-                    mode: nextState.mode,
-                    allowJump: true,
-                    checkWinMetrics: false,
-                    checkHazards: false,
-                    checkFalseGoals: true,
-                    armedFalseGoals: nextState.armedFalseGoals,
-                    flipCount: nextState.flipCount,
-                    crossedSet: nextState.crossedFlippingFilters
-                })) return null;
-                if (!options.skipTIntersectionCheck && wouldCreateBlockedTIntersection(nextState, key, level)) return null;
-                if (nextState.mode !== APP.Core.EDITOR && nextState.mode !== APP.Core.REVIEW && level.gooseSet.has(key)) return { state: nextState, result: "goose" };
-                pushTapRouteStep(nextState, key, false, level);
-                if (nextState.armedFalseGoals.has(key) && APP.Engine.areWinMetricsSatisfied(nextState, level)) return { state: nextState, result: "detonate" };
-                const portal = APP.LevelUtils.resolvePortal(level, key);
-                if (portal && portal.dest !== -1) {
-                    pushTapRouteStep(nextState, portal.dest, true, level);
-                    if (nextState.armedFalseGoals.has(portal.dest) && APP.Engine.areWinMetricsSatisfied(nextState, level)) return { state: nextState, result: "detonate" };
-                    return { state: nextState, result: "portal" };
-                }
-                return { state: nextState, result: "valid" };
-            }
+            // cloneTapRouteState, simulateTapRouteStep: imported from runtime/path-state.js
 
             function findTapRoute(target, options = {}) {
                 const level = APP.State.ENGINE.mode === APP.Core.PLAY ? APP.State.ENGINE.level : APP.State.ENGINE.editor.workingLevel;
@@ -271,21 +155,13 @@ export function installEngine(APP) {
             }
 
             function checkWinCondition() {
-                if (checkWinConditionImpl(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) {
+                if (checkWinConditionImplFn(APP.State.ENGINE.path, APP.State.ENGINE.level, APP.State.ENGINE.mode, APP.State.ENGINE.logicState, APP.State.ENGINE.isPortalJump, APP.State.ENGINE.visitedCounts, APP.State.ENGINE.intersections)) {
                     APP.Engine.setLogicState(APP.Core.RESOLVED);
                     APP.UI.renderWinExportPanel({ solutionOutput: JSON.stringify(APP.State.ENGINE.path).replace(/\s/g, ''), showExportArea: APP.State.ENGINE.isDevMode });
                     if (APP.State.ENGINE.mode === APP.Core.PLAY) APP.Persistence.markLevelComplete(APP.State.ENGINE.levelIdx);
                     APP.UI.openModal('winModal');
                     APP.Core.SOUND_BUS.play("C5", "8n");
                 }
-            }
-
-            function checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) {
-                if (!path.length || logicState === APP.Core.HAZARD_TRIGGERED || mode === APP.Core.EDITOR || mode === APP.Core.REVIEW) return false;
-                const last = path[path.length - 1];
-                if (last !== level.goalKey) return false;
-                const stubState = { mode, level, editor: { workingLevel: level }, path, isPortalJump, visitedCounts, intersections };
-                return APP.Engine.areWinMetricsSatisfied(stubState, level);
             }
 
             function checkFalseGoalCondition() {
@@ -642,16 +518,15 @@ export function installEngine(APP) {
                 requestAnimationFrame(loop);
             }
 
-            function getRealLength(state = APP.State.ENGINE) { return state.path.length > 0 ? state.path.length - 1 - state.isPortalJump.size : 0; }
+            // Wrapper: adds APP-dependent default + lastFlipTime side effect; pure logic in runtime/game-rules.js.
+            function getRealLength(state = APP.State.ENGINE) { return getRealLengthImpl(state); }
 
+            // Wrapper: determines level from APP state, delegates to runtime/path-state.js, then
+            // updates lastFlipTime (Date.now() is a side effect kept out of the pure layer).
             function rebuildDerivedPathState(state = APP.State.ENGINE) {
                 const oldFlipCount = state.flipCount;
-                state.visitedCounts.clear(); state.cellUsage.clear(); state.intersections = 0; state.flipCount = 0; state.crossedFlippingFilters.clear(); const l = state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel; if (state.path.length === 0) { if (oldFlipCount !== 0) state.lastFlipTime = Date.now(); return; }
-                for (let i = 0; i < state.path.length; i++) {
-                    const k = state.path[i]; const c = state.visitedCounts.get(k) || 0; if (c > 0 && k !== state.activeGateKey && (l && k !== l.goalKey)) { state.intersections++; } state.visitedCounts.set(k, c + 1);
-                    if (i > 0 && !state.isPortalJump.has(i)) { const prevK = state.path[i-1]; const p1 = APP.LevelUtils.UNPACK(prevK), p2 = APP.LevelUtils.UNPACK(k); const axis = (p2.y === p1.y) ? APP.Core.H : APP.Core.V; let uPrev = state.cellUsage.get(prevK) || { h: false, v: false }; if (axis === APP.Core.H) uPrev.h = true; else uPrev.v = true; state.cellUsage.set(prevK, uPrev); let uCur = state.cellUsage.get(k) || { h: false, v: false }; if (axis === APP.Core.H) uCur.h = true; else uCur.v = true; state.cellUsage.set(k, uCur); }
-                    if (l && l.flippingFilterMap.has(k) && !state.crossedFlippingFilters.has(k)) { state.crossedFlippingFilters.set(k, state.flipCount); state.flipCount++; }
-                }
+                const level = state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel;
+                rebuildDerivedState(state, level);
                 if (state.flipCount !== oldFlipCount) state.lastFlipTime = Date.now();
             }
 
@@ -672,14 +547,7 @@ export function installEngine(APP) {
                 clear(state) { state.path = []; state.isPortalJump.clear(); state.activeGateKey = null; if ([APP.Core.DRAGGING, APP.Core.PORTAL_PAUSE, APP.Core.HAZARD_TRIGGERED].includes(state.logicState)) { APP.Engine.setLogicState(APP.Core.IDLE); } if (state.mode === APP.Core.EDITOR) state.editor.isModified = true; state.isDirty = true; rebuildDerivedPathState(state); assertStateConsistency(state); }
             };
 
-            const VALID_LOGIC_TRANSITIONS = {
-                [APP.Core.IDLE]: [APP.Core.DRAGGING, APP.Core.EDIT_DRAG, APP.Core.RESOLVED],
-                [APP.Core.DRAGGING]: [APP.Core.IDLE, APP.Core.PORTAL_PAUSE, APP.Core.RESOLVED, APP.Core.HAZARD_TRIGGERED],
-                [APP.Core.PORTAL_PAUSE]: [APP.Core.DRAGGING, APP.Core.IDLE, APP.Core.RESOLVED],
-                [APP.Core.RESOLVED]: [APP.Core.IDLE],
-                [APP.Core.HAZARD_TRIGGERED]: [APP.Core.IDLE],
-                [APP.Core.EDIT_DRAG]: [APP.Core.IDLE]
-            };
+            // VALID_LOGIC_TRANSITIONS: imported from runtime/state-machine.js
 
             function setLogicState(newState) {
                 if (newState !== APP.Core.IDLE && !VALID_LOGIC_TRANSITIONS[APP.State.ENGINE.logicState]?.includes(newState)) {
@@ -739,13 +607,13 @@ export function installEngine(APP) {
             processStep(key) { return processStep(key); },
             checkWinCondition() { return checkWinCondition(); },
             areWinMetricsSatisfied(state, level) { return areWinMetricsSatisfied(state, level); },
-            wouldCreateBlockedTIntersection(state, key, level) { return wouldCreateBlockedTIntersection(state, key, level); },
+            wouldCreateBlockedTIntersection(state, key, level) { return wouldCreateBlockedTIntersectionImpl(state, key, level); },
             checkFalseGoalCondition() { return checkFalseGoalCondition(); },
             triggerJumpScare() { return triggerJumpScare(); },
             triggerBombDetonation(key) { return triggerBombDetonation(key); },
             createSnapshot() { return createSnapshot(); },
             applySnapshot(snap) { return applySnapshot(snap); },
-            checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { return checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections); },
+            checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { return checkWinConditionImplFn(path, level, mode, logicState, isPortalJump, visitedCounts, intersections); },
             getPackedPath() { return [...(refs.ENGINE?.path || [])]; },
             getIntersections() { return refs.ENGINE?.intersections ?? 0; },
             updatePlayModeLayout,

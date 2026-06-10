@@ -1,7 +1,7 @@
 /**
- * Phase 0 — Domain behaviour-locking tests.
+ * Phase 0/2 — Domain and runtime behaviour-locking tests.
  *
- * Tests the pure domain functions that Phase 1+ refactoring will extract.
+ * Tests the pure domain and runtime functions extracted during Phase 1/2.
  * Must pass before AND after every refactoring step.
  *
  * Run: node scripts/domain-unit-tests.mjs
@@ -10,6 +10,9 @@ import assert from 'node:assert/strict';
 import { installCore } from '../modules/core.js';
 import { installLevelUtils } from '../modules/levelutils.js';
 import { installEngine } from '../modules/engine.js';
+import { VALID_LOGIC_TRANSITIONS, isValidLogicTransition } from '../modules/runtime/state-machine.js';
+import { cloneTapRouteState, rebuildDerivedState, simulateTapRouteStep, wouldCreateBlockedTIntersection } from '../modules/runtime/path-state.js';
+import { checkWinConditionImpl as checkWinConditionImplDirect } from '../modules/runtime/game-rules.js';
 
 // ---------------------------------------------------------------------------
 // Minimal APP bootstrap
@@ -577,6 +580,186 @@ test('encode/decode: no-hints case returns input unchanged', () => {
     assert.equal(decodeHints(noHints), noHints);
     assert.equal(encodeHints(emptyHints), emptyHints);
     assert.equal(decodeHints(emptyHints), emptyHints);
+});
+
+// ---------------------------------------------------------------------------
+// GROUP 7 — Logic-state machine (state-machine.js)
+// ---------------------------------------------------------------------------
+console.log('\nGROUP 7: Logic-state machine (isValidLogicTransition)');
+
+test('IDLE → DRAGGING is a valid transition', () => {
+    assert.ok(isValidLogicTransition('IDLE', 'DRAGGING'));
+});
+
+test('IDLE → HAZARD_TRIGGERED is blocked', () => {
+    assert.equal(isValidLogicTransition('IDLE', 'HAZARD_TRIGGERED'), false);
+});
+
+test('any state → IDLE is always allowed (reset rule)', () => {
+    assert.ok(isValidLogicTransition('DRAGGING',         'IDLE'));
+    assert.ok(isValidLogicTransition('PORTAL_PAUSE',     'IDLE'));
+    assert.ok(isValidLogicTransition('RESOLVED',         'IDLE'));
+    assert.ok(isValidLogicTransition('HAZARD_TRIGGERED', 'IDLE'));
+    assert.ok(isValidLogicTransition('EDIT_DRAG',        'IDLE'));
+});
+
+test('DRAGGING → PORTAL_PAUSE is valid', () => {
+    assert.ok(isValidLogicTransition('DRAGGING', 'PORTAL_PAUSE'));
+});
+
+test('RESOLVED → DRAGGING is blocked', () => {
+    assert.equal(isValidLogicTransition('RESOLVED', 'DRAGGING'), false);
+});
+
+test('unknown from-state → non-IDLE is false', () => {
+    assert.equal(isValidLogicTransition('UNKNOWN', 'DRAGGING'), false);
+});
+
+test('VALID_LOGIC_TRANSITIONS has entries for every non-IDLE logic state', () => {
+    ['IDLE', 'DRAGGING', 'PORTAL_PAUSE', 'RESOLVED', 'HAZARD_TRIGGERED', 'EDIT_DRAG'].forEach(state => {
+        assert.ok(state in VALID_LOGIC_TRANSITIONS, `missing entry for ${state}`);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// GROUP 8 — Path-state pure functions (path-state.js)
+// ---------------------------------------------------------------------------
+console.log('\nGROUP 8: Path-state pure functions (cloneTapRouteState / rebuildDerivedState / simulateTapRouteStep)');
+
+function makeTapState(opts = {}) {
+    // Minimal tap-route state compatible with path-state.js functions.
+    return {
+        mode:                   opts.mode ?? 0,  // PLAY=0
+        path:                   [...(opts.path ?? [])],
+        isPortalJump:           new Set(opts.isPortalJump ?? []),
+        visitedCounts:          new Map(opts.visitedCounts ?? []),
+        cellUsage:              new Map(opts.cellUsage ?? []),
+        intersections:          opts.intersections ?? 0,
+        flipCount:              opts.flipCount ?? 0,
+        crossedFlippingFilters: new Map(opts.crossedFlippingFilters ?? []),
+        activeGateKey:          opts.activeGateKey ?? null,
+        armedFalseGoals:        new Set(opts.armedFalseGoals ?? []),
+        revealedGeese:          new Set(opts.revealedGeese ?? [])
+    };
+}
+
+test('cloneTapRouteState: produces a deep copy with independent collections', () => {
+    const original = makeTapState({ path: [PACK(0,0), PACK(1,0)] });
+    const clone = cloneTapRouteState(original);
+    assert.deepEqual(clone.path, original.path);
+    clone.path.push(PACK(2,0));
+    assert.equal(original.path.length, 2, 'original path unchanged after clone mutation');
+    clone.visitedCounts.set(PACK(0,0), 99);
+    assert.equal(original.visitedCounts.get(PACK(0,0)), undefined, 'original visitedCounts independent');
+});
+
+test('rebuildDerivedState: empty path zeroes all counters', () => {
+    const state = makeTapState({ path: [], intersections: 5, flipCount: 3 });
+    state.visitedCounts.set(PACK(0,0), 2);
+    rebuildDerivedState(state, makeLevel());
+    assert.equal(state.visitedCounts.size, 0);
+    assert.equal(state.cellUsage.size, 0);
+    assert.equal(state.intersections, 0);
+    assert.equal(state.flipCount, 0);
+});
+
+test('rebuildDerivedState: 3-step path produces correct visitedCounts', () => {
+    const path = [PACK(0,0), PACK(1,0), PACK(2,0), PACK(3,0)];
+    const state = makeTapState({ path });
+    rebuildDerivedState(state, makeLevel());
+    // Each cell visited once
+    assert.equal(state.visitedCounts.get(PACK(0,0)), 1);
+    assert.equal(state.visitedCounts.get(PACK(3,0)), 1);
+    assert.equal(state.intersections, 0);
+});
+
+test('rebuildDerivedState: detects intersection when cell visited twice', () => {
+    // (0,0)→(1,0)→(1,1)→(0,1)→(0,0): revisit (0,0)
+    const path = [PACK(0,0), PACK(1,0), PACK(1,1), PACK(0,1), PACK(0,0)];
+    const level = makeLevel();
+    const state = makeTapState({ path });
+    rebuildDerivedState(state, level);
+    assert.equal(state.visitedCounts.get(PACK(0,0)), 2);
+    assert.equal(state.intersections, 1);
+});
+
+test('simulateTapRouteStep: valid adjacent step advances path', () => {
+    const level = makeLevel();
+    const base  = makeTapState({ path: [PACK(0,0)] });
+    const result = simulateTapRouteStep(base, PACK(1,0), level);
+    assert.ok(result, 'should return a result');
+    assert.equal(result.result, 'valid');
+    assert.equal(result.state.path[result.state.path.length - 1], PACK(1,0));
+});
+
+test('simulateTapRouteStep: out-of-bounds target returns null', () => {
+    const level = makeLevel({ w: 8, h: 8 });
+    const base  = makeTapState({ path: [PACK(0,0)] });
+    assert.equal(simulateTapRouteStep(base, PACK(8,0), level), null);
+});
+
+test('simulateTapRouteStep: blocked cell returns null', () => {
+    const level = makeLevel({ blocks: [PACK(1,0)] });
+    const base  = makeTapState({ path: [PACK(0,0)] });
+    assert.equal(simulateTapRouteStep(base, PACK(1,0), level), null);
+});
+
+test('simulateTapRouteStep: backtrack (step to second-to-last) shortens path', () => {
+    const level = makeLevel();
+    const base  = makeTapState({ path: [PACK(0,0), PACK(1,0), PACK(2,0)] });
+    // manually set visitedCounts to match path
+    base.visitedCounts.set(PACK(0,0), 1); base.visitedCounts.set(PACK(1,0), 1); base.visitedCounts.set(PACK(2,0), 1);
+    const result = simulateTapRouteStep(base, PACK(1,0), level);  // backtrack to (1,0)
+    assert.ok(result);
+    assert.equal(result.result, 'valid');
+    assert.equal(result.state.path.length, 2);
+    assert.equal(result.state.path[1], PACK(1,0));
+});
+
+test('wouldCreateBlockedTIntersection: returns false when revisitCount is 0', () => {
+    const level = makeLevel();
+    const state = makeTapState({ path: [PACK(0,0)] });
+    // PACK(1,0) never visited → revisitCount = 0 → not a T-intersection issue
+    assert.equal(wouldCreateBlockedTIntersection(state, PACK(1,0), level), false);
+});
+
+// ---------------------------------------------------------------------------
+// GROUP 9 — checkWinConditionImpl (game-rules.js)
+// ---------------------------------------------------------------------------
+console.log('\nGROUP 9: checkWinConditionImpl (game-rules.js)');
+
+test('checkWinConditionImpl: returns false in EDITOR mode (mode=1)', () => {
+    const level  = makeLevel({ reqLen: 2, reqInt: 0 });
+    const path   = [PACK(0,0), PACK(1,0), PACK(2,0)];
+    assert.equal(
+        checkWinConditionImplDirect(path, level, 1, 'IDLE', new Set(), new Map([[PACK(0,0),1],[PACK(1,0),1],[PACK(2,0),1]]), 0),
+        false
+    );
+});
+
+test('checkWinConditionImpl: returns false when last key ≠ goalKey', () => {
+    const level  = makeLevel({ goalKey: PACK(7,7), reqLen: 2, reqInt: 0 });
+    const path   = [PACK(0,0), PACK(1,0), PACK(2,0)];
+    assert.equal(
+        checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), new Map([[PACK(0,0),1],[PACK(1,0),1],[PACK(2,0),1]]), 0),
+        false
+    );
+});
+
+test('checkWinConditionImpl: returns false when HAZARD_TRIGGERED', () => {
+    const goalKey = PACK(2,0);
+    const level   = makeLevel({ goalKey, reqLen: 2, reqInt: 0 });
+    const path    = [PACK(0,0), PACK(1,0), goalKey];
+    const vc      = new Map([[PACK(0,0),1],[PACK(1,0),1],[goalKey,1]]);
+    assert.equal(checkWinConditionImplDirect(path, level, 0, 'HAZARD_TRIGGERED', new Set(), vc, 0), false);
+});
+
+test('checkWinConditionImpl: returns true when path ends at goal and metrics match', () => {
+    const goalKey = PACK(2,0);
+    const level   = makeLevel({ goalKey, reqLen: 2, reqInt: 0 });
+    const path    = [PACK(0,0), PACK(1,0), goalKey];
+    const vc      = new Map([[PACK(0,0),1],[PACK(1,0),1],[goalKey,1]]);
+    assert.ok(checkWinConditionImplDirect(path, level, 0, 'IDLE', new Set(), vc, 0));
 });
 
 // ---------------------------------------------------------------------------
