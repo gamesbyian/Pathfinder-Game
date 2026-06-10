@@ -91,9 +91,9 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         if (el) el.onchange = () => { fn(el.checked); reloadForOptions(); };
     };
     bindOptionToggle('optionMuteToggle',       checked => { engine.setMuted(checked); ui.setInlineStyle('muteSlash', 'display', state.ENGINE.muted ? 'block' : 'none'); });
-    bindOptionToggle('optionGeeseToggle',      checked => { state.ENGINE.options.geese      = checked; });
-    bindOptionToggle('optionFalseGoalsToggle', checked => { state.ENGINE.options.falseGoals = checked; });
-    bindOptionToggle('optionDeadGatesToggle',  checked => { state.ENGINE.options.deadGates  = checked; });
+    bindOptionToggle('optionGeeseToggle',      checked => engine.setOption('geese', checked));
+    bindOptionToggle('optionFalseGoalsToggle', checked => engine.setOption('falseGoals', checked));
+    bindOptionToggle('optionDeadGatesToggle',  checked => engine.setOption('deadGates', checked));
 
     document.getElementById('optionsBlockedNextBtn').onclick = () => {
         ui.closeModal('playOptionsBlockedModal');
