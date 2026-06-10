@@ -20,6 +20,7 @@ import { createEditorState, DEFAULT_TOOL, TOOL_TYPES }       from '../modules/ed
 import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
          getLeaveThemeColors, normalizeTheme, CLASSIC_LEAVE,
          REQUIRED_THEME_PATHS }                               from '../modules/theme/theme-normalizer.js';
+import { encodeHints, decodeHints }                          from '../modules/persistence/level-submission-repository.js';
 
 // ---------------------------------------------------------------------------
 // Minimal APP bootstrap
@@ -541,20 +542,7 @@ test('isSameLevelStructure: different blocks → false', () => {
 // ---------------------------------------------------------------------------
 // GROUP 6 — Persistence hint encode/decode
 // ---------------------------------------------------------------------------
-// encodeHints/decodeHints live as private functions inside installPersistence
-// and are not exported. The logic is replicated here from persistence.js
-// (lines ~203-211) to lock down the Firestore round-trip contract.
-// If persistence.js changes the encoding, this test must be updated too.
-console.log('\nGROUP 6: Persistence hint encode/decode (mirrors persistence.js)');
-
-// Mirrors persistence.js encodeHints / decodeHints.
-const encodeHints = (d) =>
-    (!Array.isArray(d?.hints) || !d.hints.length) ? d
-    : { ...d, hints: d.hints.map(h => JSON.stringify(h)) };
-
-const decodeHints = (d) =>
-    (!Array.isArray(d?.hints) || !d.hints.length) ? d
-    : { ...d, hints: d.hints.map(h => typeof h === 'string' ? JSON.parse(h) : h) };
+console.log('\nGROUP 6: Persistence hint encode/decode (level-submission-repository.js)');
 
 test('encode: converts nested arrays to JSON strings', () => {
     const input  = { id: 1, hints: [[1, 2, 3], [4, 5]] };

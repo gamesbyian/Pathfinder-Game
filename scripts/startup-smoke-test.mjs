@@ -8,6 +8,23 @@ const moduleSources = {
   loader: await readFile(new URL('../modules/loader.js', import.meta.url), 'utf8'),
   boot: await readFile(new URL('../modules/boot.js', import.meta.url), 'utf8')
 };
+
+// Load persistence sub-modules so their factory functions are available when
+// the stripped installPersistence body runs in the VM context.
+const persistenceSubModuleSrcs = await Promise.all([
+  '../modules/persistence/firebase-client.js',
+  '../modules/persistence/local-session-store.js',
+  '../modules/persistence/progress-store.js',
+  '../modules/persistence/level-submission-repository.js',
+  '../modules/persistence/review-repository.js',
+].map(p => readFile(new URL(p, import.meta.url), 'utf8')));
+
+// Strip ES-module syntax (import/export declarations) so the source can run
+// as a plain script in the VM context.  Named imports become free-variable
+// references resolved from the same VM scope; exports become plain functions.
+const stripEsm = src =>
+  src.replace(/^import\b[^\n]*\n/gm, '')
+     .replace(/^export\s+(?=function|const|class|async\s)/gm, '');
 const stripModuleWrapper = (source, installName) => {
   const token = `export function ${installName}(APP) {`;
   const start = source.indexOf(token);
@@ -23,7 +40,8 @@ const stripModuleWrapper = (source, installName) => {
   }
   return source;
 };
-const persistenceHarness = stripModuleWrapper(moduleSources.persistence, 'installPersistence');
+const persistenceSubModules = persistenceSubModuleSrcs.map(stripEsm).join('\n');
+const persistenceHarness = persistenceSubModules + '\n' + stripModuleWrapper(moduleSources.persistence, 'installPersistence');
 const loaderHarness = stripModuleWrapper(moduleSources.loader, 'installLoader');
 const bootHarness = stripModuleWrapper(moduleSources.boot, 'installBoot').replace(/\n\s*window\.onload = \(\) => \{[\s\S]*$/, '');
 
