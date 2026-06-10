@@ -30,6 +30,93 @@ export function createUI({ core, getState, getRenderer }) {
     const { updateLayoutMode, updateViewport, updateAppScale } = createLayoutUI({ core, getState, getRenderer });
     const { applyOverlayState }                               = createSolverOverlayUI({ core });
 
+    // Applies all mode-dependent element visibility in one pass.
+    // Called by engine.switchMode and engine.updatePlayModeLayout.
+    const applyModeLayout = (mode, { isDevMode = false } = {}) => {
+        const isEd         = mode === core.EDITOR;
+        const isReview     = mode === core.REVIEW;
+        const isEdOrReview = isEd || isReview;
+        const el     = id => document.getElementById(id);
+        const toggle = (id, hidden) => { const e = el(id); if (e) e.classList.toggle('hidden', hidden); };
+
+        toggle('editorPalette',            !isEdOrReview);
+        toggle('levelMetadataPanel',       !isEdOrReview);
+        toggle('reviewPublishedLevelsBtn', !isReview);
+        toggle('playMetrics',              isEdOrReview);
+        toggle('editorMetrics',            !isEdOrReview);
+        toggle('gameButtonGrid',           isEdOrReview);
+        toggle('editorButtonGrid',         !isEdOrReview);
+
+        const shellToggle = el('modeToggleShellBtn');
+        if (shellToggle) shellToggle.textContent = isReview ? 'Exit Review' : (isEd ? 'Play Game' : 'Editor');
+
+        toggle('editResetGrid',    isReview);
+        toggle('editMegaSolver',   false);
+        toggle('editTrapSpotsBtn', isReview);
+        toggle('editHelpBtn',      isReview);
+        toggle('reviewHintBtn',    !isReview);
+        toggle('reviewSubmitBtn',  !isEdOrReview);
+        toggle('reviewApproveBtn', !isReview);
+        toggle('reviewRejectBtn',  !isReview);
+        setButtonState('reviewSubmitBtn', { enabled: true });
+
+        const devHidden = isEdOrReview || !isDevMode;
+        toggle('devCopyBtn', devHidden);
+        toggle('devGenBtn',  devHidden);
+        toggle('exportArea', isEdOrReview || !isDevMode);
+    };
+
+    // Submit-modal step helpers — owns all direct DOM manipulation for the
+    // multi-step submission progress UI so controllers stay presentation-free.
+    const resetSubmitModal = () => {
+        ['smStep-validate', 'smStep-duplicate', 'smStep-solve', 'smStep-save'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const icon  = el.querySelector('.sm-icon');
+            icon.innerHTML = '○';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm';
+            el.querySelector('.sm-label').className = 'sm-label text-sm text-slate-400';
+            const det = el.querySelector('.sm-detail');
+            det.innerHTML = '';
+            det.classList.add('hidden');
+        });
+        document.getElementById('submitModalDismissBtn')?.classList.add('hidden');
+    };
+
+    const setSubmitStep = (stepId, status, detail = null) => {
+        const el = document.getElementById(stepId);
+        if (!el) return;
+        const icon     = el.querySelector('.sm-icon');
+        const label    = el.querySelector('.sm-label');
+        const detailEl = el.querySelector('.sm-detail');
+        if (status === 'running') {
+            icon.innerHTML = '<div class="w-3 h-3 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center';
+            label.className = 'sm-label text-sm text-white font-semibold';
+        } else if (status === 'ok') {
+            icon.innerHTML = '✓';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-emerald-400 font-bold';
+            label.className = 'sm-label text-sm text-white';
+        } else if (status === 'warn') {
+            icon.innerHTML = '⚠';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-amber-400';
+            label.className = 'sm-label text-sm text-amber-300';
+        } else if (status === 'error') {
+            icon.innerHTML = '✗';
+            icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-red-400 font-bold';
+            label.className = 'sm-label text-sm text-red-300';
+        }
+        if (detail !== null) {
+            detailEl.innerHTML = (Array.isArray(detail) ? detail : [detail])
+                .map(r => `<p class="text-xs text-slate-400 leading-snug">• ${r}</p>`).join('');
+            detailEl.classList.remove('hidden');
+        }
+    };
+
+    const showSubmitDismiss = () => document.getElementById('submitModalDismissBtn')?.classList.remove('hidden');
+    const showSubmitModal   = () => document.getElementById('submitModal')?.classList.remove('hidden');
+    const hideSubmitModal   = () => document.getElementById('submitModal')?.classList.add('hidden');
+
     const setEditorMetrics = (currentLen, intersections) => {
         const lMet = resolveEl('editCopyMetrics');
         if (lMet) lMet.innerText = `Set (${currentLen}/${intersections})`;
@@ -135,5 +222,11 @@ export function createUI({ core, getState, getRenderer }) {
         setSolverAbortRequested,
         copyText,
         EditorDragGhost,
+        applyModeLayout,
+        resetSubmitModal,
+        setSubmitStep,
+        showSubmitDismiss,
+        showSubmitModal,
+        hideSubmitModal,
     };
 }

@@ -19,9 +19,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         }
         const overlay = document.getElementById('reviewAuthOverlay');
         if (overlay) overlay.classList.add('hidden');
-        state.ENGINE.review.submissions = [];
-        state.ENGINE.review.currentIdx  = 0;
-        engine.switchMode(core.REVIEW);
+        engine.initReviewMode();
 
         const rlm = {
             el:      document.getElementById('reviewLoadModal'),
@@ -38,7 +36,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         rlm.el.classList.remove('hidden');
         try {
             const subs = await persistence.loadSubmissions();
-            state.ENGINE.review.submissions = subs;
+            engine.setReviewSubmissions(subs);
             if (subs.length === 0) {
                 engine.loadReviewLevel(0);
                 rlm.heading.textContent = 'No Submissions';
@@ -74,7 +72,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         try {
             ui.showMessage('Approving…', 'text-white font-black');
             await persistence.approveSubmission(sub.id, levelData, Date.now());
-            state.ENGINE.review.submissions.splice(idx, 1);
+            engine.removeReviewSubmission(idx);
             if (!state.ENGINE.review.submissions.length) {
                 engine.loadReviewLevel(0);
                 ui.showMessage('No more submissions.', 'text-slate-400');
@@ -95,7 +93,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         try {
             ui.showMessage('Rejecting…', 'text-white font-black');
             await persistence.rejectSubmission(sub.id);
-            state.ENGINE.review.submissions.splice(idx, 1);
+            engine.removeReviewSubmission(idx);
             if (!state.ENGINE.review.submissions.length) {
                 engine.loadReviewLevel(0);
                 ui.showMessage('No more submissions.', 'text-slate-400');

@@ -241,15 +241,14 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function updatePlayModeLayout() {
-        if (state.ENGINE.mode !== core.PLAY) return;
-        ui.setClassState('exportArea',              'hidden', !state.ENGINE.isDevMode);
-        ui.setClassState('devCopyBtn',              'hidden', !state.ENGINE.isDevMode);
-        ui.setClassState('devGenBtn',               'hidden', !state.ENGINE.isDevMode);
-        ui.setClassState('levelMetadataPanel',      'hidden', true);
-        ui.setClassState('reviewPublishedLevelsBtn','hidden', true);
+        ui.applyModeLayout(state.ENGINE.mode, { isDevMode: state.ENGINE.isDevMode });
     }
 
     function switchMode(newMode) {
+        // Restore saved level index when returning to play from review mode.
+        if (newMode === core.PLAY && state.ENGINE.mode === core.REVIEW) {
+            state.ENGINE.levelIdx = state.ENGINE.review.savedPlayLevelIdx;
+        }
         const isEd         = newMode === core.EDITOR;
         const isReview     = newMode === core.REVIEW;
         const isEdOrReview = isEd || isReview;
@@ -261,30 +260,8 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         PathNavigator.clear(state.ENGINE);
         state.ENGINE.nav.undoStack = [];
         state.ENGINE.hazards.revealedGeese.clear();
-
         state.ENGINE.hazards.detonatedFalseGoals.clear();
-        document.getElementById('editorPalette').classList.toggle('hidden', !isEdOrReview);
-        document.getElementById('levelMetadataPanel').classList.toggle('hidden', !isEdOrReview);
-        document.getElementById('reviewPublishedLevelsBtn').classList.toggle('hidden', !isReview);
-        document.getElementById('playMetrics').classList.toggle('hidden', isEdOrReview);
-        document.getElementById('editorMetrics').classList.toggle('hidden', !isEdOrReview);
-        document.getElementById('gameButtonGrid').classList.toggle('hidden', isEdOrReview);
-        document.getElementById('editorButtonGrid').classList.toggle('hidden', !isEdOrReview);
-        const shellToggle = document.getElementById('modeToggleShellBtn');
-        if (shellToggle) shellToggle.textContent = isReview ? 'Exit Review' : (isEd ? 'Play Game' : 'Editor');
-        const exportArea = document.getElementById('exportArea');
-        document.getElementById('editResetGrid').classList.toggle('hidden', isReview);
-        document.getElementById('editMegaSolver').classList.toggle('hidden', false);
-        document.getElementById('editTrapSpotsBtn').classList.toggle('hidden', isReview);
-        document.getElementById('editHelpBtn').classList.toggle('hidden', isReview);
-        document.getElementById('reviewHintBtn').classList.toggle('hidden', !isReview);
-        document.getElementById('reviewSubmitBtn').classList.toggle('hidden', !isEdOrReview);
-        document.getElementById('reviewApproveBtn').classList.toggle('hidden', !isReview);
-        document.getElementById('reviewRejectBtn').classList.toggle('hidden', !isReview);
-        ui.setButtonState('reviewSubmitBtn', { enabled: true });
-        document.getElementById('devCopyBtn').classList.toggle('hidden', isEdOrReview || !state.ENGINE.isDevMode);
-        document.getElementById('devGenBtn').classList.toggle('hidden', isEdOrReview || !state.ENGINE.isDevMode);
-        exportArea.classList.add('hidden');
+        ui.applyModeLayout(newMode, { isDevMode: state.ENGINE.isDevMode });
         if (isEd) {
             state.ENGINE.variant = 0;
             state.ENGINE.editor.workingLevel = levelUtils.deepCloneLevel(state.ENGINE.level);
@@ -304,7 +281,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             resetEmptyReviewState();
             updatePencilState();
         } else {
-            updatePlayModeLayout();
             loadLevel(state.ENGINE.levelIdx, true);
         }
         ui.updateAppScale();
@@ -705,6 +681,57 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         state.ENGINE.isDirty = true;
     }
 
+    // Clears hint paths; stops HINT_ANIMATING overlay if active but leaves other overlays alone.
+    function clearHintPaths() {
+        state.ENGINE.hinter.pathList       = [];
+        state.ENGINE.hinter.currentPathIdx = 0;
+        state.ENGINE.hinter.source         = 'none';
+        if (state.ENGINE.overlayState === core.HINT_ANIMATING) setOverlayState(core.OVERLAY_NONE);
+    }
+
+    // Remaps all packed path/gate keys through mapFn and rebuilds derived state.
+    // Used by editor coord-transform operations (rotate, flip, resize).
+    function remapNavKeys(mapFn) {
+        const nav = state.ENGINE.nav;
+        nav.path = nav.path.map(k => k === -1 ? -1 : mapFn(k));
+        if (nav.activeGateKey != null) nav.activeGateKey = mapFn(nav.activeGateKey);
+        rebuildDerivedPathState(state.ENGINE);
+        state.ENGINE.isDirty = true;
+    }
+
+    function setMuted(muted) { state.ENGINE.muted = muted; }
+    function toggleMute()    { state.ENGINE.muted = !state.ENGINE.muted; }
+
+    function handleResetAction() {
+        if (state.ENGINE.cheatActive) {
+            if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
+            state.ENGINE.cheatTimer = setTimeout(() => { state.ENGINE.cheatActive = false; }, 3000);
+        } else {
+            state.ENGINE.resetStreak++;
+            if (state.ENGINE.resetStreak >= 5) {
+                state.ENGINE.cheatActive = true;
+                core.SOUND_BUS.play('F5', '8n');
+                if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
+                state.ENGINE.cheatTimer = setTimeout(() => {
+                    state.ENGINE.cheatActive = false;
+                    state.ENGINE.resetStreak = 0;
+                }, 3000);
+            }
+        }
+        loadLevel(state.ENGINE.levelIdx, true);
+    }
+
+    function setReviewSubmissions(subs) { state.ENGINE.review.submissions = subs; }
+
+    function removeReviewSubmission(idx) { state.ENGINE.review.submissions.splice(idx, 1); }
+
+    // Clears review submissions, resets index, then switches to REVIEW mode.
+    function initReviewMode() {
+        state.ENGINE.review.submissions = [];
+        state.ENGINE.review.currentIdx  = 0;
+        switchMode(core.REVIEW);
+    }
+
     function isRunning() { return !!state.ENGINE.solver.controller; }
 
     function resetRunState({ keepLevel = true } = {}) {
@@ -760,6 +787,14 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         setHintPaths,
         setVariant,
         reversePathDirection,
+        clearHintPaths,
+        remapNavKeys,
+        setMuted,
+        toggleMute,
+        handleResetAction,
+        setReviewSubmissions,
+        removeReviewSubmission,
+        initReviewMode,
         isRunning,
         findTapRoute,
     };

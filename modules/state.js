@@ -43,7 +43,6 @@ export function createState({ core }) {
         isDirty: true,
         muted: true,
         options: { geese: true, falseGoals: true, deadGates: true },
-        rainbowActive: true,
         titleClickCount: 0,
         titleClickTimer: null,
         resetStreak: 0,

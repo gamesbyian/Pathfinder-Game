@@ -20,7 +20,6 @@ export function createThemes({ state, data, getPersistence, getUI }) {
         const t = themes[name];
         applyCssVariables(document.documentElement, t);
         getPersistence().persistSessionState();
-        state.ENGINE.rainbowActive = (name === 'classic');
         state.ENGINE.isDirty = true;
     }
 

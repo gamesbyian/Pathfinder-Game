@@ -192,7 +192,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
             state.ENGINE.editor.workingLevel = { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [], designerName: '', description: '', difficulty: null };
             _engine.PathNavigator.clear(state.ENGINE);
             ui.setSolutionOutput('');
-            state.ENGINE.hinter.pathList = [];
+            _engine.clearHintPaths();
             state.ENGINE.editor.pendingPortal = null;
             state.ENGINE.editor.validTrapSpots.clear();
             ui.setModalContent('levelTitle', '??', 'text');
@@ -205,7 +205,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
             ui.updateViewport();
         },
         markEditorInputsDirty() {
-            state.ENGINE.hinter.pathList = [];
+            _engine.clearHintPaths();
             state.ENGINE.editor.validTrapSpots.clear();
             state.ENGINE.editor.isModified = true;
         },
