@@ -61,7 +61,7 @@ export function rebuildDerivedState(state, level) {
     }
 }
 
-function pushStep(state, key, isJump, level) {
+export function pushStep(state, key, isJump, level) {
     const lastK = state.path[state.path.length - 1];
     if (lastK !== undefined && !isJump) {
         const p1 = UNPACK(lastK), p2 = UNPACK(key);

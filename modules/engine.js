@@ -2,7 +2,7 @@ import { getRealLength as getRealLengthImpl,
          areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
          checkWinConditionImpl as checkWinConditionImplFn } from './runtime/game-rules.js';
 import { VALID_LOGIC_TRANSITIONS } from './runtime/state-machine.js';
-import { cloneTapRouteState, rebuildDerivedState,
+import { cloneTapRouteState, rebuildDerivedState, pushStep as pushStepImpl,
          simulateTapRouteStep,
          wouldCreateBlockedTIntersection as wouldCreateBlockedTIntersectionImpl } from './runtime/path-state.js';
 
@@ -534,10 +534,11 @@ export function installEngine(APP) {
 
             const PathNavigator = {
                 pushStep(state, key, isJump) {
-                    const l = state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel; const lastK = state.path[state.path.length - 1];
-                    if (lastK !== undefined && !isJump) { const p1 = APP.LevelUtils.UNPACK(lastK), p2 = APP.LevelUtils.UNPACK(key); const axis = (p2.y === p1.y) ? APP.Core.H : APP.Core.V; const mark = (k, ax) => { let u = state.cellUsage.get(k) || { h: false, v: false }; if (ax === APP.Core.H) u.h = true; else u.v = true; state.cellUsage.set(k, u); }; mark(lastK, axis); mark(key, axis); }
-                    const count = state.visitedCounts.get(key) || 0; if (count > 0 && key !== state.activeGateKey && (l && key !== l.goalKey)) { state.intersections++; } state.visitedCounts.set(key, count + 1); state.path.push(key); if (isJump) state.isPortalJump.add(state.path.length - 1); state.isDirty = true;
-                    if (l && l.flippingFilterMap.has(key) && !state.crossedFlippingFilters.has(key)) { state.crossedFlippingFilters.set(key, state.flipCount); state.flipCount++; state.lastFlipTime = Date.now(); }
+                    const l = state.mode === APP.Core.PLAY ? state.level : state.editor.workingLevel;
+                    const oldFlipCount = state.flipCount;
+                    pushStepImpl(state, key, isJump, l);
+                    state.isDirty = true;
+                    if (state.flipCount !== oldFlipCount) state.lastFlipTime = Date.now();
                     assertStateConsistency(state);
                 },
                 truncateTo(state, targetIdx) {
@@ -613,7 +614,7 @@ export function installEngine(APP) {
             triggerBombDetonation(key) { return triggerBombDetonation(key); },
             createSnapshot() { return createSnapshot(); },
             applySnapshot(snap) { return applySnapshot(snap); },
-            checkWinConditionImpl(path, level, mode, logicState, isPortalJump, visitedCounts, intersections) { return checkWinConditionImplFn(path, level, mode, logicState, isPortalJump, visitedCounts, intersections); },
+            checkWinConditionImpl: checkWinConditionImplFn,
             getPackedPath() { return [...(refs.ENGINE?.path || [])]; },
             getIntersections() { return refs.ENGINE?.intersections ?? 0; },
             updatePlayModeLayout,
