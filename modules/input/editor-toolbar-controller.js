@@ -226,7 +226,15 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             ui.showMessage(validation?.reasons?.[0] || 'Level has validation errors.', 'text-red-500 font-bold');
             return;
         }
-        const yieldFn = async () => { await new Promise(r => setTimeout(r, 0)); };
+        let _trapT0 = 0, _trapLastTenths = -1;
+        const yieldFn = async () => {
+            const tenths = Math.floor((Date.now() - _trapT0) * 10 / 1000);
+            if (tenths !== _trapLastTenths) {
+                _trapLastTenths = tenths;
+                ui.setSolverTimerText(`${(tenths / 10).toFixed(1)}s`);
+            }
+            await new Promise(r => setTimeout(r, 0));
+        };
         engine.startSolverRun({ cancel: () => {}, abort: () => {} });
         try {
             engine.setOverlayState(core.SOLVER_RUNNING);
@@ -239,20 +247,10 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             const budgetMs    = solverV2.getTrapSpotBudgetMs(searchLevel);
             const t0          = Date.now();
             const overlayMinTimer = new Promise(r => setTimeout(r, 400));
-            let rafActive = true;
-            const tick = () => {
-                if (!rafActive) return;
-                ui.setSolverTimerText(`${((Date.now() - t0) / 1000).toFixed(1)}s`);
-                requestAnimationFrame(tick);
-            };
-            requestAnimationFrame(tick);
-            let res;
-            try {
-                res = await solverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn });
-                await overlayMinTimer;
-            } finally {
-                rafActive = false;
-            }
+            _trapT0 = t0;
+            _trapLastTenths = -1;
+            const res = await solverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn });
+            await overlayMinTimer;
             engine.setOverlayState(core.OVERLAY_NONE);
             editor.setTrapSpots(res.spots || new Set());
             state.ENGINE.isDirty = true;
@@ -272,20 +270,10 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                     ui.setSolverTimerText('0.0s');
                     ui.setSolverProgress(0);
                     await new Promise(r => setTimeout(r, 0));
-                    const t1         = Date.now();
-                    let retryRafActive = true;
-                    const retryTick = () => {
-                        if (!retryRafActive) return;
-                        ui.setSolverTimerText(`${((Date.now() - t1) / 1000).toFixed(1)}s`);
-                        requestAnimationFrame(retryTick);
-                    };
-                    requestAnimationFrame(retryTick);
-                    let retryRes;
-                    try {
-                        retryRes = await solverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn });
-                    } finally {
-                        retryRafActive = false;
-                    }
+                    const t1 = Date.now();
+                    _trapT0 = t1;
+                    _trapLastTenths = -1;
+                    const retryRes = await solverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn });
                     engine.setOverlayState(core.OVERLAY_NONE);
                     editor.setTrapSpots(retryRes.spots || new Set());
                     state.ENGINE.isDirty = true;

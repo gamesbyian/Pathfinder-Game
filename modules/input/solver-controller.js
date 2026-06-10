@@ -39,7 +39,16 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
             ui.setButtonState('solverCloseBtn', { enabled: false });
         };
+        const budgetMs = 30000;
+        let _t0 = 0, _lastTenths = -1;
         const yieldFn = async () => {
+            const tenths = Math.floor((Date.now() - _t0) * 10 / 1000);
+            if (tenths !== _lastTenths) {
+                _lastTenths = tenths;
+                const elapsed = tenths / 10;
+                ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
+                ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
+            }
             await new Promise(r => setTimeout(r, 0));
             if (_cancelled) throw new Error('SolverV2:cancelled');
         };
@@ -52,26 +61,12 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.setSolverDetailText('Searching…');
             ui.setSolverProgress(0);
             await new Promise(r => setTimeout(r, 0));
-            const level    = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
-            const budgetMs = 30000;
-            const t0       = Date.now();
+            const level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
             const overlayMinTimer = new Promise(r => setTimeout(r, 400));
-            let rafActive = true;
-            const tick = () => {
-                if (!rafActive) return;
-                const elapsed = (Date.now() - t0) / 1000;
-                ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
-                ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
-                requestAnimationFrame(tick);
-            };
-            requestAnimationFrame(tick);
-            let result;
-            try {
-                result = await solverV2.solve(level, { timeBudgetMs: budgetMs, yieldFn });
-                await overlayMinTimer;
-            } finally {
-                rafActive = false;
-            }
+            _t0 = Date.now();
+            _lastTenths = -1;
+            const result = await solverV2.solve(level, { timeBudgetMs: budgetMs, yieldFn });
+            await overlayMinTimer;
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 ui.setSolverProgress(100);
                 engine.setHintPaths([result.solution], 'solver', 0);
