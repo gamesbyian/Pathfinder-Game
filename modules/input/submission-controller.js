@@ -123,16 +123,20 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
                 const budgetMs = 30000;
                 const t0 = Date.now();
-                const timerInterval = setInterval(() => {
+                let rafActive = true;
+                const tick = () => {
+                    if (!rafActive) return;
                     const elapsed = (Date.now() - t0) / 1000;
                     ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
                     ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
-                }, 100);
+                    requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
                 let result;
                 try {
                     result = await solverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
                 } finally {
-                    clearInterval(timerInterval);
+                    rafActive = false;
                 }
                 engine.setOverlayState(core.OVERLAY_NONE);
                 if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {

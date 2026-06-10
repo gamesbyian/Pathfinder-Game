@@ -239,15 +239,19 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             const budgetMs    = solverV2.getTrapSpotBudgetMs(searchLevel);
             const t0          = Date.now();
             const overlayMinTimer = new Promise(r => setTimeout(r, 400));
-            const timerInterval = setInterval(() => {
+            let rafActive = true;
+            const tick = () => {
+                if (!rafActive) return;
                 ui.setSolverTimerText(`${((Date.now() - t0) / 1000).toFixed(1)}s`);
-            }, 100);
+                requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
             let res;
             try {
                 res = await solverV2.findTrapSpots(searchLevel, { timeLimit: budgetMs, yieldFn });
                 await overlayMinTimer;
             } finally {
-                clearInterval(timerInterval);
+                rafActive = false;
             }
             engine.setOverlayState(core.OVERLAY_NONE);
             editor.setTrapSpots(res.spots || new Set());
@@ -269,12 +273,18 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                     ui.setSolverProgress(0);
                     await new Promise(r => setTimeout(r, 0));
                     const t1         = Date.now();
-                    const retryTimer = setInterval(() => { ui.setSolverTimerText(`${((Date.now() - t1) / 1000).toFixed(1)}s`); }, 100);
+                    let retryRafActive = true;
+                    const retryTick = () => {
+                        if (!retryRafActive) return;
+                        ui.setSolverTimerText(`${((Date.now() - t1) / 1000).toFixed(1)}s`);
+                        requestAnimationFrame(retryTick);
+                    };
+                    requestAnimationFrame(retryTick);
                     let retryRes;
                     try {
                         retryRes = await solverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn });
                     } finally {
-                        clearInterval(retryTimer);
+                        retryRafActive = false;
                     }
                     engine.setOverlayState(core.OVERLAY_NONE);
                     editor.setTrapSpots(retryRes.spots || new Set());
