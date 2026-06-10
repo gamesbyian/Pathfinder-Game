@@ -40,15 +40,18 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             ui.setButtonState('solverCloseBtn', { enabled: false });
         };
         const budgetMs = 30000;
-        let _t0 = 0, _lastTenths = -1;
-        const yieldFn = async () => {
+        let _t0 = 0, _lastTenths = -1, _progressTicker = null;
+        const updateProgressDisplay = () => {
+            if (!_t0) return;
             const tenths = Math.floor((Date.now() - _t0) * 10 / 1000);
-            if (tenths !== _lastTenths) {
-                _lastTenths = tenths;
-                const elapsed = tenths / 10;
-                ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
-                ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
-            }
+            if (tenths === _lastTenths) return;
+            _lastTenths = tenths;
+            const elapsed = tenths / 10;
+            ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
+            ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
+        };
+        const yieldFn = async () => {
+            updateProgressDisplay();
             await new Promise(r => setTimeout(r, 0));
             if (_cancelled) throw new Error('SolverV2:cancelled');
         };
@@ -65,7 +68,9 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             const overlayMinTimer = new Promise(r => setTimeout(r, 400));
             _t0 = Date.now();
             _lastTenths = -1;
+            _progressTicker = setInterval(updateProgressDisplay, 50);
             const result = await solverV2.solve(level, { timeBudgetMs: budgetMs, yieldFn });
+            updateProgressDisplay();
             await overlayMinTimer;
             if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
                 ui.setSolverProgress(100);
@@ -83,6 +88,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
             engine.setOverlayState(core.OVERLAY_NONE);
         } finally {
             clearInterval(abortPoll);
+            clearInterval(_progressTicker);
             engine.endSolverRun();
             ui.setSolverControlsEnabled(true);
         }

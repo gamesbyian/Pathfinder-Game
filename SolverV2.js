@@ -1467,17 +1467,34 @@ function _beamResetState(ws, startKey, level, prep) {
 async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn) {
     const ws = createState(startKey, level, prep);
     let frontier = [{ path: [startKey], score: 0 }];
+    let lastYield = startTime;
+
+    const yieldIfNeeded = async () => {
+        if (!yieldFn) return false;
+        const now = Date.now();
+        if (now - lastYield < 16) return false;
+        lastYield = now;
+        await yieldFn(); // throws on cancellation
+        return true;
+    };
 
     while (frontier.length > 0) {
         if (Date.now() - startTime > budgetMs) return null;
         if (yieldFn) {
             await yieldFn(); // yield between beam passes; throws on cancellation
-            if (Date.now() - startTime > budgetMs) return null;
+            lastYield = Date.now();
+            if (lastYield - startTime > budgetMs) return null;
         }
 
         const cands = [];
+        let frontierIndex = 0;
 
         for (const { path, score: acc } of frontier) {
+            if (((++frontierIndex) & 255) === 0) {
+                if (await yieldIfNeeded()) {
+                    if (Date.now() - startTime > budgetMs) return null;
+                }
+            }
             // Reset ws to startKey state, then replay this frontier path.
             _beamResetState(ws, startKey, level, prep);
             for (let i = 1; i < path.length; i++) {
@@ -1540,8 +1557,12 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
         }
 
         if (cands.length === 0) break;
+        await yieldIfNeeded();
+        if (Date.now() - startTime > budgetMs) return null;
         if (cands.length > beamWidth) {
             cands.sort((a, b) => b.score - a.score);
+            await yieldIfNeeded();
+            if (Date.now() - startTime > budgetMs) return null;
             frontier = cands.slice(0, beamWidth);
         } else {
             frontier = cands;
