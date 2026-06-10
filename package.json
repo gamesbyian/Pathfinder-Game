@@ -5,7 +5,8 @@
   "scripts": {
     "check:audit-output": "node scripts/check-audit-output.mjs",
     "test:hint-path-oracle": "node scripts/hint-path-oracle.mjs",
-    "ci": "npm run test:startup-smoke && npm run test:hint-path-oracle",
+    "test:domain": "node scripts/domain-unit-tests.mjs",
+    "ci": "npm run test:startup-smoke && npm run test:hint-path-oracle && npm run test:domain",
     "test:startup-smoke": "node scripts/startup-smoke-test.mjs",
     "audit:newhint:full": "node scripts/run-audit-export.mjs",
     "audit:levels": "node scripts/run-level-audit.mjs",
