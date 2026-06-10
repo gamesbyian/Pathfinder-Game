@@ -1,76 +1,77 @@
-export function installBoot(APP) {
-    APP.Boot = (() => {
-        let started = false;
+export function createBoot({ ui, debug, persistence, loader, themes, engine, data, core, state }) {
+    let started = false;
 
-        const start = async () => {
-            if (started) return;
-            started = true;
+    const start = async () => {
+        if (started) return;
+        started = true;
 
-            APP.UI.initDom();
-            APP.UI.ThemeEditor.init();
-            APP.Debug.expose();
-            const persistedSession = APP.Persistence.applySessionState();
-            APP.State.ENGINE.runtime.currentTheme = persistedSession.currentTheme;
+        ui.initDom();
+        debug.expose();
+        const persistedSession = persistence.applySessionState();
+        state.ENGINE.runtime.currentTheme = persistedSession.currentTheme;
 
-            try {
-                APP.Persistence.syncProgress();
-                if (APP.Persistence.hasConfig) {
-                    APP.Persistence.initAuth().catch((e) => console.warn('[Boot] Auth init failed', e)).finally(() => APP.Persistence.syncProgress());
-                }
-
-                const mode = await APP.Loader.init();
-                if (mode !== 'ready') {
-                    APP.Loader.fail('boot', { message: `Unexpected loader mode: ${mode}` });
-                    return;
-                }
-                if (APP.Loader.getStatus().phase === 'failed') return;
-
-                if (APP.Persistence.hasConfig) {
-                    try {
-                        const published = await APP.Persistence.loadPublishedLevels();
-                        if (published.length > 0) APP.Data.appendLevels(published);
-                    } catch (e) {
-                        console.warn('[Boot] Published levels load failed', e);
-                    }
-                }
-
-                APP.Themes.ensureThemeLeaveColors();
-                APP.Themes.applyTheme(persistedSession.currentTheme);
-                APP.Engine.loadLevel(persistedSession.levelIdx);
-                APP.Engine.updatePlayModeLayout();
-                APP.Engine.loop();
-                APP.Loader.finish();
-
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('mode') === 'review') {
-                    const overlay = document.getElementById('reviewAuthOverlay');
-                    if (overlay) overlay.classList.remove('hidden');
-                }
-            } catch (error) {
-                APP.Loader.fail('boot', error);
+        try {
+            persistence.syncProgress();
+            if (persistence.hasConfig) {
+                persistence.initAuth().catch((e) => console.warn('[Boot] Auth init failed', e)).finally(() => persistence.syncProgress());
             }
-        };
 
-        return { start };
-    })();
+            const mode = await loader.init();
+            if (mode !== 'ready') {
+                loader.fail('boot', { message: `Unexpected loader mode: ${mode}` });
+                return;
+            }
+            if (loader.getStatus().phase === 'failed') return;
 
-    window.onload = () => {
+            if (persistence.hasConfig) {
+                try {
+                    const published = await persistence.loadPublishedLevels();
+                    if (published.length > 0) data.appendLevels(published);
+                } catch (e) {
+                    console.warn('[Boot] Published levels load failed', e);
+                }
+            }
+
+            themes.ensureThemeLeaveColors();
+            themes.applyTheme(persistedSession.currentTheme);
+            engine.loadLevel(persistedSession.levelIdx);
+            engine.updatePlayModeLayout();
+            engine.loop();
+            loader.finish();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('mode') === 'review') {
+                const overlay = document.getElementById('reviewAuthOverlay');
+                if (overlay) overlay.classList.remove('hidden');
+            }
+        } catch (error) {
+            loader.fail('boot', error);
+        }
+    };
+
+    return { start };
+}
+
+// Factory for the window.onload handler — keeps the boot module testable
+// without requiring a real window at construction time.
+export function createOnloadHandler({ input, boot, ui, loader }) {
+    return () => {
         let inputInitError = null;
         try {
-            APP.Input.init();
+            input.init();
         } catch (err) {
             inputInitError = err;
             console.error('[Startup] Input init failed; continuing boot.', err);
         }
 
-        APP.Boot.start()
+        boot.start()
             .then(() => {
                 if (inputInitError) {
-                    try { APP.UI.reportError('startup-input-init', inputInitError); } catch (_) {}
+                    try { ui.reportError('startup-input-init', inputInitError); } catch (_) {}
                 }
             })
             .catch((err) => {
-                APP.Loader.fail('startup-boot', err);
+                loader.fail('startup-boot', err);
             });
     };
 }

@@ -1,0 +1,95 @@
+// Solver controller: edit-mode mega-solver button, solver-close button,
+// and the dev-mode referee-solver keyboard toggle.
+
+export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }) {
+
+    // --- Solver close / abort ---
+
+    document.getElementById('solverCloseBtn').onclick = () => {
+        if (!engine.isRunning()) {
+            engine.setOverlayState(core.OVERLAY_NONE);
+            return;
+        }
+        ui.showMessage('Stopping solver…', 'text-amber-400 font-bold');
+        engine.cancelSolver();
+    };
+
+    // --- Dev: referee-solver toggle ---
+
+    document.addEventListener('keydown', e => {
+        if (!state.ENGINE.isDevMode) return;
+        if (e.shiftKey && e.key.toLowerCase() === 'r') {
+            state.ENGINE.flags.useRefereeSolver = !state.ENGINE.flags.useRefereeSolver;
+            ui.showMessage(
+                `Referee solver ${state.ENGINE.flags.useRefereeSolver ? 'ON' : 'OFF'}`,
+                'text-white font-black'
+            );
+        }
+    });
+
+    // --- Edit-mode mega-solver ---
+
+    document.getElementById('editMegaSolver').onclick = async () => {
+        ui.closeAllModals();
+        if (state.ENGINE.activeSolverController) return;
+        let _cancelled = false;
+        const cancelSolve = () => {
+            if (_cancelled) return;
+            _cancelled = true;
+            ui.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
+            ui.setButtonState('solverCloseBtn', { enabled: false });
+        };
+        const yieldFn = async () => {
+            await new Promise(r => setTimeout(r, 0));
+            if (_cancelled) throw new Error('SolverV2:cancelled');
+        };
+        state.ENGINE.activeSolverController   = { cancel: cancelSolve, abort: cancelSolve };
+        state.ENGINE.solverAbortRequested     = false;
+        const abortPoll = setInterval(() => { if (state.ENGINE.solverAbortRequested) cancelSolve(); }, 100);
+        try {
+            engine.setOverlayState(core.SOLVER_RUNNING);
+            ui.setSolverControlsEnabled(false);
+            ui.setSolverTimerText('0.0s');
+            ui.setSolverDetailText('Searching…');
+            ui.setSolverProgress(0);
+            await new Promise(r => setTimeout(r, 0));
+            const level    = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
+            const budgetMs = 30000;
+            const t0       = Date.now();
+            const overlayMinTimer = new Promise(r => setTimeout(r, 400));
+            const timerInterval   = setInterval(() => {
+                const elapsed = (Date.now() - t0) / 1000;
+                ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
+                ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
+            }, 100);
+            let result;
+            try {
+                result = await solverV2.solve(level, { timeBudgetMs: budgetMs, yieldFn });
+                await overlayMinTimer;
+            } finally {
+                clearInterval(timerInterval);
+            }
+            if (result.ok && Array.isArray(result.solution) && result.solution.length > 0) {
+                ui.setSolverProgress(100);
+                state.ENGINE.hinter.pathList       = [result.solution];
+                state.ENGINE.hinter.currentPathIdx = 0;
+                state.ENGINE.hinter.source         = 'solver';
+                engine.startHintAnimation();
+            } else {
+                engine.setOverlayState(core.OVERLAY_NONE);
+                ui.showMessage('No solution found within time limit.', 'text-yellow-400 font-bold');
+            }
+        } catch (err) {
+            if (err?.message !== 'SolverV2:cancelled') {
+                console.error('SolverV2 failed:', err);
+                ui.showMessage(`Solve failed: ${err?.message || 'Unexpected error.'}`, 'text-red-500 font-bold');
+            }
+            engine.setOverlayState(core.OVERLAY_NONE);
+        } finally {
+            clearInterval(abortPoll);
+            state.ENGINE.activeSolverController = null;
+            state.ENGINE.solverAbortRequested   = false;
+            ui.setSolverControlsEnabled(true);
+        }
+    };
+}

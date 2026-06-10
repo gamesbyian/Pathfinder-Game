@@ -2,7 +2,8 @@
 // Flat attempt loop: no cascade, no referee, no MITM, no near-closure rescue.
 // Supports all level mechanics: portals (forced), regular filters, flipping filters,
 // geese, false goals, must-pass, must-cross, intersections.
-// Exports installSolverV2(APP) which sets APP.SolverV2.
+
+import { validateCandidatePath } from './modules/domain/path-validator.js';
 
 // ─── Encoding ────────────────────────────────────────────────────────────────
 
@@ -1829,16 +1830,11 @@ async function solveLevelV2(level, opts = {}) {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-function installSolverV2(APP) {
+function createSolverV2() {
     const prepareLevelForSolverV2 = (rawLevel, opts = {}) => {
         if (!rawLevel || typeof rawLevel !== 'object') throw new Error('SolverV2: missing level');
-        const source = opts.source || 'auto';
-        // If V1 is loaded, try to use its normalisation first (handles canonical clone path)
-        if (source !== 'raw' && typeof APP?.Solver?.prepareLevelForSolver === 'function') {
-            return APP.Solver.prepareLevelForSolver(rawLevel, opts);
-        }
-        // Raw normalisation
-        if (source === 'raw' || (rawLevel?.goal && Array.isArray(rawLevel?.gates) && !Array.isArray(rawLevel?.gateKeys))) {
+        // Raw normalisation — applied when opts.source === 'raw' or the level is in raw wire format.
+        if ((opts.source === 'raw') || (rawLevel?.goal && Array.isArray(rawLevel?.gates) && !Array.isArray(rawLevel?.gateKeys))) {
             return normalizeRawLevelV2(rawLevel, opts.levelNumber ?? opts.level ?? null);
         }
         return rawLevel;
@@ -1846,7 +1842,7 @@ function installSolverV2(APP) {
 
     const universalSolveLevel = (level, opts = {}) => solveLevelV2(level, opts);
 
-    APP.SolverV2 = {
+    return {
         prepareLevelForSolver: prepareLevelForSolverV2,
         universalSolveLevel,
         solveLevel: universalSolveLevel,
@@ -1859,13 +1855,12 @@ function installSolverV2(APP) {
                 (level.flippingFilterMap?.size || 0);
             return Math.min(120000, Math.max(3000, 2500 + area * 15 + (level.reqLen || 0) * 40 + special * 120));
         },
+        validateCandidatePath,
         // Expose internals for testing
         _normalizeRawLevel: normalizeRawLevelV2,
         _buildDistMap: buildDistMap,
         _detectArchetype: detectArchetype,
     };
-
-    return APP.SolverV2;
 }
 
-export { installSolverV2 };
+export { createSolverV2 };

@@ -1,0 +1,58 @@
+import { UNPACK } from './cell-key.js';
+
+const PORTAL_PAIR_PALETTE = [
+    '#ef4444', '#22c55e', '#3b82f6', '#f59e0b', '#a855f7', '#06b6d4',
+    '#84cc16', '#f43f5e', '#14b8a6', '#eab308', '#6366f1', '#ec4899'
+];
+
+export const resolvePortal = (level, key) =>
+    level?.portalMap?.has(key) ? level.portalMap.get(key) : null;
+
+export const getPortalPairIndex = (level, key) => {
+    if (!level?.portalVisuals?.length) return -1;
+    return level.portalVisuals.findIndex(pv => pv.k1 === key || pv.k2 === key);
+};
+
+export const getPortalDisplayColor = (level, key, fallback = '#d946ef') => {
+    const idx = getPortalPairIndex(level, key);
+    if (idx < 0) return fallback;
+    return PORTAL_PAIR_PALETTE[idx % PORTAL_PAIR_PALETTE.length];
+};
+
+export const expCoords = (items) =>
+    (Array.isArray(items) ? items : Array.from(items))
+        .map(k => { const p = UNPACK(k); return { x: p.x + 1, y: p.y + 1 }; });
+
+export const hasParitySwitchingPortal = (level) =>
+    Array.isArray(level?.portalVisuals) &&
+    level.portalVisuals.some(pv => {
+        const p1 = UNPACK(pv.k1), p2 = UNPACK(pv.k2);
+        return ((p1.x + p1.y) % 2) !== ((p2.x + p2.y) % 2);
+    });
+
+export const getParityInvalidKeys = (level, reqLenOverride = null) => {
+    const out = {
+        gates: new Set(),
+        portals: new Set(),
+        hasParitySwitch: hasParitySwitchingPortal(level),
+        targetParity: null
+    };
+    if (!level || level.goalKey === -1 || level.goalKey === undefined) return out;
+    const reqLen = (reqLenOverride === null || reqLenOverride === undefined)
+        ? Number(level.reqLen || 0)
+        : Number(reqLenOverride || 0);
+    if (!reqLen || out.hasParitySwitch) return out;
+    const gp = UNPACK(level.goalKey);
+    out.targetParity = (gp.x + gp.y + reqLen) % 2;
+    (level.gateKeys || []).forEach(k => {
+        const p = UNPACK(k);
+        if ((p.x + p.y) % 2 !== out.targetParity) out.gates.add(k);
+    });
+    (level.portalVisuals || []).forEach(pv =>
+        [pv.k1, pv.k2].forEach(k => {
+            const p = UNPACK(k);
+            if ((p.x + p.y) % 2 !== out.targetParity) out.portals.add(k);
+        })
+    );
+    return out;
+};
