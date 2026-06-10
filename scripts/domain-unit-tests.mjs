@@ -17,6 +17,9 @@ import { validateLevelDetailed as validateLevelDetailedImpl } from '../modules/d
 import { getOccupant, removeOccupant, placeOccupant }        from '../modules/editor/editor-occupancy.js';
 import { MoveContext }                                        from '../modules/domain/move-context.js';
 import { createEditorState, DEFAULT_TOOL, TOOL_TYPES }       from '../modules/editor/editor-model.js';
+import { isValidHexColor, toRgb, darkenHex, collectThemePaths,
+         getLeaveThemeColors, normalizeTheme, CLASSIC_LEAVE,
+         REQUIRED_THEME_PATHS }                               from '../modules/theme/theme-normalizer.js';
 
 // ---------------------------------------------------------------------------
 // Minimal APP bootstrap
@@ -1222,6 +1225,187 @@ test('TOOL_TYPES includes eraser and all expected tool names', () => {
 test('DEFAULT_TOOL is a member of TOOL_TYPES', () => {
     assert.ok(TOOL_TYPES.includes(DEFAULT_TOOL),
         `DEFAULT_TOOL "${DEFAULT_TOOL}" must be in TOOL_TYPES`);
+});
+
+// ---------------------------------------------------------------------------
+// GROUP 13 — Theme normalizer (theme-normalizer.js)
+// ---------------------------------------------------------------------------
+console.log('\nGROUP 13: Theme normalizer (isValidHexColor / toRgb / darkenHex / collectThemePaths / getLeaveThemeColors / normalizeTheme)');
+
+// --- isValidHexColor ---
+
+test('isValidHexColor: accepts valid 6-digit hex with #', () => {
+    assert.ok(isValidHexColor('#a1b2c3'));
+    assert.ok(isValidHexColor('#FFFFFF'));
+    assert.ok(isValidHexColor('#000000'));
+});
+
+test('isValidHexColor: rejects 3-digit shorthand', () => {
+    assert.equal(isValidHexColor('#fff'), false);
+});
+
+test('isValidHexColor: rejects value without #', () => {
+    assert.equal(isValidHexColor('aabbcc'), false);
+});
+
+test('isValidHexColor: rejects non-hex characters', () => {
+    assert.equal(isValidHexColor('#gggggg'), false);
+});
+
+test('isValidHexColor: rejects empty string', () => {
+    assert.equal(isValidHexColor(''), false);
+});
+
+test('isValidHexColor: rejects non-string input', () => {
+    assert.equal(isValidHexColor(null), false);
+    assert.equal(isValidHexColor(123456), false);
+});
+
+// --- toRgb ---
+
+test('toRgb: parses pure red correctly', () => {
+    assert.deepEqual(toRgb('#ff0000'), { r: 255, g: 0, b: 0 });
+});
+
+test('toRgb: parses pure white correctly', () => {
+    assert.deepEqual(toRgb('#ffffff'), { r: 255, g: 255, b: 255 });
+});
+
+test('toRgb: returns fallback for invalid input', () => {
+    const fallback = { r: 1, g: 2, b: 3 };
+    assert.deepEqual(toRgb('not-a-color', fallback), fallback);
+});
+
+test('toRgb: handles missing # prefix gracefully (uses fallback)', () => {
+    const result = toRgb('aabbcc');
+    assert.ok(result && typeof result.r === 'number');
+});
+
+// --- darkenHex ---
+
+test('darkenHex: darkens #ffffff by factor 0 to #000000', () => {
+    assert.equal(darkenHex('#ffffff', 0), '#000000');
+});
+
+test('darkenHex: darkens #ffffff by factor 1 to #ffffff', () => {
+    assert.equal(darkenHex('#ffffff', 1), '#ffffff');
+});
+
+test('darkenHex: default factor 0.85 darkens a mid-grey', () => {
+    const result = darkenHex('#888888');
+    assert.ok(isValidHexColor(result), 'result should be a valid hex color');
+    const { r } = toRgb(result);
+    const { r: orig } = toRgb('#888888');
+    assert.ok(r < orig, 'darkened value should be numerically smaller');
+});
+
+// --- collectThemePaths ---
+
+test('collectThemePaths: collects top-level keys', () => {
+    const paths = collectThemePaths({ a: '#fff', b: '#000' });
+    assert.ok(paths.has('a'));
+    assert.ok(paths.has('b'));
+});
+
+test('collectThemePaths: collects nested keys as dot-paths', () => {
+    const paths = collectThemePaths({ colors: { goal: '#fff' } });
+    assert.ok(paths.has('colors'));
+    assert.ok(paths.has('colors.goal'));
+});
+
+test('collectThemePaths: ignores array values (does not descend)', () => {
+    const paths = collectThemePaths({ items: ['a', 'b'] });
+    assert.ok(paths.has('items'));
+    assert.equal(paths.has('items.0'), false);
+});
+
+test('collectThemePaths: handles empty object', () => {
+    const paths = collectThemePaths({});
+    assert.equal(paths.size, 0);
+});
+
+// --- CLASSIC_LEAVE ---
+
+test('CLASSIC_LEAVE is frozen and has expected shape', () => {
+    assert.ok(Object.isFrozen(CLASSIC_LEAVE));
+    assert.equal(CLASSIC_LEAVE.bg, '#dc2626');
+    assert.equal(CLASSIC_LEAVE.hover, '#b91c1c');
+    assert.equal(CLASSIC_LEAVE.text, '#ffffff');
+    assert.equal(CLASSIC_LEAVE.border, '#b91c1c');
+});
+
+// --- getLeaveThemeColors ---
+
+test('getLeaveThemeColors: isClassic=true returns a copy of CLASSIC_LEAVE', () => {
+    const result = getLeaveThemeColors({}, true);
+    assert.deepEqual(result, { bg: '#dc2626', hover: '#b91c1c', text: '#ffffff', border: '#b91c1c' });
+    assert.notStrictEqual(result, CLASSIC_LEAVE, 'should be a copy, not the same object');
+});
+
+test('getLeaveThemeColors: derives leave colors from headerRight when leave is absent', () => {
+    const theme = { headerRight: '#3b82f6', btns: {}, colors: {} };
+    const result = getLeaveThemeColors(theme, false);
+    assert.ok(isValidHexColor(result.bg),     'bg should be a valid hex');
+    assert.ok(isValidHexColor(result.hover),  'hover should be a valid hex');
+    assert.ok(isValidHexColor(result.text),   'text should be a valid hex');
+    assert.ok(isValidHexColor(result.border), 'border should be a valid hex');
+});
+
+test('getLeaveThemeColors: explicit leave.bg in theme is honored', () => {
+    const theme = { leave: { bg: '#123456', hover: '#654321', text: '#ffffff', border: '#654321' } };
+    const result = getLeaveThemeColors(theme, false);
+    assert.equal(result.bg, '#123456');
+});
+
+// --- normalizeTheme ---
+
+test('normalizeTheme: returns object with required top-level fields from empty input', () => {
+    const t = normalizeTheme({});
+    assert.ok(t.bodyBg, 'bodyBg is filled');
+    assert.ok(t.canvasBg, 'canvasBg is filled');
+    assert.ok(t.colors && t.colors.goal, 'colors.goal is filled');
+    assert.ok(t.btns && t.btns.hint, 'btns.hint is filled');
+    assert.ok(t.modal && t.modal.bg, 'modal.bg is filled');
+    assert.ok(t.leave && t.leave.bg, 'leave.bg is filled');
+});
+
+test('normalizeTheme: respects explicit values already set', () => {
+    const t = normalizeTheme({ bodyBg: '#abcdef', canvasBg: '#fedcba' });
+    assert.equal(t.bodyBg, '#abcdef');
+    assert.equal(t.canvasBg, '#fedcba');
+});
+
+test('normalizeTheme: produces all paths required by REQUIRED_THEME_PATHS', () => {
+    const t = normalizeTheme({}, '__schema__');
+    const paths = collectThemePaths(t);
+    const missing = Array.from(REQUIRED_THEME_PATHS).filter(p => !paths.has(p));
+    assert.deepEqual(missing, [], `normalizeTheme({}) is missing schema paths: ${missing.join(', ')}`);
+});
+
+test('normalizeTheme: vibrant mode-toggle override applied for candy_apple', () => {
+    const t = normalizeTheme({}, 'candy_apple');
+    assert.equal(t.btns.modeToggle, '#ff0800');
+    assert.equal(t.text.actionBtn, '#ffffff');
+});
+
+test('normalizeTheme: chaos key skips shell preset branch but shell fields are still filled', () => {
+    const t = normalizeTheme({ shell: {} }, 'chaos');
+    assert.ok(t.shell.btnBg || t.btns.orient, 'shell.btnBg derives from available btn values');
+});
+
+// --- REQUIRED_THEME_PATHS ---
+
+test('REQUIRED_THEME_PATHS is a non-empty Set', () => {
+    assert.ok(REQUIRED_THEME_PATHS instanceof Set);
+    assert.ok(REQUIRED_THEME_PATHS.size > 0, 'schema must have at least one path');
+});
+
+test('REQUIRED_THEME_PATHS includes key deeply nested paths', () => {
+    assert.ok(REQUIRED_THEME_PATHS.has('colors.goal'));
+    assert.ok(REQUIRED_THEME_PATHS.has('btns.hint'));
+    assert.ok(REQUIRED_THEME_PATHS.has('modal.bg'));
+    assert.ok(REQUIRED_THEME_PATHS.has('leave.bg'));
+    assert.ok(REQUIRED_THEME_PATHS.has('text.body'));
 });
 
 // ---------------------------------------------------------------------------
