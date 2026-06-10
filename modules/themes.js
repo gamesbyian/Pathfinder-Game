@@ -3,7 +3,6 @@ import { rc, isValidHexColor, toRgb, darkenHex, getLeaveThemeColors,
          normalizeTheme, buildChaosTheme }                              from './theme/theme-normalizer.js';
 import { createThemeRegistry, ensureThemeLeaveColors as _ensureThemeLeaveColors } from './theme/theme-registry.js';
 import { applyCssVariables }                                            from './theme/css-variable-applier.js';
-import { applyDomStyles }                                               from './theme/dom-style-applier.js';
 import { populateThemePicker }                                          from './theme/theme-picker-renderer.js';
 
 export function installThemes(APP) {
@@ -19,7 +18,6 @@ export function installThemes(APP) {
             const t = themes[name];
             const leave = getLeaveThemeColors(t, name === 'classic');
             applyCssVariables(document.documentElement, t, leave);
-            applyDomStyles(APP, t);
             APP.Persistence.persistSessionState();
             APP.State.ENGINE.rainbowActive = (name === 'classic');
             APP.State.ENGINE.isDirty = true;
