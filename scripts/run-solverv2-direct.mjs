@@ -40,26 +40,11 @@ if (typeof globalThis.window === 'undefined')    globalThis.window    = { __PF_D
 if (typeof globalThis.document === 'undefined')  globalThis.document  = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { installSolverV2 } = await import('../SolverV2.js');
+const { createSolverV2 } = await import('../SolverV2.js');
 
 const budgetMs = Number(budgetMsArg || 30000);
 
-const PACK   = (x, y) => ((y << 16) | x) >>> 0;
-const UNPACK = k => ({ x: k & 0xFFFF, y: (k >>> 16) & 0xFFFF });
-
-const APP = {
-    LevelUtils: {
-        PACK, UNPACK,
-        inBounds:     (x, y, w, h) => x >= 0 && y >= 0 && x < w && y < h,
-        resolvePortal:(level, key) => level?.portalMap?.get(key) || null,
-        deepCloneLevel:    l => l,
-        canonicalCloneLevel: l => l,
-    },
-    Solver: null, // V1 not loaded — V2 will use its own normalisation
-};
-
-installSolverV2(APP);
-const SolverV2 = APP.SolverV2;
+const SolverV2 = createSolverV2();
 
 async function loadAllLevels() {
     const root = new URL('..', import.meta.url).pathname;
