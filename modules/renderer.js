@@ -1,4 +1,3 @@
-import { createRenderModel }   from './render/create-render-model.js';
 import { createCanvasRenderer } from './render/canvas-renderer.js';
 import { transformPoint }       from './domain/geometry.js';
 import { drawPath }             from './render/draw-path.js';
@@ -18,14 +17,7 @@ export function installRenderer(APP) {
             return { sx: (tx + 0.5) * eng.viewport.cellW, sy: (ty + 0.5) * eng.viewport.cellH };
         }
 
-        function render() {
-            // Ripple expiry is handled by the game loop before render() is called.
-            // Read the live reqLen UI value here (facade boundary) so create-render-model stays DOM-free.
-            const eng = APP.State.ENGINE;
-            const reqLenPreview = (eng.mode === APP.Core.EDITOR || eng.mode === APP.Core.REVIEW)
-                ? parseInt(APP.UI.getValue('editReqLen'))
-                : null;
-            const model = createRenderModel(APP, reqLenPreview);
+        function render(model) {
             const { needsRedraw } = canvasRenderer.render(model);
             if (needsRedraw) APP.State.ENGINE.isDirty = true;
 

@@ -5,6 +5,8 @@ import { VALID_LOGIC_TRANSITIONS } from './runtime/state-machine.js';
 import { cloneTapRouteState, rebuildDerivedState, pushStep as pushStepImpl,
          simulateTapRouteStep,
          wouldCreateBlockedTIntersection as wouldCreateBlockedTIntersectionImpl } from './runtime/path-state.js';
+import { MoveContext }       from './domain/move-context.js';
+import { createRenderModel } from './render/create-render-model.js';
 
 export function installEngine(APP) {
     APP.Engine = (() => {
@@ -27,15 +29,7 @@ export function installEngine(APP) {
                     return "valid";
                 }
                 if (APP.State.ENGINE.logicState === APP.Core.HAZARD_TRIGGERED && APP.State.ENGINE.mode !== APP.Core.EDITOR && APP.State.ENGINE.mode !== APP.Core.REVIEW) return null;
-                if (!APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, {
-                    isStrict: true,
-                    mode: APP.State.ENGINE.mode,
-                    allowJump: true,
-                    checkWinMetrics: false,
-                    checkHazards: false,
-                    checkFalseGoals: true,
-                    armedFalseGoals: APP.State.ENGINE.armedFalseGoals
-                })) {
+                if (!APP.LevelUtils.isValidMove(key, APP.State.ENGINE, activeLevel, MoveContext.TAP_ROUTE)) {
                     return null;
                 }
 
@@ -303,7 +297,7 @@ export function installEngine(APP) {
                 APP.UI.updateAppScale();
                 APP.UI.updateViewport();
                 APP.UI.syncEditorPalettePlacement();
-                APP.Persistence.updateCompletionUI();
+                updateCompletionUI();
                 APP.UI.showMessage("", "");
                 APP.State.ENGINE.isDirty = true;
             }
@@ -454,7 +448,7 @@ export function installEngine(APP) {
                 APP.UI.setSolutionOutput('');
                 APP.UI.updateAppScale();
                 APP.UI.updateViewport();
-                APP.Persistence.updateCompletionUI();
+                updateCompletionUI();
                 APP.Persistence.persistSessionState();
                 APP.State.ENGINE.isDirty = true;
             }
@@ -515,7 +509,10 @@ export function installEngine(APP) {
                 const shouldRender = APP.State.ENGINE.isDirty || hasContinuousAnimation;
                 if (shouldRender) {
                     APP.State.ENGINE.isDirty = false;
-                    APP.Renderer.render();
+                    const reqLenPreview = (APP.State.ENGINE.mode === APP.Core.EDITOR || APP.State.ENGINE.mode === APP.Core.REVIEW)
+                        ? parseInt(APP.UI.getValue('editReqLen'))
+                        : null;
+                    APP.Renderer.render(createRenderModel(APP, reqLenPreview));
                 }
                 requestAnimationFrame(loop);
             }
@@ -564,6 +561,20 @@ export function installEngine(APP) {
 
                 APP.State.ENGINE.logicState = newState;
                 return true;
+            }
+
+            function updateCompletionUI() {
+                const eng = APP.State.ENGINE;
+                const isComplete = eng.progressSet.has(eng.levelIdx);
+                const isPlayMode = eng.mode === APP.Core.PLAY;
+                const isReview   = eng.mode === APP.Core.REVIEW;
+                let reviewDisplay = null;
+                if (isReview) {
+                    const subs = eng.review.submissions;
+                    const idx  = eng.review.currentIdx;
+                    reviewDisplay = subs.length > 0 ? `${idx + 1}/${subs.length}` : '0/0';
+                }
+                APP.UI.updateLevelDisplay(eng.levelIdx, isComplete && isPlayMode, reviewDisplay);
             }
 
             // setOverlayState updates state only; APP.UI.applyOverlayState renders it.
@@ -629,6 +640,7 @@ export function installEngine(APP) {
             rebuildDerivedPathState,
             assertStateConsistency,
             updatePencilState,
+            updateCompletionUI,
             PathNavigator
         };
     })();

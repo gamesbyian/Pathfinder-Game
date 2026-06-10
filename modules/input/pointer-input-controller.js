@@ -2,6 +2,7 @@
 // drag-ghost update, and the gamepadGridPrimaryAction bridge.
 
 import { getOccupant } from '../editor/editor-occupancy.js';
+import { MoveContext } from '../domain/move-context.js';
 
 export function installPointerInputController(APP) {
 
@@ -79,15 +80,8 @@ export function installPointerInputController(APP) {
             // Tapping an earlier visited cell: truncate or allow legal intersection
             const lastIdx = APP.State.ENGINE.path.lastIndexOf(k);
             if (lastIdx !== -1 && lastIdx < APP.State.ENGINE.path.length - 1) {
-                const legalIntersectionMove = APP.LevelUtils.isValidMove(k, APP.State.ENGINE, activeLevel, {
-                    isStrict:        true,
-                    mode:            APP.State.ENGINE.mode,
-                    allowJump:       true,
-                    checkWinMetrics: false,
-                    checkHazards:    false,
-                    checkFalseGoals: true,
-                    armedFalseGoals: APP.State.ENGINE.armedFalseGoals
-                }) && !APP.Engine.wouldCreateBlockedTIntersection?.(APP.State.ENGINE, k, activeLevel);
+                const legalIntersectionMove = APP.LevelUtils.isValidMove(k, APP.State.ENGINE, activeLevel, MoveContext.TAP_ROUTE)
+                    && !APP.Engine.wouldCreateBlockedTIntersection?.(APP.State.ENGINE, k, activeLevel);
                 if (!legalIntersectionMove) {
                     APP.Engine.PathNavigator.truncateTo(APP.State.ENGINE, lastIdx);
                     APP.Engine.setLogicState(APP.Core.DRAGGING);

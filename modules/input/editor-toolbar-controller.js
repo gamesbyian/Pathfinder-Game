@@ -2,6 +2,8 @@
 // undo/reset/new-level, help modal, metrics copy, trap-spot solver, and
 // live editor-input bindings.
 
+import { createRenderModel } from '../render/create-render-model.js';
+
 export function installEditorToolbarController(APP, { tryNavigate }) {
 
     // --- Grid transform buttons ---
@@ -176,7 +178,7 @@ export function installEditorToolbarController(APP, { tryNavigate }) {
             }
             APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
             APP.Editor.setTrapSpots(res.spots || new Set());
-            APP.Renderer.render();
+            APP.Renderer.render(createRenderModel(APP));
             if (APP.State.ENGINE.editor.validTrapSpots.size > 0) {
                 APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots.`, 'text-white font-black');
             } else if (res.timedOut) {
@@ -203,7 +205,7 @@ export function installEditorToolbarController(APP, { tryNavigate }) {
                     }
                     APP.Engine.setOverlayState(APP.Core.OVERLAY_NONE);
                     APP.Editor.setTrapSpots(retryRes.spots || new Set());
-                    APP.Renderer.render();
+                    APP.Renderer.render(createRenderModel(APP));
                     if (APP.State.ENGINE.editor.validTrapSpots.size > 0) {
                         APP.UI.showMessage(`Found ${APP.State.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
                     } else if (retryRes.timedOut) {
