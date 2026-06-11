@@ -555,6 +555,32 @@ Outcomes:
 
 During approval, the app should try to produce or validate a hint path. If no solution is found, the reviewer may be asked to confirm whether to publish anyway.
 
+### 9.5 Determinism and Work-Based Budgets
+
+Solver behavior should be deterministic for a given level, solver configuration, and budget. Running the same solver on the same input should visit equivalent search states in the same order, apply the same tie-breaks, and return the same result path/status regardless of machine speed, browser, operating system, or incidental scheduling differences.
+
+To support this, solver limits should be expressed primarily as work-based budgets rather than wall-clock budgets. Examples of acceptable work units include expanded states, generated candidates, search phases, queue pops, depth iterations, validation checks, or another stable unit chosen by the solver. Wall-clock timers may still be used for UI responsiveness, cancellation, or a coarse safety cap, but they should not be the primary source of search variability when deciding which candidate paths are explored.
+
+Determinism expectations:
+
+- Use stable ordering for gates, moves, portal handling, object lists, candidate scoring tie-breaks, and any priority queues or beam-frontier selection.
+- Avoid unseeded randomness. If randomness is ever part of search, expose the seed and include it in solver telemetry.
+- Report budget exhaustion distinctly from proof of impossibility. A deterministic budget miss means only that no solution was found within the selected work budget.
+- Include telemetry that makes runs comparable, such as work units consumed, attempts/profiles tried, stop reason, solution path when found, and any validation errors.
+- Ensure that hint generation, editor solving, review validation, and automated audits all validate returned paths through the same solution-validity rules used by player win detection.
+
+### 9.6 Solver Harnesses and Regression Tools
+
+A Pathfinder codebase should include command-line harnesses/scripts that let developers and AI coding agents run the solver outside the browser, compare outputs, and diagnose regressions without manually operating the UI. The current project includes representative tools with these purposes:
+
+- A direct SolverV2 runner that loads built-in levels, accepts a level/range/all selector and a budget option, runs the solver, prints per-level outcomes, and writes a structured JSON result file.
+- Audit export and audit-check scripts that run broader solver sweeps, persist telemetry, and verify that audit output has the expected shape and invariants.
+- A hint-path oracle/replay style harness that validates stored hint paths against the same core movement and win-condition rules, so known-good paths can catch solver or rule regressions.
+- Diagnostic scripts for difficult or failing levels that compare solver telemetry against known hints/frontiers and summarize where the search is spending or exhausting its budget.
+- Related smoke/unit tests for domain rules, editor validation, startup/persistence wiring, and solver-adjacent tools such as false-goal trap search.
+
+Any AI coder extending or replacing the solver should build and maintain equivalent local tools for itself before making substantial solver changes. These tools should be easy to run from the command line, accept targeted level filters for quick iteration, support full-suite runs for regression confidence, write machine-readable output for comparison, and separate deterministic solver work budgets from optional wall-clock safety limits.
+
 ---
 
 ## 10. What Makes a Puzzle Valid
