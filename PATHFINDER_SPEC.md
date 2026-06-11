@@ -4,6 +4,16 @@ This document describes Pathfinder as an application and game in implementation-
 
 The spec focuses on what the app must do, what rules users experience, what data the app consumes and produces, and how the major modes fit together. It intentionally avoids prescribing a particular framework, file structure, rendering strategy, or exact visual styling unless that behavior is core to Pathfinder.
 
+### Normative Scope
+
+This document is the full product expectation for Pathfinder. Features, modes, and workflows described here are part of the expected app behavior; they are not nice-to-have extras merely because they are administrative, developer-facing, solver-facing, accessibility-facing, or used less often than normal Play Mode.
+
+Language such as "may" or "can" is used only to describe allowed data shapes, conditional runtime circumstances, or implementation freedom where the spec explicitly permits alternatives. It should not be read as downgrading a described Pathfinder feature or mode to optional status. If a deployment cannot perform a feature because an external dependency is unavailable, such as Firebase/network access or audio output capability, the app should expose the corresponding disabled/failure/local-only behavior described in this spec rather than silently omitting the feature.
+
+### Interaction Coverage Expectation
+
+The spec is intended to describe every user-visible mode, screen, modal, major control, and resulting state change at the product-behavior level. A compatible implementation should not add hidden alternate behavior for an existing control or omit a documented control from a supported mode. Implementation details such as DOM structure, CSS classes, exact icon artwork, and animation timing can differ, but the user-observable intent and state effects of each described interaction should be preserved.
+
 ---
 
 ## 1. Core Concept
@@ -58,6 +68,15 @@ Each level may contain:
 
 Coordinates in `levels.js` are 1-based: `{ x: 1, y: 1 }` is the top-left grid cell.
 
+Compatibility expectations:
+
+- Object arrays may be omitted in older or hand-written data; missing optional arrays should be treated as empty arrays.
+- `designerName` and `description` may be omitted and should default to empty strings.
+- `difficulty` may be omitted, blank, or `null`; otherwise it is an integer difficulty rating.
+- `reqLen` and `reqInt` are required gameplay metrics and should be interpreted as non-negative integers.
+- Unknown non-structural fields should not break loading. A compatible app may ignore them unless it intentionally preserves them during round-trip editing.
+- The loader should normalize old-but-compatible level objects into the same effective shape used by new exports before play, editing, solving, or review.
+
 The app may convert these to any internal representation, but all imported and exported level data should remain compatible with the above shape.
 
 ### 2.2 `firebase-config.js`
@@ -100,6 +119,26 @@ The path has:
 - **Visited count per cell:** how many times the path has occupied each cell.
 - **Axis usage per cell:** whether horizontal and/or vertical path segments have passed through that cell.
 - **Intersection count:** increments when the path enters a previously visited non-gate, non-goal cell in a valid way.
+
+### 3.4 Path and Hint Encoding
+
+User-facing level coordinates are 1-based, but saved hint paths may use Pathfinder's compact packed-key format. A compatible implementation should understand and be able to produce hint paths in the following forms where practical:
+
+- Packed integer keys, where `key = zeroBasedX + (zeroBasedY << 16)`.
+- Coordinate arrays such as `[x, y]`, interpreted as 1-based level coordinates when imported from user-facing data.
+- Coordinate objects such as `{ x, y }`, likewise interpreted consistently with the importer/exporter context.
+
+Hint paths are ordered path-node sequences. They should be decoded, normalized, and validated against the current level before display, copying, submission, approval, or audit use. Invalid, duplicate, malformed, out-of-bounds, or stale hint paths should be ignored or reported as invalid; they must not be accepted as proof that a level is solvable.
+
+### 3.5 Mode-Independent State Principles
+
+Play, Edit, and Review modes should share the same underlying level and path rules wherever possible. The following state principles keep behavior predictable:
+
+- Loading a level, changing levels, resetting, or switching into a different working level clears the current path, transient hazard state, portal ripple effects, and transient hint animation state.
+- Undo/backtracking should restore derived path metrics rather than trying to patch them manually. Counted length, intersections, visited counts, axis usage, portal-jump markers, and flipping-filter state should all be recomputed or restored together.
+- A level's structural data should remain immutable during Play Mode; options may create a temporary playable copy, but they must not mutate the built-in or published source data.
+- Edit and Review modes may mutate a working copy. Leaving that working copy with unsaved changes should be guarded by a confirmation.
+- Solver, hint, editor, review, submission, audit, and win-detection flows should all depend on the same rule semantics, even if they use different UI flows.
 
 ---
 
@@ -222,7 +261,7 @@ Rules:
 - Portals always come in complete pairs.
 - Entering one terminal immediately moves the path to the paired terminal.
 - The teleport hop is part of the path sequence but is not counted toward required length.
-- A portal terminal should not be re-used after it has already been visited in Play Mode, except if the destination is the goal where normal goal behavior applies.
+- A portal terminal should not be re-used after it has already been visited in Play Mode. Entering an unused portal that immediately deposits the path on the true goal is allowed, and normal goal behavior applies after arrival; this is not permission to re-enter an already visited portal terminal.
 - After entering a portal terminal, the next path node must be its paired destination; the player cannot choose to stand on a portal and then move elsewhere.
 - Portal pairs should be visually distinguishable and paired clearly, often by matching color/marking.
 - Portal parity matters for editor warnings: when a portal pair connects different checkerboard parities, it can change length parity; when any portal pair is parity-breaking in that way, simple gate/terminal parity warnings should be suppressed because naive parity predictions become unreliable.
@@ -239,9 +278,9 @@ In Play Mode:
 2. The selected gate becomes the active gate.
 3. The path starts with that gate as its first node.
 
-The app should not allow starting from non-gate cells in Play Mode.
+The logical path start in Play Mode is always a gate. A convenience input may let the player tap or drag from an aligned non-gate cell if the app can unambiguously begin at a gate and then extend through legal intervening cells, but the resulting path's first node must still be the gate. If the app cannot form such a legal gate-originating path, no path should start.
 
-In Edit/Review modes, the pencil tool can be used to sketch a candidate path on the current working level. This uses the same movement rules as puzzle play where practical, but it is primarily for testing and setting/copying metrics.
+In Edit/Review modes, the pencil tool can be used to sketch a candidate path on the current working level. This uses the same movement rules as puzzle play where practical, but it is primarily for testing and setting/copying metrics. Pencil mode may allow creator conveniences such as starting from arbitrary cells or reversing a sketched path direction, but any path used as a submitted hint or solution must still validate under the normal solution rules.
 
 ### 5.2 Continuing a Path
 
@@ -260,8 +299,12 @@ A candidate next cell is rejected if it violates any move rule, including:
 - violating a filter's active axis
 - entering a goose while the mode disallows it as a normal move
 - creating a blocked T-intersection with no legal continuation
+- attempting to move while a solver/search overlay or non-dismissible modal owns input
+- attempting to extend while a hazard state is active, except for undo/backtracking/reset recovery
 
 Rejected moves should simply not extend the path, ideally with minimal feedback rather than punishing the player.
+
+When a drag or tap target is more than one cell away, the app may interpolate a straight-line sequence of orthogonal moves from the current head to the target. Each interpolated step must pass the same legality checks as an explicit step. If any step fails or triggers a hazard/trap, interpolation stops at that point.
 
 ### 5.3 Backtracking and Undo
 
@@ -359,20 +402,43 @@ Global controls available outside the play panel:
 Levels may contain saved hint paths. The Hint button should:
 
 - Use saved hint paths when available.
-- Optionally use a solver to find a hint if no saved hint is available.
-- Show the hint as a path overlay or step guide without automatically solving the level for the player.
-- Support pinning a hint so it remains visible.
-- Support clearing the displayed hint.
+- Cycle through multiple saved hints for the current level on repeated requests.
+- Show a clear "no saved hint" style message when no validated saved hint exists for the level.
+- Show the hint as an animated path overlay or step guide without automatically solving the level for the player or mutating the player's current path.
+- Support pinning the currently displayed hint so it remains visible after the animation finishes.
+- Support clearing the pinned/displayed hint.
 
 Hint paths must be validated against the current level before use. Invalid hints should be ignored rather than shown.
 
-### 7.5 Level Navigation
+Hint animation behavior:
+
+1. Pressing Hint selects the next validated saved hint for the current level.
+2. The app enters a hint-animation overlay state that blocks conflicting grid/path input while still keeping the underlying level visible.
+3. The hint path is drawn progressively on the grid in path order, including portal jumps as non-counted jumps rather than ordinary adjacent segments.
+4. The UI identifies which hint is being shown, for example "Solution 1/3."
+5. When the full hint has been drawn, it remains briefly, then visually blinks/fades out and the app returns to the normal overlay-free state unless the user pins it.
+6. A pinned hint is rendered as a persistent overlay until cleared or until the level/mode changes.
+7. Loading a different level, resetting the level run state, editing the level structure, or switching to a mode/level where the hint no longer applies clears transient hint animation state.
+
+Play Mode's Hint button uses saved validated hint paths; it does not treat saved hints as solver input and does not make the solver rely on prior hints. Solver-based hint generation belongs to the explicit solve/review/submission workflows described elsewhere.
+
+### 7.5 Level Navigation, Loading, and Mode Display
 
 The player can move to previous/next levels. Navigation should:
 
-- Reset transient path state for the new level.
-- Preserve global options and theme.
+- Load the requested built-in or published level by normalizing its source data into the shared level model.
+- Reset transient path state for the new level, including current path, undo stack, hazard state, ripples, active hint animation, pinned transient hint overlays, and found-since-load solver hints.
+- Preserve global options, theme, mute state, progress, and other user preferences.
+- Update the displayed level number/title, metrics, completion indicators, grid viewport, mode-specific controls, and object visibility for the newly loaded level.
 - Respect option filters. For example, if the user hides geese/false goals/dead gates and the current level cannot be played under those options, show an Options Conflict modal and offer to skip to the next playable level.
+
+Mode transitions should load and display levels consistently:
+
+- Switching from Play to Edit creates an editable working copy of the current play level, resets the view orientation to the editor baseline, clears the current path and transient overlays, populates editable metric/metadata fields, and shows editor controls/palette.
+- Switching from Edit to Play is guarded by the unsaved-changes modal when the working level has unexported modifications. If the user leaves anyway, the app returns to Play Mode and reloads the selected playable level rather than silently publishing editor changes into play.
+- Switching into Review Mode saves the current Play level index, clears play/editor transient state, shows review layout, and displays an empty review state until pending submissions are loaded.
+- Loading a pending review submission normalizes that submission's level data into the shared editor/review working model, clears transient path/hazard/hint state, populates metrics/metadata, updates review position such as `1/N`, and updates the review hint count.
+- Returning from Review to Play restores the saved Play level index and reloads that playable level with the user's preserved global options/theme.
 
 ### 7.6 Hazard Feedback
 
@@ -428,7 +494,7 @@ Additional editor tools:
 - Step eraser/undo step: remove the most recent pencil path step.
 - Grid action undo: undo the last object/grid edit.
 
-### 8.4 Placing Objects
+### 8.4 Placing and Dragging Objects
 
 Users can build levels by:
 
@@ -438,10 +504,21 @@ Users can build levels by:
 - Dragging objects off the grid to remove them.
 - Using the eraser tool to clear cells.
 
+Editor drag behavior:
+
+- Pressing or tapping a palette item selects that tool. A drag from the palette should show a drag ghost/preview and place the selected object if released over a valid grid cell.
+- Pressing an existing grid object in Edit/Review mode while not in pencil mode picks it up, removes it from its original square, saves an undoable grid-edit snapshot, and shows a drag ghost.
+- Releasing a picked-up object over an empty valid grid cell places it there. Releasing it outside the grid deletes it.
+- Dropping or placing onto an occupied cell is rejected with clear feedback and must not create an overlap.
+- The eraser clears the object in the target cell. Erasing one terminal of a completed portal unpairs the other terminal and leaves it as the pending terminal that must be completed or erased. Erasing a pending unpaired portal cancels that pending portal.
+- While a portal terminal is pending, the editor should require the next placement to complete the portal pair or erase/cancel it; other object placements are blocked until the portal state is resolved.
+- Dragging or placing objects marks the working level modified, clears trap-spot highlights, and clears or invalidates hints tied to the prior level structure.
+- Palette/drag interactions should be disabled or ignored while a modal/overlay owns input or while pencil mode is active.
+
 Object placement rules:
 
-- Most single-cell objects should be exclusive: a cell should not simultaneously contain incompatible object types such as a block and a goal.
-- The editor should enforce exactly one true goal for a valid level, while allowing multiple gates and false goals.
+- Single-cell structural objects are mutually exclusive as described in Object Conflicts; a cell cannot simultaneously contain a block and a goal, a gate and a portal, a filter and a goose, or any other overlapping object combination.
+- The editor should enforce exactly one true goal for a valid level, while allowing multiple gates and false goals on distinct cells.
 - Portals require two terminals. Selecting/placing a portal once creates a pending terminal; placing the second terminal completes the pair.
 - Pending incomplete portals should be visually distinct and should make the level invalid until completed.
 - Filters and flipping filters store an axis.
@@ -479,7 +556,7 @@ Edit Mode primary buttons:
 - **Solve:** runs the solver on the current edited level.
 - **Submit:** sends the level for review. This appears for normal editor submissions and is hidden/replaced in admin review contexts as appropriate.
 
-Developer/export controls may include:
+Developer/export controls include:
 
 - Output text area for serialized level data or path data.
 - Copy Path.
@@ -514,6 +591,16 @@ The exact search algorithm is implementation-specific, but the feature should he
 ## 9. Solver Features
 
 Pathfinder includes solver-assisted workflows in Play, Edit, and Review contexts.
+
+### 9.0 Solver Input Invariants
+
+The solver must be hint-agnostic and level-agnostic:
+
+- The solver receives a level definition and searches from that definition alone.
+- Saved hints are not solver inputs and must not bias, seed, shortcut, prune, rank, or validate the solver search. Hints may be validated by separate hint-validation workflows, but they are not prior knowledge for solving.
+- Built-in level numbers, published sort order, submission IDs, filenames, audit history, and other external identifiers must not change solver behavior.
+- The solver must not contain level-specific patches, memorized solution paths, known-hard-level exceptions, or assumptions based on having encountered the same puzzle before.
+- Each solve request starts from a fresh search state for that input level and explicit solver configuration. Re-running a level is allowed to produce the same deterministic result because the algorithm is deterministic, not because the solver remembers the earlier run.
 
 ### 9.1 Solver Modal / Search Overlay
 
@@ -587,7 +674,7 @@ Any AI coder extending or replacing the solver should build and maintain equival
 
 Puzzle validity is structural validity. It means the level is well-formed enough to submit/review/play. It is separate from solution validity, though submission should also attempt to find at least one solution.
 
-A structurally valid level must satisfy:
+A structurally valid level must satisfy the requirements below. Validation should report actionable reasons, not merely a generic failure. Validation may be stricter for submission/review than for loading historical built-in levels, but no invalid structure should be silently treated as a solved or published-ready puzzle.
 
 ### 10.1 Required Core Fields
 
@@ -614,14 +701,31 @@ Every object coordinate must be inside the grid:
 
 ### 10.3 Object Conflicts
 
-A valid level should not contain impossible or contradictory object overlaps. In particular:
+A valid level must not contain object overlaps. Each grid square may contain at most one structural object. The mutually exclusive object types are:
 
-- Must-cross cannot overlap a block.
+- gate
+- true goal
+- false goal
+- block
+- goose
+- must-pass
+- must-cross
+- normal filter
+- flipping filter
+- portal terminal
+
+This means, for example, a must-cross cannot overlap a block, a gate cannot also be a portal terminal, a filter cannot also be a goose, and the true goal cannot share its square with any other object. Multiple instances of the same object type also cannot duplicate the same square.
+
+Additional object-conflict rules:
+
 - The true goal should not be absent or outside the grid.
 - Portal terminals must pair with valid destinations.
+- The two terminals of a portal pair must occupy two different squares.
+- Different portal pairs cannot share a terminal square.
 - Pending/incomplete portal terminals are invalid.
+- Normal filters and flipping filters are distinct object types and cannot share a square.
 
-A robust editor should prevent most illegal overlaps at placement time.
+A robust editor should prevent illegal overlaps at placement time, and validation should reject them if they appear in imported, submitted, or hand-authored level data.
 
 ### 10.4 Must-Cross Structural Checks
 
@@ -648,6 +752,18 @@ For each must-cross cell:
 When Firebase is available, submission should reject duplicate levels already present in pending submissions or approved/published levels.
 
 Duplicate detection should be based on a canonical structural fingerprint that ignores non-structural metadata where appropriate. Hints may be encoded for storage but should not make two otherwise identical levels count as distinct.
+
+The fingerprint should include the structural geometry and win requirements: grid size, required length/crossings, gates, true goal, false goals, blocks, must-pass cells, must-cross cells, filters and their axes, flipping filters and their axes, portal terminal pairs, and geese. It should ignore designer name, description, difficulty, hint contents, timestamps, submitter identity, published sort order, and other review metadata. Object ordering in arrays should not affect the fingerprint.
+
+### 10.7 Submitted-Level Solvability Expectations
+
+A level can be structurally valid but not proven solvable within the current solver budget. Submission and review should distinguish these states clearly:
+
+- Structural validation failure blocks submission/approval until fixed or intentionally overridden by an admin workflow.
+- A confirmed solution/hint is strong evidence that the level is publishable and should be stored if available.
+- Solver timeout or budget exhaustion is not proof of impossibility. It should be reported as "no solution found within budget" rather than "unsolvable."
+- Normal user submissions may be queued for manual review even if no solution is found, provided the app communicates that status.
+- Admin review should revalidate hints and may request confirmation before approving a level without a valid stored hint.
 
 ---
 
@@ -722,7 +838,7 @@ Review Mode should clearly indicate that the reviewer is editing a pending submi
 Review Mode uses the editor button area, with review-specific controls visible:
 
 - **Guide:** editor guide.
-- **New/Clear/BOMBS?/Solve:** may remain available depending on reviewer workflow.
+- **New/Clear/BOMBS?/Solve:** available in review workflows where creating, clearing, trap-spot inspection, or solving the working level is relevant.
 - **Hint:** inspect or generate hints associated with the working level.
 - **Submit:** save reviewer modifications back into the review workflow if applicable.
 - **Reject:** delete the pending submission without publishing.
@@ -785,23 +901,29 @@ Each stage should indicate pending/running/success/failure and include helpful d
 
 To submit:
 
-- The level must be structurally valid.
 - Firebase must be available.
-- The user must be signed in or sign-in must occur as part of submission.
-- Duplicate checks should pass unless explicitly bypassed by an admin-only workflow.
-- The solver should attempt to find at least one solution.
+- The user must be signed in or sign-in must occur as part of submission; anonymous authentication is sufficient unless the deployment requires a stronger provider.
+- The level must be structurally valid.
+- Required length must be set to a positive integer.
+- Required crossings must be set to a non-negative integer.
+- Duplicate checks should pass unless explicitly bypassed by an admin-only workflow. If part of the duplicate check cannot run, the app should show that limitation as a warning or error rather than hiding it.
+- The app should attempt to provide at least one solution/hint. It should validate any existing editor hints, current solver-found hints, and the currently drawn candidate path before running a solver.
 - If the user has drawn a valid solution or the solver finds one, include it as a hint.
+- If no solution is found within budget, submission may still be allowed for manual review if the app clearly communicates that no solution was found.
+- Only validated, unique hint paths should be saved with the submission.
 
 ### 13.3 Stored Submission Data
 
 Store pending submissions under an app-specific Firebase root with:
 
 - `levelData`: serialized level data compatible with `levels.js` shape.
-- `hints`: encoded safely for Firestore if needed.
+- encoded hints, either inside `levelData.hints` or in a companion field, safely stored for Firestore if needed.
 - `levelFingerprint`: canonical structural fingerprint.
 - `fingerprintVersion`.
 - `submittedAt`: server timestamp.
 - `submittedBy`: Firebase user ID.
+
+Remote storage should encode hint arrays in a format that survives Firestore serialization and can be decoded back into the same path-node sequences. Loading submissions or published levels should decode those hints before validation or display.
 
 ---
 
@@ -821,9 +943,15 @@ The Options menu is a modal with an options page and a theme-selection page.
 - **False Goals:** show or hide false-goal trap squares in Play Mode.
 - **Dead Gates:** show or hide parity-invalid/dead gates in Play Mode.
 
-These options are not mere visual cosmetics: hiding a challenge type may make certain levels unplayable or incompatible with the player's chosen challenge set. If the current level conflicts with active options, show an Options Conflict modal and offer to move to the next compatible level.
+These options are not mere visual cosmetics: hiding a challenge type changes the temporary playable copy of a level:
 
-Edit and Review modes should generally show all objects because creators/reviewers need full structural visibility.
+- Hiding geese removes goose hazards from the playable copy, so goose cells should no longer surprise or block the player in that attempt.
+- Hiding false goals removes false-goal trap objects from the playable copy, so they should not detonate.
+- Hiding dead gates removes parity-invalid gates from the playable copy when simple parity analysis is reliable. If every gate would be removed, the level is incompatible with the option and the app should show an Options Conflict modal rather than presenting an unsolvable no-gate level.
+
+If the current level conflicts with active options, show an Options Conflict modal and offer to move to the next compatible level.
+
+Edit and Review modes should generally show all objects because creators/reviewers need full structural visibility. Options should not permanently mutate the built-in, submitted, or published source level data.
 
 ### 14.3 Theme Selection
 
@@ -979,7 +1107,7 @@ The win modal conveys success:
 - strong success message such as "Path Found".
 - next-level action.
 - rest/stay action.
-- optional winning-path export/copy area.
+- winning-path export/copy area when export/developer controls are visible.
 
 ### 16.6 Unsaved Changes Modal
 
@@ -1015,13 +1143,23 @@ Firebase-backed persistence supports:
 
 If remote published levels are available, the app may append or merge them into the playable level list after built-in levels. If remote loading fails, built-in `levels.js` should remain playable.
 
+### 17.3 Persistence Failure Behavior
+
+Persistence failures should degrade gracefully:
+
+- If Firebase initialization, authentication, reads, or writes fail, local play and local editing should continue.
+- Submission/review/published-level management should show clear failure or disabled states rather than pretending the operation succeeded.
+- Local storage parse errors should not crash the app; invalid saved preferences/progress/session state should be ignored or reset to safe defaults.
+- Cloud session/progress sync should merge conservatively, avoid overwriting newer local state with stale remote state, and tolerate missing or partial remote documents.
+- Network timeouts should be reported distinctly from validation failures and duplicate-level findings.
+
 ---
 
 ## 18. Audio and Feedback
 
-Audio is optional but part of the intended feel.
+Audio and visual feedback are part of Pathfinder's expected player experience. Implementations should provide audio feedback when the runtime environment supports audio output, and must provide the visual feedback listed below regardless of audio availability.
 
-Recommended feedback:
+Audio feedback:
 
 - short sound for normal move
 - different sound for backtrack/undo
@@ -1048,13 +1186,13 @@ Visual feedback should include:
 A compatible app should support:
 
 - pointer/touch input for tap and drag path drawing.
-- keyboard focus on the grid where practical.
+- keyboard focus on the grid.
 - clear buttons with accessible labels or text.
 - enough contrast through theme derivation.
 - status messages for loading, validation, submission, and review.
 - controls sized for touch interaction.
 
-Gamepad support may be included: if implemented, it should move a cursor/selection across the grid, start paths at gates, extend paths with directional input, and activate buttons/menus.
+Gamepad support should move a cursor/selection across the grid, start paths at gates, extend paths with directional input, and activate buttons/menus.
 
 ---
 
@@ -1083,6 +1221,8 @@ Exported level data should include:
 - `hints`
 
 Coordinates should be 1-based in exported data. Hints may use the app's compact path-key representation, but any rebuilt app should consistently validate and decode the hint paths it produces.
+
+Export should produce a complete self-contained level object, not a diff from the current built-in level. Empty object arrays may be included explicitly for clarity. The exported object should be suitable for pasting into `levels.js`, submitting to Firebase, approving into published levels, and re-importing without changing the puzzle's structural fingerprint.
 
 ---
 
