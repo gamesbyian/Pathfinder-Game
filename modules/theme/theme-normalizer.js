@@ -248,6 +248,17 @@ export function normalizeTheme(theme, key = 'theme') {
     t.btns.approve = hintColor;
     t.btns.reset = pickDistinctButtonColor(t.btns.reset || cautionColor, [t.btns.undo]);
 
+    // Button roles (Drafting Table grammar): ink = the row's primary action,
+    // outline = supporting actions, danger = red-pencil destructive actions.
+    t.btns.ink           = t.btns.ink           || t.btns.guide;
+    t.btns.danger        = t.btns.danger        || t.btns.reset || t.headerLeft;
+    if (contrastRatio(t.canvasBg, t.btns.danger) < 2.5) {
+        t.btns.danger = pickContrastText(t.canvasBg, '#f87171', '#b91c1c');
+    }
+    t.btns.outlineBorder = t.btns.outlineBorder || t.modal.border;
+    t.btns.outlineText   = t.btns.outlineText   || keepOrImproveContrast(t.canvasBg, t.text.modalAccent);
+    t.text.btnInk        = t.text.btnInk        || pickContrastText(t.btns.ink);
+
     t.btns.disabled = t.btns.disabled || '#94a3b8';
     const hintBase = t.btns.hint || t.btns.guide || t.headerRight;
     const hintRgb = toRgb(hintBase, { r: 207, g: 107, b: 23 });
@@ -313,6 +324,19 @@ export function normalizeTheme(theme, key = 'theme') {
     t.colors.portalPending = t.colors.portalPending || '#999999';
     t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
     t.colors.bombBlastRays = t.colors.bombBlastRays || t.headerLeft;
+
+    // Board ink tokens (Drafting Table grammar): red-pencil corrections,
+    // recessive inactive gates, and hazard illustrations drawn in theme ink.
+    t.colors.hint          = t.colors.hint          || t.colors.goal;
+    t.colors.prohibit      = t.colors.prohibit      || t.colors.hint;
+    t.colors.inactive      = t.colors.inactive      || t.grid;
+    t.colors.hazardInk     = t.colors.hazardInk
+        || (contrastRatio(t.canvasBg, t.colors.filter) >= 4
+            ? t.colors.filter
+            : pickContrastText(t.canvasBg, '#f8fafc', '#0f172a'));
+    t.colors.hazardSurface = t.colors.hazardSurface || t.canvasBg;
+    t.colors.hazardAccent  = t.colors.hazardAccent  || t.colors.goal;
+    t.colors.scorch        = t.colors.scorch        || t.colors.hazardInk;
 
     t.mega.outputBg = t.mega.outputBg || t.output.bg;
     t.mega.outputBorder = t.mega.outputBorder || t.modal.border;

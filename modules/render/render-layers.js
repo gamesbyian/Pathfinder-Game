@@ -116,7 +116,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
             ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.2, 0, Math.PI * 2); ctx.fill();
             ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.08]);
             if (model.showParityWarnings && !model.hasFlippingPortal && (p.x + p.y) % 2 !== model.targetParity) {
-                drawAsset('prohibited', p.x, p.y);
+                drawAsset('prohibited', p.x, p.y, { color: th.colors.prohibit });
             }
         });
     });
@@ -151,7 +151,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
         ctx.save();
         ctx.translate(sx, sy); ctx.rotate(-Math.PI / 4);
-        const color = (model.activeGateKey === k || !model.activeGateKey) ? th.colors.gate : '#94a3b8';
+        const color = (model.activeGateKey === k || !model.activeGateKey) ? th.colors.gate : th.colors.inactive;
         ctx.strokeStyle = color; ctx.lineWidth = vp.cellW * 0.12; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         for (let i = 0; i < 2; i++) {
             const offset = (i - 0.5) * vp.cellW * 0.32;
@@ -163,7 +163,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         }
         ctx.restore();
         if (model.showParityWarnings && !model.hasFlippingPortal && (p.x + p.y) % 2 !== model.targetParity) {
-            drawAsset('prohibited', p.x, p.y);
+            drawAsset('prohibited', p.x, p.y, { color: th.colors.prohibit });
         }
     });
 
@@ -193,7 +193,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
             const p1 = UNPACK(dp[i - 1]), p2 = UNPACK(dp[i]);
             if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) hintsJumps.add(i);
         }
-        drawPath(ctx, dp, hintsJumps, '#22c55e', vp.cellW * 0.3, true, screenPosFn, vp.cellW);
+        drawPath(ctx, dp, hintsJumps, th.colors.hint, vp.cellW * 0.3, true, screenPosFn, vp.cellW);
         ctx.restore();
     }
 
@@ -220,9 +220,9 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
             ctx.beginPath(); ctx.arc(sx, sy, vp.cellW * 0.14, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
         } else if (model.detonatedFalseGoals.has(k)) {
-            drawScorchMark(ctx, sx, sy, vp.cellW);
+            drawScorchMark(ctx, sx, sy, vp.cellW, th.colors.scorch);
         } else if (model.isEditorMode || model.isReviewMode) {
-            drawAsset('bomb', p.x, p.y);
+            drawAsset('bomb', p.x, p.y, { themeColors: th.colors });
         }
     });
 
@@ -230,7 +230,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     level.gooseSet.forEach(k => {
         if (model.revealedGeese.has(k) || model.cheatActive || model.isEditorMode || model.isReviewMode) {
             const p = UNPACK(k);
-            drawAsset('goose', p.x, p.y, { isCheatReveal: model.cheatActive && !model.revealedGeese.has(k) });
+            drawAsset('goose', p.x, p.y, { isCheatReveal: model.cheatActive && !model.revealedGeese.has(k), themeColors: th.colors });
         }
     });
 

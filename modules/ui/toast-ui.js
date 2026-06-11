@@ -9,7 +9,7 @@ export const setStatus = (text = '', severity = 'info', className = '') => {
     const el = getEl('message');
     if (!el) return;
     const safeClassName = stripAlertTextColorClasses(className);
-    el.className = `font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tighter architectural-tight leading-tight drop-shadow-lg ${safeClassName}`.trim();
+    el.className = `font-black text-[var(--theme-alert-text)] text-[0.9rem] uppercase tracking-tight leading-tight drop-shadow-lg ${safeClassName}`.trim();
     el.dataset.severity = severity;
     setText(el, text);
 };

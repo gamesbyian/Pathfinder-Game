@@ -98,6 +98,17 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-portal-pending',            t.colors.portalPending);
     root.style.setProperty('--theme-bomb-blast-ring',           t.colors.bombBlastRing);
     root.style.setProperty('--theme-bomb-blast-rays',           t.colors.bombBlastRays);
+    root.style.setProperty('--theme-hint-ink',                  t.colors.hint);
+    root.style.setProperty('--theme-prohibit',                  t.colors.prohibit);
+    root.style.setProperty('--theme-inactive',                  t.colors.inactive);
+    root.style.setProperty('--theme-hazard-ink',                t.colors.hazardInk);
+    root.style.setProperty('--theme-hazard-surface',            t.colors.hazardSurface);
+    root.style.setProperty('--theme-hazard-accent',             t.colors.hazardAccent);
+    root.style.setProperty('--theme-btn-ink',                   t.btns.ink);
+    root.style.setProperty('--theme-btn-ink-text',              t.text.btnInk);
+    root.style.setProperty('--theme-btn-outline-text',          t.btns.outlineText);
+    root.style.setProperty('--theme-btn-outline-border',        t.btns.outlineBorder);
+    root.style.setProperty('--theme-btn-danger',                t.btns.danger);
     root.style.setProperty('--theme-leave-bg',     leave.bg);
     root.style.setProperty('--theme-leave-hover',  leave.hover);
     root.style.setProperty('--theme-leave-text',   leave.text);

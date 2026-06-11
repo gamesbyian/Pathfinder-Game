@@ -198,6 +198,24 @@ export function deriveTokens(seeds) {
     const alertBg     = primaryHsl.l < 20 ? secondary : primaryD;
     const alertStroke = isLight(alertBg) ? darken(alertBg, 0.2) : lighten(alertBg, 0.3);
 
+    // red pencil: correction ink (hints, prohibition marks) derived from
+    // secondary, guaranteed to read against the canvas surface.
+    const redPencil = contrastRatio(surface, secondary) >= 3
+        ? secondary
+        : (surfaceLight ? darken(secondary, 0.25) : lighten(secondary, 0.30));
+
+    // hazard ink/surface/accent: geese and bombs are drawn as ink
+    // illustrations — silhouette ink, paper cutout, one warm accent —
+    // so they stay legible on every theme surface.
+    const hazardInk    = contrastRatio(surface, text) >= 4 ? text : readableOn(surface);
+    const hazardAccent = contrastRatio(surface, secondary) >= 2 ? secondary : redPencil;
+
+    // inactive gates: recede toward the grid without vanishing into it.
+    const inactiveGate = contrastRatio(surface, neutral) >= 2 ? neutral : mix(neutral, text, 0.5);
+
+    // outline-role button text must read on the controls panel (≈ surface).
+    const outlineText = contrastRatio(surface, textAccent) >= 3 ? textAccent : readableOn(surface);
+
     return {
         bodyBg: bg,
         canvasBg: surface,
@@ -234,6 +252,10 @@ export function deriveTokens(seeds) {
             editClear: secondary,
             editBombs: lighten(secondary, 0.07),
             editNew: hintColor,
+            ink: guideColor,
+            danger: redPencil,
+            outlineText,
+            outlineBorder: border,
         },
 
         modal: {
@@ -259,7 +281,14 @@ export function deriveTokens(seeds) {
             cross: text,
             portalPending: '#999999',
             bombBlastRing: secondary,
-            bombBlastRays: '#f97316',
+            bombBlastRays: hazardAccent,
+            hint: redPencil,
+            prohibit: redPencil,
+            inactive: inactiveGate,
+            hazardInk,
+            hazardSurface: surface,
+            hazardAccent,
+            scorch: hazardInk,
         },
 
         palette: {

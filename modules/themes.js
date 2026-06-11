@@ -3,7 +3,7 @@ import { rc, isValidHexColor, toRgb, darkenHex, getLeaveThemeColors,
          normalizeTheme, buildChaosTheme }                              from './theme/theme-normalizer.js';
 import { createThemeRegistry, ensureThemeLeaveColors as _ensureThemeLeaveColors } from './theme/theme-registry.js';
 import { applyCssVariables }                                            from './theme/css-variable-applier.js';
-import { populateThemePicker }                                          from './theme/theme-picker-renderer.js';
+import { populateThemePicker, themeDisplayName }                        from './theme/theme-picker-renderer.js';
 
 export function createThemes({ state, data, getPersistence, getUI }) {
     const THEMES = {};  // local fallback when data is not yet loaded
@@ -40,6 +40,7 @@ export function createThemes({ state, data, getPersistence, getUI }) {
         ensureThemeLeaveColors: () => _ensureThemeLeaveColors(getThemeRegistry()),
         applyTheme,
         populateThemes,
+        themeDisplayName,
         deriveTokens,
         isSeedTheme,
         randomSeeds,

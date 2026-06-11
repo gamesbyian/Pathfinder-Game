@@ -40,7 +40,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             if (subs.length === 0) {
                 engine.loadReviewLevel(0);
                 rlm.heading.textContent = 'No Submissions';
-                rlm.heading.style.color = '#94a3b8';
+                rlm.heading.style.color = 'var(--theme-modal-muted)';
                 rlm.detail.textContent  = 'No levels are waiting for review.';
                 rlm.spinner.classList.add('hidden');
                 rlm.dismiss.classList.remove('hidden');
@@ -50,7 +50,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             }
         } catch (err) {
             rlm.heading.textContent = 'Load Failed';
-            rlm.heading.style.color = '#f87171';
+            rlm.heading.style.color = 'var(--theme-loading-error)';
             rlm.detail.textContent  = err?.message || String(err);
             rlm.spinner.classList.add('hidden');
             rlm.dismiss.classList.remove('hidden');
@@ -122,7 +122,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             docs.forEach(doc => {
                 const row = document.createElement('label');
                 row.className = 'flex items-center justify-between gap-3 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)]';
-                row.innerHTML = `<span class="font-black uppercase tracking-widest text-sm">Level ${doc.number}</span><input type="checkbox" class="published-level-checkbox w-5 h-5 accent-red-600" data-id="${doc.id}">`;
+                row.innerHTML = `<span class="font-black uppercase tracking-widest text-sm">Level ${doc.number}</span><input type="checkbox" class="published-level-checkbox w-5 h-5 accent-[var(--theme-btn-danger)]" data-id="${doc.id}">`;
                 list.appendChild(row);
             });
         } catch (err) {
