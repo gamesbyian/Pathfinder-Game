@@ -148,6 +148,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
     document.getElementById('editNewLevel').onclick    = () => tryNavigate(() => {
         ui.closeAllModals();
         editor.createNewLevel();
+        ui.setClassState('reviewEmptyMsg', 'hidden', true);
         ui.showMessage('New Level Created', 'text-white font-black');
     });
 
