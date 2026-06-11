@@ -3,61 +3,47 @@
 
 const AXIS_V = 2;
 
-// Must-pass "survey marker": a ring with four crosshair ticks.
-// Satisfied = filled center dot; unsatisfied = open ring.
 export function drawRequiredPin(drawCtx, size, options = {}) {
+    const tilt = options.isSatisfied ? 15 : -15;
     const pinYOffset = options.pinYOffset || 0;
     drawCtx.translate(0, pinYOffset);
-    const ink = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped;
-    const r    = size * 0.24;
-    const tick = size * 0.12;
-    drawCtx.strokeStyle = ink;
-    drawCtx.lineWidth   = size * 0.07;
-    drawCtx.lineCap     = 'round';
+    drawCtx.rotate(tilt * Math.PI / 180);
+    const scale = size / 35;
+    drawCtx.scale(scale, scale);
     drawCtx.beginPath();
-    drawCtx.arc(0, 0, r, 0, Math.PI * 2);
-    drawCtx.stroke();
-    [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([dx, dy]) => {
-        drawCtx.beginPath();
-        drawCtx.moveTo(dx * (r + size * 0.03), dy * (r + size * 0.03));
-        drawCtx.lineTo(dx * (r + tick),        dy * (r + tick));
-        drawCtx.stroke();
-    });
-    if (options.isSatisfied) {
-        drawCtx.fillStyle = ink;
-        drawCtx.beginPath();
-        drawCtx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
-        drawCtx.fill();
-    }
+    drawCtx.moveTo(-1, 0);
+    drawCtx.lineTo(1, 0);
+    drawCtx.lineTo(1.5, -12);
+    drawCtx.lineTo(-1.5, -12);
+    drawCtx.closePath();
+    drawCtx.fillStyle = '#94a3b8';
+    drawCtx.fill();
+    drawCtx.beginPath();
+    drawCtx.arc(0, -18, 7, 0, Math.PI * 2);
+    drawCtx.fillStyle = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped;
+    drawCtx.fill();
 }
 
 export const DRAW_REGISTRY = {
-    bomb(drawCtx, size, color, options = {}) {
-        const ink    = options.themeColors?.hazardInk    || '#334155';
-        const paper  = options.themeColors?.hazardSurface || '#ffffff';
-        const accent = options.themeColors?.hazardAccent || '#dc2626';
+    bomb(drawCtx, size) {
         const scale = size / 100;
         drawCtx.scale(scale, scale);
-        drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = ink; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = ink; drawCtx.lineWidth = 4; drawCtx.stroke();
-        drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = accent; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = paper; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath();
-        drawCtx.strokeStyle = ink; drawCtx.lineWidth = 3; drawCtx.fillStyle = paper; drawCtx.fill(); drawCtx.stroke();
+        drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill();
+        drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = '#94a3b8'; drawCtx.lineWidth = 4; drawCtx.stroke();
+        drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = '#ef4444'; drawCtx.fill();
+        drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill();
+        drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill();
     },
     goose(drawCtx, size, color, options = {}) {
         if (options.isCheatReveal) drawCtx.globalAlpha = 0.5;
-        const ink    = options.themeColors?.hazardInk     || '#000000';
-        const paper  = options.themeColors?.hazardSurface || '#ffffff';
-        const accent = options.themeColors?.hazardAccent  || '#f97316';
         const mapX = (v) => -size / 2 + (v / 100 * size);
         const mapY = (v) => -size / 2 + (v / 100 * size);
-        drawCtx.fillStyle = ink;
+        drawCtx.fillStyle = '#000000';
         drawCtx.beginPath();
         drawCtx.moveTo(mapX(30), mapY(0)); drawCtx.lineTo(mapX(70), mapY(0)); drawCtx.lineTo(mapX(100), mapY(30));
         drawCtx.lineTo(mapX(100), mapY(70)); drawCtx.lineTo(mapX(70), mapY(100)); drawCtx.lineTo(mapX(30), mapY(100));
         drawCtx.lineTo(mapX(0), mapY(70)); drawCtx.lineTo(mapX(0), mapY(30)); drawCtx.closePath(); drawCtx.fill();
-        drawCtx.fillStyle = paper;
+        drawCtx.fillStyle = '#FFFFFF';
         drawCtx.beginPath();
         drawCtx.moveTo(mapX(25), mapY(60)); drawCtx.quadraticCurveTo(mapX(25), mapY(45), mapX(45), mapY(45));
         drawCtx.lineTo(mapX(65), mapY(45)); drawCtx.quadraticCurveTo(mapX(75), mapY(45), mapX(75), mapY(55));
@@ -70,9 +56,9 @@ export const DRAW_REGISTRY = {
         drawCtx.quadraticCurveTo(mapX(60), mapY(18), mapX(68), mapY(18));
         drawCtx.quadraticCurveTo(mapX(75), mapY(18), mapX(75), mapY(25));
         drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.lineTo(mapX(68), mapY(35)); drawCtx.lineTo(mapX(68), mapY(45)); drawCtx.closePath(); drawCtx.fill();
-        drawCtx.fillStyle = ink;
+        drawCtx.fillStyle = '#000000';
         drawCtx.beginPath(); drawCtx.arc(mapX(70), mapY(23), size * 0.02, 0, Math.PI * 2); drawCtx.fill();
-        drawCtx.fillStyle = accent;
+        drawCtx.fillStyle = '#f97316';
         drawCtx.beginPath();
         drawCtx.moveTo(mapX(75), mapY(29)); drawCtx.lineTo(mapX(88), mapY(32)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.closePath(); drawCtx.fill();
         drawCtx.beginPath();
@@ -80,8 +66,8 @@ export const DRAW_REGISTRY = {
         drawCtx.moveTo(mapX(58), mapY(65)); drawCtx.lineTo(mapX(53), mapY(78)); drawCtx.lineTo(mapX(65), mapY(78)); drawCtx.closePath();
         drawCtx.fill();
     },
-    prohibited(drawCtx, size, color) {
-        drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = color || '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke();
+    prohibited(drawCtx, size) {
+        drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke();
         drawCtx.beginPath(); const lineLen = size * 0.25; drawCtx.moveTo(-lineLen, -lineLen); drawCtx.lineTo(lineLen, lineLen); drawCtx.stroke();
     },
     required(drawCtx, size, color, options = {}) {
@@ -109,25 +95,12 @@ export const DRAW_REGISTRY = {
         const w = size * 0.45, t = size * 0.08;
         drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t);
         drawCtx.fillRect(-size / 2 + size * 0.1,  w / 2 - t, size * 0.8, t);
-        // Drawn rotation arrow: open arc with an arrowhead at its start.
         drawCtx.globalAlpha = options.crossed ? 0.4 : 1.0;
-        const r = size * 0.16;
-        drawCtx.strokeStyle = color;
-        drawCtx.lineWidth   = size * 0.06;
-        drawCtx.lineCap     = 'round';
-        drawCtx.beginPath();
-        drawCtx.arc(0, 0, r, -Math.PI * 0.35, Math.PI * 1.05);
-        drawCtx.stroke();
-        const tipA = -Math.PI * 0.35;
-        const tipX = Math.cos(tipA) * r, tipY = Math.sin(tipA) * r;
-        const ah = size * 0.11;
         drawCtx.fillStyle = color;
-        drawCtx.beginPath();
-        drawCtx.moveTo(tipX + ah * 0.9, tipY - ah * 0.5);
-        drawCtx.lineTo(tipX - ah * 0.5, tipY - ah * 0.7);
-        drawCtx.lineTo(tipX + ah * 0.1, tipY + ah * 0.8);
-        drawCtx.closePath();
-        drawCtx.fill();
+        drawCtx.font = `900 ${size * 0.45}px sans-serif`;
+        drawCtx.textAlign = 'center';
+        drawCtx.textBaseline = 'middle';
+        drawCtx.fillText('↺', 0, 0);
     },
 };
 
@@ -146,14 +119,12 @@ export function makeAssetDrawer(ctx, screenPosFn, viewport) {
     };
 }
 
-export function drawScorchMark(ctx, cx, cy, s, ink = '#000000') {
+export function drawScorchMark(ctx, cx, cy, s) {
     ctx.save();
     ctx.translate(cx, cy);
-    const hex = /^#[0-9a-fA-F]{6}$/.test(ink) ? ink : '#000000';
-    const r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
     const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, s * 0.4);
-    grad.addColorStop(0, `rgba(${r},${g},${b},0.5)`);
-    grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    grad.addColorStop(0, 'rgba(0,0,0,0.5)');
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
     const radii = [0.35, 0.15, 0.4, 0.2, 0.3, 0.15, 0.35, 0.2, 0.4, 0.15, 0.3, 0.25, 0.35, 0.15, 0.4, 0.2];
