@@ -8,7 +8,7 @@ export function drawPath(ctx, pathArr, isJumpSet, strokeStyle, width, isCaution,
     if (!pathArr.length) return;
     ctx.save();
     ctx.lineWidth  = width;
-    ctx.lineCap    = isCaution ? 'butt' : 'round';
+    ctx.lineCap    = 'round';
     ctx.lineJoin   = 'round';
 
     const drawDot = (sx, sy, color) => {
@@ -41,6 +41,8 @@ export function drawPath(ctx, pathArr, isJumpSet, strokeStyle, width, isCaution,
     }
 
     if (isCaution) {
+        // Hint overlay — the "red pencil": one dashed correction stroke in
+        // the theme's hint ink (passed as strokeStyle), endpoints dotted.
         const trace = () => {
             const start  = UNPACK(pathArr[0]);
             const sStart = screenPosFn(start.x, start.y);
@@ -54,15 +56,13 @@ export function drawPath(ctx, pathArr, isJumpSet, strokeStyle, width, isCaution,
                 else                  { ctx.lineTo(s.sx, s.sy); }
             }
         };
-        ctx.strokeStyle = '#fbbf24';
-        trace();
-        ctx.stroke();
-        ctx.strokeStyle = '#000000';
-        ctx.setLineDash([width, width]);
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth   = width * 0.7;
+        ctx.setLineDash([width * 1.1, width * 0.9]);
         trace();
         ctx.stroke();
         ctx.setLineDash([]);
-        getCautionSegmentEndpoints().forEach(({ sx, sy }) => drawDot(sx, sy, '#fbbf24'));
+        getCautionSegmentEndpoints().forEach(({ sx, sy }) => drawDot(sx, sy, strokeStyle));
 
     } else if (strokeStyle === 'rainbow') {
         const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
