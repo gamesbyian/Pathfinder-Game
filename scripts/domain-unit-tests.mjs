@@ -1372,6 +1372,31 @@ test('normalizeTheme: search.megaStatusBorder resolves to a value when mega is n
         `search.megaStatusBorder should be a color value, got: ${t.search.megaStatusBorder}`);
 });
 
+test('normalizeTheme: action button labels keep stable colours across mode layouts without adjacent duplicates', () => {
+    const t = normalizeTheme({
+        btns: {
+            guide: '#2563eb',
+            hint: '#2563eb',
+            modeToggle: '#2563eb',
+            undo: '#64748b',
+            reset: '#64748b',
+            editClear: '#dc2626',
+        },
+    });
+    const key = color => String(color || '').toLowerCase();
+    const assertNoAdjacentDuplicate = (name, row) => {
+        for (let i = 1; i < row.length; i += 1) {
+            assert.notEqual(key(row[i - 1]), key(row[i]), `${name} buttons at ${i - 1}/${i} should not share ${row[i]}`);
+        }
+    };
+
+    assert.equal(t.btns.solve, t.btns.guide, 'Solve token should stay paired with the Guide action family');
+    assert.equal(t.btns.approve, t.btns.hint, 'Approve token should stay paired with the Hint action family');
+    assertNoAdjacentDuplicate('play', [t.btns.guide, t.btns.hint, t.btns.whoa, t.btns.undo, t.btns.reset]);
+    assertNoAdjacentDuplicate('edit', [t.btns.guide, t.btns.editNew, t.btns.editClear, t.btns.editBombs, t.btns.solve, t.btns.submit]);
+    assertNoAdjacentDuplicate('review', [t.btns.editNew, t.btns.hint, t.btns.solve, t.btns.submit, t.btns.reject, t.btns.approve]);
+});
+
 // --- REQUIRED_THEME_PATHS ---
 
 test('REQUIRED_THEME_PATHS is a non-empty Set', () => {
