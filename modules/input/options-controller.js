@@ -60,10 +60,9 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
         set('optionFalseGoalsToggle', opts.falseGoals !== false);
         set('optionDeadGatesToggle',  opts.deadGates  !== false);
         const label = document.getElementById('currentThemeOptionLabel');
-        const themeKey = themes.getCurrentTheme
+        if (label) label.textContent = themes.getCurrentTheme
             ? themes.getCurrentTheme()
             : (state.ENGINE.runtime.currentTheme || 'classic');
-        if (label) label.textContent = themes.themeDisplayName ? themes.themeDisplayName(themeKey) : themeKey;
     };
 
     const showOptionsPage = () => document.getElementById('optionsPanelTrack')?.classList.remove('show-theme-page');
