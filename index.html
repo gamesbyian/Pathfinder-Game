@@ -206,6 +206,17 @@
     </div>
 </div>
 
+<div id="reviewApproveConfirmModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
+    <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl text-center">
+        <p class="text-base font-black uppercase tracking-widest text-yellow-400 mb-2">No Solution Found</p>
+        <p id="reviewApproveConfirmDetail" class="text-sm text-slate-300 mb-5">The solver could not find a solution for this level. Publish anyway?</p>
+        <div class="flex gap-3">
+            <button id="reviewApproveConfirmNo" class="flex-1 h-10 bg-slate-600 hover:bg-slate-500 text-white rounded-xl font-black text-sm uppercase tracking-wide transition">No</button>
+            <button id="reviewApproveConfirmYes" class="flex-1 h-10 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-black text-sm uppercase tracking-wide transition">Yes</button>
+        </div>
+    </div>
+</div>
+
 <div id="submitModal" class="hidden fixed inset-0 z-[200] bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-8">
     <div class="w-full max-w-xs bg-slate-800 p-6 rounded-2xl border border-slate-600 shadow-2xl">
         <p class="text-base font-black uppercase tracking-widest text-white mb-5 text-center">Submitting Level</p>
@@ -306,6 +317,9 @@
 
         <div id="canvasContainer" class="relative overflow-hidden">
             <canvas id="gameCanvas" width="800" height="800" role="application" aria-label="Pathfinder puzzle grid. Tap or drag cells to draw a path from a gate to the goal." tabindex="0"></canvas>
+            <div id="reviewEmptyMsg" class="hidden absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                <p class="text-sm font-black uppercase tracking-widest text-slate-400">No levels pending review.</p>
+            </div>
             <div id="gooseJumpScare" class="absolute inset-0 z-40 hidden flex-col items-center justify-center bg-[var(--theme-jumpscare-goose-bg)] backdrop-blur-sm overflow-hidden pointer-events-none">
                 <div class="relative w-full h-full flex flex-col items-center justify-center">
                     <div class="absolute top-[15%] z-50 transform rotate-[-25deg] -translate-x-4"><p class="hand-drawn text-[var(--theme-jumpscare-goose-text)] text-4xl mb-2">YOU RAN INTO</p></div>
