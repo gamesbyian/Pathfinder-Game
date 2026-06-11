@@ -63,6 +63,10 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         });
     }
 
+    // --- Persisted hint ---
+    const persistedHintActive = eng.hinter.persistedPath.length > 0;
+    const persistedHintPath   = persistedHintActive ? [...eng.hinter.persistedPath] : [];
+
     return {
         // display geometry
         viewport: { ...eng.viewport },
@@ -99,6 +103,9 @@ export function createRenderModel({ eng, core, themes }, reqLenPreview = null) {
         hintCrossedFlippingFilters,
         hintDisplayFlipCount,
         hintAlpha: eng.hinter.alpha,
+        // persisted hint
+        persistedHintActive,
+        persistedHintPath,
         // mustPass split
         mustPassOnCanvas,
         mustPassInOverlay,

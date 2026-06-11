@@ -46,6 +46,7 @@ export function createUI({ core, getState, getRenderer }) {
         toggle('editorMetrics',            !isEdOrReview);
         toggle('gameButtonGrid',           isEdOrReview);
         toggle('editorButtonGrid',         !isEdOrReview);
+        if (isEdOrReview) toggle('hintPinRow', true);
 
         const shellToggle = el('modeToggleShellBtn');
         if (shellToggle) shellToggle.textContent = isReview ? 'Exit Review' : (isEd ? 'Play Game' : 'Editor');
@@ -180,6 +181,17 @@ export function createUI({ core, getState, getRenderer }) {
         if (el) el.classList.toggle('hidden', !visible);
     };
 
+    const applyHintPinState = (isAnimating, isPinned) => {
+        const pinRow   = document.getElementById('hintPinRow');
+        const pinBtn   = document.getElementById('pinHintBtn');
+        const clearBtn = document.getElementById('clearHintBtn');
+        if (!pinRow || !pinBtn || !clearBtn) return;
+        const showRow = isAnimating || isPinned;
+        pinRow.classList.toggle('hidden', !showRow);
+        pinBtn.classList.toggle('hidden', !isAnimating);
+        clearBtn.classList.toggle('hidden', !isPinned);
+    };
+
     return {
         initDom,
         getEl,
@@ -249,5 +261,6 @@ export function createUI({ core, getState, getRenderer }) {
         hideSubmitModal,
         updatePencilButton,
         setOptionsBlockedVisible,
+        applyHintPinState,
     };
 }
