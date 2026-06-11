@@ -1468,6 +1468,12 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
     const ws = createState(startKey, level, prep);
     let frontier = [{ path: [startKey], score: 0 }];
     let lastYield = startTime;
+    // Work-based budget: beam search terminates in at most reqLen + portal-pair phases
+    // regardless of machine speed, so use phase count rather than wall-clock time.
+    // Each phase extends every frontier path by one step; a reqLen-step solution is
+    // reachable only during phase reqLen (plus one per portal pair for portal jumps).
+    const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
+    let phasesCompleted = 0;
 
     const yieldIfNeeded = async () => {
         if (!yieldFn) return false;
@@ -1479,11 +1485,11 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
     };
 
     while (frontier.length > 0) {
-        if (Date.now() - startTime > budgetMs) return null;
+        if (phasesCompleted >= maxPhases) return null;
+        phasesCompleted++;
         if (yieldFn) {
             await yieldFn(); // yield between beam passes; throws on cancellation
             lastYield = Date.now();
-            if (lastYield - startTime > budgetMs) return null;
         }
 
         const cands = [];
@@ -1491,9 +1497,7 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
 
         for (const { path, score: acc } of frontier) {
             if (((++frontierIndex) & 255) === 0) {
-                if (await yieldIfNeeded()) {
-                    if (Date.now() - startTime > budgetMs) return null;
-                }
+                await yieldIfNeeded();
             }
             // Reset ws to startKey state, then replay this frontier path.
             _beamResetState(ws, startKey, level, prep);
@@ -1558,11 +1562,9 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
 
         if (cands.length === 0) break;
         await yieldIfNeeded();
-        if (Date.now() - startTime > budgetMs) return null;
         if (cands.length > beamWidth) {
             cands.sort((a, b) => b.score - a.score);
             await yieldIfNeeded();
-            if (Date.now() - startTime > budgetMs) return null;
             frontier = cands.slice(0, beamWidth);
         } else {
             frontier = cands;
