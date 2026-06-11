@@ -58,6 +58,15 @@ Each level may contain:
 
 Coordinates in `levels.js` are 1-based: `{ x: 1, y: 1 }` is the top-left grid cell.
 
+Compatibility expectations:
+
+- Object arrays may be omitted in older or hand-written data; missing optional arrays should be treated as empty arrays.
+- `designerName` and `description` may be omitted and should default to empty strings.
+- `difficulty` may be omitted, blank, or `null`; otherwise it is an integer difficulty rating.
+- `reqLen` and `reqInt` are required gameplay metrics and should be interpreted as non-negative integers.
+- Unknown non-structural fields should not break loading. A compatible app may ignore them unless it intentionally preserves them during round-trip editing.
+- The loader should normalize old-but-compatible level objects into the same effective shape used by new exports before play, editing, solving, or review.
+
 The app may convert these to any internal representation, but all imported and exported level data should remain compatible with the above shape.
 
 ### 2.2 `firebase-config.js`
@@ -100,6 +109,26 @@ The path has:
 - **Visited count per cell:** how many times the path has occupied each cell.
 - **Axis usage per cell:** whether horizontal and/or vertical path segments have passed through that cell.
 - **Intersection count:** increments when the path enters a previously visited non-gate, non-goal cell in a valid way.
+
+### 3.4 Path and Hint Encoding
+
+User-facing level coordinates are 1-based, but saved hint paths may use Pathfinder's compact packed-key format. A compatible implementation should understand and be able to produce hint paths in the following forms where practical:
+
+- Packed integer keys, where `key = zeroBasedX + (zeroBasedY << 16)`.
+- Coordinate arrays such as `[x, y]`, interpreted as 1-based level coordinates when imported from user-facing data.
+- Coordinate objects such as `{ x, y }`, likewise interpreted consistently with the importer/exporter context.
+
+Hint paths are ordered path-node sequences. They should be decoded, normalized, and validated against the current level before display, copying, submission, approval, or audit use. Invalid, duplicate, malformed, out-of-bounds, or stale hint paths should be ignored or reported as invalid; they must not be accepted as proof that a level is solvable.
+
+### 3.5 Mode-Independent State Principles
+
+Play, Edit, and Review modes should share the same underlying level and path rules wherever possible. The following state principles keep behavior predictable:
+
+- Loading a level, changing levels, resetting, or switching into a different working level clears the current path, transient hazard state, portal ripple effects, and transient hint animation state.
+- Undo/backtracking should restore derived path metrics rather than trying to patch them manually. Counted length, intersections, visited counts, axis usage, portal-jump markers, and flipping-filter state should all be recomputed or restored together.
+- A level's structural data should remain immutable during Play Mode; options may create a temporary playable copy, but they must not mutate the built-in or published source data.
+- Edit and Review modes may mutate a working copy. Leaving that working copy with unsaved changes should be guarded by a confirmation.
+- Solver, hint, editor, review, submission, audit, and win-detection flows should all depend on the same rule semantics, even if they use different UI flows.
 
 ---
 
@@ -239,9 +268,9 @@ In Play Mode:
 2. The selected gate becomes the active gate.
 3. The path starts with that gate as its first node.
 
-The app should not allow starting from non-gate cells in Play Mode.
+The logical path start in Play Mode is always a gate. A convenience input may let the player tap or drag from an aligned non-gate cell if the app can unambiguously begin at a gate and then extend through legal intervening cells, but the resulting path's first node must still be the gate. If the app cannot form such a legal gate-originating path, no path should start.
 
-In Edit/Review modes, the pencil tool can be used to sketch a candidate path on the current working level. This uses the same movement rules as puzzle play where practical, but it is primarily for testing and setting/copying metrics.
+In Edit/Review modes, the pencil tool can be used to sketch a candidate path on the current working level. This uses the same movement rules as puzzle play where practical, but it is primarily for testing and setting/copying metrics. Pencil mode may allow creator conveniences such as starting from arbitrary cells or reversing a sketched path direction, but any path used as a submitted hint or solution must still validate under the normal solution rules.
 
 ### 5.2 Continuing a Path
 
@@ -260,8 +289,12 @@ A candidate next cell is rejected if it violates any move rule, including:
 - violating a filter's active axis
 - entering a goose while the mode disallows it as a normal move
 - creating a blocked T-intersection with no legal continuation
+- attempting to move while a solver/search overlay or non-dismissible modal owns input
+- attempting to extend while a hazard state is active, except for undo/backtracking/reset recovery
 
 Rejected moves should simply not extend the path, ideally with minimal feedback rather than punishing the player.
+
+When a drag or tap target is more than one cell away, the app may interpolate a straight-line sequence of orthogonal moves from the current head to the target. Each interpolated step must pass the same legality checks as an explicit step. If any step fails or triggers a hazard/trap, interpolation stops at that point.
 
 ### 5.3 Backtracking and Undo
 
@@ -587,7 +620,7 @@ Any AI coder extending or replacing the solver should build and maintain equival
 
 Puzzle validity is structural validity. It means the level is well-formed enough to submit/review/play. It is separate from solution validity, though submission should also attempt to find at least one solution.
 
-A structurally valid level must satisfy:
+A structurally valid level must satisfy the requirements below. Validation should report actionable reasons, not merely a generic failure. Validation may be stricter for submission/review than for loading historical built-in levels, but no invalid structure should be silently treated as a solved or published-ready puzzle.
 
 ### 10.1 Required Core Fields
 
@@ -648,6 +681,18 @@ For each must-cross cell:
 When Firebase is available, submission should reject duplicate levels already present in pending submissions or approved/published levels.
 
 Duplicate detection should be based on a canonical structural fingerprint that ignores non-structural metadata where appropriate. Hints may be encoded for storage but should not make two otherwise identical levels count as distinct.
+
+The fingerprint should include the structural geometry and win requirements: grid size, required length/crossings, gates, true goal, false goals, blocks, must-pass cells, must-cross cells, filters and their axes, flipping filters and their axes, portal terminal pairs, and geese. It should ignore designer name, description, difficulty, hint contents, timestamps, submitter identity, published sort order, and other review metadata. Object ordering in arrays should not affect the fingerprint.
+
+### 10.7 Submitted-Level Solvability Expectations
+
+A level can be structurally valid but not proven solvable within the current solver budget. Submission and review should distinguish these states clearly:
+
+- Structural validation failure blocks submission/approval until fixed or intentionally overridden by an admin workflow.
+- A confirmed solution/hint is strong evidence that the level is publishable and should be stored if available.
+- Solver timeout or budget exhaustion is not proof of impossibility. It should be reported as "no solution found within budget" rather than "unsolvable."
+- Normal user submissions may be queued for manual review even if no solution is found, provided the app communicates that status.
+- Admin review should revalidate hints and may request confirmation before approving a level without a valid stored hint.
 
 ---
 
@@ -785,23 +830,29 @@ Each stage should indicate pending/running/success/failure and include helpful d
 
 To submit:
 
-- The level must be structurally valid.
 - Firebase must be available.
-- The user must be signed in or sign-in must occur as part of submission.
-- Duplicate checks should pass unless explicitly bypassed by an admin-only workflow.
-- The solver should attempt to find at least one solution.
+- The user must be signed in or sign-in must occur as part of submission; anonymous authentication is sufficient unless the deployment requires a stronger provider.
+- The level must be structurally valid.
+- Required length must be set to a positive integer.
+- Required crossings must be set to a non-negative integer.
+- Duplicate checks should pass unless explicitly bypassed by an admin-only workflow. If part of the duplicate check cannot run, the app should show that limitation as a warning or error rather than hiding it.
+- The app should attempt to provide at least one solution/hint. It should validate any existing editor hints, current solver-found hints, and the currently drawn candidate path before running a solver.
 - If the user has drawn a valid solution or the solver finds one, include it as a hint.
+- If no solution is found within budget, submission may still be allowed for manual review if the app clearly communicates that no solution was found.
+- Only validated, unique hint paths should be saved with the submission.
 
 ### 13.3 Stored Submission Data
 
 Store pending submissions under an app-specific Firebase root with:
 
 - `levelData`: serialized level data compatible with `levels.js` shape.
-- `hints`: encoded safely for Firestore if needed.
+- encoded hints, either inside `levelData.hints` or in a companion field, safely stored for Firestore if needed.
 - `levelFingerprint`: canonical structural fingerprint.
 - `fingerprintVersion`.
 - `submittedAt`: server timestamp.
 - `submittedBy`: Firebase user ID.
+
+Remote storage should encode hint arrays in a format that survives Firestore serialization and can be decoded back into the same path-node sequences. Loading submissions or published levels should decode those hints before validation or display.
 
 ---
 
@@ -821,9 +872,15 @@ The Options menu is a modal with an options page and a theme-selection page.
 - **False Goals:** show or hide false-goal trap squares in Play Mode.
 - **Dead Gates:** show or hide parity-invalid/dead gates in Play Mode.
 
-These options are not mere visual cosmetics: hiding a challenge type may make certain levels unplayable or incompatible with the player's chosen challenge set. If the current level conflicts with active options, show an Options Conflict modal and offer to move to the next compatible level.
+These options are not mere visual cosmetics: hiding a challenge type changes the temporary playable copy of a level:
 
-Edit and Review modes should generally show all objects because creators/reviewers need full structural visibility.
+- Hiding geese removes goose hazards from the playable copy, so goose cells should no longer surprise or block the player in that attempt.
+- Hiding false goals removes false-goal trap objects from the playable copy, so they should not detonate.
+- Hiding dead gates removes parity-invalid gates from the playable copy when simple parity analysis is reliable. If every gate would be removed, the level is incompatible with the option and the app should show an Options Conflict modal rather than presenting an unsolvable no-gate level.
+
+If the current level conflicts with active options, show an Options Conflict modal and offer to move to the next compatible level.
+
+Edit and Review modes should generally show all objects because creators/reviewers need full structural visibility. Options should not permanently mutate the built-in, submitted, or published source level data.
 
 ### 14.3 Theme Selection
 
@@ -1015,6 +1072,16 @@ Firebase-backed persistence supports:
 
 If remote published levels are available, the app may append or merge them into the playable level list after built-in levels. If remote loading fails, built-in `levels.js` should remain playable.
 
+### 17.3 Persistence Failure Behavior
+
+Persistence failures should degrade gracefully:
+
+- If Firebase initialization, authentication, reads, or writes fail, local play and local editing should continue.
+- Submission/review/published-level management should show clear failure or disabled states rather than pretending the operation succeeded.
+- Local storage parse errors should not crash the app; invalid saved preferences/progress/session state should be ignored or reset to safe defaults.
+- Cloud session/progress sync should merge conservatively, avoid overwriting newer local state with stale remote state, and tolerate missing or partial remote documents.
+- Network timeouts should be reported distinctly from validation failures and duplicate-level findings.
+
 ---
 
 ## 18. Audio and Feedback
@@ -1083,6 +1150,8 @@ Exported level data should include:
 - `hints`
 
 Coordinates should be 1-based in exported data. Hints may use the app's compact path-key representation, but any rebuilt app should consistently validate and decode the hint paths it produces.
+
+Export should produce a complete self-contained level object, not a diff from the current built-in level. Empty object arrays may be included explicitly for clarity. The exported object should be suitable for pasting into `levels.js`, submitting to Firebase, approving into published levels, and re-importing without changing the puzzle's structural fingerprint.
 
 ---
 
