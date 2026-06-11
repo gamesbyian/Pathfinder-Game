@@ -93,8 +93,9 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
     const last = path[path.length - 1];
     if (last !== level.goalKey)
         return { ok: false, reason: 'Path does not end on the goal.' };
-    if (level.reqLen && path.length - 1 !== level.reqLen)
-        return { ok: false, reason: `Path length ${path.length - 1} does not match required ${level.reqLen}.` };
+    const nonPortalSteps = path.length - 1 - jumpSet.size;
+    if (level.reqLen && nonPortalSteps !== level.reqLen)
+        return { ok: false, reason: `Path length ${nonPortalSteps} does not match required ${level.reqLen}.` };
     if (level.reqInt !== undefined && level.reqInt !== null && intersections !== level.reqInt)
         return { ok: false, reason: `Intersections ${intersections} do not match required ${level.reqInt}.` };
 
