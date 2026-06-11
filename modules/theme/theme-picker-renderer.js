@@ -26,22 +26,30 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
             document.getElementById('optionsPanelTrack')?.classList.remove('show-theme-page');
         };
 
-        const circle = document.createElement('div');
-        circle.className = 'w-12 h-12 rounded-full border-4 shadow-md';
-        if (key === 'chaos') {
-            circle.style.background = 'conic-gradient(red, orange, yellow, green, blue, violet, red)';
-            circle.style.borderColor = '#ffffff';
-        } else {
-            circle.style.backgroundColor = t.headerRight || '#000';
-            circle.style.borderColor = t.canvasBg || '#fff';
-        }
+        const swatch = document.createElement('div');
+        swatch.className = 'theme-map-swatch';
+        swatch.style.background = key === 'chaos'
+            ? 'conic-gradient(from 180deg, #fee2e2, #fef3c7, #dcfce7, #dbeafe, #f5d0fe, #fee2e2)'
+            : (t.canvasBg || '#fff');
+        swatch.style.borderColor = t.palette?.itemBorder || t.grid || '#cbd5e1';
+        swatch.style.setProperty('--swatch-path', key === 'chaos' ? '#d946ef' : (t.path || t.headerRight || '#2563eb'));
+
+        const gate = document.createElement('span');
+        gate.className = 'theme-map-pin theme-map-gate';
+        gate.style.backgroundColor = key === 'chaos' ? '#3b82f6' : (t.colors?.gate || t.headerRight || '#2563eb');
+        swatch.appendChild(gate);
+
+        const goal = document.createElement('span');
+        goal.className = 'theme-map-pin theme-map-goal';
+        goal.style.backgroundColor = key === 'chaos' ? '#ef4444' : (t.colors?.goal || t.headerLeft || '#ef4444');
+        swatch.appendChild(goal);
 
         const label = document.createElement('span');
         label.className = 'text-[0.65rem] font-black uppercase tracking-widest';
         label.style.color = uniformThemeNameColor;
         label.innerText = key;
 
-        btn.appendChild(circle);
+        btn.appendChild(swatch);
         btn.appendChild(label);
         grid.appendChild(btn);
     });
