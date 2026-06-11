@@ -1,12 +1,6 @@
 // Renders the theme selection grid inside the options panel.
 // Owns only DOM construction — no state, no CSS variable writes.
 
-function previewAlpha(color, alphaHex = '55') {
-    if (typeof color !== 'string') return '#94a3b855';
-    const trimmed = color.trim();
-    return /^#[0-9a-fA-F]{6}$/.test(trimmed) ? `${trimmed}${alphaHex}` : trimmed;
-}
-
 export function populateThemePicker({ clearElement }, themes, currentThemeKey, applyThemeFn) {
     const grid = document.getElementById('themeGrid');
     clearElement('themeGrid');
@@ -32,35 +26,14 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
             document.getElementById('optionsPanelTrack')?.classList.remove('show-theme-page');
         };
 
-        const preview = document.createElement('div');
-        preview.className = 'theme-preview-board';
-        preview.style.backgroundColor = key === 'chaos' ? '#ffffff' : (t.canvasBg || '#fff');
-        preview.style.borderColor = t.palette?.itemBorder || t.grid || '#cbd5e1';
-
-        const gridLines = document.createElement('div');
-        gridLines.className = 'theme-preview-grid-lines';
-        gridLines.style.backgroundImage = key === 'chaos'
-            ? 'linear-gradient(rgba(15,23,42,.18) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,.18) 1px, transparent 1px)'
-            : `linear-gradient(${previewAlpha(t.grid || '#94a3b8')} 1px, transparent 1px), linear-gradient(90deg, ${previewAlpha(t.grid || '#94a3b8')} 1px, transparent 1px)`;
-        preview.appendChild(gridLines);
-
-        const path = document.createElement('div');
-        path.className = 'theme-preview-path';
-        path.style.borderColor = key === 'chaos' ? '#d946ef' : (t.path || t.headerRight || '#2563eb');
-        preview.appendChild(path);
-
-        const gate = document.createElement('div');
-        gate.className = 'theme-preview-dot theme-preview-gate';
-        gate.style.backgroundColor = key === 'chaos' ? '#3b82f6' : (t.colors?.gate || t.headerRight || '#2563eb');
-        preview.appendChild(gate);
-
-        const goal = document.createElement('div');
-        goal.className = 'theme-preview-dot theme-preview-goal';
-        goal.style.backgroundColor = key === 'chaos' ? '#ef4444' : (t.colors?.goal || t.headerLeft || '#ef4444');
-        preview.appendChild(goal);
-
+        const circle = document.createElement('div');
+        circle.className = 'w-12 h-12 rounded-full border-4 shadow-md';
         if (key === 'chaos') {
-            preview.style.background = 'conic-gradient(from 180deg, #f8fafc, #fee2e2, #fef3c7, #dcfce7, #dbeafe, #f5d0fe, #f8fafc)';
+            circle.style.background = 'conic-gradient(red, orange, yellow, green, blue, violet, red)';
+            circle.style.borderColor = '#ffffff';
+        } else {
+            circle.style.backgroundColor = t.headerRight || '#000';
+            circle.style.borderColor = t.canvasBg || '#fff';
         }
 
         const label = document.createElement('span');
@@ -68,7 +41,7 @@ export function populateThemePicker({ clearElement }, themes, currentThemeKey, a
         label.style.color = uniformThemeNameColor;
         label.innerText = key;
 
-        btn.appendChild(preview);
+        btn.appendChild(circle);
         btn.appendChild(label);
         grid.appendChild(btn);
     });
