@@ -48,9 +48,9 @@
         .row-tight { display: flex; align-items: center; gap: var(--ui-gap-tight); }
 
         #headerLeft { flex: 0 0 clamp(3.9rem, 9.5vw, 4.1rem); width: clamp(3.9rem, 9.5vw, 4.1rem); }
-        #headerMiddle { min-width: 0; flex: 1 1 32%; flex-basis: clamp(8.25rem, 32%, 11rem); max-width: 13rem; overflow: hidden; }
+        #headerMiddle { min-width: 0; flex: 1 1 32%; flex-basis: clamp(9.4rem, 32%, 12rem); max-width: 13.5rem; overflow: visible; }
         #headerRight { min-width: 0; flex: 1 1 44%; flex-basis: clamp(9.5rem, 44%, 16rem); display: flex; align-items: center; justify-content: center; padding-inline: var(--ui-pad); }
-        #headerMiddleContent { --header-middle-col-pad: calc(var(--ui-gap-tight) * 0.9); width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); justify-content: stretch; align-items: center; }
+        #headerMiddleContent { --header-middle-col-pad: calc(var(--ui-gap-tight) * 0.55); width: 100%; display: grid; grid-template-columns: minmax(1.8rem, 1fr) auto minmax(1.8rem, 1fr); justify-content: stretch; align-items: center; }
         .header-middle-col { min-width: 0; padding: 0 var(--header-middle-col-pad); display: flex; align-items: center; }
         #headerMiddleColLeft { justify-content: flex-end; }
         #headerMiddleColCenter { justify-content: center; }
@@ -64,7 +64,11 @@
             #editorMetrics { gap: clamp(0.55rem, 1.8vw, 0.85rem); max-width: clamp(12.6rem, 90%, 16rem); }
         }
         #levelInfoWrap { min-width: 0; display: flex; flex-direction: column; align-items: center; }
-        #levelNavigator { display: flex; flex-direction: column; gap: calc(var(--ui-gap-tight) * 0.55); align-items: center; }
+        .level-nav-btn { width: 1.625rem; height: 1.625rem; border-radius: 0.45rem; display: flex; align-items: center; justify-content: center; color: var(--theme-header-nav-text); background: var(--theme-header-nav-bg); transition: background-color 0.2s, transform 0.1s; box-shadow: 0 1px 2px rgba(0,0,0,0.15); }
+        .level-nav-btn:hover { background: var(--theme-header-nav-bg-hover); }
+        .level-nav-btn:active { transform: scale(0.95); }
+        .level-nav-btn svg { width: 78%; height: 78%; }
+        #completionBurst { position: absolute; top: 50%; right: 0; width: 2rem; height: 2rem; transform: translate(50%, -50%); z-index: 5; pointer-events: none; }
 
         .screen-modal { position: absolute; inset: 0; z-index: 70; background: var(--theme-modal-bg); backdrop-filter: blur(12px); padding: var(--ui-pad); }
         .screen-modal-top { z-index: 75; }
@@ -158,6 +162,8 @@
 <svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
     <defs>
         <g id="def-gate"><g transform="rotate(-45 50 50)" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M25 30 L50 55 L25 80" /><path d="M55 30 L80 55 L55 80" /></g></g>
+        <g id="def-nav-next" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M20 28 L39 47 Q42 50 39 53 L20 72"/><path d="M58 28 L77 47 Q80 50 77 53 L58 72"/></g>
+        <g id="def-nav-prev" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"><path d="M80 28 L61 47 Q58 50 61 53 L80 72"/><path d="M42 28 L23 47 Q20 50 23 53 L42 72"/></g>
         <g id="def-goal"><circle cx="50" cy="50" r="32" fill="none" stroke="currentColor" stroke-width="10" /><circle cx="50" cy="50" r="14" fill="currentColor" /></g>
         <g id="def-falsegoal"><circle cx="50" cy="60" r="25" fill="#334155"/><path d="M 50 35 Q 60 20 75 15" fill="none" stroke="#94a3b8" stroke-width="4"/><circle cx="75" cy="15" r="5" fill="#ef4444"/><circle cx="75" cy="15" r="2.5" fill="#fde047"/><path d="M 45 35 L 55 35 L 55 45 L 45 45 Z" fill="#64748b"/></g>
         <g id="def-block"><rect x="5" y="5" width="90" height="90" rx="20" fill="currentColor" /><g fill="var(--theme-block-dot)"><circle cx="25" cy="25" r="5" /><circle cx="50" cy="25" r="5" /><circle cx="75" cy="25" r="5" /><circle cx="25" cy="50" r="5" /><circle cx="50" cy="50" r="5" /><circle cx="75" cy="50" r="5" /><circle cx="25" cy="75" r="5" /><circle cx="50" cy="75" r="5" /><circle cx="75" cy="75" r="5" /></g></g>
@@ -269,8 +275,9 @@
             </div>
             <div id="headerMiddle" class="flex-shrink-0 flex items-center transition-colors duration-300 relative border-r border-[var(--theme-header-divider)]">
                 <div id="headerMiddleContent">
+                    <svg id="completionBurst" viewBox="0 0 100 100" class="hidden shrink-0"><use href="#def-completion"/></svg>
                     <div id="headerMiddleColLeft" class="header-middle-col">
-                        <svg id="completionBurst" viewBox="0 0 100 100" class="w-8 h-8 hidden shrink-0"><use href="#def-completion"/></svg>
+                        <button id="prevLevelBtn" class="level-nav-btn" aria-label="Previous level"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#def-nav-prev"/></svg></button>
                     </div>
                     <div id="headerMiddleColCenter" class="header-middle-col">
                         <div id="levelInfoWrap" class="min-w-0">
@@ -279,10 +286,7 @@
                         </div>
                     </div>
                     <div id="headerMiddleColRight" class="header-middle-col">
-                        <div id="levelNavigator">
-                            <button id="prevLevelBtn" class="w-6 h-6 rounded flex items-center justify-center transition shadow-sm text-[0.6rem] bg-[var(--theme-header-nav-bg)] text-[var(--theme-header-nav-text)] hover:bg-[var(--theme-header-nav-bg-hover)]">◄</button>
-                            <button id="nextLevelBtn" class="w-6 h-6 rounded flex items-center justify-center transition shadow-sm text-[0.6rem] bg-[var(--theme-header-nav-bg)] text-[var(--theme-header-nav-text)] hover:bg-[var(--theme-header-nav-bg-hover)]">►</button>
-                        </div>
+                        <button id="nextLevelBtn" class="level-nav-btn" aria-label="Next level"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#def-nav-next"/></svg></button>
                     </div>
                 </div>
             </div>
