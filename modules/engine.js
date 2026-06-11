@@ -310,6 +310,8 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.setInputValue('editReqInt', 0);
         ui.renderMetricsPanel({ currentLen: 0, reqLen: 0, currentInt: 0, reqInt: 0 });
         ui.updateLevelDisplay(0, false, '0/0');
+        ui.setButtonLabel('reviewHintBtn', 'Hints');
+        ui.setClassState('reviewEmptyMsg', 'hidden', false);
         ui.updateAppScale();
         ui.updateViewport();
         state.ENGINE.isDirty = true;
@@ -341,6 +343,9 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.setInputValue('editReqInt', normalized.reqInt || 0);
         editor.syncMetadataFieldsFromLevel(normalized);
         ui.updateLevelDisplay(safeIdx, false, `${safeIdx + 1}/${subs.length}`);
+        const hintCount = normalized.hints?.length || 0;
+        ui.setButtonLabel('reviewHintBtn', hintCount > 0 ? `Hints (${hintCount})` : 'Hints');
+        ui.setClassState('reviewEmptyMsg', 'hidden', true);
         ui.updateAppScale();
         ui.updateViewport();
         state.ENGINE.isDirty = true;

@@ -21,7 +21,7 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
         createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils }, { tryNavigate: navController.tryNavigate });
         createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }, { tryNavigate: navController.tryNavigate });
         createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
-        createReviewController({ core, state, ui, engine, levelUtils, editor, persistence });
+        createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 });
         createSolverController({ core, state, ui, engine, levelUtils, solverV2 });
     };
 

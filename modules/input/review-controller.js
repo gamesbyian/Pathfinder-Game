@@ -1,7 +1,7 @@
 // Review controller: admin sign-in, approve/reject, published-levels management,
 // and the review-load modal dismiss.
 
-export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence }) {
+export function createReviewController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }) {
 
     // --- Admin sign-in ---
 
@@ -60,15 +60,137 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
     document.getElementById('reviewLoadDismissBtn').onclick = () =>
         document.getElementById('reviewLoadModal').classList.add('hidden');
 
+    // --- Helpers ---
+
+    const updateReviewHintBtn = () => {
+        const wl = state.ENGINE.editor.workingLevel;
+        const count = wl?.hints?.length || 0;
+        ui.setButtonLabel('reviewHintBtn', count > 0 ? `Hints (${count})` : 'Hints');
+    };
+
+    // Validates existing hints against the current working level state.
+    // Returns the array of still-valid hint paths.
+    const revalidateHints = (wl, reqLen, reqInt) => {
+        if (!Array.isArray(wl.hints) || !wl.hints.length) return [];
+        const seen = new Set();
+        const valid = [];
+        for (const candidatePath of wl.hints) {
+            const lv = levelUtils.deepCloneLevel(wl);
+            lv.reqLen = reqLen; lv.reqInt = reqInt;
+            const res = solverV2.validateCandidatePath(lv, candidatePath);
+            if (!res?.ok) continue;
+            const key = JSON.stringify(res.path);
+            if (seen.has(key)) continue;
+            seen.add(key);
+            valid.push(res.path);
+        }
+        return valid;
+    };
+
+    // Runs the solver on the working level and returns up to 1 solution path, or null.
+    const runSolverForHint = async (wl, reqLen, reqInt) => {
+        let _cancelled = false;
+        const cancelSolve = () => { _cancelled = true; ui.setModalContent('searchLabel', 'Stopping…', 'text'); };
+        const budgetMs = 30000;
+        let _t0 = 0, _lastTenths = -1;
+        const yieldFn = async () => {
+            const tenths = Math.floor((Date.now() - _t0) * 10 / 1000);
+            if (tenths !== _lastTenths) {
+                _lastTenths = tenths;
+                const elapsed = tenths / 10;
+                ui.setSolverTimerText(`${elapsed.toFixed(1)}s`);
+                ui.setSolverProgress(Math.min(95, elapsed / (budgetMs / 1000) * 100));
+            }
+            await new Promise(r => setTimeout(r, 0));
+            if (_cancelled) throw new Error('SolverV2:cancelled');
+        };
+        engine.startSolverRun({ cancel: cancelSolve, abort: cancelSolve });
+        const abortPoll = setInterval(() => { if (state.ENGINE.solver.abortRequested) cancelSolve(); }, 100);
+        try {
+            engine.setOverlayState(core.SOLVER_RUNNING);
+            ui.setSolverControlsEnabled(false);
+            ui.setModalContent('searchLabel', 'Solving level for approval…', 'text');
+            ui.setSolverDetailText('Searching…');
+            ui.setSolverTimerText('0.0s');
+            ui.setSolverProgress(0);
+            await new Promise(r => setTimeout(r, 0));
+            const solveLevel = levelUtils.deepCloneLevel(wl);
+            solveLevel.reqLen = reqLen; solveLevel.reqInt = reqInt;
+            _t0 = Date.now();
+            _lastTenths = -1;
+            const result = await solverV2.solve(solveLevel, { timeBudgetMs: budgetMs, yieldFn });
+            engine.setOverlayState(core.OVERLAY_NONE);
+            if (result?.ok && Array.isArray(result.solution) && result.solution.length > 0) {
+                return result.solution;
+            }
+            return null;
+        } catch (err) {
+            engine.setOverlayState(core.OVERLAY_NONE);
+            return null;
+        } finally {
+            clearInterval(abortPoll);
+            engine.endSolverRun();
+            ui.setSolverControlsEnabled(true);
+        }
+    };
+
+    // Shows the confirm-publish modal and returns a Promise<boolean>.
+    const confirmPublishWithoutHint = () => new Promise(resolve => {
+        const modal  = document.getElementById('reviewApproveConfirmModal');
+        const yesBtn = document.getElementById('reviewApproveConfirmYes');
+        const noBtn  = document.getElementById('reviewApproveConfirmNo');
+        modal.classList.remove('hidden');
+        const cleanup = (result) => {
+            modal.classList.add('hidden');
+            yesBtn.onclick = null;
+            noBtn.onclick  = null;
+            resolve(result);
+        };
+        yesBtn.onclick = () => cleanup(true);
+        noBtn.onclick  = () => cleanup(false);
+    });
+
     // --- Approve / Reject ---
 
     document.getElementById('reviewApproveBtn').onclick = async () => {
         const subs = state.ENGINE.review.submissions;
         const idx  = state.ENGINE.review.currentIdx;
         if (!subs.length || !state.ENGINE.editor.workingLevel) return;
-        const sub       = subs[idx];
-        const levelData = levelUtils.denormalizeLevel(state.ENGINE.editor.workingLevel);
+
+        const wl     = state.ENGINE.editor.workingLevel;
+        const reqLen = parseInt(ui.getValue('editReqLen')) || 0;
+        const reqInt = parseInt(ui.getValue('editReqInt')) || 0;
         editor.applyMetricsFromUI();
+
+        // Re-validate hints if the level was modified during review.
+        let hints = Array.isArray(wl.hints) ? [...wl.hints] : [];
+        if (state.ENGINE.editor.isModified && hints.length > 0) {
+            ui.showMessage('Re-validating hints…', 'text-yellow-400 font-bold');
+            hints = revalidateHints(wl, reqLen, reqInt);
+            wl.hints = hints;
+            updateReviewHintBtn();
+        }
+
+        // If no valid hints remain, run solver.
+        if (hints.length === 0) {
+            ui.showMessage('Solving for hint…', 'text-yellow-400 font-bold');
+            const solution = await runSolverForHint(wl, reqLen, reqInt);
+            if (solution) {
+                hints = [solution];
+                wl.hints = hints;
+                updateReviewHintBtn();
+            } else {
+                // Solver failed — ask reviewer whether to publish anyway.
+                const confirmed = await confirmPublishWithoutHint();
+                if (!confirmed) {
+                    ui.showMessage('Approval cancelled.', 'text-slate-400');
+                    return;
+                }
+            }
+        }
+
+        const sub       = subs[idx];
+        const levelData = levelUtils.denormalizeLevel(wl);
         try {
             ui.showMessage('Approving…', 'text-white font-black');
             await persistence.approveSubmission(sub.id, levelData, Date.now());
