@@ -204,6 +204,50 @@ export function normalizeTheme(theme, key = 'theme') {
     t.text.error = t.text.error || t.loading.error || '#ef4444';
     t.text.handDrawnShadow = t.text.handDrawnShadow || '#000000';
 
+    const normalizeColorKey = (color) => typeof color === 'string' ? color.trim().toLowerCase() : '';
+    const colorMatchesAny = (color, avoid = []) => avoid.some(candidate => normalizeColorKey(candidate) === normalizeColorKey(color));
+    const pickDistinctButtonColor = (base, avoid = []) => {
+        const candidates = [
+            base,
+            darkenHex(base, 0.78),
+            darkenHex(base, 0.62),
+            t.btns.orient,
+            t.headerRight,
+            darkenHex(t.headerRight, 0.72),
+            t.headerLeft,
+            darkenHex(t.headerLeft, 0.72),
+            t.grid,
+            '#0f172a',
+            '#f8fafc',
+        ].filter(Boolean);
+        return candidates.find(candidate => !colorMatchesAny(candidate, avoid)) || base;
+    };
+
+    // Keep label colours stable across modes while making the visible button rows
+    // alternate enough that adjacent actions never receive the exact same token.
+    // Mode rows are:
+    // Play:   Guide, Hint, Whoa, Undo, Reset
+    // Edit:   Guide, New, Clear, Bombs?, Solve, Submit
+    // Review: New, Hint, Solve, Submit, Reject, Approve
+    const guideColor = t.btns.guide;
+    const hintColor = pickDistinctButtonColor(t.btns.hint, [guideColor]);
+    const cautionColor = pickDistinctButtonColor(t.btns.editClear || t.headerLeft, [hintColor]);
+    const utilityActionColor = pickDistinctButtonColor(
+        t.btns.modeToggle || t.btns.orient || t.headerRight,
+        [guideColor, hintColor, cautionColor, t.btns.undo]
+    );
+    t.btns.guide = guideColor;
+    t.btns.solve = guideColor;
+    t.btns.hint = hintColor;
+    t.btns.whoa = utilityActionColor;
+    t.btns.editNew = utilityActionColor;
+    t.btns.editBombs = utilityActionColor;
+    t.btns.submit = utilityActionColor;
+    t.btns.editClear = cautionColor;
+    t.btns.reject = cautionColor;
+    t.btns.approve = hintColor;
+    t.btns.reset = pickDistinctButtonColor(t.btns.reset || cautionColor, [t.btns.undo]);
+
     t.btns.disabled = t.btns.disabled || '#94a3b8';
     const hintBase = t.btns.hint || t.btns.guide || t.headerRight;
     const hintRgb = toRgb(hintBase, { r: 207, g: 107, b: 23 });
