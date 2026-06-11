@@ -4,67 +4,103 @@
 const AXIS_V = 2;
 
 export function drawRequiredPin(drawCtx, size, options = {}) {
-    const tilt = options.isSatisfied ? 15 : -15;
-    const pinYOffset = options.pinYOffset || 0;
-    drawCtx.translate(0, pinYOffset);
-    drawCtx.rotate(tilt * Math.PI / 180);
-    const scale = size / 35;
-    drawCtx.scale(scale, scale);
+    const color = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped;
+    const accent = options.themeColors.pin || color;
+    const alpha = options.isSatisfied ? 0.34 : 0.18;
+    const radius = size * 0.16;
+
+    drawCtx.save();
+    drawCtx.translate(0, options.pinYOffset || 0);
+    drawCtx.strokeStyle = color;
+    drawCtx.fillStyle = color;
+    drawCtx.lineCap = 'round';
+    drawCtx.lineJoin = 'round';
+
+    drawCtx.globalAlpha = alpha;
+    drawCtx.lineWidth = size * 0.08;
     drawCtx.beginPath();
-    drawCtx.moveTo(-1, 0);
-    drawCtx.lineTo(1, 0);
-    drawCtx.lineTo(1.5, -12);
-    drawCtx.lineTo(-1.5, -12);
-    drawCtx.closePath();
-    drawCtx.fillStyle = '#94a3b8';
-    drawCtx.fill();
-    drawCtx.beginPath();
-    drawCtx.arc(0, -18, 7, 0, Math.PI * 2);
-    drawCtx.fillStyle = options.isSatisfied ? options.themeColors.pin : options.themeColors.pinUnflipped;
-    drawCtx.fill();
+    drawCtx.roundRect(-size * 0.28, -size * 0.28, size * 0.56, size * 0.56, radius);
+    drawCtx.stroke();
+
+    drawCtx.globalAlpha = options.isSatisfied ? 0.95 : 0.72;
+    drawCtx.lineWidth = size * 0.08;
+    drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.16, 0, Math.PI * 2); drawCtx.stroke();
+    drawCtx.beginPath(); drawCtx.moveTo(0, -size * 0.34); drawCtx.lineTo(0, -size * 0.22); drawCtx.stroke();
+    drawCtx.beginPath(); drawCtx.moveTo(0, size * 0.22); drawCtx.lineTo(0, size * 0.34); drawCtx.stroke();
+    drawCtx.beginPath(); drawCtx.moveTo(-size * 0.34, 0); drawCtx.lineTo(-size * 0.22, 0); drawCtx.stroke();
+    drawCtx.beginPath(); drawCtx.moveTo(size * 0.22, 0); drawCtx.lineTo(size * 0.34, 0); drawCtx.stroke();
+
+    drawCtx.fillStyle = accent;
+    drawCtx.globalAlpha = options.isSatisfied ? 1 : 0.5;
+    drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.055, 0, Math.PI * 2); drawCtx.fill();
+    drawCtx.restore();
 }
 
 export const DRAW_REGISTRY = {
-    bomb(drawCtx, size) {
-        const scale = size / 100;
-        drawCtx.scale(scale, scale);
-        drawCtx.beginPath(); drawCtx.arc(0, 10, 25, 0, Math.PI * 2); drawCtx.fillStyle = '#334155'; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.moveTo(0, -15); drawCtx.quadraticCurveTo(15, -30, 30, -25); drawCtx.strokeStyle = '#94a3b8'; drawCtx.lineWidth = 4; drawCtx.stroke();
-        drawCtx.beginPath(); drawCtx.arc(30, -25, 5, 0, Math.PI * 2); drawCtx.fillStyle = '#ef4444'; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.arc(30, -25, 2.5, 0, Math.PI * 2); drawCtx.fillStyle = '#fde047'; drawCtx.fill();
-        drawCtx.beginPath(); drawCtx.moveTo(-5, -15); drawCtx.lineTo(5, -15); drawCtx.lineTo(5, -5); drawCtx.lineTo(-5, -5); drawCtx.closePath(); drawCtx.fillStyle = '#64748b'; drawCtx.fill();
+    bomb(drawCtx, size, color, options = {}) {
+        const goal = color || options.themeColors?.goal || '#ef4444';
+        drawCtx.save();
+        drawCtx.fillStyle = options.themeColors?.filter || '#0f172a';
+        drawCtx.beginPath();
+        drawCtx.roundRect(-size * 0.36, -size * 0.36, size * 0.72, size * 0.72, size * 0.18);
+        drawCtx.fill();
+        drawCtx.strokeStyle = goal;
+        drawCtx.lineWidth = size * 0.08;
+        drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.24, 0, Math.PI * 2); drawCtx.stroke();
+        drawCtx.fillStyle = goal;
+        drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.09, 0, Math.PI * 2); drawCtx.fill();
+        drawCtx.strokeStyle = '#fde047';
+        drawCtx.lineWidth = size * 0.07;
+        drawCtx.lineCap = 'round';
+        drawCtx.beginPath(); drawCtx.moveTo(-size * 0.20, -size * 0.20); drawCtx.lineTo(size * 0.20, size * 0.20); drawCtx.stroke();
+        drawCtx.beginPath(); drawCtx.moveTo(size * 0.20, -size * 0.20); drawCtx.lineTo(-size * 0.20, size * 0.20); drawCtx.stroke();
+        drawCtx.fillStyle = '#fde047';
+        drawCtx.beginPath();
+        for (let i = 0; i < 10; i++) {
+            const a = -Math.PI / 2 + i * Math.PI * 2 / 10;
+            const r = i % 2 ? size * 0.07 : size * 0.14;
+            const x = size * 0.28 + Math.cos(a) * r;
+            const y = -size * 0.28 + Math.sin(a) * r;
+            if (i === 0) drawCtx.moveTo(x, y); else drawCtx.lineTo(x, y);
+        }
+        drawCtx.closePath(); drawCtx.fill();
+        drawCtx.restore();
     },
     goose(drawCtx, size, color, options = {}) {
         if (options.isCheatReveal) drawCtx.globalAlpha = 0.5;
         const mapX = (v) => -size / 2 + (v / 100 * size);
         const mapY = (v) => -size / 2 + (v / 100 * size);
-        drawCtx.fillStyle = '#000000';
+        drawCtx.save();
+        drawCtx.fillStyle = '#0f172a';
         drawCtx.beginPath();
-        drawCtx.moveTo(mapX(30), mapY(0)); drawCtx.lineTo(mapX(70), mapY(0)); drawCtx.lineTo(mapX(100), mapY(30));
-        drawCtx.lineTo(mapX(100), mapY(70)); drawCtx.lineTo(mapX(70), mapY(100)); drawCtx.lineTo(mapX(30), mapY(100));
-        drawCtx.lineTo(mapX(0), mapY(70)); drawCtx.lineTo(mapX(0), mapY(30)); drawCtx.closePath(); drawCtx.fill();
-        drawCtx.fillStyle = '#FFFFFF';
-        drawCtx.beginPath();
-        drawCtx.moveTo(mapX(25), mapY(60)); drawCtx.quadraticCurveTo(mapX(25), mapY(45), mapX(45), mapY(45));
-        drawCtx.lineTo(mapX(65), mapY(45)); drawCtx.quadraticCurveTo(mapX(75), mapY(45), mapX(75), mapY(55));
-        drawCtx.quadraticCurveTo(mapX(75), mapY(65), mapX(65), mapY(65)); drawCtx.lineTo(mapX(40), mapY(65));
-        drawCtx.quadraticCurveTo(mapX(25), mapY(65), mapX(25), mapY(60)); drawCtx.fill();
-        drawCtx.beginPath();
-        drawCtx.moveTo(mapX(25), mapY(55)); drawCtx.lineTo(mapX(15), mapY(45)); drawCtx.lineTo(mapX(30), mapY(55)); drawCtx.closePath(); drawCtx.fill();
-        drawCtx.beginPath();
-        drawCtx.moveTo(mapX(60), mapY(45)); drawCtx.lineTo(mapX(60), mapY(25));
-        drawCtx.quadraticCurveTo(mapX(60), mapY(18), mapX(68), mapY(18));
-        drawCtx.quadraticCurveTo(mapX(75), mapY(18), mapX(75), mapY(25));
-        drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.lineTo(mapX(68), mapY(35)); drawCtx.lineTo(mapX(68), mapY(45)); drawCtx.closePath(); drawCtx.fill();
-        drawCtx.fillStyle = '#000000';
-        drawCtx.beginPath(); drawCtx.arc(mapX(70), mapY(23), size * 0.02, 0, Math.PI * 2); drawCtx.fill();
-        drawCtx.fillStyle = '#f97316';
-        drawCtx.beginPath();
-        drawCtx.moveTo(mapX(75), mapY(29)); drawCtx.lineTo(mapX(88), mapY(32)); drawCtx.lineTo(mapX(75), mapY(35)); drawCtx.closePath(); drawCtx.fill();
-        drawCtx.beginPath();
-        drawCtx.moveTo(mapX(45), mapY(65)); drawCtx.lineTo(mapX(40), mapY(78)); drawCtx.lineTo(mapX(52), mapY(78)); drawCtx.closePath();
-        drawCtx.moveTo(mapX(58), mapY(65)); drawCtx.lineTo(mapX(53), mapY(78)); drawCtx.lineTo(mapX(65), mapY(78)); drawCtx.closePath();
+        drawCtx.roundRect(mapX(8), mapY(8), size * 0.84, size * 0.84, size * 0.24);
         drawCtx.fill();
+        drawCtx.fillStyle = '#ffffff';
+        drawCtx.beginPath();
+        drawCtx.moveTo(mapX(24), mapY(61)); drawCtx.quadraticCurveTo(mapX(28), mapY(46), mapX(46), mapY(47));
+        drawCtx.lineTo(mapX(62), mapY(47)); drawCtx.quadraticCurveTo(mapX(73), mapY(47), mapX(75), mapY(57));
+        drawCtx.quadraticCurveTo(mapX(77), mapY(68), mapX(62), mapY(69)); drawCtx.lineTo(mapX(41), mapY(69));
+        drawCtx.quadraticCurveTo(mapX(27), mapY(69), mapX(24), mapY(61)); drawCtx.fill();
+        drawCtx.beginPath(); drawCtx.moveTo(mapX(26), mapY(56)); drawCtx.lineTo(mapX(13), mapY(47)); drawCtx.lineTo(mapX(31), mapY(52)); drawCtx.closePath(); drawCtx.fill();
+        drawCtx.beginPath();
+        drawCtx.moveTo(mapX(58), mapY(48)); drawCtx.lineTo(mapX(58), mapY(28));
+        drawCtx.quadraticCurveTo(mapX(58), mapY(19), mapX(68), mapY(19));
+        drawCtx.quadraticCurveTo(mapX(78), mapY(19), mapX(78), mapY(29));
+        drawCtx.lineTo(mapX(78), mapY(39)); drawCtx.lineTo(mapX(69), mapY(39)); drawCtx.lineTo(mapX(69), mapY(48)); drawCtx.closePath(); drawCtx.fill();
+        drawCtx.fillStyle = '#0f172a';
+        drawCtx.beginPath(); drawCtx.arc(mapX(71), mapY(27), size * 0.024, 0, Math.PI * 2); drawCtx.fill();
+        drawCtx.fillStyle = '#f97316';
+        drawCtx.beginPath(); drawCtx.moveTo(mapX(78), mapY(32)); drawCtx.lineTo(mapX(91), mapY(36)); drawCtx.lineTo(mapX(78), mapY(40)); drawCtx.closePath(); drawCtx.fill();
+        drawCtx.beginPath();
+        drawCtx.moveTo(mapX(43), mapY(69)); drawCtx.lineTo(mapX(38), mapY(82)); drawCtx.lineTo(mapX(50), mapY(82)); drawCtx.closePath();
+        drawCtx.moveTo(mapX(58), mapY(69)); drawCtx.lineTo(mapX(53), mapY(82)); drawCtx.lineTo(mapX(65), mapY(82)); drawCtx.closePath(); drawCtx.fill();
+        drawCtx.strokeStyle = '#f97316';
+        drawCtx.lineWidth = size * 0.05;
+        drawCtx.lineCap = 'round';
+        drawCtx.globalAlpha *= 0.9;
+        drawCtx.beginPath(); drawCtx.moveTo(mapX(18), mapY(18)); drawCtx.lineTo(mapX(29), mapY(18)); drawCtx.moveTo(mapX(18), mapY(18)); drawCtx.lineTo(mapX(18), mapY(29)); drawCtx.stroke();
+        drawCtx.beginPath(); drawCtx.moveTo(mapX(82), mapY(82)); drawCtx.lineTo(mapX(71), mapY(82)); drawCtx.moveTo(mapX(82), mapY(82)); drawCtx.lineTo(mapX(82), mapY(71)); drawCtx.stroke();
+        drawCtx.restore();
     },
     prohibited(drawCtx, size) {
         drawCtx.beginPath(); drawCtx.arc(0, 0, size * 0.35, 0, Math.PI * 2); drawCtx.strokeStyle = '#ef4444'; drawCtx.lineWidth = size * 0.1; drawCtx.stroke();
@@ -74,33 +110,47 @@ export const DRAW_REGISTRY = {
         drawRequiredPin(drawCtx, size, options);
     },
     mustCross(drawCtx, size, color) {
-        drawCtx.strokeStyle = color; drawCtx.globalAlpha = 0.25; drawCtx.lineWidth = size * 0.08;
+        drawCtx.strokeStyle = color;
+        drawCtx.globalAlpha = 0.45;
+        drawCtx.lineWidth = size * 0.08;
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
         const outer = size * 0.4, inner = size * 0.18;
         drawCtx.beginPath(); drawCtx.moveTo(-outer, -inner); drawCtx.lineTo(-inner, -inner); drawCtx.lineTo(-inner, -outer); drawCtx.stroke();
         drawCtx.beginPath(); drawCtx.moveTo(outer, -inner);  drawCtx.lineTo(inner, -inner);  drawCtx.lineTo(inner, -outer);  drawCtx.stroke();
         drawCtx.beginPath(); drawCtx.moveTo(-outer, inner);  drawCtx.lineTo(-inner, inner);  drawCtx.lineTo(-inner, outer);  drawCtx.stroke();
         drawCtx.beginPath(); drawCtx.moveTo(outer, inner);   drawCtx.lineTo(inner, inner);   drawCtx.lineTo(inner, outer);   drawCtx.stroke();
+        drawCtx.globalAlpha = 0.22;
+        drawCtx.beginPath(); drawCtx.moveTo(-size * 0.18, 0); drawCtx.lineTo(size * 0.18, 0); drawCtx.moveTo(0, -size * 0.18); drawCtx.lineTo(0, size * 0.18); drawCtx.stroke();
     },
     filter(drawCtx, size, color, options = {}) {
         if (options.axis === AXIS_V) drawCtx.rotate(Math.PI / 2);
-        drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25;
+        drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.28;
         const w = size * 0.45, t = size * 0.08;
-        drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t);
-        drawCtx.fillRect(-size / 2 + size * 0.1,  w / 2 - t, size * 0.8, t);
+        drawCtx.beginPath(); drawCtx.roundRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t, t / 2); drawCtx.fill();
+        drawCtx.beginPath(); drawCtx.roundRect(-size / 2 + size * 0.1,  w / 2 - t, size * 0.8, t, t / 2); drawCtx.fill();
+        drawCtx.globalAlpha = 0.48;
+        drawCtx.beginPath(); drawCtx.arc(0, -w / 2 + t / 2, size * 0.045, 0, Math.PI * 2); drawCtx.fill();
+        drawCtx.beginPath(); drawCtx.arc(0, w / 2 - t / 2, size * 0.045, 0, Math.PI * 2); drawCtx.fill();
     },
     flippingFilter(drawCtx, size, color, options = {}) {
         drawCtx.rotate(options.rotation || 0);
         if (options.axis === AXIS_V) drawCtx.rotate(Math.PI / 2);
-        drawCtx.fillStyle = color; drawCtx.globalAlpha = 0.25;
-        const w = size * 0.45, t = size * 0.08;
-        drawCtx.fillRect(-size / 2 + size * 0.1, -w / 2, size * 0.8, t);
-        drawCtx.fillRect(-size / 2 + size * 0.1,  w / 2 - t, size * 0.8, t);
+        DRAW_REGISTRY.filter(drawCtx, size, color, { axis: 1 });
         drawCtx.globalAlpha = options.crossed ? 0.4 : 1.0;
+        drawCtx.strokeStyle = color;
         drawCtx.fillStyle = color;
-        drawCtx.font = `900 ${size * 0.45}px sans-serif`;
-        drawCtx.textAlign = 'center';
-        drawCtx.textBaseline = 'middle';
-        drawCtx.fillText('↺', 0, 0);
+        drawCtx.lineWidth = size * 0.075;
+        drawCtx.lineCap = 'round';
+        drawCtx.beginPath();
+        drawCtx.arc(0, 0, size * 0.18, -Math.PI * 0.2, Math.PI * 1.45, false);
+        drawCtx.stroke();
+        drawCtx.beginPath();
+        drawCtx.moveTo(size * 0.18, size * 0.09);
+        drawCtx.lineTo(size * 0.30, size * 0.05);
+        drawCtx.lineTo(size * 0.24, -size * 0.07);
+        drawCtx.closePath();
+        drawCtx.fill();
     },
 };
 

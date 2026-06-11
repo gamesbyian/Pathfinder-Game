@@ -222,7 +222,7 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         } else if (model.detonatedFalseGoals.has(k)) {
             drawScorchMark(ctx, sx, sy, vp.cellW);
         } else if (model.isEditorMode || model.isReviewMode) {
-            drawAsset('bomb', p.x, p.y);
+            drawAsset('bomb', p.x, p.y, { color: th.colors.goal, themeColors: th.colors });
         }
     });
 
