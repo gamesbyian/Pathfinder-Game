@@ -47,7 +47,7 @@ export function createState({ core }) {
         titleClickTimer: null,
         resetStreak: 0,
         cheatTimer: null,
-        hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none', holdStartMs: 0, blinkStartMs: 0, fadeStartMs: 0 },
+        hinter: { pathList: [], currentPathIdx: 0, alpha: 0, index: 0, source: 'none', holdStartMs: 0, blinkStartMs: 0, fadeStartMs: 0, persistedPath: [], persistedHintIdx: -1 },
         viewport: { cellW: 0, cellH: 0, swapped: false, lastWidth: 0, lastHeight: 0 },
         progressSet: new Set(),
         foundHintsSinceLoad: [],

@@ -248,6 +248,14 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
         showSavedHint();
     };
 
+    document.getElementById('pinHintBtn')?.addEventListener('click', () => {
+        engine.pinCurrentHint();
+    });
+
+    document.getElementById('clearHintBtn')?.addEventListener('click', () => {
+        engine.clearPersistedHint();
+    });
+
     // --- Review-mode hint (plays saved hints on the working level) ---
 
     document.getElementById('reviewHintBtn').onclick = () => {

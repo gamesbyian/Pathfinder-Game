@@ -402,6 +402,8 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         state.ENGINE.hinter.holdStartMs    = 0;
         state.ENGINE.hinter.blinkStartMs   = 0;
         state.ENGINE.hinter.fadeStartMs    = 0;
+        state.ENGINE.hinter.persistedPath    = [];
+        state.ENGINE.hinter.persistedHintIdx = -1;
 
         if (isEditor) {
             state.ENGINE.editor.workingLevel = levelUtils.deepCloneLevel(state.ENGINE.level);
@@ -422,6 +424,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.setSolutionOutput('');
         ui.updateAppScale();
         ui.updateViewport();
+        ui.applyHintPinState(false, false);
         updateCompletionUI();
         persistence.persistSessionState();
         state.ENGINE.isDirty = true;
@@ -594,6 +597,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             state.ENGINE.hinter.holdStartMs  = 0;
             state.ENGINE.hinter.blinkStartMs = 0;
             state.ENGINE.hinter.fadeStartMs  = 0;
+            ui.applyHintPinState(false, state.ENGINE.hinter.persistedPath.length > 0);
         }
         state.ENGINE.overlayState = newState;
         state.ENGINE.isDirty = true;
@@ -613,6 +617,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         state.ENGINE.hinter.blinkStartMs = 0;
         state.ENGINE.hinter.fadeStartMs  = 0;
         ui.showMessage(`Solution ${state.ENGINE.hinter.currentPathIdx + 1}/${state.ENGINE.hinter.pathList.length}`, "text-emerald-600");
+        ui.applyHintPinState(true, state.ENGINE.hinter.persistedPath.length > 0);
     }
 
     function stopHintAnimation() {
@@ -673,6 +678,23 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         state.ENGINE.hinter.currentPathIdx = 0;
         state.ENGINE.hinter.source         = 'none';
         if (state.ENGINE.overlayState === core.HINT_ANIMATING) setOverlayState(core.OVERLAY_NONE);
+    }
+
+    function pinCurrentHint() {
+        const { hinter } = state.ENGINE;
+        if (!hinter.pathList.length) return;
+        hinter.persistedPath    = [...hinter.pathList[hinter.currentPathIdx]];
+        hinter.persistedHintIdx = hinter.currentPathIdx;
+        setOverlayState(core.OVERLAY_NONE);
+        state.ENGINE.isDirty = true;
+        ui.applyHintPinState(false, true);
+    }
+
+    function clearPersistedHint() {
+        state.ENGINE.hinter.persistedPath    = [];
+        state.ENGINE.hinter.persistedHintIdx = -1;
+        state.ENGINE.isDirty = true;
+        ui.applyHintPinState(state.ENGINE.overlayState === core.HINT_ANIMATING, false);
     }
 
     // Remaps all packed path/gate keys through mapFn and rebuilds derived state.
@@ -779,6 +801,8 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         setVariant,
         reversePathDirection,
         clearHintPaths,
+        pinCurrentHint,
+        clearPersistedHint,
         remapNavKeys,
         setMuted,
         toggleMute,

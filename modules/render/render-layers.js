@@ -178,6 +178,25 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         ctx.restore();
     }
 
+    // --- Persisted hint overlay ---
+    if (model.persistedHintActive && model.persistedHintPath.length) {
+        const offsetPx = vp.cellW * 0.05;
+        const offsetPosFn = (gx, gy) => {
+            const { sx, sy } = screenPosFn(gx, gy);
+            return { sx: sx + offsetPx, sy: sy + offsetPx };
+        };
+        const dp = model.persistedHintPath;
+        const persistedJumps = new Set();
+        for (let i = 1; i < dp.length; i++) {
+            const p1 = UNPACK(dp[i - 1]), p2 = UNPACK(dp[i]);
+            if (Math.abs(p1.x - p2.x) + Math.abs(p1.y - p2.y) > 1) persistedJumps.add(i);
+        }
+        ctx.save();
+        ctx.globalAlpha = 0.38;
+        drawPath(ctx, dp, persistedJumps, '#22c55e', vp.cellW * 0.3, true, offsetPosFn, vp.cellW);
+        ctx.restore();
+    }
+
     // --- Player path ---
     if (model.path.length) {
         drawPath(ctx, model.path, model.isPortalJump, model.strokeStyle, vp.cellW * 0.25, false, screenPosFn, vp.cellW);
