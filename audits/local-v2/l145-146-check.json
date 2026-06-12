@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-06-12T10:30:09.801Z",
+  "commitSha": "07103c77d21efec93713726be269954e2a508a4b",
+  "budgetMs": 30000,
+  "levelFilter": [
+    145,
+    146
+  ],
+  "solved": 2,
+  "failed": 0,
+  "errors": 0,
+  "total": 2,
+  "totalMs": 7850,
+  "levels": [
+    {
+      "level": 145,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2255,
+      "solvedBy": "intersectionHarvest",
+      "attempts": [
+        {
+          "gateKey": 458756,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "beamWidth": 5000,
+          "ok": true,
+          "elapsedMs": 2236
+        }
+      ]
+    },
+    {
+      "level": 146,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 5594,
+      "solvedBy": "objectiveFirst",
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "objectiveFirst",
+          "template": null,
+          "beamWidth": 5000,
+          "ok": true,
+          "elapsedMs": 5584
+        }
+      ]
+    }
+  ]
+}
