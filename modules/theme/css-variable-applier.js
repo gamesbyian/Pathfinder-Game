@@ -73,12 +73,12 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-action-btn-text',    t.text.actionBtn);
     root.style.setProperty('--theme-hint-hover',         t.btns.hintHover);
     root.style.setProperty('--theme-hint-divider',       t.btns.hintDivider);
-    root.style.setProperty('--theme-editor-input-bg',    t.editor.inputBg);
-    root.style.setProperty('--theme-editor-input-text',  t.editor.inputText);
-    root.style.setProperty('--theme-editor-input-border',t.editor.inputBorder);
-    root.style.setProperty('--theme-editor-input-focus', t.editor.inputFocus);
-    root.style.setProperty('--theme-editor-tool-icon',          t.editor.toolIcon);
-    root.style.setProperty('--theme-editor-palette-shadow',     t.editor.paletteShadow);
+    root.style.setProperty('--theme-level-editor-input-bg',    t.editor.inputBg);
+    root.style.setProperty('--theme-level-editor-input-text',  t.editor.inputText);
+    root.style.setProperty('--theme-level-editor-input-border',t.editor.inputBorder);
+    root.style.setProperty('--theme-level-editor-input-focus', t.editor.inputFocus);
+    root.style.setProperty('--theme-level-editor-tool-icon',          t.editor.toolIcon);
+    root.style.setProperty('--theme-level-editor-palette-shadow',     t.editor.paletteShadow);
     root.style.setProperty('--theme-hand-drawn-shadow',         t.text.handDrawnShadow);
     root.style.setProperty('--theme-portal-pending',            t.colors.portalPending);
     root.style.setProperty('--theme-bomb-blast-ring',           t.colors.bombBlastRing);

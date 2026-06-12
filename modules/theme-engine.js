@@ -290,10 +290,5 @@ export function deriveTokens(seeds) {
             border,
             divider: dividerColor,
         },
-
-        themeEditor: {
-            panelBg: surfaceLight ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
-            swatchBorder: border,
-        },
     };
 }
