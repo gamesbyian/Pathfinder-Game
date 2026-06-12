@@ -1747,10 +1747,20 @@ function getAttemptConfigs(level) {
     // High-intersection: two sub-cases split by reqInt.
     if (arch === 'high-intersection-burden') {
         if (level.reqInt >= 7) {
-            // Very high reqInt (L61=8, L92=8, L138=8, L139=11).
-            // V1 needed 20s (L92), 14.5s (L138), 5.6s (L139) using beam search.
-            // Beam search placed first so it receives maximum budget; DFS fallbacks
-            // cover L61 (solves in 75ms via DFS intersectionHarvest).
+            // Very high reqInt (L136=8, L144=11, L146=8).
+            // Beam search first for maximum budget; DFS fallbacks for levels that
+            // beam can't find directly (L136: DFS intersectionHarvest wins in 66ms).
+            // Portal-dense levels (L146: portals=4): objectiveFirst guides the beam
+            // toward portal transitions better than pure intersection harvest.
+            // Non-portal levels (L136, L144): intersectionHarvest bw=5000 wins directly.
+            if ((level.portalMap?.size || 0) >= 2) {
+                return [
+                    { profileName: 'objectiveFirst',      template: null, beamWidth: 5000 },
+                    { profileName: 'intersectionHarvest', template: null, beamWidth: 5000 },
+                    { profileName: 'objectiveFirst',      template: null },
+                    { profileName: 'intersectionHarvest', template: null },
+                ];
+            }
             return [
                 { profileName: 'intersectionHarvest', template: null, beamWidth: 5000 },
                 { profileName: 'objectiveFirst',      template: null, beamWidth: 5000 },
@@ -1910,9 +1920,19 @@ function getAttemptConfigs(level) {
         ];
     }
 
-    // Default: trimmed template set first, then all profiles.
+    // Default: template sweep first, then all profiles.
+    // No-must-pass levels: CCW before CW (L133: 15×15, CCW wins in 186ms; CW times out).
+    // Must-pass levels: keep CW before CCW (L142: 4 mp, CW wins quickly).
+    const templateConfigs = level.mustPassKeys.length === 0
+        ? [
+            { profileName: 'perimeterSweep', template: TEMPLATES.cornerHarvest  },
+            { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCCW   },
+            { profileName: 'perimeterSweep', template: TEMPLATES.perimeterCW    },
+            { profileName: 'perimeterSweep', template: TEMPLATES.sideCommitment },
+          ]
+        : ATTEMPT_CONFIGS.filter(c => c.template !== null);
     return [
-        ...ATTEMPT_CONFIGS.filter(c => c.template !== null),
+        ...templateConfigs,
         ...PROFILE_ORDER.map(p => ({ profileName: p, template: null })),
     ];
 }
