@@ -1592,8 +1592,10 @@ function _diverseSelect(sorted, beamWidth) {
 // flipper and must-cross constraint states (prevents beam collapse to one structural mode).
 async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam) {
     const ws = createState(startKey, level, prep);
+    // State dedup: safe when there are no portals (portals aren't captured in sc).
+    const useStateDedup = level.portalMap.size === 0;
     // Root node: prev=null, key=startKey, depth=0
-    let frontier = [{ key: startKey, prev: null, depth: 0, score: 0 }];
+    let frontier = [{ key: startKey, prev: null, depth: 0, score: 0, sc: 0 }];
     let lastYield = startTime;
     // Work-based budget: beam search terminates in at most reqLen + portal-pair phases.
     const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
@@ -1693,14 +1695,15 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
                 }
                 if (ok) {
                     const mv = scoreMoveV2(next, pos, ws, level, prep, profile, rSteps, template);
+                    const sc = (ws.flipperUsedMask << 12) | (ws.mustCrossMask << 8) | (ws.mpVisitedMask << 4) | (ws.ints & 0xF);
                     // Parent-pointer node — O(1) instead of O(depth) path copy.
                     // sk = stateKey: (flipperUsedMask<<4)|mustCrossMask — used by _diverseSelect
                     // to bucket candidates and prevent beam collapse to one constraint-state mode.
                     if (diverseBeam) {
                         cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
-                                     sk: (ws.flipperUsedMask << 4) | (ws.mustCrossMask & 0xF) });
+                                     sk: (ws.flipperUsedMask << 4) | (ws.mustCrossMask & 0xF), sc });
                     } else {
-                        cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv });
+                        cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv, sc });
                     }
                 }
                 undoMove(undo, ws);
@@ -1710,9 +1713,24 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
         if (cands.length === 0) break;
         await yieldIfNeeded();
         if (cands.length > beamWidth) {
-            cands.sort((a, b) => b.score - a.score);
+            // State-based deduplication: candidates sharing (position, constraint-state) are merged —
+            // only the highest-scoring path to each (cell, flipper+MC+MP+ints) combo survives.
+            // Uses a single float64 Map key: key + sc * KEY_SPACE (exact for key<2^20, sc<2^16).
+            // Disabled for portal levels — portal usage isn't captured in sc, so merging would be
+            // incorrect (two paths at the same cell may have used different portals).
+            let pool = cands;
+            if (useStateDedup) {
+                const dm = new Map();
+                for (const c of cands) {
+                    const dk = c.key + c.sc * KEY_SPACE;
+                    const p = dm.get(dk);
+                    if (!p || c.score > p.score) dm.set(dk, c);
+                }
+                if (dm.size < cands.length) pool = [...dm.values()];
+            }
+            pool.sort((a, b) => b.score - a.score);
             await yieldIfNeeded();
-            frontier = diverseBeam ? _diverseSelect(cands, beamWidth) : cands.slice(0, beamWidth);
+            frontier = diverseBeam ? _diverseSelect(pool, beamWidth) : pool.slice(0, beamWidth);
         } else {
             frontier = cands;
         }
