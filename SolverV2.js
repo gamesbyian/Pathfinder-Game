@@ -1727,8 +1727,10 @@ function detectArchetype(level) {
 // Template attempts lead (matches V1's winning strategy for most grid levels).
 function getAttemptConfigs(level) {
     const arch = detectArchetype(level);
-    const area    = level.grid.w * level.grid.h;
-    const density = area > 0 ? level.reqLen / area : 0;
+    // Walkable density: excludes blocks/geese/false-goals/gates — same formula as detectArchetype.
+    const _navArea = Math.max(1, level.grid.w * level.grid.h - level.blockSet.size
+        - level.gooseSet.size - level.falseGoalKeys.size - level.gateKeys.length);
+    const navDensity = level.reqLen / _navArea;
 
     // Near-closure: the path is a near-loop — goal attraction dominates.
     // harvestThenFinish placed 2nd (after nearClosureRescue) to handle single-gate
@@ -1756,7 +1758,7 @@ function getAttemptConfigs(level) {
                 { profileName: 'objectiveFirst',      template: null },
             ];
         }
-        // Medium-high reqInt (L130=6, L143=5, L147=4).
+        // Medium-high reqInt (L130=5, L147=6).
         // V1 solved L130 in 362ms via perimeterCW template; L143 via perimeterCCW 1.7s.
         // Beam variants placed first so they receive the larger share of budget;
         // DFS fallbacks cover L143/L147 which already pass via DFS.
@@ -1772,16 +1774,62 @@ function getAttemptConfigs(level) {
         // their DFS fallbacks are not squeezed.
         const longMultiGate = level.reqLen >= 90 && (level.gateKeys?.length || 0) >= 2;
         const beamFloor = longMultiGate ? 0.45 : 0;
+
+        // Near-Hamiltonian levels (navDensity ≥ 0.82): reqLen fills nearly all walkable
+        // cells. Beam search fails to keep the correct path alive at w=2000 over 80+ steps
+        // of densely-constrained space (L110: w×h 90% full, L140: 3-gate near-Hamiltonian).
+        // Skip leading beams; use DFS with perimeter template — both CW and CCW tried so
+        // a lucky direction wins quickly without waiting for the other to time out.
+        if (navDensity >= 0.82) {
+            return [
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
+                { profileName: 'objectiveFirst',      template: null                   },
+                { profileName: 'intersectionHarvest', template: null                   },
+                { profileName: 'knotBuilder',         template: null                   },
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW,  beamWidth: 2000 },
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW, beamWidth: 2000 },
+            ];
+        }
+
+        // Must-pass-heavy levels (≥3 must-pass, e.g. L130: 3mp+10blocks): the solution
+        // path threads through scattered objectives that perimeter sweeps can't find. Put
+        // objectiveFirst and intersectionHarvest DFS before perimeterSweep DFS so the
+        // objective-directed profiles get the budget rather than burning it on two
+        // perimeter timeouts first (saves ~11s on L130).
+        const dfsOrder = level.mustPassKeys.length >= 3
+            ? [
+                { profileName: 'objectiveFirst',      template: null },
+                { profileName: 'intersectionHarvest', template: null },
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
+                { profileName: 'knotBuilder',         template: null },
+              ]
+            // Low-reqInt (≤4), no must-pass: CCW sweep first (wins on L110 in 230ms where
+            // CW times out; CW is tried second as fallback).
+            // Higher reqInt or must-pass: CW first (wins on L141).
+            : level.reqInt <= 4 && level.mustPassKeys.length === 0
+            ? [
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
+                { profileName: 'objectiveFirst',      template: null                   },
+                { profileName: 'intersectionHarvest', template: null                   },
+                { profileName: 'knotBuilder',         template: null                   },
+              ]
+            : [
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
+                { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
+                { profileName: 'objectiveFirst',      template: null                   },
+                { profileName: 'intersectionHarvest', template: null                   },
+                { profileName: 'knotBuilder',         template: null                   },
+              ];
+
         return [
             { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW,  beamWidth: 2000, minBudgetFraction: beamFloor },
             { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW, beamWidth: 2000, minBudgetFraction: beamFloor },
             { profileName: 'intersectionHarvest', template: null,                   beamWidth: 2000 },
             { profileName: 'objectiveFirst',      template: null,                   beamWidth: 2000 },
-            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCW  },
-            { profileName: 'perimeterSweep',      template: TEMPLATES.perimeterCCW },
-            { profileName: 'objectiveFirst',      template: null                   },
-            { profileName: 'intersectionHarvest', template: null                   },
-            { profileName: 'knotBuilder',         template: null                   },
+            ...dfsOrder,
         ];
     }
 
@@ -1833,15 +1881,32 @@ function getAttemptConfigs(level) {
                 { profileName: 'intersectionHarvest',template: null },  // DFS fallback
             ];
         }
+        // Heavy combined MC+MP burden (≥3 must-cross AND ≥2 must-pass, e.g. L129: 3mc+2mp
+        // diagonal): DFS perimeter templates fail to thread the combined constraints.
+        // Lead with beam so the correct path is found without burning two DFS timeouts first.
+        if (level.mustCrossKeys.length >= 3 && level.mustPassKeys.length >= 2) {
+            return [
+                { profileName: 'mustCrossFirst',    template: null,            beamWidth: 2000 },
+                { profileName: 'objectiveFirst',    template: null,            beamWidth: 2000 },
+                { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest         },
+                { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW           },
+                { profileName: 'mustCrossFirst',    template: null                            },
+                { profileName: 'objectiveFirst',    template: null                            },
+                { profileName: 'harvestThenFinish', template: null                            },
+                { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW, beamWidth: 2000 },
+            ];
+        }
+        // Template DFS first (solves simple MC levels fast: cornerHarvest→L62/L75/L114,
+        // perimeterCW→L64/L128), then beams before DFS profile attempts.
         return [
-            { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest    },
-            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW      },
-            { profileName: 'mustCrossFirst',    template: null                       },
-            { profileName: 'objectiveFirst',    template: null                       },
-            { profileName: 'harvestThenFinish', template: null                       },
-            { profileName: 'mustCrossFirst',    template: null,                    beamWidth: 2000 },
-            { profileName: 'objectiveFirst',    template: null,                    beamWidth: 2000 },
-            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW,   beamWidth: 2000 },
+            { profileName: 'perimeterSweep',    template: TEMPLATES.cornerHarvest              },
+            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW                },
+            { profileName: 'mustCrossFirst',    template: null,            beamWidth: 2000 },
+            { profileName: 'objectiveFirst',    template: null,            beamWidth: 2000 },
+            { profileName: 'mustCrossFirst',    template: null                             },
+            { profileName: 'objectiveFirst',    template: null                             },
+            { profileName: 'harvestThenFinish', template: null                             },
+            { profileName: 'perimeterSweep',    template: TEMPLATES.perimeterCW, beamWidth: 2000 },
         ];
     }
 

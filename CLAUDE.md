@@ -140,6 +140,19 @@ Extended config-outer/gate-inner interleaving to ALL multi-gate levels (previous
 
 Multi-gate levels: L74 (2 gates), L129 (2 gates, must-cross-heavy), L140 (3 gates), L144 (2 gates, must-cross-heavy), L147 (3 gates, near-closure — already interleaved).
 
+## Config Ordering Improvements (2026-06-12)
+Targeted `getAttemptConfigs()` sub-branching to put the empirically winning config earlier for four slow level classes:
+
+1. **must-cross-heavy, mc≥3 + mp≥2** (L129): Beam (`mustCrossFirst bw=2000`) leads instead of two DFS template timeouts first. L129: 19,110ms → ~355ms (-98%).
+2. **high-int medium-high, navDensity ≥ 0.82** (L140): DFS perimeter configs first; skip leading beams that fail on near-Hamiltonian grids. L140: 10,479ms → ~2,512ms (-76%).
+3. **high-int medium-high, mp ≥ 3** (L130): `objectiveFirst` DFS placed before `perimeterSweep` DFS for must-pass-heavy blocked grids. L130: 13,408ms → ~2,493ms (-81%).
+4. **high-int medium-high, reqInt ≤ 4 + mp = 0** (L110): CCW sweep before CW; CW times out on L110's grid topology while CCW wins in 230ms. L110: 7,308ms → ~1,592ms (-78%).
+
+Also removed the dead raw-area `density` variable from `getAttemptConfigs`; all thresholds now use `navDensity` (walkable area = grid − blocks − geese − falseGoals − gates).
+
+Total runtime after config reordering: ~54.3s (-43.7% vs interleaving baseline, -57.5% vs original baseline).
+All 147 levels still solved.
+
 ## Common Gotchas
 - **Portal forced-move**: when at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional.
 - **Gate cells cannot be re-entered**: Excluded from `staticNeighbors` targets; also guards in `isValidMove`.
