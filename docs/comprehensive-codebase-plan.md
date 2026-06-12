@@ -2,35 +2,33 @@
 
 ## How to use this document
 
-This plan is written for a future AI coder or human contributor who has no context from the review conversations that produced it. Treat it as a roadmap, not as a mandate to implement everything in one pull request.
+This plan is written for a future AI coder or human contributor who has no context from the review conversation that produced it. Treat it as a roadmap, not as a mandate to implement everything in one pull request.
 
 When taking work from this plan:
 
-1. Pick **one bounded slice** from the phase list or "Suggested first PR" sections.
-2. Inspect the referenced files before editing; this document names likely starting points.
+1. Pick **one bounded slice** from the "Suggested first PR" or "Immediate next actions" sections.
+2. Inspect the referenced files before editing; this document intentionally names the likely starting points.
 3. Preserve existing behavior unless the task explicitly says to change behavior.
-4. Add or update tests before large refactors, especially for gameplay rules, persistence, and solver behavior.
+4. Add or update tests before large refactors, especially for gameplay rules and solver behavior.
 5. Keep compatibility facades in place while moving internals, so browser behavior and developer tooling continue to work.
-6. Prefer normal ESM imports and injected adapters over VM hacks, browser globals, and side-effect script loading.
-7. Run `npm run ci` before handing off changes unless the task is documentation-only or an environment limitation prevents it.
+6. Run `npm run ci` before handing off changes unless the task is documentation-only or an environment limitation prevents it.
 
 ## Purpose
 
-This document captures a prioritized modernization plan for improving Pathfinder's architecture, efficiency, robustness, future-proofing, comprehensibility, testability, and production readiness. It incorporates two independent reviews of the current browser app, domain/runtime modules, solver, persistence layer, tests, package scripts, security rules, dependency loading, and audit workflow.
+This document captures a comprehensive, prioritized plan for improving Pathfinder's efficiency, robustness, future-proofing, comprehensibility, testability, and cleanliness. It is based on a broad review of the current browser app, domain/runtime modules, solver, persistence layer, tests, package scripts, security rules, and dependency/bootstrap structure.
 
-The overall conclusion is sharper after the second review: the codebase has clearly benefited from real refactoring, but it still carries several prototype-era or "vibe-coded" fingerprints. The most important issues are not isolated style problems; they are boundary and operational problems: a hand-wired page-level composition root, a broad engine facade, mutable shared state, browser-global data loading, drifted tooling, a large heuristic solver module, generated audit artifacts in source history, and inconsistent production/security hardening.
+The codebase is already in a promising state: core gameplay concepts have been extracted into modules such as `modules/domain`, `modules/runtime`, `modules/render`, `modules/input`, `modules/ui`, `modules/editor`, and `modules/persistence`, and the current CI path passes. The highest-leverage next steps are not isolated small cleanups; they are boundary-setting changes that make the project easier to refactor, test, secure, and scale.
 
 ## Current repo map
 
 Use this map to orient yourself before making changes:
 
-- `index.html` contains document markup, large inline style definitions, CDN dependencies, module imports, app bootstrap wiring, circular/lazy subsystem references, and the `window.APP` debug facade.
+- `index.html` contains document markup, large inline style definitions, external browser dependencies, and the current app bootstrap script.
 - `modules/core.js` defines core constants, mode/status enums, deep clone helper, and the browser audio bus.
 - `modules/state.js` creates the top-level mutable `ENGINE` state object.
 - `modules/boot.js` owns startup sequencing and the `window.onload` handler factory.
-- `modules/engine.js` is the main gameplay orchestration facade. It currently coordinates runtime rules, navigation, UI effects, persistence, solver state, hints, review mode, editor mode, modal flows, sounds, and animation/render invalidation.
-- `modules/data.js` and `modules/loader.js` are important boundary files for data loading. They currently interact with browser-global level/theme data and dynamic script loading.
-- `modules/domain/` contains mostly pure helpers for level codec, movement rules, geometry, portal utilities, path validation, fingerprinting, and level validation.
+- `modules/engine.js` is the main gameplay orchestration facade. It coordinates runtime rules, navigation, UI effects, persistence, solver state, hints, review mode, and editor-related state transitions.
+- `modules/domain/` contains mostly pure domain helpers such as level codec, movement rules, geometry, portal utilities, path validation, and level validation.
 - `modules/runtime/` contains extracted gameplay/runtime logic such as game rules, path state operations, step processing, and logic-state transitions.
 - `modules/render/` and `modules/renderer.js` contain canvas rendering and render-model creation.
 - `modules/ui/` and `modules/ui.js` contain DOM utilities, modal/toast/loading/overlay/layout helpers, and the UI facade used by engine/controllers.
@@ -38,25 +36,23 @@ Use this map to orient yourself before making changes:
 - `modules/editor/` and `modules/editor.js` contain editor state, occupancy, validation/history/export helpers, and the editor facade.
 - `modules/persistence/` and `modules/persistence.js` contain local session/progress stores, Firebase client setup, submission repository, and review repository.
 - `SolverV2.js` contains the current solver implementation and public solver factory.
-- `levels.js` and `themes.js` contain bundled level/theme data and should eventually stop relying on global side effects.
+- `levels.js` and `themes.js` contain bundled level/theme data.
 - `scripts/` contains test, audit, solver, import, and diagnostic scripts.
-- `audits/` contains generated audit output that is currently tracked in source history.
 - `firestore.rules` and `firestore.indexes.json` define Firebase/Firestore behavior.
-- `firebase-config.js` and `includes/secret.php` are part of runtime config/secret-hygiene review.
 
 ## Current strengths
 
-- Domain and runtime logic has started moving out of browser glue code into focused modules.
+- Domain and runtime logic has started moving out of the browser glue layer into focused modules.
 - The project has meaningful behavior-locking scripts for startup, hints, and domain/runtime mechanics.
 - Level normalization, movement rules, validation, rendering, input, persistence, editor operations, and themes are no longer all in one monolithic script.
-- The solver has a clear public factory and useful test/analysis hooks.
-- The codebase is still small enough that architectural improvements can be made incrementally.
+- The solver has a clear public API and useful test/analysis hooks.
+- The app is small enough that architectural improvements can still be made incrementally without a high migration cost.
 
 ## Known review findings to preserve
 
-These facts were observed during review and are useful context for future agents:
+These facts were observed during the review and are useful context for future agents:
 
-- `npm run ci` passed during review. It ran startup smoke, hint-path oracle, and domain unit tests.
+- `npm run ci` passed at review time. It ran startup smoke, hint-path oracle, and domain unit tests.
 - `package.json` declares additional audit and legacy scripts. Some referenced targets were not present in the reviewed checkout, including:
   - `scripts/run-level-audit.mjs`
   - `scripts/analyze-audit-failures.mjs`
@@ -64,204 +60,256 @@ These facts were observed during review and are useful context for future agents
   - `scripts/check-regression-levels.mjs`
   - `scripts/audit-heuristic-recall.mjs`
   - `LegacySolver/solver-smoke-test.mjs`
-- `startup-smoke-test.mjs` uses VM/regex-style import/export stripping. Treat this as a useful rescue harness, not as the desired long-term testing model.
-- `includes/secret.php` stores a Firebase API-key-like value. Firebase web API keys are normally public identifiers rather than private secrets, but the filename and storage pattern are misleading and should be clarified or removed.
+- `includes/secret.php` stores a Firebase API-key-like value. Firebase web API keys are normally public identifiers rather than private secrets, but the filename and storage pattern are misleading and should be clarified.
 - `firestore.rules` currently hard-codes a single admin email and allows authenticated users to read submissions. Do not change this casually; add rules tests first and confirm intended product behavior.
-- `index.html` currently loads Tailwind, Tone.js, Firebase compat SDKs, and Google Fonts from external CDNs without an obvious bundled/SRI/CSP strategy.
-- UI code includes `innerHTML` paths. Some may be safe because they render trusted internal markup, but dynamic/user/server-provided strings should move to text-node rendering by default.
-- Generated audit JSON is tracked in the repo. Decide intentionally which audit fixtures belong in source and which should be CI artifacts or release artifacts.
-
-## How the second report changes the plan
-
-The second review largely validates the earlier observations but improves the priorities. My original plan emphasized typed domain contracts and reducer/effects architecture. Those are still important, but the report makes clear that the first remediation wave should also remove obvious operational drift and unsafe boundaries before deep architecture work.
-
-The updated priority is:
-
-1. **Stabilize drift and production hygiene first**: broken scripts, misleading secret-like files, unsafe dynamic HTML patterns, and missing checks are low-risk/high-signal fixes.
-2. **Make the app importable and testable**: move away from global data side effects, dynamic script injection, Firebase globals, and VM-based smoke harnesses.
-3. **Then split state and engine responsibilities**: a reducer/effects architecture is easier once browser/data/persistence boundaries are injectable.
-4. **Professionalize solver and audit workflows**: modularize the solver and keep generated outputs out of normal source churn.
-5. **Finish with stronger production hardening**: CSP, dependency pinning/bundling/SRI, secret scanning, and Firestore authorization improvements.
+- `index.html` currently loads Tailwind, Tone.js, Firebase compat SDKs, and Google Fonts from external CDNs.
 
 ## Guiding principles
 
-1. **Make contracts explicit.** Level data, theme data, runtime state, solver input/output, persistence payloads, and audit output should be validated and documented.
-2. **Keep pure logic pure.** Gameplay rules, state transitions, validation, and solver contracts should be testable without DOM, canvas, audio, timers, Firebase, or browser globals.
-3. **Move effects to the edge.** UI rendering, modals, audio, persistence, timers, data loading, and browser APIs should be adapters around a pure core.
-4. **Prefer incremental compatibility.** Existing factory APIs, `window.APP`, and browser behavior should remain stable while internals are extracted behind them.
+1. **Make contracts explicit.** Level data, runtime state, solver input/output, and persistence payloads should be validated and documented.
+2. **Keep pure logic pure.** Gameplay rules, state transitions, validation, and solver contracts should be testable without DOM, canvas, audio, timers, or Firebase.
+3. **Move effects to the edge.** UI rendering, modals, audio, persistence, timers, and browser APIs should be adapters around a pure core.
+4. **Prefer incremental compatibility.** Existing factory APIs and browser behavior should remain stable while internals are extracted behind them.
 5. **Automate confidence.** Every major refactor should be backed by unit, integration, browser, security-rule, and benchmark checks.
 6. **Avoid rewrites without characterization tests.** The puzzle rules and solver heuristics are subtle; preserve behavior first, then refactor.
-7. **Do not normalize unsafe patterns.** Browser globals, broad mutable state, dynamic `innerHTML`, CDN supply-chain assumptions, and generated source churn should be treated as migration targets.
 
 ---
 
 # Top 5 Big Changes
 
-## 1. Create a real application architecture and composition boundary
+## 1. Introduce a typed, validated, immutable domain model for levels and runtime state
 
 ### Problem
 
-The browser entry point and engine are still doing too much. `index.html` is markup, style host, dependency loader, app composition root, lazy circular dependency resolver, `window.onload` assignment point, and debug facade. `modules/engine.js` is likewise a broad "god engine" that mixes game runtime, UI effects, persistence effects, review mode, editor mode, solver lifecycle, hints, sounds, modal flows, and path navigation.
+The game relies on a rich level model: packed coordinate keys, `Set`s, `Map`s, portals, filters, geese, false goals, must-pass/must-cross constraints, hints, raw 1-based coordinates, and normalized 0-based packed keys. Today much of that model is implicit and enforced by convention.
 
-The single mutable `ENGINE` state object makes feature ownership unclear and lets unrelated modules depend on the same large state shape.
+Runtime state is also stored in a large mutable `ENGINE` object that mixes mode, navigation, hazards, solver state, render flags, hints, viewport, progress, editor state, review state, UI state, runtime pointer state, gamepad state, and feature flags.
+
+This makes refactoring risky because many modules can mutate shared structures directly, and it is not always obvious which shape is raw, normalized, canonical, derived, or display-only.
 
 ### Where to look first
 
-- `index.html` for inline composition, lazy `_themes`/`_renderer`/`_persistence`/`_engine`/`_editor` references, and `window.APP` exposure.
-- `modules/engine.js` for the broad engine facade and side-effect orchestration.
-- `modules/state.js` for the top-level mutable `ENGINE` object.
-- `modules/boot.js` for startup sequencing and onload handling.
-- `modules/input/`, `modules/editor.js`, `modules/persistence.js`, and `modules/ui.js` for subsystems currently wired directly into engine/app construction.
+- `modules/domain/level-codec.js` for raw-to-normalized level parsing, denormalization, cloning, and shape assertions.
+- `modules/domain/level-validation.js` for editor/level validity checks.
+- `modules/domain/cell-key.js` for packed coordinate helpers.
+- `modules/domain/level-fingerprint.js` for canonical fingerprinting and duplicate detection.
+- `modules/state.js` for the top-level runtime state shape.
+- `modules/engine.js` for places where normalized level objects and runtime state are mutated.
+- `scripts/domain-unit-tests.mjs` for current behavior-locking coverage.
 
 ### Plan
 
-- Move bootstrap code from `index.html` to `modules/app/create-app.js` or `modules/app.js`.
-- Keep a tiny import-only script in `index.html` during the first migration.
-- Replace circular/lazy composition comments with explicit dependency inversion:
-  - small callback interfaces,
-  - event/command dispatcher,
-  - or narrowly scoped service interfaces.
-- Split `ENGINE` into smaller stores or state slices:
-  - `gameSession`
-  - `navigation`
-  - `editorSession`
-  - `reviewSession`
-  - `solverSession`
-  - `uiSession`
-  - `deviceInput`
-  - `runtimeConfig`
-- Narrow `createEngine()` to game runtime and path execution.
-- Move review administration, editor workflows, solver orchestration, and modal-specific flows into dedicated controllers/services.
-- Introduce JSDoc interfaces for subsystem boundaries before considering TypeScript.
+- Add formal model definitions for:
+  - `RawLevel`
+  - `NormalizedLevel`
+  - `LevelMetadata`
+  - `PortalPair`
+  - `RuntimeNavState`
+  - `HazardState`
+  - `SolverInputLevel`
+  - `SolverResult`
+  - `EngineState`
+  - `EditorState`
+  - `ReviewState`
+- Use TypeScript or, as an incremental first step, JSDoc typedefs plus runtime validators.
+- Add `modules/domain/level-schema.js` or an equivalent typed module that owns validation and shape normalization.
+- Change parsing APIs to return structured results:
+  - `parseRawLevel(raw) -> { ok: true, level } | { ok: false, errors }`
+  - Keep a compatibility wrapper for existing callers that expect `null` on failure.
+- Define one canonical boundary where raw 1-based coordinates become normalized 0-based packed keys.
+- Keep canonical level objects immutable in development/test mode with `Object.freeze`-style safeguards or frozen clone helpers.
+- Replace in-place challenge-option mutations with derived level variants.
+- Split the top-level state object into smaller slices with clear ownership:
+  - `game`
+  - `nav`
+  - `hazards`
+  - `solver`
+  - `editor`
+  - `review`
+  - `ui`
+  - `input`
+  - `persistence`
+
+### Deliverables
+
+1. `modules/domain/level-schema.js` with validators and typedefs.
+2. Structured parse/validation result types.
+3. A startup validation pass for all bundled levels.
+4. Dev-only frozen canonical levels.
+5. Regression tests for malformed raw levels, normalized level invariants, and challenge-option variants.
 
 ### Suggested implementation slices
 
-- **Small:** Move only the inline module bootstrap from `index.html` into `modules/app.js`; leave CSS, markup, dependencies, and `window.APP` behavior unchanged.
-- **Medium:** Define interfaces/callback objects for engine dependencies and remove one lazy circular reference.
-- **Large:** Split `ENGINE` into named state slices and move review/editor/solver orchestration out of `engine.js`.
+- **Small:** Add JSDoc typedefs and validator helpers without changing call sites.
+- **Medium:** Add `parseRawLevelDetailed(raw)` and keep `parseRawLevel(raw)` as the compatibility wrapper.
+- **Large:** Split `ENGINE` into smaller state slices after reducer/effects boundaries exist.
+
+### Acceptance criteria
+
+- All existing bundled levels validate successfully.
+- Invalid raw levels produce specific errors rather than silent `null` or partial objects.
+- Existing callers still pass until they are intentionally migrated.
+- `npm run ci` passes.
+
+### Payoff
+
+- Safer refactors.
+- Fewer accidental mutations.
+- Clearer onboarding for future contributors.
+- Better editor, solver, and persistence contracts.
+- Easier conversion to TypeScript if desired later.
+
+### Suggested first PR
+
+Add `modules/domain/level-schema.js`, validate all bundled levels during CI, and adapt `parseRawLevel` behind a compatibility wrapper so current callers do not need to change immediately.
+
+---
+
+## 2. Decouple the engine from UI, persistence, audio, timers, and rendering effects
+
+### Problem
+
+The engine is still the central orchestration point for too many responsibilities. It coordinates gameplay, navigation, state transitions, UI updates, sound effects, modal behavior, persistence writes, timers, editor behavior, review behavior, solver lifecycle, and dirty-render signaling.
+
+Although pure logic has already been extracted into runtime modules, the engine layer remains broad enough that UI or persistence changes can unintentionally affect gameplay behavior.
+
+### Where to look first
+
+- `modules/engine.js` for the current orchestration facade.
+- `modules/runtime/game-rules.js` for win metrics and win-condition logic.
+- `modules/runtime/path-state.js` for path mutations and derived path state.
+- `modules/runtime/step-processor.js` for per-step computation and event generation.
+- `modules/runtime/state-machine.js` for legal logic-state transitions.
+- `modules/ui.js` and `modules/ui/` for browser UI effects called by the engine.
+- `modules/persistence.js` and `modules/persistence/` for persistence effects called during gameplay.
+- `modules/core.js` for `SOUND_BUS` and core constants.
+
+### Plan
+
+Move toward a reducer/effects architecture:
+
+- Pure reducers:
+  - `gameReducer(state, action) -> { state, effects }`
+  - `navReducer(state, action) -> { state, effects }`
+  - `solverReducer(state, action) -> { state, effects }`
+  - `editorReducer(state, action) -> { state, effects }`
+- Effect adapters:
+  - `playSound(effect)`
+  - `openModal(effect)`
+  - `persistProgress(effect)`
+  - `scheduleTimer(effect)`
+  - `markRenderDirty(effect)`
+  - `showToast(effect)`
+- Controllers translate browser/input/solver events into actions.
+- The engine facade remains temporarily but delegates to reducers and effect execution.
+- State transitions should become explicit events rather than direct calls from mixed responsibilities.
+
+### Deliverables
+
+1. `modules/runtime/actions.js` defining gameplay/editor/solver action types.
+2. `modules/runtime/effects.js` defining effect types.
+3. A pure reducer for navigation/path actions.
+4. A browser effect runner for UI, audio, timers, persistence, and render invalidation.
+5. Tests asserting reducer outputs and emitted effects without DOM.
+
+### Suggested implementation slices
+
+- **Small:** Define effect object shapes and convert one path, such as win handling, to emit effects.
+- **Medium:** Move overlay/hazard timer behavior into an effect runner.
+- **Large:** Convert primary grid input and path navigation to actions/reducers while preserving `engine` facade methods.
+
+### Acceptance criteria
+
+- Pure reducer tests do not need DOM, canvas, Firebase, Tone, or timers.
+- Existing browser behavior remains unchanged.
+- Existing engine public methods continue to work during migration.
+- `npm run ci` passes, and new reducer tests cover emitted effects.
+
+### Payoff
+
+- Gameplay can be tested without browser dependencies.
+- UI and persistence changes become less risky.
+- Replay, undo/redo, solver visualization, analytics, and input remapping become easier.
+- Future developers can reason about state transitions from a single action/effect model.
+
+### Suggested first PR
+
+Extract win handling, overlay transitions, and hazard animation side effects into a browser effect runner while keeping `engine.js` as the compatibility entry point.
+
+---
+
+## 3. Turn the browser app shell into a real build/dependency boundary
+
+### Problem
+
+The HTML file still acts as markup, stylesheet host, dependency loader, bootstrap script, and debug facade. It loads several runtime dependencies from CDNs and contains the app factory wiring directly inside a module script.
+
+This weakens caching, dependency control, CSP/security posture, offline behavior, testability, and code-splitting.
+
+### Where to look first
+
+- `index.html` for markup, inline styles, CDN dependencies, module imports, bootstrap wiring, and `window.APP` exposure.
+- `modules/boot.js` for boot sequencing and the onload handler factory.
+- `modules/loader.js` for external level/theme loading behavior.
+- `firebase-config.js` for runtime Firebase config loading.
+- `package.json` for current scripts and minimal dependency setup.
+
+### Plan
+
+- Move bootstrap code from `index.html` into `modules/app.js` or `src/main.js`.
+- Replace the inline module script with a tiny import-only entrypoint.
+- Move large CSS variable definitions and app styles into dedicated CSS files.
+- Replace Tailwind CDN usage with a pinned build-time Tailwind setup if Tailwind remains part of the project.
+- Pin and bundle or intentionally vendor external browser dependencies.
+- Lazy-load optional systems:
+  - Firebase only when cloud persistence/submission/review is needed.
+  - Tone only after audio unlock or when sound is enabled.
+  - Solver worker only when solving/hints are requested.
+- Hide or narrow the global `window.APP` facade behind a dev/debug flag.
+- Add a target Content Security Policy and ensure the build can satisfy it.
+
+### Deliverables
+
+1. `modules/app.js` owning app construction and dependency wiring.
+2. Dedicated CSS files for base tokens, layout, components, and themes.
+3. Build scripts for development and production.
+4. Dependency pinning and update policy.
+5. CSP documentation and a deployable header template.
+
+### Suggested implementation slices
+
+- **Small:** Move only the module bootstrap code to `modules/app.js`; leave markup, CSS, and dependencies unchanged.
+- **Medium:** Move inline styles into one or more CSS files without changing selectors or variables.
+- **Large:** Add a bundler/build pipeline and replace CDN runtime dependencies with pinned build-time dependencies.
 
 ### Acceptance criteria
 
 - App boots the same way in browser and startup smoke tests.
 - `window.APP` remains available unless the task explicitly changes debug behavior.
 - No dependency-loading strategy changes are mixed into the initial bootstrap extraction PR.
-- Existing public engine methods continue to work during migration.
 - `npm run ci` passes.
+
+### Payoff
+
+- Faster and more predictable page loads.
+- Safer dependency updates.
+- Better browser security posture.
+- Cleaner separation of app code from document markup.
+- Easier end-to-end tests and future bundling/code splitting.
 
 ### Suggested first PR
 
-Create `modules/app.js`, move the current app construction code out of `index.html`, and keep behavior unchanged. This creates a real composition-root file without attempting the deeper state/engine split yet.
+Move only the current bootstrap JavaScript from `index.html` into `modules/app.js`, keep behavior unchanged, and leave dependency/build decisions for later PRs.
 
 ---
 
-## 2. Seal leaky module boundaries around data, DOM, globals, and mutation
+## 4. Split `SolverV2` into a solver package with worker execution, benchmarks, and clear contracts
 
 ### Problem
 
-Several modules look modular but still rely on browser globals, side-effect data loading, direct DOM mutation, dynamic HTML strings, or shared mutable objects. `levels.js` and `themes.js` populate global data. The loader dynamically injects scripts. Firebase is loaded as compat scripts and used through the global `firebase` object. UI helpers sometimes write `innerHTML`, including paths that may eventually receive server/user-provided text.
+The solver is one of the most valuable and complex parts of the project. It currently combines solver-level normalization, encoding assumptions, policy profiles, structural templates, search logic, trap detection, attempt orchestration, metrics, public API, and test/analysis internals in one large module.
 
-These patterns make tests harder, weaken CSP/supply-chain posture, and blur the boundary between pure logic, rendering, persistence, and data loading.
-
-### Where to look first
-
-- `modules/data.js` for level/theme access and any `window.LEVELS`, `window.RAW_LEVELS`, or `window.THEMES` assumptions.
-- `modules/loader.js` for dynamic script injection of `levels.js` and `themes.js`.
-- `levels.js` and `themes.js` for current data export/global patterns.
-- `modules/ui.js` and `modules/ui/` for direct DOM writes and `innerHTML` usage.
-- `modules/persistence/firebase-client.js` for global Firebase compat usage.
-- `modules/domain/level-codec.js`, `modules/domain/level-validation.js`, and `modules/theme/theme-normalizer.js` for boundary validation.
-
-### Plan
-
-- Convert level and theme data to ESM exports or versioned JSON assets.
-- Make `createData()` accept levels/themes as parameters instead of reading from `window`.
-- Replace dynamic script injection with static imports or explicit fetch of versioned JSON assets.
-- Add validators for loaded levels and themes at the boundary.
-- Create safe DOM utilities for dynamic text/list rendering that use `textContent` or text nodes by default.
-- Restrict `innerHTML` to explicitly reviewed, trusted markup paths.
-- Move Firebase to ESM SDK imports or a persistence adapter that can be mocked without global browser scripts.
-- Replace mutation of canonical level objects with derived variants or explicit cloned state.
-
-### Suggested implementation slices
-
-- **Small:** Add a safe DOM helper for rendering detail lists as text nodes and migrate one dynamic `innerHTML` caller.
-- **Small:** Add JSDoc typedefs and validator helpers for raw levels/themes without changing call sites.
-- **Medium:** Make `createData()` accept injected level/theme data while keeping a compatibility fallback for current globals.
-- **Large:** Convert `levels.js` and `themes.js` to ESM/JSON and remove dynamic script injection.
-
-### Acceptance criteria
-
-- Dynamic user/server-facing strings are rendered as text, not HTML.
-- Existing level/theme loading behavior remains compatible until the global path is intentionally removed.
-- All bundled levels and themes validate at startup or in CI.
-- Firebase can be mocked in tests without loading global compat scripts.
-- `npm run ci` passes.
-
-### Suggested first PR
-
-Add a safe text rendering utility and migrate the submit-step detail renderer away from raw `innerHTML` for dynamic detail strings. This is a low-risk security hardening step before larger data-loading changes.
-
----
-
-## 3. Fix tooling, CI, script drift, and test architecture
-
-### Problem
-
-`package.json` contains scripts that reference files not present in the repository. CI currently runs useful checks, but it does not include lint, type checking, format checking, bundle/build checks, browser e2e tests, dependency checks, or dead-script checks. Existing custom harnesses are valuable but also show that modules are not yet easy to import and test normally.
-
-### Where to look first
-
-- `package.json` for scripts and dependencies.
-- `.github/workflows/` for CI behavior.
-- `scripts/startup-smoke-test.mjs` for the VM/regex harness.
-- `scripts/domain-unit-tests.mjs` for the custom domain test harness and stubs.
-- `scripts/hint-path-oracle.mjs` for hint validation.
-- Missing script targets listed in "Known review findings" above.
-
-### Plan
-
-- Remove, restore, or quarantine package scripts whose targets are missing.
-- Add `check:dead-scripts` that fails when a `node <path>` package script references a missing file.
-- Add minimum quality gates:
-  - `lint`
-  - `format:check`
-  - `test:unit`
-  - `test:e2e`
-  - `check:deps`
-  - `check:dead-scripts`
-- Ensure the GitHub workflow runs the same top-level `npm run ci` that developers run locally.
-- Migrate custom tests gradually to a standard runner such as Node's built-in test runner or Vitest.
-- Add Playwright browser flows for boot, level load, path drawing, win modal, editor create/validate/export, submission flow, and review flow.
-- Replace VM/regex import-stripping smoke tests after browser globals and data loading are behind injectable adapters.
-
-### Suggested implementation slices
-
-- **Small:** Add a script that verifies referenced `node ...` script targets exist and wire it into CI.
-- **Small:** Remove or document legacy scripts for absent `LegacySolver` paths if that directory is intentionally gone.
-- **Medium:** Add a real unit test runner while keeping the current scripts as compatibility wrappers.
-- **Large:** Replace the VM startup smoke harness with normal ESM tests after app/data/persistence boundaries are injectable.
-
-### Acceptance criteria
-
-- Package scripts either work, are removed, or are explicitly documented as unavailable legacy commands.
-- CI runs the same top-level command documented for developers.
-- New quality gates do not produce noisy false positives.
-- Existing tests continue to pass.
-- `npm run ci` passes.
-
-### Suggested first PR
-
-Add `scripts/check-package-scripts.mjs` to verify package script file targets, add `check:dead-scripts`, and include it in CI. Decide separately whether to remove or restore each stale script.
-
----
-
-## 4. Professionalize SolverV2 and the audit workflow
-
-### Problem
-
-`SolverV2.js` is a large heuristic subsystem in a single file. It combines solver-level normalization, encoding assumptions, policy profiles, structural templates, search variants, trap detection, metrics, public API, and test/ablation internals. The public factory exposes private-ish helpers for analysis, which is understandable during experimentation but risky as a long-term API.
-
-The repo also tracks generated audit JSON. This creates source-history noise and can obscure meaningful code changes unless intentionally curated.
+This makes solver tuning and optimization harder than necessary, and it ties long-running search work closely to the browser thread unless carefully yielded.
 
 ### Where to look first
 
@@ -270,38 +318,61 @@ The repo also tracks generated audit JSON. This creates source-history noise and
 - `modules/domain/move-rules.js` and `modules/domain/move-context.js` for movement legality.
 - `scripts/run-solverv2-direct.mjs` for direct solver execution.
 - `scripts/run-audit-export.mjs`, `scripts/run-ablation.mjs`, and `scripts/analyze-ablation.mjs` for audit/experiment workflows.
-- `audits/` for generated audit output examples.
-- `.gitignore` for what generated artifacts are or are not excluded.
+- `audits/` for existing solver/audit output examples.
 
 ### Plan
 
-Split the solver into modules by concern:
+Create a solver package boundary:
 
 - `modules/solver/model.js`
-- `modules/solver/normalization.js`
-- `modules/solver/search/beam.js`
-- `modules/solver/search/dfs-lds.js`
-- `modules/solver/heuristics/profiles.js`
-- `modules/solver/heuristics/templates.js`
+  - Solver input model.
+  - Coordinate/key helpers.
+  - Invariant checks.
+- `modules/solver/prep.js`
+  - Precomputed maps.
+  - Masks.
+  - Portal/filter indexes.
+  - Distance maps.
+- `modules/solver/policies.js`
+  - Profiles.
+  - Templates.
+  - Attempt config generation.
+- `modules/solver/search.js`
+  - DFS/beam/search primitives.
+  - Pruning rules.
+  - Cancellation and budget checks.
 - `modules/solver/traps.js`
+  - Trap spot detection.
 - `modules/solver/metrics.js`
-- `modules/solver/public-api.js`
+  - Attempts.
+  - Nodes expanded.
+  - Timings.
+  - Failure reasons.
+- `modules/solver/worker.js`
+  - Web Worker adapter.
 - `modules/solver/contracts.js`
+  - Candidate-path validation against domain rules.
 
-Keep a narrow runtime public interface:
+Add benchmarks and regression gates:
 
-- `prepareLevelForSolver`
-- `solve`
-- `findTrapSpots`
-- `validateCandidatePath`
+- Representative easy, medium, hard, and pathological levels.
+- Fixed budgets for CI-friendly checks.
+- Longer scheduled benchmark jobs for solve-rate tracking.
+- Stable JSON metric schemas for audit output.
+- Regression thresholds for solve rates, timeouts, and nodes expanded.
 
-Put ablation-only internals behind a separate tooling/test import path. Move policy profiles and templates into data modules with documented meaning and tests. Track a small curated regression fixture set in source, but store routine generated audit runs as CI artifacts or release artifacts rather than normal source commits.
+### Deliverables
+
+1. Extracted solver policy/config module.
+2. Extracted solver prep and search modules.
+3. Browser worker adapter and cancellation tests.
+4. Solver benchmark corpus.
+5. CI-friendly solver regression script.
 
 ### Suggested implementation slices
 
 - **Small:** Extract policy profiles/templates/attempt config generation only, keeping `SolverV2.js` behavior identical.
-- **Small:** Document which audit files are curated fixtures versus generated outputs.
-- **Medium:** Extract metrics and normalization modules.
+- **Medium:** Extract solver prep and metrics modules.
 - **Large:** Add worker execution and cancellation semantics after benchmark coverage exists.
 
 ### Acceptance criteria
@@ -310,114 +381,154 @@ Put ablation-only internals behind a separate tooling/test import path. Move pol
 - Existing hint oracle and domain tests pass.
 - Any benchmark added has stable budgets appropriate for CI.
 - Extracted modules do not introduce circular imports with browser/UI code.
-- Generated audit-output policy is documented and enforced by `.gitignore` or CI.
+
+### Payoff
+
+- Better UI responsiveness.
+- Safer solver tuning.
+- Faster diagnosis of performance regressions.
+- Clearer distinction between game rules and search heuristics.
+- Easier future experimentation with alternate solvers.
 
 ### Suggested first PR
 
-Extract policy profiles and templates into `modules/solver/heuristics/` while leaving the public API and solve behavior unchanged. Add a small test or snapshot proving generated attempt configs are unchanged.
+Extract policy profiles and attempt configuration into `modules/solver/policies.js`, then add a small fixed-budget benchmark that runs a representative subset of levels.
 
 ---
 
-## 5. Harden security, persistence, dependencies, and production operations
+## 5. Strengthen quality gates, CI hygiene, and security/persistence boundaries
 
 ### Problem
 
-The app currently loads third-party scripts from public CDNs without an obvious SRI/bundling/CSP strategy. Firebase config is committed, which is usually acceptable for Firebase web config, but `includes/secret.php` looks like a secret and should not remain ambiguous. Firestore rules hard-code a personal admin email and allow authenticated users to read all pending submissions. UI dynamic HTML patterns increase risk if user/server-provided content reaches those paths.
+The current checks are useful, but the tooling surface is incomplete and somewhat inconsistent. There are tests for startup, hints, and domain behavior, but there is no standard lint/typecheck/format baseline. Some package scripts reference files that are not present in this checkout. Persistence and Firestore behavior deserve automated tests because they protect progress, submissions, review actions, and published levels.
+
+Security and persistence boundaries also need tightening and documentation. Firebase web API keys are not secrets by themselves, but config should be clearly named and handled as public runtime config rather than stored in a file named like a secret. Admin identity should not be hard-coded directly in security rules long-term, and submission read access should be revisited.
 
 ### Where to look first
 
-- `index.html` for CDN scripts and styles.
-- `firebase-config.js` and `includes/secret.php` for config/secret hygiene.
-- `firestore.rules` for read/write authorization.
-- `modules/persistence/firebase-client.js`, `modules/persistence/progress-store.js`, `modules/persistence/level-submission-repository.js`, and `modules/persistence/review-repository.js` for persistence semantics.
-- `modules/ui.js` and `modules/ui/` for dynamic HTML rendering.
-- `.github/workflows/` for possible secret scanning and dependency checks.
+- `package.json` for current scripts and dependencies.
+- `.github/workflows/` for CI behavior.
+- `scripts/domain-unit-tests.mjs`, `scripts/startup-smoke-test.mjs`, and `scripts/hint-path-oracle.mjs` for existing test style.
+- `firestore.rules` for access rules.
+- `modules/persistence/firebase-client.js` for Firebase initialization and auth behavior.
+- `modules/persistence/progress-store.js`, `modules/persistence/level-submission-repository.js`, and `modules/persistence/review-repository.js` for data access semantics.
+- `firebase-config.js` and `includes/secret.php` for runtime config handling.
 
 ### Plan
 
-- Remove `includes/secret.php` unless there is a documented, non-secret reason for it.
-- Add secret scanning to CI.
-- Bundle third-party dependencies or pin CDN dependencies with SRI.
-- Add a Content Security Policy compatible with the app's real needs.
-- Replace hard-coded admin email checks with custom claims, deployment-specific allowlists, or a locked-down admin allowlist document.
-- Avoid broad reads of pending submissions if possible; use indexed duplicate-check endpoints, sanitized fingerprints, or a server-side function.
-- Add Firestore rules tests before changing access policies.
-- Replace dynamic `innerHTML` for user/server-facing strings with text-node construction.
-- Document what Firebase web config values are public and what values must never be committed.
+- Add standard quality commands:
+  - `npm run lint`
+  - `npm run typecheck` or `npm run check:types`
+  - `npm run format:check`
+  - `npm run test:unit`
+  - `npm run test:e2e`
+  - `npm run test:rules`
+- Replace or wrap the custom test harness with Node's built-in test runner, Vitest, or another standard runner.
+- Add a script-target existence check for package scripts.
+- Remove, restore, or quarantine stale scripts.
+- Add Playwright coverage for:
+  - Boot.
+  - Level load.
+  - Path drawing.
+  - Win modal.
+  - Editor create/validate/export.
+  - Submission flow with mocked persistence.
+  - Review flow with mocked persistence.
+- Add Firestore rules tests for:
+  - User progress isolation.
+  - Submission creation ownership.
+  - Submission read policy.
+  - Admin-only approve/reject/delete.
+  - Public published-level reads.
+- Replace hard-coded admin email checks with custom claims or environment-specific allowlists.
+- Rename and document public Firebase runtime config.
+- Consider duplicate detection through structural fingerprints or a backend function rather than broad pending-submission reads.
+
+### Deliverables
+
+1. Clean `package.json` scripts.
+2. Script target existence check in CI.
+3. Lint/typecheck/format baseline.
+4. Firestore rules tests.
+5. Playwright smoke and editor-flow tests.
+6. Persistence/security documentation.
 
 ### Suggested implementation slices
 
-- **Small:** Remove or document `includes/secret.php` and add a short public-config/secret-hygiene note.
-- **Small:** Add Firestore rules tests that lock current behavior before changing the rules.
-- **Medium:** Add secret scanning and dependency checks to CI.
-- **Large:** Move Firebase to ESM imports/adapters and replace hard-coded admin identity with claims/allowlist infrastructure.
+- **Small:** Add a script that verifies referenced `node ...` script targets exist and wire it into CI.
+- **Medium:** Add Firestore rules tests for current behavior without changing the rules.
+- **Large:** Introduce lint/typecheck/format tooling and migrate custom tests to a standard runner.
 
 ### Acceptance criteria
 
+- Package scripts either work, are removed, or are explicitly documented as unavailable legacy commands.
 - Security-rule tests describe current intended behavior before any rule changes.
+- Existing CI still passes.
 - Public Firebase config is documented clearly and not represented as a private secret.
-- Secret scanning runs in CI or is documented if unavailable.
-- CDN dependency strategy is explicitly pinned, bundled, or tracked as an accepted risk.
-- `npm run ci` passes.
+
+### Payoff
+
+- Higher confidence during refactors.
+- Easier onboarding.
+- Fewer broken scripts.
+- Better protection for user submissions and admin workflows.
+- Clear distinction between public config and private credentials.
 
 ### Suggested first PR
 
-Add Firestore rules tests for the current access model and document Firebase public config versus secrets. Do not change rules until the tests make current behavior explicit.
+Clean stale package scripts, add a check that declared script targets exist, and add Firestore rules tests for the current intended access model before changing the rules.
 
 ---
 
-# Recommended remediation roadmap
+# Recommended implementation order
 
-## Phase 1: Stabilize and remove obvious drift
+## Phase 1: Stabilize quality gates
 
-- Delete, restore, or document all package scripts that point to missing files.
-- Add a CI check that verifies every `node <path>` in `package.json` exists.
-- Remove or document `LegacySolver` scripts if that directory is intentionally gone.
-- Remove `includes/secret.php` or document why it is not secret.
-- Add a lint rule or simple scanner forbidding unsafe dynamic `innerHTML` except in explicitly reviewed files.
-- Document which audit outputs are curated source fixtures and which are generated artifacts.
+- Clean or restore stale scripts.
+- Add script-target existence checks.
+- Add lint/typecheck/format commands.
+- Keep the existing CI tests passing.
+- Add a short contributor/testing guide.
 
-**Success criteria:** Developers can trust package scripts, obvious secret-hygiene ambiguity is gone, unsafe dynamic HTML has a migration path, and CI catches future script drift.
+**Success criteria:** CI is clearer, every declared script is either valid or intentionally documented, and future refactors have better guardrails.
 
-## Phase 2: Make the app importable and testable
+## Phase 2: Formalize domain contracts
 
-- Move bootstrap from inline `index.html` into a JS module.
-- Convert levels/themes from global script side effects into ESM exports or JSON fetches.
-- Make Firebase an injected adapter, not a global.
-- Replace VM/regex import-stripping smoke tests with normal ESM tests once boundaries allow it.
-- Add validators for loaded levels/themes.
+- Add level/state typedefs and validators.
+- Validate bundled raw levels.
+- Return structured parse errors internally.
+- Freeze canonical levels in dev/test paths.
+- Stop mutating canonical levels for play options.
 
-**Success criteria:** App construction can be imported by tests, loaded data has explicit contracts, and browser globals are compatibility fallbacks rather than primary architecture.
+**Success criteria:** Level shape errors are caught early, domain contracts are documented in code, and challenge variants are derived without corrupting canonical data.
 
-## Phase 3: Split state and engine responsibilities
+## Phase 3: Extract engine effects
 
-- Create separate state modules for game, editor, review, solver, UI, and input.
-- Introduce command-style methods or reducer/effect actions instead of direct mutation of one `ENGINE` object.
-- Shrink `createEngine()` to game runtime and path execution.
-- Move review, editor, solver, and modal orchestration into separate controllers/services.
+- Introduce action/effect types.
+- Extract win handling, overlay transitions, sound, modal, and timer effects.
+- Add DOM-free tests for reducer outputs.
+- Keep the existing engine public API stable during migration.
 
-**Success criteria:** Gameplay state transitions can be tested without browser adapters, and `engine.js` becomes narrower and easier to reason about.
+**Success criteria:** Gameplay state transitions can be tested without browser adapters, and `engine.js` becomes smaller and easier to reason about.
 
-## Phase 4: Professionalize solver development
+## Phase 4: Separate app shell and dependencies
 
-- Split `SolverV2.js` by concern.
-- Document each heuristic profile and template.
-- Create a curated solver regression suite from representative levels.
-- Move routine generated audit outputs out of normal source commits.
-- Keep ablation tooling separate from runtime API.
+- Move bootstrap code out of `index.html`.
+- Move large inline styles into CSS files.
+- Add dependency/build strategy.
+- Restrict global debug facade to dev mode.
+- Define a CSP target.
 
-**Success criteria:** Solver behavior is easier to tune, UI responsiveness is protected, private internals stop becoming accidental public API, and performance regressions are measurable.
+**Success criteria:** HTML becomes mostly document structure, app boot is testable as a module, and runtime dependency loading is intentional.
 
-## Phase 5: Production hardening
+## Phase 5: Modularize and benchmark the solver
 
-- Add CSP.
-- Pin or bundle third-party dependencies.
-- Add secret scanning.
-- Review Firestore read/write rules against a written threat model.
-- Replace hard-coded personal admin authorization with claims or allowlist infrastructure.
-- Avoid broad pending-submission reads unless explicitly justified by the threat model.
+- Extract policies, prep, search, traps, metrics, contracts, and worker adapter.
+- Add fixed-budget benchmark checks.
+- Add long-running scheduled benchmarks if CI supports them.
+- Track solve-rate and performance regressions over time.
 
-**Success criteria:** Deployment risks are documented and reduced, authorization is portable beyond one personal email, and security-sensitive behavior is covered by tests.
+**Success criteria:** Solver behavior is easier to tune, UI responsiveness is protected, and performance regressions are measurable.
 
 ---
 
@@ -430,7 +541,6 @@ Add Firestore rules tests for the current access model and document Firebase pub
 - Freezing or cloning levels may reveal hidden mutation assumptions.
 - Build tooling may introduce deployment differences.
 - Firestore rule changes may break existing submission/review workflows.
-- Removing generated audit files without a policy may lose useful regression context.
 
 ## Mitigations
 
@@ -439,8 +549,7 @@ Add Firestore rules tests for the current access model and document Firebase pub
 - Use small PRs with one architectural boundary per PR.
 - Add benchmarks before solver rewrites.
 - Add Firestore rules tests before changing access policies.
-- Keep deployment behavior unchanged until the app-shell split is covered by Playwright.
-- Separate curated fixtures from routine generated audit artifacts before changing `.gitignore`.
+- Keep deployment behavior unchanged until the app-shell split is well covered by Playwright.
 
 ---
 
@@ -448,15 +557,13 @@ Add Firestore rules tests for the current access model and document Firebase pub
 
 The modernization effort is complete when:
 
-- Package scripts are accurate, documented, and checked by CI.
-- Level, theme, runtime-state, solver, persistence, and audit contracts are explicit and validated.
-- App composition lives in an importable module rather than inline `index.html` bootstrap code.
-- Core gameplay reducers/services can be tested without DOM, canvas, audio, timers, Firebase, or browser globals.
+- Level and runtime-state contracts are explicit and validated.
+- Core gameplay reducers can be tested without DOM, canvas, audio, timers, Firebase, or browser globals.
 - Browser effects are adapters around pure state transitions.
-- Level/theme loading no longer depends on global side effects as the primary path.
+- The app shell has a clear build/dependency boundary.
 - Solver internals are modular, benchmarked, and worker-capable.
-- Routine generated audit artifacts no longer create normal source-history noise.
-- CI includes unit, browser, quality, dependency, script-hygiene, secret-scan, and security-rule checks.
+- CI includes unit, browser, quality, script-hygiene, and security-rule checks.
+- Package scripts are accurate and documented.
 - Persistence/security behavior is documented and tested.
 - Future contributors can understand the codebase architecture from documentation plus module boundaries.
 
@@ -466,13 +573,10 @@ The modernization effort is complete when:
 
 These are the best small-to-medium first tasks for a future agent:
 
-1. Add `check:dead-scripts` and fix or document stale `package.json` commands.
-2. Remove or document `includes/secret.php`, and add a short Firebase public-config/secret-hygiene note.
-3. Add a safe DOM text-rendering helper and migrate one dynamic detail-rendering path away from raw `innerHTML`.
-4. Move bootstrap code from `index.html` into a dedicated app module without changing runtime behavior.
-5. Make `createData()` accept injected levels/themes while preserving current global fallback behavior.
-6. Add Firestore rules tests for the current access model before changing rules.
-7. Extract solver policy profiles/templates into dedicated modules with behavior-preserving tests.
-8. Document audit artifact policy and separate curated fixtures from generated run outputs.
+1. Create a script-target existence check and run it in CI.
+2. Add level schema typedefs/validators and validate bundled levels.
+3. Extract a small effect runner from engine win/overlay/hazard paths.
+4. Move bootstrap code from `index.html` into a dedicated app module.
+5. Extract solver policies into a dedicated solver module and add a fixed-budget benchmark subset.
 
 For any of these tasks, update this plan if implementation discoveries change the recommended order or reveal constraints not captured here.
