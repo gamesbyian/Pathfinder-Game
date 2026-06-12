@@ -236,6 +236,18 @@ function normalizeRawLevelV2(rawLevel, levelNumber = null) {
 
 // ─── Pre-computation (per level) ─────────────────────────────────────────────
 
+// Convert a Map<packedKey, distance> to a Uint16Array for O(1) array access.
+// 0xFFFF is the "unreachable" sentinel (distances on a 15×15 grid never exceed 225).
+function _distMapToArr(map) {
+    const arr = new Uint16Array(KEY_SPACE);
+    arr.fill(0xFFFF);
+    for (const [k, d] of map) arr[k] = d < 0xFFFF ? d : 0xFFFE;
+    return arr;
+}
+// Inline distance lookup: Uint16Array[key] with 0xFFFF → Infinity.
+// Faster than Map.get because it avoids hash-table overhead.
+function _dget(arr, k) { const v = arr[k]; return v === 0xFFFF ? Infinity : v; }
+
 function prepLevel(level) {
     const prep = {};
     prep.distMap        = buildDistMap(level, [level.goalKey]);
@@ -252,6 +264,13 @@ function prepLevel(level) {
     prep.objectiveKeys = Array.from(new Set([...level.mustPassKeys, ...level.mustCrossKeys]));
     prep.objectiveDistMaps = prep.objectiveKeys.map(k => buildDistMap(level, [k]));
     prep.objectiveKeyToIndex = new Map(prep.objectiveKeys.map((k, i) => [k, i]));
+
+    // Fast typed-array mirrors of the most-accessed dist maps.
+    // Uint16Array[packedKey] instead of Map.get() cuts per-lookup cost ~10x.
+    prep.goalDistArr  = _distMapToArr(prep.distMap);
+    prep.mpDistArrs   = prep.mustPassDistMaps.map(_distMapToArr);
+    prep.mcDistArrs   = prep.mustCrossDistMaps.map(_distMapToArr);
+    prep.objDistArrs  = prep.objectiveDistMaps.map(_distMapToArr);
 
     // Approach-cell distance maps for must-cross 2nd visits.
     // After the 1st pass via axis A, the 2nd pass must enter from axis B.
@@ -289,17 +308,17 @@ function prepLevel(level) {
 
     // Cache initial BigInt masks so createState / _beamResetState avoid recomputing them.
     const _mpN = level.mustPassKeys.length, _mcN = level.mustCrossKeys.length;
-    prep.initialMustMask      = _mpN > 0 ? ((1n << BigInt(_mpN)) - 1n) : 0n;
-    prep.initialMustCrossMask = _mcN > 0 ? ((1n << BigInt(_mcN)) - 1n) : 0n;
+    prep.initialMustMask      = _mpN > 0 ? ((1 << _mpN) - 1) : 0;
+    prep.initialMustCrossMask = _mcN > 0 ? ((1 << _mcN) - 1) : 0;
     // DFS must-pass scoring: sparse/medium-density levels (< 0.70) get full must-pass
     // urgency scoring via initialMustMask so the DFS is guided toward must-pass cells.
-    // Near-Hamiltonian levels (density ≥ 0.70, e.g. L26 at 0.82) keep mustMask=0n to
+    // Near-Hamiltonian levels (density ≥ 0.70, e.g. L26 at 0.82) keep mustMask=0 to
     // avoid disrupting the tightly-ordered dense traversal; mpVisitedMask still enforces
     // must-pass correctness in isSolution/pruning for those levels.
     const _navArea = Math.max(1, level.grid.w * level.grid.h
         - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size
         - level.gateKeys.length);
-    prep.mustMaskForDFS = (level.reqLen / _navArea >= 0.70) ? 0n : prep.initialMustMask;
+    prep.mustMaskForDFS = (level.reqLen / _navArea >= 0.70) ? 0 : prep.initialMustMask;
 
     // Flipper index data for the global-flip mechanism.
     const _fKeys = [...level.flippingFilterMap.keys()];
@@ -345,6 +364,41 @@ function prepLevel(level) {
         ...level.portalMap.keys(),
     ]);
 
+    // Precompute static adjacency per cell. Stored as a flat Int32Array of
+    // [nk, moveAxis, nk, moveAxis, ...] pairs, eliminating repeated bounds/set
+    // checks in the hot getNeighbors loop. Excludes: blocks, geese, false goals,
+    // gate cells, and neighbors that violate static (regular) filter constraints.
+    // Flipping-filter and portal constraints remain dynamic.
+    {
+        const { w, h } = level.grid;
+        const _dx4 = [1, -1, 0, 0];
+        const _dy4 = [0, 0, 1, -1];
+        prep.staticNeighbors = new Map();
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const k = PACK(x, y);
+                if (level.blockSet.has(k) || level.gooseSet.has(k)) continue;
+                const filterFrom = level.filterMap.get(k);
+                const pairs = [];
+                for (let d = 0; d < 4; d++) {
+                    const nx = x + _dx4[d], ny = y + _dy4[d];
+                    if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                    const nk = PACK(nx, ny);
+                    if (level.blockSet.has(nk)) continue;
+                    if (level.gooseSet.has(nk)) continue;
+                    if (level.falseGoalKeys.has(nk)) continue;
+                    if (prep.gateSet.has(nk)) continue;
+                    const moveAxis = (ny === y) ? AXIS_H : AXIS_V;
+                    if (filterFrom && filterFrom !== moveAxis) continue;
+                    const filterTarget = level.filterMap.get(nk);
+                    if (filterTarget && filterTarget !== moveAxis) continue;
+                    pairs.push(nk, moveAxis);
+                }
+                prep.staticNeighbors.set(k, new Int32Array(pairs));
+            }
+        }
+    }
+
     return prep;
 }
 
@@ -357,12 +411,12 @@ function createState(startKey, level, prep) {
         visited:    new Uint16Array(KEY_SPACE),   // visit count per cell
         edgeUsage:  new Uint8Array(KEY_SPACE),    // bit1=H used, bit2=V used
         ints:       0,
-        mustMask:      prep.mustMaskForDFS,        // 0n for dense levels; initialMustMask for sparse/medium
+        mustMask:      prep.mustMaskForDFS,        // 0 for dense levels; initialMustMask for sparse/medium
         mustCrossMask: prep.initialMustCrossMask,
         crossCounts:   new Uint8Array(cn),
         // uint32 bitmask: bit i set when mustPassKeys[i] has been visited at least once.
         // Used by isSolution, mustPassLowerBound, isConnected. For dense levels where
-        // mustMask stays 0n (no scoring activation), this is the authoritative must-pass check.
+        // mustMask stays 0 (no scoring activation), this is the authoritative must-pass check.
         mpVisitedMask: 0,
         portalJumps:   0,
         flipperUsedMask: 0,                       // bit i set when flipper i has been used (global-flip rule)
@@ -372,7 +426,7 @@ function createState(startKey, level, prep) {
     // Apply start-cell effects
     const mpIdx = prep.mustPassIndex.get(startKey);
     if (mpIdx !== undefined) {
-        state.mustMask &= ~(1n << BigInt(mpIdx));
+        state.mustMask &= ~(1 << mpIdx);
         state.mpVisitedMask |= (1 << mpIdx);
     }
     const mcIdx = prep.mustCrossIndex.get(startKey);
@@ -423,7 +477,7 @@ function applyMove(target, state, level, prep, isPortalJump) {
     const prevMpVisitedMask = state.mpVisitedMask;
     const mpIdx = prep.mustPassIndex.get(target);
     if (mpIdx !== undefined && prevVisited === 0) {
-        state.mustMask &= ~(1n << BigInt(mpIdx));
+        state.mustMask &= ~(1 << mpIdx);
         state.mpVisitedMask |= (1 << mpIdx);
     }
 
@@ -434,7 +488,7 @@ function applyMove(target, state, level, prep, isPortalJump) {
     if (mcIdx !== undefined) {
         prevCrossCount = state.crossCounts[mcIdx];
         if (state.crossCounts[mcIdx] < 255) state.crossCounts[mcIdx]++;
-        if (state.crossCounts[mcIdx] >= 2) state.mustCrossMask &= ~(1n << BigInt(mcIdx));
+        if (state.crossCounts[mcIdx] >= 2) state.mustCrossMask &= ~(1 << mcIdx);
     }
 
     // Flipping filter update (global-flip rule: mark flipper as used)
@@ -478,9 +532,8 @@ function undoMove(undo, state) {
 // Returns an array of valid next-cell keys from `pos` in `state`.
 // Portal entries yield ONLY the portal destination (forced teleport).
 // `arrivedViaPortal` prevents chaining teleports.
+// Uses precomputed staticNeighbors from prepLevel; only dynamic checks run here.
 function getNeighbors(pos, state, level, prep) {
-    const { w, h } = level.grid;
-    const x = pos & 0xFFFF, y = (pos >>> 16) & 0xFFFF;
     const portal = level.portalMap.get(pos);
     const arrivedViaPortal = state.lastWasPortalJump;
 
@@ -491,31 +544,72 @@ function getNeighbors(pos, state, level, prep) {
         return [];
     }
 
-    // Entry axis of pos (needed for exit-axis edge-usage check and filter check)
+    // Entry axis of pos (needed for turning check and flipping-filter check)
     const pathLen = state.path.length;
     let entryAxis = AXIS_NONE;
-    if (pathLen >= 2) {
+    if (pathLen >= 2 && !arrivedViaPortal) {
         const prev = state.path[pathLen - 2];
-        // Check if the last step into pos was a portal jump (prev=portalSrc, pos=portalDest)
-        // In that case entry axis is NONE (we teleported).
-        const wasJump = arrivedViaPortal;
-        if (!wasJump) {
-            const px = prev & 0xFFFF, py = (prev >>> 16) & 0xFFFF;
-            entryAxis = (py === y) ? AXIS_H : AXIS_V;
-        }
+        const py = (prev >>> 16) & 0xFFFF;
+        const y  = (pos  >>> 16) & 0xFFFF;
+        entryAxis = (py === y) ? AXIS_H : AXIS_V;
     }
 
+    const staticNbList = prep.staticNeighbors.get(pos);
+    if (!staticNbList || staticNbList.length === 0) return [];
+
     const candidates = [];
-    const dx4 = [1, -1, 0,  0];
-    const dy4 = [0,  0, 1, -1];
-    for (let i = 0; i < 4; i++) {
-        const nx = x + dx4[i], ny = y + dy4[i];
-        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
-        const nk = PACK(nx, ny);
-        if (!isValidMove(pos, nk, state, level, prep, entryAxis)) continue;
-        candidates.push(nk);
+    for (let si = 0; si < staticNbList.length; si += 2) {
+        const nk       = staticNbList[si];
+        const moveAxis = staticNbList[si + 1];
+        if (_isMoveDynValid(pos, nk, state, level, prep, entryAxis, moveAxis)) candidates.push(nk);
     }
     return candidates;
+}
+
+// Dynamic move validity: checks that only depend on mutable state.
+// Static checks (blocks, geese, false goals, gates, regular filters) are
+// already applied in prepLevel's staticNeighbors; only these remain:
+function _isMoveDynValid(from, target, state, level, prep, entryAxis, moveAxis) {
+    // Portal terminal revisit: each portal cell can only be visited once
+    if (level.portalMap.has(target) && state.visited[target] > 0) return false;
+
+    const axisBit = moveAxis === AXIS_H ? 1 : 2;
+
+    // Edge-axis reuse at target
+    if (state.edgeUsage[target] & axisBit) return false;
+
+    // Turning check: when exiting in a different axis than entry, the exit axis
+    // must not already be used at the source cell
+    if (entryAxis !== AXIS_NONE && moveAxis !== entryAxis) {
+        if (state.edgeUsage[from] & axisBit) return false;
+    }
+
+    // Must-cross lock prevention: turning at an unsatisfied 1st-pass MC cell
+    // would consume both axis bits, permanently blocking the required 2nd crossing
+    const _mcLockIdx = prep.mustCrossIndex.get(from);
+    if (_mcLockIdx !== undefined && state.crossCounts[_mcLockIdx] === 1
+            && (state.mustCrossMask & (1 << _mcLockIdx)) !== 0) {
+        const _eH = (state.edgeUsage[from] & AXIS_H) !== 0;
+        const _eV = (state.edgeUsage[from] & AXIS_V) !== 0;
+        if ((_eH && !_eV && moveAxis === AXIS_V) || (!_eH && _eV && moveAxis === AXIS_H)) return false;
+    }
+
+    // Flipping filter at from: entry and exit axis must match (no turns at flipper)
+    if (level.flippingFilterMap.has(from) && entryAxis !== AXIS_NONE) {
+        if (entryAxis !== moveAxis) return false;
+    }
+
+    // Flipping filter at target: must enter in the flipper's current orientation
+    const fi = prep.flipperIndexMap.get(target);
+    if (fi !== undefined) {
+        if (state.flipperUsedMask & (1 << fi)) return false;
+        const usedCount = _popcount(state.flipperUsedMask);
+        const initAx    = prep.flipperInitAxes[fi];
+        const curAx     = (usedCount & 1) === 0 ? initAx : (initAx === AXIS_H ? AXIS_V : AXIS_H);
+        if (curAx !== moveAxis) return false;
+    }
+
+    return true;
 }
 
 // Returns true if moving from `from` to `target` is valid.
@@ -550,7 +644,7 @@ function isValidMove(from, target, state, level, prep, entryAxis) {
     // possible if the 1st pass was straight-through (same axis entry and exit).
     const _mcLockIdx = prep.mustCrossIndex.get(from);
     if (_mcLockIdx !== undefined && state.crossCounts[_mcLockIdx] === 1
-            && (state.mustCrossMask & (1n << BigInt(_mcLockIdx))) !== 0n) {
+            && (state.mustCrossMask & (1 << _mcLockIdx)) !== 0) {
         const _eH = (state.edgeUsage[from] & AXIS_H) !== 0;
         const _eV = (state.edgeUsage[from] & AXIS_V) !== 0;
         if ((_eH && !_eV && moveAxis === AXIS_V) || (!_eH && _eV && moveAxis === AXIS_H)) return false;
@@ -608,9 +702,9 @@ function mcMSTLowerBound(pos, remain, state, level, prep) {
             const mcKey = level.mustCrossKeys[i];
             const usedH = (state.edgeUsage[mcKey] & AXIS_H) !== 0;
             const aMap  = usedH ? prep.mcApproachDistMaps[i].v : prep.mcApproachDistMaps[i].h;
-            d = aMap.size > 0 ? ((aMap.get(pos) ?? Infinity) + 1) : (prep.mustCrossDistMaps[i].get(pos) ?? Infinity);
+            d = aMap.size > 0 ? ((aMap.get(pos) ?? Infinity) + 1) : _dget(prep.mcDistArrs[i], pos);
         } else {
-            d = prep.mustCrossDistMaps[i].get(pos) ?? Infinity;
+            d = _dget(prep.mcDistArrs[i], pos);
         }
         if (!Number.isFinite(d)) return Infinity;
         _mstEdges[eCount * 3]     = d;
@@ -670,7 +764,7 @@ function mpMSTLowerBound(pos, remain, level, prep) {
     const nodeCount = k + 1; // 0=pos, 1..k = MP[remain[...]]
     let eCount = 0;
     for (let a = 0; a < k; a++) {
-        const d = prep.mustPassDistMaps[remain[a]].get(pos) ?? Infinity;
+        const d = _dget(prep.mpDistArrs[remain[a]], pos);
         if (!Number.isFinite(d)) return Infinity;
         _mstEdges[eCount * 3]     = d;
         _mstEdges[eCount * 3 + 1] = 0;
@@ -721,7 +815,7 @@ function mpMSTLowerBound(pos, remain, level, prep) {
 function mustPassLowerBound(pos, state, level, prep) {
     const n = level.mustPassKeys.length;
     if (n === 0) return 0;
-    // Use mpVisitedMask (uint32) — works for both DFS (mustMask=0n) and beam.
+    // Use mpVisitedMask (uint32) — works for both DFS (mustMask=0) and beam.
     const mpAllMask = (1 << n) - 1;
     if ((state.mpVisitedMask & mpAllMask) === mpAllMask) return 0;
     const remain = [];
@@ -729,7 +823,7 @@ function mustPassLowerBound(pos, state, level, prep) {
     for (let i = 0; i < n; i++) {
         if (state.mpVisitedMask & (1 << i)) continue;
         remain.push(i);
-        const dToMp   = prep.mustPassDistMaps[i].get(pos) ?? Infinity;
+        const dToMp   = _dget(prep.mpDistArrs[i], pos);
         const dMpGoal = prep.mustPassToGoalDist[i];
         if (!Number.isFinite(dToMp) || !Number.isFinite(dMpGoal)) return Infinity;
         lb = Math.max(lb, dToMp + dMpGoal);
@@ -748,12 +842,12 @@ function mustPassLowerBound(pos, state, level, prep) {
 // For ≥2 remaining MC cells, also uses an MST joint lower bound (tighter than max over
 // individual bounds), which prunes wrong subtrees much earlier.
 function mustCrossLowerBound(pos, state, level, prep) {
-    if (state.mustCrossMask === 0n) return 0;
+    if (state.mustCrossMask === 0) return 0;
     const n = level.mustCrossKeys.length;
     let lb = 0;
     const remain = [];
     for (let i = 0; i < n; i++) {
-        if ((state.mustCrossMask & (1n << BigInt(i))) === 0n) continue;
+        if ((state.mustCrossMask & (1 << i)) === 0) continue;
         remain.push(i);
         const dMcGoal = prep.mustCrossToGoalDist[i];
         if (!Number.isFinite(dMcGoal)) return Infinity;
@@ -772,7 +866,7 @@ function mustCrossLowerBound(pos, state, level, prep) {
             }
         }
 
-        const d = prep.mustCrossDistMaps[i].get(pos) ?? Infinity;
+        const d = _dget(prep.mcDistArrs[i], pos);
         if (!Number.isFinite(d)) return Infinity;
         lb = Math.max(lb, d + dMcGoal);
     }
@@ -848,7 +942,7 @@ function isConnected(pos, state, level, prep) {
         if (!(state.mpVisitedMask & (1 << i)) && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
-        if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
+        if ((state.mustCrossMask & (1 << i)) !== 0 && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
     }
     // Volume check (mirrors V1's _checkTopology): not enough accessible fresh cells to finish.
     // Disabled for portal levels only (portal jumps visit a destination cell for 0 path
@@ -907,7 +1001,7 @@ function isConnectedForTrap(pos, state, level, prep) {
         if (!(state.mpVisitedMask & (1 << i)) && _reachGenBuf[level.mustPassKeys[i]] !== gen) return false;
     }
     for (let i = 0; i < level.mustCrossKeys.length; i++) {
-        if ((state.mustCrossMask & (1n << BigInt(i))) !== 0n && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
+        if ((state.mustCrossMask & (1 << i)) !== 0 && _reachGenBuf[level.mustCrossKeys[i]] !== gen) return false;
     }
     const hasPortal = level.portalMap.size > 0;
     if (!hasPortal) {
@@ -964,10 +1058,10 @@ async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime,
 
         // Basic pruning for the first step
         if (curRealLen > level.reqLen || state.ints > level.reqInt) { undoMove(undo, state); continue; }
-        if (state.mustCrossMask !== 0n && mcN > 0 &&
-            state.ints + _popcount(Number(state.mustCrossMask)) > level.reqInt) { undoMove(undo, state); continue; }
+        if (state.mustCrossMask !== 0 && mcN > 0 &&
+            state.ints + _popcount(state.mustCrossMask) > level.reqInt) { undoMove(undo, state); continue; }
         if (curRealLen === level.reqLen) {
-            if (state.ints === level.reqInt && state.mustCrossMask === 0n &&
+            if (state.ints === level.reqInt && state.mustCrossMask === 0 &&
                 (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
                 !prep.trapInvalidSet.has(next)) validSpots.add(next);
             undoMove(undo, state);
@@ -994,18 +1088,18 @@ async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime,
                     let mpLB = 0;
                     for (let i = 0; i < mpN; i++) {
                         if (state.mpVisitedMask & (1 << i)) continue;
-                        const d = prep.mustPassDistMaps[i].get(cur) ?? Infinity;
+                        const d = _dget(prep.mpDistArrs[i], cur);
                         if (!Number.isFinite(d)) { mpLB = Infinity; break; }
                         if (d > mpLB) mpLB = d;
                     }
                     if (!Number.isFinite(mpLB) || mpLB > rSteps) { chainDone = true; break; }
                 }
 
-                if (state.mustCrossMask !== 0n) {
+                if (state.mustCrossMask !== 0) {
                     let mcLB = 0;
                     for (let i = 0; i < mcN; i++) {
-                        if ((state.mustCrossMask & (1n << BigInt(i))) === 0n) continue;
-                        const d = prep.mustCrossDistMaps[i].get(cur) ?? Infinity;
+                        if ((state.mustCrossMask & (1 << i)) === 0) continue;
+                        const d = _dget(prep.mcDistArrs[i], cur);
                         if (!Number.isFinite(d)) { mcLB = Infinity; break; }
                         if (d > mcLB) mcLB = d;
                     }
@@ -1030,12 +1124,12 @@ async function dfsEnumerateTrapSpots(startKey, level, prep, budgetMs, startTime,
             if (curRealLen > level.reqLen || state.ints > level.reqInt) {
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
-            if (state.mustCrossMask !== 0n && mcN > 0 &&
-                state.ints + _popcount(Number(state.mustCrossMask)) > level.reqInt) {
+            if (state.mustCrossMask !== 0 && mcN > 0 &&
+                state.ints + _popcount(state.mustCrossMask) > level.reqInt) {
                 undoMove(forcedUndo, state); chainDone = true; break;
             }
             if (curRealLen === level.reqLen) {
-                if (state.ints === level.reqInt && state.mustCrossMask === 0n &&
+                if (state.ints === level.reqInt && state.mustCrossMask === 0 &&
                     (mpAllMask === 0 || (state.mpVisitedMask & mpAllMask) === mpAllMask) &&
                     !prep.trapInvalidSet.has(forcedNext)) validSpots.add(forcedNext);
                 undoMove(forcedUndo, state); chainDone = true; break;
@@ -1125,8 +1219,8 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     let score = 0;
 
     // Goal attraction: reward moves that reduce distance to goal
-    const goalDistCur    = prep.distMap.get(pos)    ?? Infinity;
-    const goalDistTarget = prep.distMap.get(target) ?? Infinity;
+    const goalDistCur    = _dget(prep.goalDistArr, pos);
+    const goalDistTarget = _dget(prep.goalDistArr, target);
     if (Number.isFinite(goalDistCur) && Number.isFinite(goalDistTarget)) {
         const gain = goalDistCur - goalDistTarget;
         score += w * phaseGoalScale * gain * 10;
@@ -1138,15 +1232,16 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     }
 
     // Objective attraction: reward moves toward nearest unsatisfied objective
-    if (state.mustMask !== 0n || state.mustCrossMask !== 0n) {
+    if (state.mustMask !== 0 || state.mustCrossMask !== 0) {
         let bestObjDist = Infinity;
-        for (const objKey of prep.objectiveKeys) {
+        for (let oi = 0; oi < prep.objectiveKeys.length; oi++) {
+            const objKey = prep.objectiveKeys[oi];
             const mpIdx = prep.mustPassIndex.get(objKey);
             const mcIdx = prep.mustCrossIndex.get(objKey);
-            const satisfied = (mpIdx !== undefined && (state.mustMask & (1n << BigInt(mpIdx))) === 0n)
-                           || (mcIdx !== undefined && (state.mustCrossMask & (1n << BigInt(mcIdx))) === 0n);
+            const satisfied = (mpIdx !== undefined && (state.mustMask & (1 << mpIdx)) === 0)
+                           || (mcIdx !== undefined && (state.mustCrossMask & (1 << mcIdx)) === 0);
             if (satisfied) continue;
-            const d = prep.objectiveDistMaps[prep.objectiveKeyToIndex.get(objKey)].get(target) ?? Infinity;
+            const d = _dget(prep.objDistArrs[oi], target);
             if (Number.isFinite(d)) bestObjDist = Math.min(bestObjDist, d);
         }
         if (Number.isFinite(bestObjDist)) {
@@ -1155,11 +1250,11 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     }
 
     // Must-pass urgency: bonus for moving toward must-pass
-    if (state.mustMask !== 0n) {
+    if (state.mustMask !== 0) {
         for (let i = 0; i < level.mustPassKeys.length; i++) {
-            if ((state.mustMask & (1n << BigInt(i))) === 0n) continue;
-            const dCur    = prep.mustPassDistMaps[i].get(pos)    ?? Infinity;
-            const dTarget = prep.mustPassDistMaps[i].get(target) ?? Infinity;
+            if ((state.mustMask & (1 << i)) === 0) continue;
+            const dCur    = _dget(prep.mpDistArrs[i], pos);
+            const dTarget = _dget(prep.mpDistArrs[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmp * (dCur - dTarget) * 5;
             }
@@ -1167,9 +1262,9 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     }
 
     // Must-cross urgency
-    if (state.mustCrossMask !== 0n) {
+    if (state.mustCrossMask !== 0) {
         for (let i = 0; i < level.mustCrossKeys.length; i++) {
-            if ((state.mustCrossMask & (1n << BigInt(i))) === 0n) continue;
+            if ((state.mustCrossMask & (1 << i)) === 0) continue;
 
             if (state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
                 // 2nd visit needed: guide toward the perpendicular-axis approach cells,
@@ -1188,8 +1283,8 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
             }
 
             // 1st visit (or approach map unavailable): standard urgency toward MC cell
-            const dCur    = prep.mustCrossDistMaps[i].get(pos)    ?? Infinity;
-            const dTarget = prep.mustCrossDistMaps[i].get(target) ?? Infinity;
+            const dCur    = _dget(prep.mcDistArrs[i], pos);
+            const dTarget = _dget(prep.mcDistArrs[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
                 score += wmc * (dCur - dTarget) * 5;
             }
@@ -1255,9 +1350,9 @@ function isSolution(state, level) {
     const realLen = state.path.length - 1 - state.portalJumps;
     if (realLen !== level.reqLen) return false;
     if (state.ints !== level.reqInt)         return false;
-    if (state.mustMask !== 0n)               return false;
-    if (state.mustCrossMask !== 0n)          return false;
-    // Dense-level DFS (density≥0.70) keeps mustMask=0n to avoid disrupting near-Hamiltonian
+    if (state.mustMask !== 0)               return false;
+    if (state.mustCrossMask !== 0)          return false;
+    // Dense-level DFS (density≥0.70) keeps mustMask=0 to avoid disrupting near-Hamiltonian
     // orderings. For those levels the mustMask check above always passes, so we enforce
     // must-pass correctness via mpVisitedMask. For all other paths this check is redundant
     // with mustMask but harmless — both fields are always kept in sync.
@@ -1333,8 +1428,8 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
         // If current ints + guaranteed future MC ints already exceeds reqInt, prune.
         // This eliminates paths with non-MC crossings on levels where all intersections
         // must come from MC cells (e.g. L53: mc=3, reqInt=3 → zero non-MC crossings).
-        if (state.mustCrossMask !== 0n && level.mustCrossKeys.length > 0) {
-            const mcRemaining = _popcount(Number(state.mustCrossMask));
+        if (state.mustCrossMask !== 0 && level.mustCrossKeys.length > 0) {
+            const mcRemaining = _popcount(state.mustCrossMask);
             if (state.ints + mcRemaining > level.reqInt) { undoMove(undo, state); continue; }
         }
 
@@ -1347,7 +1442,7 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
         const rSteps = level.reqLen - realLen;
 
         // Distance bound: min steps from next to goal must fit in remaining steps
-        const goalDist = prep.distMap.get(next) ?? Infinity;
+        const goalDist = _dget(prep.goalDistArr, next);
         if (!Number.isFinite(goalDist) || goalDist > rSteps) { undoMove(undo, state); continue; }
 
         // Parity pruning (V1 line 6559): on a portal-free grid every step flips (x+y)%2.
@@ -1371,7 +1466,7 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
         }
 
         // Must-cross lower bound: dist(next→MC) + dist(MC→goal) ≤ rSteps
-        if (state.mustCrossMask !== 0n) {
+        if (state.mustCrossMask !== 0) {
             const mcLB = mustCrossLowerBound(next, state, level, prep);
             if (!Number.isFinite(mcLB) || mcLB > rSteps) { undoMove(undo, state); continue; }
         }
@@ -1450,7 +1545,7 @@ function _beamResetState(ws, startKey, level, prep) {
     ws.visited[startKey] = 1;
     const mpIdx = prep.mustPassIndex.get(startKey);
     if (mpIdx !== undefined) {
-        ws.mustMask &= ~(1n << BigInt(mpIdx));
+        ws.mustMask &= ~(1 << mpIdx);
         ws.mpVisitedMask |= (1 << mpIdx);
     }
     const mcIdx = prep.mustCrossIndex.get(startKey);
@@ -1459,21 +1554,20 @@ function _beamResetState(ws, startKey, level, prep) {
     if (_fsi !== undefined) ws.flipperUsedMask |= (1 << _fsi);
 }
 
-// Synchronous beam search: maintain a frontier of up to `beamWidth` partial paths,
-// all at the same depth. At each step expand every frontier state, score all valid
-// one-step extensions, and keep the top-beamWidth by cumulative score.
-// Uses a single reusable mutable state (KEY_SPACE arrays allocated once, cells
-// zeroed per-frontier-state via _beamResetState) to avoid repeated large allocations.
+// Synchronous beam search using parent-pointer frontier nodes to eliminate
+// O(depth) path-array copies. Each frontier entry is { key, prev, depth, score };
+// depth is stored to avoid a length-counting pass during reconstruction.
+// The path is reconstructed into a reusable scratch array only when needed.
 async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn) {
     const ws = createState(startKey, level, prep);
-    let frontier = [{ path: [startKey], score: 0 }];
+    // Root node: prev=null, key=startKey, depth=0
+    let frontier = [{ key: startKey, prev: null, depth: 0, score: 0 }];
     let lastYield = startTime;
-    // Work-based budget: beam search terminates in at most reqLen + portal-pair phases
-    // regardless of machine speed, so use phase count rather than wall-clock time.
-    // Each phase extends every frontier path by one step; a reqLen-step solution is
-    // reachable only during phase reqLen (plus one per portal pair for portal jumps).
+    // Work-based budget: beam search terminates in at most reqLen + portal-pair phases.
     const maxPhases = level.reqLen + Math.floor(level.portalMap.size / 2);
     let phasesCompleted = 0;
+    // Reusable scratch array for path reconstruction from parent pointers
+    const _scratch = [];
 
     const yieldIfNeeded = async () => {
         if (!yieldFn) return false;
@@ -1495,22 +1589,30 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
         const cands = [];
         let frontierIndex = 0;
 
-        for (const { path, score: acc } of frontier) {
+        for (const node of frontier) {
             if (((++frontierIndex) & 255) === 0) {
                 await yieldIfNeeded();
             }
-            // Reset ws to startKey state, then replay this frontier path.
+
+            // Reconstruct path from parent-pointer chain into _scratch.
+            // node.depth stores path length-1, so one traversal suffices (no length-count pass).
+            const len = node.depth + 1;
+            _scratch.length = len;
+            let cur = node;
+            for (let i = len - 1; i >= 0; i--) { _scratch[i] = cur.key; cur = cur.prev; }
+
+            // Reset ws to startKey state, then replay the reconstructed path
             _beamResetState(ws, startKey, level, prep);
-            for (let i = 1; i < path.length; i++) {
-                const from = path[i - 1], to = path[i];
+            for (let i = 1; i < len; i++) {
+                const from = _scratch[i - 1], to = _scratch[i];
                 const p = level.portalMap.get(from);
                 const isJump = !!(p && !ws.lastWasPortalJump && p.dest === to);
                 applyMove(to, ws, level, prep, isJump);
             }
 
-            const pos = path[path.length - 1];
+            const pos = node.key;
             if (pos === level.goalKey) {
-                if (isSolution(ws, level)) return path;
+                if (isSolution(ws, level)) return _scratch.slice();
                 continue;
             }
 
@@ -1523,15 +1625,20 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
                 const rSteps  = level.reqLen - realLen;
                 let ok = realLen <= level.reqLen && ws.ints <= level.reqInt;
 
-                if (ok && ws.mustCrossMask !== 0n) {
-                    if (ws.ints + _popcount(Number(ws.mustCrossMask)) > level.reqInt) ok = false;
+                if (ok && ws.mustCrossMask !== 0) {
+                    if (ws.ints + _popcount(ws.mustCrossMask) > level.reqInt) ok = false;
                 }
                 if (ok && next === level.goalKey) {
-                    if (isSolution(ws, level)) { undoMove(undo, ws); return [...path, next]; }
+                    if (isSolution(ws, level)) {
+                        // ws.path is already [startKey, ..., pos, next] — return it
+                        const sol = ws.path.slice();
+                        undoMove(undo, ws);
+                        return sol;
+                    }
                     ok = false;
                 }
                 if (ok) {
-                    const gd = prep.distMap.get(next) ?? Infinity;
+                    const gd = _dget(prep.goalDistArr, next);
                     if (!Number.isFinite(gd) || gd > rSteps) ok = false;
                 }
                 if (ok && level.portalMap.size === 0) {
@@ -1543,18 +1650,19 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
                     const lb = mustPassLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
-                if (ok && ws.mustCrossMask !== 0n) {
+                if (ok && ws.mustCrossMask !== 0) {
                     const lb = mustCrossLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
                 if (ok && (level.reqInt - ws.ints) > rSteps) ok = false;
-                // Connectivity: check near end and every 8 path steps (catches dead ends early).
+                // Connectivity: check near end and every 8 path steps
                 if (ok && (rSteps <= 20 || (realLen & 7) === 0)) {
                     if (!isConnected(next, ws, level, prep)) ok = false;
                 }
                 if (ok) {
                     const mv = scoreMoveV2(next, pos, ws, level, prep, profile, rSteps, template);
-                    cands.push({ path: [...path, next], score: acc + mv });
+                    // Parent-pointer node — O(1) instead of O(depth) path copy
+                    cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv });
                 }
                 undoMove(undo, ws);
             }
@@ -1573,19 +1681,27 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
     return null;
 }
 
+// Reusable scratch buffer for scoreAndSort (max 4 neighbors on a 4-directional grid).
+const _sas = new Float64Array(4); // scores indexed by neighbor position
 // Sort neighbors in-place: best-first at index 0 (DFS iterates with childIdx++).
 function scoreAndSort(neighbors, pos, state, level, prep, profile, template) {
-    if (neighbors.length <= 1) return;
+    const n = neighbors.length;
+    if (n <= 1) return;
     const realLen = state.path.length - 1 - state.portalJumps;
     const portalEntry = level.portalMap.get(pos);
-    const scored = neighbors.map(nk => {
+    for (let i = 0; i < n; i++) {
+        const nk = neighbors[i];
         const isJump = !!(portalEntry && portalEntry.dest === nk);
-        const nLen = realLen + (isJump ? 0 : 1);
-        const nRSteps = level.reqLen - nLen;
-        return [nk, scoreMoveV2(nk, pos, state, level, prep, profile, nRSteps, template)];
-    });
-    scored.sort((a, b) => b[1] - a[1]); // descending: children[0] = best = explored first
-    for (let i = 0; i < neighbors.length; i++) neighbors[i] = scored[i][0];
+        const nRSteps = level.reqLen - realLen - (isJump ? 0 : 1);
+        _sas[i] = scoreMoveV2(nk, pos, state, level, prep, profile, nRSteps, template);
+    }
+    // Insertion sort (tiny arrays ≤4)
+    for (let i = 1; i < n; i++) {
+        const si = _sas[i], ki = neighbors[i];
+        let j = i - 1;
+        while (j >= 0 && _sas[j] < si) { _sas[j + 1] = _sas[j]; neighbors[j + 1] = neighbors[j]; j--; }
+        _sas[j + 1] = si; neighbors[j + 1] = ki;
+    }
 }
 
 // ─── Archetype detection ──────────────────────────────────────────────────────
