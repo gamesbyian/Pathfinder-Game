@@ -29,7 +29,7 @@ export const initDom = () => {
         'message','searchIndicator','searchLabel','solverDetailLabel','solverCloseBtn','solverTimer','solverProgressBar','solverProgressPct',
         'guideModal','editorHelpModal','winModal','themeModal','unsavedModal','playOptionsBlockedModal','publishedLevelsModal',
         'gooseJumpScare','bombJumpScare','alertOverlay','hintBtn','solutionOutput','completionBurst',
-        'themeEditList','themeSelectView','themeEditView','dragGhost',
+        'themeSelectView','dragGhost',
     ].forEach(id => { dom[id] = document.getElementById(id); });
 };
 
