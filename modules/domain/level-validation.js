@@ -77,6 +77,30 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
     const hasFreeFlipForMustCross = Array.from(l.flippingFilterMap.keys())
         .some(fk => !mustCrossAdjCells.has(fk));
 
+    const isDiagonalTurnObstacle = (key) => (
+        l.blockSet.has(key) ||
+        l.gooseSet.has(key) ||
+        l.falseGoalKeys.has(key) ||
+        l.filterMap.has(key) ||
+        l.flippingFilterMap.has(key) ||
+        l.portalMap.has(key) ||
+        gateSet.has(key) ||
+        l.goalKey === key
+    );
+
+    const hasAlternateTurnSpaceAroundDiagonal = (p, sx, sy) => {
+        // If the immediate diagonal is blocked, a route can still turn farther
+        // out in the same row or column, provided at least one such cell is
+        // inside the grid and not itself a routing obstacle.
+        for (let x = p.x + (2 * sx); inBounds(x, p.y + sy, w, h); x += sx) {
+            if (!isDiagonalTurnObstacle(PACK(x, p.y + sy))) return true;
+        }
+        for (let y = p.y + (2 * sy); inBounds(p.x + sx, y, w, h); y += sy) {
+            if (!isDiagonalTurnObstacle(PACK(p.x + sx, y))) return true;
+        }
+        return false;
+    };
+
     for (const k of l.mustCrossKeys) {
         if (!inGrid(k)) continue;
         const p = UNPACK(k);
@@ -100,11 +124,12 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
             if ([up, down].some(nk => l.flippingFilterMap.get(nk) === AXIS_H))
                 reasons.push(`Flipping H-filter blocks MustCross at (${p.x + 1},${p.y + 1})`);
         }
-        const inBoundsDiags = [[1,1],[1,-1],[-1,1],[-1,-1]]
-            .filter(([dx, dy]) => inBounds(p.x + dx, p.y + dy, w, h))
-            .map(([dx, dy]) => PACK(p.x + dx, p.y + dy));
-        if (inBoundsDiags.some(dk => l.filterMap.has(dk) || l.flippingFilterMap.has(dk)))
-            reasons.push(`Filter diagonally adjacent to MustCross at (${p.x + 1},${p.y + 1})`);
+        for (const [sx, sy] of [[1,1],[1,-1],[-1,1],[-1,-1]]) {
+            const dk = PACK(p.x + sx, p.y + sy);
+            if (!inGrid(dk) || !isDiagonalTurnObstacle(dk)) continue;
+            if (!hasAlternateTurnSpaceAroundDiagonal(p, sx, sy))
+                reasons.push(`Diagonal obstacle traps MustCross at (${p.x + 1},${p.y + 1})`);
+        }
     }
 
     // Gate accessibility: needs at least one open orthogonal side to start.

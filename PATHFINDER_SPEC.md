@@ -738,7 +738,7 @@ For each must-cross cell:
 - A vertical filter immediately left or right of the must-cross should be invalid because it blocks horizontal crossing approaches.
 - A horizontal filter immediately above or below the must-cross should be invalid because it blocks vertical crossing approaches.
 - Flipping filters that would block the same required approaches should be invalid unless there is a free flipping filter elsewhere that can change the relevant filter state before reaching the must-cross.
-- Filters diagonally adjacent to a must-cross should be treated as invalid because they tend to create misleading/blocked crossing geometry.
+- Diagonal adjacency to a must-cross is not invalid by itself. A diagonally adjacent obstacle should be invalid only when the surrounding rows/columns leave no other open turn space for the line to turn back toward that must-cross except the immediately diagonal square. This rule applies to diagonal obstacles generally, including filters and flipping filters, but only in that cramped/no-alternate-turn-space case.
 
 ### 10.5 Accessibility
 
