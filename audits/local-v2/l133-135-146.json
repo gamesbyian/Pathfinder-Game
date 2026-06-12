@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-06-12T06:53:47.747Z",
+  "commitSha": "683f79f48b8a11285aa048aace45da372196d72a",
+  "budgetMs": 30000,
+  "levelFilter": [
+    133,
+    135,
+    146
+  ],
+  "solved": 3,
+  "failed": 0,
+  "errors": 0,
+  "total": 3,
+  "totalMs": 5008,
+  "levels": [
+    {
+      "level": 133,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2072,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": false,
+          "elapsedMs": 1875
+        },
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCCW",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 193
+        }
+      ]
+    },
+    {
+      "level": 135,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 14,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 458759,
+          "profile": "perimeterSweep",
+          "template": "cornerHarvest",
+          "beamWidth": null,
+          "ok": true,
+          "elapsedMs": 3
+        }
+      ]
+    },
+    {
+      "level": 146,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2922,
+      "solvedBy": "objectiveFirst",
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "objectiveFirst",
+          "template": null,
+          "beamWidth": 5000,
+          "ok": true,
+          "elapsedMs": 2911
+        }
+      ]
+    }
+  ]
+}
