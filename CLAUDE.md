@@ -230,12 +230,16 @@ Checked in priority order:
   - Connectivity: isolating a region that must be visited
 
 ### Beam Search (`beamSearchFromGate`)
-- Frontier of parent-pointer nodes `{ key, prev, depth, score }`
+- Frontier of parent-pointer nodes `{ key, prev, depth, score, sc, sk? }`
 - Path reconstructed into reusable `_scratch[]` array — no O(depth) allocations per candidate
 - Replay via `_beamResetState()` + `applyMove()` loop from reconstructed path
 - Same pruning checks as DFS applied to each candidate
 - `scoreAndSort` uses module-level `_sas[4]` Float64Array scratch + insertion sort (no per-call allocation)
 - Default beam width: 2000. Wide beams (5000, 50000) for very hard levels.
+- **State dedup**: before sort+select, candidates sharing `(key, sc)` are merged — only the highest-scoring path to each `(position, constraint-state)` tuple survives. Map key is `c.key + c.sc * KEY_SPACE` (exact float64). Disabled for portal levels (portal usage isn't in `sc`, so merging would be incorrect).
+  - `sc = (flipperUsedMask<<12)|(mustCrossMask<<8)|(mpVisitedMask<<4)|(ints&0xF)`
+- **Diverse beam** (`diverseBeam` flag + `_diverseSelect`): buckets candidates by `sk = (flipperUsedMask<<4)|(mustCrossMask&0xF)`, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills remaining slots from the global top. Prevents beam collapse to one constraint-state mode on levels with flippers and must-cross cells.
+- **Progressive widening**: hard levels use `[bw=5000 diverse, bw=15000 diverse, bw=50000]` config sequence — narrow beams solve fast if they can; wide beam is a fallback with `minBudgetFraction: 1.0`.
 
 ### Key Data Structures
 ```js
@@ -365,10 +369,21 @@ Targeted `getAttemptConfigs()` sub-branching:
 6. **L146** (high-int reqInt≥7, portals=4): `objectiveFirst bw=5000` before `intersectionHarvest` → 6,392ms → ~2,934ms (−54%)
 - **After L133/L146 fixes**: ~47.3s (−12.9% vs config reordering, −63.0% vs original baseline)
 
+### Diverse Beam + Progressive Widening (2026-06-12)
+7. **L145** (must-cross-heavy, mp≥3, flippers≥2): Added `diverseBeam` flag + `_diverseSelect` bucketing by `(flipperUsedMask, mustCrossMask)`. Config sequence: `bw=5000 diverse → bw=15000 diverse → bw=50000`. Prevents beam collapse to one flipper-ordering mode.
+   - L145: ~18,000ms → ~8,750ms (bw=15000 diverse wins)
+- **After diverse beam**: ~38.1s (−19.4% vs L133/L146 fixes)
+
+### State-based Beam Dedup (2026-06-12)
+8. **All beam levels (portal-free)**: Before sort+select, merge candidates sharing `(position, constraint-state sc)`, keeping highest-scoring path per `(cell, flipper+MC+MP+ints)` tuple. Map key: `c.key + c.sc * KEY_SPACE`. Disabled for portal levels.
+   - L145: 8,750ms → 2,295ms (bw=5000 diverse now wins; was bw=15000)
+- **After state dedup**: ~26.8s (−29.6% vs diverse beam, −79.0% vs original baseline)
+
 ### Current State (2026-06-12)
 - 147/147 solved
-- Total runtime: ~47.3s
-- Remaining slow levels: L145 (~18s, intersectionHarvest beam w=50000)
+- Total runtime: ~26.8s
+- Slowest levels: L146 (~3.5s), L147 (~3.0s), L140 (~2.5s), L145 (~2.3s), L133 (~2.1s)
+- No single dominant bottleneck — top-10 levels all under 3.6s
 
 ---
 
