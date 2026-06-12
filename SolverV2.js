@@ -1554,11 +1554,43 @@ function _beamResetState(ws, startKey, level, prep) {
     if (_fsi !== undefined) ws.flipperUsedMask |= (1 << _fsi);
 }
 
+// Diverse beam selection: guarantee each (flipperUsedMask, mustCrossMask) bucket
+// retains at least floor(beamWidth/numBuckets) candidates. The remaining slots
+// are filled from the global top of the score-sorted list.
+// `sorted` must already be sorted descending by score; each entry carries `.sk`
+// (stateKey = (flipperUsedMask << 4) | mustCrossMask, packed at candidate creation).
+function _diverseSelect(sorted, beamWidth) {
+    const buckets = new Map();
+    for (const c of sorted) {
+        let b = buckets.get(c.sk);
+        if (!b) { b = []; buckets.set(c.sk, b); }
+        b.push(c);
+    }
+    const nb = buckets.size;
+    if (nb <= 1) return sorted.slice(0, beamWidth);
+
+    const guaranteed = Math.max(1, Math.floor(beamWidth / nb));
+    const result = [];
+    const added = new Set();
+
+    for (const bucket of buckets.values()) {
+        const take = Math.min(guaranteed, bucket.length);
+        for (let i = 0; i < take; i++) { result.push(bucket[i]); added.add(bucket[i]); }
+    }
+    for (const c of sorted) {
+        if (result.length >= beamWidth) break;
+        if (!added.has(c)) result.push(c);
+    }
+    return result;
+}
+
 // Synchronous beam search using parent-pointer frontier nodes to eliminate
 // O(depth) path-array copies. Each frontier entry is { key, prev, depth, score };
 // depth is stored to avoid a length-counting pass during reconstruction.
 // The path is reconstructed into a reusable scratch array only when needed.
-async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn) {
+// diverseBeam: if true, use _diverseSelect to maintain candidate diversity across
+// flipper and must-cross constraint states (prevents beam collapse to one structural mode).
+async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam) {
     const ws = createState(startKey, level, prep);
     // Root node: prev=null, key=startKey, depth=0
     let frontier = [{ key: startKey, prev: null, depth: 0, score: 0 }];
@@ -1661,8 +1693,15 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
                 }
                 if (ok) {
                     const mv = scoreMoveV2(next, pos, ws, level, prep, profile, rSteps, template);
-                    // Parent-pointer node — O(1) instead of O(depth) path copy
-                    cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv });
+                    // Parent-pointer node — O(1) instead of O(depth) path copy.
+                    // sk = stateKey: (flipperUsedMask<<4)|mustCrossMask — used by _diverseSelect
+                    // to bucket candidates and prevent beam collapse to one constraint-state mode.
+                    if (diverseBeam) {
+                        cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
+                                     sk: (ws.flipperUsedMask << 4) | (ws.mustCrossMask & 0xF) });
+                    } else {
+                        cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv });
+                    }
                 }
                 undoMove(undo, ws);
             }
@@ -1673,7 +1712,7 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
         if (cands.length > beamWidth) {
             cands.sort((a, b) => b.score - a.score);
             await yieldIfNeeded();
-            frontier = cands.slice(0, beamWidth);
+            frontier = diverseBeam ? _diverseSelect(cands, beamWidth) : cands.slice(0, beamWidth);
         } else {
             frontier = cands;
         }
@@ -1870,11 +1909,16 @@ function getAttemptConfigs(level) {
             // Empirically: beam[50000] intersectionHarvest solves L140 in ~20s; any split
             // reduces the per-attempt budget below that threshold and the level times out.
             if (level.flippingFilterMap.size >= 2) {
-                // beam[50000] intersectionHarvest needs the full 30s budget for L140
-                // (25+ seconds under GC pressure from prior levels). minBudgetFraction=1.0
-                // gives it the entire gate budget; DFS fallbacks consume whatever is left
-                // if the beam finishes early, acting as a backstop for future levels.
+                // Progressive beam widening with diverse-beam selection for flipper-heavy levels
+                // (L145: 4 flippers + 4mp + 2mc). The diverse beam buckets candidates by
+                // (flipperUsedMask, mustCrossMask) so all valid flipper orderings stay alive
+                // even at narrow widths where a uniform beam would collapse to one mode.
+                // bw=5000/15000 diverse: fast probes (~2s/~7s) that may solve outright.
+                // bw=50000 fallback: full-budget non-diverse beam, proven to work (L145 baseline).
+                // DFS fallbacks consume any leftover budget if the beam finishes early.
                 return [
+                    { profileName: 'intersectionHarvest', template: null, beamWidth:  5000, diverseBeam: true },
+                    { profileName: 'intersectionHarvest', template: null, beamWidth: 15000, diverseBeam: true },
                     { profileName: 'intersectionHarvest', template: null, beamWidth: 50000, minBudgetFraction: 1.0 },
                     { profileName: 'objectiveFirst',      template: null },
                     { profileName: 'intersectionHarvest', template: null },
@@ -1986,13 +2030,13 @@ async function solveLevelV2(level, opts = {}) {
                 if (attBudget < 50) break outer;
 
                 const gateKey = activeGates[gi];
-                const { profileName, template, beamWidth } = baseConfigs[ci];
+                const { profileName, template, beamWidth, diverseBeam } = baseConfigs[ci];
                 const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
                 const attStart = Date.now();
                 let path = null;
                 try {
                     path = beamWidth
-                        ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn)
+                        ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam)
                         : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
                 } catch (err) {
                     if (err?.message === 'SolverV2:cancelled') throw err;
@@ -2031,13 +2075,13 @@ async function solveLevelV2(level, opts = {}) {
                     : evenShare;
                 if (attBudget < 50) break;
 
-                const { profileName, template, beamWidth } = baseConfigs[ci];
+                const { profileName, template, beamWidth, diverseBeam } = baseConfigs[ci];
                 const profile = POLICY_PROFILES[profileName] ?? POLICY_PROFILES.default;
                 const attStart = Date.now();
                 let path = null;
                 try {
                     path = beamWidth
-                        ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn)
+                        ? await beamSearchFromGate(gateKey, level, prep, profile, attBudget, attStart, template, beamWidth, yieldFn, diverseBeam)
                         : await dfsFromGateLDS(gateKey, level, prep, profile, attBudget, attStart, template, yieldFn);
                 } catch (err) {
                     if (err?.message === 'SolverV2:cancelled') throw err;
