@@ -1,4 +1,4 @@
-// Solver controller: edit-mode mega-solver button, solver-close button,
+// Solver controller: solve button, solver-close button,
 // and the dev-mode referee-solver keyboard toggle.
 
 export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }) {
@@ -27,9 +27,9 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
         }
     });
 
-    // --- Edit-mode mega-solver ---
+    // --- Solve button ---
 
-    document.getElementById('editMegaSolver').onclick = async () => {
+    document.getElementById('solveLevelBtn').onclick = async () => {
         ui.closeAllModals();
         if (state.ENGINE.solver.controller) return;
         let _cancelled = false;

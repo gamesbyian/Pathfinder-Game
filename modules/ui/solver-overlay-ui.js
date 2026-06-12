@@ -8,7 +8,7 @@ export const setSearchIndicatorVisible = (visible) => {
 };
 
 export const setSolverControlsEnabled = (enabled) => {
-    setButtonState('editMegaSolver',   { enabled });
+    setButtonState('solveLevelBtn',   { enabled });
     setButtonState('editTrapSpotsBtn', { enabled });
     const hintEl = resolveEl('hintBtn');
     if (!hintEl) return;

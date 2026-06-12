@@ -33,19 +33,6 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-logo-goal',    t.colors.goal);
     root.style.setProperty('--theme-burst',        t.burst);
     root.style.setProperty('--theme-check',        t.check);
-    root.style.setProperty('--theme-mega-output-bg',         t.mega.outputBg);
-    root.style.setProperty('--theme-mega-output-text',       t.text.megaOutput);
-    root.style.setProperty('--theme-mega-output-border',     t.mega.outputBorder);
-    root.style.setProperty('--theme-mega-primary-bg',        t.mega.primaryBg);
-    root.style.setProperty('--theme-mega-primary-text',      t.text.megaPrimary);
-    root.style.setProperty('--theme-mega-primary-border',    t.mega.primaryBorder);
-    root.style.setProperty('--theme-mega-secondary-bg',      t.mega.secondaryBg);
-    root.style.setProperty('--theme-mega-secondary-text',    t.text.megaSecondary);
-    root.style.setProperty('--theme-mega-secondary-border',  t.mega.secondaryBorder);
-    root.style.setProperty('--theme-mega-copy-bg',           t.mega.copyBg);
-    root.style.setProperty('--theme-mega-copy-text',         t.text.megaCopy);
-    root.style.setProperty('--theme-mega-copy-border',       t.mega.copyBorder);
-    root.style.setProperty('--theme-mega-desc-text',         t.text.megaDesc);
     root.style.setProperty('--theme-body-text',              t.text.body);
     root.style.setProperty('--theme-disabled-btn-bg',        t.btns.disabled);
     root.style.setProperty('--theme-canvas-bg',              t.canvasBg);
@@ -59,8 +46,6 @@ export function applyCssVariables(root, t) {
     root.style.setProperty('--theme-loading-bar',            t.loading.bar);
     root.style.setProperty('--theme-loading-error',          t.text.error);
     root.style.setProperty('--theme-search-overlay-bg',          t.search.overlayBg);
-    root.style.setProperty('--theme-search-mega-status-text',    t.search.megaStatusText);
-    root.style.setProperty('--theme-search-mega-status-border',  t.search.megaStatusBorder);
     root.style.setProperty('--theme-search-label',               t.search.label);
     root.style.setProperty('--theme-search-dot',                 t.search.dot);
     root.style.setProperty('--theme-search-timer',               t.search.timer);

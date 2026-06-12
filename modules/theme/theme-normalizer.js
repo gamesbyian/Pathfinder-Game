@@ -76,7 +76,6 @@ export function normalizeTheme(theme, key = 'theme') {
     t.alert = t.alert || {};
     t.ctrlArea = t.ctrlArea || {};
     t.text = t.text || {};
-    t.mega = t.mega || {};
     t.loading = t.loading || {};
     t.search = t.search || {};
     t.jumpscare = t.jumpscare || {};
@@ -100,7 +99,7 @@ export function normalizeTheme(theme, key = 'theme') {
 
     const btnFallbacks = {
         undo: t.grid, reset: t.headerLeft, guide: t.headerRight, whoa: t.headerRight,
-        hint: t.headerRight, mega: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight,
+        hint: t.headerRight, mute: t.canvasBg, muteIcon: t.headerRight,
         copy: t.canvasBg, gen: t.canvasBg, modeToggle: t.headerRight, orient: t.headerRight,
         solve: t.headerRight, submit: t.btns.solve || t.headerRight, approve: t.btns.editNew || t.headerRight, reject: t.btns.editClear || t.headerLeft,
         editClear: t.headerLeft, editBombs: t.colors.goal || t.headerLeft, editNew: t.headerRight,
@@ -183,11 +182,6 @@ export function normalizeTheme(theme, key = 'theme') {
     t.text.headerSub = t.text.headerSub || t.headerLeftLabel;
     t.text.win = t.text.win || t.win.text;
     t.text.winAccent = t.text.winAccent || t.win.accent;
-    t.text.megaDesc = t.text.megaDesc || t.modal.textMuted;
-    t.text.megaOutput = t.text.megaOutput || t.output.text;
-    t.text.megaPrimary = t.text.megaPrimary || '#ffffff';
-    t.text.megaSecondary = t.text.megaSecondary || '#ffffff';
-    t.text.megaCopy = t.text.megaCopy || t.modal.text;
     t.text.body = t.text.body || t.modal.text;
     t.text.themeName = pickThemeNameColor(
         t.modal.panelBg || t.canvasBg || '#ffffff',
@@ -266,7 +260,6 @@ export function normalizeTheme(theme, key = 'theme') {
     t.loading.error = t.loading.error || t.text.output;
 
     t.search.overlayBg = t.search.overlayBg || t.modal.bg;
-    t.search.megaStatusText = t.search.megaStatusText || t.text.megaOutput;
     t.search.label = t.search.label || t.text.output;
     t.search.dot = t.search.dot || t.path || t.headerRight;
     t.search.timer = t.search.timer || t.text.modal;
@@ -314,16 +307,6 @@ export function normalizeTheme(theme, key = 'theme') {
     t.colors.bombBlastRing = t.colors.bombBlastRing || t.colors.goal;
     t.colors.bombBlastRays = t.colors.bombBlastRays || t.headerLeft;
 
-    t.mega.outputBg = t.mega.outputBg || t.output.bg;
-    t.mega.outputBorder = t.mega.outputBorder || t.modal.border;
-    t.mega.primaryBg = t.mega.primaryBg || t.btns.mega || t.headerRight;
-    t.mega.primaryBorder = t.mega.primaryBorder || t.modal.border;
-    t.mega.secondaryBg = t.mega.secondaryBg || darkenHex(t.mega.primaryBg, 0.88);
-    t.mega.secondaryBorder = t.mega.secondaryBorder || t.modal.border;
-    t.mega.copyBg = t.mega.copyBg || t.btns.copy || t.modal.panelBg;
-    t.mega.copyBorder = t.mega.copyBorder || t.modal.border;
-    t.search.megaStatusBorder = t.search.megaStatusBorder || t.mega.outputBorder;
-
     if (['candy_apple', 'hello_kitty', 'roygbiv', 'vegas', 'sherbet'].includes(key)) {
         const vibrantModeToggle = {
             candy_apple: { bg: '#ff0800', text: '#ffffff' },
@@ -347,7 +330,7 @@ export function buildChaosTheme() {
     return normalizeTheme({
         bodyBg: rc(), canvasBg: rc(), grid: rc(), headerLeft: rc(), headerRight: rc(), path: rc(),
         controls: rc(), metricText: rc(),
-        btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), mega: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), submit: rc(), approve: rc(), reject: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() },
+        btns: { undo: rc(), reset: rc(), guide: rc(), whoa: rc(), hint: rc(), mute: rc(), muteIcon: rc(), copy: rc(), gen: rc(), modeToggle: rc(), orient: rc(), solve: rc(), submit: rc(), approve: rc(), reject: rc(), editClear: rc(), editBombs: rc(), editNew: rc(), disabled: rc() },
         modal: { bg: rc(), panelBg: rc(), border: rc(), text: rc(), textMuted: rc(), accent: rc(), closeHover: rc() },
         output: { bg: rc(), text: rc() },
         colors: { gate: rc(), goal: rc(), block: rc(), pin: rc(), pinUnflipped: rc(), filter: rc(), portal: rc(), cross: rc(), portalPending: rc(), bombBlastRing: rc(), bombBlastRays: rc() },
@@ -356,15 +339,14 @@ export function buildChaosTheme() {
         win: { bg: rc(), border: rc(), text: rc(), accent: rc() },
         alert: { bg: rc(), stroke: rc() },
         ctrlArea: { bg: rc(), border: rc() },
-        text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), megaDesc: rc(), megaOutput: rc(), megaPrimary: rc(), megaSecondary: rc(), megaCopy: rc(), body: rc(), actionBtn: rc(), utilityBtn: rc(), utilityBtnGen: rc(), error: rc(), handDrawnShadow: rc() },
+        text: { modal: rc(), modalMuted: rc(), modalAccent: rc(), output: rc(), metric: rc(), headerMain: rc(), headerSub: rc(), win: rc(), winAccent: rc(), body: rc(), actionBtn: rc(), utilityBtn: rc(), utilityBtnGen: rc(), error: rc(), handDrawnShadow: rc() },
         loading: { overlayBg: rc(), panelBg: rc(), panelBorder: rc(), title: rc(), status: rc(), percent: rc(), track: rc(), bar: rc(), error: rc() },
-        search: { overlayBg: rc(), megaStatusText: rc(), megaStatusBorder: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() },
+        search: { overlayBg: rc(), label: rc(), dot: rc(), timer: rc(), close: rc(), closeHover: rc() },
         jumpscare: { gooseBg: rc(), gooseText: rc(), bombBg: rc(), bombTopText: rc(), bombBottomText: rc() },
         shell: { btnBg: rc(), btnBgHover: rc(), btnText: rc(), btnBorder: rc(), muteBg: rc(), muteBgHover: rc(), muteText: rc(), muteBorder: rc() },
         header: { navBg: rc(), navBgHover: rc(), navText: rc(), divider: rc() },
         editor: { inputBg: rc(), inputText: rc(), inputBorder: rc(), inputFocus: rc(), toolIcon: rc(), paletteShadow: `0 0 0 2px ${rc()}66` },
         layout: { border: rc(), divider: rc() },
-        mega: { outputBg: rc(), outputBorder: rc(), primaryBg: rc(), primaryBorder: rc(), secondaryBg: rc(), secondaryBorder: rc(), copyBg: rc(), copyBorder: rc() },
         burst: rc(), check: rc(), leave: { bg: rc(), hover: rc(), text: rc(), border: rc() },
     }, 'chaos');
 }

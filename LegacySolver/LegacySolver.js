@@ -6913,7 +6913,6 @@ function installSolver(APP) {
                 // Architectural contract:
                 // - Saved hints (level.hints) are UI-only playback data.
                 // - Solver discovery/referee/audit/new-hint/editor solve flows must be hint-blind.
-                // - Mega solver may consult saved-hint PRESENCE only to skip already-covered levels.
                 toHintBlindSolverLevel(level) {
                     if (!level || typeof level !== 'object') return level;
                     return Array.isArray(level.hints) && level.hints.length > 0
