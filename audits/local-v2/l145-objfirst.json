@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-06-12T07:30:28.995Z",
+  "commitSha": "eac9d5d831ee855ba1c7e7de59c41b3be6994546",
+  "budgetMs": 30000,
+  "levelFilter": [
+    145
+  ],
+  "solved": 1,
+  "failed": 0,
+  "errors": 0,
+  "total": 1,
+  "totalMs": 9709,
+  "levels": [
+    {
+      "level": 145,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 9707,
+      "solvedBy": "objectiveFirst",
+      "attempts": [
+        {
+          "gateKey": 458756,
+          "profile": "objectiveFirst",
+          "template": null,
+          "beamWidth": 5000,
+          "ok": false,
+          "elapsedMs": 1749
+        },
+        {
+          "gateKey": 458756,
+          "profile": "objectiveFirst",
+          "template": null,
+          "beamWidth": 15000,
+          "ok": true,
+          "elapsedMs": 7939
+        }
+      ]
+    }
+  ]
+}
