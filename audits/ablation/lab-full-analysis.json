@@ -1,0 +1,1239 @@
+{
+  "meta": {
+    "inputFile": "audits/ablation/lab-full.json",
+    "timestamp": "2026-06-12T12:12:40.863Z",
+    "phase": "full",
+    "budgetMs": 5000,
+    "levelCount": 147,
+    "baselineSummary": {
+      "solved": 146,
+      "failed": 1,
+      "errors": 0,
+      "total": 147,
+      "solveRate": 0.9931972789115646,
+      "totalMs": 32255,
+      "avgMs": 219,
+      "medianMs": 15,
+      "p95Ms": 1303,
+      "nodesExpanded": 9212844,
+      "nodesPerSolved": 41515,
+      "nodesPerFailed": 3151662
+    },
+    "totalExperiments": 100
+  },
+  "featureRanking": [
+    {
+      "name": "disable:SCORE_GOAL_ATTRACTION",
+      "label": "Disable SCORE_GOAL_ATTRACTION — Goal distance reduction reward — primary navigation signal",
+      "tier": "critical",
+      "importanceScore": 439.7,
+      "deltaSolved": -4,
+      "solveLoss": 4,
+      "solveGain": 0,
+      "deltaTotalMs": 24749,
+      "deltaAvgMs": 169,
+      "deltaNodes": 592262,
+      "uniqueFailures": [
+        110,
+        139,
+        140,
+        142,
+        147
+      ],
+      "uniqueSuccesses": [
+        125
+      ]
+    },
+    {
+      "name": "disable:SCORE_TEMPLATE_BONUS",
+      "label": "Disable SCORE_TEMPLATE_BONUS — Structural template geometric bonus (perimeter / corner / side)",
+      "tier": "critical",
+      "importanceScore": 434.4,
+      "deltaSolved": -4,
+      "solveLoss": 4,
+      "solveGain": 0,
+      "deltaTotalMs": 20738,
+      "deltaAvgMs": 141,
+      "deltaNodes": 1020355,
+      "uniqueFailures": [
+        27,
+        49,
+        142,
+        147
+      ],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:STRATEGY_LDS",
+      "label": "Disable STRATEGY_LDS — Limited Discrepancy Search probe waves before full DFS",
+      "tier": "critical",
+      "importanceScore": 337.1,
+      "deltaSolved": -3,
+      "solveLoss": 3,
+      "solveGain": 0,
+      "deltaTotalMs": 23925,
+      "deltaAvgMs": 163,
+      "deltaNodes": -7611677,
+      "uniqueFailures": [
+        109,
+        110,
+        123,
+        133
+      ],
+      "uniqueSuccesses": [
+        125
+      ]
+    },
+    {
+      "name": "disable:SCORE_MUST_PASS_URGENCY",
+      "label": "Disable SCORE_MUST_PASS_URGENCY — Per-must-pass distance-to-go reward",
+      "tier": "critical",
+      "importanceScore": 316.2,
+      "deltaSolved": -3,
+      "solveLoss": 3,
+      "solveGain": 0,
+      "deltaTotalMs": 8960,
+      "deltaAvgMs": 61,
+      "deltaNodes": 1084691,
+      "uniqueFailures": [
+        123,
+        139,
+        146
+      ],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:SCORE_MUST_CROSS_URGENCY",
+      "label": "Disable SCORE_MUST_CROSS_URGENCY — Per-must-cross distance-to-go reward (1st and 2nd visit)",
+      "tier": "critical",
+      "importanceScore": 231.6,
+      "deltaSolved": -2,
+      "solveLoss": 2,
+      "solveGain": 0,
+      "deltaTotalMs": 16566,
+      "deltaAvgMs": 113,
+      "deltaNodes": 2713494,
+      "uniqueFailures": [
+        146,
+        147
+      ],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:SCORE_PHASE_SCALING",
+      "label": "Disable SCORE_PHASE_SCALING — Phase-based goal/perimeter weight scaling (harvest → finish)",
+      "tier": "critical",
+      "importanceScore": 210.4,
+      "deltaSolved": -2,
+      "solveLoss": 2,
+      "solveGain": 0,
+      "deltaTotalMs": 6472,
+      "deltaAvgMs": 44,
+      "deltaNodes": 170730,
+      "uniqueFailures": [
+        146,
+        147
+      ],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:SCORE_REVISIT_PENALTY",
+      "label": "Disable SCORE_REVISIT_PENALTY — Already-visited cell penalty",
+      "tier": "critical",
+      "importanceScore": 205.4,
+      "deltaSolved": -2,
+      "solveLoss": 2,
+      "solveGain": 0,
+      "deltaTotalMs": 3054,
+      "deltaAvgMs": 21,
+      "deltaNodes": 317136,
+      "uniqueFailures": [
+        133,
+        146
+      ],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:STRATEGY_STATE_DEDUP",
+      "label": "Disable STRATEGY_STATE_DEDUP — Beam state deduplication: merge same (position + constraint-state)",
+      "tier": "critical",
+      "importanceScore": 142.1,
+      "deltaSolved": -1,
+      "solveLoss": 1,
+      "solveGain": 0,
+      "deltaTotalMs": 26024,
+      "deltaAvgMs": 177,
+      "deltaNodes": 827578,
+      "uniqueFailures": [
+        130
+      ],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:PRUNE_DISTANCE_BOUND",
+      "label": "Disable PRUNE_DISTANCE_BOUND — Goal BFS distance exceeds remaining steps",
+      "tier": "critical",
+      "importanceScore": 111.4,
+      "deltaSolved": -1,
+      "solveLoss": 1,
+      "solveGain": 0,
+      "deltaTotalMs": 7373,
+      "deltaAvgMs": 51,
+      "deltaNodes": 318,
+      "uniqueFailures": [
+        123
+      ],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:SCORE_INTERSECTION_SETUP",
+      "label": "Disable SCORE_INTERSECTION_SETUP — Second-visit intersection bonus + high-branching cell bonus",
+      "tier": "critical",
+      "importanceScore": 110.4,
+      "deltaSolved": -1,
+      "solveLoss": 1,
+      "solveGain": 0,
+      "deltaTotalMs": 6677,
+      "deltaAvgMs": 46,
+      "deltaNodes": -514734,
+      "uniqueFailures": [
+        111,
+        133
+      ],
+      "uniqueSuccesses": [
+        125
+      ]
+    },
+    {
+      "name": "disable:SCORE_PERIMETER_BIAS",
+      "label": "Disable SCORE_PERIMETER_BIAS — Grid-edge cell preference",
+      "tier": "critical",
+      "importanceScore": 105.9,
+      "deltaSolved": -1,
+      "solveLoss": 1,
+      "solveGain": 0,
+      "deltaTotalMs": 3821,
+      "deltaAvgMs": 26,
+      "deltaNodes": -1993057,
+      "uniqueFailures": [
+        133,
+        146
+      ],
+      "uniqueSuccesses": [
+        125
+      ]
+    },
+    {
+      "name": "disable:SCORE_MC_APPROACH_GUIDANCE",
+      "label": "Disable SCORE_MC_APPROACH_GUIDANCE — 2nd-visit MC guidance via perpendicular approach maps",
+      "tier": "critical",
+      "importanceScore": 101.5,
+      "deltaSolved": -1,
+      "solveLoss": 1,
+      "solveGain": 0,
+      "deltaTotalMs": 651,
+      "deltaAvgMs": 5,
+      "deltaNodes": 224668,
+      "uniqueFailures": [
+        147
+      ],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:STRATEGY_GATE_INTERLEAVING",
+      "label": "Disable STRATEGY_GATE_INTERLEAVING — Config-outer gate-inner scheduling for multi-gate levels",
+      "tier": "helpful",
+      "importanceScore": 12.7,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": 7929,
+      "deltaAvgMs": 54,
+      "deltaNodes": 183408,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:PRUNE_MUST_CROSS_LB",
+      "label": "Disable PRUNE_MUST_CROSS_LB — MST lower bound on remaining must-cross distance (with approach maps)",
+      "tier": "helpful",
+      "importanceScore": 7.8,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": 4640,
+      "deltaAvgMs": 32,
+      "deltaNodes": 295420,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:SCORE_OBJECTIVE_ATTRACTION",
+      "label": "Disable SCORE_OBJECTIVE_ATTRACTION — Pull toward the nearest unsatisfied MP/MC objective",
+      "tier": "neutral",
+      "importanceScore": 4.3,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": 1658,
+      "deltaAvgMs": 12,
+      "deltaNodes": 819257,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:PRUNE_MUST_PASS_LB",
+      "label": "Disable PRUNE_MUST_PASS_LB — MST lower bound on remaining must-pass visit distance",
+      "tier": "neutral",
+      "importanceScore": 3.3,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": 2134,
+      "deltaAvgMs": 15,
+      "deltaNodes": -2404311,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:STRATEGY_DIVERSE_BEAM",
+      "label": "Disable STRATEGY_DIVERSE_BEAM — Diverse beam selection bucketed by (flipperUsedMask, mustCrossMask)",
+      "tier": "neutral",
+      "importanceScore": 0.7,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": -1031,
+      "deltaAvgMs": -7,
+      "deltaNodes": 309691,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:PRUNE_MC_CEILING",
+      "label": "Disable PRUNE_MC_CEILING — Intersection ceiling: ints + pending-MC-crossings > reqInt",
+      "tier": "neutral",
+      "importanceScore": 0.6,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": -514,
+      "deltaAvgMs": -3,
+      "deltaNodes": 270146,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:PRUNE_INTERSECTION_DEFICIT",
+      "label": "Disable PRUNE_INTERSECTION_DEFICIT — Remaining steps < intersections still needed",
+      "tier": "neutral",
+      "importanceScore": 0.2,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": 125,
+      "deltaAvgMs": 1,
+      "deltaNodes": -12054,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:SCORE_FINISH_COMMITMENT",
+      "label": "Disable SCORE_FINISH_COMMITMENT — End-phase bonus when remaining steps ≤ 4",
+      "tier": "neutral",
+      "importanceScore": 0,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": -103,
+      "deltaAvgMs": 0,
+      "deltaNodes": -557,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:SCORE_FLIPPER_URGENCY",
+      "label": "Disable SCORE_FLIPPER_URGENCY — Harvest-phase flipper approach-zone guidance (global-flip rule)",
+      "tier": "neutral",
+      "importanceScore": 0,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": -637,
+      "deltaAvgMs": -4,
+      "deltaNodes": -263800,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:SCORE_ANTI_DITHER",
+      "label": "Disable SCORE_ANTI_DITHER — U-turn penalty (immediate backtrack)",
+      "tier": "neutral",
+      "importanceScore": 0,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": -638,
+      "deltaAvgMs": -4,
+      "deltaNodes": -217973,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:PRUNE_PARITY",
+      "label": "Disable PRUNE_PARITY — Manhattan parity mismatch (portal-free levels only)",
+      "tier": "neutral",
+      "importanceScore": 0,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": -866,
+      "deltaAvgMs": -5,
+      "deltaNodes": -557,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:STRATEGY_PARITY_GATE_FILTER",
+      "label": "Disable STRATEGY_PARITY_GATE_FILTER — Pre-filter infeasible gates by parity (portal-free levels)",
+      "tier": "neutral",
+      "importanceScore": 0,
+      "deltaSolved": 0,
+      "solveLoss": 0,
+      "solveGain": 0,
+      "deltaTotalMs": -549,
+      "deltaAvgMs": -3,
+      "deltaNodes": -345405,
+      "uniqueFailures": [],
+      "uniqueSuccesses": []
+    },
+    {
+      "name": "disable:PRUNE_CONNECTIVITY",
+      "label": "Disable PRUNE_CONNECTIVITY — Flood-fill connectivity + volume check",
+      "tier": "negative",
+      "importanceScore": -20,
+      "deltaSolved": 1,
+      "solveLoss": 0,
+      "solveGain": 1,
+      "deltaTotalMs": -16561,
+      "deltaAvgMs": -112,
+      "deltaNodes": -3134255,
+      "uniqueFailures": [],
+      "uniqueSuccesses": [
+        125
+      ]
+    }
+  ],
+  "tierSummary": {
+    "critical": [
+      "disable:SCORE_GOAL_ATTRACTION",
+      "disable:SCORE_TEMPLATE_BONUS",
+      "disable:STRATEGY_LDS",
+      "disable:SCORE_MUST_PASS_URGENCY",
+      "disable:SCORE_MUST_CROSS_URGENCY",
+      "disable:SCORE_PHASE_SCALING",
+      "disable:SCORE_REVISIT_PENALTY",
+      "disable:STRATEGY_STATE_DEDUP",
+      "disable:PRUNE_DISTANCE_BOUND",
+      "disable:SCORE_INTERSECTION_SETUP",
+      "disable:SCORE_PERIMETER_BIAS",
+      "disable:SCORE_MC_APPROACH_GUIDANCE"
+    ],
+    "strong": [],
+    "helpful": [
+      "disable:STRATEGY_GATE_INTERLEAVING",
+      "disable:PRUNE_MUST_CROSS_LB"
+    ],
+    "neutral": [
+      "disable:SCORE_OBJECTIVE_ATTRACTION",
+      "disable:PRUNE_MUST_PASS_LB",
+      "disable:STRATEGY_DIVERSE_BEAM",
+      "disable:PRUNE_MC_CEILING",
+      "disable:PRUNE_INTERSECTION_DEFICIT",
+      "disable:SCORE_FINISH_COMMITMENT",
+      "disable:SCORE_FLIPPER_URGENCY",
+      "disable:SCORE_ANTI_DITHER",
+      "disable:PRUNE_PARITY",
+      "disable:STRATEGY_PARITY_GATE_FILTER"
+    ],
+    "negative": [
+      "disable:PRUNE_CONNECTIVITY"
+    ]
+  },
+  "profileRanking": [
+    {
+      "profile": "perimeterSweep",
+      "wins": 88,
+      "winLevels": [
+        2,
+        9,
+        10,
+        11,
+        14,
+        16,
+        17,
+        18,
+        21,
+        24,
+        27,
+        30,
+        31,
+        32,
+        33,
+        35,
+        38,
+        40,
+        43,
+        46,
+        48,
+        49,
+        50,
+        51,
+        52,
+        54,
+        57,
+        58,
+        59,
+        60,
+        61,
+        65,
+        66,
+        67,
+        68,
+        69,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        95,
+        96,
+        97,
+        99,
+        100,
+        102,
+        103,
+        104,
+        105,
+        106,
+        108,
+        110,
+        111,
+        112,
+        113,
+        114,
+        116,
+        117,
+        120,
+        121,
+        122,
+        124,
+        126,
+        127,
+        128,
+        130,
+        131,
+        132,
+        135,
+        139,
+        141,
+        142,
+        143,
+        147
+      ],
+      "uniqueWins": [
+        27,
+        49,
+        142,
+        147
+      ],
+      "importanceScore": 319.6,
+      "tier": "critical",
+      "soloSolves": 145,
+      "soloMs": 38855
+    },
+    {
+      "profile": "intersectionHarvest",
+      "wins": 4,
+      "winLevels": [
+        136,
+        138,
+        144,
+        145
+      ],
+      "uniqueWins": [
+        145
+      ],
+      "importanceScore": 103.8,
+      "tier": "critical",
+      "soloSolves": 144,
+      "soloMs": 45433
+    },
+    {
+      "profile": "objectiveFirst",
+      "wins": 2,
+      "winLevels": [
+        140,
+        146
+      ],
+      "uniqueWins": [
+        146
+      ],
+      "importanceScore": 101.1,
+      "tier": "critical",
+      "soloSolves": 144,
+      "soloMs": 50660
+    },
+    {
+      "profile": "nearClosureRescue",
+      "wins": 42,
+      "winLevels": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        12,
+        13,
+        15,
+        19,
+        20,
+        22,
+        23,
+        25,
+        26,
+        28,
+        29,
+        34,
+        36,
+        37,
+        39,
+        41,
+        42,
+        44,
+        45,
+        47,
+        53,
+        55,
+        56,
+        62,
+        63,
+        64,
+        70,
+        72,
+        82,
+        92,
+        94,
+        101,
+        118,
+        119,
+        137
+      ],
+      "uniqueWins": [],
+      "importanceScore": 0.2,
+      "tier": "neutral",
+      "soloSolves": 145,
+      "soloMs": 51420
+    },
+    {
+      "profile": "portalFirstTransfer",
+      "wins": 7,
+      "winLevels": [
+        71,
+        93,
+        107,
+        109,
+        115,
+        123,
+        134
+      ],
+      "uniqueWins": [],
+      "importanceScore": 0.5,
+      "tier": "neutral",
+      "soloSolves": 146,
+      "soloMs": 44797
+    },
+    {
+      "profile": "harvestThenFinish",
+      "wins": 2,
+      "winLevels": [
+        98,
+        133
+      ],
+      "uniqueWins": [],
+      "importanceScore": 0,
+      "tier": "neutral",
+      "soloSolves": 145,
+      "soloMs": 51595
+    },
+    {
+      "profile": "mustCrossFirst",
+      "wins": 1,
+      "winLevels": [
+        129
+      ],
+      "uniqueWins": [],
+      "importanceScore": 0.4,
+      "tier": "neutral",
+      "soloSolves": 147,
+      "soloMs": 44632
+    }
+  ],
+  "templateRanking": [
+    {
+      "template": "perimeterCW",
+      "wins": 5,
+      "winLevels": [
+        66,
+        130,
+        141,
+        142,
+        147
+      ],
+      "uniqueWins": [
+        147
+      ],
+      "importanceScore": 103.1,
+      "tier": "critical"
+    },
+    {
+      "template": "cornerHarvest",
+      "wins": 82,
+      "winLevels": [
+        2,
+        9,
+        10,
+        11,
+        14,
+        16,
+        17,
+        18,
+        21,
+        24,
+        27,
+        30,
+        31,
+        32,
+        33,
+        35,
+        38,
+        40,
+        43,
+        46,
+        48,
+        49,
+        50,
+        51,
+        52,
+        54,
+        57,
+        58,
+        59,
+        60,
+        61,
+        65,
+        67,
+        68,
+        69,
+        73,
+        74,
+        75,
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        95,
+        96,
+        97,
+        99,
+        100,
+        102,
+        103,
+        104,
+        105,
+        106,
+        108,
+        111,
+        112,
+        113,
+        114,
+        116,
+        117,
+        120,
+        121,
+        122,
+        124,
+        126,
+        127,
+        128,
+        131,
+        132,
+        135,
+        139,
+        143
+      ],
+      "uniqueWins": [],
+      "importanceScore": 13.2,
+      "tier": "helpful"
+    },
+    {
+      "template": "perimeterCCW",
+      "wins": 1,
+      "winLevels": [
+        110
+      ],
+      "uniqueWins": [],
+      "importanceScore": 0.3,
+      "tier": "neutral"
+    }
+  ],
+  "attemptOrderSensitivity": [
+    {
+      "order": "reverse",
+      "deltaSolved": -2,
+      "deltaTotalMs": 35266,
+      "uniqueFailures": [
+        140,
+        147
+      ],
+      "uniqueSuccesses": [],
+      "importanceScore": 263.8
+    },
+    {
+      "order": "random",
+      "deltaSolved": -2,
+      "deltaTotalMs": 19302,
+      "uniqueFailures": [
+        140,
+        147
+      ],
+      "uniqueSuccesses": [],
+      "importanceScore": 236.5
+    },
+    {
+      "order": "random:seed1",
+      "deltaSolved": -2,
+      "deltaTotalMs": 9033,
+      "uniqueFailures": [
+        140,
+        147
+      ],
+      "uniqueSuccesses": [],
+      "importanceScore": 217.6
+    },
+    {
+      "order": "random:seed42",
+      "deltaSolved": -1,
+      "deltaTotalMs": 20709,
+      "uniqueFailures": [
+        147
+      ],
+      "uniqueSuccesses": [],
+      "importanceScore": 137.1
+    },
+    {
+      "order": "random:seed99",
+      "deltaSolved": -1,
+      "deltaTotalMs": 15297,
+      "uniqueFailures": [
+        147
+      ],
+      "uniqueSuccesses": [],
+      "importanceScore": 125.8
+    },
+    {
+      "order": "random:seed7",
+      "deltaSolved": -1,
+      "deltaTotalMs": 3891,
+      "uniqueFailures": [
+        147
+      ],
+      "uniqueSuccesses": [],
+      "importanceScore": 109.5
+    },
+    {
+      "order": "random:seed314",
+      "deltaSolved": -1,
+      "deltaTotalMs": 2142,
+      "uniqueFailures": [
+        140
+      ],
+      "uniqueSuccesses": [],
+      "importanceScore": 103.3
+    },
+    {
+      "order": "profile-grouped",
+      "deltaSolved": 0,
+      "deltaTotalMs": 13385,
+      "uniqueFailures": [],
+      "uniqueSuccesses": [],
+      "importanceScore": 25.6
+    }
+  ],
+  "redundancyAnalysis": [
+    {
+      "features": [
+        "SCORE_GOAL_ATTRACTION",
+        "SCORE_OBJECTIVE_ATTRACTION"
+      ],
+      "pairSolveLoss": 2,
+      "aOnlySolveLoss": 4,
+      "bOnlySolveLoss": 0,
+      "expectedCombined": 4,
+      "redundancyRatio": 0.5,
+      "isRedundant": true,
+      "note": "combined loss ≤ max(a,b) — one may subsume the other"
+    },
+    {
+      "features": [
+        "STRATEGY_LDS",
+        "PRUNE_CONNECTIVITY"
+      ],
+      "pairSolveLoss": 1,
+      "aOnlySolveLoss": 3,
+      "bOnlySolveLoss": -1,
+      "expectedCombined": 2,
+      "redundancyRatio": 0.5,
+      "isRedundant": true,
+      "note": "combined loss ≤ max(a,b) — one may subsume the other"
+    },
+    {
+      "features": [
+        "SCORE_MUST_PASS_URGENCY",
+        "SCORE_MUST_CROSS_URGENCY"
+      ],
+      "pairSolveLoss": 4,
+      "aOnlySolveLoss": 3,
+      "bOnlySolveLoss": 2,
+      "expectedCombined": 5,
+      "redundancyRatio": 0.8,
+      "isRedundant": false,
+      "note": null
+    },
+    {
+      "features": [
+        "SCORE_TEMPLATE_BONUS",
+        "SCORE_PERIMETER_BIAS"
+      ],
+      "pairSolveLoss": 5,
+      "aOnlySolveLoss": 4,
+      "bOnlySolveLoss": 1,
+      "expectedCombined": 5,
+      "redundancyRatio": 1,
+      "isRedundant": false,
+      "note": null
+    },
+    {
+      "features": [
+        "SCORE_ANTI_DITHER",
+        "SCORE_REVISIT_PENALTY"
+      ],
+      "pairSolveLoss": 2,
+      "aOnlySolveLoss": 0,
+      "bOnlySolveLoss": 2,
+      "expectedCombined": 2,
+      "redundancyRatio": 1,
+      "isRedundant": true,
+      "note": "combined loss ≤ max(a,b) — one may subsume the other"
+    },
+    {
+      "features": [
+        "SCORE_MC_APPROACH_GUIDANCE",
+        "SCORE_FLIPPER_URGENCY"
+      ],
+      "pairSolveLoss": 1,
+      "aOnlySolveLoss": 1,
+      "bOnlySolveLoss": 0,
+      "expectedCombined": 1,
+      "redundancyRatio": 1,
+      "isRedundant": true,
+      "note": "combined loss ≤ max(a,b) — one may subsume the other"
+    },
+    {
+      "features": [
+        "TEMPLATE_PERIMETER_CW",
+        "TEMPLATE_PERIMETER_CCW"
+      ],
+      "pairSolveLoss": 1,
+      "aOnlySolveLoss": 1,
+      "bOnlySolveLoss": 0,
+      "expectedCombined": 1,
+      "redundancyRatio": 1,
+      "isRedundant": true,
+      "note": "combined loss ≤ max(a,b) — one may subsume the other"
+    },
+    {
+      "features": [
+        "STRATEGY_GATE_INTERLEAVING",
+        "STRATEGY_PARITY_GATE_FILTER"
+      ],
+      "pairSolveLoss": 0,
+      "aOnlySolveLoss": 0,
+      "bOnlySolveLoss": 0,
+      "expectedCombined": 0,
+      "redundancyRatio": 1,
+      "isRedundant": false,
+      "note": null
+    },
+    {
+      "features": [
+        "PRUNE_MUST_PASS_LB",
+        "PRUNE_MUST_CROSS_LB"
+      ],
+      "pairSolveLoss": 0,
+      "aOnlySolveLoss": 0,
+      "bOnlySolveLoss": 0,
+      "expectedCombined": 0,
+      "redundancyRatio": 1,
+      "isRedundant": false,
+      "note": null
+    },
+    {
+      "features": [
+        "SCORE_PHASE_SCALING",
+        "SCORE_FINISH_COMMITMENT"
+      ],
+      "pairSolveLoss": 3,
+      "aOnlySolveLoss": 2,
+      "bOnlySolveLoss": 0,
+      "expectedCombined": 2,
+      "redundancyRatio": 1.5,
+      "isRedundant": false,
+      "note": null
+    },
+    {
+      "features": [
+        "STRATEGY_DIVERSE_BEAM",
+        "STRATEGY_STATE_DEDUP"
+      ],
+      "pairSolveLoss": 2,
+      "aOnlySolveLoss": 0,
+      "bOnlySolveLoss": 1,
+      "expectedCombined": 1,
+      "redundancyRatio": 2,
+      "isRedundant": false,
+      "note": null
+    }
+  ],
+  "combinationResults": [
+    {
+      "name": "pair-off:SCORE_TEMPLATE_BONUS+SCORE_PERIMETER_BIAS",
+      "deltaSolved": -5,
+      "deltaMs": 18357,
+      "uniqueFailures": [
+        27,
+        49,
+        133,
+        142,
+        146,
+        147
+      ],
+      "importanceScore": 528.5
+    },
+    {
+      "name": "pair-off:SCORE_MUST_PASS_URGENCY+SCORE_MUST_CROSS_URGENCY",
+      "deltaSolved": -4,
+      "deltaMs": 23870,
+      "uniqueFailures": [
+        123,
+        139,
+        146,
+        147
+      ],
+      "importanceScore": 444.2
+    },
+    {
+      "name": "pair-off:SCORE_PHASE_SCALING+SCORE_FINISH_COMMITMENT",
+      "deltaSolved": -3,
+      "deltaMs": 9324,
+      "uniqueFailures": [
+        123,
+        146,
+        147
+      ],
+      "importanceScore": 314.5
+    },
+    {
+      "name": "pair-off:STRATEGY_DIVERSE_BEAM+STRATEGY_STATE_DEDUP",
+      "deltaSolved": -2,
+      "deltaMs": 22742,
+      "uniqueFailures": [
+        130,
+        145
+      ],
+      "importanceScore": 235.5
+    },
+    {
+      "name": "pair-off:SCORE_GOAL_ATTRACTION+SCORE_OBJECTIVE_ATTRACTION",
+      "deltaSolved": -2,
+      "deltaMs": 15298,
+      "uniqueFailures": [
+        110,
+        139,
+        140
+      ],
+      "importanceScore": 223.7
+    },
+    {
+      "name": "pair-off:SCORE_ANTI_DITHER+SCORE_REVISIT_PENALTY",
+      "deltaSolved": -2,
+      "deltaMs": 3575,
+      "uniqueFailures": [
+        133,
+        146
+      ],
+      "importanceScore": 205.5
+    },
+    {
+      "name": "pair-off:SCORE_MC_APPROACH_GUIDANCE+SCORE_FLIPPER_URGENCY",
+      "deltaSolved": -1,
+      "deltaMs": 3832,
+      "uniqueFailures": [
+        147
+      ],
+      "importanceScore": 105.9
+    },
+    {
+      "name": "pair-off:STRATEGY_LDS+PRUNE_CONNECTIVITY",
+      "deltaSolved": -1,
+      "deltaMs": 254,
+      "uniqueFailures": [
+        110,
+        133
+      ],
+      "importanceScore": 100.4
+    },
+    {
+      "name": "pair-off:TEMPLATE_PERIMETER_CW+TEMPLATE_PERIMETER_CCW",
+      "deltaSolved": -1,
+      "deltaMs": -250,
+      "uniqueFailures": [
+        142,
+        147
+      ],
+      "importanceScore": 100
+    },
+    {
+      "name": "pair-off:STRATEGY_GATE_INTERLEAVING+STRATEGY_PARITY_GATE_FILTER",
+      "deltaSolved": 0,
+      "deltaMs": 8579,
+      "uniqueFailures": [],
+      "importanceScore": 13.7
+    },
+    {
+      "name": "pair-off:PRUNE_MUST_PASS_LB+PRUNE_MUST_CROSS_LB",
+      "deltaSolved": 0,
+      "deltaMs": 8069,
+      "uniqueFailures": [],
+      "importanceScore": 12.5
+    }
+  ],
+  "recommendations": [
+    {
+      "category": "essential",
+      "message": "12 feature(s) critical — removing causes solve failures.",
+      "features": [
+        "disable:SCORE_GOAL_ATTRACTION",
+        "disable:SCORE_TEMPLATE_BONUS",
+        "disable:STRATEGY_LDS",
+        "disable:SCORE_MUST_PASS_URGENCY",
+        "disable:SCORE_MUST_CROSS_URGENCY",
+        "disable:SCORE_PHASE_SCALING",
+        "disable:SCORE_REVISIT_PENALTY",
+        "disable:STRATEGY_STATE_DEDUP",
+        "disable:PRUNE_DISTANCE_BOUND",
+        "disable:SCORE_INTERSECTION_SETUP",
+        "disable:SCORE_PERIMETER_BIAS",
+        "disable:SCORE_MC_APPROACH_GUIDANCE"
+      ]
+    },
+    {
+      "category": "removable-candidates",
+      "message": "8 feature(s) appear neutral (importance ≤ 2).",
+      "features": [
+        "disable:STRATEGY_DIVERSE_BEAM",
+        "disable:PRUNE_MC_CEILING",
+        "disable:PRUNE_INTERSECTION_DEFICIT",
+        "disable:SCORE_FINISH_COMMITMENT",
+        "disable:SCORE_FLIPPER_URGENCY",
+        "disable:SCORE_ANTI_DITHER",
+        "disable:PRUNE_PARITY",
+        "disable:STRATEGY_PARITY_GATE_FILTER"
+      ]
+    },
+    {
+      "category": "potentially-harmful",
+      "message": "1 feature(s) net-negative: removing improves results.",
+      "features": [
+        "disable:PRUNE_CONNECTIVITY"
+      ]
+    },
+    {
+      "category": "possible-redundancy",
+      "message": "5 feature pair(s) show possible redundancy.",
+      "pairs": [
+        {
+          "features": [
+            "SCORE_GOAL_ATTRACTION",
+            "SCORE_OBJECTIVE_ATTRACTION"
+          ],
+          "note": "combined loss ≤ max(a,b) — one may subsume the other"
+        },
+        {
+          "features": [
+            "STRATEGY_LDS",
+            "PRUNE_CONNECTIVITY"
+          ],
+          "note": "combined loss ≤ max(a,b) — one may subsume the other"
+        },
+        {
+          "features": [
+            "SCORE_ANTI_DITHER",
+            "SCORE_REVISIT_PENALTY"
+          ],
+          "note": "combined loss ≤ max(a,b) — one may subsume the other"
+        },
+        {
+          "features": [
+            "SCORE_MC_APPROACH_GUIDANCE",
+            "SCORE_FLIPPER_URGENCY"
+          ],
+          "note": "combined loss ≤ max(a,b) — one may subsume the other"
+        },
+        {
+          "features": [
+            "TEMPLATE_PERIMETER_CW",
+            "TEMPLATE_PERIMETER_CCW"
+          ],
+          "note": "combined loss ≤ max(a,b) — one may subsume the other"
+        }
+      ]
+    }
+  ]
+}
