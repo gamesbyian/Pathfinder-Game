@@ -52,7 +52,7 @@ export function createUI({ core, getState, getRenderer }) {
         if (shellToggle) shellToggle.textContent = isReview ? 'Exit Review' : (isEd ? 'Play Game' : 'Editor');
 
         toggle('editResetGrid',    isReview);
-        toggle('editMegaSolver',   false);
+        toggle('solveLevelBtn',   false);
         toggle('editTrapSpotsBtn', isReview);
         toggle('editHelpBtn',      isReview);
         toggle('reviewHintBtn',    !isReview);

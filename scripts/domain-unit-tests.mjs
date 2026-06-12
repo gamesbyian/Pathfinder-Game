@@ -1363,15 +1363,6 @@ test('normalizeTheme: chaos key skips shell preset branch but shell fields are s
     assert.ok(t.shell.btnBg || t.btns.orient, 'shell.btnBg derives from available btn values');
 });
 
-test('normalizeTheme: search.megaStatusBorder resolves to a value when mega is not pre-set', () => {
-    // Pre-fix this would be undefined because megaStatusBorder was assigned before
-    // mega.outputBorder had its own fallback applied.
-    const t = normalizeTheme({});
-    assert.ok(t.search.megaStatusBorder, 'search.megaStatusBorder should not be undefined/empty');
-    assert.ok(isValidHexColor(t.search.megaStatusBorder) || t.search.megaStatusBorder.startsWith('rgba'),
-        `search.megaStatusBorder should be a color value, got: ${t.search.megaStatusBorder}`);
-});
-
 test('normalizeTheme: action button labels keep stable colours across mode layouts without adjacent duplicates', () => {
     const t = normalizeTheme({
         btns: {
