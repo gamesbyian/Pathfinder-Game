@@ -1,0 +1,76 @@
+{
+  "timestamp": "2026-06-12T05:35:55.883Z",
+  "commitSha": "79f0ebe5ba93339b96bfe4b85d032e5efd4e7d38",
+  "budgetMs": 30000,
+  "levelFilter": [
+    145,
+    146,
+    147
+  ],
+  "solved": 3,
+  "failed": 0,
+  "errors": 0,
+  "total": 3,
+  "totalMs": 27024,
+  "levels": [
+    {
+      "level": 145,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 18257,
+      "solvedBy": "intersectionHarvest",
+      "attempts": [
+        {
+          "gateKey": 458756,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "beamWidth": 50000,
+          "ok": true,
+          "elapsedMs": 18252
+        }
+      ]
+    },
+    {
+      "level": 146,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 6025,
+      "solvedBy": "objectiveFirst",
+      "attempts": [
+        {
+          "gateKey": 393217,
+          "profile": "intersectionHarvest",
+          "template": null,
+          "beamWidth": 5000,
+          "ok": false,
+          "elapsedMs": 3189
+        },
+        {
+          "gateKey": 393217,
+          "profile": "objectiveFirst",
+          "template": null,
+          "beamWidth": 5000,
+          "ok": true,
+          "elapsedMs": 2835
+        }
+      ]
+    },
+    {
+      "level": 147,
+      "status": "success",
+      "ok": true,
+      "elapsedMs": 2741,
+      "solvedBy": "perimeterSweep",
+      "attempts": [
+        {
+          "gateKey": 0,
+          "profile": "perimeterSweep",
+          "template": "perimeterCW",
+          "beamWidth": 2000,
+          "ok": true,
+          "elapsedMs": 2740
+        }
+      ]
+    }
+  ]
+}
