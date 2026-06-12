@@ -924,7 +924,6 @@ function isConnected(pos, state, level, prep) {
     //   cell A still needs to be passable in BFS if we have intersection budget left.
     //   Cap at 2 rather than reqInt to bound BFS cost on high-intersection levels.
     const maxVisit = intNeeded > 0 ? 2 : 0;
-    const hasMC = level.mustCrossKeys.length > 0;
 
     _reachGen++;
     const gen = _reachGen;
@@ -1335,8 +1334,6 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     // e.g. L140 where F2 (axisV) must be approached from above/below before F1 becomes
     // accessible from a non-flipper cell — without this urgency the beam/DFS goes west
     // toward the nearer MC/MP cells and never reaches the east-side flippers.
-    // Scale 2.0: strong enough to overcome goal-attraction bias (~6.5/step) without
-    // dominating the scoring at later phases where we need intersection flexibility.
     if ((!cfg || cfg.SCORE_FLIPPER_URGENCY) && rRatio < 0.45 && prep.flipperApproachEven.length > 0) {
         const _parityOdd = (_popcount(state.flipperUsedMask) & 1) === 1;
         const _aMaps = _parityOdd ? prep.flipperApproachOdd : prep.flipperApproachEven;
