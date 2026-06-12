@@ -58,6 +58,29 @@ const TEMPLATES = {
     sideYHigh: { id: 'sideYHigh', sideAxis: 'y', sideDir: +1, sideBiasBoost: 14, sideViolation: 10 },
 };
 
+// Ablation support: template id → ablation config key (used to filter disabled templates).
+const _TEMPLATE_CFG_KEY = {
+    cornerHarvest:  'TEMPLATE_CORNER_HARVEST',
+    perimeterCW:    'TEMPLATE_PERIMETER_CW',
+    perimeterCCW:   'TEMPLATE_PERIMETER_CCW',
+    sideCommitment: 'TEMPLATE_SIDE_COMMITMENT',
+    sideXLow:       'TEMPLATE_SIDE_X_LOW',
+    sideXHigh:      'TEMPLATE_SIDE_X_HIGH',
+    sideYLow:       'TEMPLATE_SIDE_Y_LOW',
+    sideYHigh:      'TEMPLATE_SIDE_Y_HIGH',
+};
+
+// Seeded Fisher-Yates shuffle for reproducible random attempt ordering.
+function _shuffleArray(arr, seed) {
+    let s = (seed | 0) >>> 0;
+    const next = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(next() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
 // Pre-compute template bonus for a candidate move.
 // Returns the bonus to add to the DFS score (higher = preferred).
 function computeTemplateBonus(target, pos, level, template, rRatio) {
@@ -1184,6 +1207,7 @@ async function findTrapSpotsV2(level, opts = {}) {
 
 // Score a candidate move `target` from `pos` in `state`.
 // Higher score = better (explored first).
+// prep._cfg: optional ablation config — null means all features enabled (default behaviour).
 function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, template) {
     const w = profile.goalAttractionWeight       ?? 1;
     const wo = profile.objectiveAttractionWeight  ?? 1;
@@ -1195,6 +1219,8 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     const wad = profile.antiDeadCorridorWeight    ?? 1;
     const wdt = profile.antiDitherWeight          ?? 1;
     const wrv = profile.revisitPenaltyWeight      ?? 1;
+
+    const cfg = prep._cfg; // null when no ablation config (fast-path: !cfg is true → run normally)
 
     // Phase-based multipliers — mirroring V1's harvest/finish phase policy.
     // Harvest (early path, rRatio < 0.45): weaken goal pull so the DFS builds
@@ -1216,23 +1242,31 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
         ? Math.max(0.22, 1.0 - (rRatio - 0.45) * 1.42)  // 1.0→0.22 over rRatio 0.45→1.0
         : 1.0;
 
+    // Ablation: when SCORE_PHASE_SCALING is disabled, all phase multipliers collapse to 1.0.
+    const _phaseGoalScale  = (!cfg || cfg.SCORE_PHASE_SCALING) ? phaseGoalScale  : 1.0;
+    const _phasePerimScale = (!cfg || cfg.SCORE_PHASE_SCALING) ? phasePerimScale : 1.0;
+
     let score = 0;
 
     // Goal attraction: reward moves that reduce distance to goal
     const goalDistCur    = _dget(prep.goalDistArr, pos);
     const goalDistTarget = _dget(prep.goalDistArr, target);
-    if (Number.isFinite(goalDistCur) && Number.isFinite(goalDistTarget)) {
-        const gain = goalDistCur - goalDistTarget;
-        score += w * phaseGoalScale * gain * 10;
+    if (!cfg || cfg.SCORE_GOAL_ATTRACTION) {
+        if (Number.isFinite(goalDistCur) && Number.isFinite(goalDistTarget)) {
+            const gain = goalDistCur - goalDistTarget;
+            score += w * _phaseGoalScale * gain * 10;
+        }
     }
 
     // Finish commitment: bonus when close to goal (small rSteps)
-    if (rStepsAfterMove <= 4 && Number.isFinite(goalDistTarget)) {
-        score += wf * (5 - rStepsAfterMove) * 8;
+    if (!cfg || cfg.SCORE_FINISH_COMMITMENT) {
+        if (rStepsAfterMove <= 4 && Number.isFinite(goalDistTarget)) {
+            score += wf * (5 - rStepsAfterMove) * 8;
+        }
     }
 
     // Objective attraction: reward moves toward nearest unsatisfied objective
-    if (state.mustMask !== 0 || state.mustCrossMask !== 0) {
+    if ((!cfg || cfg.SCORE_OBJECTIVE_ATTRACTION) && (state.mustMask !== 0 || state.mustCrossMask !== 0)) {
         let bestObjDist = Infinity;
         for (let oi = 0; oi < prep.objectiveKeys.length; oi++) {
             const objKey = prep.objectiveKeys[oi];
@@ -1250,7 +1284,7 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     }
 
     // Must-pass urgency: bonus for moving toward must-pass
-    if (state.mustMask !== 0) {
+    if ((!cfg || cfg.SCORE_MUST_PASS_URGENCY) && state.mustMask !== 0) {
         for (let i = 0; i < level.mustPassKeys.length; i++) {
             if ((state.mustMask & (1 << i)) === 0) continue;
             const dCur    = _dget(prep.mpDistArrs[i], pos);
@@ -1262,11 +1296,12 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     }
 
     // Must-cross urgency
-    if (state.mustCrossMask !== 0) {
+    if ((!cfg || cfg.SCORE_MUST_CROSS_URGENCY) && state.mustCrossMask !== 0) {
         for (let i = 0; i < level.mustCrossKeys.length; i++) {
             if ((state.mustCrossMask & (1 << i)) === 0) continue;
 
-            if (state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
+            // 2nd-visit approach guidance (independently togglable)
+            if ((!cfg || cfg.SCORE_MC_APPROACH_GUIDANCE) && state.crossCounts[i] === 1 && prep.mcApproachDistMaps) {
                 // 2nd visit needed: guide toward the perpendicular-axis approach cells,
                 // not the MC cell itself (which is axis-blocked from the used direction).
                 const mcKey = level.mustCrossKeys[i];
@@ -1282,7 +1317,7 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
                 }
             }
 
-            // 1st visit (or approach map unavailable): standard urgency toward MC cell
+            // 1st visit (or approach map unavailable / guidance disabled): standard urgency
             const dCur    = _dget(prep.mcDistArrs[i], pos);
             const dTarget = _dget(prep.mcDistArrs[i], target);
             if (Number.isFinite(dCur) && Number.isFinite(dTarget)) {
@@ -1299,7 +1334,7 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     // toward the nearer MC/MP cells and never reaches the east-side flippers.
     // Scale 2.0: strong enough to overcome goal-attraction bias (~6.5/step) without
     // dominating the scoring at later phases where we need intersection flexibility.
-    if (rRatio < 0.45 && prep.flipperApproachEven.length > 0) {
+    if ((!cfg || cfg.SCORE_FLIPPER_URGENCY) && rRatio < 0.45 && prep.flipperApproachEven.length > 0) {
         const _parityOdd = (_popcount(state.flipperUsedMask) & 1) === 1;
         const _aMaps = _parityOdd ? prep.flipperApproachOdd : prep.flipperApproachEven;
         for (let _fi = 0; _fi < _aMaps.length; _fi++) {
@@ -1315,30 +1350,33 @@ function scoreMoveV2(target, pos, state, level, prep, profile, rStepsAfterMove, 
     }
 
     // Intersection setup: reward second visit to a non-gate, non-goal cell if ints needed
-    const intNeeded = level.reqInt - state.ints;
-    if (intNeeded > 0 && state.visited[target] > 0 && target !== level.goalKey && !prep.gateSet.has(target)) {
-        score += wi * 12;
-    } else if (intNeeded > 0) {
-        // Small bonus for cells that have many neighbors (potential intersection spots)
-        score += wi * 1;
+    if (!cfg || cfg.SCORE_INTERSECTION_SETUP) {
+        const intNeeded = level.reqInt - state.ints;
+        if (intNeeded > 0 && state.visited[target] > 0 && target !== level.goalKey && !prep.gateSet.has(target)) {
+            score += wi * 12;
+        } else if (intNeeded > 0) {
+            score += wi * 1;
+        }
     }
 
     // Perimeter bias: prefer cells on the grid edge
-    const gw = level.grid.w, gh = level.grid.h;
-    const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
-    if (tx === 0 || ty === 0 || tx === gw - 1 || ty === gh - 1) score += wp * phasePerimScale * 3;
+    if (!cfg || cfg.SCORE_PERIMETER_BIAS) {
+        const gw = level.grid.w, gh = level.grid.h;
+        const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
+        if (tx === 0 || ty === 0 || tx === gw - 1 || ty === gh - 1) score += wp * _phasePerimScale * 3;
+    }
 
     // Anti-dither: penalise immediate U-turns
-    if (state.path.length >= 2) {
+    if ((!cfg || cfg.SCORE_ANTI_DITHER) && state.path.length >= 2) {
         const prevPrev = state.path[state.path.length - 2];
         if (prevPrev === target) score -= wdt * 15;
     }
 
     // Revisit penalty
-    if (state.visited[target] > 0) score -= wrv * 8;
+    if ((!cfg || cfg.SCORE_REVISIT_PENALTY) && state.visited[target] > 0) score -= wrv * 8;
 
     // Structural template bias (overrides/supplements profile heuristics)
-    if (template) score += computeTemplateBonus(target, pos, level, template, rRatio);
+    if ((!cfg || cfg.SCORE_TEMPLATE_BONUS) && template) score += computeTemplateBonus(target, pos, level, template, rRatio);
 
     return score;
 }
@@ -1374,6 +1412,7 @@ function isSolution(state, level) {
 // Returns the solution path (array of keys) or null on timeout/failure.
 async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, maxDiscrepancy = Infinity, yieldFn = null, out = null) {
     const state = createState(startKey, level, prep);
+    const cfg = prep._cfg; // null = no ablation (all features enabled)
 
     // Stack entry: { key, children, childIdx, undoInfo, disc } where disc = cumulative
     // discrepancy to REACH this node (sum of chosen child-indices along the path).
@@ -1417,10 +1456,10 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
 
         const realLen = state.path.length - 1 - state.portalJumps;
 
-        // Over-length prune
+        // Over-length prune (fundamental — always on)
         if (realLen > level.reqLen) { undoMove(undo, state); continue; }
 
-        // Over-intersection prune
+        // Over-intersection prune (fundamental — always on)
         if (state.ints > level.reqInt) { undoMove(undo, state); continue; }
 
         // Intersection ceiling: ints + remaining_MC_crossings must not exceed reqInt.
@@ -1428,29 +1467,34 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
         // If current ints + guaranteed future MC ints already exceeds reqInt, prune.
         // This eliminates paths with non-MC crossings on levels where all intersections
         // must come from MC cells (e.g. L53: mc=3, reqInt=3 → zero non-MC crossings).
-        if (state.mustCrossMask !== 0 && level.mustCrossKeys.length > 0) {
+        if ((!cfg || cfg.PRUNE_MC_CEILING) && state.mustCrossMask !== 0 && level.mustCrossKeys.length > 0) {
             const mcRemaining = _popcount(state.mustCrossMask);
             if (state.ints + mcRemaining > level.reqInt) { undoMove(undo, state); continue; }
         }
 
         // Solution check (only when at goal)
         if (next === level.goalKey) {
-            if (isSolution(state, level)) return state.path.slice();
+            if (isSolution(state, level)) {
+                if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
+                return state.path.slice();
+            }
             undoMove(undo, state); continue;
         }
 
         const rSteps = level.reqLen - realLen;
 
         // Distance bound: min steps from next to goal must fit in remaining steps
-        const goalDist = _dget(prep.goalDistArr, next);
-        if (!Number.isFinite(goalDist) || goalDist > rSteps) { undoMove(undo, state); continue; }
+        if (!cfg || cfg.PRUNE_DISTANCE_BOUND) {
+            const goalDist = _dget(prep.goalDistArr, next);
+            if (!Number.isFinite(goalDist) || goalDist > rSteps) { undoMove(undo, state); continue; }
+        }
 
         // Parity pruning (V1 line 6559): on a portal-free grid every step flips (x+y)%2.
         // Always apply at depth 1 (catches globally infeasible gates, e.g. L53 gate 2).
         // Apply deep parity (full DFS) only for corridor-rich levels (≥10 blocks): these
         // levels have tightly constrained paths where parity cuts many dead-end corridors.
         // For open levels with few blocks, deep parity changes search order adversely.
-        if (level.portalMap.size === 0) {
+        if ((!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
             const posP  = ((next & 0xFFFF) + ((next >>> 16) & 0xFFFF)) & 1;
             const goalP = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
             const firstStep = (realLen === 1);
@@ -1460,23 +1504,25 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
         }
 
         // Must-pass lower bound: dist(next→MP) + dist(MP→goal) ≤ rSteps
-        if (level.mustPassKeys.length > 0) {
+        if ((!cfg || cfg.PRUNE_MUST_PASS_LB) && level.mustPassKeys.length > 0) {
             const mpLB = mustPassLowerBound(next, state, level, prep);
             if (!Number.isFinite(mpLB) || mpLB > rSteps) { undoMove(undo, state); continue; }
         }
 
         // Must-cross lower bound: dist(next→MC) + dist(MC→goal) ≤ rSteps
-        if (state.mustCrossMask !== 0) {
+        if ((!cfg || cfg.PRUNE_MUST_CROSS_LB) && state.mustCrossMask !== 0) {
             const mcLB = mustCrossLowerBound(next, state, level, prep);
             if (!Number.isFinite(mcLB) || mcLB > rSteps) { undoMove(undo, state); continue; }
         }
 
         // Intersection deficit: can't create more than rSteps intersections
-        const intNeeded = level.reqInt - state.ints;
-        if (intNeeded > rSteps) { undoMove(undo, state); continue; }
+        if (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) {
+            const intNeeded = level.reqInt - state.ints;
+            if (intNeeded > rSteps) { undoMove(undo, state); continue; }
+        }
 
         // Connectivity + volume check: every 32 nodes and always near end.
-        if (rSteps <= 10 || (nodesExpanded & 31) === 0) {
+        if ((!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 10 || (nodesExpanded & 31) === 0)) {
             if (!isConnected(next, state, level, prep)) { undoMove(undo, state); continue; }
         }
 
@@ -1486,6 +1532,7 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
         scoreAndSort(nextNeighbors, next, state, level, prep, profile, template);
         stack.push({ key: next, children: nextNeighbors, childIdx: 0, undoInfo: undo, disc: childDisc });
     }
+    if (prep._metrics) prep._metrics.nodesExpanded += nodesExpanded;
     return null;
 }
 
@@ -1507,6 +1554,11 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
 const _LDS_PROBE_K = [0, 1, 2, 4, 8];
 const _LDS_DEBUG = typeof process !== 'undefined' && process.env && process.env.PF_LDS_DEBUG === '1';
 async function dfsFromGateLDS(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, yieldFn) {
+    const cfg = prep._cfg;
+    // When STRATEGY_LDS is disabled, skip probe waves and run plain best-first DFS directly.
+    if (cfg && !cfg.STRATEGY_LDS) {
+        return dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelStartTime, template, Infinity, yieldFn);
+    }
     const probeCapMs = Math.min(Math.floor(levelBudgetMs * 0.5), 4000);
     for (const k of _LDS_PROBE_K) {
         if (yieldFn) await yieldFn();
@@ -1592,8 +1644,12 @@ function _diverseSelect(sorted, beamWidth) {
 // flipper and must-cross constraint states (prevents beam collapse to one structural mode).
 async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, startTime, template, beamWidth, yieldFn, diverseBeam) {
     const ws = createState(startKey, level, prep);
+    const cfg = prep._cfg;
     // State dedup: safe when there are no portals (portals aren't captured in sc).
-    const useStateDedup = level.portalMap.size === 0;
+    // Ablation: STRATEGY_STATE_DEDUP can disable this optimisation independently.
+    const useStateDedup = level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_STATE_DEDUP);
+    // Ablation: STRATEGY_DIVERSE_BEAM can disable diverse selection even when the config requests it.
+    const effectiveDiverseBeam = diverseBeam && (!cfg || cfg.STRATEGY_DIVERSE_BEAM);
     // Root node: prev=null, key=startKey, depth=0
     let frontier = [{ key: startKey, prev: null, depth: 0, score: 0, sc: 0 }];
     let lastYield = startTime;
@@ -1651,15 +1707,16 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
             }
 
             const neighbors = getNeighbors(pos, ws, level, prep);
+            let _beamNeighborCount = neighbors.length;
             for (const next of neighbors) {
                 const pAtPos = level.portalMap.get(pos);
                 const isJump = !!(pAtPos && !ws.lastWasPortalJump && pAtPos.dest === next);
                 const undo = applyMove(next, ws, level, prep, isJump);
                 const realLen = ws.path.length - 1 - ws.portalJumps;
                 const rSteps  = level.reqLen - realLen;
-                let ok = realLen <= level.reqLen && ws.ints <= level.reqInt;
+                let ok = realLen <= level.reqLen && ws.ints <= level.reqInt; // fundamental, always on
 
-                if (ok && ws.mustCrossMask !== 0) {
+                if (ok && (!cfg || cfg.PRUNE_MC_CEILING) && ws.mustCrossMask !== 0) {
                     if (ws.ints + _popcount(ws.mustCrossMask) > level.reqInt) ok = false;
                 }
                 if (ok && next === level.goalKey) {
@@ -1667,30 +1724,31 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
                         // ws.path is already [startKey, ..., pos, next] — return it
                         const sol = ws.path.slice();
                         undoMove(undo, ws);
+                        if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex + _beamNeighborCount;
                         return sol;
                     }
                     ok = false;
                 }
-                if (ok) {
+                if (ok && (!cfg || cfg.PRUNE_DISTANCE_BOUND)) {
                     const gd = _dget(prep.goalDistArr, next);
                     if (!Number.isFinite(gd) || gd > rSteps) ok = false;
                 }
-                if (ok && level.portalMap.size === 0) {
+                if (ok && (!cfg || cfg.PRUNE_PARITY) && level.portalMap.size === 0) {
                     const pp = ((next & 0xFFFF) + ((next >>> 16) & 0xFFFF)) & 1;
                     const gp = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
                     if ((realLen === 1 || level.blockSet.size >= 10) && ((pp ^ gp ^ (rSteps & 1)) !== 0)) ok = false;
                 }
-                if (ok && level.mustPassKeys.length > 0) {
+                if (ok && (!cfg || cfg.PRUNE_MUST_PASS_LB) && level.mustPassKeys.length > 0) {
                     const lb = mustPassLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
-                if (ok && ws.mustCrossMask !== 0) {
+                if (ok && (!cfg || cfg.PRUNE_MUST_CROSS_LB) && ws.mustCrossMask !== 0) {
                     const lb = mustCrossLowerBound(next, ws, level, prep);
                     if (!Number.isFinite(lb) || lb > rSteps) ok = false;
                 }
-                if (ok && (level.reqInt - ws.ints) > rSteps) ok = false;
+                if (ok && (!cfg || cfg.PRUNE_INTERSECTION_DEFICIT) && (level.reqInt - ws.ints) > rSteps) ok = false;
                 // Connectivity: check near end and every 8 path steps
-                if (ok && (rSteps <= 20 || (realLen & 7) === 0)) {
+                if (ok && (!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 20 || (realLen & 7) === 0)) {
                     if (!isConnected(next, ws, level, prep)) ok = false;
                 }
                 if (ok) {
@@ -1699,7 +1757,7 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
                     // Parent-pointer node — O(1) instead of O(depth) path copy.
                     // sk = stateKey: (flipperUsedMask<<4)|mustCrossMask — used by _diverseSelect
                     // to bucket candidates and prevent beam collapse to one constraint-state mode.
-                    if (diverseBeam) {
+                    if (effectiveDiverseBeam) {
                         cands.push({ key: next, prev: node, depth: node.depth + 1, score: node.score + mv,
                                      sk: (ws.flipperUsedMask << 4) | (ws.mustCrossMask & 0xF), sc });
                     } else {
@@ -1730,11 +1788,12 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
             }
             pool.sort((a, b) => b.score - a.score);
             await yieldIfNeeded();
-            frontier = diverseBeam ? _diverseSelect(pool, beamWidth) : pool.slice(0, beamWidth);
+            frontier = effectiveDiverseBeam ? _diverseSelect(pool, beamWidth) : pool.slice(0, beamWidth);
         } else {
             frontier = cands;
         }
     }
+    if (prep._metrics) prep._metrics.nodesExpanded += frontierIndex;
     return null;
 }
 
@@ -2007,7 +2066,38 @@ async function solveLevelV2(level, opts = {}) {
     const levelStartTime = Date.now();
     const prep         = prepLevel(level);
     const gateKeys     = Array.isArray(level.gateKeys) ? level.gateKeys : [];
-    const baseConfigs  = getAttemptConfigs(level);
+
+    // Ablation config: attach to prep so all inner functions can read it.
+    const cfg = opts.ablation ?? null;
+    prep._cfg     = cfg;
+    prep._metrics = { nodesExpanded: 0 };
+
+    // Build attempt configs, then filter by disabled profiles/templates.
+    let baseConfigs = getAttemptConfigs(level);
+    if (cfg) {
+        const filtered = baseConfigs.filter(c => {
+            if (c.template) {
+                const tKey = _TEMPLATE_CFG_KEY[c.template.id];
+                if (tKey && !cfg[tKey]) return false;
+            }
+            const pKey = `PROFILE_${c.profileName}`;
+            if (pKey in cfg && !cfg[pKey]) return false;
+            return true;
+        });
+        if (filtered.length > 0) baseConfigs = filtered;
+        // Apply attempt order override
+        if (cfg.ATTEMPT_ORDER === 'reverse') {
+            baseConfigs = [...baseConfigs].reverse();
+        } else if (cfg.ATTEMPT_ORDER === 'random') {
+            baseConfigs = _shuffleArray([...baseConfigs], cfg._randomSeed ?? 42);
+        } else if (cfg.ATTEMPT_ORDER === 'profile-grouped') {
+            baseConfigs = [
+                ...baseConfigs.filter(c => !c.template && !c.beamWidth),
+                ...baseConfigs.filter(c => !!c.template),
+                ...baseConfigs.filter(c => c.beamWidth && !c.template),
+            ];
+        }
+    }
 
     const attempts = [];
     let solution   = null;
@@ -2017,7 +2107,7 @@ async function solveLevelV2(level, opts = {}) {
     // Filtering infeasible gates concentrates the budget on gates that can succeed,
     // avoiding the case where a slow-to-exhaust infeasible gate consumes half the budget.
     let activeGates = gateKeys;
-    if (level.portalMap.size === 0) {
+    if (level.portalMap.size === 0 && (!cfg || cfg.STRATEGY_PARITY_GATE_FILTER)) {
         const goalP = ((level.goalKey & 0xFFFF) + ((level.goalKey >>> 16) & 0xFFFF)) & 1;
         const feasible = gateKeys.filter(gk => {
             const gP = ((gk & 0xFFFF) + ((gk >>> 16) & 0xFFFF)) & 1;
@@ -2031,8 +2121,9 @@ async function solveLevelV2(level, opts = {}) {
     // Config 1 — crucial when Gate 1 is structurally infeasible but parity-feasible
     // (e.g. near-closure L21/L106/L111, or L74 where Gate 2 solves instantly on Config 1
     // while Gate 1 never solves). Applies to all archetypes with multiple active gates.
-    const arch = detectArchetype(level);
-    if (activeGates.length > 1) {
+    // Ablation: STRATEGY_GATE_INTERLEAVING can force the gate-outer (non-interleaved) loop.
+    const useInterleaving = (!cfg || cfg.STRATEGY_GATE_INTERLEAVING);
+    if (useInterleaving && activeGates.length > 1) {
         let pairsLeft = baseConfigs.length * activeGates.length;
         outer:
         for (let ci = 0; ci < baseConfigs.length; ci++) {
@@ -2113,10 +2204,11 @@ async function solveLevelV2(level, opts = {}) {
     }
 
     const totalMs = Date.now() - levelStartTime;
+    const nodesExpanded = prep._metrics.nodesExpanded;
     if (solution) {
-        return { ok: true, status: 'success', solution, solutions: [solution], attempts, totalMs };
+        return { ok: true, status: 'success', solution, solutions: [solution], attempts, totalMs, nodesExpanded };
     }
-    return { ok: false, status: totalMs >= timeBudgetMs ? 'timeout' : 'failed', solution: null, solutions: [], attempts, totalMs };
+    return { ok: false, status: totalMs >= timeBudgetMs ? 'timeout' : 'failed', solution: null, solutions: [], attempts, totalMs, nodesExpanded };
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -2147,10 +2239,12 @@ function createSolverV2() {
             return Math.min(120000, Math.max(3000, 2500 + area * 15 + (level.reqLen || 0) * 40 + special * 120));
         },
         validateCandidatePath,
-        // Expose internals for testing
+        // Expose internals for testing / ablation analysis
         _normalizeRawLevel: normalizeRawLevelV2,
         _buildDistMap: buildDistMap,
         _detectArchetype: detectArchetype,
+        _getAttemptConfigs: getAttemptConfigs,
+        _prepLevel: prepLevel,
     };
 }
 
