@@ -128,8 +128,17 @@ AXIS_NONE = 0
 
 ## After-Optimization Results (full 147-level run)
 - 147/147 solved (no regressions)
-- Total runtime: ~113s (-11.4% vs baseline)
+- Total runtime after P1-P5 opts: ~113s (-11.4% vs baseline)
 - L145: -26%, L146: -26%, L147: -24%, L140: -4%, L130: -4%
+
+## Interleaved Gate Scheduling (2026-06-12)
+Extended config-outer/gate-inner interleaving to ALL multi-gate levels (previously only near-closure archetype). This fixes the case where Gate 1 is structurally infeasible but parity-feasible and exhausts its full budget across all configs before Gate 2 ever gets tried.
+
+- L74 improved: ~15,003ms → ~941ms (15× speedup) — Gate 2 solves on Config 1
+- Total runtime after interleaving: ~96.6s (-14.7% vs P1-P5 baseline, -24.3% vs original baseline)
+- All 147 levels still solved
+
+Multi-gate levels: L74 (2 gates), L129 (2 gates, must-cross-heavy), L140 (3 gates), L144 (2 gates, must-cross-heavy), L147 (3 gates, near-closure — already interleaved).
 
 ## Common Gotchas
 - **Portal forced-move**: when at a portal cell and last move was NOT a portal jump, `getNeighbors()` returns only `[portal.dest]`, bypassing static adjacency. This is intentional.

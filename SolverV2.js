@@ -1879,20 +1879,25 @@ async function solveLevelV2(level, opts = {}) {
         if (feasible.length > 0) activeGates = feasible;
     }
 
-    // Near-closure with multiple gates: interleave configs across gates (config-outer,
-    // gate-inner). This prevents Gate 1 exhausting its full budget before Gate 2 ever
-    // gets to try Config 1 — crucial when Gate 1 is structurally infeasible but parity-
-    // feasible (L21, L106, L111): Gate 2 solves in ~10ms via nearClosureRescue but would
-    // otherwise wait 15s while Gate 1 cycles through all 16 configs.
+    // Multi-gate levels: interleave configs across gates (config-outer, gate-inner).
+    // This prevents Gate 1 exhausting its full budget before Gate 2 ever gets to try
+    // Config 1 — crucial when Gate 1 is structurally infeasible but parity-feasible
+    // (e.g. near-closure L21/L106/L111, or L74 where Gate 2 solves instantly on Config 1
+    // while Gate 1 never solves). Applies to all archetypes with multiple active gates.
     const arch = detectArchetype(level);
-    if (arch === 'near-closure' && activeGates.length > 1) {
+    if (activeGates.length > 1) {
         let pairsLeft = baseConfigs.length * activeGates.length;
         outer:
         for (let ci = 0; ci < baseConfigs.length; ci++) {
             for (let gi = 0; gi < activeGates.length; gi++) {
                 const elapsed = Date.now() - levelStartTime;
                 if (elapsed >= timeBudgetMs) break outer;
-                const attBudget = Math.floor((timeBudgetMs - elapsed) / pairsLeft);
+                const pairShare  = Math.floor((timeBudgetMs - elapsed) / pairsLeft);
+                const minFrac    = baseConfigs[ci].minBudgetFraction ?? 0;
+                const gateShare  = (timeBudgetMs - elapsed) / activeGates.length;
+                const attBudget  = minFrac > 0
+                    ? Math.max(Math.floor(gateShare * minFrac), pairShare)
+                    : pairShare;
                 if (attBudget < 50) break outer;
 
                 const gateKey = activeGates[gi];
