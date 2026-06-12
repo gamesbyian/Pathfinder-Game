@@ -917,10 +917,13 @@ const _reachGenBuf = new Uint32Array(KEY_SPACE); // generation tracking (32-bit 
 function isConnected(pos, state, level, prep) {
     const { w, h } = level.grid;
     const intNeeded = level.reqInt - state.ints;
-    // Threshold: visited count allowed to pass through
-    //   0 intersections remaining: only unvisited cells
-    //   N intersections remaining: cells visited up to N times may be re-entered
-    const maxVisit = intNeeded > 0 ? 1 : 0;
+    // Threshold: visited count allowed to pass through.
+    //   0 intersections remaining: only unvisited cells (path acts as hard walls).
+    //   N > 0 intersections remaining: cells visited up to twice are traversable.
+    //   The original maxVisit=1 was wrong: after making one intersection (visited[A]=2),
+    //   cell A still needs to be passable in BFS if we have intersection budget left.
+    //   Cap at 2 rather than reqInt to bound BFS cost on high-intersection levels.
+    const maxVisit = intNeeded > 0 ? 2 : 0;
     const hasMC = level.mustCrossKeys.length > 0;
 
     _reachGen++;
@@ -1521,8 +1524,8 @@ async function dfsFromGate(startKey, level, prep, profile, levelBudgetMs, levelS
             if (intNeeded > rSteps) { undoMove(undo, state); continue; }
         }
 
-        // Connectivity + volume check: every 32 nodes and always near end.
-        if ((!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 10 || (nodesExpanded & 31) === 0)) {
+        // Connectivity + volume check: every 64 nodes and always near end.
+        if ((!cfg || cfg.PRUNE_CONNECTIVITY) && (rSteps <= 10 || (nodesExpanded & 63) === 0)) {
             if (!isConnected(next, state, level, prep)) { undoMove(undo, state); continue; }
         }
 
