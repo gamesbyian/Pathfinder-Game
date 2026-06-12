@@ -8,7 +8,6 @@ import { validateCandidatePath } from './modules/domain/path-validator.js';
 // ─── Encoding ────────────────────────────────────────────────────────────────
 
 const PACK = (x, y) => ((y << 16) | x) >>> 0;
-const UNPACK = k => ({ x: k & 0xFFFF, y: (k >>> 16) & 0xFFFF });
 // Max PACK key for a 15x15 grid = PACK(14,14) = (14<<16)|14 = 917518.
 // Use 1<<20 = 1048576 to cover all possible grid sizes safely.
 const KEY_SPACE = 1 << 20; // 1M entries
@@ -623,72 +622,6 @@ function _isMoveDynValid(from, target, state, level, prep, entryAxis, moveAxis) 
     }
 
     // Flipping filter at target: must enter in the flipper's current orientation
-    const fi = prep.flipperIndexMap.get(target);
-    if (fi !== undefined) {
-        if (state.flipperUsedMask & (1 << fi)) return false;
-        const usedCount = _popcount(state.flipperUsedMask);
-        const initAx    = prep.flipperInitAxes[fi];
-        const curAx     = (usedCount & 1) === 0 ? initAx : (initAx === AXIS_H ? AXIS_V : AXIS_H);
-        if (curAx !== moveAxis) return false;
-    }
-
-    return true;
-}
-
-// Returns true if moving from `from` to `target` is valid.
-function isValidMove(from, target, state, level, prep, entryAxis) {
-    if (level.blockSet.has(target))   return false;
-    if (level.gooseSet.has(target))   return false;
-    if (prep.gateSet.has(target))     return false; // no gate re-entry
-    if (level.falseGoalKeys.has(target)) return false;
-    if (from === level.goalKey)       return false; // can't move after reaching goal
-    // Portal terminals can only be used once
-    if (level.portalMap.has(target) && state.visited[target] > 0) return false;
-
-    const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
-    const fx = from   & 0xFFFF, fy = (from   >>> 16) & 0xFFFF;
-    if (Math.abs(tx - fx) + Math.abs(ty - fy) !== 1) return false; // must be adjacent
-
-    const moveAxis = (ty === fy) ? AXIS_H : AXIS_V;
-    const axisBit  = moveAxis === AXIS_H ? 1 : 2;
-
-    // Edge usage: can't reuse an axis at target
-    if (state.edgeUsage[target] & axisBit) return false;
-
-    // Edge usage at source: turning check (exit axis must be fresh if different from entry)
-    if (entryAxis !== AXIS_NONE && moveAxis !== entryAxis) {
-        if (state.edgeUsage[from] & axisBit) return false;
-    }
-
-    // Must-cross cell lock prevention: if 'from' is an unsatisfied MC cell with exactly
-    // 1 visit, turning here (exiting in the axis perpendicular to entry) would set both
-    // axis bits on the cell — permanently blocking any future 2nd visit.
-    // A valid 2nd crossing requires re-entering via the UNUSED axis, which is only
-    // possible if the 1st pass was straight-through (same axis entry and exit).
-    const _mcLockIdx = prep.mustCrossIndex.get(from);
-    if (_mcLockIdx !== undefined && state.crossCounts[_mcLockIdx] === 1
-            && (state.mustCrossMask & (1 << _mcLockIdx)) !== 0) {
-        const _eH = (state.edgeUsage[from] & AXIS_H) !== 0;
-        const _eV = (state.edgeUsage[from] & AXIS_V) !== 0;
-        if ((_eH && !_eV && moveAxis === AXIS_V) || (!_eH && _eV && moveAxis === AXIS_H)) return false;
-    }
-
-    // Regular filter axis check
-    const filterFrom   = level.filterMap.get(from);
-    const filterTarget = level.filterMap.get(target);
-    if (filterFrom   && filterFrom   !== moveAxis) return false;
-    if (filterTarget && filterTarget !== moveAxis) return false;
-
-    // Flipping filter: cannot turn at a flipper cell (entry and exit must use the same axis).
-    // This mirrors V1's _isMoveValid guard.
-    if (level.flippingFilterMap.has(from) && entryAxis !== AXIS_NONE) {
-        if (entryAxis !== moveAxis) return false;
-    }
-
-    // Flipping-filter entry: must match target flipper's current orientation.
-    // Global rule: using flipper i flips all OTHER unused flippers.
-    // Current axis of unused flipper fi = initial_axis[fi] XOR (odd usedCount → flip).
-    // Used flippers are locked (orientation frozen) and cannot be re-entered.
     const fi = prep.flipperIndexMap.get(target);
     if (fi !== undefined) {
         if (state.flipperUsedMask & (1 << fi)) return false;
@@ -1669,6 +1602,7 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
     };
 
     while (frontier.length > 0) {
+        if (Date.now() - startTime >= budgetMs) return null;
         if (phasesCompleted >= maxPhases) return null;
         phasesCompleted++;
         if (yieldFn) {
@@ -1681,6 +1615,7 @@ async function beamSearchFromGate(startKey, level, prep, profile, budgetMs, star
 
         for (const node of frontier) {
             if (((++frontierIndex) & 255) === 0) {
+                if (Date.now() - startTime >= budgetMs) return null;
                 await yieldIfNeeded();
             }
 
