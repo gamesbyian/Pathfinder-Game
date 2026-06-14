@@ -7,7 +7,65 @@ import { cloneTapRouteState, rebuildDerivedState, pushStep as pushStepImpl,
          wouldCreateBlockedTIntersection as wouldCreateBlockedTIntersectionImpl } from './runtime/path-state.js';
 import { computeStep } from './runtime/step-processor.js';
 import { MoveContext }       from './domain/move-context.js';
+import { createOverlayController } from './engine/overlay-controller.js';
+import { createPathNavigator } from './engine/path-navigator.js';
 import { createRenderModel } from './render/create-render-model.js';
+import {
+    addRipple,
+    advanceHintAnimationIndex,
+    clearDirty,
+    clearEditorUndoStack,
+    clearEditorValidTrapSpots,
+    clearNavigationUndoStack,
+    clearRipples,
+    clearRuntimePendingAction as clearRuntimePendingActionState,
+    detonateFalseGoal,
+    endSolverRun as endSolverRunState,
+    incrementResetStreak,
+    markDirty,
+    resetHinterForLevel,
+    requestSolverAbort,
+    setLevel,
+    setLevelIndex,
+    setHintPaths as setHintPathsState,
+    setFoundHintsSinceLoad,
+    setHintAnimationAlpha,
+    setHintAnimationIndex,
+    setHintBlinkStartMsIfUnset,
+    setHintFadeStartMs,
+    setHintHoldStartMsIfUnset,
+    setLogicState as setLogicStateValue,
+    setMode as setModeState,
+    setNavigationLastFlipTime,
+    setNavigationSnapshot,
+    resetFalseGoalHazardsForLevel,
+    removeReviewSubmission as removeReviewSubmissionState,
+    resetReviewSubmissions,
+    remapNavigationKeys,
+    restoreFalseGoalHazardsForLevel,
+    reverseNavigationPath,
+    pruneRipples,
+    setCheatActive,
+    setCheatTimer,
+    setDetonatedFalseGoals,
+    setEditorEmptyClickCount,
+    setEditorModified,
+    setEditorPencilMode,
+    setEditorWorkingLevel,
+    setMuted as setMutedState,
+    setOptionValue,
+    setResetStreak,
+    setRevealedGeese,
+    setReviewIndex,
+    setReviewSavedPlayLevelIndex,
+    setReviewSubmissions as setReviewSubmissionsState,
+    setRuntimePendingAction as setRuntimePendingActionState,
+    startSolverRun as startSolverRunState,
+    stepVisualFlipCount,
+    truncateNavigationPath,
+    setVariant as setVariantState,
+    toggleMuted as toggleMutedState
+} from './state-actions.js';
 
 export function createEngine({ core, state, ui, renderer, levelUtils, themes, data, persistence, editor }) {
 
@@ -26,19 +84,14 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     const pushStepOnNav = (nav, key, isJump, level) => {
         const oldFlipCount = nav.flipCount;
         pushStepImpl(nav, key, isJump, level);
-        if (nav.flipCount !== oldFlipCount) nav.lastFlipTime = Date.now();
+        if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, Date.now());
     };
 
     // Truncates nav.path to `targetLen` cells and rebuilds derived state.
     // Handles logic-state reset and derived-state rebuild; does NOT set isDirty
     // (the caller is responsible for that).
     const truncateNavTo = (nav, targetLen) => {
-        if (targetLen < -1 || targetLen >= nav.path.length - 1) return;
-        nav.path.splice(targetLen + 1);
-        const newJumps = new Set();
-        for (const j of nav.isPortalJump) if (j <= targetLen) newJumps.add(j);
-        nav.isPortalJump = newJumps;
-        if (nav.path.length === 0) nav.activeGateKey = null;
+        if (!truncateNavigationPath(nav, targetLen)) return;
         if ([core.DRAGGING, core.PORTAL_PAUSE, core.HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
             setLogicState(core.IDLE);
         }
@@ -98,12 +151,12 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             stepHelpers
         );
         if (outcome !== null) {
-            state.ENGINE.isDirty = true;
-            if (state.ENGINE.mode === core.EDITOR) state.ENGINE.editor.isModified = true;
+            markDirty(state);
+            if (state.ENGINE.mode === core.EDITOR) setEditorModified(state, true);
         }
         const now = Date.now();
         for (const { x, y, color } of mutations.ripples) {
-            state.ENGINE.ripples.push({ x, y, startTime: now, color });
+            addRipple(state, { x, y, startTime: now, color });
         }
         for (const event of events) dispatchStepEvent(event);
         return outcome === 'backtrack' ? 'valid' : outcome;
@@ -170,7 +223,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             const result = processStep(step);
             if (result === null || result === "goose" || result === "detonate") break;
         }
-        if (pathSteps.length > 0) state.ENGINE.isDirty = true;
+        if (pathSteps.length > 0) markDirty(state);
     }
 
     function checkWinCondition() {
@@ -196,18 +249,17 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     let bombTimer2 = null;
 
     function triggerBombDetonation(key) {
-        state.ENGINE.hazards.armedFalseGoals.delete(key);
-        state.ENGINE.hazards.detonatedFalseGoals.add(key);
+        detonateFalseGoal(state, key);
         setOverlayState(core.FALSE_GOAL_ANIMATING);
         ui.showBombDetonation();
         core.SOUND_BUS.play("C2", "8n");
         bombTimer1 = setTimeout(() => {
             bombTimer1 = null;
-            ui.showBombDetonation({ explodedMarkup: `<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="var(--theme-bomb-blast-ring)" stroke-width="10" stroke-dasharray="10 5" class="animate-ping"/><path d="M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20" stroke="var(--theme-bomb-blast-rays)" stroke-width="8"/></svg>` });
+            ui.showBombDetonation({ exploded: true });
             core.SOUND_BUS.play("F1", "4n");
             bombTimer2 = setTimeout(() => {
                 bombTimer2 = null;
-                ui.hideBombDetonation({ resetMarkup: `<svg viewBox="0 0 100 100"><use href="#def-falsegoal"/></svg>` });
+                ui.hideBombDetonation();
                 setOverlayState(core.OVERLAY_NONE);
             }, 1000);
         }, 1000);
@@ -224,19 +276,14 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function applySnapshot(snap) {
-        state.ENGINE.nav.path         = [...snap.path];
-        state.ENGINE.nav.isPortalJump = new Set(snap.isPortalJump);
-        state.ENGINE.nav.activeGateKey = snap.activeGateKey;
+        setNavigationSnapshot(state, snap);
         const restoredLogicState = snap.logicState === core.HAZARD_TRIGGERED ? core.IDLE : snap.logicState;
         setLogicState(core.IDLE);
         if (restoredLogicState !== core.IDLE) setLogicState(restoredLogicState);
-        state.ENGINE.hazards.detonatedFalseGoals = new Set(snap.detonatedFalseGoals);
         const l = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
-        const armed = new Set(l?.falseGoalKeys || []);
-        state.ENGINE.hazards.detonatedFalseGoals.forEach(k => armed.delete(k));
-        state.ENGINE.hazards.armedFalseGoals = armed;
+        restoreFalseGoalHazardsForLevel(state, l, snap.detonatedFalseGoals);
         rebuildDerivedPathState(state.ENGINE);
-        state.ENGINE.isDirty = true;
+        markDirty(state);
         ui.showMessage("", "");
     }
 
@@ -247,37 +294,37 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     function switchMode(newMode) {
         // Restore saved level index when returning to play from review mode.
         if (newMode === core.PLAY && state.ENGINE.mode === core.REVIEW) {
-            state.ENGINE.levelIdx = state.ENGINE.review.savedPlayLevelIdx;
+            setLevelIndex(state, state.ENGINE.review.savedPlayLevelIdx);
         }
         const isEd         = newMode === core.EDITOR;
         const isReview     = newMode === core.REVIEW;
         const isEdOrReview = isEd || isReview;
-        state.ENGINE.mode = newMode;
+        setModeState(state, newMode);
         if (newMode !== core.PLAY) ui.closeModal('playOptionsBlockedModal');
         ui.setSolutionOutput('');
         setLogicState(core.IDLE);
         setOverlayState(core.OVERLAY_NONE);
         PathNavigator.clear(state.ENGINE);
-        state.ENGINE.nav.undoStack = [];
-        state.ENGINE.hazards.revealedGeese.clear();
-        state.ENGINE.hazards.detonatedFalseGoals.clear();
+        clearNavigationUndoStack(state);
+        setRevealedGeese(state);
+        setDetonatedFalseGoals(state);
         ui.applyModeLayout(newMode, { isDevMode: state.ENGINE.isDevMode });
         if (isEd) {
-            state.ENGINE.variant = 0;
-            state.ENGINE.editor.workingLevel = levelUtils.deepCloneLevel(state.ENGINE.level);
-            state.ENGINE.editor.isPencilMode = false;
-            state.ENGINE.editor.undoStack = [];
-            state.ENGINE.editor.validTrapSpots.clear();
-            state.ENGINE.editor.emptyClickCount = 0;
+            setVariantState(state, 0);
+            setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
+            setEditorPencilMode(state, false);
+            clearEditorUndoStack(state);
+            clearEditorValidTrapSpots(state);
+            setEditorEmptyClickCount(state, 0);
             ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
             ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
             editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
-            state.ENGINE.editor.isModified = false;
+            setEditorModified(state, false);
             updatePencilState();
         } else if (isReview) {
-            state.ENGINE.review.savedPlayLevelIdx = state.ENGINE.levelIdx;
-            state.ENGINE.editor.isPencilMode = false;
-            state.ENGINE.editor.emptyClickCount = 0;
+            setReviewSavedPlayLevelIndex(state, state.ENGINE.levelIdx);
+            setEditorPencilMode(state, false);
+            setEditorEmptyClickCount(state, 0);
             resetEmptyReviewState();
             updatePencilState();
         } else {
@@ -288,7 +335,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.syncEditorPalettePlacement();
         updateCompletionUI();
         ui.showMessage("", "");
-        state.ENGINE.isDirty = true;
+        markDirty(state);
     }
 
     function updatePencilState() {
@@ -296,16 +343,16 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function resetEmptyReviewState() {
-        state.ENGINE.review.currentIdx = 0;
-        state.ENGINE.editor.workingLevel = null;
-        state.ENGINE.editor.undoStack = [];
-        state.ENGINE.editor.isModified = false;
-        state.ENGINE.editor.validTrapSpots.clear();
+        setReviewIndex(state, 0);
+        setEditorWorkingLevel(state, null);
+        clearEditorUndoStack(state);
+        setEditorModified(state, false);
+        clearEditorValidTrapSpots(state);
         PathNavigator.clear(state.ENGINE);
-        state.ENGINE.nav.undoStack = [];
-        state.ENGINE.hazards.revealedGeese.clear();
+        clearNavigationUndoStack(state);
+        setRevealedGeese(state);
 
-        state.ENGINE.hazards.detonatedFalseGoals.clear();
+        setDetonatedFalseGoals(state);
         ui.setInputValue('editReqLen', 0);
         ui.setInputValue('editReqInt', 0);
         ui.renderMetricsPanel({ currentLen: 0, reqLen: 0, currentInt: 0, reqInt: 0 });
@@ -314,7 +361,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.setClassState('reviewEmptyMsg', 'hidden', false);
         ui.updateAppScale();
         ui.updateViewport();
-        state.ENGINE.isDirty = true;
+        markDirty(state);
     }
 
     function loadReviewLevel(idx) {
@@ -324,21 +371,21 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             return;
         }
         const safeIdx = Math.max(0, Math.min(idx, subs.length - 1));
-        state.ENGINE.review.currentIdx = safeIdx;
+        setReviewIndex(state, safeIdx);
         const rawLevel   = subs[safeIdx].levelData;
         const normalized = levelUtils.processRawLevel(rawLevel, safeIdx);
         if (!normalized) {
             ui.showMessage('Could not load submission.', 'text-red-500 font-bold');
             return;
         }
-        state.ENGINE.editor.workingLevel = normalized;
-        state.ENGINE.editor.undoStack    = [];
-        state.ENGINE.editor.isModified   = false;
+        setEditorWorkingLevel(state, normalized);
+        clearEditorUndoStack(state);
+        setEditorModified(state, false);
         PathNavigator.clear(state.ENGINE);
-        state.ENGINE.nav.undoStack = [];
-        state.ENGINE.hazards.revealedGeese.clear();
+        clearNavigationUndoStack(state);
+        setRevealedGeese(state);
 
-        state.ENGINE.hazards.detonatedFalseGoals.clear();
+        setDetonatedFalseGoals(state);
         ui.setInputValue('editReqLen', normalized.reqLen || 0);
         ui.setInputValue('editReqInt', normalized.reqInt || 0);
         editor.syncMetadataFieldsFromLevel(normalized);
@@ -348,7 +395,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.setClassState('reviewEmptyMsg', 'hidden', true);
         ui.updateAppScale();
         ui.updateViewport();
-        state.ENGINE.isDirty = true;
+        markDirty(state);
     }
 
     function applyPlayChallengeOptions(level) {
@@ -378,48 +425,38 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         const levels = data.getLevels();
         if (!levels || !data.getLevel(idx)) return;
 
-        state.ENGINE.levelIdx = idx;
+        setLevelIndex(state, idx);
 
         const isEditor = state.ENGINE.mode === core.EDITOR;
-        if (isEditor) state.ENGINE.variant = 0;
-        else if (!keepVariant) state.ENGINE.variant = Math.floor(Math.random() * 8);
+        if (isEditor) setVariantState(state, 0);
+        else if (!keepVariant) setVariantState(state, Math.floor(Math.random() * 8));
 
         setLogicState(core.IDLE);
         setOverlayState(core.OVERLAY_NONE);
 
-        state.ENGINE.level = levelUtils.normalizeLevel(idx);
+        setLevel(state, levelUtils.normalizeLevel(idx));
         const optionsResult = applyPlayChallengeOptions(state.ENGINE.level);
         showOptionsBlockedModalIfNeeded(optionsResult);
         if (optionsResult.playable !== false) levelUtils.assertLevelShape(state.ENGINE.level);
         PathNavigator.clear(state.ENGINE);
-        state.ENGINE.nav.undoStack = [];
-        state.ENGINE.hazards.revealedGeese.clear();
-        state.ENGINE.ripples = [];
+        clearNavigationUndoStack(state);
+        setRevealedGeese(state);
+        clearRipples(state);
 
-        state.ENGINE.hazards.armedFalseGoals       = new Set(state.ENGINE.level.falseGoalKeys || []);
-        state.ENGINE.hazards.detonatedFalseGoals   = new Set();
-        state.ENGINE.foundHintsSinceLoad   = [];
-        state.ENGINE.hinter.pathList       = [];
-        state.ENGINE.hinter.currentPathIdx = 0;
-        state.ENGINE.hinter.source         = 'none';
-        state.ENGINE.hinter.index          = 0;
-        state.ENGINE.hinter.alpha          = 0;
-        state.ENGINE.hinter.holdStartMs    = 0;
-        state.ENGINE.hinter.blinkStartMs   = 0;
-        state.ENGINE.hinter.fadeStartMs    = 0;
-        state.ENGINE.hinter.persistedPath    = [];
-        state.ENGINE.hinter.persistedHintIdx = -1;
+        resetFalseGoalHazardsForLevel(state, state.ENGINE.level);
+        setFoundHintsSinceLoad(state);
+        resetHinterForLevel(state);
 
         if (isEditor) {
-            state.ENGINE.editor.workingLevel = levelUtils.deepCloneLevel(state.ENGINE.level);
-            state.ENGINE.editor.isPencilMode = false;
-            state.ENGINE.editor.undoStack    = [];
-            state.ENGINE.editor.validTrapSpots.clear();
-            state.ENGINE.editor.emptyClickCount = 0;
+            setEditorWorkingLevel(state, levelUtils.deepCloneLevel(state.ENGINE.level));
+            setEditorPencilMode(state, false);
+            clearEditorUndoStack(state);
+            clearEditorValidTrapSpots(state);
+            setEditorEmptyClickCount(state, 0);
             ui.setInputValue('editReqLen', state.ENGINE.editor.workingLevel.reqLen || 0);
             ui.setInputValue('editReqInt', state.ENGINE.editor.workingLevel.reqInt || 0);
             editor.syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
-            state.ENGINE.editor.isModified = false;
+            setEditorModified(state, false);
             updatePencilState();
         }
 
@@ -432,7 +469,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.applyHintPinState(false, false);
         updateCompletionUI();
         persistence.persistSessionState();
-        state.ENGINE.isDirty = true;
+        markDirty(state);
     }
 
     function loop() {
@@ -444,53 +481,47 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
             const hintBlinkCycleMs  = 800;
             const hintFadeDurationMs = 900;
 
-            state.ENGINE.hinter.index += 0.285;
+            advanceHintAnimationIndex(state, 0.285);
 
             if (state.ENGINE.hinter.index >= hPath.length) {
-                state.ENGINE.hinter.index = hPath.length;
-                if (!state.ENGINE.hinter.holdStartMs) state.ENGINE.hinter.holdStartMs = hintNowMs;
+                setHintAnimationIndex(state, hPath.length);
+                setHintHoldStartMsIfUnset(state, hintNowMs);
             }
 
             const holdElapsedMs = state.ENGINE.hinter.holdStartMs ? (hintNowMs - state.ENGINE.hinter.holdStartMs) : 0;
             const holdComplete  = state.ENGINE.hinter.holdStartMs && holdElapsedMs >= hintHoldDurationMs;
 
-            if (holdComplete && !state.ENGINE.hinter.blinkStartMs) state.ENGINE.hinter.blinkStartMs = hintNowMs;
+            if (holdComplete) setHintBlinkStartMsIfUnset(state, hintNowMs);
 
             if (state.ENGINE.hinter.blinkStartMs && !state.ENGINE.hinter.fadeStartMs) {
                 const blinkElapsedMs = hintNowMs - state.ENGINE.hinter.blinkStartMs;
                 const blinkWindowMs  = hintBlinkCount * hintBlinkCycleMs;
                 if (blinkElapsedMs < blinkWindowMs) {
                     const blinkPhase = (blinkElapsedMs % hintBlinkCycleMs) / hintBlinkCycleMs;
-                    state.ENGINE.hinter.alpha = 0.25 + (0.75 * (0.5 + 0.5 * Math.cos(blinkPhase * Math.PI * 2)));
+                    setHintAnimationAlpha(state, 0.25 + (0.75 * (0.5 + 0.5 * Math.cos(blinkPhase * Math.PI * 2))));
                 } else {
-                    state.ENGINE.hinter.fadeStartMs = hintNowMs;
-                    state.ENGINE.hinter.alpha = 1;
+                    setHintFadeStartMs(state, hintNowMs);
+                    setHintAnimationAlpha(state, 1);
                 }
             }
 
             if (state.ENGINE.hinter.fadeStartMs) {
                 const fadeElapsedMs = hintNowMs - state.ENGINE.hinter.fadeStartMs;
-                state.ENGINE.hinter.alpha = Math.max(0, 1 - (fadeElapsedMs / hintFadeDurationMs));
+                setHintAnimationAlpha(state, Math.max(0, 1 - (fadeElapsedMs / hintFadeDurationMs)));
                 if (state.ENGINE.hinter.alpha <= 0) {
                     setOverlayState(core.OVERLAY_NONE);
                     ui.showMessage("", "");
                 }
             }
         }
-        if (state.ENGINE.nav.visualFlipCount < state.ENGINE.nav.flipCount) {
-            state.ENGINE.nav.visualFlipCount = Math.min(state.ENGINE.nav.flipCount, state.ENGINE.nav.visualFlipCount + 0.15);
-            state.ENGINE.isDirty = true;
-        } else if (state.ENGINE.nav.visualFlipCount > state.ENGINE.nav.flipCount) {
-            state.ENGINE.nav.visualFlipCount = Math.max(state.ENGINE.nav.flipCount, state.ENGINE.nav.visualFlipCount - 0.15);
-            state.ENGINE.isDirty = true;
-        }
+        if (stepVisualFlipCount(state)) markDirty(state);
         const _now = Date.now();
-        state.ENGINE.ripples = state.ENGINE.ripples.filter(r => _now - r.startTime < 600);
+        pruneRipples(state, _now);
         const hasContinuousAnimation = state.ENGINE.ripples.length > 0 || state.ENGINE.overlayState === core.HINT_ANIMATING;
-        if (hasContinuousAnimation) state.ENGINE.isDirty = true;
+        if (hasContinuousAnimation) markDirty(state);
         const shouldRender = state.ENGINE.isDirty || hasContinuousAnimation;
         if (shouldRender) {
-            state.ENGINE.isDirty = false;
+            clearDirty(state);
             const reqLenPreview = (state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
                 ? parseInt(ui.getValue('editReqLen'))
                 : null;
@@ -508,7 +539,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         const oldFlipCount = nav.flipCount;
         const level = engineState.mode === core.PLAY ? engineState.level : engineState.editor?.workingLevel;
         rebuildDerivedState(nav, level);
-        if (nav.flipCount !== oldFlipCount) nav.lastFlipTime = Date.now();
+        if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, Date.now());
     }
 
     function assertStateConsistency(engineState = state.ENGINE) {
@@ -527,46 +558,13 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         });
     }
 
-    const PathNavigator = {
-        pushStep(engineState, key, isJump) {
-            const l = engineState.mode === core.PLAY ? engineState.level : engineState.editor.workingLevel;
-            const nav = engineState.nav;
-            const oldFlipCount = nav.flipCount;
-            pushStepImpl(nav, key, isJump, l);
-            engineState.isDirty = true;
-            if (nav.flipCount !== oldFlipCount) nav.lastFlipTime = Date.now();
-            assertStateConsistency(engineState);
-        },
-        truncateTo(engineState, targetIdx) {
-            const nav = engineState.nav;
-            if (targetIdx < -1 || targetIdx >= nav.path.length - 1) return;
-            nav.path.splice(targetIdx + 1);
-            const newJumps = new Set();
-            for (const j of nav.isPortalJump) if (j <= targetIdx) newJumps.add(j);
-            nav.isPortalJump = newJumps;
-            if (nav.path.length === 0) { nav.activeGateKey = null; }
-            if ([core.DRAGGING, core.PORTAL_PAUSE, core.HAZARD_TRIGGERED].includes(engineState.logicState)) {
-                setLogicState(core.IDLE);
-            }
-            if (engineState.mode === core.EDITOR) engineState.editor.isModified = true;
-            engineState.isDirty = true;
-            rebuildDerivedPathState(engineState);
-            assertStateConsistency(engineState);
-        },
-        clear(engineState) {
-            const nav = engineState.nav;
-            nav.path = [];
-            nav.isPortalJump.clear();
-            nav.activeGateKey = null;
-            if ([core.DRAGGING, core.PORTAL_PAUSE, core.HAZARD_TRIGGERED].includes(engineState.logicState)) {
-                setLogicState(core.IDLE);
-            }
-            if (engineState.mode === core.EDITOR) engineState.editor.isModified = true;
-            engineState.isDirty = true;
-            rebuildDerivedPathState(engineState);
-            assertStateConsistency(engineState);
-        }
-    };
+    const PathNavigator = createPathNavigator({
+        core,
+        getLevel: engineState => engineState.mode === core.PLAY ? engineState.level : engineState.editor.workingLevel,
+        setLogicState,
+        rebuildDerivedPathState,
+        assertStateConsistency
+    });
 
     function setLogicState(newState) {
         if (newState !== core.IDLE && !VALID_LOGIC_TRANSITIONS[state.ENGINE.logicState]?.includes(newState)) {
@@ -576,7 +574,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         if (state.ENGINE.logicState === core.EDIT_DRAG && newState !== core.EDIT_DRAG) {
             ui.EditorDragGhost.update({ visible: false });
         }
-        state.ENGINE.logicState = newState;
+        setLogicStateValue(state, newState);
         return true;
     }
 
@@ -594,181 +592,114 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.updateLevelDisplay(eng.levelIdx, isComplete && isPlayMode, reviewDisplay);
     }
 
-    // setOverlayState updates state and applies the visual via ui.
-    function setOverlayState(newState) {
-        if (state.ENGINE.overlayState === newState) return true;
-        if (state.ENGINE.overlayState === core.HINT_ANIMATING && newState !== core.HINT_ANIMATING) {
-            state.ENGINE.hinter.alpha        = 0;
-            state.ENGINE.hinter.holdStartMs  = 0;
-            state.ENGINE.hinter.blinkStartMs = 0;
-            state.ENGINE.hinter.fadeStartMs  = 0;
-            ui.applyHintPinState(false, state.ENGINE.hinter.persistedPath.length > 0);
-        }
-        state.ENGINE.overlayState = newState;
-        state.ENGINE.isDirty = true;
-        ui.setSolverAbortRequested(state.ENGINE.solver.abortRequested);
-        ui.applyOverlayState(newState);
-        return true;
-    }
+    const overlayController = createOverlayController({ core, state, ui });
+    const {
+        setOverlayState,
+        startHintAnimation,
+        stopHintAnimation,
+        clearHintPaths,
+        pinCurrentHint,
+        clearPersistedHint
+    } = overlayController;
 
     // --- Hint animation and solver control ---
 
-    function startHintAnimation() {
-        if (!state.ENGINE.hinter.pathList.length) return;
-        setOverlayState(core.HINT_ANIMATING);
-        state.ENGINE.hinter.alpha        = 1;
-        state.ENGINE.hinter.index        = 0;
-        state.ENGINE.hinter.holdStartMs  = 0;
-        state.ENGINE.hinter.blinkStartMs = 0;
-        state.ENGINE.hinter.fadeStartMs  = 0;
-        ui.showMessage(`Solution ${state.ENGINE.hinter.currentPathIdx + 1}/${state.ENGINE.hinter.pathList.length}`, "text-emerald-600");
-        ui.applyHintPinState(true, state.ENGINE.hinter.persistedPath.length > 0);
-    }
-
-    function stopHintAnimation() {
-        state.ENGINE.hinter.pathList       = [];
-        state.ENGINE.hinter.currentPathIdx = 0;
-        state.ENGINE.hinter.index          = 0;
-        state.ENGINE.hinter.alpha          = 0;
-        state.ENGINE.hinter.holdStartMs    = 0;
-        state.ENGINE.hinter.blinkStartMs   = 0;
-        state.ENGINE.hinter.fadeStartMs    = 0;
-        setOverlayState(core.OVERLAY_NONE);
-    }
-
     function cancelSolver() {
         if (!state.ENGINE.solver.controller) return;
-        state.ENGINE.solver.abortRequested = true;
+        requestSolverAbort(state);
         ui.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
         ui.setButtonState('solverCloseBtn', { enabled: false });
         state.ENGINE.solver.controller.abort();
     }
 
     function startSolverRun(controller) {
-        state.ENGINE.solver.controller     = controller;
-        state.ENGINE.solver.abortRequested = false;
+        startSolverRunState(state, controller);
     }
 
     function endSolverRun() {
-        state.ENGINE.solver.controller     = null;
-        state.ENGINE.solver.abortRequested = false;
+        endSolverRunState(state);
     }
 
     function setHintPaths(pathList, source, currentIdx = 0) {
-        state.ENGINE.hinter.pathList       = pathList;
-        state.ENGINE.hinter.currentPathIdx = currentIdx;
-        state.ENGINE.hinter.source         = source;
+        setHintPathsState(state, pathList, source, currentIdx);
     }
 
     function setVariant(v) {
-        state.ENGINE.variant = v;
+        setVariantState(state, v);
         ui.updateViewport();
         rebuildDerivedPathState(state.ENGINE);
-        state.ENGINE.isDirty = true;
+        markDirty(state);
     }
 
     function reversePathDirection() {
-        const nav = state.ENGINE.nav;
-        nav.path.reverse();
-        const newJumps = new Set();
-        nav.isPortalJump.forEach(jIdx => newJumps.add(nav.path.length - 1 - jIdx));
-        nav.isPortalJump = newJumps;
+        reverseNavigationPath(state);
         rebuildDerivedPathState(state.ENGINE);
-        state.ENGINE.isDirty = true;
-    }
-
-    // Clears hint paths; stops HINT_ANIMATING overlay if active but leaves other overlays alone.
-    function clearHintPaths() {
-        state.ENGINE.hinter.pathList       = [];
-        state.ENGINE.hinter.currentPathIdx = 0;
-        state.ENGINE.hinter.source         = 'none';
-        if (state.ENGINE.overlayState === core.HINT_ANIMATING) setOverlayState(core.OVERLAY_NONE);
-    }
-
-    function pinCurrentHint() {
-        const { hinter } = state.ENGINE;
-        if (!hinter.pathList.length) return;
-        hinter.persistedPath    = [...hinter.pathList[hinter.currentPathIdx]];
-        hinter.persistedHintIdx = hinter.currentPathIdx;
-        setOverlayState(core.OVERLAY_NONE);
-        state.ENGINE.isDirty = true;
-        ui.applyHintPinState(false, true);
-    }
-
-    function clearPersistedHint() {
-        state.ENGINE.hinter.persistedPath    = [];
-        state.ENGINE.hinter.persistedHintIdx = -1;
-        state.ENGINE.isDirty = true;
-        ui.applyHintPinState(state.ENGINE.overlayState === core.HINT_ANIMATING, false);
+        markDirty(state);
     }
 
     // Remaps all packed path/gate keys through mapFn and rebuilds derived state.
     // Used by editor coord-transform operations (rotate, flip, resize).
     function remapNavKeys(mapFn) {
-        const nav = state.ENGINE.nav;
-        nav.path = nav.path.map(k => k === -1 ? -1 : mapFn(k));
-        if (nav.activeGateKey != null) nav.activeGateKey = mapFn(nav.activeGateKey);
+        remapNavigationKeys(state, mapFn);
         rebuildDerivedPathState(state.ENGINE);
-        state.ENGINE.isDirty = true;
+        markDirty(state);
     }
 
-    function setMuted(muted) { state.ENGINE.muted = muted; }
-    function toggleMute()    { state.ENGINE.muted = !state.ENGINE.muted; }
+    function setMuted(muted) { setMutedState(state, muted); }
+    function toggleMute()    { toggleMutedState(state); }
 
     function handleResetAction() {
         if (state.ENGINE.cheatActive) {
             if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-            state.ENGINE.cheatTimer = setTimeout(() => { state.ENGINE.cheatActive = false; }, 3000);
+            setCheatTimer(state, setTimeout(() => { setCheatActive(state, false); }, 3000));
         } else {
-            state.ENGINE.resetStreak++;
+            incrementResetStreak(state);
             if (state.ENGINE.resetStreak >= 5) {
-                state.ENGINE.cheatActive = true;
+                setCheatActive(state, true);
                 core.SOUND_BUS.play('F5', '8n');
                 if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-                state.ENGINE.cheatTimer = setTimeout(() => {
-                    state.ENGINE.cheatActive = false;
-                    state.ENGINE.resetStreak = 0;
-                }, 3000);
+                setCheatTimer(state, setTimeout(() => {
+                    setCheatActive(state, false);
+                    setResetStreak(state, 0);
+                }, 3000));
             }
         }
         loadLevel(state.ENGINE.levelIdx, true);
     }
 
-    function setReviewSubmissions(subs) { state.ENGINE.review.submissions = subs; }
+    function setReviewSubmissions(subs) { setReviewSubmissionsState(state, subs); }
 
-    function removeReviewSubmission(idx) { state.ENGINE.review.submissions.splice(idx, 1); }
+    function removeReviewSubmission(idx) { removeReviewSubmissionState(state, idx); }
 
     // Clears review submissions, resets index, then switches to REVIEW mode.
     function initReviewMode() {
-        state.ENGINE.review.submissions = [];
-        state.ENGINE.review.currentIdx  = 0;
+        resetReviewSubmissions(state);
         switchMode(core.REVIEW);
     }
 
     function isRunning() { return !!state.ENGINE.solver.controller; }
 
-    function setPendingAction(fn)      { state.ENGINE.runtime.pendingAction = fn; }
-    function clearPendingAction()      { state.ENGINE.runtime.pendingAction = null; }
+    function setPendingAction(fn)      { setRuntimePendingActionState(state, fn); }
+    function clearPendingAction()      { clearRuntimePendingActionState(state); }
     function executePendingAction()    { if (state.ENGINE.runtime.pendingAction) state.ENGINE.runtime.pendingAction(); }
-    function setOption(key, value)     { state.ENGINE.options[key] = value; }
+    function setOption(key, value)     { setOptionValue(state, key, value); }
 
     function resetRunState({ keepLevel = true } = {}) {
         PathNavigator.clear(state.ENGINE);
-        state.ENGINE.nav.undoStack = [];
-        state.ENGINE.hazards.revealedGeese.clear();
-        state.ENGINE.ripples = [];
+        clearNavigationUndoStack(state);
+        setRevealedGeese(state);
+        clearRipples(state);
 
-        if (!keepLevel) state.ENGINE.level = null;
-        state.ENGINE.hazards.armedFalseGoals    = new Set((state.ENGINE.level?.falseGoalKeys) || []);
-        state.ENGINE.hazards.detonatedFalseGoals = new Set();
+        if (!keepLevel) setLevel(state, null);
+        resetFalseGoalHazardsForLevel(state, state.ENGINE.level);
     }
 
     return {
         loadLevel(levelObjOrIdx, options = {}) {
             if (typeof levelObjOrIdx === 'number') return loadLevel(levelObjOrIdx, !!options.keepVariant);
             const mode = options.mode || state.ENGINE.mode;
-            if (mode === core.PLAY) state.ENGINE.level = levelObjOrIdx;
-            else state.ENGINE.editor.workingLevel = levelObjOrIdx;
+            if (mode === core.PLAY) setLevel(state, levelObjOrIdx);
+            else setEditorWorkingLevel(state, levelObjOrIdx);
             resetRunState({ keepLevel: true });
         },
         resetRunState,

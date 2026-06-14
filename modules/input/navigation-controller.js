@@ -1,5 +1,6 @@
 // Navigation controller: focus management, viewport resize, level navigation,
 // mode switching, unsaved-changes guard, guide/win modal wiring.
+import { setGamepadFocusEnabled, setUiFocusGroupState, setUiFocusIndex } from '../state-actions.js';
 
 export function createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer }) {
 
@@ -53,9 +54,8 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         const gIdx   = Math.max(0, groups.findIndex(g => g.name === groupName));
         const group  = groups[gIdx] || groups[0];
         if (!group) return;
-        state.ENGINE.ui.focusGroup = group.name;
-        state.ENGINE.ui.focusIndex = Math.max(0, Math.min(index, group.elements.length - 1));
-        if (forceVisual) state.ENGINE.ui.gamepadFocusEnabled = true;
+        setUiFocusGroupState(state, group.name, Math.max(0, Math.min(index, group.elements.length - 1)));
+        if (forceVisual) setGamepadFocusEnabled(state, true);
         applyFocusVisual(group.elements[state.ENGINE.ui.focusIndex]);
     }
 
@@ -71,7 +71,7 @@ export function createNavigationController({ core, state, ui, engine, levelUtils
         const groups = getFocusableGroups();
         const group  = groups.find(g => g.name === state.ENGINE.ui.focusGroup);
         if (!group || !group.elements.length) return;
-        state.ENGINE.ui.focusIndex = (state.ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length;
+        setUiFocusIndex(state, (state.ENGINE.ui.focusIndex + delta + group.elements.length) % group.elements.length);
         applyFocusVisual(group.elements[state.ENGINE.ui.focusIndex]);
     }
 

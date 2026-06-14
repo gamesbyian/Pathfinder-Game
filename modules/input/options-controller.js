@@ -1,5 +1,6 @@
 // Options controller: theme modal, game options toggles, mute, perspective,
 // reset, undo, dev mode toggle, and the dev-gen (copy-hints) shortcut.
+import { popNavigationUndoStack, toggleDevMode } from '../state-actions.js';
 
 export function createOptionsController({ core, state, ui, engine, themes, data, solverV2, levelUtils }, { tryNavigate }) {
 
@@ -33,7 +34,8 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
 
     document.getElementById('undoBtn').onclick = () => {
         ui.closeAllModals();
-        if (state.ENGINE.nav.undoStack.length) engine.applySnapshot(state.ENGINE.nav.undoStack.pop());
+        const snapshot = popNavigationUndoStack(state);
+        if (snapshot) engine.applySnapshot(snapshot);
     };
 
     // --- Dev: copy current hints ---
@@ -104,7 +106,7 @@ export function createOptionsController({ core, state, ui, engine, themes, data,
     // --- Dev mode toggle ---
 
     document.getElementById('devToggleBtn').onclick = () => {
-        state.ENGINE.isDevMode = !state.ENGINE.isDevMode;
+        toggleDevMode(state);
         engine.updatePlayModeLayout();
         ui.showMessage(state.ENGINE.isDevMode ? 'Dev Enabled' : 'Player Enabled', 'text-white font-black');
     };

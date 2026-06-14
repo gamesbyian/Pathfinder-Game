@@ -20,7 +20,7 @@ function makeScreenPosFn(model) {
 export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     const { viewport: vp, level, theme: th } = model;
 
-    if (mustPassOverlay) mustPassOverlay.innerHTML = '';
+    if (mustPassOverlay) mustPassOverlay.replaceChildren();
     if (!vp.cellW || !level) {
         if (th) { ctx.fillStyle = th.canvasBg; ctx.fillRect(0, 0, cvs.width, cvs.height); }
         return { needsRedraw: false };

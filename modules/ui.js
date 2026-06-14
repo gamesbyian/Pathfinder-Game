@@ -3,11 +3,11 @@ import {
     addClasses, removeClasses, setInlineStyle, setTextContent, setInputValue,
     setButtonLabel, setButtonState, setClassState,
     setFieldValue, appendFieldLine, clearElement, setSolutionOutput,
-    queryAll, clearClass, bindAll,
+    queryAll, clearClass, bindAll, renderTextList, removeChildren,
     setRootCssVar, setBodyStyle,
     showOverlay, hideOverlay, setOverlayOpacity,
     getValue, getChecked, getNumber,
-    copyText,
+    copyText, createSvgElement, replaceSvgChildren,
     toggleClass, addClass, removeClass,
 } from './ui/dom.js';
 import { openModal, closeModal, isModalOpen, toggleModal, setModalContent, closeAllModals } from './ui/modal-ui.js';
@@ -74,11 +74,11 @@ export function createUI({ core, getState, getRenderer }) {
             const el = document.getElementById(id);
             if (!el) return;
             const icon  = el.querySelector('.sm-icon');
-            icon.innerHTML = '○';
+            icon.textContent = '○';
             icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-slate-600 text-sm';
             el.querySelector('.sm-label').className = 'sm-label text-sm text-slate-400';
             const det = el.querySelector('.sm-detail');
-            det.innerHTML = '';
+            removeChildren(det);
             det.classList.add('hidden');
         });
         document.getElementById('submitModalDismissBtn')?.classList.add('hidden');
@@ -91,25 +91,29 @@ export function createUI({ core, getState, getRenderer }) {
         const label    = el.querySelector('.sm-label');
         const detailEl = el.querySelector('.sm-detail');
         if (status === 'running') {
-            icon.innerHTML = '<div class="w-3 h-3 rounded-full border-2 border-sky-400 border-t-transparent animate-spin"></div>';
+            const spinner = document.createElement('div');
+            spinner.className = 'w-3 h-3 rounded-full border-2 border-sky-400 border-t-transparent animate-spin';
+            icon.replaceChildren(spinner);
             icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center';
             label.className = 'sm-label text-sm text-white font-semibold';
         } else if (status === 'ok') {
-            icon.innerHTML = '✓';
+            icon.textContent = '✓';
             icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-emerald-400 font-bold';
             label.className = 'sm-label text-sm text-white';
         } else if (status === 'warn') {
-            icon.innerHTML = '⚠';
+            icon.textContent = '⚠';
             icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-amber-400';
             label.className = 'sm-label text-sm text-amber-300';
         } else if (status === 'error') {
-            icon.innerHTML = '✗';
+            icon.textContent = '✗';
             icon.className = 'sm-icon mt-0.5 w-5 h-5 flex-shrink-0 flex items-center justify-center text-red-400 font-bold';
             label.className = 'sm-label text-sm text-red-300';
         }
         if (detail !== null) {
-            detailEl.innerHTML = (Array.isArray(detail) ? detail : [detail])
-                .map(r => `<p class="text-xs text-slate-400 leading-snug">• ${r}</p>`).join('');
+            renderTextList(detailEl, detail, {
+                className: 'text-xs text-slate-400 leading-snug',
+                prefix: '• ',
+            });
             detailEl.classList.remove('hidden');
         }
     };
@@ -120,15 +124,15 @@ export function createUI({ core, getState, getRenderer }) {
 
     const setEditorMetrics = (currentLen, intersections) => {
         const lMet = resolveEl('editCopyMetrics');
-        if (lMet) lMet.innerText = `Set (${currentLen}/${intersections})`;
+        if (lMet) lMet.textContent = `Set (${currentLen}/${intersections})`;
     };
 
     const renderMetricsPanel = ({ currentLen = 0, reqLen = 0, currentInt = 0, reqInt = 0 } = {}) => {
         const lenEl = resolveEl('lengthInfo');
-        if (lenEl) lenEl.innerText = `${currentLen}/${reqLen}`;
+        if (lenEl) lenEl.textContent = `${currentLen}/${reqLen}`;
         const intEl = resolveEl('intersectionInfo');
         if (!intEl) return;
-        intEl.innerText = `${currentInt}/${reqInt}`;
+        intEl.textContent = `${currentInt}/${reqInt}`;
         if (currentInt > reqInt) {
             intEl.classList.remove('text-white');
             intEl.classList.add('text-red-300');
@@ -162,18 +166,39 @@ export function createUI({ core, getState, getRenderer }) {
         if (el) toggleClass(el, 'selected', !!selected);
     };
 
+    const PENCIL_ICON_PATHS = {
+        inactive: {
+            viewBox: '0 0 490.667 490.667',
+            paths: [
+                'M459.113,31.24c-41.654-41.654-109.199-41.654-150.853,0L21.647,317.854c-3.425,3.425-5.583,7.915-6.118,12.729L0.447,466.348c-1.509,13.587,9.971,25.068,23.558,23.558l135.765-15.083c4.815-0.535,9.304-2.693,12.729-6.118L399.827,241.38c0.007-0.007,0.016-0.013,0.023-0.021l59.264-59.264c20.827-20.827,31.241-48.127,31.24-75.427C490.354,79.368,479.941,52.068,459.113,31.24z M428.943,151.923l-44.18,44.18l-90.512-90.512l44.179-44.179c24.991-24.992,65.521-24.992,90.513,0c12.495,12.495,18.743,28.875,18.744,45.255C447.687,123.048,441.439,139.428,428.943,151.923z M147.622,433.245L45.797,444.557l11.312-101.825L264.081,135.76l90.513,90.513L147.622,433.245z',
+                'M232.839,448h-21.333c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h21.333c11.782,0,21.333-9.551,21.333-21.333C254.172,457.551,244.621,448,232.839,448z',
+                'M467.506,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C488.839,457.551,479.288,448,467.506,448z',
+                'M360.839,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C382.172,457.551,372.621,448,360.839,448z',
+            ],
+        },
+        active: {
+            viewBox: '0 0 490.612 490.612',
+            paths: [
+                'M254.172,447.945h-21.333c-11.797,0-21.333,9.557-21.333,21.333s9.536,21.333,21.333,21.333h21.333c11.797,0,21.333-9.557,21.333-21.333S265.97,447.945,254.172,447.945z',
+                'M467.506,447.945h-42.667c-11.797,0-21.333,9.557-21.333,21.333s9.536,21.333,21.333,21.333h42.667c11.797,0,21.333-9.557,21.333-21.333S479.303,447.945,467.506,447.945z',
+                'M360.839,447.945h-42.667c-11.797,0-21.333,9.557-21.333,21.333s9.536,21.333,21.333,21.333h42.667c11.797,0,21.333-9.557,21.333-21.333S372.636,447.945,360.839,447.945z',
+                'M459.109,182.04c41.579-41.6,41.579-109.269,0-150.848c-41.6-41.6-109.291-41.579-150.848,0l-44.181,44.181l150.848,150.848L459.109,182.04z',
+                'M21.652,317.799c-3.435,3.435-5.589,7.915-6.123,12.736L0.446,466.3c-0.704,6.443,1.536,12.843,6.123,17.429c4.011,4.032,9.451,6.251,15.083,6.251c0.789,0,1.557-0.043,2.347-0.128l135.787-15.083c4.8-0.533,9.301-2.688,12.715-6.123L384.766,256.38L233.918,105.532L21.652,317.799z',
+            ],
+        },
+    };
+
     const updatePencilButton = (isPencilMode) => {
         const btn = document.getElementById('editPencilBtn');
         if (!btn) return;
         const svg = btn.querySelector('svg');
         if (!svg) return;
-        const inactivePencilIcon = '<g><g><g><path d="M459.113,31.24c-41.654-41.654-109.199-41.654-150.853,0L21.647,317.854c-3.425,3.425-5.583,7.915-6.118,12.729L0.447,466.348c-1.509,13.587,9.971,25.068,23.558,23.558l135.765-15.083c4.815-0.535,9.304-2.693,12.729-6.118L399.827,241.38c0.007-0.007,0.016-0.013,0.023-0.021l59.264-59.264c20.827-20.827,31.241-48.127,31.24-75.427C490.354,79.368,479.941,52.068,459.113,31.24z M428.943,151.923l-44.18,44.18l-90.512-90.512l44.179-44.179c24.991-24.992,65.521-24.992,90.513,0c12.495,12.495,18.743,28.875,18.744,45.255C447.687,123.048,441.439,139.428,428.943,151.923z M147.622,433.245L45.797,444.557l11.312-101.825L264.081,135.76l90.513,90.513L147.622,433.245z"/><path d="M232.839,448h-21.333c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h21.333c11.782,0,21.333-9.551,21.333-21.333C254.172,457.551,244.621,448,232.839,448z"/><path d="M467.506,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C488.839,457.551,479.288,448,467.506,448z"/><path d="M360.839,448h-42.667c-11.782,0-21.333,9.551-21.333,21.333c0,11.782,9.551,21.333,21.333,21.333h42.667c11.782,0,21.333-9.551,21.333-21.333C382.172,457.551,372.621,448,360.839,448z"/></g></g></g>';
-        const activePencilIcon = '<g><g><g><path d="M254.172,447.945h-21.333c-11.797,0-21.333,9.557-21.333,21.333s9.536,21.333,21.333,21.333h21.333c11.797,0,21.333-9.557,21.333-21.333S265.97,447.945,254.172,447.945z"/><path d="M467.506,447.945h-42.667c-11.797,0-21.333,9.557-21.333,21.333s9.536,21.333,21.333,21.333h42.667c11.797,0,21.333-9.557,21.333-21.333S479.303,447.945,467.506,447.945z"/><path d="M360.839,447.945h-42.667c-11.797,0-21.333,9.557-21.333,21.333s9.536,21.333,21.333,21.333h42.667c11.797,0,21.333-9.557,21.333-21.333S372.636,447.945,360.839,447.945z"/><path d="M459.109,182.04c41.579-41.6,41.579-109.269,0-150.848c-41.6-41.6-109.291-41.579-150.848,0l-44.181,44.181l150.848,150.848L459.109,182.04z"/><path d="M21.652,317.799c-3.435,3.435-5.589,7.915-6.123,12.736L0.446,466.3c-0.704,6.443,1.536,12.843,6.123,17.429c4.011,4.032,9.451,6.251,15.083,6.251c0.789,0,1.557-0.043,2.347-0.128l135.787-15.083c4.8-0.533,9.301-2.688,12.715-6.123L384.766,256.38L233.918,105.532L21.652,317.799z"/></g></g></g>';
+        const icon = isPencilMode ? PENCIL_ICON_PATHS.active : PENCIL_ICON_PATHS.inactive;
         btn.classList.toggle('selected', isPencilMode);
-        svg.setAttribute('viewBox', isPencilMode ? '0 0 490.612 490.612' : '0 0 490.667 490.667');
+        svg.setAttribute('viewBox', icon.viewBox);
         svg.setAttribute('fill', 'currentColor');
         svg.setAttribute('stroke', 'none');
-        svg.innerHTML = isPencilMode ? activePencilIcon : inactivePencilIcon;
+        replaceSvgChildren(svg, icon.paths.map((d) => createSvgElement('path', { d })));
     };
 
     const setOptionsBlockedVisible = (visible) => {

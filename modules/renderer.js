@@ -2,6 +2,7 @@ import { createCanvasRenderer } from './render/canvas-renderer.js';
 import { transformPoint }       from './domain/geometry.js';
 import { drawPath }             from './render/draw-path.js';
 import { drawScorchMark }       from './render/draw-assets.js';
+import { markDirty }            from './state-actions.js';
 
 export function createRenderer({ core, state, ui }) {
     const cvs             = document.getElementById('gameCanvas');
@@ -18,7 +19,7 @@ export function createRenderer({ core, state, ui }) {
 
     function render(model) {
         const { needsRedraw } = canvasRenderer.render(model);
-        if (needsRedraw) state.ENGINE.isDirty = true;
+        if (needsRedraw) markDirty(state);
 
         // HUD DOM updates — outside the canvas renderer so the render layer stays pure
         if (model.isPlayMode && model.level) {

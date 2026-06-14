@@ -9,7 +9,7 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
 
     async function initAdminAuth() {
         if (!client.auth) throw new Error('No Firebase connection');
-        const provider = new firebase.auth.GoogleAuthProvider();
+        const provider = client.createGoogleAuthProvider();
         provider.setCustomParameters({ prompt: 'select_account' });
         await client.auth.signInWithPopup(provider);
         const user = client.auth.currentUser;
@@ -49,7 +49,7 @@ export function createReviewRepository(client, { getLevelFingerprint }) {
             levelData:          encodeHints(levelData),
             levelFingerprint,
             fingerprintVersion: 1,
-            approvedAt:         firebase.firestore.FieldValue.serverTimestamp(),
+            approvedAt:         client.serverTimestamp(),
             sortOrder,
         });
         batch.delete(root().collection('submissions').doc(submissionId));

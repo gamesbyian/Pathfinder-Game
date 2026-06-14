@@ -1,0 +1,97 @@
+#!/usr/bin/env node
+/** Unit tests for shared SolverV2 encoding and distance primitives. */
+import assert from 'node:assert/strict';
+import { createSolverV2 } from '../SolverV2.js';
+import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray } from '../modules/solver/distance.js';
+import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, PACK, popcount } from '../modules/solver/encoding.js';
+
+let passed = 0;
+let failed = 0;
+function test(name, fn) {
+  try { fn(); console.log(`  ✓ ${name}`); passed += 1; }
+  catch (error) { console.error(`  ✗ ${name}`); console.error(`    ${error.stack || error.message}`); failed += 1; }
+}
+
+function makeLevel(overrides = {}) {
+  return {
+    grid: { w: 4, h: 4 },
+    blockSet: new Set(),
+    portalMap: new Map(),
+    gooseSet: new Set(),
+    ...overrides,
+  };
+}
+
+test('PACK and axis constants preserve SolverV2 coordinate contracts', () => {
+  assert.equal(PACK(0, 0), 0);
+  assert.equal(PACK(14, 14), 917518);
+  assert.equal(PACK(3, 5) & 0xFFFF, 3);
+  assert.equal((PACK(3, 5) >>> 16) & 0xFFFF, 5);
+  assert.equal(KEY_SPACE, 1 << 20);
+  assert.equal(AXIS_H, 1);
+  assert.equal(AXIS_V, 2);
+  assert.equal(AXIS_NONE, 0);
+});
+
+test('popcount counts set bits in unsigned masks', () => {
+  assert.equal(popcount(0), 0);
+  assert.equal(popcount(0b101101), 4);
+  assert.equal(popcount(0xFFFFFFFF), 32);
+});
+
+test('buildDistMap respects blocks and portal zero-cost edges', () => {
+  const source = PACK(0, 0);
+  const portalA = PACK(1, 0);
+  const portalB = PACK(3, 3);
+  const blocked = PACK(0, 1);
+  const level = makeLevel({
+    blockSet: new Set([blocked]),
+    portalMap: new Map([
+      [portalA, { dest: portalB, color: '#fff' }],
+      [portalB, { dest: portalA, color: '#fff' }],
+    ]),
+  });
+
+  const dist = buildDistMap(level, [source]);
+  assert.equal(dist.get(source), 0);
+  assert.equal(dist.has(blocked), false);
+  assert.equal(dist.get(portalA), 1);
+  assert.equal(dist.get(portalB), 1, 'portal destination should inherit zero-cost portal traversal');
+});
+
+
+test('distMapToArray and getDistanceFromArray preserve finite and unreachable distances', () => {
+  const source = PACK(0, 0);
+  const reachable = PACK(2, 0);
+  const map = new Map([[source, 0], [reachable, 2], [PACK(3, 0), 0xFFFF + 10]]);
+  const arr = distMapToArray(map, KEY_SPACE);
+  assert.equal(getDistanceFromArray(arr, source), 0);
+  assert.equal(getDistanceFromArray(arr, reachable), 2);
+  assert.equal(getDistanceFromArray(arr, PACK(1, 1)), Infinity);
+  assert.equal(getDistanceFromArray(arr, PACK(3, 0)), 0xFFFE);
+});
+
+test('buildAxisApproachMap selects only filtered approach cells for the requested axis', () => {
+  const targetX = 1;
+  const targetY = 1;
+  const level = makeLevel();
+  const vertical = buildAxisApproachMap(level, targetX, targetY, AXIS_V, k => k !== PACK(1, 0));
+  assert.notEqual(vertical.get(PACK(1, 0)), 0, 'filtered-out approach cell should not be a zero-distance source');
+  assert.equal(vertical.get(PACK(1, 2)), 0);
+  assert.equal(vertical.get(PACK(1, 1)), 1);
+
+  const horizontal = buildAxisApproachMap(level, targetX, targetY, AXIS_H, k => k === PACK(0, 1));
+  assert.equal(horizontal.get(PACK(0, 1)), 0);
+  assert.notEqual(horizontal.get(PACK(2, 1)), 0, 'filtered-out approach cell should not be a zero-distance source');
+});
+
+test('SolverV2 exposes the extracted distance map primitive for compatibility', () => {
+  const solver = createSolverV2();
+  const source = PACK(0, 0);
+  const level = makeLevel();
+  assert.equal(solver._buildDistMap, buildDistMap);
+  assert.equal(solver._buildDistMap(level, [source]).get(PACK(3, 3)), 6);
+});
+
+if (failed > 0) { console.error(`\nSolver primitive tests: ${passed} passed, ${failed} failed`); process.exit(1); }
+console.log(`\nSolver primitive tests: ${passed} passed, ${failed} failed`);

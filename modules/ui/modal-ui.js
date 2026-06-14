@@ -1,4 +1,4 @@
-import { resolveEl, addClass, removeClass, toggleClass, setText, setHTML } from './dom.js';
+import { resolveEl, addClass, removeClass, toggleClass, setText } from './dom.js';
 
 export const openModal   = (id) => removeClass(resolveEl(id), 'hidden');
 export const closeModal  = (id) => addClass(resolveEl(id), 'hidden');
@@ -12,11 +12,10 @@ export const toggleModal = (id, force = null) => {
     return next;
 };
 
-export const setModalContent = (id, value, mode = 'text') => {
+export const setModalContent = (id, value, _mode = 'text') => {
     const el = resolveEl(id);
     if (!el) return;
-    if (mode === 'html') setHTML(el, value);
-    else setText(el, value);
+    setText(el, value);
 };
 
 export const closeAllModals = () => {

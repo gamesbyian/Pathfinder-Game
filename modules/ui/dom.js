@@ -7,7 +7,24 @@ export const addClass    = (el, cls)          => { if (el && cls) el.classList.a
 export const removeClass = (el, cls)          => { if (el && cls) el.classList.remove(cls); };
 export const toggleClass = (el, cls, force)   => { if (el && cls) el.classList.toggle(cls, force); };
 export const setText     = (el, value = '')   => { if (el) el.textContent = `${value}`; };
-export const setHTML     = (el, value = '')   => { if (el) el.innerHTML   = `${value}`; };
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+export const createSvgElement = (tag, attrs = {}) => {
+    const el = document.createElementNS(SVG_NS, tag);
+    Object.entries(attrs).forEach(([key, value]) => {
+        if (value === null || value === undefined) return;
+        el.setAttribute(key, `${value}`);
+    });
+    return el;
+};
+
+export const replaceSvgChildren = (svg, children = []) => {
+    if (!svg) return;
+    svg.replaceChildren(...children.filter(Boolean));
+};
+
+export const removeChildren = (el) => { if (el) el.replaceChildren(); };
 export const setStyle    = (el, key, value)   => { if (el) el.style[key]  = value; };
 export const safeEnable  = (el, enabled=true) => { if (el) el.disabled    = !enabled; };
 export const show = (el, displayClass = 'flex') => {
@@ -72,7 +89,19 @@ export const appendFieldLine = (id, line = '')  => {
     el.value += `${line}\n`;
     el.scrollTop = el.scrollHeight;
 };
-export const clearElement      = (id)         => { const el = resolveEl(id); if (!el) return; setHTML(el, ''); };
+export const clearElement      = (id)         => { const el = resolveEl(id); if (!el) return; removeChildren(el); };
+export const renderTextList = (idOrEl, items = [], { className = '', prefix = '' } = {}) => {
+    const el = resolveEl(idOrEl);
+    if (!el) return;
+    const values = Array.isArray(items) ? items : [items];
+    const nodes = values.map((item) => {
+        const p = document.createElement('p');
+        if (className) p.className = className;
+        p.textContent = `${prefix}${item ?? ''}`;
+        return p;
+    });
+    el.replaceChildren(...nodes);
+};
 export const setSolutionOutput = (value = '') => setFieldValue('solutionOutput', value);
 
 export const queryAll  = (selector) => Array.from(document.querySelectorAll(selector));

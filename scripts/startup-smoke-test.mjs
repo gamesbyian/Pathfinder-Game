@@ -13,6 +13,7 @@ const stripEsm = src =>
 const persistenceSrc = await readFile(new URL('../modules/persistence.js', import.meta.url), 'utf8');
 const loaderSrc      = await readFile(new URL('../modules/loader.js',      import.meta.url), 'utf8');
 const bootSrc        = await readFile(new URL('../modules/boot.js',        import.meta.url), 'utf8');
+const stateActionsSrc = await readFile(new URL('../modules/state-actions.js', import.meta.url), 'utf8');
 
 // Load persistence sub-modules — their factory functions must be in scope when
 // createPersistence runs in the VM context.  Also include domain helpers that
@@ -20,6 +21,7 @@ const bootSrc        = await readFile(new URL('../modules/boot.js',        impor
 // injected as plain scripts before the factory runs).
 const persistenceSubModuleSrcs = await Promise.all([
   '../modules/domain/level-fingerprint.js',
+  '../modules/persistence/firebase-runtime-config.js',
   '../modules/persistence/firebase-client.js',
   '../modules/persistence/local-session-store.js',
   '../modules/persistence/progress-store.js',
@@ -30,9 +32,10 @@ const persistenceSubModuleSrcs = await Promise.all([
 const persistenceSubModules = persistenceSubModuleSrcs.map(stripEsm).join('\n');
 
 // Full harnesses: sub-modules + factory, all ESM stripped
-const persistenceHarness = persistenceSubModules + '\n' + stripEsm(persistenceSrc);
-const loaderHarness      = stripEsm(loaderSrc);
-const bootHarness        = stripEsm(bootSrc);
+const stateActionsHarness = stripEsm(stateActionsSrc);
+const persistenceHarness  = persistenceSubModules + '\n' + stripEsm(persistenceSrc);
+const loaderHarness       = stripEsm(loaderSrc);
+const bootHarness         = stateActionsHarness + '\n' + stripEsm(bootSrc);
 
 
 // 1) syncProgress should not duplicate cloud listeners for the same signed-in user.

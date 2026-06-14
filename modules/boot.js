@@ -1,3 +1,5 @@
+import { setCurrentThemeName } from './state-actions.js';
+
 export function createBoot({ ui, debug, persistence, loader, themes, engine, data, core, state }) {
     let started = false;
 
@@ -8,7 +10,7 @@ export function createBoot({ ui, debug, persistence, loader, themes, engine, dat
         ui.initDom();
         debug.expose();
         const persistedSession = persistence.applySessionState();
-        state.ENGINE.runtime.currentTheme = persistedSession.currentTheme;
+        setCurrentThemeName(state, persistedSession.currentTheme);
 
         try {
             persistence.syncProgress();

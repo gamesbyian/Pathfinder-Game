@@ -1,4 +1,5 @@
 import { setRootCssVar } from './dom.js';
+import { markDirty } from '../state-actions.js';
 
 export const getViewportDimensions = () => {
     const vv = window.visualViewport;
@@ -49,7 +50,7 @@ export const createLayoutUI = ({ core, getState, getRenderer }) => {
         const gridH = eng.viewport.swapped ? l.grid.w : l.grid.h;
         eng.viewport.cellW = canvas.width  / gridW;
         eng.viewport.cellH = canvas.height / gridH;
-        eng.isDirty = true;
+        markDirty(eng);
     };
 
     const updateAppScale = () => {
@@ -65,7 +66,7 @@ export const createLayoutUI = ({ core, getState, getRenderer }) => {
         const scale = Math.min(viewport.height * 0.02, viewport.width * 0.035);
         setRootCssVar('--app-scale', `${scale}px`);
         updateViewport();
-        eng.isDirty = true;
+        markDirty(eng);
     };
 
     return { updateLayoutMode, updateViewport, updateAppScale };

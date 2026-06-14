@@ -236,7 +236,7 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
         if (!status || !list) return;
         status.textContent = 'Loading…';
         status.classList.remove('hidden');
-        list.innerHTML = '';
+        list.replaceChildren();
         try {
             const docs = await persistence.listPublishedLevelDocs();
             if (!docs.length) { status.textContent = 'No published levels remain.'; return; }
@@ -244,7 +244,14 @@ export function createReviewController({ core, state, ui, engine, levelUtils, ed
             docs.forEach(doc => {
                 const row = document.createElement('label');
                 row.className = 'flex items-center justify-between gap-3 p-3 rounded-xl border border-[var(--theme-modal-border)] bg-[var(--theme-modal-panel)] text-[var(--theme-modal-text)]';
-                row.innerHTML = `<span class="font-black uppercase tracking-widest text-sm">Level ${doc.number}</span><input type="checkbox" class="published-level-checkbox w-5 h-5 accent-red-600" data-id="${doc.id}">`;
+                const label = document.createElement('span');
+                label.className = 'font-black uppercase tracking-widest text-sm';
+                label.textContent = `Level ${doc.number}`;
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'published-level-checkbox w-5 h-5 accent-red-600';
+                checkbox.dataset.id = doc.id;
+                row.replaceChildren(label, checkbox);
                 list.appendChild(row);
             });
         } catch (err) {

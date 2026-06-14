@@ -1,6 +1,7 @@
 // Editor toolbar controller: grid transforms, palette drag, pencil/eraser,
 // undo/reset/new-level, help modal, metrics copy, trap-spot solver, and
 // live editor-input bindings.
+import { clearEditorValidTrapSpots, markDirty, setEditorModified, setEditorPendingPortal, toggleEditorMirrorHorizontal } from '../state-actions.js';
 
 export function createEditorToolbarController({ core, state, ui, engine, levelUtils, editor, solverV2 }, { tryNavigate }) {
 
@@ -19,11 +20,11 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         };
         levelUtils.applyCoordMapToLevel(l, coordMap, newW, newH, axisMap);
         const eng = state.ENGINE;
-        if (eng.editor.pendingPortal) eng.editor.pendingPortal = mapKey(eng.editor.pendingPortal);
+        if (eng.editor.pendingPortal) setEditorPendingPortal(state, mapKey(eng.editor.pendingPortal));
         engine.remapNavKeys(mapKey);
         engine.clearHintPaths();
-        eng.editor.validTrapSpots.clear();
-        eng.editor.isModified = true;
+        clearEditorValidTrapSpots(state);
+        setEditorModified(state, true);
         ui.updateViewport();
     }
 
@@ -61,10 +62,10 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         if (shiftX !== 0 || shiftY !== 0) {
             levelUtils.shiftLevelCoords(l, shiftX, shiftY);
             const shiftKey = k => { const p = levelUtils.UNPACK(k); return levelUtils.PACK(p.x + shiftX, p.y + shiftY); };
-            if (eng.editor.pendingPortal) eng.editor.pendingPortal = shiftKey(eng.editor.pendingPortal);
+            if (eng.editor.pendingPortal) setEditorPendingPortal(state, shiftKey(eng.editor.pendingPortal));
             engine.remapNavKeys(shiftKey);
             engine.clearHintPaths();
-            eng.editor.validTrapSpots.clear();
+            clearEditorValidTrapSpots(state);
         }
         l.grid.w = newSize;
         l.grid.h = newSize;
@@ -73,9 +74,9 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             return p.x < 0 || p.y < 0 || p.x >= newSize || p.y >= newSize;
         });
         if (pathOutOfBounds) engine.PathNavigator.clear(eng);
-        eng.editor.isModified = true;
+        setEditorModified(state, true);
         ui.updateViewport();
-        eng.isDirty = true;
+        markDirty(eng);
         ui.showMessage(`Grid: ${newSize}x${newSize}`, 'text-sky-600 font-bold');
     }
 
@@ -93,7 +94,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         ui.closeAllModals();
         if (state.ENGINE.overlayState !== core.OVERLAY_NONE || !state.ENGINE.editor.workingLevel) return;
         const l = state.ENGINE.editor.workingLevel;
-        state.ENGINE.editor.mirrorHorizontal = !state.ENGINE.editor.mirrorHorizontal;
+        toggleEditorMirrorHorizontal(state);
         ui.setInlineStyle('mirrorIconSvg', 'transform', state.ENGINE.editor.mirrorHorizontal ? 'rotate(90deg)' : 'rotate(0deg)');
         if (state.ENGINE.editor.mirrorHorizontal) {
             applyCoordTransform(l, (x, y) => ({ x: l.grid.w - 1 - x, y }), l.grid.w, l.grid.h, a => a);
@@ -254,7 +255,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
             await overlayMinTimer;
             engine.setOverlayState(core.OVERLAY_NONE);
             editor.setTrapSpots(res.spots || new Set());
-            state.ENGINE.isDirty = true;
+            markDirty(state);
             if (state.ENGINE.editor.validTrapSpots.size > 0) {
                 ui.showMessage(`Found ${state.ENGINE.editor.validTrapSpots.size} spots.`, 'text-white font-black');
             } else if (res.timedOut) {
@@ -277,7 +278,7 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
                     const retryRes = await solverV2.findTrapSpots(retryLevel, { timeLimit: retryBudgetMs, yieldFn });
                     engine.setOverlayState(core.OVERLAY_NONE);
                     editor.setTrapSpots(retryRes.spots || new Set());
-                    state.ENGINE.isDirty = true;
+                    markDirty(state);
                     if (state.ENGINE.editor.validTrapSpots.size > 0) {
                         ui.showMessage(`Found ${state.ENGINE.editor.validTrapSpots.size} spots after retry.`, 'text-white font-black');
                     } else if (retryRes.timedOut) {

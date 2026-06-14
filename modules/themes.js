@@ -1,26 +1,27 @@
 import { deriveTokens, isSeedTheme, randomSeeds }                       from './theme-engine.js';
 import { rc, isValidHexColor, toRgb, darkenHex, getLeaveThemeColors,
          normalizeTheme, buildChaosTheme }                              from './theme/theme-normalizer.js';
+import { markDirty, setCurrentThemeName }                                  from './state-actions.js';
 import { createThemeRegistry, ensureThemeLeaveColors as _ensureThemeLeaveColors } from './theme/theme-registry.js';
 import { applyCssVariables }                                            from './theme/css-variable-applier.js';
 import { populateThemePicker }                                          from './theme/theme-picker-renderer.js';
 
-export function createThemes({ state, data, getPersistence, getUI }) {
+export function createThemes({ state, data, getPersistence, getUI, getWindow }) {
     const THEMES = {};  // local fallback when data is not yet loaded
 
     const { getThemeRegistry, getCurrentTheme, getTheme } = createThemeRegistry(
-        { getData: () => data, getState: () => state.ENGINE },
+        { getData: () => data, getState: () => state.ENGINE, getWindow },
         THEMES
     );
 
     function applyTheme(name) {
         const themes = getThemeRegistry();
         if (name === 'chaos') { themes.chaos = buildChaosTheme(); }
-        state.ENGINE.runtime.currentTheme = name;
+        setCurrentThemeName(state, name);
         const t = themes[name];
         applyCssVariables(document.documentElement, t);
         getPersistence().persistSessionState();
-        state.ENGINE.isDirty = true;
+        markDirty(state);
     }
 
     function populateThemes() {

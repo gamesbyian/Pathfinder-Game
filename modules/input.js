@@ -6,6 +6,7 @@ import { createEditorToolbarController }  from './input/editor-toolbar-controlle
 import { createSubmissionController }     from './input/submission-controller.js';
 import { createReviewController }         from './input/review-controller.js';
 import { createSolverController }         from './input/solver-controller.js';
+import { setGamepadGridPrimaryAction }     from './state-actions.js';
 
 export function createInput({ core, state, ui, engine, levelUtils, editor, renderer, themes, data, solverV2, persistence }) {
     let initialized = false;
@@ -13,7 +14,7 @@ export function createInput({ core, state, ui, engine, levelUtils, editor, rende
     const init = () => {
         if (initialized) return;
         initialized = true;
-        state.ENGINE.ui.gamepadGridPrimaryAction = () => {};
+        setGamepadGridPrimaryAction(state, () => {});
 
         const navController = createNavigationController({ core, state, ui, engine, levelUtils, editor, renderer });
         createGamepadController({ core, state, ui, engine, levelUtils }, navController);
