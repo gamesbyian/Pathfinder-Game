@@ -1,4 +1,4 @@
-export function createDebug({ core }) {
+export function createDebug({ core, getWindow = () => (typeof window === 'undefined' ? null : window) }) {
     const debugExports = {};
 
     function register(name, value) {
@@ -8,9 +8,11 @@ export function createDebug({ core }) {
 
     function expose() {
         if (!core.DEV) return;
-        window.AXIS = core.AXIS;
+        const targetWindow = getWindow();
+        if (!targetWindow) return;
+        targetWindow.AXIS = core.AXIS;
         Object.entries(debugExports).forEach(([name, value]) => {
-            window[name] = value;
+            targetWindow[name] = value;
         });
     }
 

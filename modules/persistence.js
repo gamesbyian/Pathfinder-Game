@@ -1,15 +1,30 @@
 import { createFirebaseClient }            from './persistence/firebase-client.js';
+import { getFirebaseRuntimeConfig }         from './persistence/firebase-runtime-config.js';
 import { createLocalSessionStore }         from './persistence/local-session-store.js';
 import { createProgressStore }             from './persistence/progress-store.js';
 import { createLevelSubmissionRepository } from './persistence/level-submission-repository.js';
 import { createReviewRepository }          from './persistence/review-repository.js';
 import { isSameLevelStructure, getLevelFingerprint } from './domain/level-fingerprint.js';
 
-export function createPersistence({ getState, getTheme, getRawLevels, onProgressChanged }) {
-    const firebaseConfigRaw = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
-    const appId             = typeof __app_id !== 'undefined' ? __app_id : 'pathfinder-standalone';
-
-    const client         = createFirebaseClient(firebaseConfigRaw, appId);
+export function createPersistence({
+    getState,
+    getTheme,
+    getRawLevels,
+    onProgressChanged,
+    firebaseConfigRaw = undefined,
+    appId = undefined,
+    createClient = createFirebaseClient,
+    firebaseClientOptions = {},
+    getRuntimeConfig = getFirebaseRuntimeConfig,
+}) {
+    const runtimeConfig = getRuntimeConfig();
+    const resolvedFirebaseConfigRaw = firebaseConfigRaw === undefined ? runtimeConfig.firebaseConfigRaw : firebaseConfigRaw;
+    const resolvedAppId = appId === undefined ? runtimeConfig.appId : appId;
+    const resolvedClientOptions = {
+        initialAuthToken: runtimeConfig.initialAuthToken,
+        ...firebaseClientOptions,
+    };
+    const client         = createClient(resolvedFirebaseConfigRaw, resolvedAppId, resolvedClientOptions);
     const localSession   = createLocalSessionStore(client, { getRawLevels, getTheme, getState });
     const progressStore  = createProgressStore(client, localSession, { getState }, onProgressChanged);
     const submissionRepo = createLevelSubmissionRepository(client, { isSameLevelStructure, getLevelFingerprint });

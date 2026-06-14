@@ -1,4 +1,4 @@
-import { getEl, resolveEl, setText, setStyle, addClass, removeClass, setInlineStyle, toggleClass, show, hide, setHTML } from './dom.js';
+import { getEl, resolveEl, setText, setStyle, addClass, removeClass, setInlineStyle, toggleClass, show, hide, createSvgElement } from './dom.js';
 
 let messageTimer = null;
 
@@ -49,20 +49,48 @@ export const showSolverAlreadyRunning = () => showMessage('Solver already runnin
 export const showGooseJumpScare = () => show(getEl('gooseJumpScare'));
 export const hideGooseJumpScare = () => hide(getEl('gooseJumpScare'));
 
-export const showBombDetonation = ({ explodedMarkup } = {}) => {
-    const overlay = getEl('bombJumpScare');
-    show(overlay);
-    if (explodedMarkup) {
-        const bomb = overlay ? overlay.querySelector('#scaryBomb') : null;
-        setHTML(bomb, explodedMarkup);
-    }
+const getBombNode = (overlay) => overlay ? overlay.querySelector('#scaryBomb') : null;
+
+const renderBombReady = (bomb) => {
+    if (!bomb) return;
+    const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'w-full h-full' });
+    svg.append(createSvgElement('use', { href: '#def-falsegoal' }));
+    bomb.replaceChildren(svg);
 };
 
-export const hideBombDetonation = ({ resetMarkup } = {}) => {
+const renderBombExplosion = (bomb) => {
+    if (!bomb) return;
+    const svg = createSvgElement('svg', { viewBox: '0 0 100 100', class: 'w-full h-full' });
+    svg.append(
+        createSvgElement('circle', {
+            cx: 50,
+            cy: 50,
+            r: 45,
+            fill: 'none',
+            stroke: 'var(--theme-bomb-blast-ring)',
+            'stroke-width': 10,
+            'stroke-dasharray': '10 5',
+            class: 'animate-ping',
+        }),
+        createSvgElement('path', {
+            d: 'M 50 10 L 50 90 M 10 50 L 90 50 M 20 20 L 80 80 M 20 80 L 80 20',
+            stroke: 'var(--theme-bomb-blast-rays)',
+            'stroke-width': 8,
+        }),
+    );
+    bomb.replaceChildren(svg);
+};
+
+export const showBombDetonation = ({ exploded = false } = {}) => {
+    const overlay = getEl('bombJumpScare');
+    show(overlay);
+    const bomb = getBombNode(overlay);
+    if (exploded) renderBombExplosion(bomb);
+    else renderBombReady(bomb);
+};
+
+export const hideBombDetonation = ({ reset = true } = {}) => {
     const overlay = getEl('bombJumpScare');
     hide(overlay);
-    if (resetMarkup) {
-        const bomb = overlay ? overlay.querySelector('#scaryBomb') : null;
-        setHTML(bomb, resetMarkup);
-    }
+    if (reset) renderBombReady(getBombNode(overlay));
 };

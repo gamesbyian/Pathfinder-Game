@@ -1,4 +1,15 @@
 // Gamepad controller: polling loop, button/direction handling, connected/disconnected events.
+import {
+    resetGamepadConnectionState,
+    setGamepadFocusEnabled,
+    setGamepadHasPad,
+    setGamepadLastButtons,
+    setGamepadNextMoveAt,
+    setGamepadRafState,
+    setNavigationActiveGateKey,
+    setUiBLastPressTime,
+    setUiBSingleTimer
+} from '../state-actions.js';
 
 const GAMEPAD_MAP = { A: 0, B: 1, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
 const GAMEPAD_REPEAT_INITIAL = 220;
@@ -32,7 +43,7 @@ export function createGamepadController({ core, state, ui, engine, levelUtils },
         if (!state.ENGINE.nav.path.length) {
             const firstGate = l.gateKeys && l.gateKeys.length ? levelUtils.UNPACK(l.gateKeys[0]) : null;
             if (!firstGate) return;
-            state.ENGINE.nav.activeGateKey = l.gateKeys[0];
+            setNavigationActiveGateKey(state, l.gateKeys[0]);
             engine.PathNavigator.pushStep(state.ENGINE, l.gateKeys[0], false);
             engine.setLogicState(core.DRAGGING);
         }
@@ -56,30 +67,30 @@ export function createGamepadController({ core, state, ui, engine, levelUtils },
         if (now - state.ENGINE.ui.bLastPressTime <= 320) {
             if (state.ENGINE.ui.bSingleTimer) {
                 clearTimeout(state.ENGINE.ui.bSingleTimer);
-                state.ENGINE.ui.bSingleTimer = null;
+                setUiBSingleTimer(state, null);
             }
             cycleFocusGroup();
-            state.ENGINE.ui.bLastPressTime = 0;
+            setUiBLastPressTime(state, 0);
             return;
         }
-        state.ENGINE.ui.bLastPressTime = now;
-        state.ENGINE.ui.bSingleTimer = setTimeout(() => {
+        setUiBLastPressTime(state, now);
+        setUiBSingleTimer(state, setTimeout(() => {
             dismissGuideOrHelpModal();
-            state.ENGINE.ui.bSingleTimer = null;
-        }, 320);
+            setUiBSingleTimer(state, null);
+        }, 320));
     }
 
     function pollGamepadInput() {
         const pads = navigator.getGamepads ? navigator.getGamepads() : [];
         const pad  = pads && pads[0];
         if (!pad) return;
-        state.ENGINE.gamepad.hasPad = true;
+        setGamepadHasPad(state, true);
         const now = Date.now();
 
         const pressed    = idx => !!pad.buttons[idx] && pad.buttons[idx].pressed;
         const wasPressed = idx => !!state.ENGINE.gamepad.lastButtons[idx];
         const anyPressed = pad.buttons.some(b => !!b && b.pressed);
-        if (anyPressed) state.ENGINE.gamepad.hasPad = true;
+        if (anyPressed) setGamepadHasPad(state, true);
 
         if (pressed(GAMEPAD_MAP.A) && !wasPressed(GAMEPAD_MAP.A)) activateFocusedControl();
         if (pressed(GAMEPAD_MAP.B) && !wasPressed(GAMEPAD_MAP.B)) handleBPress();
@@ -92,16 +103,16 @@ export function createGamepadController({ core, state, ui, engine, levelUtils },
                 activeDir = dir;
                 if (!wasPressed(idx)) {
                     handleGamepadDirection(dir);
-                    state.ENGINE.gamepad.nextMoveAt = now + GAMEPAD_REPEAT_INITIAL;
+                    setGamepadNextMoveAt(state, now + GAMEPAD_REPEAT_INITIAL);
                 }
             }
         }
         if (activeDir && now >= state.ENGINE.gamepad.nextMoveAt) {
             handleGamepadDirection(activeDir);
-            state.ENGINE.gamepad.nextMoveAt = now + GAMEPAD_REPEAT_RATE;
+            setGamepadNextMoveAt(state, now + GAMEPAD_REPEAT_RATE);
         }
 
-        state.ENGINE.gamepad.lastButtons = pad.buttons.map(b => b.pressed);
+        setGamepadLastButtons(state, pad.buttons.map(b => b.pressed));
     }
 
     function hasConnectedGamepad() {
@@ -111,38 +122,34 @@ export function createGamepadController({ core, state, ui, engine, levelUtils },
 
     function stopGamepadPollingLoop() {
         if (state.ENGINE.gamepad.rafId !== null) cancelAnimationFrame(state.ENGINE.gamepad.rafId);
-        state.ENGINE.gamepad.rafId     = null;
-        state.ENGINE.gamepad.rafActive = false;
+        setGamepadRafState(state, { rafId: null, rafActive: false });
     }
 
     function gamepadPollingTick() {
         pollGamepadInput();
         if (!hasConnectedGamepad()) {
-            state.ENGINE.gamepad.hasPad      = false;
-            state.ENGINE.gamepad.lastButtons = [];
+            resetGamepadConnectionState(state);
             stopGamepadPollingLoop();
             return;
         }
-        state.ENGINE.gamepad.rafId = requestAnimationFrame(gamepadPollingTick);
+        setGamepadRafState(state, { rafId: requestAnimationFrame(gamepadPollingTick) });
     }
 
     function startGamepadPollingLoop() {
         if (state.ENGINE.gamepad.rafActive) return;
-        state.ENGINE.gamepad.rafActive = true;
-        state.ENGINE.gamepad.rafId     = requestAnimationFrame(gamepadPollingTick);
+        setGamepadRafState(state, { rafActive: true, rafId: requestAnimationFrame(gamepadPollingTick) });
     }
 
     window.addEventListener('gamepadconnected', () => {
-        state.ENGINE.gamepad.hasPad = true;
+        setGamepadHasPad(state, true);
         pollGamepadInput();
         startGamepadPollingLoop();
         setFocusGroup(state.ENGINE.ui.focusGroup || 'GRID', state.ENGINE.ui.focusIndex || 0);
     });
     window.addEventListener('gamepaddisconnected', () => {
         if (hasConnectedGamepad()) return;
-        state.ENGINE.gamepad.hasPad         = false;
-        state.ENGINE.gamepad.lastButtons    = [];
-        state.ENGINE.ui.gamepadFocusEnabled = false;
+        resetGamepadConnectionState(state);
+        setGamepadFocusEnabled(state, false);
         applyFocusVisual(null);
         stopGamepadPollingLoop();
     });

@@ -1,10 +1,10 @@
-import { getEl, setInlineStyle, setHTML } from './dom.js';
+import { getEl, setInlineStyle, removeChildren } from './dom.js';
 
 export const EditorDragGhost = (() => {
-    const getPaletteIconSVG = (type) => {
-        if (!type) return '';
+    const getPaletteIconNode = (type) => {
+        if (!type) return null;
         const icon = document.querySelector(`.palette-item[data-type="${type}"] svg`);
-        return icon ? icon.outerHTML : '';
+        return icon ? icon.cloneNode(true) : null;
     };
 
     const isPointerOverPalette = (x, y) => {
@@ -19,7 +19,7 @@ export const EditorDragGhost = (() => {
         if (!ghostEl) return;
         if (!visible || isOverPalette) {
             setInlineStyle(ghostEl, 'display', 'none');
-            setHTML(ghostEl, '');
+            removeChildren(ghostEl);
             return;
         }
         const ghostSize = cellSize * 1.15;
@@ -27,9 +27,12 @@ export const EditorDragGhost = (() => {
         setInlineStyle(ghostEl, 'height', `${ghostSize}px`);
         setInlineStyle(ghostEl, 'left',   `${x}px`);
         setInlineStyle(ghostEl, 'top',    `${y}px`);
-        if (!ghostEl.innerHTML) setHTML(ghostEl, getPaletteIconSVG(type));
+        if (!ghostEl.childElementCount) {
+            const icon = getPaletteIconNode(type);
+            if (icon) ghostEl.replaceChildren(icon);
+        }
         setInlineStyle(ghostEl, 'display', 'flex');
     };
 
-    return { update, getPaletteIconSVG, isPointerOverPalette };
+    return { update, getPaletteIconNode, isPointerOverPalette };
 })();

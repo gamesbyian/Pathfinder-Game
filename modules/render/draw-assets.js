@@ -142,7 +142,7 @@ export function drawScorchMark(ctx, cx, cy, s) {
 // to schedule a re-render (equivalent to the original isDirty = true guard).
 export function drawMustPassOverflowOverlay(overlay, pins, themeColors, viewport, cvs, screenPosFn, gridW, gridH) {
     if (!overlay) return false;
-    overlay.innerHTML = '';
+    overlay.replaceChildren();
     if (!pins || !pins.length) return false;
 
     const canvasRect = cvs.getBoundingClientRect();

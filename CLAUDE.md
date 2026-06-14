@@ -50,7 +50,7 @@ All of the following must be true simultaneously when the path reaches the goal:
 ├── design_bible.txt         Design notes
 ├── index.html               Main browser entry point
 ├── themes.js                Theme definitions
-├── firebase-config.js       Firebase credentials (client-side)
+├── firebase-config.js       Firebase public web config (client-side)
 ├── firebase.json            Firebase deploy config
 ├── firestore.rules          Firestore security rules
 ├── firestore.indexes.json   Firestore composite indexes
@@ -115,15 +115,9 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   ├── hint-path-replay/    Hint replay validation results
 │   ├── hint-validation/     Hint validation outputs
 │   └── ablation/            Ablation lab outputs (run-*.json, analysis JSON)
-│
-└── includes/                Server-side PHP includes
-    └── secret.php           (credentials, not committed to version control)
 ```
 
-> **Note**: Several npm scripts in `package.json` reference scripts that don't exist in `scripts/`:
-> `check-persistent-hard-levels.mjs`, `check-regression-levels.mjs`,
-> `audit-heuristic-recall.mjs`, `analyze-audit-failures.mjs`, `run-level-audit.mjs`.
-> These are from a prior era and can be ignored. The `legacy:*` scripts reference `LegacySolver/` which exists but is not relevant to current work.
+> **Note**: `package.json` now includes `check:dead-scripts` to catch npm scripts that reference missing local Node entrypoints.
 
 ---
 
@@ -556,7 +550,7 @@ Targeted `getAttemptConfigs()` sub-branching:
 
 ## Firebase Integration
 
-The app reads/writes level submissions and player progress to Firestore. Firebase config is in `firebase-config.js` (client-side credentials, excluded from version control on production). The `modules/persistence/` directory contains:
+The app reads/writes level submissions and player progress to Firestore. Firebase config is in `firebase-config.js` (public client-side web config). See `docs/firebase-config-and-secret-hygiene.md` for what may be committed and what must remain secret. The `modules/persistence/` directory contains:
 - `firebase-client.js` — Firebase SDK wrapper
 - `level-submission-repository.js` — Hint path storage (encode/decode for Firestore)
 - `local-session-store.js` — Local session state (fallback when offline)

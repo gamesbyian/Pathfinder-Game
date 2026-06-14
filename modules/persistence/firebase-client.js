@@ -2,16 +2,19 @@
 // All other persistence modules receive a client instance rather than
 // importing firebase globals directly.
 
-export function createFirebaseClient(firebaseConfigRaw, appId) {
+export function createFirebaseClient(firebaseConfigRaw, appId, {
+    firebaseApi = (typeof firebase !== 'undefined' ? firebase : null),
+    initialAuthToken = (typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null),
+} = {}) {
     let auth = null;
     let db   = null;
 
-    if (firebaseConfigRaw) {
+    if (firebaseConfigRaw && firebaseApi) {
         try {
             const config = JSON.parse(firebaseConfigRaw);
-            firebase.initializeApp(config);
-            auth = firebase.auth();
-            db   = firebase.firestore();
+            firebaseApi.initializeApp(config);
+            auth = firebaseApi.auth();
+            db   = firebaseApi.firestore();
             db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
         } catch (e) {
             console.warn('[Persistence] Firebase init failed; running in local-only mode.', e);
@@ -23,8 +26,8 @@ export function createFirebaseClient(firebaseConfigRaw, appId) {
     async function initAuth() {
         if (!auth) return;
         try {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await auth.signInWithCustomToken(__initial_auth_token);
+            if (initialAuthToken) {
+                await auth.signInWithCustomToken(initialAuthToken);
             } else {
                 await auth.signInAnonymously();
             }
@@ -62,5 +65,7 @@ export function createFirebaseClient(firebaseConfigRaw, appId) {
         initAuth,
         waitForUser,
         withTimeout,
+        createGoogleAuthProvider: () => new firebaseApi.auth.GoogleAuthProvider(),
+        serverTimestamp: () => firebaseApi.firestore.FieldValue.serverTimestamp(),
     };
 }

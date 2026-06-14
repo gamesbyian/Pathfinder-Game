@@ -2,6 +2,25 @@ import { validateLevelDetailed as validateLevelDetailedImpl } from './domain/lev
 import { getOccupant, removeOccupant, placeOccupant }        from './editor/editor-occupancy.js';
 import { saveEditorSnapshot, restoreEditorSnapshot }         from './editor/editor-history.js';
 import { serializeLevel }                                     from './editor/editor-export.js';
+import {
+    clearEditorValidTrapSpots,
+    popEditorUndoStack,
+    markDirty,
+    setEditorDraggedFromGrid,
+    setEditorDraggedObject,
+    setEditorEmptyClickCount,
+    setEditorMetrics,
+    setEditorModified,
+    resetEditorWorkingGrid,
+    setEditorPendingPortal,
+    setEditorPencilMode,
+    setEditorSelectedTool,
+    setEditorValidTrapSpots,
+    setEditorWorkingHints,
+    setEditorWorkingLevel,
+    setLevel,
+    toggleEditorPencilMode
+} from './state-actions.js';
 
 export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
     // engine is injected late via init() to break the engine↔editor circular dep.
@@ -11,18 +30,18 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
     function pickUpObject(k) {
         if (state.ENGINE.editor.isPencilMode) return null;
         saveEditorState();
-        state.ENGINE.editor.draggedFromGrid = true;
-        state.ENGINE.editor.validTrapSpots.clear();
+        setEditorDraggedFromGrid(state, true);
+        clearEditorValidTrapSpots(state);
         const l = state.ENGINE.editor.workingLevel;
-        l.hints = [];
+        setEditorWorkingHints(state, []);
         const result = removeOccupant(l, k, state.ENGINE.editor.pendingPortal);
         if (!result) {
-            state.ENGINE.editor.undoStack.pop();
-            state.ENGINE.editor.draggedFromGrid = false;
+            popEditorUndoStack(state);
+            setEditorDraggedFromGrid(state, false);
             return null;
         }
-        state.ENGINE.editor.pendingPortal = result.pendingPortal;
-        state.ENGINE.isDirty = true;
+        setEditorPendingPortal(state, result.pendingPortal);
+        markDirty(state);
         if (result.message) ui.showMessage(result.message, result.messageCls);
         return { type: result.type };
     }
@@ -50,14 +69,14 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
         if (toolType === 'portal' && pendingPortal === k) return;
 
         saveEditorState();
-        state.ENGINE.editor.validTrapSpots.clear();
-        l.hints = [];
+        clearEditorValidTrapSpots(state);
+        setEditorWorkingHints(state, []);
 
         const result = placeOccupant(l, k, toolType, pendingPortal);
         if (result.ok) {
-            state.ENGINE.editor.pendingPortal = result.pendingPortal;
-            state.ENGINE.editor.draggedObject = null;
-            state.ENGINE.isDirty = true;
+            setEditorPendingPortal(state, result.pendingPortal);
+            setEditorDraggedObject(state, null);
+            markDirty(state);
             if (result.message) ui.showMessage(result.message, result.messageCls);
         }
     }
@@ -84,7 +103,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
     function restoreEditorState() {
         const result = restoreEditorSnapshot(state.ENGINE.editor, state.ENGINE.hinter);
         if (!result) return;
-        state.ENGINE.isDirty = true;
+        markDirty(state);
         ui.showMessage('Undo Grid Action', 'text-slate-500');
     }
 
@@ -125,7 +144,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
         const json = serializeLevel(l, reqLen, reqInt, exportedHints);
         ui.setSolutionOutput(json);
         await ui.copyText(json, { fallbackElId: 'solutionOutput' });
-        state.ENGINE.editor.isModified = false;
+        setEditorModified(state, false);
         if (isValid) {
             ui.showMessage('Data Generated & Copied!', 'text-white font-black');
         } else {
@@ -153,92 +172,93 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
         enterEditorMode() { _engine.switchMode(core.EDITOR); },
         exitEditorMode() { _engine.switchMode(core.PLAY); },
         loadWorkingLevel(fromLevelObjOrBlank) {
-            state.ENGINE.editor.workingLevel = levelUtils.deepCloneLevel(fromLevelObjOrBlank);
-            state.ENGINE.editor.isModified = false;
+            setEditorWorkingLevel(state, levelUtils.deepCloneLevel(fromLevelObjOrBlank));
+            setEditorModified(state, false);
         },
         commitWorkingLevel() {
-            state.ENGINE.level = levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel);
-            state.ENGINE.editor.isModified = false;
+            setLevel(state, levelUtils.deepCloneLevel(state.ENGINE.editor.workingLevel));
+            setEditorModified(state, false);
         },
         applyMetricsFromUI() {
             if (!state.ENGINE?.editor?.workingLevel) return;
             const clampMetric = (n) => Number.isFinite(n) ? Math.max(0, Math.min(999, Math.floor(n))) : 0;
-            state.ENGINE.editor.workingLevel.reqLen = clampMetric(parseInt(ui.getValue('editReqLen'), 10));
-            state.ENGINE.editor.workingLevel.reqInt = clampMetric(parseInt(ui.getValue('editReqInt'), 10));
+            setEditorMetrics(state, {
+                reqLen: clampMetric(parseInt(ui.getValue('editReqLen'), 10)),
+                reqInt: clampMetric(parseInt(ui.getValue('editReqInt'), 10))
+            });
             applyMetadataFromUI(state.ENGINE.editor.workingLevel);
         },
         setObjectAt(k, obj) {
-            state.ENGINE.editor.draggedObject = obj;
+            setEditorDraggedObject(state, obj);
             return placeEditorObject(k);
         },
         removeObjectAt(k) {
-            state.ENGINE.editor.draggedObject = null;
+            setEditorDraggedObject(state, null);
             return pickUpObject(k);
         },
         validateWorkingLevel() {
             return validateLevelDetailed(state.ENGINE.editor.workingLevel);
         },
         setTrapSpots(spots = new Set()) {
-            state.ENGINE.editor.validTrapSpots = spots || new Set();
+            setEditorValidTrapSpots(state, spots);
         },
         resetWorkingGrid() {
             this.saveEditorState();
-            const l = state.ENGINE.editor.workingLevel;
-            Object.assign(l, { gateKeys: [], goalKey: -1, falseGoalKeys: new Set(), blockSet: new Set(), gooseSet: new Set(), mustPassKeys: [], mustCrossKeys: [], filterMap: new Map(), flippingFilterMap: new Map(), portalMap: new Map(), portalVisuals: [] });
+            resetEditorWorkingGrid(state);
             _engine.PathNavigator.clear(state.ENGINE);
-            state.ENGINE.isDirty = true;
+            markDirty(state);
         },
         createNewLevel() {
-            state.ENGINE.editor.workingLevel = { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [], designerName: '', description: '', difficulty: null };
+            setEditorWorkingLevel(state, { grid: { w: 10, h: 10 }, reqLen: 0, reqInt: 0, goalKey: -1, falseGoalKeys: new Set(), gateKeys: [], blockSet: new Set(), gooseSet: new Set(), portalMap: new Map(), portalVisuals: [], filterMap: new Map(), flippingFilterMap: new Map(), mustPassKeys: [], mustCrossKeys: [], hints: [], designerName: '', description: '', difficulty: null });
             _engine.PathNavigator.clear(state.ENGINE);
             ui.setSolutionOutput('');
             _engine.clearHintPaths();
-            state.ENGINE.editor.pendingPortal = null;
-            state.ENGINE.editor.validTrapSpots.clear();
+            setEditorPendingPortal(state, null);
+            clearEditorValidTrapSpots(state);
             ui.setModalContent('levelTitle', '??', 'text');
             ui.setInputValue('editReqLen', 0);
             ui.setInputValue('editReqInt', 0);
             syncMetadataFieldsFromLevel(state.ENGINE.editor.workingLevel);
-            state.ENGINE.editor.isPencilMode = false;
+            setEditorPencilMode(state, false);
             _engine.updatePencilState();
-            state.ENGINE.editor.isModified = true;
+            setEditorModified(state, true);
             ui.updateViewport();
         },
         markEditorInputsDirty() {
             _engine.clearHintPaths();
-            state.ENGINE.editor.validTrapSpots.clear();
-            state.ENGINE.editor.isModified = true;
+            clearEditorValidTrapSpots(state);
+            setEditorModified(state, true);
         },
         handlePaletteToolPointerDown(toolType, options = {}) {
             if (state.ENGINE.mode !== core.EDITOR && state.ENGINE.mode !== core.REVIEW) return;
             if (state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
-            state.ENGINE.editor.draggedFromGrid = false;
-            state.ENGINE.editor.emptyClickCount = 0;
+            setEditorDraggedFromGrid(state, false);
+            setEditorEmptyClickCount(state, 0);
             if (state.ENGINE.editor.pendingPortal && toolType !== 'portal' && toolType !== 'eraser') {
                 ui.showMessage('Finish portal pair!', 'text-white font-black');
                 return;
             }
             const forceActivate = !!options.forceActivate;
             if (state.ENGINE.editor.selectedTool === toolType && !forceActivate) {
-                state.ENGINE.editor.selectedTool = null;
+                setEditorSelectedTool(state, null);
                 ui.setPaletteSelectedByType(toolType, false);
-                state.ENGINE.editor.draggedObject = null;
+                setEditorDraggedObject(state, null);
                 _engine.setLogicState(core.IDLE);
             } else {
-                state.ENGINE.editor.selectedTool = toolType;
-                state.ENGINE.editor.draggedObject = { type: toolType };
+                setEditorSelectedTool(state, toolType);
+                setEditorDraggedObject(state, { type: toolType });
                 _engine.setLogicState(core.EDIT_DRAG);
                 ui.clearPaletteSelection();
                 ui.setPaletteSelectedByType(toolType, true);
             }
-            state.ENGINE.editor.isPencilMode = false;
+            setEditorPencilMode(state, false);
             _engine.updatePencilState();
         },
         togglePencilMode() {
             if (state.ENGINE.overlayState !== core.OVERLAY_NONE) return;
-            state.ENGINE.editor.isPencilMode = !state.ENGINE.editor.isPencilMode;
+            toggleEditorPencilMode(state);
             if (state.ENGINE.editor.isPencilMode) {
-                state.ENGINE.editor.selectedTool = null;
+                setEditorSelectedTool(state, null);
                 ui.clearPaletteSelection();
             } else {
                 _engine.setLogicState(core.IDLE);
@@ -246,7 +266,7 @@ export function createEditor({ core, state, ui, levelUtils, solverV2 }) {
             _engine.updatePencilState();
         },
         setWorkingHints(hints = []) {
-            if (state.ENGINE?.editor?.workingLevel) state.ENGINE.editor.workingLevel.hints = hints;
+            setEditorWorkingHints(state, hints);
         },
         pickUpObject(k)          { return pickUpObject(k); },
         placeEditorObject(k)     { return placeEditorObject(k); },

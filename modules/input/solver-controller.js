@@ -1,5 +1,6 @@
 // Solver controller: solve button, solver-close button,
 // and the dev-mode referee-solver keyboard toggle.
+import { toggleFlag } from '../state-actions.js';
 
 export function createSolverController({ core, state, ui, engine, levelUtils, solverV2 }) {
 
@@ -19,7 +20,7 @@ export function createSolverController({ core, state, ui, engine, levelUtils, so
     document.addEventListener('keydown', e => {
         if (!state.ENGINE.isDevMode) return;
         if (e.shiftKey && e.key.toLowerCase() === 'r') {
-            state.ENGINE.flags.useRefereeSolver = !state.ENGINE.flags.useRefereeSolver;
+            toggleFlag(state, 'useRefereeSolver');
             ui.showMessage(
                 `Referee solver ${state.ENGINE.flags.useRefereeSolver ? 'ON' : 'OFF'}`,
                 'text-white font-black'

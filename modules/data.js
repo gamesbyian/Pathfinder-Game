@@ -1,7 +1,41 @@
-export function createData({ deepClone, getThemes = () => ({}) }) {
+export function validateDataSources({ levels = [], themes = {} } = {}) {
+    const errors = [];
+    const warnings = [];
+
+    if (!Array.isArray(levels)) {
+        errors.push('levels must be an array');
+    } else {
+        levels.forEach((level, index) => {
+            if (!level || typeof level !== 'object') {
+                errors.push(`level ${index + 1} must be an object`);
+                return;
+            }
+            if (!level.goal || typeof level.goal !== 'object') warnings.push(`level ${index + 1} is missing a goal object`);
+            if (!Array.isArray(level.gates)) warnings.push(`level ${index + 1} gates should be an array`);
+            if (!level.grid || typeof level.grid !== 'object') warnings.push(`level ${index + 1} is missing a grid object; defaults will be applied`);
+            else {
+                if (!Number.isFinite(level.grid.w) || level.grid.w <= 0) warnings.push(`level ${index + 1} grid.w should be a positive number`);
+                if (!Number.isFinite(level.grid.h) || level.grid.h <= 0) warnings.push(`level ${index + 1} grid.h should be a positive number`);
+            }
+        });
+    }
+
+    if (!themes || typeof themes !== 'object' || Array.isArray(themes)) {
+        errors.push('themes must be an object map');
+    }
+
+    return Object.freeze({
+        ok: errors.length === 0,
+        errors: Object.freeze(errors),
+        warnings: Object.freeze(warnings),
+    });
+}
+
+export function createData({ deepClone, getThemes = () => ({}), levels = null, themes = null, getWindow = () => (typeof window === 'undefined' ? null : window) }) {
     let _levels = [];
     let _themes = {};
     let _loaded = false;
+    let _validation = validateDataSources();
 
     const clone = deepClone;
 
@@ -14,20 +48,28 @@ export function createData({ deepClone, getThemes = () => ({}) }) {
     };
 
     const ingest = (opts = {}) => {
-        const levelSource = Array.isArray(window.LEVELS) ? window.LEVELS : (Array.isArray(window.RAW_LEVELS) ? window.RAW_LEVELS : []);
+        const win = opts.window === undefined ? getWindow() : opts.window;
+        const injectedLevels = Array.isArray(opts.levels) ? opts.levels : levels;
+        const levelSource = Array.isArray(injectedLevels)
+            ? injectedLevels
+            : (Array.isArray(win?.LEVELS) ? win.LEVELS : (Array.isArray(win?.RAW_LEVELS) ? win.RAW_LEVELS : []));
         const baseThemes = (getThemes() && typeof getThemes() === 'object') ? getThemes() : {};
-        const sourceThemes = (window.THEMES && typeof window.THEMES === 'object') ? window.THEMES : {};
+        const injectedThemes = (opts.themes && typeof opts.themes === 'object') ? opts.themes : themes;
+        const sourceThemes = (injectedThemes && typeof injectedThemes === 'object')
+            ? injectedThemes
+            : ((win?.THEMES && typeof win.THEMES === 'object') ? win.THEMES : {});
 
         _levels = clone(levelSource).map(normalizeRawLevel);
         _themes = Object.assign({}, clone(baseThemes), clone(sourceThemes));
+        _validation = validateDataSources({ levels: _levels, themes: _themes });
 
         _loaded = true;
 
-        if (opts.secureGlobals !== false) {
+        if (win && opts.secureGlobals !== false) {
             try {
-                window.LEVELS = null;
-                window.RAW_LEVELS = null;
-                window.THEMES = null;
+                win.LEVELS = null;
+                win.RAW_LEVELS = null;
+                win.THEMES = null;
             } catch (_) {}
         }
         return true;
@@ -36,6 +78,7 @@ export function createData({ deepClone, getThemes = () => ({}) }) {
     const appendLevels = (rawLevels) => {
         if (!Array.isArray(rawLevels) || rawLevels.length === 0) return;
         _levels = [..._levels, ...clone(rawLevels).map(normalizeRawLevel)];
+        _validation = validateDataSources({ levels: _levels, themes: _themes });
     };
 
     return {
@@ -45,6 +88,7 @@ export function createData({ deepClone, getThemes = () => ({}) }) {
         getLevel: (index) => _levels[index],
         getThemes: () => _themes,
         getTheme: (id) => _themes[id],
+        getValidation: () => _validation,
         isLoaded: () => _loaded
     };
 }

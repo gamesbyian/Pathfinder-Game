@@ -1,6 +1,8 @@
 // Submission controller: shared submit-with-solve flow, hint button (play mode),
 // review-mode hint button, dev copy-path button.
 
+import { markDirty, setEditorWorkingLevel } from '../state-actions.js';
+
 export function createSubmissionController({ core, state, ui, engine, levelUtils, editor, persistence, solverV2 }) {
 
     // --- Shared multi-step submission flow ---
@@ -198,8 +200,8 @@ export function createSubmissionController({ core, state, ui, engine, levelUtils
                 if (subs.length > 0) {
                     engine.loadReviewLevel(safeIdx);
                 } else {
-                    state.ENGINE.editor.workingLevel = null;
-                    state.ENGINE.isDirty = true;
+                    setEditorWorkingLevel(state, null);
+                    markDirty(state);
                     ui.updateLevelDisplay(0, false, '0/0');
                 }
             } catch (e) {
