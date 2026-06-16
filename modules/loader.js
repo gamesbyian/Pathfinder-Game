@@ -69,30 +69,6 @@ export function createLoader({ ui, data, themes, core, browser = createDefaultLo
                 resolve(mode);
             };
 
-            const loadScriptWithTimeout = (src, timeoutMs) => new Promise((res, rej) => {
-                const s = browser.createScript();
-                s.src = src;
-                let settled = false;
-                const timer = browser.setTimeout(() => {
-                    if (settled) return;
-                    settled = true;
-                    rej(new Error(`Timed out loading ${src} after ${timeoutMs}ms`));
-                }, timeoutMs);
-                s.onload = () => {
-                    if (settled) return;
-                    settled = true;
-                    browser.clearTimeout(timer);
-                    res();
-                };
-                s.onerror = () => {
-                    if (settled) return;
-                    settled = true;
-                    browser.clearTimeout(timer);
-                    rej(new Error(`Failed to load ${src}`));
-                };
-                browser.appendToHead(s);
-            });
-
             const finishLoadedData = (label) => {
                 themes.ensureThemeLeaveColors();
                 if (!Array.isArray(data.getLevels()) || data.getLevels().length === 0) {
@@ -106,56 +82,25 @@ export function createLoader({ ui, data, themes, core, browser = createDefaultLo
                 done('ready');
             };
 
-            const tryLoadDataAssets = () => {
-                if (typeof dataAssetLoader !== 'function') return Promise.resolve(false);
-                setProgress(20, 'Loading Data Assets...');
-                return Promise.resolve(dataAssetLoader())
-                    .then((assets) => {
-                        if (!assets || !Array.isArray(assets.levels) || !assets.themes || typeof assets.themes !== 'object') return false;
-                        data.ingest({ levels: assets.levels, themes: assets.themes, window: null });
-                        finishLoadedData('Data Assets Ready');
-                        return true;
-                    })
-                    .catch((err) => {
-                        console.warn('[Loader] data asset load failed; falling back to legacy scripts.', err);
-                        return false;
-                    });
-            };
+            if (typeof dataAssetLoader !== 'function') {
+                console.error('[Loader] dataAssetLoader is required but was not provided.');
+                done('failed');
+                return;
+            }
 
-            const loadLegacyScripts = () => {
-                const loadThemes = new Promise(innerResolve => {
-                    setProgress(20, 'Loading Themes...');
-                    loadScriptWithTimeout('./themes.js', 4000)
-                        .then(() => { setProgress(55, 'Themes Ready'); innerResolve(); })
-                        .catch(err => {
-                            console.warn('[Loader] themes.js failed; using fallback theme.', err);
-                            setProgress(55, 'Themes Fallback');
-                            innerResolve();
-                        });
-                });
-
-                const loadLevels = loadScriptWithTimeout('./levels.js', 4000)
-                    .then(() => { setProgress(70, 'Loading Levels...'); });
-
-                return loadThemes
-                    .then(() => loadLevels)
-                    .then(() => {
-                        if (state.hasLoaded) {
-                            done(state.mode === 'unknown' ? 'failed' : state.mode);
-                            return;
-                        }
-                        data.ingest();
-                        finishLoadedData('Levels Ready');
-                    });
-            };
-
-            tryLoadDataAssets()
-                .then((loadedFromAssets) => {
-                    if (loadedFromAssets) return null;
-                    return loadLegacyScripts();
+            setProgress(20, 'Loading Data Assets...');
+            Promise.resolve(dataAssetLoader())
+                .then((assets) => {
+                    if (!assets || !Array.isArray(assets.levels) || !assets.themes || typeof assets.themes !== 'object') {
+                        console.error('[Loader] dataAssetLoader returned invalid assets.');
+                        done('failed');
+                        return;
+                    }
+                    data.ingest({ levels: assets.levels, themes: assets.themes, window: null });
+                    finishLoadedData('Data Assets Ready');
                 })
                 .catch(err => {
-                    console.error('[External level/theme load failed]', err);
+                    console.error('[Loader] dataAssetLoader failed:', err);
                     done('failed');
                 });
 

@@ -40,6 +40,10 @@ The game is served as a static site via **GitHub Pages** (github.io). There is n
 | **Flipping filter** | Starts with its declared axis; flips to the other axis each time the path uses it (based on `flipperUsedMask` count parity). Cannot turn on it. Fully dynamic — can't be precomputed. |
 | **Portal** | Pair of cells. Entering a portal forces an immediate jump to the paired exit at zero path-length cost. Portals cannot be reused. When standing on a portal cell and the last move was NOT a portal jump, `getNeighbors()` returns only the portal destination — bypassing static adjacency entirely. |
 | **Goose** | Hazard. Entering a goose cell in PLAY mode fails the path. The solver ignores geese (MoveContext.SOLVER). |
+| **Surround landmark** | Impassable. Path must visit all reachable 8-adjacent cells before finishing. Tracked via `surroundMask` + `surroundNeighborRemainingMasks`. |
+| **Must-turn landmark** | Passable. Path must make a turn (of required direction: `either`/`left`/`right`) at this cell. Tracked via `mustTurnMask`. |
+| **Adjacent-turn landmark** | Impassable. Path must make a required turn at one of its 8-adjacent passable cells. Tracked via `adjTurnMask`. |
+| **Decorative landmark** | Impassable. No path constraint — visual only. |
 
 ### Win Condition
 All of the following must be true simultaneously when the path reaches the goal:
@@ -47,6 +51,36 @@ All of the following must be true simultaneously when the path reaches the goal:
 2. Intersection count = `reqInt`
 3. All must-pass cells visited (`mustMask === 0` or `mpVisitedMask === initialMpMask`)
 4. All must-cross constraints satisfied (`mustCrossMask === 0`)
+5. All surround neighbor cells visited (`surroundMask === 0`)
+6. All must-turn cells turned in required direction (`mustTurnMask === 0`)
+7. All adj-turn constraints satisfied (`adjTurnMask === 0`)
+
+### Landmark Wire Format
+Landmarks are declared in the raw level JSON as a `landmarks` array. Each entry has `x`, `y`, `objectType` (visual asset name), and `role`:
+
+```js
+landmarks: [
+  { x: 5, y: 5, objectType: 'park',     role: 'surround' },
+  { x: 3, y: 3, objectType: 'library',  role: 'mustTurn',       turn: 'either' },
+  { x: 2, y: 7, objectType: 'library',  role: 'mustTurnLeft' },
+  { x: 7, y: 2, objectType: 'fountain', role: 'adjacentTurn',   turn: 'right' },
+  { x: 6, y: 8, objectType: 'lamppost', role: 'adjacentTurnLeft' },
+  { x: 9, y: 4, objectType: 'statue',   role: 'decorative' },
+]
+```
+
+Role passability:
+- **Passable** (path may enter): `mustPass`, `mustTurn`, `mustTurnLeft`, `mustTurnRight`
+- **Impassable** (added to `blockSet`): `surround`, `adjacentTurn`, `adjacentTurnLeft`, `adjacentTurnRight`, `decorative`
+
+Normalized level fields produced by `normalizeLevel()`:
+```js
+surroundKeys:       number[]                      // packed keys of surround landmarks
+adjacentTurnKeys:   number[]                      // packed keys of adj-turn landmarks
+adjacentTurnDirs:   string[]                      // parallel: 'either'|'left'|'right'
+mustPassTurnDirs:   Map<key, 'either'|'left'|'right'>  // turn direction per must-turn cell
+landmarkMeta:       Map<key, { objectType, role }> // visual/role metadata for renderer/editor
+```
 
 ---
 
@@ -54,7 +88,10 @@ All of the following must be true simultaneously when the path reaches the goal:
 
 ```
 /
-├── levels.js                147 levels as window.RAW_LEVELS (1-indexed coords)
+├── data/
+│   ├── levels.json          150 levels (1-indexed coords). Sole source of truth for
+│   │                        level data — loaded as JSON (no window.RAW_LEVELS).
+│   └── themes.json          Theme definitions — loaded as JSON (no window.THEMES).
 ├── PATHFINDER_SPEC.md       Full product spec (authoritative game rules)
 ├── design_bible.txt         Design notes
 ├── index.html               Main browser entry point. Links tailwind-generated.css
@@ -74,7 +111,6 @@ All of the following must be true simultaneously when the path reaches the goal:
 │                            'bomb_detonation') in type: property positions.
 ├── playwright.config.mjs    Playwright config (uses pre-installed Chromium via
 │                            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH env var)
-├── themes.js                Theme definitions
 ├── firebase-config.js       Firebase public web config (client-side, safe to commit)
 ├── firebase.json            Firestore rules + indexes config only (no hosting)
 ├── firestore.rules          Firestore security rules
@@ -184,7 +220,6 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   ├── state-slices.js      State slice factories (nav, editor, etc.)
 │   ├── state.js             App state (top-level ENGINE object)
 │   ├── theme-engine.js      Theme engine
-│   ├── themes.js            Theme definitions
 │   └── ui.js                UI integration
 │
 ├── scripts/                 Node.js CLI tools (ES modules)
@@ -203,7 +238,6 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   ├── editor-validation-test.mjs   Editor behavior tests
 │   ├── effect-runner-unit-tests.mjs 15 tests for modules/runtime/effect-runner.js
 │   ├── engine-controllers-unit-tests.mjs  Engine sub-controller tests (29 tests)
-│   ├── export-data-assets.mjs       Bundle data assets for serving
 │   ├── firestore-rules-test.mjs     Firestore security rules tests
 │   ├── import-published-levels.mjs  Import levels from Firestore (needs FIREBASE_BEARER_TOKEN)
 │   ├── level-schema-unit-tests.mjs  40 tests for modules/domain/level-schema.js
@@ -212,7 +246,7 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   ├── state-unit-tests.mjs / state-actions-unit-tests.mjs
 │   ├── step-processor-unit-tests.mjs 15 tests including portal+false-goal detonation
 │   ├── trap-search-audit.mjs        findTrapSpots timing audit
-│   ├── validate-bundled-levels.mjs  Validates all 147 bundled levels at CI time
+│   ├── validate-bundled-levels.mjs  Validates all 150 bundled levels at CI time
 │   ├── ablation-config.mjs          Ablation feature registry + experiment catalogue
 │   ├── run-ablation.mjs             Ablation experiment runner (controlled measurement)
 │   └── analyze-ablation.mjs         Ablation analysis + report generator
@@ -259,8 +293,8 @@ npm run check:third-party            # Verify CDN URLs against allowlist
 npm run test:domain             # Domain unit tests
 npm run test:level-schema       # Level schema validation tests (40 tests)
 npm run test:startup-smoke      # Boot harness integration tests
-npm run test:hint-path-oracle   # Validates solver output against all 147 levels
-npm run test:bundled-levels     # Validates all 147 bundled levels (schema + solver)
+npm run test:hint-path-oracle   # Validates solver output against all 150 levels
+npm run test:bundled-levels     # Validates all 150 bundled levels (schema + solver)
 npm run test:engine-controllers # Engine sub-controller unit tests (29 tests)
 npm run test:runtime-actions    # ActionType/EffectType constants tests
 npm run test:effect-runner      # Central effect dispatcher tests (15 tests)
@@ -323,15 +357,16 @@ Each entry in `data.levels[]`:
 
 ---
 
-## Level Stats (as of 2026-06-12)
-- 147 levels total
+## Level Stats (as of 2026-06-16)
+- 150 levels total
+- Three test levels (148–150) use landmark mechanics
 - Max must-pass cells: 4
 - Max must-cross cells: 4
 - Max portals: 3 pairs (6 portal keys)
 - Max flipping filters: 4
 - Grid sizes up to 15×15
 - All masks fit in 32-bit integers (no BigInt needed)
-- Level coordinates in `levels.js` are **1-indexed**; solver normalizes to 0-indexed internally
+- Level coordinates in `data/levels.json` are **1-indexed**; solver normalizes to 0-indexed internally
 
 ---
 
@@ -383,7 +418,7 @@ Checked in priority order:
 - `scoreAndSort` uses module-level `_sas[4]` Float64Array scratch + insertion sort (no per-call allocation)
 - Default beam width: 2000. Wide beams (5000, 50000) for very hard levels.
 - **State dedup**: before sort+select, candidates sharing `(key, sc)` are merged — only the highest-scoring path to each `(position, constraint-state)` tuple survives. Map key is `c.key + c.sc * KEY_SPACE` (exact float64). Disabled for portal levels (portal usage isn't in `sc`, so merging would be incorrect).
-  - `sc = (flipperUsedMask<<12)|(mustCrossMask<<8)|(mpVisitedMask<<4)|(ints&0xF)`
+  - `sc = (adjTurnMask&0xF)<<24 | (mustTurnMask&0xF)<<20 | (surroundMask&0xF)<<16 | (flipperUsedMask<<12) | (mustCrossMask<<8) | (mpVisitedMask<<4) | (ints&0xF)`
 - **Diverse beam** (`diverseBeam` flag + `_diverseSelect`): buckets candidates by `sk = (flipperUsedMask<<4)|(mustCrossMask&0xF)`, guarantees `floor(beamWidth/numBuckets)` per bucket, then fills remaining slots from the global top. Prevents beam collapse to one constraint-state mode on levels with flippers and must-cross cells.
 - **Progressive widening**: hard levels use `[bw=5000 diverse, bw=15000 diverse, bw=50000]` config sequence — narrow beams solve fast if they can; wide beam is a fallback with `minBudgetFraction: 1.0`.
 
@@ -401,6 +436,10 @@ state = {
   portalJumps: number,     // portal jumps so far (subtracted from counted length)
   flipperUsedMask: number, // bitmask tracking which flippers have been used
   lastWasPortalJump: boolean,
+  surroundMask: number,              // 32-bit: bit i set while surround[i] has unvisited neighbors
+  surroundNeighborRemainingMasks: Uint8Array, // per surround cell: 8-bit mask of unvisited neighbors
+  mustTurnMask: number,              // 32-bit: bit i set while must-turn[i] unsatisfied
+  adjTurnMask: number,               // 32-bit: bit i set while adj-turn[i] unsatisfied
 }
 ```
 
@@ -415,6 +454,12 @@ state = {
 - `prep.flipperIndexMap / flipperInitAxes` — flipper state tracking
 - `prep.mcPairDist / mpPairDist` — pairwise BFS distances for MST lower bounds
 - `prep.mcApproachDistMaps` — BFS distances to approach cells for must-cross 2nd-visit requirements
+- `prep.surroundNeighborIndex` — Map<neighborKey, surroundIdx> for O(1) lookup when entering a cell adjacent to a surround landmark
+- `prep.surroundInitNeighborMasks` — Uint8Array: initial 8-bit neighbor bitmask per surround cell
+- `prep.surroundNeighborDistMaps` — BFS dist arrays to each surround neighbor (for lower-bound pruning)
+- `prep.mustTurnCellIndex` — Map<key, idx>; `prep.mustTurnDirs` — required turn direction per must-turn cell
+- `prep.adjTurnDistMaps` — BFS dist arrays to approach cells for each adj-turn landmark
+- `prep.hasLandmarkConstraints` — boolean fast-path flag; `false` for levels without any landmark constraints (avoids overhead on the vast majority of levels)
 
 ### Cell Key Encoding
 ```js
@@ -719,7 +764,7 @@ FIREBASE_BEARER_TOKEN=<token> npm run levels:import-published
 ## Development Workflows
 
 ### Adding a new level
-1. Add entry to `levels.js` `RAW_LEVELS` array (1-indexed coordinates)
+1. Add entry to `data/levels.json` array (1-indexed coordinates)
 2. Run `npm run test:hint-path-oracle` — will fail if solver can't find a valid path
 3. If solver fails: debug with `npm run solver:direct -- --levels=<N> --verbose`
 
@@ -767,11 +812,11 @@ node -e "
 ### Level archetype investigation
 ```bash
 node --input-type=module << 'EOF'
-globalThis.window = globalThis;
-await import('./levels.js');
+import { readFileSync } from 'fs';
+const RAW_LEVELS = JSON.parse(readFileSync('./data/levels.json', 'utf8'));
 const { createSolverV2 } = await import('./modules/SolverV2.js');
 const solver = createSolverV2();
-const raw = globalThis.RAW_LEVELS[N - 1];  // N = level number
+const raw = RAW_LEVELS[N - 1];  // N = level number
 const level = solver._normalizeRawLevel(raw);
 const arch = solver._detectArchetype(level);
 const navArea = level.grid.w * level.grid.h - level.blockSet.size - level.gooseSet.size - level.falseGoalKeys.size - level.gateKeys.length;

@@ -1412,13 +1412,12 @@ test('REQUIRED_THEME_PATHS includes key deeply nested paths', () => {
 // ---------------------------------------------------------------------------
 console.log('\nGROUP 14: Data ingestion boundary (createData)');
 
-test('createData: can ingest injected levels/themes without a window global', () => {
+test('createData: can ingest injected levels/themes', () => {
     const dataStore = createData({
         deepClone: core.deepClone,
         getThemes: () => ({ base: { label: 'base' } }),
         levels: [{ goal: { x: 1, y: 1 }, gates: [], reqLen: 0 }],
         themes: { injected: { label: 'injected' } },
-        getWindow: () => null,
     });
     assert.equal(dataStore.ingest(), true);
     assert.equal(dataStore.isLoaded(), true);
@@ -1447,7 +1446,6 @@ test('createData: exposes validation diagnostics after ingest', () => {
         deepClone: core.deepClone,
         levels: [{ grid: { w: 2, h: 2 }, goal: { x: 1, y: 1 }, gates: [] }],
         themes: { injected: { label: 'injected' } },
-        getWindow: () => null,
     });
     dataStore.ingest();
     assert.equal(dataStore.getValidation().ok, true);
@@ -1461,31 +1459,11 @@ test('createData: appendLevels refreshes validation diagnostics', () => {
         deepClone: core.deepClone,
         levels: [{ grid: { w: 2, h: 2 }, goal: { x: 1, y: 1 }, gates: [] }],
         themes: {},
-        getWindow: () => null,
     });
     dataStore.ingest();
     assert.equal(dataStore.getValidation().warnings.length, 0);
     dataStore.appendLevels([{ grid: { w: 0, h: 2 }, gates: [] }]);
     assert.ok(dataStore.getValidation().warnings.some(w => w.includes('grid.w should be a positive number')));
-});
-
-test('createData: keeps window globals as a compatibility fallback and clears them by default', () => {
-    const fakeWindow = {
-        LEVELS: [{ grid: { w: 3, h: 4 }, goal: { x: 1, y: 1 }, gates: [] }],
-        RAW_LEVELS: [{ grid: { w: 9, h: 9 }, goal: { x: 1, y: 1 }, gates: [] }],
-        THEMES: { fallbackTheme: { label: 'fallback' } },
-    };
-    const dataStore = createData({
-        deepClone: core.deepClone,
-        getThemes: () => ({}),
-        getWindow: () => fakeWindow,
-    });
-    dataStore.ingest();
-    assert.equal(dataStore.getLevel(0).grid.w, 3, 'LEVELS wins over RAW_LEVELS fallback');
-    assert.equal(dataStore.getTheme('fallbackTheme').label, 'fallback');
-    assert.equal(fakeWindow.LEVELS, null);
-    assert.equal(fakeWindow.RAW_LEVELS, null);
-    assert.equal(fakeWindow.THEMES, null);
 });
 
 // ---------------------------------------------------------------------------

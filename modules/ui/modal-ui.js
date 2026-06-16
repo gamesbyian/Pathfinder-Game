@@ -19,6 +19,7 @@ export const setModalContent = (id, value, _mode = 'text') => {
 };
 
 export const closeAllModals = () => {
-    ['guideModal', 'editorHelpModal', 'winModal', 'themeModal', 'unsavedModal', 'publishedLevelsModal']
+    ['guideModal', 'editorHelpModal', 'winModal', 'themeModal', 'unsavedModal', 'publishedLevelsModal',
+     'paletteVariantPopup']
         .forEach(id => closeModal(id));
 };

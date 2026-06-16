@@ -20,9 +20,8 @@
  */
 
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
-import vm from 'node:vm';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -82,16 +81,11 @@ const { buildExperimentList } = await import('./ablation-config.mjs');
 
 const SolverV2 = createSolverV2();
 
-async function loadAllLevels() {
+function loadAllLevels() {
     const root = new URL('..', import.meta.url).pathname;
-    const windowCtx = {};
-    const ctx = vm.createContext({ window: windowCtx });
-    const filePath = path.join(root, 'levels.js');
-    if (!existsSync(filePath)) throw new Error('levels.js not found');
-    const src = await readFile(filePath, 'utf8');
-    vm.runInContext(src, ctx, { filename: 'levels.js' });
-    const levels = ctx.window.RAW_LEVELS;
-    if (!Array.isArray(levels) || levels.length === 0) throw new Error('Failed to load RAW_LEVELS');
+    const filePath = path.join(root, 'data', 'levels.json');
+    const levels = JSON.parse(readFileSync(filePath, 'utf8'));
+    if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return levels;
 }
 
@@ -100,7 +94,7 @@ const getCommitSha = () => {
     try { return execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim(); } catch { return 'local'; }
 };
 
-const rawLevels = await loadAllLevels();
+const rawLevels = loadAllLevels();
 const levelNumbers = levelFilter
     ? [...levelFilter].filter(n => n >= 1 && n <= rawLevels.length).sort((a, b) => a - b)
     : Array.from({ length: rawLevels.length }, (_, i) => i + 1);

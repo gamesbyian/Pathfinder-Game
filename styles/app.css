@@ -397,6 +397,41 @@ button:disabled {
 .palette-item.selected { border-color: var(--theme-gate); box-shadow: var(--theme-level-editor-palette-shadow); }
 .palette-item:active   { transform: scale(0.95); }
 
+.palette-expandable { position: relative; }
+.expand-chevron { position: absolute; bottom: 2px; right: 3px; font-size: 7px; line-height: 1; color: var(--theme-palette-item-border); pointer-events: none; }
+
+#paletteVariantPopup {
+    position: fixed;
+    z-index: 300;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 6px 32px rgba(0,0,0,0.18);
+    padding: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-width: 240px;
+}
+#paletteVariantPopup.hidden { display: none; }
+.palette-variant-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    padding: 5px 4px 3px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    min-width: 48px;
+    touch-action: none;
+    transition: background 0.1s, border-color 0.15s;
+}
+.palette-variant-item:hover { background: #f1f5f9; }
+.palette-variant-item.pv-active { border-color: var(--theme-gate); background: #eff6ff; }
+.palette-variant-item svg { width: 38px; height: 38px; }
+.palette-variant-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; white-space: nowrap; }
+
 #editUndoGridBtn { width: var(--palette-cell-size) !important; height: 100% !important; }
 
 .editor-input {

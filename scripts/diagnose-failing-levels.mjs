@@ -9,6 +9,7 @@
  */
 
 import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,12 +25,8 @@ const toKey = (x1, y1) => (x1 - 1) | ((y1 - 1) << 16);
 const fmt   = k => `(${keyX(k)+1},${keyY(k)+1})`;   // back to 1-based for display
 
 // ─── load level data ──────────────────────────────────────────────────────────
-async function loadLevels() {
-  const src1 = await readFile(path.join(root, 'levels.js'),  'utf8');
-  // levels.js assigns to window.RAW_LEVELS — eval with a fake window
-  const window = {};
-  new Function('window', src1)(window);
-  return window.RAW_LEVELS || []; // index 0 = level 1
+function loadLevels() {
+  return JSON.parse(readFileSync(path.join(root, 'data', 'levels.json'), 'utf8'));
 }
 
 // ─── load latest audit ────────────────────────────────────────────────────────
@@ -324,7 +321,7 @@ function report(levelNum, level, auditRow) {
 // extend this script to derive it from the latest audit's failure list).
 const FAILING_LEVELS = [92, 108, 134];
 
-const [allLevels, auditMap] = await Promise.all([loadLevels(), loadAudit()]);
+const [allLevels, auditMap] = [loadLevels(), await loadAudit()];
 
 console.log('PATHFINDER SOLVER — HEURISTIC RECALL DIAGNOSTIC');
 console.log('Comparing known-good hint paths against solver frontier data');

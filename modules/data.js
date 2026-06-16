@@ -31,7 +31,14 @@ export function validateDataSources({ levels = [], themes = {} } = {}) {
     });
 }
 
-export function createData({ deepClone, getThemes = () => ({}), levels = null, themes = null, getWindow = () => (typeof window === 'undefined' ? null : window) }) {
+/**
+ * createData — level and theme data store.
+ *
+ * Data must be injected explicitly via ingest({ levels, themes }) or via
+ * the constructor-level `levels`/`themes` parameters. Window globals are
+ * no longer read; explicit injection is required.
+ */
+export function createData({ deepClone, getThemes = () => ({}), levels = null, themes = null }) {
     let _levels = [];
     let _themes = {};
     let _loaded = false;
@@ -48,30 +55,17 @@ export function createData({ deepClone, getThemes = () => ({}), levels = null, t
     };
 
     const ingest = (opts = {}) => {
-        const win = opts.window === undefined ? getWindow() : opts.window;
         const injectedLevels = Array.isArray(opts.levels) ? opts.levels : levels;
-        const levelSource = Array.isArray(injectedLevels)
-            ? injectedLevels
-            : (Array.isArray(win?.LEVELS) ? win.LEVELS : (Array.isArray(win?.RAW_LEVELS) ? win.RAW_LEVELS : []));
+        const levelSource = Array.isArray(injectedLevels) ? injectedLevels : [];
         const baseThemes = (getThemes() && typeof getThemes() === 'object') ? getThemes() : {};
         const injectedThemes = (opts.themes && typeof opts.themes === 'object') ? opts.themes : themes;
-        const sourceThemes = (injectedThemes && typeof injectedThemes === 'object')
-            ? injectedThemes
-            : ((win?.THEMES && typeof win.THEMES === 'object') ? win.THEMES : {});
+        const sourceThemes = (injectedThemes && typeof injectedThemes === 'object') ? injectedThemes : {};
 
         _levels = clone(levelSource).map(normalizeRawLevel);
         _themes = Object.assign({}, clone(baseThemes), clone(sourceThemes));
         _validation = validateDataSources({ levels: _levels, themes: _themes });
 
         _loaded = true;
-
-        if (win && opts.secureGlobals !== false) {
-            try {
-                win.LEVELS = null;
-                win.RAW_LEVELS = null;
-                win.THEMES = null;
-            } catch (_) {}
-        }
         return true;
     };
 

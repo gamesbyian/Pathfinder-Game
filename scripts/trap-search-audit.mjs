@@ -9,9 +9,7 @@
  *   node scripts/trap-search-audit.mjs --extended-budget=120000
  */
 
-import { readFile } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
-import vm from 'node:vm';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -44,15 +42,11 @@ const extendedBudgetMs = Number(argMap.get('--extended-budget') || 300_000);
 
 // ── Level loader ──────────────────────────────────────────────────────────────
 
-async function loadAllLevels() {
+function loadAllLevels() {
     const root = new URL('..', import.meta.url).pathname;
-    const ctx = vm.createContext({ window: {} });
-    const filePath = path.join(root, 'levels.js');
-    if (!existsSync(filePath)) throw new Error('levels.js not found');
-    const src = await readFile(filePath, 'utf8');
-    vm.runInContext(src, ctx, { filename: 'levels.js' });
-    const levels = ctx.window.RAW_LEVELS;
-    if (!Array.isArray(levels) || levels.length === 0) throw new Error('Failed to load RAW_LEVELS');
+    const filePath = path.join(root, 'data', 'levels.json');
+    const levels = JSON.parse(readFileSync(filePath, 'utf8'));
+    if (!Array.isArray(levels) || levels.length === 0) throw new Error('data/levels.json is empty or not an array');
     return levels;
 }
 
@@ -73,7 +67,7 @@ function levelSummary(raw) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-const rawLevels = await loadAllLevels();
+const rawLevels = loadAllLevels();
 console.log(`Loaded ${rawLevels.length} levels.\n`);
 
 const timedOutLevels = [];

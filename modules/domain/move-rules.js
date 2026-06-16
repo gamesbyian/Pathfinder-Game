@@ -132,6 +132,51 @@ export function isValidMove(targetKey, state, level, options = {}) {
         const mustPassOk  = level.mustPassKeys.every(k => (nextCounts.get(k) || 0) > 0 || k === targetKey);
         const mustCrossOk = level.mustCrossKeys.every(k => ((nextCounts.get(k) || 0) + (k === targetKey ? 1 : 0)) >= 2);
         if (!mustPassOk || !mustCrossOk) return setReason('invalid-must-cross-impossibility');
+
+        // Surround: all valid 8-neighbors of each surround landmark must have been visited.
+        // A neighbor equal to targetKey counts as visited (the path is stepping there now).
+        if (level.surroundKeys?.length > 0) {
+            const { w, h } = level.grid;
+            const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
+            const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
+            for (const sk of level.surroundKeys) {
+                const sx = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
+                for (let d = 0; d < 8; d++) {
+                    const nx = sx + _dx8[d], ny = sy + _dy8[d];
+                    if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                    const nk = ((ny << 16) | nx) >>> 0;
+                    if (level.blockSet.has(nk)) continue;
+                    if (!(nextCounts.get(nk) > 0) && nk !== targetKey)
+                        return setReason('invalid-must-cross-impossibility');
+                }
+            }
+        }
+
+        // Adjacent-turn: each adj-turn landmark must have had a qualifying turn at an adjacent cell.
+        // turnsAtMap is available in engine nav state; omitted contexts skip this check conservatively.
+        if (level.adjacentTurnKeys?.length > 0) {
+            const turnsAtMap = state?.nav?.turnsAtMap ?? state?.turnsAtMap;
+            if (turnsAtMap) {
+                const { w, h } = level.grid;
+                const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
+                const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
+                for (let oi = 0; oi < level.adjacentTurnKeys.length; oi++) {
+                    const atk = level.adjacentTurnKeys[oi];
+                    const req = (level.adjacentTurnDirs || [])[oi] || 'either';
+                    const ax = atk & 0xFFFF, ay = (atk >>> 16) & 0xFFFF;
+                    let satisfied = false;
+                    for (let d = 0; d < 8 && !satisfied; d++) {
+                        const nx = ax + _dx8[d], ny = ay + _dy8[d];
+                        if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                        const nk = ((ny << 16) | nx) >>> 0;
+                        const t = turnsAtMap.get(nk);
+                        if (!t) continue;
+                        if (req === 'either' || t === req || t === 'both') satisfied = true;
+                    }
+                    if (!satisfied) return setReason('invalid-must-cross-impossibility');
+                }
+            }
+        }
     }
 
     if (diagnostics && typeof diagnostics === 'object') diagnostics.reasonCode = 'valid';

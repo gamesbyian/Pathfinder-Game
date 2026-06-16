@@ -184,12 +184,137 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         editor.applyMetadataFromUI();
     });
 
+    // --- Palette group variants popup ---
+
+    const PALETTE_GROUPS = {
+        visit: {
+            color: 'var(--theme-pin)',
+            variants: [
+                { type: 'mustPass',                    label: 'Required', def: '#def-mustpass' },
+                { type: 'landmark:var1:mustTurn',      label: 'Turn ↔',  def: '#def-mustturn' },
+                { type: 'landmark:var1:mustTurnLeft',  label: 'Turn ↶',  def: '#def-mustturnl' },
+                { type: 'landmark:var1:mustTurnRight', label: 'Turn ↷',  def: '#def-mustturrnr' },
+            ],
+        },
+        filter: {
+            color: 'var(--theme-filter)',
+            variants: [
+                { type: 'filterH', label: 'H-Filter', def: '#def-filterH' },
+                { type: 'filterV', label: 'V-Filter', def: '#def-filterV' },
+            ],
+        },
+        flip: {
+            color: 'var(--theme-filter)',
+            variants: [
+                { type: 'flipH', label: 'H-Flip', def: '#def-flipH' },
+                { type: 'flipV', label: 'V-Flip', def: '#def-flipV' },
+            ],
+        },
+        surround: {
+            color: 'var(--theme-pin)',
+            variants: [
+                { type: 'landmark:var1:surround', label: 'Var 1', def: '#def-surround' },
+                { type: 'landmark:var2:surround', label: 'Var 2', def: '#def-surround' },
+            ],
+        },
+        adjTurn: {
+            color: 'var(--theme-portal)',
+            variants: [
+                { type: 'landmark:var1:adjacentTurn',      label: 'Var 1',   def: '#def-adj-turn' },
+                { type: 'landmark:var1:adjacentTurnLeft',  label: 'Var 1 ↶', def: '#def-adj-turn' },
+                { type: 'landmark:var1:adjacentTurnRight', label: 'Var 1 ↷', def: '#def-adj-turn' },
+                { type: 'landmark:var2:adjacentTurn',      label: 'Var 2',   def: '#def-adj-turn' },
+                { type: 'landmark:var2:adjacentTurnLeft',  label: 'Var 2 ↶', def: '#def-adj-turn' },
+                { type: 'landmark:var2:adjacentTurnRight', label: 'Var 2 ↷', def: '#def-adj-turn' },
+            ],
+        },
+    };
+
+    const variantPopup  = document.getElementById('paletteVariantPopup');
+    let   popupGroupId  = null;
+
+    function getGroupEl(groupId) {
+        return document.querySelector(`.palette-expandable[data-group="${groupId}"]`);
+    }
+
+    function setGroupVariant(groupId, toolType) {
+        const group = PALETTE_GROUPS[groupId];
+        if (!group) return;
+        const variant = group.variants.find(v => v.type === toolType);
+        if (!variant) return;
+        const el = getGroupEl(groupId);
+        if (!el) return;
+        el.dataset.type = toolType;
+        const useEl = el.querySelector('.palette-group-icon');
+        if (useEl) useEl.setAttribute('href', variant.def);
+    }
+
+    function hideVariantPopup() {
+        if (variantPopup) variantPopup.classList.add('hidden');
+        popupGroupId = null;
+    }
+
+    function showVariantPopup(groupId, anchorEl) {
+        const group = PALETTE_GROUPS[groupId];
+        if (!group || !variantPopup) return;
+        popupGroupId = groupId;
+        const groupEl    = getGroupEl(groupId);
+        const activeType = groupEl?.dataset.type;
+
+        variantPopup.innerHTML = '';
+        for (const v of group.variants) {
+            const item = document.createElement('div');
+            item.className = 'palette-variant-item' + (v.type === activeType ? ' pv-active' : '');
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('viewBox', '0 0 100 100');
+            svg.style.color = group.color;
+            const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+            use.setAttribute('href', v.def);
+            svg.appendChild(use);
+            const label = document.createElement('span');
+            label.className = 'palette-variant-label';
+            label.textContent = v.label;
+            item.appendChild(svg);
+            item.appendChild(label);
+            item.addEventListener('pointerdown', ev => {
+                ev.stopPropagation();
+                setGroupVariant(groupId, v.type);
+                hideVariantPopup();
+                editor.handlePaletteToolPointerDown(v.type);
+            });
+            variantPopup.appendChild(item);
+        }
+
+        variantPopup.style.top  = '-9999px';
+        variantPopup.style.left = '-9999px';
+        variantPopup.classList.remove('hidden');
+        const rect = anchorEl.getBoundingClientRect();
+        const pw   = variantPopup.offsetWidth;
+        const ph   = variantPopup.offsetHeight;
+        let top  = rect.top - ph - 8;
+        let left = rect.left + rect.width / 2 - pw / 2;
+        if (top < 8) top = rect.bottom + 8;
+        if (left < 8) left = 8;
+        if (left + pw > window.innerWidth - 8) left = window.innerWidth - pw - 8;
+        variantPopup.style.top  = `${top}px`;
+        variantPopup.style.left = `${left}px`;
+    }
+
+    document.addEventListener('pointerdown', e => {
+        if (popupGroupId && variantPopup && !variantPopup.contains(e.target)) hideVariantPopup();
+    }, { capture: true });
+
     // --- Palette drag-and-drop ---
 
     const palettePointerStarts = new Map();
     ui.bindAll('.palette-item[data-type]', 'pointerdown', (e, el) => {
         if (e.button !== 0 && e.pointerType === 'mouse') return;
-        palettePointerStarts.set(e.pointerId, { type: el.dataset.type, x: e.clientX, y: e.clientY, moved: false });
+        palettePointerStarts.set(e.pointerId, {
+            type:  el.dataset.type,
+            group: el.dataset.group || null,
+            el,
+            x: e.clientX, y: e.clientY, moved: false,
+        });
     });
     window.addEventListener('pointermove', e => {
         const press = palettePointerStarts.get(e.pointerId);
@@ -198,13 +323,17 @@ export function createEditorToolbarController({ core, state, ui, engine, levelUt
         const dy = Math.abs(e.clientY - press.y);
         if (!press.moved && (dx > 6 || dy > 6)) {
             press.moved = true;
+            hideVariantPopup();
             editor.handlePaletteToolPointerDown(press.type, { forceActivate: true });
         }
     });
     const releasePalettePress = e => {
         const press = palettePointerStarts.get(e.pointerId);
         if (!press) return;
-        if (!press.moved) editor.handlePaletteToolPointerDown(press.type);
+        if (!press.moved) {
+            if (press.group) showVariantPopup(press.group, press.el);
+            else editor.handlePaletteToolPointerDown(press.type);
+        }
         palettePointerStarts.delete(e.pointerId);
     };
     window.addEventListener('pointerup',     releasePalettePress);

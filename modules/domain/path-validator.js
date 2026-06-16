@@ -29,9 +29,10 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
     if (!level.gateKeys.includes(path[0]))
         return { ok: false, reason: 'Path must start on a gate.' };
 
-    const counts   = new Map();
-    const usage    = new Map();
-    const jumpSet  = new Set();
+    const counts      = new Map();
+    const usage       = new Map();
+    const jumpSet     = new Set();
+    const turnsAtCell = new Map();  // key → 'left'|'right'|'both'
     let intersections = 0;
     let flipCount     = 0;
     const crossedSet  = new Map();
@@ -88,6 +89,21 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
             crossedSet.set(cur, flipCount);
             flipCount++;
         }
+
+        // Detect turn at prev when both this step and the previous are regular (non-portal) moves.
+        // Cross product of (pp→prev) × (prev→cur): positive = right turn, negative = left turn.
+        if (i >= 2 && !jumpSet.has(i - 1)) {
+            const pp  = path[i - 2];
+            const ppX = pp   & 0xFFFF, ppY  = (pp   >>> 16) & 0xFFFF;
+            const pvX = prev & 0xFFFF, pvY  = (prev >>> 16) & 0xFFFF;
+            const crX = cur  & 0xFFFF, crY  = (cur  >>> 16) & 0xFFFF;
+            const cross = (pvX - ppX) * (crY - pvY) - (pvY - ppY) * (crX - pvX);
+            if (cross !== 0) {
+                const dir = cross > 0 ? 'right' : 'left';
+                const ex  = turnsAtCell.get(prev);
+                turnsAtCell.set(prev, !ex ? dir : ex !== dir ? 'both' : ex);
+            }
+        }
     }
 
     const last = path[path.length - 1];
@@ -98,6 +114,70 @@ export function validateCandidatePath(level, pathCoordsOrKeys) {
         return { ok: false, reason: `Path length ${nonPortalSteps} does not match required ${level.reqLen}.` };
     if (level.reqInt !== undefined && level.reqInt !== null && intersections !== level.reqInt)
         return { ok: false, reason: `Intersections ${intersections} do not match required ${level.reqInt}.` };
+
+    // Must-pass: every required cell visited at least once
+    for (const mpKey of (level.mustPassKeys || [])) {
+        if (!(counts.get(mpKey) > 0))
+            return { ok: false, reason: `Must-pass cell not visited.` };
+    }
+
+    // Must-cross: every required cell visited at least twice
+    for (const mcKey of (level.mustCrossKeys || [])) {
+        if ((counts.get(mcKey) || 0) < 2)
+            return { ok: false, reason: `Must-cross cell visited fewer than twice.` };
+    }
+
+    // Surround: all valid (in-bounds, non-blocked) 8-neighbors of each surround landmark must be visited
+    if (level.surroundKeys?.length > 0) {
+        const { w, h } = level.grid;
+        const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
+        const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
+        for (const sk of level.surroundKeys) {
+            const sx = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
+            for (let d = 0; d < 8; d++) {
+                const nx = sx + _dx8[d], ny = sy + _dy8[d];
+                if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                const nk = ((ny << 16) | nx) >>> 0;
+                if (level.blockSet.has(nk)) continue;
+                if (!(counts.get(nk) > 0))
+                    return { ok: false, reason: `Surround constraint not satisfied: neighbor at (${nx + 1},${ny + 1}) not visited.` };
+            }
+        }
+    }
+
+    // Must-turn: each must-turn cell must have had a turn of the required direction
+    if (level.mustPassTurnDirs?.size > 0) {
+        for (const [k, req] of level.mustPassTurnDirs) {
+            const t = turnsAtCell.get(k);
+            if (!t)
+                return { ok: false, reason: `Must-turn constraint not satisfied: no turn at required cell.` };
+            if (req !== 'either' && t !== req && t !== 'both')
+                return { ok: false, reason: `Must-turn constraint not satisfied: need ${req} turn, got ${t}.` };
+        }
+    }
+
+    // Adjacent-turn: each adj-turn landmark must have a required turn at one of its 8 adjacent cells
+    if (level.adjacentTurnKeys?.length > 0) {
+        const { w, h } = level.grid;
+        const _dx8 = [0, 1, 1, 1, 0, -1, -1, -1];
+        const _dy8 = [-1, -1, 0, 1, 1, 1, 0, -1];
+        for (let oi = 0; oi < level.adjacentTurnKeys.length; oi++) {
+            const atk = level.adjacentTurnKeys[oi];
+            const req = (level.adjacentTurnDirs || [])[oi] || 'either';
+            const ax = atk & 0xFFFF, ay = (atk >>> 16) & 0xFFFF;
+            let satisfied = false;
+            for (let d = 0; d < 8 && !satisfied; d++) {
+                const nx = ax + _dx8[d], ny = ay + _dy8[d];
+                if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                const nk = ((ny << 16) | nx) >>> 0;
+                const t = turnsAtCell.get(nk);
+                if (!t) continue;
+                if (req === 'either' || t === req || t === 'both') satisfied = true;
+            }
+            if (!satisfied)
+                return { ok: false, reason: `Adjacent-turn constraint not satisfied.` };
+        }
+    }
 
     return { ok: true, path };
 }
