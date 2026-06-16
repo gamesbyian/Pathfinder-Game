@@ -3,6 +3,7 @@
 // normalizeLevel accessor and the direct processRawLevel API.
 
 import { PACK, UNPACK } from './cell-key.js';
+import { validateRawLevel } from './level-schema.js';
 
 export const normalizeMetadata = (raw = {}) => ({
     designerName: typeof raw.designerName === 'string' ? raw.designerName : '',
@@ -172,4 +173,20 @@ export function assertLevelShape(level) {
     if (level.goalKey === undefined || level.goalKey === -1) throw new Error('Level missing goal');
     if (!Array.isArray(level.gateKeys) || level.gateKeys.length === 0) throw new Error('Level missing gates');
     if (!level.grid || !level.grid.w || !level.grid.h) throw new Error('Grid dimensions missing');
+}
+
+/**
+ * Combined validate-and-parse for raw level data.
+ * Prefers this over calling validateRawLevel + parseRawLevel separately.
+ *
+ * @param {unknown} raw
+ * @param {number|null} [id]
+ * @returns {{ ok: boolean, level: import('./level-schema.js').NormalizedLevel|null, errors: string[] }}
+ */
+export function parseRawLevelDetailed(raw, id = null) {
+    const { ok, errors } = validateRawLevel(raw);
+    if (!ok) return { ok: false, level: null, errors };
+    const level = parseRawLevel(raw, id);
+    if (!level) return { ok: false, level: null, errors: ['parse failed unexpectedly after validation passed'] };
+    return { ok: true, level, errors: [] };
 }

@@ -9,8 +9,7 @@ import process from 'node:process';
 
 globalThis.window = globalThis;
 await import('../levels.js');
-const { parseRawLevel } = await import('../modules/domain/level-codec.js');
-const { validateRawLevel } = await import('../modules/domain/level-schema.js');
+const { parseRawLevelDetailed } = await import('../modules/domain/level-codec.js');
 
 const levels = globalThis.RAW_LEVELS;
 if (!Array.isArray(levels) || levels.length === 0) {
@@ -22,19 +21,10 @@ let failures = 0;
 
 for (let i = 0; i < levels.length; i++) {
     const levelNumber = i + 1;
-    const raw = levels[i];
-
-    const { ok, errors } = validateRawLevel(raw);
+    const { ok, errors } = parseRawLevelDetailed(levels[i], i);
     if (!ok) {
-        console.error(`Level ${levelNumber}: schema validation failed`);
+        console.error(`Level ${levelNumber}: validation/parse failed`);
         for (const err of errors) console.error(`  - ${err}`);
-        failures++;
-        continue;
-    }
-
-    const normalized = parseRawLevel(raw, i);
-    if (!normalized) {
-        console.error(`Level ${levelNumber}: parseRawLevel returned null`);
         failures++;
     }
 }
