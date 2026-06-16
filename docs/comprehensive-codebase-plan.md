@@ -517,8 +517,9 @@ Clean stale package scripts, add a check that declared script targets exist, and
 - ✅ `win-controller.js` — `computeWinEffects()` pure function extracts win-event effects; 5 DOM-free tests.
 - ✅ `hazard-controller.js` — `computeJumpScareEffects()` + `computeBombDetonationEffects()` extracted; 3 DOM-free tests.
 - ✅ `step-processor.js` — now emits `ActionType`/`EffectType` constants instead of raw strings at the computation layer. `step-dispatcher.js` switches on the same constants.
-- ⬜ Remaining: overlay-controller, level-flow handlers, and timer-based effects. `Effects.scheduleTimer` vocabulary exists but adapters are not yet wired.
-- ⬜ Add DOM-free tests for reducer outputs (game-rules.js `checkWinConditionImpl` is already pure and tested).
+- ✅ `test:step-processor` (14 tests) — behaviour-locking tests for all 5 step outcomes; each explicitly asserts event types are constants, not raw strings.
+- ✅ `scheduleTimer` injected into `hazard-controller.js` — 4 new tests cover timer callbacks using a synchronous fake timer.
+- ⬜ Remaining: overlay-controller and level-flow handlers. `Effects.scheduleTimer` vocabulary exists and pattern is established.
 
 **Note:** The vocabulary is now load-bearing from the computation layer (`step-processor.js`) up through engine controllers (`win-controller.js`, `hazard-controller.js`). The dispatcher (`step-dispatcher.js`) bridges to adapters using the same constants.
 
@@ -607,10 +608,10 @@ These are the best next tasks based on current progress (Phase 1 ✅, Phase 2 �
 
 **Remaining:**
 
-1. **(Phase 3 — Medium)** Wire timer-based effects (`Effects.scheduleTimer`) through an effect runner in `hazard-controller.js`. Currently the 2-stage bomb timer still uses raw `setTimeout` calls rather than the `SCHEDULE_TIMER` effect type. Requires an effect-runner that can be tested by injecting a fake `scheduleTimer` adapter.
+1. **(Phase 3 — Medium)** Apply the `scheduleTimer` injection pattern from `hazard-controller.js` to `level-flow.js` (reset streak cheat timer + `handleResetAction` timer). This completes Phase 3 timer testability across all engine controllers.
 
 2. **(Phase 4 — Small)** Define a Content Security Policy target in `index.html` as a `<meta http-equiv="Content-Security-Policy">` header. Start permissive (allow CDN sources) and document what would need to change for a strict CSP. Note: the debug facade (`modules/debug.js`) is already gated by `core.DEV = false`, so `debug.expose()` is a no-op in production — that item is already satisfied.
 
-4. **(Housekeeping)** Add Prettier with `format:check` as a CI step. Prevents style drift as the codebase grows. Run `prettier --write` once to establish baseline, then add `check:format` to CI.
+4. **(Housekeeping — Deferred)** Prettier was evaluated and intentionally deferred. With default/adjusted config, it removes intentional column alignment (`MOVE:   'MOVE'` → `MOVE: 'MOVE'`) used throughout the codebase for readability. Would touch 99 files with no functional change. The existing ESLint config enforces structural consistency; Prettier adds marginal benefit at high disruption cost for this codebase.
 
 For any of these tasks, update this plan if implementation discoveries change the recommended order or reveal constraints not captured here.
