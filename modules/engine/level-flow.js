@@ -72,9 +72,10 @@ export function createLevelFlowController({
         setLogicState(core.IDLE);
         setOverlayState(core.OVERLAY_NONE);
 
-        setLevel(state, levelUtils.normalizeLevel(idx));
-        const optionsResult = applyPlayChallengeOptions(state.ENGINE.level);
+        const baseLevel = levelUtils.normalizeLevel(idx);
+        const optionsResult = applyPlayChallengeOptions(baseLevel);
         showOptionsBlockedModalIfNeeded(optionsResult);
+        setLevel(state, optionsResult.level ?? baseLevel);
         if (optionsResult.playable !== false) levelUtils.assertLevelShape(state.ENGINE.level);
         PathNavigator.clear(state.ENGINE);
         clearNavigationUndoStack(state);

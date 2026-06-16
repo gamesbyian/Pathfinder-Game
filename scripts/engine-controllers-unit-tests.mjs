@@ -229,7 +229,7 @@ test('computeWinEffects in EDITOR mode omits PERSIST_PROGRESS', () => {
 
 // ─── ChallengeOptionsController ───────────────────────────────────────────────
 
-test('applyPlayChallengeOptions strips geese when option disabled', () => {
+test('applyPlayChallengeOptions strips geese in returned level without mutating input', () => {
     const state = makeState();
     state.ENGINE.mode = core.PLAY;
     state.ENGINE.options = { geese: false, falseGoals: true, deadGates: true };
@@ -237,8 +237,9 @@ test('applyPlayChallengeOptions strips geese when option disabled', () => {
     const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: {} });
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(result.playable, true, 'should still be playable');
-    assertEqual(level.gooseSet.size, 0, 'geese should be cleared');
-    assertEqual(level.falseGoalKeys.size, 1, 'false goals should be unaffected');
+    assertEqual(result.level.gooseSet.size, 0, 'derived level should have geese cleared');
+    assertEqual(result.level.falseGoalKeys.size, 1, 'derived level false goals should be unaffected');
+    assertEqual(level.gooseSet.size, 2, 'input level must NOT be mutated');
 });
 
 test('applyPlayChallengeOptions returns playable:false when all gates are dead', () => {
@@ -252,16 +253,18 @@ test('applyPlayChallengeOptions returns playable:false when all gates are dead',
     const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(result.playable, false, 'should be unplayable when all gates are dead');
     assertEqual(result.reason, 'dead-gates', 'reason should identify dead-gates');
+    assertEqual(level.gateKeys.length, 1, 'input level gateKeys must NOT be mutated');
 });
 
-test('applyPlayChallengeOptions is no-op outside PLAY mode', () => {
+test('applyPlayChallengeOptions is no-op outside PLAY mode and returns same level', () => {
     const state = makeState();
     state.ENGINE.mode = core.EDITOR;
     state.ENGINE.options = { geese: false, falseGoals: false };
     const level = { gooseSet: new Set([1]), falseGoalKeys: new Set([2]) };
     const ctrl = createChallengeOptionsController({ core, state, ui: {}, levelUtils: {} });
-    ctrl.applyPlayChallengeOptions(level);
+    const result = ctrl.applyPlayChallengeOptions(level);
     assertEqual(level.gooseSet.size, 1, 'geese should be unchanged in editor mode');
+    assert(result.level === level, 'returned level should be the same reference in non-PLAY mode');
 });
 
 test('showOptionsBlockedModalIfNeeded shows/hides modal based on result', () => {

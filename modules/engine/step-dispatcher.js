@@ -1,6 +1,6 @@
 import { computeStep } from '../runtime/step-processor.js';
 import { ActionType } from '../runtime/actions.js';
-import { EffectType }  from '../runtime/effects.js';
+import { runEffects } from '../runtime/effect-runner.js';
 import { MoveContext } from '../domain/move-context.js';
 import { areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
          checkWinConditionImpl } from '../runtime/game-rules.js';
@@ -72,14 +72,16 @@ export function createStepDispatcher({
         portalThemeColor:               '#d946ef',
     };
 
+    const stepEffectAdapters = {
+        playSound:          (note, dur) => core.SOUND_BUS.play(note, dur),
+        showGooseJumpScare: ()          => onJumpScare(),
+        showBombDetonation: (fx)        => onBombDetonation(fx.key),
+    };
+
     function dispatchStepEvent(event) {
-        switch (event.type) {
-            case EffectType.PLAY_SOUND:            core.SOUND_BUS.play(event.note, event.duration); break;
-            case ActionType.LOGIC_STATE_CHANGE:    setLogicState(event.value); break;
-            case EffectType.SHOW_GOOSE_JUMP_SCARE: onJumpScare(); break;
-            case EffectType.SHOW_BOMB_DETONATION:  onBombDetonation(event.key); break;
-            case ActionType.WIN:                   onWin(); break;
-        }
+        if (event.type === ActionType.LOGIC_STATE_CHANGE) { setLogicState(event.value); return; }
+        if (event.type === ActionType.WIN)                { onWin(); return; }
+        runEffects([event], stepEffectAdapters);
     }
 
     function processStep(key) {
