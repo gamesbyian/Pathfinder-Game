@@ -8,32 +8,24 @@ import { createChallengeOptionsController } from './engine/challenge-options.js'
 import { createHazardController } from './engine/hazard-controller.js';
 import { createOverlayController } from './engine/overlay-controller.js';
 import { createPathNavigator } from './engine/path-navigator.js';
+import { createRenderLoop } from './engine/render-loop.js';
+import { createReviewModeController } from './engine/review-mode.js';
+import { createSolverManager } from './engine/solver-manager.js';
 import { createStepDispatcher } from './engine/step-dispatcher.js';
 import { createTapRouter } from './engine/tap-router.js';
 import { createWinController } from './engine/win-controller.js';
-import { createRenderModel } from './render/create-render-model.js';
 import {
-    advanceHintAnimationIndex,
-    clearDirty,
     clearEditorUndoStack,
     clearEditorValidTrapSpots,
     clearNavigationUndoStack,
     clearRipples,
     clearRuntimePendingAction as clearRuntimePendingActionState,
-    endSolverRun as endSolverRunState,
     incrementResetStreak,
     markDirty,
     resetHinterForLevel,
-    requestSolverAbort,
     setLevel,
     setLevelIndex,
-    setHintPaths as setHintPathsState,
     setFoundHintsSinceLoad,
-    setHintAnimationAlpha,
-    setHintAnimationIndex,
-    setHintBlinkStartMsIfUnset,
-    setHintFadeStartMs,
-    setHintHoldStartMsIfUnset,
     setLogicState as setLogicStateValue,
     setMode as setModeState,
     setNavigationSnapshot,
@@ -43,7 +35,6 @@ import {
     remapNavigationKeys,
     restoreFalseGoalHazardsForLevel,
     reverseNavigationPath,
-    pruneRipples,
     setCheatActive,
     setCheatTimer,
     setDetonatedFalseGoals,
@@ -52,15 +43,13 @@ import {
     setEditorPencilMode,
     setEditorWorkingLevel,
     setMuted as setMutedState,
+    setNavigationLastFlipTime,
     setOptionValue,
     setResetStreak,
     setRevealedGeese,
-    setReviewIndex,
     setReviewSavedPlayLevelIndex,
     setReviewSubmissions as setReviewSubmissionsState,
     setRuntimePendingAction as setRuntimePendingActionState,
-    startSolverRun as startSolverRunState,
-    stepVisualFlipCount,
     setVariant as setVariantState,
     toggleMuted as toggleMutedState
 } from './state-actions.js';
@@ -193,62 +182,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.updatePencilButton(state.ENGINE.editor.isPencilMode);
     }
 
-    function resetEmptyReviewState() {
-        setReviewIndex(state, 0);
-        setEditorWorkingLevel(state, null);
-        clearEditorUndoStack(state);
-        setEditorModified(state, false);
-        clearEditorValidTrapSpots(state);
-        PathNavigator.clear(state.ENGINE);
-        clearNavigationUndoStack(state);
-        setRevealedGeese(state);
-
-        setDetonatedFalseGoals(state);
-        ui.setInputValue('editReqLen', 0);
-        ui.setInputValue('editReqInt', 0);
-        ui.renderMetricsPanel({ currentLen: 0, reqLen: 0, currentInt: 0, reqInt: 0 });
-        ui.updateLevelDisplay(0, false, '0/0');
-        ui.setButtonLabel('reviewHintBtn', 'Hints');
-        ui.setClassState('reviewEmptyMsg', 'hidden', false);
-        ui.updateAppScale();
-        ui.updateViewport();
-        markDirty(state);
-    }
-
-    function loadReviewLevel(idx) {
-        const subs = state.ENGINE.review.submissions;
-        if (!subs || !subs.length) {
-            resetEmptyReviewState();
-            return;
-        }
-        const safeIdx = Math.max(0, Math.min(idx, subs.length - 1));
-        setReviewIndex(state, safeIdx);
-        const rawLevel   = subs[safeIdx].levelData;
-        const normalized = levelUtils.processRawLevel(rawLevel, safeIdx);
-        if (!normalized) {
-            ui.showMessage('Could not load submission.', 'text-red-500 font-bold');
-            return;
-        }
-        setEditorWorkingLevel(state, normalized);
-        clearEditorUndoStack(state);
-        setEditorModified(state, false);
-        PathNavigator.clear(state.ENGINE);
-        clearNavigationUndoStack(state);
-        setRevealedGeese(state);
-
-        setDetonatedFalseGoals(state);
-        ui.setInputValue('editReqLen', normalized.reqLen || 0);
-        ui.setInputValue('editReqInt', normalized.reqInt || 0);
-        editor.syncMetadataFieldsFromLevel(normalized);
-        ui.updateLevelDisplay(safeIdx, false, `${safeIdx + 1}/${subs.length}`);
-        const hintCount = normalized.hints?.length || 0;
-        ui.setButtonLabel('reviewHintBtn', hintCount > 0 ? `Hints (${hintCount})` : 'Hints');
-        ui.setClassState('reviewEmptyMsg', 'hidden', true);
-        ui.updateAppScale();
-        ui.updateViewport();
-        markDirty(state);
-    }
-
     function loadLevel(idx, keepVariant = false) {
         clearBombTimers();
         if (state.ENGINE.solver.controller) return;
@@ -303,64 +236,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         markDirty(state);
     }
 
-    function loop() {
-        if (state.ENGINE.overlayState === core.HINT_ANIMATING && state.ENGINE.hinter.pathList.length) {
-            const hPath             = state.ENGINE.hinter.pathList[state.ENGINE.hinter.currentPathIdx];
-            const hintNowMs         = Date.now();
-            const hintHoldDurationMs = 2700;
-            const hintBlinkCount    = 3;
-            const hintBlinkCycleMs  = 800;
-            const hintFadeDurationMs = 900;
-
-            advanceHintAnimationIndex(state, 0.285);
-
-            if (state.ENGINE.hinter.index >= hPath.length) {
-                setHintAnimationIndex(state, hPath.length);
-                setHintHoldStartMsIfUnset(state, hintNowMs);
-            }
-
-            const holdElapsedMs = state.ENGINE.hinter.holdStartMs ? (hintNowMs - state.ENGINE.hinter.holdStartMs) : 0;
-            const holdComplete  = state.ENGINE.hinter.holdStartMs && holdElapsedMs >= hintHoldDurationMs;
-
-            if (holdComplete) setHintBlinkStartMsIfUnset(state, hintNowMs);
-
-            if (state.ENGINE.hinter.blinkStartMs && !state.ENGINE.hinter.fadeStartMs) {
-                const blinkElapsedMs = hintNowMs - state.ENGINE.hinter.blinkStartMs;
-                const blinkWindowMs  = hintBlinkCount * hintBlinkCycleMs;
-                if (blinkElapsedMs < blinkWindowMs) {
-                    const blinkPhase = (blinkElapsedMs % hintBlinkCycleMs) / hintBlinkCycleMs;
-                    setHintAnimationAlpha(state, 0.25 + (0.75 * (0.5 + 0.5 * Math.cos(blinkPhase * Math.PI * 2))));
-                } else {
-                    setHintFadeStartMs(state, hintNowMs);
-                    setHintAnimationAlpha(state, 1);
-                }
-            }
-
-            if (state.ENGINE.hinter.fadeStartMs) {
-                const fadeElapsedMs = hintNowMs - state.ENGINE.hinter.fadeStartMs;
-                setHintAnimationAlpha(state, Math.max(0, 1 - (fadeElapsedMs / hintFadeDurationMs)));
-                if (state.ENGINE.hinter.alpha <= 0) {
-                    setOverlayState(core.OVERLAY_NONE);
-                    ui.showMessage("", "");
-                }
-            }
-        }
-        if (stepVisualFlipCount(state)) markDirty(state);
-        const _now = Date.now();
-        pruneRipples(state, _now);
-        const hasContinuousAnimation = state.ENGINE.ripples.length > 0 || state.ENGINE.overlayState === core.HINT_ANIMATING;
-        if (hasContinuousAnimation) markDirty(state);
-        const shouldRender = state.ENGINE.isDirty || hasContinuousAnimation;
-        if (shouldRender) {
-            clearDirty(state);
-            const reqLenPreview = (state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW)
-                ? parseInt(ui.getValue('editReqLen'))
-                : null;
-            renderer.render(createRenderModel({ eng: state.ENGINE, core, themes }, reqLenPreview));
-        }
-        requestAnimationFrame(loop);
-    }
-
     // Wrapper: accepts either full engineState (has .nav) or flat state (for tests).
     function getRealLength(engineState = state.ENGINE) { return getRealLengthImpl(engineState.nav ?? engineState); }
 
@@ -396,6 +271,9 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         rebuildDerivedPathState,
         assertStateConsistency
     });
+
+    const { resetEmptyReviewState, loadReviewLevel } =
+        createReviewModeController({ state, ui, levelUtils, editor, PathNavigator });
 
     function setLogicState(newState) {
         if (newState !== core.IDLE && !VALID_LOGIC_TRANSITIONS[state.ENGINE.logicState]?.includes(newState)) {
@@ -452,27 +330,10 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     const { applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded } =
         createChallengeOptionsController({ core, state, ui, levelUtils });
 
-    // --- Hint animation and solver control ---
+    const { loop } = createRenderLoop({ core, state, themes, ui, renderer, setOverlayState });
 
-    function cancelSolver() {
-        if (!state.ENGINE.solver.controller) return;
-        requestSolverAbort(state);
-        ui.setModalContent('searchLabel', 'Stopping… finishing current stage safely.', 'text');
-        ui.setButtonState('solverCloseBtn', { enabled: false });
-        state.ENGINE.solver.controller.abort();
-    }
-
-    function startSolverRun(controller) {
-        startSolverRunState(state, controller);
-    }
-
-    function endSolverRun() {
-        endSolverRunState(state);
-    }
-
-    function setHintPaths(pathList, source, currentIdx = 0) {
-        setHintPathsState(state, pathList, source, currentIdx);
-    }
+    const { cancelSolver, startSolverRun, endSolverRun, setHintPaths, isRunning } =
+        createSolverManager({ state, ui });
 
     function setVariant(v) {
         setVariantState(state, v);
@@ -526,8 +387,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         resetReviewSubmissions(state);
         switchMode(core.REVIEW);
     }
-
-    function isRunning() { return !!state.ENGINE.solver.controller; }
 
     function setPendingAction(fn)      { setRuntimePendingActionState(state, fn); }
     function clearPendingAction()      { clearRuntimePendingActionState(state); }
