@@ -2,6 +2,9 @@
 // AXIS_H/AXIS_V must stay in sync with APP.Core.H (=1) and APP.Core.V (=2).
 
 import { PACK, UNPACK, inBounds } from './cell-key.js';
+
+const _DX8 = [0, 1, 1, 1, 0, -1, -1, -1];
+const _DY8 = [-1, -1, 0, 1, 1, 1, 0, -1];
 import { resolvePortal }          from './portal-utils.js';
 
 const AXIS_H = 1;
@@ -153,6 +156,42 @@ export function validateLevelDetailed(l, opts = {}, pendingPortal = null) {
         const p = UNPACK(mk);
         if (accessibleSides(p.x, p.y) < 2)
             reasons.push(`MustPass blocked on 3+ sides at (${p.x + 1},${p.y + 1})`);
+    }
+
+    // Landmark validation
+    if (l.landmarkMeta?.size > 0) {
+        const impassableRoles = new Set([
+            'surround', 'adjacentTurn', 'adjacentTurnLeft', 'adjacentTurnRight', 'decorative'
+        ]);
+        l.landmarkMeta.forEach(({ role }, k) => {
+            if (!inGrid(k)) { addOOB('landmark', k); return; }
+            if (impassableRoles.has(role)) {
+                if (gateSet.has(k)) {
+                    const p = UNPACK(k);
+                    reasons.push(`Impassable landmark overlaps gate at (${p.x + 1},${p.y + 1})`);
+                }
+                if (l.goalKey === k) {
+                    const p = UNPACK(k);
+                    reasons.push(`Impassable landmark overlaps goal at (${p.x + 1},${p.y + 1})`);
+                }
+            }
+        });
+
+        // Surround: at least one in-bounds non-blocked neighbor must exist (otherwise unsatisfiable)
+        for (const sk of (l.surroundKeys || [])) {
+            if (!inGrid(sk)) continue;
+            const sx = sk & 0xFFFF, sy = (sk >>> 16) & 0xFFFF;
+            let accessible = 0;
+            for (let d = 0; d < 8; d++) {
+                const nx = sx + _DX8[d], ny = sy + _DY8[d];
+                if (!inBounds(nx, ny, w, h)) continue;
+                if (!l.blockSet.has(PACK(nx, ny))) accessible++;
+            }
+            if (accessible === 0) {
+                const p = UNPACK(sk);
+                reasons.push(`Surround landmark completely enclosed at (${p.x + 1},${p.y + 1})`);
+            }
+        }
     }
 
     // Connectivity: at least one gate must be reachable from the goal via BFS.
