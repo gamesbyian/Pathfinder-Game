@@ -2,18 +2,17 @@ import { getRealLength as getRealLengthImpl,
          areWinMetricsSatisfied as areWinMetricsSatisfiedImpl,
          checkWinConditionImpl as checkWinConditionImplFn } from './runtime/game-rules.js';
 import { VALID_LOGIC_TRANSITIONS } from './runtime/state-machine.js';
-import { cloneTapRouteState, rebuildDerivedState, pushStep as pushStepImpl,
-         simulateTapRouteStep,
+import { rebuildDerivedState,
          wouldCreateBlockedTIntersection as wouldCreateBlockedTIntersectionImpl } from './runtime/path-state.js';
-import { computeStep } from './runtime/step-processor.js';
-import { MoveContext }       from './domain/move-context.js';
+import { createChallengeOptionsController } from './engine/challenge-options.js';
 import { createHazardController } from './engine/hazard-controller.js';
 import { createOverlayController } from './engine/overlay-controller.js';
 import { createPathNavigator } from './engine/path-navigator.js';
+import { createStepDispatcher } from './engine/step-dispatcher.js';
+import { createTapRouter } from './engine/tap-router.js';
 import { createWinController } from './engine/win-controller.js';
 import { createRenderModel } from './render/create-render-model.js';
 import {
-    addRipple,
     advanceHintAnimationIndex,
     clearDirty,
     clearEditorUndoStack,
@@ -37,7 +36,6 @@ import {
     setHintHoldStartMsIfUnset,
     setLogicState as setLogicStateValue,
     setMode as setModeState,
-    setNavigationLastFlipTime,
     setNavigationSnapshot,
     resetFalseGoalHazardsForLevel,
     removeReviewSubmission as removeReviewSubmissionState,
@@ -63,7 +61,6 @@ import {
     setRuntimePendingAction as setRuntimePendingActionState,
     startSolverRun as startSolverRunState,
     stepVisualFlipCount,
-    truncateNavigationPath,
     setVariant as setVariantState,
     toggleMuted as toggleMutedState
 } from './state-actions.js';
@@ -78,84 +75,8 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         return areWinMetricsSatisfiedImpl(engineState.nav ?? engineState, lvl);
     }
 
-    // --- Step helpers (closures over engine state/functions) ---
-
-    // Pushes a step onto nav without going through PathNavigator (no isDirty, no assertConsistency).
-    // Used by computeStep and by PathNavigator.pushStep.
-    const pushStepOnNav = (nav, key, isJump, level) => {
-        const oldFlipCount = nav.flipCount;
-        pushStepImpl(nav, key, isJump, level);
-        if (nav.flipCount !== oldFlipCount) setNavigationLastFlipTime(nav, Date.now());
-    };
-
-    // Truncates nav.path to `targetLen` cells and rebuilds derived state.
-    // Handles logic-state reset and derived-state rebuild; does NOT set isDirty
-    // (the caller is responsible for that).
-    const truncateNavTo = (nav, targetLen) => {
-        if (!truncateNavigationPath(nav, targetLen)) return;
-        if ([core.DRAGGING, core.PORTAL_PAUSE, core.HAZARD_TRIGGERED].includes(state.ENGINE.logicState)) {
-            setLogicState(core.IDLE);
-        }
-        rebuildDerivedPathState(state.ENGINE);
-    };
-
-    function dispatchStepEvent(event) {
-        switch (event.type) {
-            case 'sound':          core.SOUND_BUS.play(event.note, event.duration); break;
-            case 'logic_state':    setLogicState(event.value); break;
-            case 'goose_jumpscare': triggerJumpScare(); break;
-            case 'bomb_detonation': triggerBombDetonation(event.key); break;
-            case 'win':            handleWin(); break;
-        }
-    }
-
-
-    // Stable helpers for computeStep — allocated once at factory time, not per call.
-    // Only portalThemeColor is refreshed per step (theme may change between levels).
-    const stepHelpers = {
-        isValidMove:                    (k, s, l, ctx) => levelUtils.isValidMove(k, s, l, ctx),
-        wouldCreateBlockedTIntersection: wouldCreateBlockedTIntersectionImpl,
-        resolvePortal:                  (l, k) => levelUtils.resolvePortal(l, k),
-        areWinMetricsSatisfied:         areWinMetricsSatisfiedImpl,
-        getPortalDisplayColor:          (l, k, c) => levelUtils.getPortalDisplayColor(l, k, c),
-        UNPACK:                         levelUtils.UNPACK,
-        pushStepOnNav,
-        truncateNavTo,
-        createNavSnapshot:              createSnapshot,
-        checkWinCondition:              (nav, level, mode, logicState) =>
-            checkWinConditionImplFn(nav.path, level, mode, logicState, nav.isPortalJump, nav.visitedCounts, nav.intersections),
-        MoveContext,
-        HAZARD_TRIGGERED:               core.HAZARD_TRIGGERED,
-        PORTAL_PAUSE:                   core.PORTAL_PAUSE,
-        EDITOR:                         core.EDITOR,
-        REVIEW:                         core.REVIEW,
-        portalThemeColor:               '#d946ef',
-    };
-
-    function processStep(key) {
-        const activeLevel = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
-        stepHelpers.portalThemeColor = themes.THEMES[themes.getCurrentTheme()]?.colors?.portal || '#d946ef';
-        const { outcome, events, mutations } = computeStep(
-            state.ENGINE.nav,
-            state.ENGINE.hazards,
-            state.ENGINE.mode,
-            state.ENGINE.logicState,
-            activeLevel,
-            key,
-            stepHelpers
-        );
-        if (outcome !== null) {
-            markDirty(state);
-            if (state.ENGINE.mode === core.EDITOR) setEditorModified(state, true);
-        }
-        const now = Date.now();
-        for (const { x, y, color } of mutations.ripples) {
-            addRipple(state, { x, y, startTime: now, color });
-        }
-        for (const event of events) dispatchStepEvent(event);
-        return outcome === 'backtrack' ? 'valid' : outcome;
-    }
-
+    // Generates packed cell keys for a straight horizontal or vertical path segment.
+    // Used only by attemptMoveTo for continuous pointer drag.
     const buildStraightPathSteps = (headPos, target) => {
         const dx = target.x - headPos.x;
         const dy = target.y - headPos.y;
@@ -168,40 +89,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         }
         return pathSteps;
     };
-
-    function findTapRoute(target, options = {}) {
-        const level = state.ENGINE.mode === core.PLAY ? state.ENGINE.level : state.ENGINE.editor.workingLevel;
-        if (!level || !state.ENGINE.nav.path.length) return null;
-        const targetKey = levelUtils.PACK(target.x, target.y);
-        const startState = cloneTapRouteState(state.ENGINE);
-        const startKey = startState.path[startState.path.length - 1];
-        if (targetKey === startKey) return [];
-        const dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-        const maxExpansions = options.maxExpansions || Math.max(200, level.grid.w * level.grid.h * 40);
-        const queue = [{ state: startState, inputs: [] }];
-        const seen = new Set([`${startKey}|${startState.path.join('.')}`]);
-        let expansions = 0;
-        while (queue.length > 0 && expansions < maxExpansions) {
-            const cur = queue.shift();
-            expansions++;
-            const headKey = cur.state.path[cur.state.path.length - 1];
-            const head = levelUtils.UNPACK(headKey);
-            for (const [dx, dy] of dirs) {
-                const nk = levelUtils.PACK(head.x + dx, head.y + dy);
-                const sim = simulateTapRouteStep(cur.state, nk, level);
-                if (!sim || sim.result === "goose" || sim.result === "detonate") continue;
-                const newInputs = [...cur.inputs, nk];
-                if (nk === targetKey) return newInputs;
-                const nextKey = sim.state.path[sim.state.path.length - 1];
-                if (nextKey === targetKey) return newInputs;
-                const sig = `${nextKey}|${sim.state.path.join('.')}`;
-                if (seen.has(sig)) continue;
-                seen.add(sig);
-                queue.push({ state: sim.state, inputs: newInputs });
-            }
-        }
-        return null;
-    }
 
     function attemptMoveTo(target, opts = {}) {
         if ((state.ENGINE.mode === core.EDITOR || state.ENGINE.mode === core.REVIEW) && !state.ENGINE.editor.isPencilMode) return;
@@ -360,26 +247,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         ui.updateAppScale();
         ui.updateViewport();
         markDirty(state);
-    }
-
-    function applyPlayChallengeOptions(level) {
-        if (!level || state.ENGINE.mode !== core.PLAY) return { playable: true };
-        const opts = state.ENGINE.options || {};
-        if (opts.geese === false) level.gooseSet = new Set();
-        if (opts.falseGoals === false) level.falseGoalKeys = new Set();
-        if (opts.deadGates === false) {
-            const dead = levelUtils.getParityInvalidKeys(level);
-            if (dead.gates.size > 0) {
-                const kept = level.gateKeys.filter(k => !dead.gates.has(k));
-                if (kept.length === 0) return { playable: false, reason: 'dead-gates' };
-                level.gateKeys = kept;
-            }
-        }
-        return { playable: true };
-    }
-
-    function showOptionsBlockedModalIfNeeded(result) {
-        ui.setOptionsBlockedVisible(result?.playable === false);
     }
 
     function loadLevel(idx, keepVariant = false) {
@@ -571,6 +438,19 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
 
     const winController = createWinController({ core, state, ui, persistence, setLogicState });
     const { handleWin } = winController;
+
+    const { processStep, pushStepOnNav, truncateNavTo } = createStepDispatcher({
+        core, state, themes, levelUtils,
+        setLogicState, rebuildDerivedPathState, createSnapshot,
+        onJumpScare: triggerJumpScare,
+        onBombDetonation: triggerBombDetonation,
+        onWin: handleWin,
+    });
+
+    const { findTapRoute } = createTapRouter({ core, state, levelUtils });
+
+    const { applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded } =
+        createChallengeOptionsController({ core, state, ui, levelUtils });
 
     // --- Hint animation and solver control ---
 
