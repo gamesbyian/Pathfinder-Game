@@ -3,18 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <!--
-        Content Security Policy — Tailwind is now served from styles/tailwind-generated.css
-        (built via `npm run build:css`), so 'unsafe-eval' and cdn.tailwindcss.com are removed.
-        Remaining path to a strict policy:
-          1. Replace <link onload="this.media='all'"> font-swap pattern with a preload+rel=stylesheet
-             approach so inline event handlers are no longer needed in script-src.
-          2. Move the inline <script type="module"> bootstrapApp() call to an external entrypoint,
-             then remove 'unsafe-inline' from script-src (or switch to a per-deploy nonce/hash).
-          3. Bundle or vendor Firebase and Tone.js to shrink the allowed script-src origins.
-          After steps 1-2, a strict-dynamic policy with nonces becomes viable.
-    -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com https://www.gstatic.com 'unsafe-inline'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com; frame-src https://pathfinder-game-23e29.firebaseapp.com; object-src 'none';">
+    <!-- CSP temporarily removed for debugging — Google sign-in (signInWithPopup) breaks with any
+         meta CSP so far attempted. Re-enable once the exact required directives are identified. -->
     <title>Pathfinder</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 9'><rect width='9' height='9' fill='%23f8fafc'/><g stroke='%2394a3b8' stroke-width='0.05'><line x1='0' y1='0' x2='9' y2='0'/><line x1='0' y1='2' x2='9' y2='2'/><line x1='0' y1='4' x2='9' y2='4'/><line x1='0' y1='6' x2='9' y2='6'/><line x1='0' y1='8' x2='9' y2='8'/><line x1='2' y1='0' x2='2' y2='9'/><line x1='4' y1='0' x2='4' y2='9'/><line x1='6' y1='0' x2='6' y2='9'/><line x1='8' y1='0' x2='8' y2='9'/></g><path d='M2.5 5H6.5V2H3.5V7' fill='none' stroke='%233b82f6' stroke-width='0.9' stroke-linecap='round' stroke-linejoin='round'/><circle cx='2.5' cy='5' r='0.525' fill='%233b82f6'/><circle cx='3.5' cy='7' r='0.525' fill='%23ef4444'/></svg>">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js" defer></script>
