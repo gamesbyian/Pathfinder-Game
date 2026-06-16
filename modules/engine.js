@@ -7,8 +7,10 @@ import { cloneTapRouteState, rebuildDerivedState, pushStep as pushStepImpl,
          wouldCreateBlockedTIntersection as wouldCreateBlockedTIntersectionImpl } from './runtime/path-state.js';
 import { computeStep } from './runtime/step-processor.js';
 import { MoveContext }       from './domain/move-context.js';
+import { createHazardController } from './engine/hazard-controller.js';
 import { createOverlayController } from './engine/overlay-controller.js';
 import { createPathNavigator } from './engine/path-navigator.js';
+import { createWinController } from './engine/win-controller.js';
 import { createRenderModel } from './render/create-render-model.js';
 import {
     addRipple,
@@ -19,7 +21,6 @@ import {
     clearNavigationUndoStack,
     clearRipples,
     clearRuntimePendingAction as clearRuntimePendingActionState,
-    detonateFalseGoal,
     endSolverRun as endSolverRunState,
     incrementResetStreak,
     markDirty,
@@ -108,13 +109,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         }
     }
 
-    function handleWin() {
-        setLogicState(core.RESOLVED);
-        ui.renderWinExportPanel({ solutionOutput: JSON.stringify(state.ENGINE.nav.path).replace(/\s/g, ''), showExportArea: state.ENGINE.isDevMode });
-        if (state.ENGINE.mode === core.PLAY) persistence.markLevelComplete(state.ENGINE.levelIdx);
-        ui.openModal('winModal');
-        core.SOUND_BUS.play("C5", "8n");
-    }
 
     // Stable helpers for computeStep — allocated once at factory time, not per call.
     // Only portalThemeColor is refreshed per step (theme may change between levels).
@@ -234,36 +228,6 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         }
     }
 
-    function triggerJumpScare() {
-        ui.showGooseJumpScare();
-        setOverlayState(core.GOOSE_OVERLAY);
-        setTimeout(() => {
-            if (state.ENGINE.overlayState === core.GOOSE_OVERLAY) {
-                ui.hideGooseJumpScare();
-                setOverlayState(core.OVERLAY_NONE);
-            }
-        }, 2500);
-    }
-
-    let bombTimer1 = null;
-    let bombTimer2 = null;
-
-    function triggerBombDetonation(key) {
-        detonateFalseGoal(state, key);
-        setOverlayState(core.FALSE_GOAL_ANIMATING);
-        ui.showBombDetonation();
-        core.SOUND_BUS.play("C2", "8n");
-        bombTimer1 = setTimeout(() => {
-            bombTimer1 = null;
-            ui.showBombDetonation({ exploded: true });
-            core.SOUND_BUS.play("F1", "4n");
-            bombTimer2 = setTimeout(() => {
-                bombTimer2 = null;
-                ui.hideBombDetonation();
-                setOverlayState(core.OVERLAY_NONE);
-            }, 1000);
-        }, 1000);
-    }
 
     function createSnapshot() {
         return {
@@ -419,7 +383,7 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
     }
 
     function loadLevel(idx, keepVariant = false) {
-        clearTimeout(bombTimer1); clearTimeout(bombTimer2); bombTimer1 = null; bombTimer2 = null;
+        clearBombTimers();
         if (state.ENGINE.solver.controller) return;
 
         const levels = data.getLevels();
@@ -601,6 +565,12 @@ export function createEngine({ core, state, ui, renderer, levelUtils, themes, da
         pinCurrentHint,
         clearPersistedHint
     } = overlayController;
+
+    const hazardController = createHazardController({ core, state, ui, setOverlayState });
+    const { triggerJumpScare, triggerBombDetonation, clearBombTimers } = hazardController;
+
+    const winController = createWinController({ core, state, ui, persistence, setLogicState });
+    const { handleWin } = winController;
 
     // --- Hint animation and solver control ---
 
