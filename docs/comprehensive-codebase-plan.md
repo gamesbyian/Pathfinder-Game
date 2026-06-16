@@ -544,7 +544,7 @@ Clean stale package scripts, add a check that declared script targets exist, and
 - ✅ Extract scoring, lower-bounds, distance, encoding, topology, normalization, orchestration
 - ✅ 13 solver module unit test suites added to CI
 - ✅ `SolverV2.js` reduced to a thin shim over `modules/solver/`
-- ⬜ Web Worker adapter not yet added — solver still runs on browser thread
+- ✅ Web Worker adapter added — `modules/solver/worker.js` + `modules/solver/solver-worker-client.js`; `test:solver-worker` (11 tests) in CI. `handleWorkerMessage()` is exported for Node.js unit testing; bootstrap only runs in a real `WorkerGlobalScope`.
 - ⬜ Long-running scheduled benchmark CI not yet added
 
 **Success criteria mostly met:** Solver internals are modular, thoroughly tested, and performance regressions are measurable. Worker execution remains future work.
@@ -599,14 +599,16 @@ These are the best next tasks based on current progress (Phase 1 ✅, Phase 2 �
 
 **Remaining:**
 
-1. **(Phase 3 — Medium)** Wire `ActionType` / `Effects` into one engine controller as a proof of concept. `modules/engine/win-controller.js` is a good candidate: its `handleWin()` path emits sounds, shows a modal, and persists progress — mapping cleanly to `Effects.playSound`, `Effects.openModal`, `Effects.persistProgress`. This makes the vocabulary load-bearing without a big rewrite.
+**Completed in this pass:**
+- ✅ `computeWinEffects()` extracted from `win-controller.js` — 5 DOM-free tests — Phase 3
+- ✅ `modules/solver/worker.js` + `solver-worker-client.js` — 11 tests — Phase 5
 
-2. **(Phase 5 — Medium)** Add a Web Worker adapter at `modules/solver/worker.js` so the in-game hint solver can run off the browser thread. The `solver-manager.js` engine controller is the natural integration point. Message protocol: `{ type: 'SOLVE', levelRaw, budgetMs }` → `{ type: 'RESULT', ok, solution, elapsedMs }`.
+**Remaining:**
 
-3. **(Phase 4 — Small)** Restrict the global debug facade (`modules/debug.js`) to dev mode only — wrap `window.DEBUG` assignment in `if (location.hostname === 'localhost' || location.search.includes('debug'))`.
+1. **(Phase 3 — Medium)** Continue wiring `ActionType`/`Effects` into more engine controllers. Next candidates: `hazard-controller.js` (`triggerJumpScare`, `triggerBombDetonation`) and `level-flow.js` (`handleResetAction`). The pattern from `win-controller.js` — extract `computeXxxEffects()`, add DOM-free tests — is now established.
 
-4. **(Phase 4 — Small)** Define a Content Security Policy target in `index.html` as a `<meta http-equiv="Content-Security-Policy">` header. Start permissive (allow CDN sources) and document what would need to change for a strict CSP.
+2. **(Phase 4 — Small)** Define a Content Security Policy target in `index.html` as a `<meta http-equiv="Content-Security-Policy">` header. Start permissive (allow CDN sources) and document what would need to change for a strict CSP. Note: the debug facade (`modules/debug.js`) is already gated by `core.DEV = false`, so `debug.expose()` is a no-op in production — that item is already satisfied.
 
-5. **(Housekeeping)** Add Prettier with `format:check` as a CI step. Prevents style drift as the codebase grows. Run `prettier --write` once to establish baseline, then add `check:format` to CI.
+4. **(Housekeeping)** Add Prettier with `format:check` as a CI step. Prevents style drift as the codebase grows. Run `prettier --write` once to establish baseline, then add `check:format` to CI.
 
 For any of these tasks, update this plan if implementation discoveries change the recommended order or reveal constraints not captured here.

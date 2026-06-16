@@ -63,7 +63,7 @@ All of the following must be true simultaneously when the path reaches the goal:
 ├── firebase.json            Firebase deploy config
 ├── firestore.rules          Firestore security rules
 ├── firestore.indexes.json   Firestore composite indexes
-├── package.json             NPM scripts (CI is 38+ steps; see Testing Commands)
+├── package.json             NPM scripts (CI is 42+ steps; see Testing Commands)
 │
 ├── tests/                   Playwright browser tests
 │   ├── smoke.spec.mjs       Boot, load, navigation tests (7 tests)
@@ -92,16 +92,20 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   │   ├── solver-manager.js     In-game hint/solver lifecycle
 │   │   ├── step-dispatcher.js    Per-step event dispatch
 │   │   ├── tap-router.js         Tap/click routing to game objects
-│   │   └── win-controller.js     Win detection and modal flow
+│   │   └── win-controller.js     Win detection and modal flow. Exports
+│   │                             computeWinEffects(state, core) — pure fn
+│   │                             returning Effects[] for DOM-free testing.
 │   ├── input/               Controllers (gamepad, pointer, solver overlay, etc.)
 │   ├── persistence/         Firebase client, progress store, submission repo
 │   ├── render/              Canvas renderer and draw helpers
 │   ├── runtime/             Game-rules, path-state, state machine, step processor
+│   │   ├── actions.js       Frozen ActionType constants + factory helpers (13 types)
+│   │   ├── effects.js       Frozen EffectType constants + factory helpers (11 types)
 │   │   ├── game-rules.js    Win metrics and win-condition logic
 │   │   ├── path-state.js    Path mutations and derived path state
 │   │   ├── state-machine.js Legal logic-state transitions
 │   │   └── step-processor.js Per-step computation and event generation
-│   ├── solver/              Modularized solver internals (15 files)
+│   ├── solver/              Modularized solver internals (17 files)
 │   │   ├── archetype.js     Level archetype detection
 │   │   ├── attempts.js      Attempt config generation (getConfiguredAttemptConfigs)
 │   │   ├── distance.js      BFS distance utilities
@@ -117,7 +121,12 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   │   ├── solution.js      Solution validation and result packing
 │   │   ├── testing-api.js   Test/debug helpers exposed by SolverV2
 │   │   ├── topology.js      Connectivity pruning
-│   │   └── trap-search.js   Trap spot detection
+│   │   ├── trap-search.js   Trap spot detection
+│   │   ├── worker.js        Web Worker script — runs solver off-thread. Exports
+│   │   │                    handleWorkerMessage() for Node.js unit testing.
+│   │   └── solver-worker-client.js  Client adapter: createSolverWorkerClient(url)
+│   │                                returns an object with solve() compatible with
+│   │                                SolverV2.solve() but delegates to a Worker.
 │   ├── theme/               Theme normalization and registry
 │   ├── ui/                  Modal, toast, layout, loading, solver overlay UI
 │   ├── app.js               App construction and dependency wiring
