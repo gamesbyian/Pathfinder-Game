@@ -23,6 +23,29 @@
  */
 
 /**
+ * Named thematic object placed on the grid with a specific mechanical role.
+ * The same objectType (e.g. 'park') can play different roles in different levels.
+ *
+ * Passable roles  (path may enter the cell): mustPass, mustTurn, mustTurnLeft, mustTurnRight
+ * Impassable roles (cell is blocked):        surround, adjacentTurn, adjacentTurnLeft,
+ *                                             adjacentTurnRight, decorative
+ *
+ * Turn-direction field:
+ *   mustTurn / adjacentTurn   →  'turn' is required ('either'|'left'|'right')
+ *   mustTurnLeft / Right      →  direction encoded in role name; 'turn' ignored
+ *   adjacentTurnLeft / Right  →  same
+ *
+ * @typedef {{
+ *   x:          number,
+ *   y:          number,
+ *   objectType: string,
+ *   role:       'surround'|'mustPass'|'mustTurn'|'mustTurnLeft'|'mustTurnRight'|
+ *               'adjacentTurn'|'adjacentTurnLeft'|'adjacentTurnRight'|'decorative',
+ *   turn?:      'either'|'left'|'right',
+ * }} RawLandmark
+ */
+
+/**
  * @typedef {{
  *   grid:           { w: number, h: number },
  *   gates:          RawCoord[],
@@ -34,6 +57,7 @@
  *   falseGoals?:    RawCoord[],
  *   mustPass?:      RawCoord[],
  *   mustCross?:     RawCoord[],
+ *   landmarks?:     RawLandmark[],
  *   filters?:       RawFilter[],
  *   flippingFilters?: RawFilter[],
  *   portals?:       RawPortal[],
@@ -59,6 +83,11 @@
  *   falseGoalKeys:     Set<number>,
  *   mustPassKeys:      number[],
  *   mustCrossKeys:     number[],
+ *   surroundKeys:      number[],
+ *   adjacentTurnKeys:  number[],
+ *   adjacentTurnDirs:  Array<'either'|'left'|'right'>,
+ *   mustPassTurnDirs:  Map<number, 'either'|'left'|'right'>,
+ *   landmarkMeta:      Map<number, { objectType: string, role: string }>,
  *   portalMap:         Map<number, { dest: number }>,
  *   portalVisuals:     Array<{ k1: number, k2: number, color?: string }>,
  *   filterMap:         Map<number, 1|2>,
@@ -162,6 +191,27 @@ export function validateRawLevel(raw) {
                     if (isPositiveInt(p.x2) && isPositiveInt(p.y2) && !isInBounds({ x: p.x2, y: p.y2 }, w, h))
                         errors.push(`portals[${i}] endpoint 2 (${p.x2},${p.y2}) out of bounds`);
                 }
+            });
+        }
+    }
+
+    // Landmarks
+    const _validRoles = new Set([
+        'surround', 'mustPass', 'mustTurn', 'mustTurnLeft', 'mustTurnRight',
+        'adjacentTurn', 'adjacentTurnLeft', 'adjacentTurnRight', 'decorative',
+    ]);
+    const _validTurnDirs = new Set(['either', 'left', 'right']);
+    if (raw.landmarks !== undefined && raw.landmarks !== null) {
+        if (!Array.isArray(raw.landmarks)) {
+            errors.push('landmarks must be an array');
+        } else {
+            raw.landmarks.forEach((lm, i) => {
+                if (!lm || typeof lm !== 'object') { errors.push(`landmarks[${i}] must be an object`); return; }
+                if (!isCoord(lm)) { errors.push(`landmarks[${i}] must have positive integer x and y`); return; }
+                if (hasGrid && !isInBounds(lm, w, h)) errors.push(`landmarks[${i}] (${lm.x},${lm.y}) out of bounds`);
+                if (typeof lm.objectType !== 'string') errors.push(`landmarks[${i}].objectType must be a string`);
+                if (!_validRoles.has(lm.role)) errors.push(`landmarks[${i}].role "${lm.role}" is not a valid role`);
+                if (lm.turn !== undefined && !_validTurnDirs.has(lm.turn)) errors.push(`landmarks[${i}].turn must be 'either', 'left', or 'right'`);
             });
         }
     }

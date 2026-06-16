@@ -1,6 +1,49 @@
 import { getDistanceFromArray } from './distance.js';
 import { AXIS_H } from './encoding.js';
 
+// Lower bound for surround constraints: for each unsatisfied surround cell,
+// the path must still reach every unvisited valid neighbor and then the goal.
+// Uses max(dist_to_neighbor + dist_neighbor_to_goal) over unvisited neighbors.
+export function surroundLowerBound(pos, state, level, prep) {
+    if (state.surroundMask === 0 || !prep.surroundNeighborDistMaps) return 0;
+    const n = (level.surroundKeys || []).length;
+    let lb = 0;
+    for (let i = 0; i < n; i++) {
+        if ((state.surroundMask & (1 << i)) === 0) continue;
+        const remainBits = state.surroundNeighborRemainingMasks[i];
+        if (!remainBits) continue;
+        const nbrKeys     = prep.surroundNeighborKeys[i];
+        const nbrGoalDist = prep.surroundNeighborGoalDist[i];
+        const nbrDistMaps = prep.surroundNeighborDistMaps[i];
+        // Bits in remainBits are dense-index bits: bit j = j-th valid neighbor
+        for (let j = 0; j < nbrKeys.length; j++) {
+            if (!(remainBits & (1 << j))) continue;
+            const dToNbr   = nbrDistMaps[j].get(pos) ?? Infinity;
+            const dNbrGoal = nbrGoalDist[j];
+            if (!Number.isFinite(dToNbr) || !Number.isFinite(dNbrGoal)) return Infinity;
+            lb = Math.max(lb, dToNbr + dNbrGoal);
+        }
+    }
+    return lb;
+}
+
+// Lower bound for adjacent-turn constraints: the path must still reach an
+// adjacent cell of each unsatisfied adj-turn object (and turn there + reach goal).
+// Uses the precomputed multi-source approach dist map per adj-turn object.
+export function adjTurnLowerBound(pos, state, level, prep) {
+    if (state.adjTurnMask === 0 || !prep.adjTurnDistMaps) return 0;
+    const n = (level.adjacentTurnKeys || []).length;
+    let lb = 0;
+    for (let i = 0; i < n; i++) {
+        if ((state.adjTurnMask & (1 << i)) === 0) continue;
+        const dToAdj = prep.adjTurnDistMaps[i].get(pos) ?? Infinity;
+        const dGoal  = prep.adjTurnGoalDist[i];
+        if (!Number.isFinite(dToAdj) || !Number.isFinite(dGoal)) return Infinity;
+        lb = Math.max(lb, dToAdj + dGoal);
+    }
+    return lb;
+}
+
 // Union-find backing store for Kruskal's MST (max 6 nodes: pos + up to 5 MC cells)
 const _ufPar = new Int32Array(8);
 function _ufFind(x) { while (_ufPar[x] !== x) { _ufPar[x] = _ufPar[_ufPar[x]]; x = _ufPar[x]; } return x; }

@@ -1,7 +1,20 @@
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, popcount } from './encoding.js';
 
+// Returns 'left', 'right', or null for a turn from prev→from→target.
+// prev, from, target are packed cell keys. Returns null if not a turn or entry was AXIS_NONE.
+export function computeTurnDir(prev, from, target, entryAxis, moveAxis) {
+    if (entryAxis === AXIS_NONE || entryAxis === moveAxis) return null;
+    const fx = from & 0xFFFF, fy = (from >>> 16) & 0xFFFF;
+    const tx = target & 0xFFFF, ty = (target >>> 16) & 0xFFFF;
+    const px = prev & 0xFFFF, py = (prev >>> 16) & 0xFFFF;
+    // Cross product (entry vector) × (exit vector); y increases downward so CW = right.
+    const cross = (fx - px) * (ty - fy) - (fy - py) * (tx - fx);
+    return cross > 0 ? 'right' : 'left';
+}
+
 export function createState(startKey, level, prep) {
-    const cn = level.mustCrossKeys.length;
+    const cn  = level.mustCrossKeys.length;
+    const snN = prep.surroundInitNeighborMasks?.length ?? 0;
     const state = {
         path: [startKey],
         visited:    new Uint16Array(KEY_SPACE),   // visit count per cell
@@ -17,6 +30,11 @@ export function createState(startKey, level, prep) {
         portalJumps:   0,
         flipperUsedMask: 0,                       // bit i set when flipper i has been used (global-flip rule)
         lastWasPortalJump: false,                 // was last move a portal jump?
+        // Landmark constraints
+        surroundMask:               prep.initialSurroundMask ?? 0,
+        surroundNeighborRemainingMasks: snN > 0 ? new Uint8Array(prep.surroundInitNeighborMasks) : new Uint8Array(0),
+        mustTurnMask:   prep.initialMustTurnMask ?? 0,
+        adjTurnMask:    prep.initialAdjTurnMask  ?? 0,
     };
     state.visited[startKey] = 1;
     // Apply start-cell effects
@@ -32,6 +50,14 @@ export function createState(startKey, level, prep) {
     }
     const _fsi = prep.flipperIndexMap.get(startKey);
     if (_fsi !== undefined) state.flipperUsedMask |= (1 << _fsi);
+    // Surround: mark start cell's neighbor-bits as visited
+    const snNbrs = prep.surroundNeighborIndex?.get(startKey);
+    if (snNbrs) {
+        for (const { i, bit } of snNbrs) {
+            state.surroundNeighborRemainingMasks[i] &= ~bit;
+            if (state.surroundNeighborRemainingMasks[i] === 0) state.surroundMask &= ~(1 << i);
+        }
+    }
     return state;
 }
 
@@ -97,6 +123,83 @@ export function applyMove(target, state, level, prep, isPortalJump) {
     const prevLastWasPortalJump = state.lastWasPortalJump;
     state.lastWasPortalJump = isPortalJump;
 
+    // ── Landmark constraints ──────────────────────────────────────────────────
+    // Skip entirely for non-landmark levels (prep.hasLandmarkConstraints = false).
+    // This keeps the undo token at its original 15-field size, avoiding GC overhead
+    // on the ~1M applyMove/undoMove cycles in beam search for existing levels.
+    if (!prep.hasLandmarkConstraints) {
+        return {
+            target, from, moveAxis, axisBit, isPortalJump,
+            prevVisited, prevEdgeFrom, prevEdgeTarget,
+            wasIntAdded,
+            prevMustMask, prevMpVisitedMask, mpIdx,
+            prevMustCrossMask, mcIdx, prevCrossCount,
+            prevFlipperUsedMask,
+            prevLastWasPortalJump,
+        };
+    }
+
+    // Surround: mark neighbor-bits of any surround cell adjacent to `target`.
+    // Guard: state.surroundMask === 0 for levels with no surround cells (fast path).
+    const prevSurroundMask = state.surroundMask;
+    let surroundNbrRestores = null; // [{i, prevMask}] — only allocated if needed
+    if (state.surroundMask !== 0) {
+        const snNbrs = prep.surroundNeighborIndex.get(target);
+        if (snNbrs) {
+            for (const { i, bit } of snNbrs) {
+                if (state.surroundNeighborRemainingMasks[i] & bit) {
+                    if (!surroundNbrRestores) surroundNbrRestores = [];
+                    surroundNbrRestores.push({ i, prevMask: state.surroundNeighborRemainingMasks[i] });
+                    state.surroundNeighborRemainingMasks[i] &= ~bit;
+                    if (state.surroundNeighborRemainingMasks[i] === 0) state.surroundMask &= ~(1 << i);
+                }
+            }
+        }
+    }
+
+    // Must-turn: detect turn happening AT `from` as we EXIT it toward `target`.
+    // Guard: state.mustTurnMask === 0 when no must-turn cells remain (or no landmark level).
+    const prevMustTurnMask = state.mustTurnMask;
+    if (state.mustTurnMask !== 0 && !isPortalJump) {
+        const mtIdx = prep.mustTurnCellIndex.get(from);
+        if (mtIdx !== undefined && (state.mustTurnMask & (1 << mtIdx)) !== 0) {
+            const pathLen = state.path.length; // path already has target pushed
+            // path is [..., prev, from, target]; from = path[pathLen-2], prev = path[pathLen-3]
+            const prevKey = pathLen >= 3 ? state.path[pathLen - 3] : null;
+            const entryAxis = prevKey !== null && !prevLastWasPortalJump
+                ? (((prevKey >>> 16) & 0xFFFF) === ((from >>> 16) & 0xFFFF) ? AXIS_H : AXIS_V)
+                : AXIS_NONE;
+            if (entryAxis !== AXIS_NONE && entryAxis !== moveAxis && moveAxis !== AXIS_NONE) {
+                const req = prep.mustTurnDirs[mtIdx];
+                const turnDir = req === 'either' ? 'either'
+                    : computeTurnDir(prevKey, from, target, entryAxis, moveAxis);
+                if (req === 'either' || turnDir === req) state.mustTurnMask &= ~(1 << mtIdx);
+            }
+        }
+    }
+
+    // Adjacent-turn: detect turn AT `from` adjacent to any adj-turn object.
+    // Guard: state.adjTurnMask === 0 when satisfied (or no landmark level).
+    const prevAdjTurnMask = state.adjTurnMask;
+    if (state.adjTurnMask !== 0 && !isPortalJump && moveAxis !== AXIS_NONE) {
+        const atNbrs = prep.adjTurnCellIndex.get(from);
+        if (atNbrs) {
+            const pathLen = state.path.length;
+            const prevKey = pathLen >= 3 ? state.path[pathLen - 3] : null;
+            const entryAxis = prevKey !== null && !prevLastWasPortalJump
+                ? (((prevKey >>> 16) & 0xFFFF) === ((from >>> 16) & 0xFFFF) ? AXIS_H : AXIS_V)
+                : AXIS_NONE;
+            if (entryAxis !== AXIS_NONE && entryAxis !== moveAxis) {
+                for (const { i, dir } of atNbrs) {
+                    if ((state.adjTurnMask & (1 << i)) === 0) continue;
+                    const turnDir = dir === 'either' ? 'either'
+                        : computeTurnDir(prevKey, from, target, entryAxis, moveAxis);
+                    if (dir === 'either' || turnDir === dir) state.adjTurnMask &= ~(1 << i);
+                }
+            }
+        }
+    }
+
     return {
         target, from, moveAxis, axisBit, isPortalJump,
         prevVisited, prevEdgeFrom, prevEdgeTarget,
@@ -105,6 +208,9 @@ export function applyMove(target, state, level, prep, isPortalJump) {
         prevMustCrossMask, mcIdx, prevCrossCount,
         prevFlipperUsedMask,
         prevLastWasPortalJump,
+        prevSurroundMask, surroundNbrRestores,
+        prevMustTurnMask,
+        prevAdjTurnMask,
     };
 }
 
@@ -121,6 +227,17 @@ export function undoMove(undo, state) {
     if (undo.mcIdx !== undefined) state.crossCounts[undo.mcIdx] = undo.prevCrossCount;
     state.flipperUsedMask   = undo.prevFlipperUsedMask;
     state.lastWasPortalJump = undo.prevLastWasPortalJump;
+    // Landmark undo (only present when prep.hasLandmarkConstraints was true)
+    if (undo.prevSurroundMask !== undefined) {
+        state.surroundMask = undo.prevSurroundMask;
+        if (undo.surroundNbrRestores) {
+            for (const { i, prevMask } of undo.surroundNbrRestores) {
+                state.surroundNeighborRemainingMasks[i] = prevMask;
+            }
+        }
+        state.mustTurnMask = undo.prevMustTurnMask;
+        state.adjTurnMask  = undo.prevAdjTurnMask;
+    }
 }
 
 // ─── Neighbour generation ─────────────────────────────────────────────────────
