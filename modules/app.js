@@ -188,7 +188,10 @@ export function createAppFacade(app) {
 export function bootstrapApp() {
     const app = createApp();
     window.onload = createOnloadHandler({ input: app.input, boot: app.boot, ui: app.ui, loader: app.loader });
-    // Thin APP compatibility facade (used by browser console / dev tooling).
+    // Intentional debug/compatibility facade. Exposes all app subsystems to the
+    // browser console for development tooling and manual testing. Not gated on DEV
+    // because it's used in production debugging workflows. To restrict in production,
+    // wrap this with: if (app.core.DEV) window.APP = createAppFacade(app);
     window.APP = createAppFacade(app);
     return app;
 }

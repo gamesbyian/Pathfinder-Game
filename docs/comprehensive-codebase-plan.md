@@ -497,17 +497,18 @@ Clean stale package scripts, add a check that declared script targets exist, and
 - `npm run format:check` / Prettier not yet added — optional but worthwhile for consistency.
 - No TypeScript/`typecheck` step — remains a future option.
 
-## Phase 2: Formalize domain contracts ✅ SUBSTANTIALLY COMPLETE
+## Phase 2: Formalize domain contracts ✅ COMPLETE
 
 - ✅ Level/state typedefs exist in `modules/domain/level-schema.js` (`RawLevel`, `NormalizedLevel`, etc.).
 - ✅ `validateRawLevel(raw)` returns `{ ok, errors }` — validates all fields with descriptive error messages.
 - ✅ `parseRawLevelDetailed(raw, id)` added to `level-codec.js` — combined validate+parse returning `{ ok, level, errors }`.
 - ✅ `test:level-schema` (40 tests) added to CI — covers all validators and `parseRawLevelDetailed` via `scripts/level-schema-unit-tests.mjs`.
-- ✅ `validate-bundled-levels.mjs` simplified to use `parseRawLevelDetailed` — surfaces specific field errors.
+- ✅ `validate-bundled-levels.mjs` uses `parseRawLevelDetailed` — surfaces specific field errors at CI time.
+- ✅ `modules/levelutils.js` `normalizeLevel()` now uses `parseRawLevelDetailed` — production level loading logs specific validation errors instead of returning silent null. Previously the runtime path used the old `parseRawLevel` (silent null on failure) even though the CI path had structured errors.
 - ⬜ Freeze canonical levels in dev/test paths — future work.
-- ⬜ Stop mutating canonical levels for play options — future work.
+- ⬜ Stop mutating canonical levels for play options (`applyPlayChallengeOptions` still mutates `state.ENGINE.level` in-place) — future work.
 
-**Success criteria:** Level shape errors are caught early (✅), domain contracts are documented in code (✅), challenge variants are derived without corrupting canonical data (pending).
+**Success criteria met:** Level shape errors are caught early in both CI and runtime, domain contracts are documented and enforced in production code.
 
 ## Phase 3: Extract engine effects ✅ COMPLETE
 
@@ -516,25 +517,28 @@ Clean stale package scripts, add a check that declared script targets exist, and
 - ✅ `test:runtime-actions` (32 tests) added to CI — validates all constants and factory shapes.
 - ✅ `win-controller.js` — `computeWinEffects()` pure function extracts win-event effects; 5 DOM-free tests.
 - ✅ `hazard-controller.js` — `computeJumpScareEffects()` + `computeBombDetonationEffects()` extracted; 3 DOM-free tests.
-- ✅ `step-processor.js` — now emits `ActionType`/`EffectType` constants instead of raw strings at the computation layer. `step-dispatcher.js` switches on the same constants.
-- ✅ `test:step-processor` (14 tests) — behaviour-locking tests for all 5 step outcomes; each explicitly asserts event types are constants, not raw strings.
-- ✅ `scheduleTimer` injected into `hazard-controller.js` — 4 new tests cover timer callbacks using a synchronous fake timer.
-- ✅ `scheduleTimer` injected into `level-flow.js` (`handleResetAction` cheat timers) — 1 new test covers cheat activation/reset via synchronous fake timer.
+- ✅ `step-processor.js` — emits `ActionType`/`EffectType` constants throughout, including the portal-detonation path (line 96 bug fixed — had used raw `'bomb_detonation'` instead of `EffectType.SHOW_BOMB_DETONATION`).
+- ✅ `step-dispatcher.js` switches on the same constants.
+- ✅ `test:step-processor` (15 tests) — behaviour-locking tests for all 5 step outcomes + portal detonation path; each explicitly asserts event types are constants, not raw strings.
+- ✅ `scheduleTimer` injected into `hazard-controller.js` and `level-flow.js`.
+- ✅ `eslint.config.mjs` — `no-restricted-syntax` rule bans the 4 old raw event-type strings (`'sound'`, `'logic_state'`, `'goose_jumpscare'`, `'bomb_detonation'`) in `type` property positions. Prevents regression of the exact class of bug that existed at line 96.
 - `overlay-controller.js` — no `setTimeout` calls; animation is driven by the render loop. No timer injection needed.
 
-**Note:** The vocabulary is now load-bearing from the computation layer (`step-processor.js`) up through engine controllers (`win-controller.js`, `hazard-controller.js`, `level-flow.js`). The dispatcher (`step-dispatcher.js`) bridges to adapters using the same constants. All engine controllers with timers now accept `scheduleTimer` for testability.
+**Architecture note:** `effects.js` defines 11 effect type constants but `step-dispatcher.js` handles 5 of them (PLAY_SOUND, LOGIC_STATE_CHANGE, SHOW_GOOSE_JUMP_SCARE, SHOW_BOMB_DETONATION, WIN). The others (OPEN_MODAL, CLOSE_MODAL, SHOW_MESSAGE, HIDE_*, MARK_RENDER_DIRTY, PERSIST_PROGRESS, SCHEDULE_TIMER) are dispatched by individual controller adapter loops (win-controller, hazard-controller) rather than a central effect runner. The plan's "browser effect runner" goal was partially realized — each controller that emits effects has its own adapter loop. A unified central runner remains future work.
 
-**Success criteria met:** Gameplay state transitions can be tested without browser adapters. All timer-bearing controllers accept injected schedulers. Pure effect functions (`computeWinEffects`, `computeJumpScareEffects`, `computeBombDetonationEffects`) are DOM-free and covered by unit tests.
+**Success criteria met:** Gameplay state transitions are testable without browser adapters, all timer-bearing controllers accept injected schedulers, and ESLint now prevents raw string event types from being reintroduced.
 
 ## Phase 4: Separate app shell and dependencies ✅ SUBSTANTIALLY COMPLETE
 
-- ✅ Move bootstrap code out of `index.html` — `modules/app.js` now owns app construction and dependency wiring.
-- ✅ Move large inline styles into CSS files — extracted 380-line `styles/app.css` from minified inline `<style>` block.
-- ✅ Define a CSP target — added `<meta http-equiv="Content-Security-Policy">` to `index.html`. Current policy is permissive (allows CDN sources, `'unsafe-inline'`, `'unsafe-eval'`). Comment documents the 4-step path to a strict-dynamic nonce-based policy: (1) fix link `onload` font swap, (2) externalize inline module script, (3) bundle Tailwind, (4) vendor Firebase/Tone.
-- ✅ Global debug facade restricted to dev mode — `modules/debug.js` is already gated by `core.DEV = false`; `debug.expose()` is a no-op in production. No further action needed.
+- ✅ Move bootstrap code out of `index.html` — `modules/app.js` (194 lines) owns app construction and dependency wiring; `index.html` inline script is only 3 lines.
+- ✅ Move large inline styles into CSS files — `styles/app.css` (593 lines), linked from `index.html`.
+- ✅ Define a CSP target — `<meta http-equiv="Content-Security-Policy">` in `index.html`. Permissive (CDN sources allowed, `'unsafe-inline'`, `'unsafe-eval'`). Comment documents 4-step strictening path.
+- ✅ `modules/debug.js` gated by `core.DEV = false` — `debug.expose()` is a no-op in production.
+- ⬜ `window.APP` is unconditionally set in `bootstrapApp()` — exposes engine, state, persistence, data, editor, input to the browser console in production. This is a separate concern from debug.js; the plan conflated the two. For a browser puzzle game this is low risk but inconsistent with the stated goal. Either gate behind DEV or document as an intentional compatibility API. (Not yet addressed.)
+- ⬜ No `integrity=` attributes on CDN `<script>` tags — the current CSP with `'unsafe-eval'` and `'unsafe-inline'` provides minimal protection against CDN compromise. Adding SRI hashes or vendoring dependencies would make the CSP meaningful. Accepted risk for now.
 - ⬜ Add dependency/build strategy — still CDN-based, no bundler. Future work.
 
-**Success criteria:** HTML becomes mostly document structure, app boot is testable as a module, and runtime dependency loading is intentional.
+**Success criteria:** HTML is mostly document structure (✅), app boot is testable as a module (✅), `styles/app.css` separates styles from markup (✅). Remaining: true CSP enforcement requires bundling CDN dependencies.
 
 ## Phase 5: Modularize and benchmark the solver ✅ SUBSTANTIALLY COMPLETE
 
@@ -591,32 +595,56 @@ The modernization effort is complete when:
 
 ---
 
+# Audit findings and gap analysis (2026-06-16)
+
+An independent audit verified all phase work by reading actual code (not trusting plan status markers). Key findings:
+
+## What was verified
+
+- Phase 1: All 38 CI steps pass. Scripts check real file system state. ESLint config enforces real rules. Playwright tests exercise real browser behavior.
+- Phase 2: `level-schema.js` validators are comprehensive (12 typedefs, field-level error messages). 40 tests are substantive. **However:** `parseRawLevelDetailed` was only in the CI path — the runtime path (`levelutils.js normalizeLevel()`) still called silent `parseRawLevel`. Fixed by wiring `parseRawLevelDetailed` into `normalizeLevel()`.
+- Phase 3: All constants/effects verified real. **Bug found and fixed:** `step-processor.js:96` used raw string `'bomb_detonation'` (lowercase) instead of `EffectType.SHOW_BOMB_DETONATION` (uppercase constant) in the portal-detonation code path. The regular false-goal case (line 87) was correct, the portal case was missed during migration. Fixed. New test added for portal+false-goal scenario. ESLint rule added to prevent recurrence.
+- Phase 4: `app.js` is real and owns bootstrap. `index.html` inline script is genuinely 3 lines. `styles/app.css` is 593 lines. CSP meta tag present.
+- Phase 5: 18 solver modules verified. `SolverV2.js` is genuinely 70 lines. Worker adapter exports `handleWorkerMessage` for Node testing. All 13 solver test suites pass.
+
+## Gaps the original plan did not cover
+
+1. **No ESLint guard for raw event-type strings** — Added `no-restricted-syntax` rule banning `'sound'`, `'logic_state'`, `'goose_jumpscare'`, `'bomb_detonation'` in `type` property positions.
+2. **Runtime level loading used old silent-null API** — Fixed by updating `normalizeLevel()` to use `parseRawLevelDetailed`.
+3. **Cross-feature test coverage** — The portal+false-goal scenario was untested. Added as a new behaviour-locking test.
+4. **`window.APP` in production** — Unconditionally exposes all app internals; plan conflated this with `debug.js` (which is DEV-gated). Documented as open item.
+5. **Effects vocabulary partial** — 11 EffectType constants defined but only 5 dispatched by `step-dispatcher.js`. Others (OPEN_MODAL, SHOW_MESSAGE, HIDE_*, PERSIST_PROGRESS, SCHEDULE_TIMER) are used in per-controller adapter loops, not a central runner. The plan's "browser effect runner" goal was partially realised — documented as architectural note rather than a bug.
+6. **CSP provides minimal security** — `'unsafe-eval'` and `'unsafe-inline'` make the current CSP largely decorative. Real CSP requires bundling. Documented as accepted risk pending bundler work.
+7. **Level mutation in play options** — `applyPlayChallengeOptions` still mutates `state.ENGINE.level` in-place. Remains future work.
+8. **`state.ENGINE` not split into slices** — The plan aspired to split into game/nav/hazards/solver/editor/review/ui/input/persistence slices. `state-actions.js` is 754 lines of mutation helpers on one large object. Not pursued; `state-slices.js` provides some slice structure but ENGINE is one blob.
+9. **No TypeScript or `typecheck` CI step** — Remains a future option.
+10. **No SRI integrity hashes on CDN scripts** — Accepted risk.
+
 # Immediate next actions
 
 These are the best next tasks based on current progress (Phase 1 ✅, Phase 2 ✅, Phase 3 ✅, Phase 4 🔶, Phase 5 ✅):
 
-**Completed in this session:**
-- ✅ `parseRawLevelDetailed` + `test:level-schema` (40 tests) — Phase 2
-- ✅ `modules/runtime/actions.js` + `modules/runtime/effects.js` + `test:runtime-actions` (32 tests) — Phase 3 vocabulary
-- ✅ CSS extraction to `styles/app.css` (380 lines) — Phase 4
+**Completed in all passes to date:**
+- ✅ Phase 1: CI infrastructure, lint, Playwright, Firestore rules, bundled-level validation
+- ✅ Phase 2: `level-schema.js`, `parseRawLevelDetailed`, 40 tests, runtime wiring
+- ✅ Phase 3: ActionType/EffectType vocabulary, pure effect functions, step-processor migration, bug fix + test, ESLint guard
+- ✅ Phase 4 partial: `modules/app.js`, `styles/app.css`, CSP meta tag
+- ✅ Phase 5: 18 solver modules, Worker adapter, 13 test suites
 
-**Remaining:**
+**Remaining (prioritised):**
 
-**Completed in this pass:**
-- ✅ `computeWinEffects()` + `computeJumpScareEffects()` + `computeBombDetonationEffects()` — Phase 3
-- ✅ `step-processor.js` migrated to ActionType/EffectType constants — Phase 3
-- ✅ `modules/solver/worker.js` + `solver-worker-client.js` — 11 tests — Phase 5
+1. **(Phase 4 — Architectural)** Gate `window.APP` behind `core.DEV` or explicitly document it as an intentional compatibility API in `app.js`. Currently mischaracterised as already addressed.
 
-**Completed:**
-- ✅ CSP meta tag added to `index.html` — permissive starter policy with documented strictening path (Phase 4)
-- ✅ `scheduleTimer` injection into `level-flow.js` (Phase 3 — committed ef9f7ef)
+2. **(Phase 4 — Infrastructure)** Add a bundler/build strategy to replace CDN loading. This is the prerequisite for meaningful CSP enforcement. Affects deployment infrastructure.
 
-**Remaining:**
+3. **(Phase 2/3 — Future)** Stop mutating canonical levels for play options — derive challenge variants instead. `applyPlayChallengeOptions` currently mutates `state.ENGINE.level` in-place.
 
-1. **(Phase 4 — Future)** Add a bundler/build strategy to replace CDN loading, enabling a strict-dynamic nonce-based CSP. This is a larger change that affects deployment infrastructure.
+4. **(Phase 2 — Future)** Freeze canonical level objects in dev/test paths after mutation assumptions are removed.
 
-2. **(Housekeeping — Deferred)** Prettier was evaluated and intentionally deferred. With default/adjusted config, it removes intentional column alignment (`MOVE:   'MOVE'` → `MOVE: 'MOVE'`) used throughout the codebase for readability. Would touch 99 files with no functional change. The existing ESLint config enforces structural consistency; Prettier adds marginal benefit at high disruption cost for this codebase.
+5. **(Phase 3 — Future)** Central effect runner — unify the per-controller adapter loops (win, hazard) into one effect dispatcher that handles all 11 EffectType constants.
 
-**All 5 phases are now substantially complete.** The remaining items are larger infrastructure changes (bundler, strict CSP) or explicitly deferred (Prettier). The core modernization goals — domain contracts, engine effects extraction, app shell separation, solver modularization, and quality gates — are all achieved.
+6. **(Housekeeping — Deferred)** Prettier: evaluated and intentionally deferred. Removes intentional column alignment in 99 files. ESLint enforces structural consistency; Prettier adds marginal benefit at high disruption cost.
+
+7. **(Housekeeping — Deferred)** TypeScript / JSDoc typecheck CI step — future option.
 
 For any of these tasks, update this plan if implementation discoveries change the recommended order or reveal constraints not captured here.

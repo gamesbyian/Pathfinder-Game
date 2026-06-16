@@ -1,6 +1,6 @@
 // Domain imports — pure functions live in modules/domain/
 import { PACK, UNPACK, inBounds }                                         from './domain/cell-key.js';
-import { normalizeMetadata, parseRawLevel, denormalizeLevel,
+import { normalizeMetadata, parseRawLevel, parseRawLevelDetailed, denormalizeLevel,
          canonicalCloneLevel, deepCloneLevel,
          getLevelBounds, assertLevelShape }                               from './domain/level-codec.js';
 import { canonicalLevelFingerprintPayload, getLevelFingerprintSource,
@@ -13,13 +13,19 @@ import { transformPoint, inverseTransformPoint, transformAxis }           from '
 export function createLevelUtils({ core, data, getState, getRenderer }) {
     const getRawLevels = () => data.getLevels();
 
-    // Index-based accessor — wraps the shared parseRawLevel parser.
+    // Index-based accessor — validates and parses raw level data.
+    // Returns null on failure and logs specific errors rather than failing silently.
     function normalizeLevel(idx) {
         const levels = getRawLevels();
         if (idx < 0 || idx >= levels.length) return null;
         const raw = levels[idx];
         if (!raw) return null;
-        return parseRawLevel(raw, idx);
+        const { ok, level, errors } = parseRawLevelDetailed(raw, idx);
+        if (!ok) {
+            console.error(`Level ${idx + 1}: validation failed`, errors);
+            return null;
+        }
+        return level;
     }
 
     // Pointer-to-grid coordinate conversion — reads DOM, canvas, and app state.

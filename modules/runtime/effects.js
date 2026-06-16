@@ -1,11 +1,14 @@
 // Effect type constants — the vocabulary of side-effects the engine must dispatch.
 // Effects describe WHAT should happen (sound, UI, persistence, timer), not HOW.
-// Intended for use in future effect-runner patterns.
 //
-// Relationship to step-processor.js events:
-//   step-processor emits { type: 'sound', note, duration } etc. — those are a
-//   subset of this vocabulary. EffectType.PLAY_SOUND corresponds to 'sound',
-//   giving future refactors a named constant to migrate toward.
+// Current dispatch coverage:
+//   step-dispatcher.js handles: PLAY_SOUND, SHOW_GOOSE_JUMP_SCARE, SHOW_BOMB_DETONATION
+//   win-controller.js adapter handles: PLAY_SOUND, OPEN_MODAL, PERSIST_PROGRESS
+//   hazard-controller.js adapter handles: SHOW_GOOSE_JUMP_SCARE, SHOW_BOMB_DETONATION, PLAY_SOUND
+//
+// Not yet dispatched by any runner (vocabulary reserved for a future central effect runner):
+//   CLOSE_MODAL, SHOW_MESSAGE, HIDE_GOOSE_JUMP_SCARE, HIDE_BOMB_DETONATION,
+//   MARK_RENDER_DIRTY, SCHEDULE_TIMER
 
 export const EffectType = Object.freeze({
     // Audio

@@ -286,6 +286,32 @@ test('detonate event type is NOT raw string "bomb_detonation"', () => {
     assert.ok(events.some(e => e.type === EffectType.SHOW_BOMB_DETONATION), 'should use EffectType.SHOW_BOMB_DETONATION');
 });
 
+// ─── Outcome: portal detonation (portal landing on armed false goal) ──────────
+
+test('stepping through portal onto armed false goal emits SHOW_BOMB_DETONATION', () => {
+    // Path: gate(0,0) → portal-src(1,0) → [jump] → portal-dest(3,0) = false goal
+    // Counted length = 3 nodes - 1 start - 1 portal jump = 1, so reqLen=1 satisfies metrics.
+    const portalSrc  = PACK(1, 0);
+    const portalDest = PACK(3, 0);
+    const falseGoal  = portalDest;
+    const portalMap  = new Map([[portalSrc, { dest: portalDest }], [portalDest, { dest: portalSrc }]]);
+    const level = makeLevel({
+        reqLen: 1, reqInt: 0,
+        goalKey: PACK(4, 0),
+        falseGoalKeys: new Set([falseGoal]),
+        portalMap,
+    });
+    const nav     = makeNav({ path: [PACK(0, 0)], visitedCounts: new Map([[PACK(0, 0), 1]]) });
+    const hazards = makeHazards({ armedFalseGoals: new Set([falseGoal]) });
+    const h       = makeStepHelpers(level, nav);
+    const { outcome, events } = computeStep(nav, hazards, PLAY, IDLE, level, portalSrc, h);
+    assert.equal(outcome, 'detonate', 'stepping through portal onto armed false goal should detonate');
+    assert.ok(events.some(e => e.type === EffectType.SHOW_BOMB_DETONATION),
+        'portal detonation should emit EffectType.SHOW_BOMB_DETONATION (not raw string)');
+    assert.ok(!events.some(e => e.type === 'bomb_detonation'),
+        'portal detonation should NOT use raw string "bomb_detonation"');
+});
+
 // ─── Summary ─────────────────────────────────────────────────────────────────
 
 console.log(`\nStep processor tests: ${passed} passed, ${failed} failed`);

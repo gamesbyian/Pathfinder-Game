@@ -93,7 +93,7 @@ export function computeStep(nav, hazards, mode, logicState, level, targetKey, {
     if (portal && portal.dest !== -1) {
         pushStepOnNav(nav, portal.dest, true, level);
         if (hazards.armedFalseGoals.has(portal.dest) && areWinMetricsSatisfied(nav, level)) {
-            events.push({ type: 'bomb_detonation', key: portal.dest });
+            events.push({ type: EffectType.SHOW_BOMB_DETONATION, key: portal.dest });
             return { outcome: 'detonate', events, mutations: { ripples } };
         }
         const color = getPortalDisplayColor(level, targetKey, portalThemeColor);
