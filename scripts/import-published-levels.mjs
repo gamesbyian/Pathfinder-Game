@@ -5,7 +5,6 @@ import vm from 'vm';
 
 const repoRoot = path.resolve(new URL('..', import.meta.url).pathname);
 const levelsJsonPath = path.join(repoRoot, 'data', 'levels.json');
-const levelsPath = path.join(repoRoot, 'levels.js');
 const firebaseConfigPath = path.join(repoRoot, 'firebase-config.js');
 
 function loadRawLevels() {
@@ -70,12 +69,7 @@ function fingerprint(level) {
 }
 
 function writeLevels(levels) {
-  const lines = ['window.RAW_LEVELS = ['];
-  levels.forEach((level, index) => {
-    lines.push(`    /* ${index + 1} */ ${JSON.stringify(normalizeLevel(level))}${index === levels.length - 1 ? '' : ','}`);
-  });
-  lines.push('];', '');
-  fs.writeFileSync(levelsPath, lines.join('\n'));
+  fs.writeFileSync(levelsJsonPath, JSON.stringify(levels.map(normalizeLevel), null, 2) + '\n');
 }
 
 async function fetchPublishedLevels() {
@@ -106,7 +100,7 @@ async function main() {
     }
   }
   writeLevels([...existing, ...additions]);
-  console.log(`Imported ${additions.length} new published level(s) from Firestore into levels.js.`);
+  console.log(`Imported ${additions.length} new published level(s) from Firestore into data/levels.json.`);
 }
 
 main().catch(err => {

@@ -1,7 +1,7 @@
 /**
  * @fileoverview JSDoc typedefs and runtime validators for raw and normalized level shapes.
  *
- * "Raw" = the wire format stored in levels.js and Firestore (1-indexed coords, plain arrays).
+ * "Raw" = the wire format stored in data/levels.json and Firestore (1-indexed coords, plain arrays).
  * "Normalized" = the internal representation after parseRawLevel (0-indexed, packed keys, Sets/Maps).
  */
 
