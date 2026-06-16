@@ -411,6 +411,22 @@ test('handleResetAction increments reset streak', () => {
     assert(deps.state.ENGINE.resetStreak >= 1, 'reset streak should increment');
 });
 
+test('handleResetAction activates cheat mode after 5 resets and fires sync timer', () => {
+    const deps = makeLevelFlowDeps();
+    deps.state.ENGINE.resetStreak = 4;
+    deps.state.ENGINE.cheatActive = false;
+    deps.state.ENGINE.cheatTimer  = null;
+    const sounds = [];
+    deps.core = { ...core, SOUND_BUS: { play: (n) => sounds.push(n) } };
+    const fakeTimer = (fn) => fn();
+    const ctrl = createLevelFlowController({ ...deps, scheduleTimer: fakeTimer });
+    ctrl.handleResetAction(); // streak becomes 5 → cheat activates, timer fires immediately
+    assert(sounds.includes('F5'), 'cheat activation should play F5');
+    // Timer fires immediately → cheat deactivated and streak reset
+    assertEqual(deps.state.ENGINE.cheatActive, false, 'cheat should be deactivated after timer fires');
+    assertEqual(deps.state.ENGINE.resetStreak, 0, 'reset streak should be zeroed after cheat timer fires');
+});
+
 test('initReviewMode resets submissions then switches to REVIEW', () => {
     const deps = makeLevelFlowDeps();
     deps.state.ENGINE.review = { submissions: [{ id: 1 }], currentIdx: 0, savedPlayLevelIdx: 0 };

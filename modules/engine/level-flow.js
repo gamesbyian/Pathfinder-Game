@@ -32,6 +32,7 @@ export function createLevelFlowController({
     applyPlayChallengeOptions, showOptionsBlockedModalIfNeeded,
     resetEmptyReviewState,
     setLogicState, setOverlayState,
+    scheduleTimer = setTimeout,
 }) {
     function updatePencilState() {
         ui.updatePencilButton(state.ENGINE.editor.isPencilMode);
@@ -175,14 +176,14 @@ export function createLevelFlowController({
     function handleResetAction() {
         if (state.ENGINE.cheatActive) {
             if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-            setCheatTimer(state, setTimeout(() => { setCheatActive(state, false); }, 3000));
+            setCheatTimer(state, scheduleTimer(() => { setCheatActive(state, false); }, 3000));
         } else {
             incrementResetStreak(state);
             if (state.ENGINE.resetStreak >= 5) {
                 setCheatActive(state, true);
                 core.SOUND_BUS.play('F5', '8n');
                 if (state.ENGINE.cheatTimer) clearTimeout(state.ENGINE.cheatTimer);
-                setCheatTimer(state, setTimeout(() => {
+                setCheatTimer(state, scheduleTimer(() => {
                     setCheatActive(state, false);
                     setResetStreak(state, 0);
                 }, 3000));
