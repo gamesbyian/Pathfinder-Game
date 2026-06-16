@@ -86,6 +86,64 @@ test('computeBombDetonationEffects PLAY_SOUND uses C2 note', () => {
     assertEqual(soundFx.note, 'C2', 'initial bomb sound should be C2');
 });
 
+test('triggerJumpScare cleanup fires hideGooseJumpScare when overlay unchanged (sync timer)', () => {
+    const state = makeState();
+    state.ENGINE.overlayState = core.GOOSE_OVERLAY;
+    const uiCalls = [];
+    const ui = {
+        showGooseJumpScare: () => uiCalls.push('show'),
+        hideGooseJumpScare: () => uiCalls.push('hide'),
+    };
+    const fakeTimer = (fn) => fn(); // fire immediately — bypasses the real 2500ms delay
+    const setOverlayState = (v) => { state.ENGINE.overlayState = v; };
+    const ctrl = createHazardController({ core, state, ui, setOverlayState, scheduleTimer: fakeTimer });
+    ctrl.triggerJumpScare();
+    assert(uiCalls.includes('hide'), 'hideGooseJumpScare should fire when overlay is still GOOSE_OVERLAY');
+    assertEqual(state.ENGINE.overlayState, core.OVERLAY_NONE, 'overlay should reset to NONE');
+});
+
+test('triggerJumpScare cleanup does NOT fire hide when overlay changed before timer fires', () => {
+    const state = makeState();
+    const uiCalls = [];
+    const ui = {
+        showGooseJumpScare: () => uiCalls.push('show'),
+        hideGooseJumpScare: () => uiCalls.push('hide'),
+    };
+    // Capture the callback without firing it immediately
+    let capturedCallback = null;
+    const capturingTimer = (fn) => { capturedCallback = fn; };
+    const setOverlayState = (v) => { state.ENGINE.overlayState = v; };
+    const ctrl = createHazardController({ core, state, ui, setOverlayState, scheduleTimer: capturingTimer });
+    ctrl.triggerJumpScare(); // sets overlay to GOOSE_OVERLAY, captures callback
+    // Simulate something else changing the overlay before the timer fires
+    state.ENGINE.overlayState = core.FALSE_GOAL_ANIMATING;
+    capturedCallback(); // now fire the cleanup manually
+    assert(!uiCalls.includes('hide'), 'hideGooseJumpScare should NOT fire when overlay changed before timer');
+});
+
+test('triggerBombDetonation full sequence fires via injected sync timer', () => {
+    const state = makeState();
+    state.ENGINE.hazards = { detonatedFalseGoals: new Set(), revealedGeese: new Set(), armedFalseGoals: new Set() };
+    const uiCalls = [];
+    const sounds = [];
+    const ui = {
+        showBombDetonation: (opts) => uiCalls.push(['showBombDetonation', opts]),
+        hideBombDetonation: () => uiCalls.push('hideBombDetonation'),
+    };
+    const localCore = { ...core, SOUND_BUS: { play: (n) => sounds.push(n) } };
+    const overlayHistory = [];
+    const setOverlayState = (v) => { state.ENGINE.overlayState = v; overlayHistory.push(v); };
+    const fakeTimer = (fn) => fn(); // fires both stages immediately
+    const ctrl = createHazardController({ core: localCore, state, ui, setOverlayState, scheduleTimer: fakeTimer });
+    ctrl.triggerBombDetonation(42);
+    // Stage 1: showBombDetonation({ exploded: true }) + F1
+    assert(uiCalls.some(c => Array.isArray(c) && c[1]?.exploded === true), 'should show exploded bomb');
+    assert(sounds.includes('F1'), 'F1 sound should play in stage 1');
+    // Stage 2: hideBombDetonation + overlay reset
+    assert(uiCalls.includes('hideBombDetonation'), 'bomb detonation UI should be hidden');
+    assert(overlayHistory.includes(core.OVERLAY_NONE), 'overlay should return to NONE after full sequence');
+});
+
 // ─── WinController ───────────────────────────────────────────────────────────
 
 test('handleWin marks level complete and opens win modal', () => {

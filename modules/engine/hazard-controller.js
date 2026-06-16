@@ -17,7 +17,8 @@ export function computeBombDetonationEffects() {
     ];
 }
 
-export function createHazardController({ core, state, ui, setOverlayState }) {
+// scheduleTimer defaults to setTimeout; inject a synchronous fake in tests.
+export function createHazardController({ core, state, ui, setOverlayState, scheduleTimer = setTimeout }) {
     let bombTimer1 = null;
     let bombTimer2 = null;
 
@@ -34,7 +35,7 @@ export function createHazardController({ core, state, ui, setOverlayState }) {
             for (const fx of computeJumpScareEffects()) {
                 if (fx.type === EffectType.SHOW_GOOSE_JUMP_SCARE) ui.showGooseJumpScare();
             }
-            setTimeout(() => {
+            scheduleTimer(() => {
                 if (state.ENGINE.overlayState === core.GOOSE_OVERLAY) {
                     ui.hideGooseJumpScare();
                     setOverlayState(core.OVERLAY_NONE);
@@ -49,11 +50,11 @@ export function createHazardController({ core, state, ui, setOverlayState }) {
                 if (fx.type === EffectType.SHOW_BOMB_DETONATION) ui.showBombDetonation();
                 else if (fx.type === EffectType.PLAY_SOUND)      core.SOUND_BUS.play(fx.note, fx.duration);
             }
-            bombTimer1 = setTimeout(() => {
+            bombTimer1 = scheduleTimer(() => {
                 bombTimer1 = null;
                 ui.showBombDetonation({ exploded: true });
                 core.SOUND_BUS.play('F1', '4n');
-                bombTimer2 = setTimeout(() => {
+                bombTimer2 = scheduleTimer(() => {
                     bombTimer2 = null;
                     ui.hideBombDetonation();
                     setOverlayState(core.OVERLAY_NONE);
