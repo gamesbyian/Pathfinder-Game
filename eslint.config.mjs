@@ -55,6 +55,10 @@ export default [
                 document: 'readonly',
                 HTMLElement: 'readonly',
                 SVGElement: 'readonly',
+                Worker: 'readonly',
+                WorkerGlobalScope: 'readonly',
+                self: 'readonly',
+                URL: 'readonly',
             },
         },
         rules: {
