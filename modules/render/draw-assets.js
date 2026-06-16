@@ -102,6 +102,126 @@ export const DRAW_REGISTRY = {
         drawCtx.textBaseline = 'middle';
         drawCtx.fillText('↺', 0, 0);
     },
+    landmark(drawCtx, size, color, options = {}) {
+        const { objectType = 'block', role = 'decorative', isSatisfied = false } = options;
+        const s = size * 0.42;
+        const OBJ_COLORS = {
+            park:     '#15803d',
+            market:   '#c2410c',
+            library:  '#1d4ed8',
+            fountain: '#0e7490',
+            lamppost: '#a16207',
+            statue:   '#52525b',
+        };
+        const baseColor = OBJ_COLORS[objectType] || '#475569';
+
+        drawCtx.globalAlpha = 0.9;
+        drawCtx.fillStyle = baseColor;
+
+        if (objectType === 'park') {
+            drawCtx.beginPath();
+            drawCtx.roundRect(-s, -s, s * 2, s * 2, s * 0.35);
+            drawCtx.fill();
+            drawCtx.fillStyle = '#86efac';
+            drawCtx.beginPath();
+            drawCtx.moveTo(0, -s * 0.65);
+            drawCtx.lineTo(-s * 0.5, s * 0.15);
+            drawCtx.lineTo(s * 0.5, s * 0.15);
+            drawCtx.closePath();
+            drawCtx.fill();
+            drawCtx.fillStyle = baseColor;
+            drawCtx.fillRect(-s * 0.1, s * 0.15, s * 0.2, s * 0.4);
+        } else if (objectType === 'fountain') {
+            drawCtx.beginPath();
+            drawCtx.arc(0, 0, s, 0, Math.PI * 2);
+            drawCtx.fill();
+            drawCtx.strokeStyle = '#bae6fd';
+            drawCtx.lineWidth = size * 0.06;
+            drawCtx.globalAlpha = 0.8;
+            for (let a = 0; a < 4; a++) {
+                const ang = a * Math.PI / 2;
+                drawCtx.beginPath();
+                drawCtx.moveTo(0, 0);
+                drawCtx.lineTo(Math.cos(ang) * s * 0.6, Math.sin(ang) * s * 0.6);
+                drawCtx.stroke();
+            }
+        } else if (objectType === 'lamppost') {
+            drawCtx.fillRect(-s * 0.12, -s * 0.6, s * 0.24, s * 1.2);
+            drawCtx.beginPath();
+            drawCtx.arc(0, -s * 0.6, s * 0.28, 0, Math.PI * 2);
+            drawCtx.fill();
+            drawCtx.fillStyle = '#fef08a';
+            drawCtx.globalAlpha = 0.7;
+            drawCtx.beginPath();
+            drawCtx.arc(0, -s * 0.6, s * 0.16, 0, Math.PI * 2);
+            drawCtx.fill();
+        } else if (objectType === 'statue') {
+            drawCtx.beginPath();
+            drawCtx.moveTo(0, -s);
+            drawCtx.lineTo(s * 0.75, 0);
+            drawCtx.lineTo(0, s);
+            drawCtx.lineTo(-s * 0.75, 0);
+            drawCtx.closePath();
+            drawCtx.fill();
+            drawCtx.strokeStyle = '#a1a1aa';
+            drawCtx.lineWidth = size * 0.04;
+            drawCtx.globalAlpha = 0.8;
+            drawCtx.stroke();
+        } else {
+            drawCtx.beginPath();
+            drawCtx.roundRect(-s, -s, s * 2, s * 2, s * 0.2);
+            drawCtx.fill();
+            if (objectType === 'library') {
+                drawCtx.strokeStyle = '#93c5fd';
+                drawCtx.lineWidth = size * 0.06;
+                drawCtx.globalAlpha = 0.8;
+                for (let row = -1; row <= 1; row++) {
+                    drawCtx.beginPath();
+                    drawCtx.moveTo(-s * 0.55, row * s * 0.28);
+                    drawCtx.lineTo(s * 0.55, row * s * 0.28);
+                    drawCtx.stroke();
+                }
+            } else if (objectType === 'market') {
+                drawCtx.fillStyle = '#fed7aa';
+                drawCtx.globalAlpha = 0.7;
+                drawCtx.beginPath();
+                drawCtx.moveTo(0, -s * 0.55);
+                drawCtx.lineTo(s * 0.45, 0);
+                drawCtx.lineTo(0, s * 0.55);
+                drawCtx.lineTo(-s * 0.45, 0);
+                drawCtx.closePath();
+                drawCtx.fill();
+            }
+        }
+
+        drawCtx.globalAlpha = 1.0;
+
+        // Role ring overlay (impassable landmark roles only)
+        if (role === 'surround' || role === 'adjacentTurn' || role === 'adjacentTurnLeft' || role === 'adjacentTurnRight') {
+            const overlayColor = isSatisfied ? '#22c55e' : '#f59e0b';
+            drawCtx.strokeStyle = overlayColor;
+            drawCtx.lineWidth = size * 0.055;
+            drawCtx.globalAlpha = 0.8;
+            if (role === 'surround') {
+                drawCtx.beginPath();
+                drawCtx.arc(0, 0, s * 1.18, 0, Math.PI * 2);
+                drawCtx.stroke();
+            } else {
+                drawCtx.setLineDash([size * 0.09, size * 0.06]);
+                drawCtx.beginPath();
+                drawCtx.arc(0, 0, s * 1.18, 0, Math.PI * 2);
+                drawCtx.stroke();
+                drawCtx.setLineDash([]);
+                const badge = role.endsWith('Left') ? 'L' : role.endsWith('Right') ? 'R' : '↺';
+                drawCtx.fillStyle = overlayColor;
+                drawCtx.font = `bold ${size * 0.28}px sans-serif`;
+                drawCtx.textAlign = 'center';
+                drawCtx.textBaseline = 'middle';
+                drawCtx.fillText(badge, s * 0.58, -s * 0.58);
+            }
+            drawCtx.globalAlpha = 1.0;
+        }
+    },
 };
 
 // Returns a drawAsset(type, x, y, options) function bound to ctx/screenPosFn/viewport.

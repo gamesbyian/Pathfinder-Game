@@ -15,18 +15,18 @@ async function test(name, fn) {
 
 await test('extractGlobalData reads browser-global levels and themes without a browser', () => {
     const { levels, themes } = extractGlobalData();
-    assert.equal(levels.length, 147);
+    assert.equal(levels.length, 150);
     assert.equal(typeof themes.classic, 'object');
     assert.equal(typeof themes.dark, 'object');
     assert.equal(levels[0].grid.w, 9);
-    assert.equal(levels.at(-1).grid.w, 15);
+    assert.equal(levels.at(-1).grid.w, 5);
 });
 
 await test('writeJsonAssets writes deterministic JSON files', () => {
     const outDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pathfinder-data-assets-'));
     try {
         const result = writeJsonAssets({ outDir });
-        assert.equal(result.levelCount, 147);
+        assert.equal(result.levelCount, 150);
         assert.ok(result.themeCount >= 1);
         const levelsJson = JSON.parse(fs.readFileSync(path.join(outDir, 'levels.json'), 'utf8'));
         const themesJson = JSON.parse(fs.readFileSync(path.join(outDir, 'themes.json'), 'utf8'));

@@ -28729,5 +28729,161 @@
     "designerName": "",
     "description": "",
     "difficulty": null
+  },
+  {
+    "grid": {
+      "w": 5,
+      "h": 5
+    },
+    "gates": [
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "goal": {
+      "x": 5,
+      "y": 5
+    },
+    "falseGoals": [],
+    "reqLen": 16,
+    "reqInt": 0,
+    "blocks": [],
+    "mustPass": [],
+    "mustCross": [],
+    "filters": [],
+    "flippingFilters": [],
+    "portals": [],
+    "geese": [],
+    "landmarks": [
+      {
+        "x": 3,
+        "y": 3,
+        "objectType": "park",
+        "role": "surround"
+      }
+    ],
+    "hints": [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        65540,
+        65539,
+        65538,
+        65537,
+        131073,
+        196609,
+        196610,
+        196611,
+        131075,
+        131076,
+        196612,
+        262148
+      ]
+    ],
+    "designerName": "",
+    "description": "Park surround test — path must wind around all 8 neighbors of the central park.",
+    "difficulty": 3
+  },
+  {
+    "grid": {
+      "w": 5,
+      "h": 5
+    },
+    "gates": [
+      {
+        "x": 1,
+        "y": 1
+      }
+    ],
+    "goal": {
+      "x": 5,
+      "y": 5
+    },
+    "falseGoals": [],
+    "reqLen": 8,
+    "reqInt": 0,
+    "blocks": [],
+    "mustPass": [],
+    "mustCross": [],
+    "filters": [],
+    "flippingFilters": [],
+    "portals": [],
+    "geese": [],
+    "landmarks": [
+      {
+        "x": 3,
+        "y": 3,
+        "objectType": "library",
+        "role": "mustTurn"
+      }
+    ],
+    "hints": [
+      [
+        0,
+        65536,
+        131072,
+        131073,
+        131074,
+        196610,
+        262146,
+        262147,
+        262148
+      ]
+    ],
+    "designerName": "",
+    "description": "Library turn test — path must visit the library and change direction there.",
+    "difficulty": 2
+  },
+  {
+    "grid": {
+      "w": 5,
+      "h": 5
+    },
+    "gates": [
+      {
+        "x": 1,
+        "y": 3
+      }
+    ],
+    "goal": {
+      "x": 5,
+      "y": 3
+    },
+    "falseGoals": [],
+    "reqLen": 6,
+    "reqInt": 0,
+    "blocks": [],
+    "mustPass": [],
+    "mustCross": [],
+    "filters": [],
+    "flippingFilters": [],
+    "portals": [],
+    "geese": [],
+    "landmarks": [
+      {
+        "x": 3,
+        "y": 3,
+        "objectType": "fountain",
+        "role": "adjacentTurn"
+      }
+    ],
+    "hints": [
+      [
+        131072,
+        131073,
+        65537,
+        65538,
+        65539,
+        131075,
+        131076
+      ]
+    ],
+    "designerName": "",
+    "description": "Fountain adjacent-turn test — path must turn in a cell adjacent to the fountain.",
+    "difficulty": 2
   }
 ]

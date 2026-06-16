@@ -90,8 +90,25 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
     // --- Must-cross markers ---
     level.mustCrossKeys.forEach(k => { const p = UNPACK(k); drawAsset('mustCross', p.x, p.y, { color: th.colors.cross }); });
 
+    // --- Surround neighbor highlights (unvisited neighbors of surround landmarks) ---
+    if (model.unsatisfiedSurroundNeighbors?.size > 0) {
+        model.unsatisfiedSurroundNeighbors.forEach(nk => {
+            const p = UNPACK(nk), { sx, sy } = screenPosFn(p.x, p.y);
+            const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2;
+            ctx.save();
+            ctx.fillStyle = '#84cc1630';
+            ctx.fillRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4);
+            ctx.strokeStyle = '#84cc16';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([vp.cellW * 0.1, vp.cellW * 0.1]);
+            ctx.strokeRect(cx + 2, cy + 2, vp.cellW - 4, vp.cellH - 4);
+            ctx.restore();
+        });
+    }
+
     // --- Blocks ---
     level.blockSet.forEach(k => {
+        if (level.landmarkMeta?.has(k)) return; // drawn separately as landmark
         const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
         const cx = sx - vp.cellW / 2, cy = sy - vp.cellH / 2, cr = vp.cellW * 0.2;
         ctx.fillStyle = th.colors.block;
@@ -101,6 +118,16 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
             ctx.beginPath(); ctx.arc(cx + c * 0.25 * vp.cellW, cy + r * 0.25 * vp.cellH, vp.cellW * 0.045, 0, Math.PI * 2); ctx.fill();
         }
     });
+
+    // --- Landmarks (impassable: surround, adjacentTurn, decorative) ---
+    if (level.landmarkMeta?.size > 0) {
+        level.landmarkMeta.forEach(({ objectType, role }, k) => {
+            if (!level.blockSet.has(k)) return; // passable landmarks drawn elsewhere
+            const p = UNPACK(k);
+            const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
+            drawAsset('landmark', p.x, p.y, { objectType, role, isSatisfied, color: th.colors.block });
+        });
+    }
 
     // --- Portals ---
     level.portalVisuals.forEach(pv => {
@@ -226,6 +253,23 @@ export function renderScene(ctx, model, { cvs, mustPassOverlay }) {
         if (drawMustPassOverflowOverlay(mustPassOverlay, model.mustPassInOverlay, th.colors, vp, cvs, screenPosFn, gridW, gridH)) {
             needsRedraw = true;
         }
+    }
+
+    // --- MustTurn direction badges (passable landmark cells with turn constraints) ---
+    if (level.mustPassTurnDirs?.size > 0) {
+        level.mustPassTurnDirs.forEach((dir, k) => {
+            const p = UNPACK(k), { sx, sy } = screenPosFn(p.x, p.y);
+            const isSatisfied = model.landmarkSatisfiedState?.get(k) ?? false;
+            const badge = dir === 'left' ? 'L' : dir === 'right' ? 'R' : '↺';
+            ctx.save();
+            ctx.fillStyle = isSatisfied ? '#22c55e' : '#f59e0b';
+            ctx.globalAlpha = 0.9;
+            ctx.font = `bold ${vp.cellW * 0.28}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(badge, sx + vp.cellW * 0.3, sy - vp.cellH * 0.3);
+            ctx.restore();
+        });
     }
 
     // --- False goals ---

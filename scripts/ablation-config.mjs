@@ -29,6 +29,8 @@ export const FEATURES = {
     SCORE_ANTI_DITHER:          'U-turn penalty (immediate backtrack)',
     SCORE_REVISIT_PENALTY:      'Already-visited cell penalty',
     SCORE_TEMPLATE_BONUS:       'Structural template geometric bonus (perimeter / corner / side)',
+    SCORE_SURROUND_URGENCY:     'Urgency reward toward unvisited surround-landmark neighbors',
+    SCORE_ADJ_TURN_URGENCY:     'Urgency reward toward unsatisfied adjacent-turn landmark objects',
 
     // ── Pruning rules (dfsFromGate + beamSearchFromGate) ─────────────────────
     PRUNE_MC_CEILING:           'Intersection ceiling: ints + pending-MC-crossings > reqInt',
@@ -38,6 +40,8 @@ export const FEATURES = {
     PRUNE_MUST_CROSS_LB:        'MST lower bound on remaining must-cross distance (with approach maps)',
     PRUNE_INTERSECTION_DEFICIT: 'Remaining steps < intersections still needed',
     PRUNE_CONNECTIVITY:         'Flood-fill connectivity + volume check',
+    PRUNE_SURROUND_LB:          'Lower bound on steps needed to visit all surround-landmark neighbors',
+    PRUNE_ADJ_TURN_LB:          'Lower bound on steps needed to satisfy all adjacent-turn landmark objects',
 
     // ── Search strategy ───────────────────────────────────────────────────────
     STRATEGY_LDS:               'Limited Discrepancy Search probe waves before full DFS',

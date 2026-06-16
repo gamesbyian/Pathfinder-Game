@@ -27,7 +27,7 @@ await test('default data-asset loader reads committed JSON assets and createData
   const assets = await loadAssets();
   const data = createData({ deepClone: (value) => JSON.parse(JSON.stringify(value)) });
   data.ingest({ levels: assets.levels, themes: assets.themes, window: null });
-  assert.equal(data.getLevels().length, 147);
+  assert.equal(data.getLevels().length, 150);
   assert.equal(typeof data.getThemes().classic, 'object');
   assert.equal(data.getValidation().ok, true);
 });
