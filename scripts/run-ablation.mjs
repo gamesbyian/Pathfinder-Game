@@ -77,7 +77,7 @@ if (typeof globalThis.performance === 'undefined')
 
 // ─── Load solver + levels ─────────────────────────────────────────────────────
 
-const { createSolverV2 }  = await import('../SolverV2.js');
+const { createSolverV2 }  = await import('../modules/SolverV2.js');
 const { buildExperimentList } = await import('./ablation-config.mjs');
 
 const SolverV2 = createSolverV2();

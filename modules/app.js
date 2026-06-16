@@ -1,4 +1,4 @@
-import { createSolverV2 }    from '../SolverV2.js';
+import { createSolverV2 }    from './SolverV2.js';
 import { createCore }        from './core.js';
 import { createDebug }       from './debug.js';
 import { createUI }          from './ui.js';

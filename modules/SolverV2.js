@@ -3,11 +3,11 @@
 // Supports all level mechanics: portals (forced), regular filters, flipping filters,
 // geese, false goals, must-pass, must-cross, intersections.
 
-import { validateCandidatePath } from './modules/domain/path-validator.js';
-import { normalizeRawLevelV2 } from './modules/solver/normalization.js';
-import { getTrapSpotBudgetMs, solveLevelV2 } from './modules/solver/orchestration.js';
-import { SOLVER_TESTING_API } from './modules/solver/testing-api.js';
-import { findTrapSpotsV2 } from './modules/solver/trap-search.js';
+import { validateCandidatePath } from './domain/path-validator.js';
+import { normalizeRawLevelV2 } from './solver/normalization.js';
+import { getTrapSpotBudgetMs, solveLevelV2 } from './solver/orchestration.js';
+import { SOLVER_TESTING_API } from './solver/testing-api.js';
+import { findTrapSpotsV2 } from './solver/trap-search.js';
 
 // ─── Solver policy, encoding, distance, and solution primitives live in modules/solver/ ─
 

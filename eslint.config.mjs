@@ -11,7 +11,7 @@ export default [
     },
     {
         ...js.configs.recommended,
-        files: ['modules/**/*.js', 'SolverV2.js'],
+        files: ['modules/**/*.js'],
         languageOptions: {
             ecmaVersion: 2022,
             sourceType: 'module',

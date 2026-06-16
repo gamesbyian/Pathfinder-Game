@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 attempt-order selection. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../SolverV2.js';
+import { createSolverV2 } from '../modules/SolverV2.js';
 import { applyAttemptConfigOptions, getAttemptConfigs, getConfiguredAttemptConfigs } from '../modules/solver/attempts.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { ATTEMPT_CONFIGS, PROFILE_ORDER } from '../modules/solver/policy.js';

@@ -62,7 +62,7 @@
     "test:editor-validation": "node scripts/editor-validation-test.mjs",
     "levels:import-published": "node scripts/import-published-levels.mjs",
     "check:engine-state-boundary": "node scripts/check-engine-state-boundary.mjs",
-    "check:lint": "eslint modules/ SolverV2.js scripts/ --max-warnings=0",
+    "check:lint": "eslint modules/ scripts/ --max-warnings=0",
     "build:css": "tailwindcss -c tailwind.config.cjs -i styles/tailwind-input.css -o styles/tailwind-generated.css --minify",
     "test:e2e": "playwright test"
   },
