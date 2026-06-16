@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 lower-bound pruning helpers. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../SolverV2.js';
+import { createSolverV2 } from '../modules/SolverV2.js';
 import { AXIS_H, KEY_SPACE, PACK } from '../modules/solver/encoding.js';
 import { mustCrossLowerBound, mustPassLowerBound } from '../modules/solver/lower-bounds.js';
 import { prepLevel } from '../modules/solver/prep.js';

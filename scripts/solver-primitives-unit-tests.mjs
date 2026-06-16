@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for shared SolverV2 encoding and distance primitives. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../SolverV2.js';
+import { createSolverV2 } from '../modules/SolverV2.js';
 import { buildAxisApproachMap, buildDistMap, distMapToArray, getDistanceFromArray } from '../modules/solver/distance.js';
 import { AXIS_H, AXIS_NONE, AXIS_V, KEY_SPACE, PACK, popcount } from '../modules/solver/encoding.js';
 

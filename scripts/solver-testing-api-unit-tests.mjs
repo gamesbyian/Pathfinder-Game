@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for the documented SolverV2 testing/analysis import path. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../SolverV2.js';
+import { createSolverV2 } from '../modules/SolverV2.js';
 import { PACK } from '../modules/solver/encoding.js';
 import { SOLVER_TESTING_API, createSolverTestingApi } from '../modules/solver/testing-api.js';
 

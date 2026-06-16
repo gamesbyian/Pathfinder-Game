@@ -23,7 +23,7 @@ if (typeof globalThis.document === 'undefined')
 if (typeof globalThis.performance === 'undefined')
     globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2 } = await import('../SolverV2.js');
+const { createSolverV2 } = await import('../modules/SolverV2.js');
 
 const SolverV2 = createSolverV2();
 

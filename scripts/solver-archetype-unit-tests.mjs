@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for SolverV2 archetype/density classification. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../SolverV2.js';
+import { createSolverV2 } from '../modules/SolverV2.js';
 import { detectArchetype, getNavigableArea, getNavigableDensity } from '../modules/solver/archetype.js';
 import { PACK } from '../modules/solver/encoding.js';
 

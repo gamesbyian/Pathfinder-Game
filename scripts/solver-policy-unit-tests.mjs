@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /** Unit tests for extracted SolverV2 policy/template data. */
 import assert from 'node:assert/strict';
-import { createSolverV2 } from '../SolverV2.js';
+import { createSolverV2 } from '../modules/SolverV2.js';
 import { ATTEMPT_CONFIGS, POLICY_PROFILES, PROFILE_ORDER, TEMPLATES, TEMPLATE_CONFIG_KEYS } from '../modules/solver/policy.js';
 
 let passed = 0;

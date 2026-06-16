@@ -40,7 +40,7 @@ if (typeof globalThis.window === 'undefined')    globalThis.window    = { __PF_D
 if (typeof globalThis.document === 'undefined')  globalThis.document  = { addEventListener(){}, getElementById: () => null, createElement: () => ({ classList: { add(){}, remove(){} }, style: {} }) };
 if (typeof globalThis.performance === 'undefined') globalThis.performance = { now: () => Date.now() };
 
-const { createSolverV2 } = await import('../SolverV2.js');
+const { createSolverV2 } = await import('../modules/SolverV2.js');
 
 const budgetMs = Number(budgetMsArg || 30000);
 

@@ -54,7 +54,6 @@ All of the following must be true simultaneously when the path reaches the goal:
 
 ```
 /
-├── SolverV2.js              Main solver facade — thin shim over modules/solver/
 ├── levels.js                147 levels as window.RAW_LEVELS (1-indexed coords)
 ├── PATHFINDER_SPEC.md       Full product spec (authoritative game rules)
 ├── design_bible.txt         Design notes
@@ -69,7 +68,7 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   │                           Committed to repo; regenerate with `npm run build:css`
 │   │                           whenever Tailwind classes change.
 │   └── tailwind-input.css   @tailwind directives — input for the build step only.
-├── eslint.config.mjs        ESLint 9 flat config (modules/ + SolverV2.js + scripts/).
+├── eslint.config.mjs        ESLint 9 flat config (modules/ + scripts/).
 │                            Includes no-restricted-syntax rules banning raw event-type
 │                            strings ('sound', 'logic_state', 'goose_jumpscare',
 │                            'bomb_detonation') in type: property positions.
@@ -160,6 +159,9 @@ All of the following must be true simultaneously when the path reaches the goal:
 │   │   └── solver-worker-client.js  Client adapter: createSolverWorkerClient(url)
 │   │                                returns an object with solve() compatible with
 │   │                                SolverV2.solve() but delegates to a Worker.
+│   ├── SolverV2.js          Main solver facade — thin shim over modules/solver/.
+│   │                        Moved from root so ESLint, imports, and audit triggers
+│   │                        all resolve under modules/ consistently.
 │   ├── theme/               Theme normalization and registry
 │   ├── ui/                  Modal, toast, layout, loading, solver overlay UI
 │   ├── app.js               App construction and dependency wiring. bootstrapApp()
@@ -246,7 +248,7 @@ npm run ci
 
 # Individual check commands
 npm run check:dead-scripts           # Verify all npm script targets exist
-npm run check:lint                   # ESLint across modules/ + SolverV2.js + scripts/
+npm run check:lint                   # ESLint across modules/ + scripts/
 npm run check:secret-hygiene         # Scan for committed secrets
 npm run check:engine-state-boundary  # Enforce ENGINE mutations via state-actions.js
 npm run check:raw-inner-html         # Ban unsafe innerHTML patterns
@@ -767,7 +769,7 @@ node -e "
 node --input-type=module << 'EOF'
 globalThis.window = globalThis;
 await import('./levels.js');
-const { createSolverV2 } = await import('./SolverV2.js');
+const { createSolverV2 } = await import('./modules/SolverV2.js');
 const solver = createSolverV2();
 const raw = globalThis.RAW_LEVELS[N - 1];  // N = level number
 const level = solver._normalizeRawLevel(raw);
